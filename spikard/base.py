@@ -8,7 +8,16 @@ from inspect import iscoroutinefunction
 from pathlib import PurePath
 from random import uniform
 from time import time
-from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, TypeVar, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Generic,
+    Literal,
+    TypeVar,
+    cast,
+    overload,
+)
 from uuid import UUID
 
 import msgspec
@@ -18,18 +27,21 @@ from jsonschema import validate
 from msgspec.json import schema as msgspec_schema
 
 from spikard._ref import Ref
-from spikard.exceptions import DeserializationError, RequestError, ResponseValidationError, RetryError
+from spikard.exceptions import (
+    ConfigurationError,
+    DeserializationError,
+    RequestError,
+    ResponseValidationError,
+    RetryError,
+)
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Coroutine
 
 
-MessageRole = Literal["system", "user", "assistant"]
-
 T = TypeVar("T")
 
 LMClientConfig = TypeVar("LMClientConfig")
-CompletionConfig = TypeVar("CompletionConfig")
 LMClient = TypeVar("LMClient")
 
 Content = TypeVar("Content")
@@ -38,18 +50,31 @@ Callback = Callable[["LLMResponse[T]"], "LLMResponse[T] | Coroutine[Any, Any, LL
 
 
 @dataclass
-class InputMessage:
-    """A generic message object. An LLM client should be able to generate completions based on a list of this object.
+class CompletionConfig:
+    """TypedDict containing common parameters between OpenAI and Anthropic message creation APIs."""
 
-    Attributes:
-        role: The role of the message.
-        content: The content of the message.
-    """
+    model: str
+    """Model identifier to use for generation."""
+    # Optional parameters ~keep
+    max_tokens: int | None = None
+    """Maximum number of tokens that can be generated in the completion."""
+    metadata: dict[str, str] | None = None
+    """Key-value pairs for tracking or categorizing the request."""
+    seed: int | None = None
+    """Seed for deterministic sampling to get reproducible results."""
+    stop_sequences: str | list[str] | None = None
+    """Sequences where the API will stop generating further tokens."""
+    temperature: float | None = None
+    """Controls randomness in generation. Lower values are more deterministic, higher values more creative."""
+    timeout: float | None = None
+    """Request timeout duration in seconds."""
+    top_p: float | None = None
+    """Alternative to temperature sampling that considers tokens with top probability mass."""
+    user: str | None = None
+    """Unique identifier representing the end-user for monitoring and abuse detection."""
 
-    role: MessageRole
-    """The role of the message."""
-    content: str
-    """The content of the message."""
+
+TCompletionConfig = TypeVar("TCompletionConfig", bound=CompletionConfig)
 
 
 @dataclass
@@ -167,7 +192,7 @@ class RetryCaller(Generic[T]):
 _DEFAULT_RETRY_CONFIG = RetryConfig()
 
 
-class LLMClient(ABC, Generic[LMClient, LMClientConfig, CompletionConfig]):
+class LLMClient(ABC, Generic[LMClient, LMClientConfig, TCompletionConfig]):
     """Base class for Language Model (LLM) clients.
 
     This abstract class provides a standard interface for interacting with various LLM providers.
@@ -197,10 +222,162 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, CompletionConfig]):
     ) -> None:
         self.schema_hook = schema_hook
         self.decoder_mapping = decoder_mapping or {}
-        self.client = self.instantiate_client(client_config=client_config)
+        self.client = self._instantiate_client(client_config=client_config)
+
+    @overload
+    async def generate_completion(
+        self,
+        messages: list[str],
+        *,
+        callback: Callback[str] | None = None,
+        config: TCompletionConfig,
+        enforce_schema_validation: Literal[None] = None,
+        response_type: Literal[None] = None,
+        retry_config: RetryConfig,
+        stream: Literal[False] = False,
+        system_prompt: str | None = None,
+        tool_definition: Literal[None] = None,
+    ) -> LLMResponse[str]: ...
+
+    @overload
+    async def generate_completion(
+        self,
+        messages: list[str],
+        *,
+        callback: Callback[str] | None = None,
+        config: TCompletionConfig,
+        enforce_schema_validation: Literal[None] = None,
+        response_type: Literal[None] = None,
+        retry_config: RetryConfig,
+        stream: Literal[True] = True,
+        system_prompt: str | None = None,
+        tool_definition: Literal[None] = None,
+    ) -> AsyncIterator[LLMResponse[str]]: ...
+
+    @overload
+    async def generate_completion(
+        self,
+        messages: list[str],
+        *,
+        callback: Callback[T] | None = None,
+        config: TCompletionConfig,
+        enforce_schema_validation: bool | None = None,
+        response_type: Literal[None] = None,
+        retry_config: RetryConfig,
+        stream: Literal[None] = None,
+        system_prompt: str | None = None,
+        tool_definition: ToolDefinition[T],
+    ) -> LLMResponse[T]: ...
+
+    @overload
+    async def generate_completion(
+        self,
+        messages: list[str],
+        *,
+        callback: Callback[T] | None = None,
+        config: TCompletionConfig,
+        enforce_schema_validation: bool | None = None,
+        response_type: type[T],
+        retry_config: RetryConfig,
+        stream: Literal[None] = None,
+        system_prompt: str | None = None,
+        tool_definition: Literal[None] = None,
+    ) -> LLMResponse[T]: ...
+
+    async def generate_completion(
+        self,
+        messages: list[str],
+        *,
+        callback: Callback[str] | Callback[T] | None = None,
+        config: TCompletionConfig,
+        enforce_schema_validation: bool | None = None,
+        response_type: type[T] | None = None,
+        retry_config: RetryConfig = _DEFAULT_RETRY_CONFIG,
+        stream: bool | None = None,
+        system_prompt: str | None = None,
+        tool_definition: ToolDefinition[T] | None = None,
+    ) -> LLMResponse[str] | LLMResponse[T] | AsyncIterator[LLMResponse[str]]:
+        """Generate a completion from the LLM.
+
+        Args:
+            messages: List of message strings to send to the LLM.
+            callback: Optional callback function to process the response.
+            config: Configuration options for the completion.
+            enforce_schema_validation: Whether to enforce schema validation for tool calls.
+            response_type: Optional response type for structured outputs.
+            retry_config: Configuration for retry behavior.
+            stream: Whether to stream the completion.
+            system_prompt: Optional system prompt to include.
+            tool_definition: Optional tool definition for structured outputs.
+
+        Returns:
+            Either a single response or an async iterator of streamed responses.
+
+        Raises:
+            ConfigurationError: When invalid configuration combinations are provided.
+        """
+        if stream is not None and tool_definition is not None:
+            raise ConfigurationError("stream and tool_definition cannot be both specified at the same time.")
+
+        if not messages:
+            raise ConfigurationError("messages cannot be empty.")
+
+        if tool_definition is not None and response_type is not None:
+            raise ConfigurationError(
+                "specify either response_type or pass a tool_definition that includes a response_type, but not both."
+            )
+
+        if tool_definition is not None and response_type is None:
+            response_type = tool_definition.response_type
+
+        if response_type:
+            tool_definition = self._prepare_tool_call(
+                response_type=response_type,
+                tool_definition=tool_definition,
+            )
+            handler = RetryCaller(
+                config=retry_config,
+                handler=partial(
+                    self._handle_generate_completion,
+                    system_prompt=system_prompt,
+                    messages=messages,
+                    stream=None,
+                    tool_definition=tool_definition,
+                    config=config,
+                ),
+            )
+        else:
+            handler = RetryCaller(
+                config=retry_config,
+                handler=partial(
+                    self._handle_generate_completion,
+                    system_prompt=system_prompt,
+                    messages=messages,
+                    stream=stream or False,
+                    tool_definition=None,
+                    config=config,
+                ),
+            )
+
+        if tool_definition and response_type:
+            return await self._handle_tool_call(
+                callback=cast("Callback[T] | None", callback),
+                enforce_schema_validation=enforce_schema_validation or False,
+                handler=handler,
+                response_type=response_type,
+                tool_definition=tool_definition,
+            )
+
+        if stream:
+            return await self._handle_stream(
+                callback=cast("Callback[str] | None", callback),
+                handler=cast("Callable[[], Coroutine[Any, Any, AsyncIterator[tuple[str, int]]]]", handler),
+            )
+
+        return await self._handle_completion(callback=cast("Callback[str] | None", callback), handler=handler)
 
     @property
-    def default_decoder_mapping(self) -> dict[type, Callable[[Any], Any]]:
+    def _default_decoder_mapping(self) -> dict[type, Callable[[Any], Any]]:
         """Mapping relating types to decoder callbacks. The callbacks should receive the raw value and return the decoded value."""
         mapping: dict[type, Callable[[Any], Any]] = {}
 
@@ -215,9 +392,9 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, CompletionConfig]):
         return mapping
 
     @cached_property
-    def decoder(self) -> Callable[[type[T]], msgspec.json.Decoder[T]]:
+    def _decoder(self) -> Callable[[type[T]], msgspec.json.Decoder[T]]:
         """Returns a decoder for the given type."""
-        decoder_mapping = {**self.decoder_mapping, **self.default_decoder_mapping}
+        decoder_mapping = {**self.decoder_mapping, **self._default_decoder_mapping}
 
         def _decoder_hook(value: Any, target_type: Any) -> Any:
             if isinstance(value, target_type):
@@ -240,7 +417,7 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, CompletionConfig]):
         )
 
     @abstractmethod
-    def instantiate_client(self, client_config: LMClientConfig) -> LMClient:
+    def _instantiate_client(self, client_config: LMClientConfig) -> LMClient:
         """Create and return an instance of the LM client. For example. this can be an OpenAI client.
 
         Args:
@@ -251,117 +428,86 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, CompletionConfig]):
         """
         ...
 
-    @abstractmethod
-    async def generate_completion(
+    @overload
+    async def _handle_generate_completion(
         self,
-        messages: list[InputMessage],
-        config: CompletionConfig,
-    ) -> tuple[str, int]:
-        """Generate a completion using the LLM.
-
-        Args:
-            messages: List of input messages.
-            config: Configuration options for the completion.
-
-        Returns:
-            A tuple containing the completion string and the number of tokens used.
-        """
-        ...
-
-    @abstractmethod
-    async def generate_tool_call(
-        self,
-        messages: list[InputMessage],
-        tool_definition: ToolDefinition[T],
-        config: CompletionConfig,
-    ) -> tuple[str | bytes | T, int]:
-        """Generate a tool call using the LLM.
-
-        Args:
-            messages: List of input messages.
-            tool_definition: The tool definition.
-            config: Configuration options for the tool call.
-
-        Returns:
-            A tuple containing The raw json value of the tool call and the number of tokens used.
-        """
-        ...
-
-    @abstractmethod
-    async def generate_completion_stream(
-        self,
-        messages: list[InputMessage],
-        config: CompletionConfig,
-    ) -> AsyncIterator[tuple[str, int]]:
-        """Generate a streaming completion using the LLM.
-
-        Args:
-            messages: List of input messages.
-            config: Configuration options for the completion.
-
-        Returns:
-            An async iterator yielding tuples of completion chunks and tokens used.
-        """
-        ...
-
-    async def tool_call(
-        self,
-        messages: list[InputMessage],
-        response_type: type[T],
         *,
-        callback: Callback[T] | None = None,
-        description: str | None = None,
-        enforce_schema_validation: bool = True,
-        name: str | None = None,
-        retry_config: RetryConfig = _DEFAULT_RETRY_CONFIG,
-        schema: dict[str, Any] | None = None,
-        config: CompletionConfig,
-    ) -> LLMResponse[T]:
-        """Make a tool call to the LLM.
+        config: TCompletionConfig,
+        messages: list[str],
+        stream: Literal[False],
+        system_prompt: str | None,
+        tool_definition: None,
+    ) -> tuple[str, int]: ...
 
-        Args:
-            messages: List of input messages.
-            response_type: Expected type of the response.
-            callback: Optional callback function to process the response.
-            description: Optional description of the tool.
-            enforce_schema_validation: Whether to enforce schema validation.
-            name: Optional name for the tool.
-            retry_config: Configuration for retry behavior.
-            schema: Optional JSON schema for the tool.
-            config: Configuration options for the tool call.
+    @overload
+    async def _handle_generate_completion(
+        self,
+        *,
+        config: TCompletionConfig,
+        messages: list[str],
+        stream: Literal[True],
+        system_prompt: str | None,
+        tool_definition: None,
+    ) -> AsyncIterator[tuple[str, int]]: ...
 
-        Returns:
-            An LLM response containing the tool call results.
+    @overload
+    async def _handle_generate_completion(
+        self,
+        *,
+        config: TCompletionConfig,
+        messages: list[str],
+        stream: Literal[None],
+        system_prompt: str | None,
+        tool_definition: ToolDefinition[T],
+    ) -> tuple[str | bytes | T, int]: ...
 
-        Raises:
-            ResponseValidationError: When the response cannot be deserialized or fails schema validation.
-        """
-        tool_definition = self.prepare_tool_call(
-            response_type=response_type,
-            description=description,
-            name=name,
+    @abstractmethod
+    async def _handle_generate_completion(
+        self,
+        *,
+        config: TCompletionConfig,
+        messages: list[str],
+        stream: bool | None,
+        system_prompt: str | None,
+        tool_definition: ToolDefinition[T] | None,
+    ) -> tuple[str, int] | tuple[str | bytes | T, int] | AsyncIterator[tuple[str, int]]: ...
+
+    def _prepare_tool_call(
+        self,
+        response_type: type[T],
+        tool_definition: ToolDefinition[T] | None,
+    ) -> ToolDefinition[T]:
+        if tool_definition is not None:
+            return tool_definition
+
+        schema = msgspec_schema(response_type, schema_hook=self.schema_hook)
+        return ToolDefinition(
+            name=response_type.__name__.lower(),
             schema=schema,
+            response_type=response_type,
+            description=schema.get("description"),
         )
-        handler = RetryCaller(
-            config=retry_config,
-            handler=partial(
-                self.generate_tool_call,
-                messages=messages,
-                tool_definition=tool_definition,
-                config=config,
-            ),
-        )
+
+    async def _handle_tool_call(
+        self,
+        *,
+        callback: Callback[T] | None,
+        enforce_schema_validation: bool,
+        handler: Callable[[], Coroutine[Any, Any, tuple[str | bytes | T, int]]],
+        response_type: type[T],
+        tool_definition: ToolDefinition[T],
+    ) -> LLMResponse[T]:
         start_time = time()
         value, tokens = await handler()
         if isinstance(value, (str, bytes)):
             try:
-                decoder = self.decoder(response_type)
+                decoder = self._decoder(response_type)
                 result = decoder.decode(value)
 
                 if enforce_schema_validation:
                     validate(instance=result, schema=tool_definition.schema)
 
-                response = LLMResponse(content=result, tokens=tokens, duration=time() - start_time)
+                response: LLMResponse[T] = LLMResponse(content=result, tokens=tokens, duration=time() - start_time)
 
                 if callback:
                     return cast(
@@ -372,128 +518,48 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, CompletionConfig]):
                 return response
             except (DeserializationError, JSONSchemaValidationError) as e:
                 raise ResponseValidationError("Failed to deserialize tool call response", context={"error": e}) from e
-
         return LLMResponse(content=value, tokens=tokens, duration=time() - start_time)
 
-    async def text_completion(
-        self,
-        messages: list[InputMessage],
+    @staticmethod
+    async def _handle_stream(
         *,
-        callback: Callback[str] | None = None,
-        retry_config: RetryConfig = _DEFAULT_RETRY_CONFIG,
-        config: CompletionConfig,
+        callback: Callback[T] | None,
+        handler: Callable[[], Coroutine[Any, Any, AsyncIterator[tuple[str, int]]]],
+    ) -> AsyncIterator[LLMResponse[str]]:
+        response_stream = await handler()
+
+        async def _async_generator() -> AsyncIterator[LLMResponse[str]]:
+            start_time = time()
+            async for chunk, tokens in response_stream:
+                duration = time() - start_time
+                start_time = time()
+
+                response: LLMResponse[str] = LLMResponse(content=chunk, tokens=tokens, duration=duration)
+
+                if callback:
+                    yield cast(
+                        "LLMResponse[str]",
+                        (await callback(response) if iscoroutinefunction(callback) else callback(response)),  # type: ignore[arg-type]
+                    )
+
+                yield response
+
+        return _async_generator()
+
+    async def _handle_completion(
+        self,
+        *,
+        callback: Callback[str] | None,
+        handler: Callable[[], Coroutine[Any, Any, tuple[str, int]]],
     ) -> LLMResponse[str]:
-        """Generate a text completion from the LLM.
-
-        Args:
-            messages: List of input messages.
-            callback: Optional callback function to process the response.
-            retry_config: Configuration for retry behavior.
-            config: Configuration options for the completion.
-
-        Returns:
-            An LLM response containing the completion text.
-        """
-        handler = RetryCaller(
-            config=retry_config,
-            handler=partial(
-                self.generate_completion,
-                messages=messages,
-                config=config,
-            ),
-        )
         start_time = time()
         result, tokens = await handler()
         duration = time() - start_time
 
-        response = LLMResponse(content=result, tokens=tokens, duration=duration)
+        response: LLMResponse[str] = LLMResponse(content=result, tokens=tokens, duration=duration)
         if callback:
             return cast(
                 "LLMResponse[str]", (await callback(response) if iscoroutinefunction(callback) else callback(response))
             )
 
         return response
-
-    async def stream_completion(
-        self,
-        messages: list[InputMessage],
-        *,
-        callback: Callback[str] | None = None,
-        retry_config: RetryConfig = _DEFAULT_RETRY_CONFIG,
-        config: CompletionConfig,
-    ) -> AsyncIterator[LLMResponse[str]]:
-        """Generate a streaming completion from the LLM.
-
-        Args:
-            messages: List of input messages.
-            callback: Optional callback function to process the response.
-            retry_config: Configuration for retry behavior.
-            config: Configuration options for the completion.
-
-        Returns:
-            An async iterator yielding LLM responses with completion chunks.
-
-        Yields:
-            LLMResponse[str]: LLM responses containing completion chunks.
-        """
-        handler = RetryCaller(
-            config=retry_config,
-            handler=partial(
-                self.generate_completion_stream,
-                messages=messages,
-                config=config,
-            ),
-        )
-        result = await handler()
-        start_time = time()
-        async for chunk, tokens in result:
-            duration = time() - start_time
-            start_time = time()
-
-            response = LLMResponse(content=chunk, tokens=tokens, duration=duration)
-
-            if callback:
-                yield cast(
-                    "LLMResponse[str]",
-                    (await callback(response) if iscoroutinefunction(callback) else callback(response)),
-                )
-
-            yield response
-
-    def prepare_tool_call(
-        self,
-        response_type: type[T],
-        name: str | None = None,
-        description: str | None = None,
-        schema: dict[str, Any] | None = None,
-    ) -> ToolDefinition[T]:
-        """Prepare a tool call definition.
-
-        Args:
-            response_type: Expected type of the response.
-            name: Optional name for the tool.
-            description: Optional description of the tool.
-            schema: Optional JSON schema for the tool.
-
-        Notes:
-            - subclasses can override this method to customize the creation of tool calls.
-            - this method uses `msgspec_schema` to generate the schema if not provided.
-
-        Returns:
-            A tool definition ready to be used for a tool call.
-        """
-        if not schema:
-            schema = msgspec_schema(response_type, schema_hook=self.schema_hook)
-
-        if not name:
-            name = response_type.__name__.lower()
-
-        if not description:
-            description = schema.get("description")
-
-        return ToolDefinition(
-            name=name,
-            schema=schema,
-            response_type=response_type,
-            description=description,
-        )

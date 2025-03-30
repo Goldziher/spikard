@@ -3,29 +3,27 @@ from __future__ import annotations
 from abc import ABC
 from dataclasses import asdict, dataclass
 from os import environ
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, overload
 
 import tiktoken
 
 from spikard.base import (
-    InputMessage,
+    CompletionConfig,
     LLMClient,
-    MessageRole,
     ToolDefinition,
 )
 from spikard.exceptions import ConfigurationError, MissingDependencyError, RequestError
 
-try:  # pragma: no cover
+try:
     from openai import APIError, AsyncOpenAI
     from openai.lib.azure import AsyncAzureADTokenProvider, AsyncAzureOpenAI
     from openai.types.chat import (
-        ChatCompletionAssistantMessageParam,
         ChatCompletionSystemMessageParam,
         ChatCompletionToolParam,
         ChatCompletionUserMessageParam,
     )
     from openai.types.shared_params.function_definition import FunctionDefinition
-except ImportError as e:  # pragma: no cover
+except ImportError as e:
     raise MissingDependencyError.create_for_package(
         dependency_group="openai",
         functionality="OpenAI",
@@ -47,15 +45,6 @@ T = TypeVar("T")
 LMClient = TypeVar("LMClient", bound="AsyncAzureOpenAI | AsyncOpenAI")
 LMClientConfig = TypeVar("LMClientConfig", bound="AzureOpenAIClientConfig | OpenAIClientConfig")
 
-_role_to_message_type_mapping: dict[
-    MessageRole,
-    type[ChatCompletionAssistantMessageParam | ChatCompletionUserMessageParam | ChatCompletionSystemMessageParam],
-] = {
-    "system": ChatCompletionSystemMessageParam,
-    "user": ChatCompletionUserMessageParam,
-    "assistant": ChatCompletionAssistantMessageParam,
-}
-
 
 @dataclass
 class OpenAIClientConfig:
@@ -67,7 +56,7 @@ class OpenAIClientConfig:
     """Optional custom base URL for the API."""
     default_headers: Mapping[str, str] | None = None
     """Optional default headers to include with every request."""
-    default_query: Mapping[str, object] | None = None
+    default_query: Mapping[str, Any] | None = None
     """Optional default query parameters to include with every request."""
     max_retries: int | None = None
     """Optional maximum number of retry attempts."""
@@ -142,11 +131,9 @@ class AzureOpenAIClientConfig:
 
 
 @dataclass
-class OpenAICompletionConfig:
+class OpenAICompletionConfig(CompletionConfig):
     """Configuration for OpenAI completions."""
 
-    model: str
-    """model: ID of the model to use. You can use the"""
     best_of: int | None = None
     """Generates `best_of` completions server-side and returns the "best" (the one with the highest log probability per token). Results cannot be streamed."""
     echo: bool | None = None
@@ -163,26 +150,10 @@ class OpenAICompletionConfig:
     """Modify the likelihood of specified tokens appearing in the completion."""
     max_completion_tokens: int | None = None
     """An upper bound for the number of tokens that can be generated for a completion"""
-    max_tokens: int | None = None
-    """The maximum number of [tokens](/tokenizer) that can be generated in the completion."""
-    metadata: dict[str, str] | None = None
-    """Set of 16 key-value pairs that can be attached to an object. This can be useful for storing additional information about the object in a structured format, and querying for objects via API or the dashboard."""
     n: int | None = None
     """How many completions to generate for each prompt."""
     presence_penalty: float | None = None
     """Number between -2.0 and 2.0. Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics."""
-    seed: int | None = None
-    """If specified, the system will make a best effort to sample deterministically, such that repeated requests with the same `seed` and parameters should return the same result."""
-    stop: str | None | list[str] = None
-    """Up to 4 sequences where the API will stop generating further tokens. The returned text will not contain the stop sequence."""
-    temperature: float | None = None
-    """What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic."""
-    timeout: float | Timeout | None = None
-    """Timeout value for the underlying httpx request."""
-    top_p: float | None = None
-    """An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered."""
-    user: str | None = None
-    """A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse."""
     web_search_options: WebSearchOptions | None = None
     """Options for the web search tools."""
 
@@ -194,9 +165,90 @@ class BaseOpenAIClient(
 ):
     """Base class for OpenAI clients."""
 
-    async def generate_tool_call(
+    @overload
+    async def _handle_generate_completion(
         self,
-        messages: list[InputMessage],
+        *,
+        config: OpenAICompletionConfig,
+        messages: list[str],
+        stream: Literal[False],
+        system_prompt: str | None,
+        tool_definition: None,
+    ) -> tuple[str, int]: ...
+
+    @overload
+    async def _handle_generate_completion(
+        self,
+        *,
+        config: OpenAICompletionConfig,
+        messages: list[str],
+        stream: Literal[True],
+        system_prompt: str | None,
+        tool_definition: None,
+    ) -> AsyncIterator[tuple[str, int]]: ...
+
+    @overload
+    async def _handle_generate_completion(
+        self,
+        *,
+        config: OpenAICompletionConfig,
+        messages: list[str],
+        stream: Literal[None],
+        system_prompt: str | None,
+        tool_definition: ToolDefinition[T],
+    ) -> tuple[str | bytes | T, int]: ...
+
+    async def _handle_generate_completion(
+        self,
+        *,
+        config: OpenAICompletionConfig,
+        messages: list[str],
+        stream: bool | None,
+        system_prompt: str | None,
+        tool_definition: ToolDefinition[T] | None,
+    ) -> tuple[str, int] | tuple[str | bytes | T, int] | AsyncIterator[tuple[str, int]]:
+        """Generate a completion using the OpenAI API.
+
+        Args:
+            config: Configuration options for the completion.
+            messages: List of message strings.
+            stream: Whether to stream the completion.
+            system_prompt: Optional system prompt.
+            tool_definition: Optional tool definition.
+
+        Returns:
+            Either a tuple containing the completion and token count,
+            a tuple containing the tool call result and token count,
+            or an async iterator yielding tuples of completion chunks and token counts.
+        """
+        input_messages: list[ChatCompletionSystemMessageParam | ChatCompletionUserMessageParam] = []
+
+        if system_prompt:
+            input_messages.append(ChatCompletionSystemMessageParam(role="system", content=system_prompt))
+
+        input_messages.extend([ChatCompletionUserMessageParam(role="user", content=message) for message in messages])
+
+        if tool_definition is not None:
+            return await self._generate_tool_call(
+                messages=input_messages,
+                tool_definition=tool_definition,  # type: ignore[arg-type]
+                config=config,
+            )
+
+        if stream:
+            return await self._generate_completion_stream(
+                messages=input_messages,
+                config=config,
+            )
+
+        return await self._generate_completion(
+            messages=input_messages,
+            config=config,
+        )
+
+    async def _generate_tool_call(
+        self,
+        messages: list[ChatCompletionSystemMessageParam | ChatCompletionUserMessageParam],
         tool_definition: ToolDefinition[T],
         config: OpenAICompletionConfig,
     ) -> tuple[str | bytes | T, int]:
@@ -215,10 +267,14 @@ class BaseOpenAIClient(
         """
         config_kwargs = {k: v for k, v in asdict(config).items() if v is not None}
 
+        if config.stop_sequences is not None:
+            config_kwargs["stop"] = config.stop_sequences
+            config_kwargs.pop("stop_sequences", None)
+
         try:
             response = await self.client.chat.completions.create(
                 **config_kwargs,
-                messages=self._convert_messages(messages),
+                messages=messages,
                 tools=[
                     ChatCompletionToolParam(
                         type="function",
@@ -235,9 +291,9 @@ class BaseOpenAIClient(
         except APIError as e:  # pragma: no cover - tested via mocked exceptions
             raise RequestError(f"Failed to generate tool call: {e}", context={"tool": tool_definition.name}) from e
 
-    async def generate_completion(
+    async def _generate_completion(
         self,
-        messages: list[InputMessage],
+        messages: list[ChatCompletionSystemMessageParam | ChatCompletionUserMessageParam],
         config: OpenAICompletionConfig,
     ) -> tuple[str, int]:
         """Generate a completion using the OpenAI API.
@@ -254,20 +310,24 @@ class BaseOpenAIClient(
         """
         config_kwargs = {k: v for k, v in asdict(config).items() if v is not None}
 
+        if config.stop_sequences is not None:
+            config_kwargs["stop"] = config.stop_sequences
+            config_kwargs.pop("stop_sequences", None)
+
         try:
             response = await self.client.chat.completions.create(
                 **config_kwargs,
                 stream=False,
-                messages=self._convert_messages(messages),
+                messages=messages,
                 model=config.model,
             )
             return self._process_completion_response(response)
         except Exception as e:  # pragma: no cover - tested via mocked exceptions
             raise RequestError(f"Failed to generate completion: {e}") from e
 
-    async def generate_completion_stream(
+    async def _generate_completion_stream(
         self,
-        messages: list[InputMessage],
+        messages: list[ChatCompletionSystemMessageParam | ChatCompletionUserMessageParam],
         config: OpenAICompletionConfig,
     ) -> AsyncIterator[tuple[str, int]]:
         """Generate a streaming completion using the OpenAI API.
@@ -284,11 +344,15 @@ class BaseOpenAIClient(
         """
         config_kwargs = {k: v for k, v in asdict(config).items() if v is not None}
 
+        if config.stop_sequences is not None:
+            config_kwargs["stop"] = config.stop_sequences
+            config_kwargs.pop("stop_sequences", None)
+
         try:
             stream = await self.client.chat.completions.create(
                 **config_kwargs,
                 stream=True,
-                messages=self._convert_messages(messages),
+                messages=messages,
                 model=config.model,
             )
         except APIError as e:  # pragma: no cover - tested via mocked exceptions
@@ -308,27 +372,6 @@ class BaseOpenAIClient(
                         yield "", 0
 
             return _iterate_chunks()
-
-    @staticmethod
-    def _convert_messages(
-        messages: list[InputMessage],
-    ) -> list[ChatCompletionSystemMessageParam | ChatCompletionUserMessageParam | ChatCompletionAssistantMessageParam]:
-        """Convert internal message format to OpenAI's format.
-
-        Args:
-            messages: List of internal message objects.
-
-        Returns:
-            List of OpenAI-compatible message objects.
-        """
-        return [
-            _role_to_message_type_mapping[messages.role](
-                content=messages.content,
-                name="message-{i+1}",
-                role=messages.role,  # type: ignore[arg-type]
-            )
-            for i, messages in enumerate(messages)
-        ]
 
     @staticmethod
     def _process_completion_response(response: ChatCompletion) -> tuple[str, int]:
@@ -398,7 +441,7 @@ class BaseOpenAIClient(
 class OpenAIClient(BaseOpenAIClient[AsyncOpenAI, OpenAIClientConfig]):
     """OpenAI client class."""
 
-    def instantiate_client(self, client_config: OpenAIClientConfig) -> AsyncOpenAI:
+    def _instantiate_client(self, client_config: OpenAIClientConfig) -> AsyncOpenAI:
         """Create and return an instance of the OpenAI client.
 
         Args:
@@ -413,7 +456,7 @@ class OpenAIClient(BaseOpenAIClient[AsyncOpenAI, OpenAIClientConfig]):
 class AzureOpenAIClient(BaseOpenAIClient[AsyncAzureOpenAI, AzureOpenAIClientConfig]):
     """Azure OpenAI client class."""
 
-    def instantiate_client(self, client_config: AzureOpenAIClientConfig) -> AsyncAzureOpenAI:
+    def _instantiate_client(self, client_config: AzureOpenAIClientConfig) -> AsyncAzureOpenAI:
         """Create and return an instance of the Azure OpenAI client.
 
         Args:

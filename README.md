@@ -19,7 +19,7 @@ For further reading, grab a copy of the Amber cycle of books by Roger Zelazny.
 
 This library is open to contributions- if you see a provider that is missing, please open an issue or submit a pull request.
 
-## Usage
+## Installation
 
 Install the library with the providers you want to use, for example:
 
@@ -31,4 +31,102 @@ Or multiple providers:
 
 ```shell
 pip install spikard[openai,anthropic]
+```
+
+## Architecture
+
+Spikard follows a layered architecture with a consistent interface across all providers:
+
+1. **Base Layer**: `LLMClient` abstract base class in `base.py` defines the standard interface for all providers.
+1. **Provider Layer**: Provider-specific implementations extend the base class (e.g., `OpenAIClient`, `AzureOpenAIClient`).
+1. **Configuration Layer**: Each provider has its own configuration class (e.g., `OpenAIClientConfig`).
+1. **Response Layer**: All providers return responses in a standardized `LLMResponse` format.
+
+This design allows for consistent usage patterns regardless of the underlying LLM provider while maintaining provider-specific configuration options.
+
+## Public Interface
+
+All LLM clients expose the following core methods and classes:
+
+### Client Configuration
+
+Each client requires a provider-specific configuration class:
+
+```python
+from spikard.openai import OpenAIClient, OpenAIClientConfig
+
+client = OpenAIClient(
+    client_config=OpenAIClientConfig(
+        api_key="your-api-key",
+        # Other provider-specific options
+    )
+)
+```
+
+### Text Completion
+
+Generate text completions with optional system prompts:
+
+```python
+from spikard.openai import OpenAICompletionConfig
+
+response = await client.generate_completion(
+    messages=["Tell me about machine learning"],
+    system_prompt="You are a helpful AI assistant",
+    config=OpenAICompletionConfig(
+        model="gpt-4o",
+        temperature=0.7,
+    ),
+)
+
+print(response.content)  # The response text
+print(response.tokens)  # Token count used
+print(response.duration)  # Time taken to generate
+```
+
+### Streaming Responses
+
+Stream responses for real-time output:
+
+```python
+async for chunk in await client.generate_completion(
+    messages=["Write a short story"], config=OpenAICompletionConfig(model="gpt-4o"), stream=True
+):
+    print(chunk.content, end="", flush=True)
+```
+
+### Structured Outputs
+
+Get structured, typed responses using tool definitions:
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class MovieRecommendation:
+    title: str
+    year: int
+    genre: str
+    description: str
+
+response = await client.generate_completion(
+    messages=["Recommend a sci-fi movie"], config=OpenAICompletionConfig(model="gpt-4o"), response_type=MovieRecommendation
+)
+
+movie = response.content  # Typed as MovieRecommendation
+print(f"{movie.title} ({movie.year}): {movie.description}")
+```
+
+### Error Handling and Retries
+
+Configure retry behavior for robustness:
+
+```python
+from spikard.base import RetryConfig
+
+response = await client.generate_completion(
+    messages=["Complex query that might fail"],
+    config=OpenAICompletionConfig(model="gpt-4o"),
+    retry_config=RetryConfig(max_retries=5, initial_interval=1.0, exponential=True),
+)
 ```
