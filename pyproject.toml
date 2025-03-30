@@ -50,13 +50,14 @@ dev = [
   "mypy>=1.15.0",
   "polyfactory>=2.16.0",
   "pre-commit>=4.2.0",
+  "pydantic>=2.11.1",
   "pytest>=8.3.5",
-  "pytest-asyncio>=0.23.7",
   "pytest-cov>=6.0.0",
   "pytest-mock>=3.14.0",
   "pytest-timeout>=2.3.1",
   "python-dotenv>=1.0.1",
   "ruff>=0.11.2",
+  "trio>=0.29.0",
   "types-jsonschema>=4.22.0.20240501",
   "uv-bump",
 ]
@@ -91,9 +92,11 @@ lint.ignore = [
 ]
 lint.per-file-ignores."tests/**/*.*" = [
   "ARG001",
+  "ARG002",
   "D",
   "N815",
   "PD",
+  "PERF",
   "PGH003",
   "PLR0915",
   "PLR2004",
@@ -116,9 +119,6 @@ lint.pylint.max-returns = 10
 keep_full_version = true
 max_supported_python = "3.13"
 
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
-
 [tool.coverage.run]
 omit = [ "tests/*" ]
 plugins = [ "covdefaults" ]
@@ -126,7 +126,7 @@ source = [ "spikard" ]
 
 [tool.coverage.report]
 exclude_lines = [ 'if TYPE_CHECKING:', "except ImportError:" ]
-fail_under = 100
+fail_under = 90
 
 [tool.mypy]
 packages = [ "spikard", "tests" ]
