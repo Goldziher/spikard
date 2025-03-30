@@ -1,3 +1,14 @@
+"""Exception hierarchy for the Spikard library.
+
+This module defines custom exceptions used throughout the Spikard library to provide
+clear error messages and context for different types of failures when interacting
+with LLM providers.
+
+All exceptions inherit from the base SpikardError class, which includes context
+information to aid in debugging. Specific subclasses are provided for different
+error categories.
+"""
+
 from __future__ import annotations
 
 from json import dumps
@@ -8,7 +19,19 @@ if TYPE_CHECKING:
 
 
 class SpikardError(Exception):
-    """Raised when an internal error occurs."""
+    """Base exception class for all Spikard-specific errors.
+
+    This class extends the standard Exception class and adds support for context
+    information that can be used to provide additional details about the error.
+
+    Attributes:
+        context: Dictionary containing additional information about the error context.
+            This can include request parameters, response data, or other debugging info.
+
+    Args:
+        message: The error message.
+        **context: Additional contextual information about the error.
+    """
 
     context: Mapping[str, Any]
     """The context of the error."""
@@ -18,45 +41,86 @@ class SpikardError(Exception):
         super().__init__(message)
 
     def __str__(self) -> str:
-        """Return a string representation of the exception."""
+        """Return a string representation of the exception.
+
+        Returns:
+            A formatted string with the exception class name, message, and context.
+        """
         ctx = f"\n\nContext: {dumps(self.context)}" if self.context else ""
 
         return f"{self.__class__.__name__}: {super().__str__()}{ctx}"
 
     def __repr__(self) -> str:
-        """Return a string representation of the exception."""
+        """Return a string representation of the exception for debugging.
+
+        Returns:
+            The same string as __str__ to maintain consistency.
+        """
         return self.__str__()
 
 
 class JsonSchemaValidationError(SpikardError):
-    """Raised when a validation error occurs."""
+    """Raised when JSON schema validation fails.
+
+    This exception is raised when data does not conform to the expected JSON schema,
+    typically when validating tool inputs or outputs.
+    """
 
 
 class ResponseValidationError(SpikardError):
-    """Raised when a validation error occurs."""
+    """Raised when LLM response validation fails.
+
+    This exception is raised when the response from an LLM provider doesn't match
+    the expected format or cannot be properly validated against the expected schema.
+    """
 
 
 class SerializationError(SpikardError):
-    """Raised when an error occurs during serialization."""
+    """Raised when data serialization fails.
+
+    This exception is raised when attempting to convert data structures to formats
+    that can be sent to LLM providers (typically JSON).
+    """
 
 
 class DeserializationError(SpikardError):
-    """Raised when an error occurs during deserialization."""
+    """Raised when data deserialization fails.
+
+    This exception is raised when attempting to parse responses from LLM providers
+    into expected data structures.
+    """
 
 
 class RequestError(SpikardError):
-    """Raised when an error occurs during a request."""
+    """Raised when an error occurs during a request to an LLM provider.
 
-    wait_internal: float | None
+    This can include network errors, API errors, rate limiting, or other failures
+    when communicating with LLM services.
+
+    Attributes:
+        wait_interval: Time in seconds to wait before retrying the request,
+            typically extracted from rate limit headers in 429 responses.
+
+    Args:
+        message: The error message.
+        context: Additional contextual information about the error.
+        wait_interval: Time in seconds to wait before retrying the request.
+    """
+
+    wait_interval: float | None
     """
     An amount of time in seconds to wait before retrying the request.
     This value should be set if it can be extracted from a 429 coded response.
     """
 
-    def __init__(self, message: str, context: Any = None, wait_internal: float | None = None) -> None:
-        self.wait_internal = wait_internal
+    def __init__(self, message: str, context: Any = None, wait_interval: float | None = None) -> None:
+        self.wait_interval = wait_interval
         super().__init__(message, **context)
 
 
 class RetryError(SpikardError):
-    """Raised when a retry error occurs."""
+    """Raised when maximum retry attempts have been exhausted.
+
+    This exception is raised when the library has attempted to retry a failed
+    request the maximum number of times and still cannot succeed.
+    """

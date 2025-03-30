@@ -1,34 +1,28 @@
 from __future__ import annotations
 
-import asyncio
 from abc import ABC, abstractmethod
 from contextlib import suppress
 from dataclasses import dataclass
-from functools import partial
+from functools import cached_property, partial
+from inspect import iscoroutinefunction
 from pathlib import PurePath
 from random import uniform
 from time import time
-from typing import TYPE_CHECKING, Any, Callable, Final, Generic, Literal, Never, TypeVar, Unpack
+from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, TypeVar, cast
 from uuid import UUID
 
+import msgspec.json
+from anyio import sleep
 from jsonschema import ValidationError as JSONSchemaValidationError
 from jsonschema import validate
 from msgspec import Struct
 from msgspec.json import schema as msgspec_schema
 
+from spikard._ref import Ref
 from spikard.exceptions import DeserializationError, RequestError, ResponseValidationError, RetryError
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Mapping
-
-try:
-    from pydantic import BaseModel
-    from pydantic import ValidationError as PydanticValidationError
-except ImportError:
-    BaseModel = Never
-    PydanticValidationError = Never
-
-__all__ = ["InputMessage", "LLMClient", "MessageRole", "ToolDefinition"]
+    from collections.abc import AsyncIterator, Coroutine
 
 
 MessageRole = Literal["system", "user", "assistant"]
@@ -40,18 +34,17 @@ ToolCallConfig = TypeVar("ToolCallConfig")
 CompletionConfig = TypeVar("CompletionConfig")
 LMClient = TypeVar("LMClient")
 
-
 Content = TypeVar("Content")
 
 ToolResponseType = TypeVar("ToolResponseType", bound=Struct)
-Callback = Callable[[T], T]
+Callback = Callable[["LLMResponse[T]"], "LLMResponse[T] | Coroutine[Any, Any, LLMResponse[T]]"]
 
 
 @dataclass
 class InputMessage:
     """A generic message object. An LLM client should be able to generate completions based on a list of this object.
 
-    Args:
+    Attributes:
         role: The role of the message.
         content: The content of the message.
     """
@@ -109,9 +102,11 @@ class RetryConfig:
 
 
 class RetryCaller(Generic[T]):
-    def __init__(self, config: RetryConfig, handler: Callable[[], T]) -> None:
+    """Retry logic for making LLM requests."""
+
+    def __init__(self, config: RetryConfig, handler: Callable[[], Coroutine[Any, Any, T]]) -> None:
         self.config = config
-        self.handler = staticmethod(handler)
+        self.handler = Ref(handler)
 
     async def __call__(self, call_count: int = 1, errors: list[RequestError] | None = None) -> T:
         """Execute the handler with retry logic based on the retry configuration.
@@ -125,20 +120,24 @@ class RetryCaller(Generic[T]):
 
         Raises:
             RetryError: When max retries have been exceeded.
+            ValueError: When handler is not set.
         """
         if errors is None:
             errors = []
 
+        if not self.handler.value:
+            raise ValueError("Handler is not set")
+
         try:
-            return await self.handler()
+            return await self.handler.value()
         except RequestError as e:
             errors.append(e)
 
             if call_count > self.config.max_retries:
-                raise RetryError("Max retries exceeded", context={"retries": call_count, "errors": errors})
+                raise RetryError("Max retries exceeded", context={"retries": call_count, "errors": errors}) from e
 
             wait_time = self._calculate_wait_time(call_count, e)
-            await asyncio.sleep(wait_time)
+            await sleep(wait_time)
             return await self(call_count + 1, errors)
 
     def _calculate_wait_time(self, call_count: int, error: RequestError) -> float:
@@ -151,8 +150,8 @@ class RetryCaller(Generic[T]):
         Returns:
             The time to wait in seconds before the next retry.
         """
-        if error.wait_internal is not None:
-            return error.wait_internal
+        if error.wait_interval is not None:
+            return error.wait_interval
 
         if self.config.exponential:
             base_interval = self.config.initial_interval * (self.config.exponent ** (call_count - 1))
@@ -162,10 +161,13 @@ class RetryCaller(Generic[T]):
 
         if self.config.jitter:
             jitter_range = base_interval * self.config.jitter_factor
-            jitter = uniform(-jitter_range, jitter_range)
+            jitter = uniform(-jitter_range, jitter_range)  # noqa: S311
             return max(0.0, base_interval + jitter)
 
         return base_interval
+
+
+_DEFAULT_RETRY_CONFIG = RetryConfig()
 
 
 class LLMClient(ABC, Generic[LMClient, LMClientConfig, ToolCallConfig, ToolResponseType]):
@@ -182,32 +184,28 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, ToolCallConfig, ToolRespo
     with custom exceptions.
     """
 
-    client: Final[LMClient]
+    client: LMClient
     """The underlying LLM client implementation."""
-    decoder_mapping: Final[Mapping[type, Callable[[Any], Any]]]
+    decoder_mapping: dict[type, Callable[[Any], Any]]
     """Mapping of types to decoder callbacks."""
-    schema_hook: Final[Callable[[type], dict[str, Any]] | None]
+    schema_hook: Callable[[type], dict[str, Any]] | None
     """Optional function to customize the JSON schema generation. This hook is passed to msgspec directly."""
 
     def __init__(
         self,
+        client_config: LMClientConfig,
+        *,
         schema_hook: Callable[[type], dict[str, Any]] | None = None,
-        decoder_mapping: Mapping[type, Callable[[Any], Any]] | None = None,
-        **kwargs: Unpack[LMClientConfig],
+        decoder_mapping: dict[type, Callable[[Any], Any]] | None = None,
     ) -> None:
-        """Initialize the LLM client.
-
-        Args:
-            **kwargs: Configuration options for the LLM client.
-        """
         self.schema_hook = schema_hook
-        self.decoder_mapping = {**self.default_decoder_mapping, **(decoder_mapping or {})}
-        self.client = self.instantiate_client(**kwargs)
+        self.decoder_mapping = decoder_mapping or {}
+        self.client = self.instantiate_client(client_config=client_config)
 
     @property
-    def default_decoder_mapping(self) -> Mapping[type, Callable[[Any], Any]]:
+    def default_decoder_mapping(self) -> dict[type, Callable[[Any], Any]]:
         """Mapping relating types to decoder callbacks. The callbacks should receive the raw value and return the decoded value."""
-        mapping = {}
+        mapping: dict[type, Callable[[Any], Any]] = {}
 
         with suppress(ImportError):
             from pydantic import BaseModel
@@ -219,12 +217,37 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, ToolCallConfig, ToolRespo
 
         return mapping
 
+    @cached_property
+    def decoder(self) -> Callable[[type[T]], msgspec.json.Decoder[T]]:
+        """Returns a decoder for the given type."""
+        decoder_mapping = {**self.decoder_mapping, **self.default_decoder_mapping}
+
+        def _decoder_hook(value: Any, target_type: Any) -> Any:
+            if isinstance(value, target_type):
+                return value
+
+            with suppress(TypeError):
+                for value_type, decoder in decoder_mapping.items():
+                    if isinstance(value, value_type):
+                        return decoder(value)
+
+            if issubclass(target_type, (PurePath, UUID)):
+                return target_type(value)
+
+            raise TypeError(f"Cannot decode {type(value).__name__} to {target_type.__name__}. Received value: {value}")
+
+        return lambda target_type: msgspec.json.Decoder(
+            type=target_type,
+            strict=False,
+            dec_hook=_decoder_hook,
+        )
+
     @abstractmethod
-    def instantiate_client(self, **kwargs: Unpack[LMClientConfig]) -> LMClient:
+    def instantiate_client(self, client_config: LMClientConfig) -> LMClient:
         """Create and return an instance of the LM client. For example. this can be an OpenAI client.
 
         Args:
-            **kwargs: Configuration options for the LM client.
+            client_config: Configuration options for the LLM client.
 
         Returns:
             An instance of the LLM client.
@@ -235,13 +258,13 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, ToolCallConfig, ToolRespo
     async def generate_completion(
         self,
         messages: list[InputMessage],
-        **kwargs: Unpack[CompletionConfig],
+        config: CompletionConfig,
     ) -> tuple[str, int]:
         """Generate a completion using the LLM.
 
         Args:
             messages: List of input messages.
-            **kwargs: Additional options for the completion.
+            config: Configuration options for the completion.
 
         Returns:
             A tuple containing the completion string and the number of tokens used.
@@ -252,15 +275,15 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, ToolCallConfig, ToolRespo
     async def generate_tool_call(
         self,
         messages: list[InputMessage],
-        response_type: type[ToolResponseType],
-        **kwargs: Unpack[ToolCallConfig],
-    ) -> tuple[str | bytes, int]:
+        tool_definition: ToolDefinition[ToolResponseType],
+        config: ToolCallConfig,
+    ) -> tuple[str | bytes | ToolResponseType, int]:
         """Generate a tool call using the LLM.
 
         Args:
             messages: List of input messages.
-            response_type: The expected response type.
-            **kwargs: Additional options for the tool call.
+            tool_definition: The tool definition.
+            config: Configuration options for the tool call.
 
         Returns:
             A tuple containing The raw json value of the tool call and the number of tokens used.
@@ -271,13 +294,13 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, ToolCallConfig, ToolRespo
     async def generate_completion_stream(
         self,
         messages: list[InputMessage],
-        **kwargs: Unpack[CompletionConfig],
+        config: CompletionConfig,
     ) -> AsyncIterator[tuple[str, int]]:
         """Generate a streaming completion using the LLM.
 
         Args:
             messages: List of input messages.
-            **kwargs: Additional options for the completion.
+            config: Configuration options for the completion.
 
         Returns:
             An async iterator yielding tuples of completion chunks and tokens used.
@@ -293,9 +316,9 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, ToolCallConfig, ToolRespo
         description: str | None = None,
         enforce_schema_validation: bool = True,
         name: str | None = None,
-        retry_config: RetryConfig = RetryConfig(),
+        retry_config: RetryConfig = _DEFAULT_RETRY_CONFIG,
         schema: dict[str, Any] | None = None,
-        **kwargs: Unpack[ToolCallConfig],
+        config: ToolCallConfig,
     ) -> LLMResponse[ToolResponseType]:
         """Make a tool call to the LLM.
 
@@ -308,10 +331,13 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, ToolCallConfig, ToolRespo
             name: Optional name for the tool.
             retry_config: Configuration for retry behavior.
             schema: Optional JSON schema for the tool.
-            **kwargs: Additional options for the tool call.
+            config: Configuration options for the tool call.
 
         Returns:
             An LLM response containing the tool call results.
+
+        Raises:
+            ResponseValidationError: When the response cannot be deserialized or fails schema validation.
         """
         tool_definition = self.prepare_tool_call(
             response_type=response_type,
@@ -325,32 +351,40 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, ToolCallConfig, ToolRespo
                 self.generate_tool_call,
                 messages=messages,
                 tool_definition=tool_definition,
-                **kwargs,
+                config=config,
             ),
         )
-        raw_json, tokens = await handler()
-
         start_time = time()
-        try:
-            result = self._deserialize(raw_json, response_type)
+        value, tokens = await handler()
+        if isinstance(value, (str, bytes)):
+            try:
+                decoder = self.decoder(response_type)
+                result = decoder.decode(value)
 
-            if callback:
-                result = await callback(result)
+                if enforce_schema_validation:
+                    validate(instance=result, schema=tool_definition.schema)
 
-            if enforce_schema_validation:
-                validate(instance=result, schema=tool_definition.schema)
+                response = LLMResponse(content=result, tokens=tokens, duration=time() - start_time)
 
-            return LLMResponse(content=result, tokens=tokens, duration=time() - start_time)
-        except (DeserializationError, JSONSchemaValidationError) as e:
-            raise ResponseValidationError("Failed to deserialize tool call response", context={"error": e})
+                if callback:
+                    return cast(
+                        "LLMResponse[ToolResponseType]",
+                        (await callback(response) if iscoroutinefunction(callback) else callback(response)),
+                    )
+
+                return response
+            except (DeserializationError, JSONSchemaValidationError) as e:
+                raise ResponseValidationError("Failed to deserialize tool call response", context={"error": e}) from e
+
+        return LLMResponse(content=value, tokens=tokens, duration=time() - start_time)
 
     async def text_completion(
         self,
         messages: list[InputMessage],
         *,
-        callback: Callback[ToolResponseType] | None = None,
-        retry_config: RetryConfig = RetryConfig(),
-        **kwargs: Unpack[CompletionConfig],
+        callback: Callback[str] | None = None,
+        retry_config: RetryConfig = _DEFAULT_RETRY_CONFIG,
+        config: CompletionConfig,
     ) -> LLMResponse[str]:
         """Generate a text completion from the LLM.
 
@@ -358,7 +392,7 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, ToolCallConfig, ToolRespo
             messages: List of input messages.
             callback: Optional callback function to process the response.
             retry_config: Configuration for retry behavior.
-            **kwargs: Additional options for the completion.
+            config: Configuration options for the completion.
 
         Returns:
             An LLM response containing the completion text.
@@ -368,25 +402,28 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, ToolCallConfig, ToolRespo
             handler=partial(
                 self.generate_completion,
                 messages=messages,
-                **kwargs,
+                config=config,
             ),
         )
         start_time = time()
         result, tokens = await handler()
         duration = time() - start_time
 
+        response = LLMResponse(content=result, tokens=tokens, duration=duration)
         if callback:
-            result = await callback(result)
+            return cast(
+                "LLMResponse[str]", (await callback(response) if iscoroutinefunction(callback) else callback(response))
+            )
 
-        return LLMResponse(content=result, tokens=tokens, duration=duration)
+        return response
 
     async def stream_completion(
         self,
         messages: list[InputMessage],
         *,
-        callback: Callback[ToolResponseType] | None = None,
-        retry_config: RetryConfig = RetryConfig(),
-        **kwargs: Unpack[CompletionConfig],
+        callback: Callback[str] | None = None,
+        retry_config: RetryConfig = _DEFAULT_RETRY_CONFIG,
+        config: CompletionConfig,
     ) -> AsyncIterator[LLMResponse[str]]:
         """Generate a streaming completion from the LLM.
 
@@ -394,29 +431,37 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, ToolCallConfig, ToolRespo
             messages: List of input messages.
             callback: Optional callback function to process the response.
             retry_config: Configuration for retry behavior.
-            **kwargs: Additional options for the completion.
+            config: Configuration options for the completion.
 
         Returns:
             An async iterator yielding LLM responses with completion chunks.
+
+        Yields:
+            LLMResponse[str]: LLM responses containing completion chunks.
         """
         handler = RetryCaller(
             config=retry_config,
             handler=partial(
-                self.generate_completion,
+                self.generate_completion_stream,
                 messages=messages,
-                **kwargs,
+                config=config,
             ),
         )
-        result, tokens = await handler()
+        result = await handler()
         start_time = time()
-        async for chunk in result:
+        async for chunk, tokens in result:
             duration = time() - start_time
             start_time = time()
 
-            if callback:
-                chunk = await callback(chunk)
+            response = LLMResponse(content=chunk, tokens=tokens, duration=duration)
 
-            yield LLMResponse(content=chunk, tokens=tokens, duration=duration)
+            if callback:
+                yield cast(
+                    "LLMResponse[str]",
+                    (await callback(response) if iscoroutinefunction(callback) else callback(response)),
+                )
+
+            yield response
 
     def prepare_tool_call(
         self,
@@ -455,17 +500,3 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, ToolCallConfig, ToolRespo
             response_type=response_type,
             description=description,
         )
-
-    def _deserialize(self, target_type: type[T], value: Any) -> T:
-        if isinstance(value, target_type):
-            return value
-
-        with suppress(TypeError):
-            for value_type, decoder in self.decoder_mapping.items():
-                if isinstance(value, value_type):
-                    return decoder(value)
-
-        if issubclass(target_type, (PurePath, UUID)):
-            return target_type(value)
-
-        raise TypeError(f"Unsupported type: {type(value)!r}")

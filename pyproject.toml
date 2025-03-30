@@ -1,0 +1,151 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+
+requires = [ "setuptools>=78.1" ]
+
+[project]
+name = "spikard"
+version = "0.0.1"
+description = "Universal LLM client"
+readme = "README.md"
+keywords = [ "ai", "client", "llm" ]
+
+license-files = [ "LICENSE" ]
+authors = [ { name = "Na'aman Hirschfeld", email = "nhirschfeld@gmail.com" } ]
+requires-python = ">=3.9"
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Information Technology",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development",
+  "Topic :: Software Development :: Libraries",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Typing :: Typed",
+]
+dependencies = [
+  "anyio>=4.4.0",
+  "jsonschema>=4.22.0",
+  "msgspec>=0.18.6",
+  "typing-extensions>=4.12.2",
+]
+
+optional-dependencies.groq = [ "groq>=0.20.0" ]
+optional-dependencies.openai = [
+  "openai>=1.69.0",
+]
+urls.Repository = "https://github.com/Goldziher/spikard"
+
+[dependency-groups]
+dev = [
+  "covdefaults>=2.3.0",
+  "mypy>=1.15.0",
+  "polyfactory>=2.16.0",
+  "pre-commit>=4.2.0",
+  "pytest>=8.3.5",
+  "pytest-asyncio>=0.23.7",
+  "pytest-cov>=6.0.0",
+  "pytest-mock>=3.14.0",
+  "pytest-timeout>=2.3.1",
+  "python-dotenv>=1.0.1",
+  "ruff>=0.11.2",
+  "types-jsonschema>=4.22.0.20240501",
+  "uv-bump",
+]
+
+[tool.setuptools.packages.find]
+include = [ "spikard" ]
+
+[tool.setuptools.package-data]
+spikard = [ "py.typed" ]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 120
+src = [ "spikard", "tests" ]
+format.docstring-code-line-length = 120
+format.docstring-code-format = true
+lint.select = [ "ALL" ]
+lint.ignore = [
+  "ANN401", # Dynamically typed ANY for kwargs
+  "COM812", # Conflicts with formatter
+  "D100",   # Missing docstring in public module
+  "D104",   # Missing docstring in public package
+  "D107",   # Missing docstring in __init__
+  "D205",   # 1 blank line required between summary line and description
+  "E501",   # Line too long, handled by ruff format
+  "EM",     # Exception messages,
+  "FBT",    # Boolean-typed positional argument in function definition
+  "FIX",    # We allow todo and fixme comments
+  "ISC001", # Conflicts with formatter
+  "TD",     # We allow todo and fixme comments
+  "TRY",    # Try except block, rules are too strict
+]
+lint.per-file-ignores."tests/**/*.*" = [
+  "ARG001",
+  "D",
+  "N815",
+  "PD",
+  "PGH003",
+  "PLR0915",
+  "PLR2004",
+  "PT006",
+  "PT007",
+  "PT011",
+  "PT013",
+  "RUF012",
+  "S",
+  "SLF001",
+]
+lint.isort.known-first-party = [ "spikard", "tests" ]
+lint.mccabe.max-complexity = 15
+lint.pydocstyle.convention = "google"
+lint.pylint.max-args = 10
+lint.pylint.max-branches = 15
+lint.pylint.max-returns = 10
+
+[tool.pyproject-fmt]
+keep_full_version = true
+max_supported_python = "3.13"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+omit = [ "tests/*" ]
+plugins = [ "covdefaults" ]
+source = [ "spikard" ]
+
+[tool.coverage.report]
+exclude_lines = [ 'if TYPE_CHECKING:', "except ImportError:" ]
+fail_under = 100
+
+[tool.mypy]
+packages = [ "spikard", "tests" ]
+python_version = "3.9"
+disable_error_code = 'import-untyped'
+implicit_reexport = false
+show_error_codes = true
+strict = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_decorators = false
+disallow_any_unimported = false
+disable_error_code = "method-assign"
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[tool.uv.sources]
+uv-bump = { git = "https://github.com/Goldziher/uv-bump" }
