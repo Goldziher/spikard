@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
+from inspect import iscoroutinefunction
+from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
 from unittest.mock import AsyncMock, call, patch
 
 import msgspec
 import pytest
 from anyio import sleep
-from msgspec import Struct
 
 from spikard.base import (
     Callback,
@@ -16,7 +16,6 @@ from spikard.base import (
     LLMResponse,
     RetryCaller,
     RetryConfig,
-    ToolCallConfig,
     ToolDefinition,
 )
 from spikard.exceptions import RequestError, ResponseValidationError, RetryError
@@ -32,10 +31,9 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
 T = TypeVar("T")
-ToolResponseType = TypeVar("ToolResponseType", bound=Struct)
 
 
-class MockLLMClient(LLMClient[MockClient, MockClientConfig, MockToolCallConfig, MockToolResponse]):
+class MockLLMClient(LLMClient[MockClient, MockClientConfig, Any]):
     def instantiate_client(self, client_config: MockClientConfig) -> MockClient:
         return MockClient(client_config)
 
@@ -46,9 +44,9 @@ class MockLLMClient(LLMClient[MockClient, MockClientConfig, MockToolCallConfig, 
     async def generate_tool_call(
         self,
         messages: list[InputMessage],
-        tool_definition: ToolDefinition[MockToolResponse],
-        config: ToolCallConfig,
-    ) -> tuple[str | bytes | MockToolResponse, int]:
+        tool_definition: ToolDefinition[T],
+        config: Any,
+    ) -> tuple[str | bytes | T, int]:
         self.client.record_call("generate_tool_call", messages=messages, tool_definition=tool_definition, config=config)
 
         return '{"result": "This is a test tool call result"}', 15
@@ -287,7 +285,6 @@ async def test_llm_client_decoder_with_pydantic() -> None:
 
 @pytest.mark.anyio
 async def test_llm_client_decoder_json_direct() -> None:
-    """Test that the decoder can handle decoding directly using msgspec."""
     client = MockLLMClient(client_config=MockClientConfig())
 
     from dataclasses import dataclass
@@ -309,8 +306,6 @@ async def test_llm_client_decoder_json_direct() -> None:
 
 @pytest.mark.anyio
 async def test_llm_client_decoder_with_custom_mapping() -> None:
-    """Test decoder with a custom type and decoder mapping."""
-
     class CustomType:
         def __init__(self, value: Any) -> None:
             self.value = value
@@ -321,13 +316,6 @@ async def test_llm_client_decoder_with_custom_mapping() -> None:
         return value
 
     client = MockLLMClient(client_config=MockClientConfig(), decoder_mapping={dict: _custom_decoder})
-
-    class DecodeHookTester:
-        def __init__(self, func: Callable[[Any, Any], Any]) -> None:
-            self.func = func
-
-        def __call__(self, value: Any, typ: Any) -> Any:
-            return self.func(value, typ)
 
     def wrap_decode_hook() -> Callable[[Any, Any], Any]:
         client.decoder(CustomType)
@@ -348,8 +336,6 @@ async def test_llm_client_decoder_with_custom_mapping() -> None:
 
 
 def test_synthetic_decoder_hook_coverage() -> None:
-    """A synthetic test that specifically targets uncovered decoder hook lines."""
-
     client = MockLLMClient(client_config=MockClientConfig())
 
     def simulate_decoder_hook(value: Any, target_type: Any) -> Any:
@@ -385,8 +371,6 @@ def test_synthetic_decoder_hook_coverage() -> None:
 
 
 def test_patch_decoder_hook_for_coverage() -> None:
-    """This test directly monkeypatches the decoder to access internal functions."""
-
     from pathlib import PurePath
     from uuid import UUID
 
@@ -435,8 +419,6 @@ def test_patch_decoder_hook_for_coverage() -> None:
 
 @pytest.mark.anyio
 async def test_llm_client_decoder_same_type_passthrough() -> None:
-    """Test the decoder with same-type values that should be passed through."""
-
     MockLLMClient(client_config=MockClientConfig())
 
     class MockLLMClientWithHook(MockLLMClient):
@@ -454,7 +436,6 @@ async def test_llm_client_decoder_same_type_passthrough() -> None:
 
 @pytest.mark.anyio
 async def test_llm_client_decoder_with_type_conversions() -> None:
-    """Test special case type conversions for Path and UUID types."""
     from pathlib import Path
     from uuid import UUID
 
@@ -486,19 +467,19 @@ async def test_llm_client_tool_call_success() -> None:
         async def generate_tool_call(
             self,
             messages: list[InputMessage],
-            tool_definition: ToolDefinition[MockToolResponse],
-            config: ToolCallConfig,
-        ) -> tuple[str | bytes | MockToolResponse, int]:
+            tool_definition: ToolDefinition[T],
+            config: Any,
+        ) -> tuple[str | bytes | T, int]:
             self.client.record_call(
                 "generate_tool_call", messages=messages, tool_definition=tool_definition, config=config
             )
 
-            return MockToolResponse(result="This is a test tool call result"), 15
+            return cast("T", MockToolResponse(result="This is a test tool call result")), 15
 
     client = SpecialMockLLMClient(client_config=MockClientConfig())
     messages = [InputMessage(role="user", content="test")]
 
-    response = await client.tool_call(messages=messages, response_type=MockToolResponse, config=MockToolCallConfig())
+    response = await client.tool_call(messages=messages, response_type=MockToolResponse, config={})
 
     assert isinstance(response.content, MockToolResponse)
     assert response.content.result == "This is a test tool call result"
@@ -507,97 +488,19 @@ async def test_llm_client_tool_call_success() -> None:
 
 
 @pytest.mark.anyio
-@pytest.mark.skip(reason="This test is difficult to implement without modifying the base implementation")
-async def test_llm_client_tool_call_with_direct_object_and_callback() -> None:
-    """Test tool_call with a direct object return type and callback - this covers line 370."""
-
-    class CustomToolCallClient(LLMClient[MockClient, MockClientConfig, MockToolCallConfig, MockToolResponse]):
-        """A special implementation for this test that fakes direct object returns."""
-
-        def instantiate_client(self, client_config: MockClientConfig) -> MockClient:
-            return MockClient(client_config)
-
-        async def generate_completion(self, messages: list[InputMessage], config: CompletionConfig) -> tuple[str, int]:
-            return "Test completion", 10
-
-        async def generate_completion_stream(
-            self, messages: list[InputMessage], config: CompletionConfig
-        ) -> AsyncIterator[tuple[str, int]]:
-            async def stream() -> AsyncIterator[tuple[str, int]]:
-                yield "Test", 5
-
-            return stream()
-
-        async def generate_tool_call(
-            self,
-            messages: list[InputMessage],
-            tool_definition: ToolDefinition[MockToolResponse],
-            config: ToolCallConfig,
-        ) -> tuple[str | bytes | MockToolResponse, int]:
-            mock_obj = MockToolResponse(result="Direct result object")
-            return mock_obj, 10
-
-    client = CustomToolCallClient(client_config=MockClientConfig())
-    messages = [InputMessage(role="user", content="test")]
-    callback_called = False
-
-    def regular_callback(response: LLMResponse[MockToolResponse]) -> LLMResponse[MockToolResponse]:
-        nonlocal callback_called
-        callback_called = True
-
-        response.content.result = "Modified by callback"
-        return response
-
-    response = await client.tool_call(
-        messages=messages, response_type=MockToolResponse, callback=regular_callback, config=MockToolCallConfig()
-    )
-
-    assert callback_called, "Callback should have been called"
-    assert response.content.result == "Modified by callback"
-
-    async_callback_called = False
-
-    async def async_callback(response: LLMResponse[MockToolResponse]) -> LLMResponse[MockToolResponse]:
-        nonlocal async_callback_called
-        async_callback_called = True
-        response.content.result = "Modified by async callback"
-        return response
-
-    response = await client.tool_call(
-        messages=messages, response_type=MockToolResponse, callback=async_callback, config=MockToolCallConfig()
-    )
-
-    assert async_callback_called, "Async callback should have been called"
-    assert response.content.result == "Modified by async callback"
-
-
-@pytest.mark.anyio
 async def test_llm_client_tool_call_with_callback() -> None:
     class SpecialMockLLMClient(MockLLMClient):
         async def generate_tool_call(
             self,
             messages: list[InputMessage],
-            tool_definition: ToolDefinition[MockToolResponse],
-            config: ToolCallConfig,
-        ) -> tuple[str | bytes | MockToolResponse, int]:
+            tool_definition: ToolDefinition[T],
+            config: Any,
+        ) -> tuple[str | bytes | T, int]:
             self.client.record_call(
                 "generate_tool_call", messages=messages, tool_definition=tool_definition, config=config
             )
 
-            return MockToolResponse(result="This is a test tool call result"), 15
-
-        async def tool_call(
-            self,
-            messages: list[InputMessage],
-            response_type: type[MockToolResponse],
-            *,
-            callback: Callback[ToolResponseType] | None = None,
-            **kwargs: Any,
-        ) -> LLMResponse[ToolResponseType]:
-            response = await super().tool_call(messages=messages, response_type=response_type, callback=None, **kwargs)
-            if callback:
-                return callback(response)  # type: ignore
-            return response  # type: ignore
+            return cast("T", MockToolResponse(result="This is a test tool call result")), 15
 
     client = SpecialMockLLMClient(client_config=MockClientConfig())
     messages = [InputMessage(role="user", content="test")]
@@ -619,31 +522,29 @@ async def test_llm_client_tool_call_with_async_callback() -> None:
         async def generate_tool_call(
             self,
             messages: list[InputMessage],
-            tool_definition: ToolDefinition[MockToolResponse],
-            config: ToolCallConfig,
-        ) -> tuple[str | bytes | MockToolResponse, int]:
+            tool_definition: ToolDefinition[T],
+            config: Any,
+        ) -> tuple[str | bytes | T, int]:
             self.client.record_call(
                 "generate_tool_call", messages=messages, tool_definition=tool_definition, config=config
             )
 
-            return MockToolResponse(result="This is a test tool call result"), 15
+            return cast("T", MockToolResponse(result="This is a test tool call result")), 15
 
         async def tool_call(
             self,
             messages: list[InputMessage],
-            response_type: type[MockToolResponse],
+            response_type: type[T],
             *,
-            callback: Callback[ToolResponseType] | None = None,
+            callback: Callback[T] | None = None,
             **kwargs: Any,
-        ) -> LLMResponse[ToolResponseType]:
+        ) -> LLMResponse[T]:
             response = await super().tool_call(messages=messages, response_type=response_type, callback=None, **kwargs)
             if callback:
-                from inspect import iscoroutinefunction as check_coroutine
-
-                if check_coroutine(callback):
-                    return await callback(response)  # type: ignore
-                return callback(response)  # type: ignore
-            return response  # type: ignore
+                if iscoroutinefunction(callback):
+                    return cast("LLMResponse[T]", await callback(response))
+                return cast("LLMResponse[T]", callback(response))
+            return response
 
     client = SpecialMockLLMClient(client_config=MockClientConfig())
     messages = [InputMessage(role="user", content="test")]
@@ -665,19 +566,19 @@ async def test_llm_client_tool_call_with_deserialization_error() -> None:
         async def generate_tool_call(
             self,
             messages: list[InputMessage],
-            tool_definition: ToolDefinition[MockToolResponse],
-            config: ToolCallConfig,
-        ) -> tuple[str | bytes | MockToolResponse, int]:
+            tool_definition: ToolDefinition[T],
+            config: Any,
+        ) -> tuple[str | bytes | T, int]:
             return "invalid json", 5
 
         async def tool_call(
             self,
             messages: list[InputMessage],
-            response_type: type[MockToolResponse],
+            response_type: type[T],
             **kwargs: Any,
-        ) -> LLMResponse[ToolResponseType]:
+        ) -> LLMResponse[T]:
             try:
-                return await super().tool_call(messages=messages, response_type=response_type, **kwargs)  # type: ignore
+                return await super().tool_call(messages=messages, response_type=response_type, **kwargs)
             except msgspec.DecodeError as e:
                 raise ResponseValidationError(
                     "Failed to deserialize tool call response", error_type="decode_error"
@@ -700,20 +601,20 @@ async def test_llm_client_tool_call_with_validation_error() -> None:
         async def generate_tool_call(
             self,
             messages: list[InputMessage],
-            tool_definition: ToolDefinition[MockToolResponse],
-            config: ToolCallConfig,
-        ) -> tuple[str | bytes | MockToolResponse, int]:
+            tool_definition: ToolDefinition[T],
+            config: Any,
+        ) -> tuple[str | bytes | T, int]:
             return '{"result": "This is a test tool call result"}', 15
 
         async def tool_call(
             self,
             messages: list[InputMessage],
-            response_type: type[MockToolResponse],
+            response_type: type[T],
             **kwargs: Any,
-        ) -> LLMResponse[ToolResponseType]:
+        ) -> LLMResponse[T]:
             with patch("jsonschema.validate", side_effect=JSONSchemaValidationError("Schema validation error")):
                 try:
-                    return await super().tool_call(messages=messages, response_type=response_type, **kwargs)  # type: ignore
+                    return await super().tool_call(messages=messages, response_type=response_type, **kwargs)
                 except JSONSchemaValidationError as e:
                     raise ResponseValidationError("Validation failed", context={"error": e}) from e
 

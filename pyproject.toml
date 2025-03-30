@@ -38,9 +38,25 @@ dependencies = [
   "typing-extensions>=4.12.2",
 ]
 
+optional-dependencies.anthropic = [
+  "anthropic>=0.49.0",
+]
+optional-dependencies.anthropic-vertex = [
+  "anthropic[vertex]>=0.49.0",
+]
+optional-dependencies.aws-bedrock = [
+  "aioboto3>=14.1.0",
+]
+optional-dependencies.google-genai = [
+  "google-genai>=1.8.0",
+]
+optional-dependencies.google-vertex = [
+  "google-cloud-aiplatform>=1.86.0",
+]
 optional-dependencies.groq = [ "groq>=0.20.0" ]
 optional-dependencies.openai = [
   "openai>=1.69.0",
+  "tiktoken>=0.9.0",
 ]
 urls.Repository = "https://github.com/Goldziher/spikard"
 

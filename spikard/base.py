@@ -11,11 +11,10 @@ from time import time
 from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, TypeVar, cast
 from uuid import UUID
 
-import msgspec.json
+import msgspec
 from anyio import sleep
 from jsonschema import ValidationError as JSONSchemaValidationError
 from jsonschema import validate
-from msgspec import Struct
 from msgspec.json import schema as msgspec_schema
 
 from spikard._ref import Ref
@@ -30,13 +29,11 @@ MessageRole = Literal["system", "user", "assistant"]
 T = TypeVar("T")
 
 LMClientConfig = TypeVar("LMClientConfig")
-ToolCallConfig = TypeVar("ToolCallConfig")
 CompletionConfig = TypeVar("CompletionConfig")
 LMClient = TypeVar("LMClient")
 
 Content = TypeVar("Content")
 
-ToolResponseType = TypeVar("ToolResponseType", bound=Struct)
 Callback = Callable[["LLMResponse[T]"], "LLMResponse[T] | Coroutine[Any, Any, LLMResponse[T]]"]
 
 
@@ -56,14 +53,14 @@ class InputMessage:
 
 
 @dataclass
-class ToolDefinition(Generic[ToolResponseType]):
+class ToolDefinition(Generic[T]):
     """Definition of a tool that can be used by an LLM client."""
 
     name: str
     """The name of the tool."""
     schema: dict[str, Any]
     """JSON schema describing the tool's parameters and structure."""
-    response_type: type[ToolResponseType]
+    response_type: type[T]
     """The expected type of the response from the tool call."""
     description: str | None = None
     """Optional human-readable description of the tool's functionality."""
@@ -170,7 +167,7 @@ class RetryCaller(Generic[T]):
 _DEFAULT_RETRY_CONFIG = RetryConfig()
 
 
-class LLMClient(ABC, Generic[LMClient, LMClientConfig, ToolCallConfig, ToolResponseType]):
+class LLMClient(ABC, Generic[LMClient, LMClientConfig, CompletionConfig]):
     """Base class for Language Model (LLM) clients.
 
     This abstract class provides a standard interface for interacting with various LLM providers.
@@ -275,9 +272,9 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, ToolCallConfig, ToolRespo
     async def generate_tool_call(
         self,
         messages: list[InputMessage],
-        tool_definition: ToolDefinition[ToolResponseType],
-        config: ToolCallConfig,
-    ) -> tuple[str | bytes | ToolResponseType, int]:
+        tool_definition: ToolDefinition[T],
+        config: CompletionConfig,
+    ) -> tuple[str | bytes | T, int]:
         """Generate a tool call using the LLM.
 
         Args:
@@ -310,16 +307,16 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, ToolCallConfig, ToolRespo
     async def tool_call(
         self,
         messages: list[InputMessage],
-        response_type: type[ToolResponseType],
+        response_type: type[T],
         *,
-        callback: Callback[ToolResponseType] | None = None,
+        callback: Callback[T] | None = None,
         description: str | None = None,
         enforce_schema_validation: bool = True,
         name: str | None = None,
         retry_config: RetryConfig = _DEFAULT_RETRY_CONFIG,
         schema: dict[str, Any] | None = None,
-        config: ToolCallConfig,
-    ) -> LLMResponse[ToolResponseType]:
+        config: CompletionConfig,
+    ) -> LLMResponse[T]:
         """Make a tool call to the LLM.
 
         Args:
@@ -368,7 +365,7 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, ToolCallConfig, ToolRespo
 
                 if callback:
                     return cast(
-                        "LLMResponse[ToolResponseType]",
+                        "LLMResponse[T]",
                         (await callback(response) if iscoroutinefunction(callback) else callback(response)),
                     )
 
@@ -465,11 +462,11 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, ToolCallConfig, ToolRespo
 
     def prepare_tool_call(
         self,
-        response_type: type[ToolResponseType],
+        response_type: type[T],
         name: str | None = None,
         description: str | None = None,
         schema: dict[str, Any] | None = None,
-    ) -> ToolDefinition[ToolResponseType]:
+    ) -> ToolDefinition[T]:
         """Prepare a tool call definition.
 
         Args:
