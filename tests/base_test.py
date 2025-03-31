@@ -290,7 +290,7 @@ class TestLLMClientGenerateCompletionMethods:
         tool_definition: ToolDefinition[TestStruct],
     ) -> None:
         with pytest.raises(ConfigurationError, match="stream and tool_definition cannot be both specified"):
-            await test_client.generate_completion(
+            await test_client.generate_completion(  # type: ignore[call-overload]
                 messages=["test"],
                 config=completion_config,
                 tool_definition=tool_definition,
@@ -305,7 +305,7 @@ class TestLLMClientGenerateCompletionMethods:
         tool_definition: ToolDefinition[TestStruct],
     ) -> None:
         with pytest.raises(ConfigurationError, match="specify either response_type or pass a tool_definition"):
-            await test_client.generate_completion(
+            await test_client.generate_completion(  # type: ignore[call-overload]
                 messages=["test"],
                 config=completion_config,
                 tool_definition=tool_definition,
