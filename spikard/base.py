@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from contextlib import suppress
 from dataclasses import dataclass
 from functools import cached_property, partial
-from inspect import iscoroutinefunction
+from inspect import isclass, iscoroutinefunction
 from pathlib import PurePath
 from random import uniform
 from time import time
@@ -25,6 +25,7 @@ from anyio import sleep
 from jsonschema import ValidationError as JSONSchemaValidationError
 from jsonschema import validate
 from msgspec.json import schema as msgspec_schema
+from typing_extensions import TypeGuard
 
 from spikard._ref import Ref
 from spikard.exceptions import (
@@ -38,15 +39,24 @@ from spikard.exceptions import (
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Coroutine
 
+    from pydantic import BaseModel
+
 
 T = TypeVar("T")
-
 LMClientConfig = TypeVar("LMClientConfig")
 LMClient = TypeVar("LMClient")
-
 Content = TypeVar("Content")
-
 Callback = Callable[["LLMResponse[T]"], "LLMResponse[T] | Coroutine[Any, Any, LLMResponse[T]]"]
+
+
+def _is_pydantic_base_model(value: Any) -> TypeGuard[BaseModel]:
+    """Check if the value is a Pydantic BaseModel."""
+    try:
+        from pydantic import BaseModel
+
+        return isclass(value) and issubclass(value, BaseModel)
+    except ImportError:
+        return False
 
 
 @dataclass
@@ -480,7 +490,20 @@ class LLMClient(ABC, Generic[LMClient, LMClientConfig, TCompletionConfig]):
         if tool_definition is not None:
             return tool_definition
 
-        schema = msgspec_schema(response_type, schema_hook=self.schema_hook)
+        schema: dict[str, Any] | None = None
+
+        if issubclass(response_type, msgspec.Struct):
+            schema = msgspec_schema(response_type, schema_hook=self.schema_hook)
+
+        elif _is_pydantic_base_model(response_type):
+            schema = response_type.model_json_schema()
+
+        if not schema:
+            raise ConfigurationError(
+                f"Tool definition is not provided and cannot be generated for {response_type.__name__}. "
+                f"Please provide a tool definition or a response type that is a subclass of either msgspec.Struct or a Pydantic model."
+            )
+
         return ToolDefinition(
             name=response_type.__name__.lower(),
             schema=schema,
