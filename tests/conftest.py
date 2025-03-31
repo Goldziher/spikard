@@ -1,90 +1,146 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Literal, TypeVar, overload
 
 import pytest
-from msgspec import Struct
 
 from spikard.base import (
-    InputMessage,
+    CompletionConfig,
+    LLMClient,
+    LLMResponse,
+    RetryConfig,
     ToolDefinition,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
 T = TypeVar("T")
-ToolResponseType = TypeVar("ToolResponseType", bound=Struct)
+LMClientConfig = TypeVar("LMClientConfig")
 
 
 @dataclass
-class MockClientConfig:
-    api_key: str = "test-api-key"
-    base_url: str = "https://api.example.com"
-    timeout: int = 30
+class TestStruct:
+    field1: str
+    field2: int
+    field3: bool | None = None
 
 
 @dataclass
-class MockToolCallConfig:
-    temperature: float = 0.0
-    max_tokens: int = 1000
+class TestCompletionConfig(CompletionConfig):
+    test_param: str | None = None
 
 
-@dataclass
-class MockCompletionConfig:
-    temperature: float = 0.7
-    max_tokens: int = 2000
+class TestLLMClient(LLMClient[Any, dict[str, Any], TestCompletionConfig]):
+    def __init__(
+        self,
+        client_config: dict[str, Any],
+        schema_hook: Callable[[type[Any]], dict[str, Any]] | None = None,
+        decoder_mapping: dict[type[Any], Callable[[Any], Any]] | None = None,
+    ) -> None:
+        super().__init__(client_config, schema_hook=schema_hook, decoder_mapping=decoder_mapping)
+        self.called_with: dict[str, Any] = {}
 
+    def _instantiate_client(self, client_config: dict[str, Any]) -> Any:
+        return client_config
 
-class MockToolResponse(Struct):
-    result: str
+    @overload
+    async def _handle_generate_completion(
+        self,
+        *,
+        config: TestCompletionConfig,
+        messages: list[str],
+        stream: Literal[False],
+        system_prompt: str | None,
+        tool_definition: None,
+    ) -> tuple[str, int]: ...
 
+    @overload
+    async def _handle_generate_completion(
+        self,
+        *,
+        config: TestCompletionConfig,
+        messages: list[str],
+        stream: Literal[True],
+        system_prompt: str | None,
+        tool_definition: None,
+    ) -> AsyncIterator[tuple[str, int]]: ...
 
-class MockClient:
-    def __init__(self, config: MockClientConfig) -> None:
-        self.config = config
-        self.calls: list[dict[str, Any]] = []
+    @overload
+    async def _handle_generate_completion(
+        self,
+        *,
+        config: TestCompletionConfig,
+        messages: list[str],
+        stream: None,
+        system_prompt: str | None,
+        tool_definition: ToolDefinition[T],
+    ) -> tuple[str | bytes | T, int]: ...
 
-    def record_call(self, method: str, **kwargs: Any) -> None:
-        self.calls.append({"method": method, **kwargs})
+    async def _handle_generate_completion(
+        self,
+        *,
+        config: TestCompletionConfig,
+        messages: list[str],
+        stream: bool | None,
+        system_prompt: str | None,
+        tool_definition: ToolDefinition[T] | None,
+    ) -> tuple[str, int] | tuple[str | bytes | T, int] | AsyncIterator[tuple[str, int]]:
+        self.called_with = {
+            "config": config,
+            "messages": messages,
+            "stream": stream,
+            "system_prompt": system_prompt,
+            "tool_definition": tool_definition,
+        }
+
+        if tool_definition:
+            return '{"field1": "test", "field2": 123}', 10
+
+        if stream:
+
+            async def _stream_generator() -> AsyncIterator[tuple[str, int]]:
+                yield "chunk1", 5
+                yield "chunk2", 5
+
+            return _stream_generator()
+
+        return "test response", 10
 
 
 @pytest.fixture
-def mock_client_config() -> MockClientConfig:
-    return MockClientConfig()
+def test_client() -> TestLLMClient:
+    return TestLLMClient({"test": "config"})
 
 
 @pytest.fixture
-def mock_tool_call_config() -> MockToolCallConfig:
-    return MockToolCallConfig()
-
-
-@pytest.fixture
-def mock_completion_config() -> MockCompletionConfig:
-    return MockCompletionConfig()
-
-
-@pytest.fixture
-def mock_messages() -> list[InputMessage]:
-    return [
-        InputMessage(role="system", content="You are a helpful assistant."),
-        InputMessage(role="user", content="Hello, how are you?"),
-    ]
-
-
-@pytest.fixture
-def mock_tool_definition() -> ToolDefinition[MockToolResponse]:
-    return ToolDefinition(
-        name="test_tool",
-        schema={
-            "$ref": "#/$defs/MockToolResponse",
-            "$defs": {
-                "MockToolResponse": {
-                    "type": "object",
-                    "properties": {"result": {"type": "string"}},
-                    "required": ["result"],
-                    "title": "MockToolResponse",
-                }
-            },
-        },
-        response_type=MockToolResponse,
-        description="A test tool",
+def retry_config() -> RetryConfig:
+    return RetryConfig(
+        max_retries=2,
+        initial_interval=0.01,
+        exponential=True,
+        exponent=2.0,
+        max_interval=1.0,
+        jitter=False,
     )
+
+
+@pytest.fixture
+def tool_definition() -> ToolDefinition[TestStruct]:
+    return ToolDefinition[TestStruct](
+        name="test_tool",
+        schema={"type": "object", "properties": {"field1": {"type": "string"}, "field2": {"type": "integer"}}},
+        response_type=TestStruct,
+        description="Test tool definition",
+    )
+
+
+@pytest.fixture
+def completion_config() -> TestCompletionConfig:
+    return TestCompletionConfig(model="test-model")
+
+
+@pytest.fixture
+def sample_llm_response() -> LLMResponse[str]:
+    return LLMResponse[str](content="test content", tokens=10, duration=0.1)
