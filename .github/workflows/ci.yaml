@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Install Dependencies
+        if: steps.python-cache.outputs.cache-hit != 'true'
+        run: uv sync --all-extras --dev
+
+      - name: Load Cached Pre-Commit Dependencies
+        id: cached-pre-commit-dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit/
+          key: pre-commit|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Execute Pre-Commit
+        run: uv run pre-commit run --show-diff-on-failure --color=always --all-files
+
+  test:
+    strategy:
+      matrix:
+        python: [ "3.9", "3.10", "3.11", "3.12", "3.13" ]
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Cache Python Dependencies
+        id: python-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+            .venv
+          key: python-dependencies-${{ matrix.python }}-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            python-dependencies-${{ matrix.python }}-
+
+      - name: Install Dependencies
+        if: steps.python-cache.outputs.cache-hit != 'true'
+        run: uv sync --all-extras --dev
+
+      - name: Cache Test Artifacts
+        uses: actions/cache@v4
+        with:
+          path: .pytest_cache/
+          key: pytest-cache-${{ matrix.python }}
+
+      - name: Run Tests
+        run: uv run pytest -s -vvv
