@@ -1,0 +1,24 @@
+[package]
+name = "spikard-py"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Python bindings (PyO3) for spikard"
+
+[lib]
+name = "_spikard"
+crate-type = ["cdylib", "rlib"]
+doctest = false
+
+[dependencies]
+spikard.workspace = true
+pyo3.workspace = true
+
+[dev-dependencies]
+
+[features]
+default = []
+extension-module = ["pyo3/extension-module"]

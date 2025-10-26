@@ -1,0 +1,52 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/spikard",
+    "crates/spikard-cli",
+    "crates/spikard-http",
+    "crates/spikard-py",
+    "crates/spikard-node",
+    "crates/spikard-wasm",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/Goldziher/spikard"
+homepage = "https://github.com/Goldziher/spikard"
+
+[workspace.dependencies]
+# Core library
+spikard = { version = "0.1.0", path = "crates/spikard" }
+
+# Python bindings
+pyo3 = { version = "0.22", features = ["abi3-py310"] }
+
+# CLI dependencies
+clap = { version = "4.5", features = ["derive"] }
+clap_complete = "4.5"
+clap_mangen = "0.2"
+
+# HTTP dependencies
+axum = "0.7"
+tokio = { version = "1", features = ["full"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["trace"] }
+
+# Utilities
+thiserror = "2.0"
+serde = { version = "1.0", features = ["derive"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+opt-level = 3
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true

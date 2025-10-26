@@ -1,0 +1,9 @@
+{
+  "name": "spikard-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build:node": "pnpm --filter @spikard/node build",
+    "build:wasm": "pnpm --filter @spikard/wasm build"
+  }
+}
