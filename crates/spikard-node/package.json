@@ -1,0 +1,23 @@
+{
+  "name": "@spikard/node",
+  "version": "0.1.0",
+  "description": "Node.js bindings for spikard",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "license": "MIT",
+  "scripts": {
+    "build": "napi build --platform --release",
+    "build:debug": "napi build --platform",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^2.18.0",
+    "vitest": "^2.0.0"
+  },
+  "napi": {
+    "name": "spikard-node",
+    "triples": {
+      "defaults": true
+    }
+  }
+}

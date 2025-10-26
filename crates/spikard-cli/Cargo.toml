@@ -1,0 +1,21 @@
+[package]
+name = "spikard-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Command-line interface for spikard"
+
+[[bin]]
+name = "spikard"
+path = "src/main.rs"
+
+[dependencies]
+spikard.workspace = true
+clap.workspace = true
+clap_complete.workspace = true
+clap_mangen.workspace = true
+
+[dev-dependencies]
