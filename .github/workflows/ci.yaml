@@ -1,0 +1,169 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Python environment
+        id: setup-python
+        uses: ./.github/actions/setup-python-env
+        with:
+          python-version: '3.13'
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: rust-validate
+
+      - name: Load Cached Prek Dependencies
+        id: cached-prek-dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/prek/
+          key: prek|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Execute Prek
+        run: uv run prek run --show-diff-on-failure --color=always --all-files
+
+  rust-tests:
+    needs:
+      - validate
+    runs-on: ${{ matrix.os }}
+    env:
+      RUSTFLAGS: "--cap-lints=warn"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: rust-tests-${{ matrix.os }}
+
+      - name: Run Rust tests
+        run: cargo test --workspace --release
+
+      - name: Generate Rust coverage
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cargo install cargo-llvm-cov --locked
+          cargo llvm-cov --workspace --lcov --output-path rust-coverage.lcov
+
+      - name: Upload coverage artifacts
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-rust-${{ github.sha }}
+          path: rust-coverage.lcov
+          retention-days: 7
+
+  python-tests:
+    needs:
+      - validate
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.10", "3.13"]
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Python environment
+        id: setup-python
+        uses: ./.github/actions/setup-python-env
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: rust-python-${{ matrix.os }}-${{ matrix.python }}
+
+      - name: Build Python bindings
+        run: |
+          cd crates/spikard-py
+          uv run maturin develop --release
+
+      - name: Install Python package
+        run: uv pip install -e packages/python
+
+      - name: Run test suite with coverage
+        shell: bash
+        run: uv run --with pytest pytest tests/ -vv --cov=spikard --cov-report=lcov:coverage.lcov --cov-report=term --cov-config=pyproject.toml
+
+      - name: Upload coverage artifacts
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-python-${{ github.sha }}
+          path: coverage.lcov
+          retention-days: 7
+
+  node-bindings:
+    needs:
+      - validate
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          components: rustfmt, clippy
+          cache-key-prefix: rust-node-${{ matrix.os }}
+
+      - name: Setup Node workspace
+        uses: ./.github/actions/setup-node-workspace
+        with:
+          node-version: "20"
+
+      - name: Build NAPI-RS bindings
+        working-directory: crates/spikard-node
+        run: pnpm build
+
+      - name: Verify NAPI bindings were created
+        working-directory: crates/spikard-node
+        shell: bash
+        run: |
+          echo "Checking for .node files..."
+          ls -lah *.node || echo "No .node files found in crates/spikard-node/"
+          echo ""
+          echo "Checking generated index.js..."
+          ls -lah index.js index.d.ts || echo "Generated files not found"
+
+      - name: Run Rust tests for NAPI bindings
+        working-directory: crates/spikard-node
+        env:
+          RUST_BACKTRACE: 1
+        run: cargo test --release
