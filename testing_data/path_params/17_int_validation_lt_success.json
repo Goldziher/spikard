@@ -1,0 +1,18 @@
+{
+  "name": "Integer path parameter with lt constraint - success",
+  "description": "Tests integer path parameter with lt (less than) validation",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_path.py",
+    "test_function": "test_path_param_lt_2"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/path/param-lt/2"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": 2
+  },
+  "notes": "Path param with lt=3 constraint, value 2 is valid"
+}

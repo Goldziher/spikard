@@ -1,0 +1,21 @@
+{
+  "name": "Bearer token authentication - missing",
+  "description": "Tests missing Bearer token returns 401 Unauthorized",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_security_oauth2.py",
+    "test_function": "test_security_oauth2_no_token"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/headers/bearer-auth",
+    "headers": {}
+  },
+  "expected_response": {
+    "status_code": 401,
+    "body": {
+      "detail": "Not authenticated"
+    }
+  },
+  "notes": "Missing Authorization header returns 401"
+}

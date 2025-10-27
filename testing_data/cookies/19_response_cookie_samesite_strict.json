@@ -1,0 +1,30 @@
+{
+  "name": "Response cookie with SameSite=Strict",
+  "description": "Tests setting cookie with SameSite strict attribute",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_responses.py",
+    "test_function": "test_set_cookie_samesite_strict"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/cookies/samesite-strict",
+    "body": {
+      "value": "strict_cookie"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "message": "Cookie set with SameSite=Strict"
+    },
+    "cookies": {
+      "secure_session": {
+        "value": "strict_cookie",
+        "samesite": "strict",
+        "secure": true
+      }
+    }
+  },
+  "notes": "SameSite=Strict prevents cookie in cross-site requests"
+}

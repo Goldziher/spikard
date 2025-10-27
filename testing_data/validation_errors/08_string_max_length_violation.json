@@ -1,0 +1,30 @@
+{
+  "name": "String max_length constraint violation",
+  "description": "Tests validation error when string exceeds max_length",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_query_params_str_validations/test_tutorial001.py",
+    "test_function": "test_query_params_str_validations"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items/?q=this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "string_too_long",
+          "loc": ["query", "q"],
+          "msg": "String should have at most 50 characters",
+          "input": "this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter",
+          "ctx": {
+            "max_length": 50
+          }
+        }
+      ]
+    }
+  },
+  "notes": "max_length constraint enforces maximum string length"
+}

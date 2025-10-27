@@ -1,0 +1,27 @@
+{
+  "name": "Header validation error",
+  "description": "Tests validation error when required header is missing",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_header_params/test_tutorial001.py",
+    "test_function": "test_header_missing"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items/"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "missing",
+          "loc": ["header", "x-token"],
+          "msg": "Field required",
+          "input": null
+        }
+      ]
+    }
+  },
+  "notes": "Required headers must be present in request"
+}

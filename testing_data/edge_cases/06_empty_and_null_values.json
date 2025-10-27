@@ -1,0 +1,36 @@
+{
+  "name": "Empty and null value handling",
+  "description": "Tests distinction between null, empty, and missing values",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_null_handling.py",
+    "test_function": "test_null_vs_empty"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/nulls/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "explicit_null": null,
+      "empty_string": "",
+      "empty_array": [],
+      "empty_object": {},
+      "zero_number": 0,
+      "false_boolean": false
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "explicit_null_is_null": true,
+      "empty_string_length": 0,
+      "empty_array_length": 0,
+      "empty_object_keys": 0,
+      "zero_is_falsy": true,
+      "false_is_false": true
+    }
+  },
+  "notes": "Tests proper distinction between null, empty, and falsy values"
+}

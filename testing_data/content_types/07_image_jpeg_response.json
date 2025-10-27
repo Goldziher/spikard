@@ -1,0 +1,21 @@
+{
+  "name": "JPEG image response - image/jpeg",
+  "description": "Tests JPEG image response",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_responses.py",
+    "test_function": "test_image_response"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/images/photo.jpg"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "headers": {
+      "content-type": "image/jpeg"
+    },
+    "body": "jpeg_binary_data"
+  },
+  "notes": "JPEG image with image/jpeg content type"
+}

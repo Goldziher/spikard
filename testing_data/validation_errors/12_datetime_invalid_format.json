@@ -1,0 +1,34 @@
+{
+  "name": "Invalid datetime format",
+  "description": "Tests validation error when datetime format is invalid",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_datetime/test_tutorial001.py",
+    "test_function": "test_datetime_invalid"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Item",
+      "created_at": "not-a-datetime"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "datetime_parsing",
+          "loc": ["body", "created_at"],
+          "msg": "Input should be a valid datetime, invalid character in year",
+          "input": "not-a-datetime"
+        }
+      ]
+    }
+  },
+  "notes": "Datetime validation expects ISO 8601 format"
+}

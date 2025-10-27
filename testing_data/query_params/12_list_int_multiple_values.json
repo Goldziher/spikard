@@ -1,0 +1,22 @@
+{
+  "name": "List of integers - multiple values",
+  "description": "Tests list query parameter with multiple integer values using same key",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_query.py",
+    "test_function": "test_query_list"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/query/list",
+    "query_string": "device_ids=1&device_ids=2",
+    "query_params": {
+      "device_ids": [1, 2]
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": [1, 2]
+  },
+  "notes": "Multiple values with same key: ?device_ids=1&device_ids=2"
+}

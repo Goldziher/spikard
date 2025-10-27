@@ -1,0 +1,24 @@
+{
+  "name": "JSON response - application/json",
+  "description": "Tests JSON response with correct Content-Type header",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_response_model.py",
+    "test_function": "test_json_response"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items/json"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "body": {
+      "name": "Item",
+      "price": 42.0
+    }
+  },
+  "notes": "Standard JSON response with application/json content type"
+}

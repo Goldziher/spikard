@@ -1,0 +1,21 @@
+{
+  "name": "Plain text response - text/plain",
+  "description": "Tests plain text response",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_responses.py",
+    "test_function": "test_text_response"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/text"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "headers": {
+      "content-type": "text/plain; charset=utf-8"
+    },
+    "body": "Hello, World!"
+  },
+  "notes": "Plain text response with text/plain content type"
+}

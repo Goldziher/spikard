@@ -1,0 +1,42 @@
+{
+  "name": "Mixed files and form data",
+  "description": "Multipart request with both file uploads and regular form fields",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_formparsers.py",
+    "test_function": "test_multi_items"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/",
+    "content_type": "multipart/form-data",
+    "files": [
+      {
+        "field_name": "file",
+        "filename": "upload.txt",
+        "content": "file data here",
+        "content_encoding": "text",
+        "content_type": "text/plain"
+      }
+    ],
+    "data": {
+      "username": "testuser",
+      "age": "25",
+      "active": "true"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "file": {
+        "filename": "upload.txt",
+        "size": 14,
+        "content": "file data here",
+        "content_type": "text/plain"
+      },
+      "username": "testuser",
+      "age": "25",
+      "active": "true"
+    }
+  }
+}

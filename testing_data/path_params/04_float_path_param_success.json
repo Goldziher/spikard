@@ -1,0 +1,18 @@
+{
+  "name": "Float path parameter - success",
+  "description": "Tests float path parameter with valid value",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_path.py",
+    "test_function": "test_path_float_42_5"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/path/float/42.5"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": 42.5
+  },
+  "notes": "Path template: /path/float/{item_id}"
+}

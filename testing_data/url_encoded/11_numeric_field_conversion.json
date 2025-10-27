@@ -1,0 +1,28 @@
+{
+  "name": "Numeric field type conversion",
+  "description": "Tests conversion of form string value to numeric type",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_request_form_models/test_tutorial001.py",
+    "test_function": "test_form_numeric"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/form/",
+    "headers": {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "form_data": {
+      "username": "johndoe",
+      "age": "30"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "username": "johndoe",
+      "age": 30
+    }
+  },
+  "notes": "Form field 'age' as string '30' converted to integer 30"
+}

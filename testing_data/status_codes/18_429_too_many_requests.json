@@ -1,0 +1,26 @@
+{
+  "name": "429 Too Many Requests",
+  "description": "Tests 429 status code for rate limiting",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_rate_limit.py",
+    "test_function": "test_rate_limit_exceeded"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/api/resource"
+  },
+  "expected_response": {
+    "status_code": 429,
+    "body": {
+      "detail": "Rate limit exceeded. Try again in 60 seconds."
+    },
+    "headers": {
+      "Retry-After": "60",
+      "X-RateLimit-Limit": "100",
+      "X-RateLimit-Remaining": "0",
+      "X-RateLimit-Reset": "1609459200"
+    }
+  },
+  "notes": "429 Too Many Requests when rate limit is exceeded, includes Retry-After header"
+}

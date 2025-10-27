@@ -1,0 +1,49 @@
+{
+  "name": "Deeply nested structure (10+ levels)",
+  "description": "Tests handling of deeply nested JSON objects",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_nesting.py",
+    "test_function": "test_deep_nesting"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/nested/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "level1": {
+        "level2": {
+          "level3": {
+            "level4": {
+              "level5": {
+                "level6": {
+                  "level7": {
+                    "level8": {
+                      "level9": {
+                        "level10": {
+                          "value": "deep",
+                          "depth": 10
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "message": "Processed deeply nested structure",
+      "max_depth": 10,
+      "value_found": "deep"
+    }
+  },
+  "notes": "Tests parser handles deep nesting without stack overflow"
+}

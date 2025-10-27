@@ -1,0 +1,30 @@
+{
+  "name": "PUT - Idempotent operation",
+  "description": "Tests PUT idempotency - repeated calls produce same result",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_methods.py",
+    "test_function": "test_put_idempotent"
+  },
+  "request": {
+    "method": "PUT",
+    "path": "/items/1",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "id": 1,
+      "name": "Fixed Name",
+      "price": 50.00
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "id": 1,
+      "name": "Fixed Name",
+      "price": 50.00
+    }
+  },
+  "notes": "PUT is idempotent - calling multiple times with same data produces same result"
+}

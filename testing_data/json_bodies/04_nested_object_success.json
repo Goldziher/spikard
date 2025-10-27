@@ -1,0 +1,36 @@
+{
+  "name": "Nested object - success",
+  "description": "Tests nested JSON objects",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_body_nested_models/test_tutorial001.py",
+    "test_function": "test_nested_model"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/nested",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Foo",
+      "price": 42.0,
+      "image": {
+        "url": "https://example.com/image.jpg",
+        "name": "Product Image"
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "name": "Foo",
+      "price": 42.0,
+      "image": {
+        "url": "https://example.com/image.jpg",
+        "name": "Product Image"
+      }
+    }
+  },
+  "notes": "Object with nested 'image' object"
+}

@@ -1,0 +1,25 @@
+{
+  "name": "Response set cookie - basic",
+  "description": "Tests setting a cookie in the response",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_response_cookies/test_tutorial001.py",
+    "test_function": "test_path_operation"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/cookie/"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "message": "Come to the dark side, we have cookies"
+    },
+    "cookies": {
+      "fakesession": {
+        "value": "fake-cookie-session-value"
+      }
+    }
+  },
+  "notes": "Response sets a cookie using set_cookie()"
+}

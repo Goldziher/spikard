@@ -1,0 +1,30 @@
+{
+  "name": "String min_length constraint violation",
+  "description": "Tests validation error when string is shorter than min_length",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_query_params_str_validations/test_tutorial003.py",
+    "test_function": "test_query_params_str_validations"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items/?q=ab"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "string_too_short",
+          "loc": ["query", "q"],
+          "msg": "String should have at least 3 characters",
+          "input": "ab",
+          "ctx": {
+            "min_length": 3
+          }
+        }
+      ]
+    }
+  },
+  "notes": "min_length constraint enforces minimum string length"
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Optional header with None default - missing",
+  "description": "Tests optional header parameter with None default when not provided",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_header_params/test_tutorial002.py",
+    "test_function": "test_no_strange_header"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items/"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "strange_header": null
+    }
+  },
+  "notes": "Optional header returns None when not provided"
+}

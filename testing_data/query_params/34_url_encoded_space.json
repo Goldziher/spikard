@@ -1,0 +1,23 @@
+{
+  "name": "Query parameter with URL encoded space",
+  "description": "Tests query parameter with URL encoded space character",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_query.py",
+    "test_function": "test_query_param_url_encoded_space"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/query/basic",
+    "query_params": {
+      "name": "hello world"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "name": "hello world"
+    }
+  },
+  "notes": "Space in query parameter should be properly decoded from %20 or +"
+}

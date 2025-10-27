@@ -1,0 +1,33 @@
+{
+  "name": "Unicode and emoji handling",
+  "description": "Tests proper handling of Unicode characters and emojis",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_unicode.py",
+    "test_function": "test_unicode_emoji"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/",
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "name": "Coffee Shop ☕",
+      "description": "Best café in München 🇩🇪",
+      "tags": ["食べ物", "音楽", "💰"],
+      "emoji_reactions": "👍❤️😂🎉"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "id": 1,
+      "name": "Coffee Shop ☕",
+      "description": "Best café in München 🇩🇪",
+      "tags": ["食べ物", "音楽", "💰"],
+      "emoji_reactions": "👍❤️😂🎉"
+    }
+  },
+  "notes": "Server correctly handles UTF-8 encoded Unicode and multi-byte emoji characters"
+}

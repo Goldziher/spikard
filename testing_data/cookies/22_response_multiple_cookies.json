@@ -1,0 +1,35 @@
+{
+  "name": "Response - multiple cookies",
+  "description": "Tests setting multiple cookies in single response",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_responses.py",
+    "test_function": "test_set_multiple_cookies"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/cookies/multiple",
+    "body": {
+      "user": "john",
+      "session": "session123"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "message": "Multiple cookies set"
+    },
+    "cookies": {
+      "user": {
+        "value": "john",
+        "max_age": 3600
+      },
+      "session": {
+        "value": "session123",
+        "max_age": 7200,
+        "httponly": true
+      }
+    }
+  },
+  "notes": "Multiple Set-Cookie headers in single response"
+}

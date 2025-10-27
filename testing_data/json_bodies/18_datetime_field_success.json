@@ -1,0 +1,28 @@
+{
+  "name": "Datetime field - success",
+  "description": "Tests datetime field with ISO datetime format",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
+    "test_function": "test_datetime_field"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/events/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Meeting",
+      "created_at": "2024-03-15T10:30:00Z"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "name": "Meeting",
+      "created_at": "2024-03-15T10:30:00Z"
+    }
+  },
+  "notes": "Datetime field in ISO 8601 format with UTC timezone"
+}

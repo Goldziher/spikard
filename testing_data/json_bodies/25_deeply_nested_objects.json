@@ -1,0 +1,50 @@
+{
+  "name": "Deeply nested objects",
+  "description": "Tests deeply nested JSON structure (3+ levels)",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_body_nested_models/test_tutorial001.py",
+    "test_function": "test_deeply_nested"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/nested",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Product",
+      "price": 100.0,
+      "seller": {
+        "name": "John Doe",
+        "address": {
+          "street": "123 Main St",
+          "city": "Springfield",
+          "country": {
+            "name": "USA",
+            "code": "US"
+          }
+        }
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "name": "Product",
+      "price": 100.0,
+      "seller": {
+        "name": "John Doe",
+        "address": {
+          "street": "123 Main St",
+          "city": "Springfield",
+          "country": {
+            "name": "USA",
+            "code": "US"
+          }
+        }
+      }
+    }
+  },
+  "notes": "Nested structure: item -> seller -> address -> country (4 levels)"
+}

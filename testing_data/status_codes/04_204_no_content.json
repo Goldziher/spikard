@@ -1,0 +1,17 @@
+{
+  "name": "204 No Content - Success with no body",
+  "description": "Tests 204 No Content response for successful DELETE",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_response_model/test_tutorial001.py",
+    "test_function": "test_delete_item"
+  },
+  "request": {
+    "method": "DELETE",
+    "path": "/items/1"
+  },
+  "expected_response": {
+    "status_code": 204
+  },
+  "notes": "204 No Content - successful deletion with no response body"
+}

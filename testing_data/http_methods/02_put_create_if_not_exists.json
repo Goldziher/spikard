@@ -1,0 +1,30 @@
+{
+  "name": "PUT - Create resource if doesn't exist",
+  "description": "Tests PUT creating new resource at specific URI",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_methods.py",
+    "test_function": "test_put_create"
+  },
+  "request": {
+    "method": "PUT",
+    "path": "/items/999",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "id": 999,
+      "name": "New Item",
+      "price": 49.99
+    }
+  },
+  "expected_response": {
+    "status_code": 201,
+    "body": {
+      "id": 999,
+      "name": "New Item",
+      "price": 49.99
+    }
+  },
+  "notes": "PUT can create resource with 201 Created when resource doesn't exist"
+}

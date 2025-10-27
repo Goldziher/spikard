@@ -1,0 +1,23 @@
+{
+  "name": "503 Service Unavailable - Server overload",
+  "description": "Tests 503 Service Unavailable during maintenance or overload",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_responses.py",
+    "test_function": "test_service_unavailable"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/health"
+  },
+  "expected_response": {
+    "status_code": 503,
+    "body": {
+      "detail": "Service temporarily unavailable"
+    },
+    "headers": {
+      "retry-after": "120"
+    }
+  },
+  "notes": "503 Service Unavailable - server overloaded or under maintenance"
+}

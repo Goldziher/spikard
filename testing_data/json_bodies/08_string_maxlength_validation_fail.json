@@ -1,0 +1,37 @@
+{
+  "name": "String max_length validation - fail",
+  "description": "Tests string field with max_length constraint failure",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_body_fields/test_tutorial001.py",
+    "test_function": "test_string_too_long"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/validated",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "This is a very long name that exceeds the maximum length",
+      "price": 35.4
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "string_too_long",
+          "loc": ["body", "name"],
+          "msg": "String should have at most 50 characters",
+          "input": "This is a very long name that exceeds the maximum length",
+          "ctx": {
+            "max_length": 50
+          }
+        }
+      ]
+    }
+  },
+  "notes": "name field has max_length=50, input has 57 characters"
+}

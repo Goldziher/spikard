@@ -1,0 +1,23 @@
+{
+  "name": "String validation with regex - success",
+  "description": "Tests string parameter with regex pattern validation - matching pattern",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_query_params_str_validations/test_tutorial010.py",
+    "test_function": "test_query_params_str_validations_item_query_fixedquery"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items/",
+    "query_params": {
+      "item_query": "fixedquery"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "item_query": "fixedquery"
+    }
+  },
+  "notes": "Regex pattern: ^fixedquery$"
+}

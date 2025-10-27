@@ -1,0 +1,20 @@
+{
+  "name": "307 Temporary Redirect - Method preserved",
+  "description": "Tests 307 temporary redirect with method preservation",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_responses.py",
+    "test_function": "test_redirect_307"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/redirect-post"
+  },
+  "expected_response": {
+    "status_code": 307,
+    "headers": {
+      "location": "/target-post"
+    }
+  },
+  "notes": "307 preserves request method (POST remains POST)"
+}

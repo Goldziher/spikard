@@ -1,0 +1,17 @@
+{
+  "name": "DELETE - Remove resource",
+  "description": "Tests DELETE method to remove a resource",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_methods.py",
+    "test_function": "test_delete_resource"
+  },
+  "request": {
+    "method": "DELETE",
+    "path": "/items/1"
+  },
+  "expected_response": {
+    "status_code": 204
+  },
+  "notes": "DELETE returns 204 No Content on successful deletion"
+}

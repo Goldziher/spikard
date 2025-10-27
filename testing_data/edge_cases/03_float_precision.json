@@ -1,0 +1,34 @@
+{
+  "name": "Float precision and rounding",
+  "description": "Tests floating point precision and rounding behavior",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_numeric_limits.py",
+    "test_function": "test_float_precision"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/calculations/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "value1": 0.1,
+      "value2": 0.2,
+      "expected_sum": 0.3,
+      "precise_value": 3.141592653589793,
+      "very_small": 1e-10,
+      "very_large": 1.7976931348623157e+308
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "sum": 0.30000000000000004,
+      "precise_value": 3.141592653589793,
+      "very_small": 1e-10,
+      "very_large": 1.7976931348623157e+308
+    }
+  },
+  "notes": "Demonstrates float precision issues (0.1 + 0.2 != 0.3) and extreme values"
+}

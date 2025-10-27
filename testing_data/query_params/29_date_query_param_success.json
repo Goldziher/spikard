@@ -1,0 +1,23 @@
+{
+  "name": "Date query parameter - success",
+  "description": "Tests date query parameter with valid ISO date format",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_query.py",
+    "test_function": "test_query_param_date"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/query/date",
+    "query_params": {
+      "event_date": "2024-01-15"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "event_date": "2024-01-15"
+    }
+  },
+  "notes": "Date query parameter in ISO format (YYYY-MM-DD)"
+}

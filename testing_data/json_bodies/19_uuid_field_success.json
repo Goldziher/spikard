@@ -1,0 +1,28 @@
+{
+  "name": "UUID field - success",
+  "description": "Tests UUID field with valid UUID format",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
+    "test_function": "test_uuid_field"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Item",
+      "item_id": "c892496f-b1fd-4b91-bdb8-b46f92df1716"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "name": "Item",
+      "item_id": "c892496f-b1fd-4b91-bdb8-b46f92df1716"
+    }
+  },
+  "notes": "UUID field validated and returned"
+}

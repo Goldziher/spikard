@@ -1,0 +1,33 @@
+{
+  "name": "Header regex validation - fail",
+  "description": "Tests header with regex pattern validation failure",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_header_params/test_tutorial003.py",
+    "test_function": "test_header_pattern_fail"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/headers/pattern",
+    "headers": {
+      "X-Request-Id": "invalid-format"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "string_pattern_mismatch",
+          "loc": ["header", "x-request-id"],
+          "msg": "String should match pattern '^[0-9]{3,}$'",
+          "input": "invalid-format",
+          "ctx": {
+            "pattern": "^[0-9]{3,}$"
+          }
+        }
+      ]
+    }
+  },
+  "notes": "Header must match regex pattern ^[0-9]{3,}$ (3+ digits)"
+}

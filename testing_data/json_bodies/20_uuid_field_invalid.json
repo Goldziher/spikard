@@ -1,0 +1,34 @@
+{
+  "name": "UUID field - invalid format",
+  "description": "Tests UUID field with invalid UUID format",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
+    "test_function": "test_uuid_field_invalid"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Item",
+      "item_id": "not-a-valid-uuid"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "uuid_parsing",
+          "loc": ["body", "item_id"],
+          "msg": "Input should be a valid UUID",
+          "input": "not-a-valid-uuid"
+        }
+      ]
+    }
+  },
+  "notes": "Invalid UUID format returns validation error"
+}

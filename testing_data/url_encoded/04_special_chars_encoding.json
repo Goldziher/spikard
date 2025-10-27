@@ -1,0 +1,28 @@
+{
+  "name": "Special characters encoding",
+  "description": "Tests URL encoding of special characters in form data",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_request_forms/test_tutorial001.py",
+    "test_function": "test_form_special_chars"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/form/",
+    "headers": {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "form_data": {
+      "name": "John Doe",
+      "description": "Test & Development"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "name": "John Doe",
+      "description": "Test & Development"
+    }
+  },
+  "notes": "Spaces encoded as +, & encoded as %26"
+}

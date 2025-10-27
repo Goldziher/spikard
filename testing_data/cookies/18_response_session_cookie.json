@@ -1,0 +1,28 @@
+{
+  "name": "Response - session cookie (no max_age)",
+  "description": "Tests setting session cookie without max_age (expires with browser)",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_responses.py",
+    "test_function": "test_set_session_cookie"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/cookies/session",
+    "body": {
+      "value": "session_abc123"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "message": "Session cookie set"
+    },
+    "cookies": {
+      "session": {
+        "value": "session_abc123"
+      }
+    }
+  },
+  "notes": "Session cookie without max_age expires when browser closes"
+}

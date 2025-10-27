@@ -1,0 +1,24 @@
+{
+  "name": "400 Bad Request - Invalid request",
+  "description": "Tests 400 Bad Request for malformed request",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_response_model/test_tutorial001.py",
+    "test_function": "test_bad_request"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": "not valid json"
+  },
+  "expected_response": {
+    "status_code": 400,
+    "body": {
+      "detail": "Invalid request format"
+    }
+  },
+  "notes": "400 Bad Request for malformed/invalid requests"
+}

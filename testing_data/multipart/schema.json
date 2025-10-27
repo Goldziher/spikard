@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Multipart Form Data Test Fixture",
+  "description": "Schema for multipart/form-data test fixtures extracted from FastAPI, Starlette, and Litestar test suites",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Human-readable name for this test case"
+    },
+    "description": {
+      "type": "string",
+      "description": "What this test case validates"
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "framework": {
+          "type": "string",
+          "enum": ["starlette", "fastapi", "litestar"]
+        },
+        "test_file": {
+          "type": "string",
+          "description": "Original test file path"
+        },
+        "test_function": {
+          "type": "string",
+          "description": "Original test function name"
+        }
+      },
+      "required": ["framework", "test_file", "test_function"]
+    },
+    "request": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["POST", "PUT", "PATCH"]
+        },
+        "path": {
+          "type": "string"
+        },
+        "content_type": {
+          "type": "string",
+          "description": "Expected Content-Type header",
+          "pattern": "^multipart/form-data"
+        },
+        "files": {
+          "type": "array",
+          "description": "File uploads in the request",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field_name": {
+                "type": "string",
+                "description": "Form field name for this file"
+              },
+              "filename": {
+                "type": ["string", "null"],
+                "description": "Original filename, null for unnamed files"
+              },
+              "content": {
+                "type": "string",
+                "description": "File content (base64 encoded for binary, plain text otherwise)"
+              },
+              "content_encoding": {
+                "type": "string",
+                "enum": ["text", "base64"],
+                "default": "text"
+              },
+              "content_type": {
+                "type": ["string", "null"],
+                "description": "MIME type of the file"
+              },
+              "headers": {
+                "type": "object",
+                "description": "Additional headers for this file part",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": ["field_name", "content"]
+          }
+        },
+        "data": {
+          "type": "object",
+          "description": "Form data fields (non-file fields)",
+          "additionalProperties": {
+            "oneOf": [
+              {"type": "string"},
+              {"type": "number"},
+              {"type": "boolean"},
+              {
+                "type": "array",
+                "items": {"type": ["string", "number", "boolean"]}
+              }
+            ]
+          }
+        }
+      },
+      "required": ["method", "path"]
+    },
+    "expected_response": {
+      "type": "object",
+      "properties": {
+        "status_code": {
+          "type": "integer"
+        },
+        "body": {
+          "description": "Expected response body (parsed JSON or raw text)"
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["status_code"]
+    }
+  },
+  "required": ["name", "description", "source", "request", "expected_response"]
+}

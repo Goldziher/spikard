@@ -1,0 +1,30 @@
+{
+  "name": "Response cookie with SameSite=None",
+  "description": "Tests setting cookie with SameSite none (requires Secure)",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_responses.py",
+    "test_function": "test_set_cookie_samesite_none"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/cookies/samesite-none",
+    "body": {
+      "value": "none_cookie"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "message": "Cookie set with SameSite=None"
+    },
+    "cookies": {
+      "tracking": {
+        "value": "none_cookie",
+        "samesite": "none",
+        "secure": true
+      }
+    }
+  },
+  "notes": "SameSite=None allows cross-site, requires Secure flag"
+}

@@ -1,0 +1,39 @@
+{
+  "name": "Array max_items constraint violation",
+  "description": "Tests validation error when array has more items than max_items",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_body_multiple_params/test_tutorial001.py",
+    "test_function": "test_array_max_items"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Item",
+      "tags": ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6"]
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "too_long",
+          "loc": ["body", "tags"],
+          "msg": "List should have at most 5 items after validation, not 6",
+          "input": ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6"],
+          "ctx": {
+            "field_type": "List",
+            "max_length": 5,
+            "actual_length": 6
+          }
+        }
+      ]
+    }
+  },
+  "notes": "max_items constraint limits maximum number of array elements"
+}
