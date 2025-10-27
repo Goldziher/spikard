@@ -22,7 +22,8 @@ homepage = "https://github.com/Goldziher/spikard"
 spikard = { version = "0.1.0", path = "crates/spikard" }
 
 # Python bindings
-pyo3 = { version = "0.22", features = ["abi3-py310"] }
+pyo3 = { version = "0.27", features = ["abi3-py310"] }
+pyo3-async-runtimes = { version = "0.27", features = ["tokio-runtime"] }
 
 # CLI dependencies
 clap = { version = "4.5", features = ["derive"] }
@@ -30,7 +31,7 @@ clap_complete = "4.5"
 clap_mangen = "0.2"
 
 # HTTP dependencies
-axum = "0.7"
+axum = "0.8"
 tokio = { version = "1", features = ["full"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["trace"] }

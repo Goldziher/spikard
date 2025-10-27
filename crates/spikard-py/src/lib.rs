@@ -20,7 +20,7 @@ pub fn extract_routes_from_app(
     let mut routes = Vec::new();
 
     // Iterate over routes
-    for route_obj in routes_list.downcast::<PyList>()?.iter() {
+    for route_obj in routes_list.cast::<PyList>()?.iter() {
         let metadata = extract_route_metadata(py, &route_obj)?;
         routes.push(metadata);
     }
@@ -41,7 +41,7 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
         None
     } else {
         let json_str: String = py
-            .import_bound("json")?
+            .import("json")?
             .call_method1("dumps", (request_schema,))?
             .extract()?;
         Some(serde_json::from_str(&json_str).map_err(|e| {
@@ -57,7 +57,7 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
         None
     } else {
         let json_str: String = py
-            .import_bound("json")?
+            .import("json")?
             .call_method1("dumps", (response_schema,))?
             .extract()?;
         Some(serde_json::from_str(&json_str).map_err(|e| {
