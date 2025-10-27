@@ -6,6 +6,12 @@ use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 use spikard_http::RouteMetadata;
 
+/// Route with Python handler
+pub struct RouteWithHandler {
+    pub metadata: RouteMetadata,
+    pub handler: Py<PyAny>,
+}
+
 /// Extract routes from a Python Spikard application instance (internal function)
 ///
 /// This function is meant to be called from Rust code that has GIL access.
@@ -13,7 +19,7 @@ use spikard_http::RouteMetadata;
 pub fn extract_routes_from_app(
     py: Python<'_>,
     app: &Bound<'_, PyAny>,
-) -> PyResult<Vec<RouteMetadata>> {
+) -> PyResult<Vec<RouteWithHandler>> {
     // Call app.get_routes() to get the route list
     let routes_list = app.call_method0("get_routes")?;
 
@@ -22,7 +28,11 @@ pub fn extract_routes_from_app(
     // Iterate over routes
     for route_obj in routes_list.cast::<PyList>()?.iter() {
         let metadata = extract_route_metadata(py, &route_obj)?;
-        routes.push(metadata);
+
+        // Get the handler function
+        let handler: Py<PyAny> = route_obj.getattr("handler")?.into();
+
+        routes.push(RouteWithHandler { metadata, handler });
     }
 
     Ok(routes)
