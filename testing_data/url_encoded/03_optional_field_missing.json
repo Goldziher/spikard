@@ -1,0 +1,28 @@
+{
+  "name": "Optional field missing - success",
+  "description": "Tests form with optional field omitted",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_request_forms/test_tutorial001.py",
+    "test_function": "test_post_form_optional_omitted"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/register/",
+    "headers": {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "form_data": {
+      "username": "johndoe",
+      "password": "secret"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "username": "johndoe",
+      "email": null
+    }
+  },
+  "notes": "Optional 'email' field omitted, defaults to null"
+}

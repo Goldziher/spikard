@@ -1,0 +1,29 @@
+{
+  "name": "Required cookie - missing",
+  "description": "Tests validation error when required cookie is missing",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_cookie_param_models/test_tutorial001.py",
+    "test_function": "test_cookie_param_model_invalid"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items/",
+    "cookies": {
+      "fatebook_tracker": "tracker456"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "missing",
+          "loc": ["cookie", "session_id"],
+          "msg": "Field required"
+        }
+      ]
+    }
+  },
+  "notes": "Missing required cookie returns 422 validation error"
+}

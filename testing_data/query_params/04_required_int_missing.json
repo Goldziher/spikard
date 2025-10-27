@@ -1,0 +1,23 @@
+{
+  "name": "Required integer query parameter - missing",
+  "description": "Tests a required integer query parameter without providing value, should return 422",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_query.py",
+    "test_function": "test_query_int"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/query/int"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "loc": ["query", "query"],
+        "msg": "Field required",
+        "type": "missing"
+      }
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "Boolean path parameter - numeric 1",
+  "description": "Tests boolean path parameter with '1' converts to true",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_path.py",
+    "test_function": "test_path_bool_1"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/path/bool/1"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": true
+  },
+  "notes": "Boolean conversion: '1' -> true"
+}

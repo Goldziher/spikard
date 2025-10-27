@@ -1,0 +1,27 @@
+{
+  "name": "String validation with regex - failure",
+  "description": "Tests string parameter with regex pattern validation - non-matching pattern returns 422",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_query_params_str_validations/test_tutorial010.py",
+    "test_function": "test_query_params_str_validations_item_query_nonregexquery"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items/",
+    "query_params": {
+      "item_query": "nonregexquery"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "loc": ["query", "item_query"],
+        "msg": "String should match pattern '^fixedquery$'",
+        "type": "string_pattern_mismatch"
+      }
+    ]
+  },
+  "notes": "Regex pattern: ^fixedquery$ - value doesn't match"
+}

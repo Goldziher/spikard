@@ -1,0 +1,28 @@
+{
+  "name": "Content-Type validation - invalid type",
+  "description": "Tests file upload with disallowed content type",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_request_files/test_tutorial003.py",
+    "test_function": "test_invalid_content_type"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/files/images-only",
+    "files": [
+      {
+        "field_name": "file",
+        "filename": "script.sh",
+        "content": "#!/bin/bash\necho hello",
+        "content_type": "application/x-sh"
+      }
+    ]
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": "Only image files are allowed (image/jpeg, image/png, image/gif)"
+    }
+  },
+  "notes": "Content-Type validation rejects non-image files"
+}

@@ -1,0 +1,30 @@
+{
+  "name": "PDF file upload",
+  "description": "Tests uploading a PDF document",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_request_files/test_tutorial003.py",
+    "test_function": "test_upload_pdf"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/files/document",
+    "files": [
+      {
+        "field_name": "document",
+        "filename": "report.pdf",
+        "content": "fake_pdf_content",
+        "content_type": "application/pdf"
+      }
+    ]
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "filename": "report.pdf",
+      "content_type": "application/pdf",
+      "size": 16
+    }
+  },
+  "notes": "PDF file with application/pdf content type"
+}

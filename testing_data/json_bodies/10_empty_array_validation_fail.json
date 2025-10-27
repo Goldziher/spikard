@@ -1,0 +1,37 @@
+{
+  "name": "Empty array validation - fail",
+  "description": "Tests array field with min_items constraint failure",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_body_nested_models/test_tutorial009.py",
+    "test_function": "test_empty_array"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/list-validated",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Product",
+      "tags": []
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "too_short",
+          "loc": ["body", "tags"],
+          "msg": "List should have at least 1 item after validation",
+          "input": [],
+          "ctx": {
+            "min_length": 1
+          }
+        }
+      ]
+    }
+  },
+  "notes": "tags array requires at least 1 item (min_items=1)"
+}

@@ -1,0 +1,61 @@
+{
+  "name": "Nested object validation error",
+  "description": "Tests validation error in nested object field",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_validate_response_recursive/test_validate_response_recursive.py",
+    "test_function": "test_nested_validation_error"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Product",
+      "seller": {
+        "name": "Jo",
+        "address": {
+          "city": "SF",
+          "zip_code": "123"
+        }
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "string_too_short",
+          "loc": ["body", "seller", "name"],
+          "msg": "String should have at least 3 characters",
+          "input": "Jo",
+          "ctx": {
+            "min_length": 3
+          }
+        },
+        {
+          "type": "string_too_short",
+          "loc": ["body", "seller", "address", "city"],
+          "msg": "String should have at least 3 characters",
+          "input": "SF",
+          "ctx": {
+            "min_length": 3
+          }
+        },
+        {
+          "type": "string_too_short",
+          "loc": ["body", "seller", "address", "zip_code"],
+          "msg": "String should have at least 5 characters",
+          "input": "123",
+          "ctx": {
+            "min_length": 5
+          }
+        }
+      ]
+    }
+  },
+  "notes": "Validation errors in nested objects include full path in loc, showing multiple levels of nesting"
+}

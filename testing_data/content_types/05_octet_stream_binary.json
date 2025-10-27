@@ -1,0 +1,22 @@
+{
+  "name": "Binary response - application/octet-stream",
+  "description": "Tests binary data response",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_responses.py",
+    "test_function": "test_binary_response"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/download/file.bin"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "headers": {
+      "content-type": "application/octet-stream",
+      "content-disposition": "attachment; filename=file.bin"
+    },
+    "body": "binary_data_placeholder"
+  },
+  "notes": "Binary file download with application/octet-stream"
+}

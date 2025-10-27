@@ -1,0 +1,23 @@
+{
+  "name": "APIKey cookie authentication - success",
+  "description": "Tests APIKeyCookie authentication with valid cookie",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_security_api_key_cookie.py",
+    "test_function": "test_security_api_key"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/users/me",
+    "cookies": {
+      "key": "secret"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "username": "secret"
+    }
+  },
+  "notes": "Valid API key cookie allows authentication"
+}

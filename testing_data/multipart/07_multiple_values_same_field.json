@@ -1,0 +1,53 @@
+{
+  "name": "Multiple values for same field name",
+  "description": "Multiple files uploaded with the same field name (array-like behavior)",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_formparsers.py",
+    "test_function": "test_multi_items_app"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/",
+    "content_type": "multipart/form-data",
+    "files": [
+      {
+        "field_name": "files",
+        "filename": "file1.txt",
+        "content": "first file",
+        "content_encoding": "text",
+        "content_type": "text/plain"
+      },
+      {
+        "field_name": "files",
+        "filename": "file2.txt",
+        "content": "second file",
+        "content_encoding": "text",
+        "content_type": "text/plain"
+      }
+    ],
+    "data": {
+      "tags": ["python", "rust", "web"]
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "files": [
+        {
+          "filename": "file1.txt",
+          "size": 10,
+          "content": "first file",
+          "content_type": "text/plain"
+        },
+        {
+          "filename": "file2.txt",
+          "size": 11,
+          "content": "second file",
+          "content_type": "text/plain"
+        }
+      ],
+      "tags": ["python", "rust", "web"]
+    }
+  }
+}

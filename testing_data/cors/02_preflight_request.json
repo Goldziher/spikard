@@ -1,0 +1,28 @@
+{
+  "name": "CORS preflight request",
+  "description": "Tests OPTIONS preflight request for CORS",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_cors.py",
+    "test_function": "test_preflight"
+  },
+  "request": {
+    "method": "OPTIONS",
+    "path": "/items/",
+    "headers": {
+      "Origin": "https://example.com",
+      "Access-Control-Request-Method": "POST",
+      "Access-Control-Request-Headers": "Content-Type, X-Custom-Header"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "headers": {
+      "Access-Control-Allow-Origin": "https://example.com",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, X-Custom-Header",
+      "Access-Control-Max-Age": "600"
+    }
+  },
+  "notes": "Preflight checks if actual request is allowed before sending it"
+}

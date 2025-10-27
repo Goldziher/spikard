@@ -1,0 +1,31 @@
+{
+  "name": "PATCH - Update multiple fields",
+  "description": "Tests PATCH updating multiple fields at once",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_methods.py",
+    "test_function": "test_patch_multiple"
+  },
+  "request": {
+    "method": "PATCH",
+    "path": "/items/1",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Updated Name",
+      "price": 89.99,
+      "in_stock": false
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "id": 1,
+      "name": "Updated Name",
+      "price": 89.99,
+      "in_stock": false
+    }
+  },
+  "notes": "PATCH can update multiple fields in one request"
+}

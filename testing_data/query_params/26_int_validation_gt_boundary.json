@@ -1,0 +1,23 @@
+{
+  "name": "Integer query param with gt constraint - valid",
+  "description": "Tests integer query parameter with gt validation, value above limit",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_query.py",
+    "test_function": "test_query_param_int_gt"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/query/int-gt",
+    "query_params": {
+      "value": "1"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "value": 1
+    }
+  },
+  "notes": "gt=0 constraint, value 1 is valid (just above boundary)"
+}

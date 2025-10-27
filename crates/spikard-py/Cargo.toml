@@ -17,10 +17,15 @@ doctest = false
 spikard.workspace = true
 spikard-http = { path = "../spikard-http" }
 pyo3.workspace = true
+pyo3-async-runtimes.workspace = true
 serde_json.workspace = true
+axum.workspace = true
+axum-test = "18"
+bytes = "1.8"
+http-body-util = "0.1"
 
 [dev-dependencies]
 
 [features]
-default = []
+default = ["extension-module"]
 extension-module = ["pyo3/extension-module"]

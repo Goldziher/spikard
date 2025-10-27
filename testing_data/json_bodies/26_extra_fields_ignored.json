@@ -1,0 +1,30 @@
+{
+  "name": "Extra fields ignored (no additionalProperties)",
+  "description": "Tests that extra fields not in model are ignored",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
+    "test_function": "test_extra_fields"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Item",
+      "price": 42.0,
+      "extra_field": "this should be ignored",
+      "another_extra": 123
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "name": "Item",
+      "price": 42.0
+    }
+  },
+  "notes": "Extra fields 'extra_field' and 'another_extra' are ignored (not in response)"
+}

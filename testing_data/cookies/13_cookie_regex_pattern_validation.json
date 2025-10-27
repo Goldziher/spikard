@@ -1,0 +1,33 @@
+{
+  "name": "Cookie regex pattern validation - fail",
+  "description": "Tests cookie with regex pattern validation failure",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_cookie_params/test_tutorial001.py",
+    "test_function": "test_cookie_pattern"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/cookies/pattern",
+    "cookies": {
+      "tracking_id": "invalid-format"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "string_pattern_mismatch",
+          "loc": ["cookie", "tracking_id"],
+          "msg": "String should match pattern '^[A-Z0-9]{8}$'",
+          "input": "invalid-format",
+          "ctx": {
+            "pattern": "^[A-Z0-9]{8}$"
+          }
+        }
+      ]
+    }
+  },
+  "notes": "Pattern requires 8 alphanumeric uppercase characters"
+}

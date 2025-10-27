@@ -1,0 +1,36 @@
+{
+  "name": "Field type validation - invalid type",
+  "description": "Tests type validation error when field has wrong type",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
+    "test_function": "test_post_body_invalid_type"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Foo",
+      "description": "A very nice Item",
+      "price": "not a number",
+      "tax": 3.2
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "float_parsing",
+          "loc": ["body", "price"],
+          "msg": "Input should be a valid number",
+          "input": "not a number"
+        }
+      ]
+    }
+  },
+  "notes": "price field expects float, got string"
+}

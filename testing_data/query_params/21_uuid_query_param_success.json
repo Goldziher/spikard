@@ -1,0 +1,23 @@
+{
+  "name": "UUID query parameter - success",
+  "description": "Tests UUID query parameter with valid UUID format",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_query.py",
+    "test_function": "test_query_param_uuid"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/query/uuid",
+    "query_params": {
+      "item_id": "c892496f-b1fd-4b91-bdb8-b46f92df1716"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "item_id": "c892496f-b1fd-4b91-bdb8-b46f92df1716"
+    }
+  },
+  "notes": "UUID query parameter validation"
+}

@@ -1,0 +1,23 @@
+{
+  "name": "Authorization header - wrong scheme",
+  "description": "Tests Authorization header with incorrect scheme returns 403",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_security_http_digest.py",
+    "test_function": "test_security_http_digest_incorrect_scheme_credentials"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/users/me",
+    "headers": {
+      "Authorization": "Other invalidauthorization"
+    }
+  },
+  "expected_response": {
+    "status_code": 403,
+    "body": {
+      "detail": "Invalid authentication credentials"
+    }
+  },
+  "notes": "Expected scheme is Digest, not Other"
+}

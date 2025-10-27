@@ -1,0 +1,26 @@
+{
+  "name": "Header case insensitivity - access",
+  "description": "Tests case-insensitive header access (Content-Type vs content-type)",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_datastructures.py",
+    "test_function": "test_headers"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/echo",
+    "headers": {
+      "content-type": "application/json"
+    },
+    "body": {"test": "data"}
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "content_type_lower": "application/json",
+      "content_type_upper": "application/json",
+      "content_type_mixed": "application/json"
+    }
+  },
+  "notes": "Headers should be accessible with any case variation"
+}

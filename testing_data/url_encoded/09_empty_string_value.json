@@ -1,0 +1,28 @@
+{
+  "name": "Empty string value",
+  "description": "Tests form field with empty string value",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_request_forms/test_tutorial001.py",
+    "test_function": "test_form_empty_string"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/form/",
+    "headers": {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "form_data": {
+      "username": "johndoe",
+      "description": ""
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "username": "johndoe",
+      "description": ""
+    }
+  },
+  "notes": "Empty string is valid value for optional field"
+}

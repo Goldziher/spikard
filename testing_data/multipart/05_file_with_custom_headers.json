@@ -1,0 +1,42 @@
+{
+  "name": "File upload with custom headers",
+  "description": "File upload with additional custom headers in the multipart section",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_formparsers.py",
+    "test_function": "test_multipart_request_multiple_files_with_headers"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/",
+    "content_type": "multipart/form-data",
+    "files": [
+      {
+        "field_name": "test2",
+        "filename": "test2.txt",
+        "content": "<file2 content>",
+        "content_encoding": "text",
+        "content_type": "text/plain",
+        "headers": {
+          "x-custom": "f2"
+        }
+      }
+    ]
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "test2": {
+        "filename": "test2.txt",
+        "size": 15,
+        "content": "<file2 content>",
+        "content_type": "text/plain",
+        "headers": [
+          ["content-disposition", "form-data; name=\"test2\"; filename=\"test2.txt\""],
+          ["content-type", "text/plain"],
+          ["x-custom", "f2"]
+        ]
+      }
+    }
+  }
+}

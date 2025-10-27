@@ -1,0 +1,23 @@
+{
+  "name": "Header with underscore conversion - explicit",
+  "description": "Tests X-Token header converted to x_token parameter",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_compat_params_v1.py",
+    "test_function": "test_get_header_with_underscore"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/headers/underscore",
+    "headers": {
+      "X-Token": "secret123"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "x_token": "secret123"
+    }
+  },
+  "notes": "X-Token header automatically converted to x_token parameter (convert_underscores=True)"
+}

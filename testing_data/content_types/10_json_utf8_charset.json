@@ -1,0 +1,24 @@
+{
+  "name": "JSON with UTF-8 charset",
+  "description": "Tests JSON response with explicit UTF-8 charset",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_response_model.py",
+    "test_function": "test_json_utf8"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items/unicode"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "headers": {
+      "content-type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "name": "Café",
+      "emoji": "☕"
+    }
+  },
+  "notes": "JSON with UTF-8 characters and explicit charset"
+}

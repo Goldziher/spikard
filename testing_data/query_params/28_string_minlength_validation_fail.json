@@ -1,0 +1,33 @@
+{
+  "name": "String query param with min_length constraint - fail",
+  "description": "Tests string query parameter with min_length validation failure",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_query.py",
+    "test_function": "test_query_param_str_min_length"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/query/str-min-length",
+    "query_params": {
+      "name": "ab"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "string_too_short",
+          "loc": ["query", "name"],
+          "msg": "String should have at least 3 characters",
+          "input": "ab",
+          "ctx": {
+            "min_length": 3
+          }
+        }
+      ]
+    }
+  },
+  "notes": "min_length=3 constraint, value has 2 characters"
+}

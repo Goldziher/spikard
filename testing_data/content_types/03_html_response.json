@@ -1,0 +1,21 @@
+{
+  "name": "HTML response - text/html",
+  "description": "Tests HTML response",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_responses.py",
+    "test_function": "test_html_response"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/html"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "body": "<html><body><h1>Hello</h1></body></html>"
+  },
+  "notes": "HTML response with text/html content type"
+}

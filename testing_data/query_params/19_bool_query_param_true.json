@@ -1,0 +1,23 @@
+{
+  "name": "Boolean query parameter - true",
+  "description": "Tests boolean query parameter with 'true' string value",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_query.py",
+    "test_function": "test_query_param_bool"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/query/bool",
+    "query_params": {
+      "flag": "true"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "flag": true
+    }
+  },
+  "notes": "Boolean conversion: 'true' -> true"
+}

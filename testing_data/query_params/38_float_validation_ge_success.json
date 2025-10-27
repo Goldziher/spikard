@@ -1,0 +1,23 @@
+{
+  "name": "Float query param with ge constraint - success",
+  "description": "Tests float query parameter with ge validation at boundary",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_query.py",
+    "test_function": "test_query_param_float_ge"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/query/float-ge",
+    "query_params": {
+      "price": "0.01"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "price": 0.01
+    }
+  },
+  "notes": "Float with ge=0.01 constraint, value 0.01 is valid (boundary test)"
+}

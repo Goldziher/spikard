@@ -1,0 +1,33 @@
+{
+  "name": "PUT - Missing required field",
+  "description": "Tests PUT with missing required fields returns 422",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_methods.py",
+    "test_function": "test_put_missing_field"
+  },
+  "request": {
+    "method": "PUT",
+    "path": "/items/1",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "id": 1,
+      "name": "Item Name"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "missing",
+          "loc": ["body", "price"],
+          "msg": "Field required"
+        }
+      ]
+    }
+  },
+  "notes": "PUT requires all fields since it's a complete replacement"
+}

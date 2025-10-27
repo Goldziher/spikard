@@ -1,0 +1,27 @@
+{
+  "name": "Simple form submission - success",
+  "description": "Tests basic URL-encoded form with username and password",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_request_forms/test_tutorial001.py",
+    "test_function": "test_post_form_data"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/login/",
+    "headers": {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "form_data": {
+      "username": "johndoe",
+      "password": "secret"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "username": "johndoe"
+    }
+  },
+  "notes": "Standard login form with username and password fields"
+}

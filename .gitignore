@@ -16,6 +16,9 @@ rust-coverage.lcov
 coverage.info
 htmlcov/
 
+# TODO files in root only
+/*_TODO.md
+
 # Rust
 *.rs.bk
 target/

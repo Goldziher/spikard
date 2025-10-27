@@ -395,7 +395,7 @@ source = { editable = "packages/python" }
 [[package]]
 name = "spikard-dev"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 
 [package.dev-dependencies]
 dev = [

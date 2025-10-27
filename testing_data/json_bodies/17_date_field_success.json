@@ -1,0 +1,28 @@
+{
+  "name": "Date field - success",
+  "description": "Tests date field with ISO date format",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
+    "test_function": "test_date_field"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/events/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Conference",
+      "event_date": "2024-03-15"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "name": "Conference",
+      "event_date": "2024-03-15"
+    }
+  },
+  "notes": "Date field in ISO format (YYYY-MM-DD)"
+}

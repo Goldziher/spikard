@@ -1,0 +1,53 @@
+{
+  "name": "Multiple validation errors",
+  "description": "Tests multiple validation errors returned in single response",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_validate_response.py",
+    "test_function": "test_multiple_validation_errors"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "X",
+      "price": -10,
+      "quantity": "not_a_number"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "string_too_short",
+          "loc": ["body", "name"],
+          "msg": "String should have at least 3 characters",
+          "input": "X",
+          "ctx": {
+            "min_length": 3
+          }
+        },
+        {
+          "type": "greater_than",
+          "loc": ["body", "price"],
+          "msg": "Input should be greater than 0",
+          "input": -10,
+          "ctx": {
+            "gt": 0
+          }
+        },
+        {
+          "type": "int_parsing",
+          "loc": ["body", "quantity"],
+          "msg": "Input should be a valid integer, unable to parse string as an integer",
+          "input": "not_a_number"
+        }
+      ]
+    }
+  },
+  "notes": "All validation errors are collected and returned together"
+}

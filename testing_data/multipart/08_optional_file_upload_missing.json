@@ -1,0 +1,22 @@
+{
+  "name": "Optional file upload - missing",
+  "description": "Tests optional file parameter when no file is provided",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_request_files/test_tutorial001.py",
+    "test_function": "test_optional_file_missing"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/files/optional",
+    "files": [],
+    "form_data": {}
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "file": null
+    }
+  },
+  "notes": "Optional file parameter returns null when not provided"
+}

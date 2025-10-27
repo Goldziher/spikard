@@ -2,9 +2,12 @@
 //!
 //! This crate provides Python bindings using PyO3
 
+mod test_client;
+
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList};
+use pyo3::types::PyList;
 use spikard_http::RouteMetadata;
+use spikard_http::server::Server;
 
 /// Route with Python handler
 pub struct RouteWithHandler {
@@ -96,9 +99,55 @@ fn process() -> PyResult<()> {
     })
 }
 
+/// Create a test client from a Spikard application
+///
+/// Args:
+///     app: A Spikard application instance
+///
+/// Returns:
+///     TestClient: A test client for making requests to the app
+#[pyfunction]
+fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_client::TestClient> {
+    // Extract routes from the Python app
+    let routes_with_handlers = extract_routes_from_app(py, app)?;
+
+    // Convert to Route + Py<PyAny> pairs
+    let routes: Vec<_> = routes_with_handlers
+        .into_iter()
+        .map(|r| {
+            let route = spikard_http::Route {
+                method: r.metadata.method.parse().unwrap_or(spikard_http::Method::Get),
+                path: r.metadata.path,
+                handler_name: r.metadata.handler_name,
+                request_validator: r.metadata.request_schema.and_then(|schema| {
+                    spikard_http::SchemaValidator::new(schema).ok()
+                }),
+                response_validator: r.metadata.response_schema.and_then(|schema| {
+                    spikard_http::SchemaValidator::new(schema).ok()
+                }),
+                is_async: r.metadata.is_async,
+            };
+            (route, r.handler)
+        })
+        .collect();
+
+    // Create server config (not used for test client, but needed for API)
+    let config = spikard_http::ServerConfig::default();
+
+    // Build Axum router with Python handlers
+    let axum_router = Server::with_python_handlers(config, routes)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to build router: {}", e)))?;
+
+    // Create test client from the router
+    test_client::TestClient::from_router(axum_router)
+}
+
 /// Python module for spikard
 #[pymodule]
 fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<test_client::TestClient>()?;
+    m.add_class::<test_client::TestResponse>()?;
+    m.add_function(wrap_pyfunction!(create_test_client, m)?)?;
     m.add_function(wrap_pyfunction!(process, m)?)?;
     Ok(())
 }

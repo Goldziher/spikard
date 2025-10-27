@@ -1,0 +1,33 @@
+{
+  "name": "Required field missing - validation error",
+  "description": "Tests validation error when required field is missing",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
+    "test_function": "test_post_body_missing_required"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "description": "A very nice Item",
+      "price": 35.4
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "missing",
+          "loc": ["body", "name"],
+          "msg": "Field required"
+        }
+      ]
+    }
+  },
+  "notes": "Required 'name' field is missing"
+}

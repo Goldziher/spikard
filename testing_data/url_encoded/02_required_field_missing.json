@@ -1,0 +1,32 @@
+{
+  "name": "Required field missing - validation error",
+  "description": "Tests validation error when required form field is missing",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_request_forms/test_tutorial001.py",
+    "test_function": "test_post_form_missing_required"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/login/",
+    "headers": {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "form_data": {
+      "password": "secret"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "missing",
+          "loc": ["body", "username"],
+          "msg": "Field required"
+        }
+      ]
+    }
+  },
+  "notes": "Required 'username' field is missing"
+}

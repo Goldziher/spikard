@@ -1,0 +1,32 @@
+{
+  "name": "Null value for optional field",
+  "description": "Tests explicitly setting optional field to null",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
+    "test_function": "test_null_optional_field"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Item",
+      "price": 42.0,
+      "description": null,
+      "tax": null
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "name": "Item",
+      "price": 42.0,
+      "description": null,
+      "tax": null
+    }
+  },
+  "notes": "Explicitly null values for optional fields"
+}

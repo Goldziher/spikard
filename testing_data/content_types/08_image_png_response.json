@@ -1,0 +1,21 @@
+{
+  "name": "PNG image response - image/png",
+  "description": "Tests PNG image response",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_responses.py",
+    "test_function": "test_png_response"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/images/logo.png"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "headers": {
+      "content-type": "image/png"
+    },
+    "body": "png_binary_data"
+  },
+  "notes": "PNG image with image/png content type"
+}

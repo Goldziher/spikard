@@ -1,0 +1,28 @@
+{
+  "name": "Boolean field conversion",
+  "description": "Tests conversion of form string value to boolean",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_request_form_models/test_tutorial001.py",
+    "test_function": "test_form_boolean"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/form/",
+    "headers": {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "form_data": {
+      "username": "johndoe",
+      "subscribe": "true"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "username": "johndoe",
+      "subscribe": true
+    }
+  },
+  "notes": "Form field 'subscribe' as string 'true' converted to boolean true"
+}

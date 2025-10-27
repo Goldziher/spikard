@@ -1,0 +1,21 @@
+{
+  "name": "Array query parameter - empty array",
+  "description": "Tests array query parameter when no values are provided",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_query.py",
+    "test_function": "test_query_param_list_empty"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/query/list",
+    "query_params": {}
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "items": []
+    }
+  },
+  "notes": "Optional array query parameter, no values provided returns empty array"
+}

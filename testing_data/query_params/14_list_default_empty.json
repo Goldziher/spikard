@@ -1,0 +1,18 @@
+{
+  "name": "List with default empty array - no values provided",
+  "description": "Tests list parameter with default=[] when no values provided, should return empty list",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_query.py",
+    "test_function": "test_query_list_default_empty"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/query/list-default"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": []
+  },
+  "notes": "List with default=[] returns empty list when no params provided"
+}
