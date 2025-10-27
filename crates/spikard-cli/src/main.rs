@@ -76,7 +76,7 @@ fn run_server(module_path: PathBuf, host: String, port: u16) -> Result<()> {
     Python::initialize();
 
     // Extract routes from Python module
-    let (router, _handlers) = Python::attach(|py| -> PyResult<(Router, Vec<Py<PyAny>>)> {
+    let routes_with_handlers = Python::attach(|py| -> PyResult<Vec<spikard_py::RouteWithHandler>> {
         // Add module directory to sys.path
         let sys = py.import("sys")?;
         let sys_path = sys.getattr("path")?;
@@ -98,31 +98,25 @@ fn run_server(module_path: PathBuf, host: String, port: u16) -> Result<()> {
         // Find the Spikard app instance
         let app = user_module.getattr("app")?;
 
-        // Extract routes directly from the app using spikard-py's internal function
-        let route_metadata_list = spikard_py::extract_routes_from_app(py, &app)?;
-
-        // Build router from metadata
-        let mut router = Router::new();
-        let mut handlers = Vec::new();
-
-        for metadata in route_metadata_list {
-            tracing::info!(
-                "Registering route: {} {}",
-                metadata.method,
-                metadata.path
-            );
-
-            let route = Route::from_metadata(metadata)
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e))?;
-
-            router.add_route(route);
-
-            // TODO: Store Python handler references
-            // handlers.push(handler.to_object(py));
-        }
-
-        Ok((router, handlers))
+        // Extract routes with handlers from the app
+        spikard_py::extract_routes_from_app(py, &app)
     })?;
+
+    // Build router from metadata (keeping handlers separate for now)
+    let mut router = Router::new();
+
+    for route_with_handler in &routes_with_handlers {
+        tracing::info!(
+            "Registering route: {} {}",
+            route_with_handler.metadata.method,
+            route_with_handler.metadata.path
+        );
+
+        let route = Route::from_metadata(route_with_handler.metadata.clone())
+            .map_err(|e| anyhow::anyhow!("Failed to create route: {}", e))?;
+
+        router.add_route(route);
+    }
 
     // Configure and start server
     let config = ServerConfig {
