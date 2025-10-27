@@ -1,8 +1,9 @@
 //! HTTP server implementation using Tokio and Axum
 
-use crate::{Router, ServerConfig};
-use axum::routing::get;
+use crate::{PythonHandler, Router, ServerConfig};
+use axum::routing::{get, MethodRouter};
 use axum::Router as AxumRouter;
+use pyo3::{Py, PyAny};
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
@@ -18,6 +19,43 @@ impl Server {
     /// Create a new server with configuration
     pub fn new(config: ServerConfig, router: Router) -> Self {
         Self { config, router }
+    }
+
+    /// Create a new server with Python handlers
+    pub fn with_python_handlers(
+        config: ServerConfig,
+        routes: Vec<(crate::Route, Py<PyAny>)>,
+    ) -> Result<AxumRouter, String> {
+        let mut app = AxumRouter::new();
+
+        // Add health check endpoint
+        app = app.route("/health", get(|| async { "OK" }));
+
+        // Add routes with Python handlers
+        for (route, handler_py) in routes {
+            let handler = PythonHandler::new(handler_py, route.is_async);
+
+            // Create Axum route based on HTTP method
+            let method_router: MethodRouter = match route.method.as_str() {
+                "GET" => axum::routing::get(move |req| async move { handler.call(req).await }),
+                "POST" => axum::routing::post(move |req| async move { handler.call(req).await }),
+                "PUT" => axum::routing::put(move |req| async move { handler.call(req).await }),
+                "PATCH" => axum::routing::patch(move |req| async move { handler.call(req).await }),
+                "DELETE" => axum::routing::delete(move |req| async move { handler.call(req).await }),
+                _ => {
+                    return Err(format!("Unsupported HTTP method: {}", route.method.as_str()))
+                }
+            };
+
+            app = app.route(&route.path, method_router);
+
+            tracing::info!("Registered route: {} {}", route.method.as_str(), route.path);
+        }
+
+        // Add middleware
+        app = app.layer(TraceLayer::new_for_http());
+
+        Ok(app)
     }
 
     /// Initialize logging
