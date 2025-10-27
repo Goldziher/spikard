@@ -102,37 +102,34 @@ fn run_server(module_path: PathBuf, host: String, port: u16) -> Result<()> {
         spikard_py::extract_routes_from_app(py, &app)
     })?;
 
-    // Build router from metadata (keeping handlers separate for now)
-    let mut router = Router::new();
+    // Build routes with handlers for the Axum router
+    let routes: Vec<(Route, Py<PyAny>)> = routes_with_handlers
+        .into_iter()
+        .map(|rwh| {
+            Route::from_metadata(rwh.metadata)
+                .map(|route| (route, rwh.handler))
+                .map_err(|e| anyhow::anyhow!("Failed to create route: {}", e))
+        })
+        .collect::<Result<Vec<_>>>()?;
 
-    for route_with_handler in &routes_with_handlers {
-        tracing::info!(
-            "Registering route: {} {}",
-            route_with_handler.metadata.method,
-            route_with_handler.metadata.path
-        );
-
-        let route = Route::from_metadata(route_with_handler.metadata.clone())
-            .map_err(|e| anyhow::anyhow!("Failed to create route: {}", e))?;
-
-        router.add_route(route);
-    }
-
-    // Configure and start server
+    // Configure server
     let config = ServerConfig {
         host: host.clone(),
         port,
         workers: 1,
     };
 
-    let server = Server::new(config, router);
-
     // Initialize logging
     Server::init_logging();
 
     tracing::info!("Starting Spikard server");
     tracing::info!("Module: {}", module_path.display());
+    tracing::info!("Registered {} routes", routes.len());
     tracing::info!("Listening on http://{}:{}", host, port);
+
+    // Build Axum router with Python handlers
+    let app = Server::with_python_handlers(config.clone(), routes)
+        .map_err(|e| anyhow::anyhow!("Failed to build router: {}", e))?;
 
     // Run server
     tokio::runtime::Builder::new_multi_thread()
@@ -140,9 +137,20 @@ fn run_server(module_path: PathBuf, host: String, port: u16) -> Result<()> {
         .build()
         .context("Failed to create Tokio runtime")?
         .block_on(async {
-            server.serve().await
-        })
-        .map_err(|e| anyhow::anyhow!("Server error: {}", e))?;
+            let addr = format!("{}:{}", config.host, config.port);
+            let socket_addr: std::net::SocketAddr = addr
+                .parse()
+                .map_err(|e| anyhow::anyhow!("Invalid socket address: {}", e))?;
+            let listener = tokio::net::TcpListener::bind(socket_addr)
+                .await
+                .context("Failed to bind to address")?;
+
+            tracing::info!("Server listening on {}", socket_addr);
+
+            axum::serve(listener, app)
+                .await
+                .context("Server error")
+        })?;
 
     Ok(())
 }

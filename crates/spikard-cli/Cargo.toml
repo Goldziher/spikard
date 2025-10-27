@@ -23,5 +23,6 @@ pyo3.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 anyhow = "1.0"
+axum.workspace = true
 
 [dev-dependencies]
