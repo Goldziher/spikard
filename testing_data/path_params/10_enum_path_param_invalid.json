@@ -1,0 +1,26 @@
+{
+  "name": "Enum path parameter - invalid value",
+  "description": "Tests enum path parameter with invalid enum value returns 422",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_path_params/test_tutorial005.py",
+    "test_function": "test_get_enums_invalid"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/models/foo"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "enum",
+          "loc": ["path", "model_name"],
+          "msg": "Input should be 'alexnet', 'resnet' or 'lenet'"
+        }
+      ]
+    }
+  },
+  "notes": "Invalid enum value 'foo' not in allowed values (alexnet, lenet, resnet)"
+}

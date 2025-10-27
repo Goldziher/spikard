@@ -1,0 +1,23 @@
+{
+  "name": "Query parameter with URL encoded special characters",
+  "description": "Tests query parameter with URL encoded special characters",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_query.py",
+    "test_function": "test_query_param_url_encoded_special"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/query/basic",
+    "query_params": {
+      "name": "test&value=123"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "name": "test&value=123"
+    }
+  },
+  "notes": "Special characters &, =, etc should be properly decoded from %26, %3D"
+}

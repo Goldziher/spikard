@@ -1,0 +1,30 @@
+{
+  "name": "Invalid enum value",
+  "description": "Tests validation error when value is not in allowed enum values",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_path_params/test_tutorial005.py",
+    "test_function": "test_get_enums_invalid"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/models/invalid_model"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "enum",
+          "loc": ["path", "model_name"],
+          "msg": "Input should be 'alexnet', 'resnet' or 'lenet'",
+          "input": "invalid_model",
+          "ctx": {
+            "expected": "'alexnet', 'resnet' or 'lenet'"
+          }
+        }
+      ]
+    }
+  },
+  "notes": "Enum validation restricts values to predefined set"
+}

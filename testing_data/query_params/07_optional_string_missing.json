@@ -1,0 +1,17 @@
+{
+  "name": "Optional string query parameter - missing",
+  "description": "Tests optional string parameter without value, should return None/null",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_query.py",
+    "test_function": "test_query_optional"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/query/optional"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": "foo bar None"
+  }
+}

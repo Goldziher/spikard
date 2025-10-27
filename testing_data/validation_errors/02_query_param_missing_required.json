@@ -1,0 +1,27 @@
+{
+  "name": "Missing required query parameter",
+  "description": "Tests validation error when required query param is missing",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_query_params/test_tutorial001.py",
+    "test_function": "test_query_params_required_missing"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items/"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "missing",
+          "loc": ["query", "q"],
+          "msg": "Field required",
+          "input": null
+        }
+      ]
+    }
+  },
+  "notes": "Required query parameter without default must be provided"
+}

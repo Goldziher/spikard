@@ -1,0 +1,33 @@
+{
+  "name": "String query param with max_length constraint - fail",
+  "description": "Tests string query parameter with max_length validation failure",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_query.py",
+    "test_function": "test_query_param_str_max_length"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/query/str-max-length",
+    "query_params": {
+      "name": "this_is_way_too_long"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "string_too_long",
+          "loc": ["query", "name"],
+          "msg": "String should have at most 10 characters",
+          "input": "this_is_way_too_long",
+          "ctx": {
+            "max_length": 10
+          }
+        }
+      ]
+    }
+  },
+  "notes": "max_length=10 constraint, value has 20 characters"
+}

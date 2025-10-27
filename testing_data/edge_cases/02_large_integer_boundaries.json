@@ -1,0 +1,30 @@
+{
+  "name": "Large integer boundary values",
+  "description": "Tests handling of very large integer values near system limits",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_numeric_limits.py",
+    "test_function": "test_large_integers"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/numbers/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "max_safe_int": 9007199254740991,
+      "large_int": 9223372036854775807,
+      "negative_large": -9223372036854775808
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "max_safe_int": 9007199254740991,
+      "large_int": 9223372036854775807,
+      "negative_large": -9223372036854775808
+    }
+  },
+  "notes": "Tests max safe integer (2^53-1) and 64-bit integer limits"
+}

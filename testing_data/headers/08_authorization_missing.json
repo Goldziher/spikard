@@ -1,0 +1,19 @@
+{
+  "name": "Authorization header - missing",
+  "description": "Tests missing Authorization header returns 403",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_security_http_digest.py",
+    "test_function": "test_security_http_digest_no_credentials"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/users/me"
+  },
+  "expected_response": {
+    "status_code": 403,
+    "body": {
+      "detail": "Not authenticated"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "Array of objects - success",
+  "description": "Tests array field containing objects",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_body_nested_models/test_tutorial009.py",
+    "test_function": "test_array_of_objects"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/list",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Product Bundle",
+      "tags": ["electronics", "gadget"],
+      "images": [
+        {"url": "https://example.com/img1.jpg", "name": "Front"},
+        {"url": "https://example.com/img2.jpg", "name": "Back"}
+      ]
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "name": "Product Bundle",
+      "tags": ["electronics", "gadget"],
+      "images": [
+        {"url": "https://example.com/img1.jpg", "name": "Front"},
+        {"url": "https://example.com/img2.jpg", "name": "Back"}
+      ]
+    }
+  },
+  "notes": "Array of strings (tags) and array of objects (images)"
+}

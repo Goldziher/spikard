@@ -1,0 +1,34 @@
+{
+  "name": "PUT - Complete resource replacement",
+  "description": "Tests PUT method for complete resource replacement",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_methods.py",
+    "test_function": "test_put_replace"
+  },
+  "request": {
+    "method": "PUT",
+    "path": "/items/1",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "id": 1,
+      "name": "Updated Item",
+      "description": "Completely replaced",
+      "price": 99.99,
+      "in_stock": true
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "id": 1,
+      "name": "Updated Item",
+      "description": "Completely replaced",
+      "price": 99.99,
+      "in_stock": true
+    }
+  },
+  "notes": "PUT replaces entire resource, all fields must be provided"
+}

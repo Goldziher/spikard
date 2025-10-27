@@ -1,0 +1,37 @@
+{
+  "name": "Enum field - invalid value",
+  "description": "Tests enum field with value not in enum",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
+    "test_function": "test_enum_field_invalid"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Item",
+      "category": "furniture"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "enum",
+          "loc": ["body", "category"],
+          "msg": "Input should be 'electronics', 'clothing' or 'books'",
+          "input": "furniture",
+          "ctx": {
+            "expected": "'electronics', 'clothing' or 'books'"
+          }
+        }
+      ]
+    }
+  },
+  "notes": "Valid enum values: electronics, clothing, books. 'furniture' is invalid"
+}

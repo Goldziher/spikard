@@ -1,0 +1,26 @@
+{
+  "name": "Integer path parameter - invalid string",
+  "description": "Tests integer path parameter with non-numeric string returns 422",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_path.py",
+    "test_function": "test_path_int_foobar"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/path/int/foobar"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "int_parsing",
+          "loc": ["path", "item_id"],
+          "msg": "Input should be a valid integer, unable to parse string as an integer"
+        }
+      ]
+    }
+  },
+  "notes": "Type conversion error for path parameter"
+}

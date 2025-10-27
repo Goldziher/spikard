@@ -1,0 +1,23 @@
+{
+  "name": "Cookie validation - min_length constraint success",
+  "description": "Tests cookie validation with min_length constraint at boundary",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_cookie_params/test_tutorial001.py",
+    "test_function": "test_cookie_min_length_success"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/cookies/min-length",
+    "cookies": {
+      "token": "abc"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "token": "abc"
+    }
+  },
+  "notes": "min_length=3 constraint, value 'abc' is valid (boundary test)"
+}

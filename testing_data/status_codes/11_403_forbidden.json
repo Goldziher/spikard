@@ -1,0 +1,23 @@
+{
+  "name": "403 Forbidden - Insufficient permissions",
+  "description": "Tests 403 Forbidden when user lacks permissions",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_security_api_key_header.py",
+    "test_function": "test_incorrect_key"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/admin/users",
+    "headers": {
+      "Authorization": "Bearer valid_token"
+    }
+  },
+  "expected_response": {
+    "status_code": 403,
+    "body": {
+      "detail": "Not enough permissions"
+    }
+  },
+  "notes": "403 Forbidden - authenticated but lacks required permissions"
+}

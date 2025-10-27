@@ -1,0 +1,23 @@
+{
+  "name": "Header regex validation - success",
+  "description": "Tests header with regex pattern validation success",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_header_params/test_tutorial003.py",
+    "test_function": "test_header_pattern_success"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/headers/pattern",
+    "headers": {
+      "X-Request-Id": "12345"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "x_request_id": "12345"
+    }
+  },
+  "notes": "Header matches pattern ^[0-9]{3,}$ (5 digits valid)"
+}

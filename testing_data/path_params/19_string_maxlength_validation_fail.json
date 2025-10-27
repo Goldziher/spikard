@@ -1,0 +1,26 @@
+{
+  "name": "String path parameter with max_length - failure",
+  "description": "Tests string path parameter with max_length validation fails when too long",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_path.py",
+    "test_function": "test_path_param_maxlength_foobar"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/path/param-maxlength/foobar"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "string_too_long",
+          "loc": ["path", "item_id"],
+          "msg": "String should have at most 3 characters"
+        }
+      ]
+    }
+  },
+  "notes": "Path param with max_length=3, value 'foobar' (6 chars) fails"
+}

@@ -1,0 +1,26 @@
+{
+  "name": "CORS wildcard origin",
+  "description": "Tests CORS with wildcard allowing all origins",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_cors.py",
+    "test_function": "test_cors_wildcard"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/public/data",
+    "headers": {
+      "Origin": "https://random-site.com"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "headers": {
+      "Access-Control-Allow-Origin": "*"
+    },
+    "body": {
+      "data": "public"
+    }
+  },
+  "notes": "Wildcard (*) allows any origin, cannot be used with credentials"
+}

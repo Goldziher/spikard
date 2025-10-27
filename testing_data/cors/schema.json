@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CORS Test Fixture",
+  "description": "Test fixture for CORS (Cross-Origin Resource Sharing) scenarios",
+  "type": "object",
+  "required": ["name", "description", "source", "request", "expected_response"],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "source": {
+      "type": "object",
+      "required": ["framework", "test_file", "test_function"],
+      "properties": {
+        "framework": {
+          "type": "string",
+          "enum": ["fastapi", "starlette", "litestar"]
+        },
+        "test_file": {
+          "type": "string"
+        },
+        "test_function": {
+          "type": "string"
+        }
+      }
+    },
+    "request": {
+      "type": "object",
+      "required": ["method", "path"],
+      "properties": {
+        "method": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "body": true
+      }
+    },
+    "expected_response": {
+      "type": "object",
+      "required": ["status_code"],
+      "properties": {
+        "status_code": {
+          "type": "integer"
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "body": true
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

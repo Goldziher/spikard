@@ -1,0 +1,27 @@
+{
+  "name": "Simple CORS request",
+  "description": "Tests simple CORS request with Origin header",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_cors.py",
+    "test_function": "test_simple_cors"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items/",
+    "headers": {
+      "Origin": "https://example.com"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "headers": {
+      "Access-Control-Allow-Origin": "https://example.com",
+      "Vary": "Origin"
+    },
+    "body": {
+      "items": []
+    }
+  },
+  "notes": "Simple CORS request returns Access-Control-Allow-Origin header"
+}

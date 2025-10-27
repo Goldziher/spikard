@@ -98,6 +98,13 @@ tasks:
     cmds:
       - cd crates/spikard-py && uv run maturin develop
 
+  build:local:python:
+    desc: "Clean rebuild Python bindings for local testing (removes cached .so files)"
+    cmds:
+      - cargo clean
+      - rm -rf crates/spikard-py/.venv/lib/python*/site-packages/_spikard
+      - cd crates/spikard-py && uv run maturin develop
+
   build:
     desc: "Build Rust components for development"
     cmds:

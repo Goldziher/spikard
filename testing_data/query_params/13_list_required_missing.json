@@ -1,0 +1,24 @@
+{
+  "name": "List query parameter - required but missing",
+  "description": "Tests required list parameter without any values, should return 422",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_query.py",
+    "test_function": "test_query_list_empty"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/query/list"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "loc": ["query", "device_ids"],
+        "msg": "Field required",
+        "type": "missing"
+      }
+    ]
+  },
+  "notes": "List without default requires at least one value"
+}

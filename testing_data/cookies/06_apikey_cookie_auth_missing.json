@@ -1,0 +1,20 @@
+{
+  "name": "APIKey cookie authentication - missing",
+  "description": "Tests APIKeyCookie authentication returns 403 when cookie missing",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_security_api_key_cookie.py",
+    "test_function": "test_security_api_key_no_key"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/users/me"
+  },
+  "expected_response": {
+    "status_code": 403,
+    "body": {
+      "detail": "Not authenticated"
+    }
+  },
+  "notes": "Missing required API key cookie returns 403 Forbidden"
+}

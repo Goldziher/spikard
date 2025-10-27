@@ -1,0 +1,29 @@
+{
+  "name": "Cookie validation - min_length failure",
+  "description": "Tests cookie parameter with min_length constraint returns 422 when too short",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_compat_params_v1.py",
+    "test_function": "test_cookie_tracking_id_too_short"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items/",
+    "cookies": {
+      "tracking_id": "ab"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "string_too_short",
+          "loc": ["cookie", "tracking_id"],
+          "msg": "String should have at least 3 characters"
+        }
+      ]
+    }
+  },
+  "notes": "Cookie value fails min_length validation"
+}

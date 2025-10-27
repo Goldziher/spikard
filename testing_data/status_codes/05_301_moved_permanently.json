@@ -1,0 +1,20 @@
+{
+  "name": "301 Moved Permanently - Permanent redirect",
+  "description": "Tests 301 permanent redirect response",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_responses.py",
+    "test_function": "test_redirect_response"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/old-path"
+  },
+  "expected_response": {
+    "status_code": 301,
+    "headers": {
+      "location": "/new-path"
+    }
+  },
+  "notes": "301 Moved Permanently - resource moved to new location"
+}

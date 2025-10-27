@@ -21,5 +21,8 @@ tracing-subscriber.workspace = true
 jsonschema = "0.33"
 pyo3.workspace = true
 pyo3-async-runtimes.workspace = true
+bytes = "1.8"
+http-body-util = "0.1"
+axum-test = "18"
 
 [dev-dependencies]

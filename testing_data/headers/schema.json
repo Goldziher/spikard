@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HTTP Headers Test Fixture",
+  "description": "Schema for HTTP header test fixtures covering standard headers, custom headers, case sensitivity, and validation",
+  "type": "object",
+  "required": ["name", "description", "source", "request", "expected_response"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Human-readable test case name",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "description": "What this test validates",
+      "minLength": 1
+    },
+    "source": {
+      "type": "object",
+      "description": "Source framework and test location",
+      "required": ["framework", "test_file", "test_function"],
+      "properties": {
+        "framework": {
+          "type": "string",
+          "enum": ["fastapi", "starlette", "litestar"],
+          "description": "Source framework"
+        },
+        "test_file": {
+          "type": "string",
+          "description": "Path to original test file relative to framework root",
+          "minLength": 1
+        },
+        "test_function": {
+          "type": "string",
+          "description": "Name of the test function",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "request": {
+      "type": "object",
+      "description": "HTTP request details",
+      "required": ["method", "path"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
+          "description": "HTTP method"
+        },
+        "path": {
+          "type": "string",
+          "description": "Request path",
+          "minLength": 1
+        },
+        "headers": {
+          "type": "object",
+          "description": "Request headers as key-value pairs. Headers with multiple values are represented as arrays.",
+          "additionalProperties": {
+            "oneOf": [
+              { "type": "string" },
+              {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            ]
+          }
+        },
+        "body": {
+          "description": "Request body (any JSON type)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "expected_response": {
+      "type": "object",
+      "description": "Expected HTTP response",
+      "required": ["status_code"],
+      "properties": {
+        "status_code": {
+          "type": "integer",
+          "description": "Expected HTTP status code",
+          "minimum": 100,
+          "maximum": 599
+        },
+        "body": {
+          "description": "Expected response body (any JSON type)"
+        },
+        "headers": {
+          "type": "object",
+          "description": "Expected response headers",
+          "additionalProperties": { "type": "string" }
+        },
+        "validation_errors": {
+          "type": "array",
+          "description": "Expected validation errors for 422 responses",
+          "items": {
+            "type": "object",
+            "required": ["loc", "msg", "type"],
+            "properties": {
+              "loc": {
+                "type": "array",
+                "description": "Error location path (e.g., ['header', 'x-api-key'])",
+                "items": { "type": "string" }
+              },
+              "msg": {
+                "type": "string",
+                "description": "Error message"
+              },
+              "type": {
+                "type": "string",
+                "description": "Error type (e.g., 'missing', 'value_error')"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about this test case"
+    }
+  },
+  "additionalProperties": false
+}

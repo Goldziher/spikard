@@ -77,26 +77,63 @@ fn run_server(module_path: PathBuf, host: String, port: u16) -> Result<()> {
 
     // Extract routes from Python module
     let routes_with_handlers = Python::attach(|py| -> PyResult<Vec<spikard_py::RouteWithHandler>> {
-        // Add module directory to sys.path
-        let sys = py.import("sys")?;
-        let sys_path = sys.getattr("path")?;
-        let module_dir = module_path
-            .parent()
-            .context("Module path has no parent directory")
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
-        sys_path.call_method1("insert", (0, module_dir))?;
+        // Add current directory's venv to sys.path if it exists
+        let current_dir = std::env::current_dir()
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+                format!("Failed to get current directory: {}", e)
+            ))?;
 
-        // Import the user's module
-        let module_name = module_path
-            .file_stem()
+        // Add the spikard package to sys.path
+        // The package is in packages/python relative to current directory
+        let spikard_package_dir = current_dir.join("packages").join("python");
+        if spikard_package_dir.exists() {
+            tracing::debug!("Adding spikard package to sys.path: {}", spikard_package_dir.display());
+            let sys = py.import("sys")?;
+            let sys_path = sys.getattr("path")?;
+            sys_path.call_method1("insert", (0, spikard_package_dir.to_string_lossy().as_ref()))?;
+        } else {
+            tracing::warn!("Could not find spikard package at {}", spikard_package_dir.display());
+        }
+        // Get absolute path to module
+        let abs_path = module_path.canonicalize()
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+                format!("Failed to resolve module path: {}", e)
+            ))?;
+
+        let abs_path_str = abs_path.to_str()
+            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+                "Module path contains invalid UTF-8"
+            ))?;
+
+        let module_name = abs_path.file_stem()
             .and_then(|s| s.to_str())
-            .context("Invalid module name")
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+                "Invalid module name"
+            ))?;
 
-        let user_module = py.import(module_name)?;
+        tracing::debug!("Loading Python module: {} from {}", module_name, abs_path_str);
+
+        // Use importlib to load module from file path
+        let importlib_util = py.import("importlib.util")?;
+
+        // Create module spec from file location
+        let spec = importlib_util
+            .call_method1("spec_from_file_location", (module_name, abs_path_str))?;
+
+        // Create module from spec
+        let module_from_spec = importlib_util.getattr("module_from_spec")?;
+        let user_module = module_from_spec.call1((&spec,))?;
+
+        // Execute the module
+        let spec_loader = spec.getattr("loader")?;
+        spec_loader.call_method1("exec_module", (&user_module,))?;
+
+        tracing::debug!("Module loaded successfully");
 
         // Find the Spikard app instance
         let app = user_module.getattr("app")?;
+
+        tracing::debug!("Found app instance, extracting routes");
 
         // Extract routes with handlers from the app
         spikard_py::extract_routes_from_app(py, &app)

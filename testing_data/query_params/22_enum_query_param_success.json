@@ -1,0 +1,23 @@
+{
+  "name": "Enum query parameter - success",
+  "description": "Tests enum query parameter with valid enum value",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_query.py",
+    "test_function": "test_query_param_enum"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/query/enum",
+    "query_params": {
+      "model": "alexnet"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "model": "alexnet"
+    }
+  },
+  "notes": "Enum values: alexnet, resnet, lenet"
+}

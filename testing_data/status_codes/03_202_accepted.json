@@ -1,0 +1,27 @@
+{
+  "name": "202 Accepted - Request accepted for processing",
+  "description": "Tests 202 Accepted for async processing",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_response_model/test_tutorial001.py",
+    "test_function": "test_async_task"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/tasks/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "task": "process_data"
+    }
+  },
+  "expected_response": {
+    "status_code": 202,
+    "body": {
+      "message": "Task accepted for processing",
+      "task_id": "abc123"
+    }
+  },
+  "notes": "202 Accepted for async/background processing"
+}

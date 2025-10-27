@@ -1,0 +1,34 @@
+{
+  "name": "Array item validation error",
+  "description": "Tests validation error for invalid item within array",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_union_body.py",
+    "test_function": "test_array_item_validation"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Item",
+      "prices": [10.0, 20.0, "invalid", 30.0]
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "float_parsing",
+          "loc": ["body", "prices", 2],
+          "msg": "Input should be a valid number, unable to parse string as a number",
+          "input": "invalid"
+        }
+      ]
+    }
+  },
+  "notes": "Array item validation includes item index in loc path"
+}

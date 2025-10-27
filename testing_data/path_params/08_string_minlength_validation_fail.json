@@ -1,0 +1,26 @@
+{
+  "name": "String path parameter with min_length - failure",
+  "description": "Tests string path parameter with min_length validation fails",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_path.py",
+    "test_function": "test_path_param_minlength_fo"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/path/param-minlength/fo"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "string_too_short",
+          "loc": ["path", "item_id"],
+          "msg": "String should have at least 3 characters"
+        }
+      ]
+    }
+  },
+  "notes": "Path param with min_length=3, value 'fo' (2 chars) fails"
+}

@@ -1,0 +1,26 @@
+{
+  "name": "Query parameter with special characters - URL encoding",
+  "description": "Tests query parameters with special characters that need URL encoding",
+  "source": {
+    "framework": "litestar",
+    "test_file": "tests/unit/test_kwargs/test_query_params.py",
+    "test_function": "test_query_parsing_of_escaped_values"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/test",
+    "query_string": "email=x%40test.com&special=%26%40A.ac",
+    "query_params": {
+      "email": "x@test.com",
+      "special": "&@A.ac"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "email": "x@test.com",
+      "special": "&@A.ac"
+    }
+  },
+  "notes": "URL-encoded: @ becomes %40, & becomes %26"
+}

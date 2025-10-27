@@ -1,0 +1,20 @@
+{
+  "name": "304 Not Modified - Cached content valid",
+  "description": "Tests 304 Not Modified for cached resources",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_responses.py",
+    "test_function": "test_not_modified"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items/1",
+    "headers": {
+      "If-None-Match": "\"abc123\""
+    }
+  },
+  "expected_response": {
+    "status_code": 304
+  },
+  "notes": "304 Not Modified - cached content still valid (ETag match)"
+}

@@ -1,0 +1,30 @@
+{
+  "name": "Array of primitive values",
+  "description": "Tests array field containing primitive values (strings, numbers)",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_body_nested_models/test_tutorial009.py",
+    "test_function": "test_array_of_primitives"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Product",
+      "tags": ["electronics", "gadget", "new"],
+      "ratings": [4.5, 4.8, 5.0, 4.2]
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "name": "Product",
+      "tags": ["electronics", "gadget", "new"],
+      "ratings": [4.5, 4.8, 5.0, 4.2]
+    }
+  },
+  "notes": "Array of strings (tags) and array of floats (ratings)"
+}

@@ -1,0 +1,39 @@
+{
+  "name": "Array min_items constraint violation",
+  "description": "Tests validation error when array has fewer items than min_items",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_body_multiple_params/test_tutorial001.py",
+    "test_function": "test_array_min_items"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items/",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Item",
+      "tags": []
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "too_short",
+          "loc": ["body", "tags"],
+          "msg": "List should have at least 1 item after validation, not 0",
+          "input": [],
+          "ctx": {
+            "field_type": "List",
+            "min_length": 1,
+            "actual_length": 0
+          }
+        }
+      ]
+    }
+  },
+  "notes": "min_items constraint ensures array has minimum number of elements"
+}

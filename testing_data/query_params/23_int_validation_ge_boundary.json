@@ -1,0 +1,23 @@
+{
+  "name": "Integer query param with ge constraint - boundary",
+  "description": "Tests integer query parameter with ge validation at boundary value",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_query.py",
+    "test_function": "test_query_param_int_ge"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/query/int-ge",
+    "query_params": {
+      "value": "10"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "value": 10
+    }
+  },
+  "notes": "ge=10 constraint, value 10 is valid (boundary test)"
+}

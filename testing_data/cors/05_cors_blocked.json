@@ -1,0 +1,23 @@
+{
+  "name": "CORS request blocked",
+  "description": "Tests CORS request from disallowed origin",
+  "source": {
+    "framework": "starlette",
+    "test_file": "tests/test_cors.py",
+    "test_function": "test_cors_blocked"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items/",
+    "headers": {
+      "Origin": "https://malicious-site.com"
+    }
+  },
+  "expected_response": {
+    "status_code": 403,
+    "body": {
+      "detail": "CORS request from origin 'https://malicious-site.com' not allowed"
+    }
+  },
+  "notes": "Server can block requests from disallowed origins"
+}

@@ -1,0 +1,27 @@
+{
+  "name": "Query param type error - string provided for int",
+  "description": "Tests validation error when string is provided for integer query param",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_tutorial/test_query_params/test_tutorial001.py",
+    "test_function": "test_query_params_invalid"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items/?skip=not_a_number"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "int_parsing",
+          "loc": ["query", "skip"],
+          "msg": "Input should be a valid integer, unable to parse string as an integer",
+          "input": "not_a_number"
+        }
+      ]
+    }
+  },
+  "notes": "Pydantic v2 returns int_parsing error when string cannot be parsed as integer"
+}

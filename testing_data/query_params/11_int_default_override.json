@@ -1,0 +1,21 @@
+{
+  "name": "Integer with default value - override",
+  "description": "Tests integer parameter with default value when overridden with custom value",
+  "source": {
+    "framework": "fastapi",
+    "test_file": "tests/test_query.py",
+    "test_function": "test_query_int_default_query_50"
+  },
+  "request": {
+    "method": "GET",
+    "path": "/query/int/default",
+    "query_params": {
+      "query": 50
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": "foo bar 50"
+  },
+  "notes": "Default value is 10, but overridden to 50"
+}
