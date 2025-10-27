@@ -73,12 +73,12 @@ fn main() -> Result<()> {
 
 fn run_server(module_path: PathBuf, host: String, port: u16) -> Result<()> {
     // Initialize Python interpreter
-    pyo3::prepare_freethreaded_python();
+    Python::initialize();
 
     // Extract routes from Python module
-    let (router, _handlers) = Python::with_gil(|py| -> PyResult<(Router, Vec<PyObject>)> {
+    let (router, _handlers) = Python::attach(|py| -> PyResult<(Router, Vec<Py<PyAny>>)> {
         // Add module directory to sys.path
-        let sys = py.import_bound("sys")?;
+        let sys = py.import("sys")?;
         let sys_path = sys.getattr("path")?;
         let module_dir = module_path
             .parent()
@@ -93,7 +93,7 @@ fn run_server(module_path: PathBuf, host: String, port: u16) -> Result<()> {
             .context("Invalid module name")
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
 
-        let user_module = py.import_bound(module_name)?;
+        let user_module = py.import(module_name)?;
 
         // Find the Spikard app instance
         let app = user_module.getattr("app")?;

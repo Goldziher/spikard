@@ -13,8 +13,8 @@ crate-type = ["cdylib"]
 
 [dependencies]
 spikard.workspace = true
-napi = { version = "3.3", default-features = false, features = ["napi8"] }
-napi-derive = "3.2"
+napi = { version = "3.4", default-features = false, features = ["napi8"] }
+napi-derive = "3.3"
 
 [target.'cfg(all(any(windows, unix), target_arch = "x86_64", not(target_env = "musl")))'.dependencies]
 mimalloc-rust = "0.2"
