@@ -19,5 +19,7 @@ serde_json.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
 jsonschema = "0.33"
+pyo3.workspace = true
+pyo3-async-runtimes.workspace = true
 
 [dev-dependencies]

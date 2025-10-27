@@ -7,10 +7,12 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+pub mod handler;
 pub mod router;
 pub mod server;
 pub mod validation;
 
+pub use handler::PythonHandler;
 pub use router::{Route, RouteHandler, Router};
 pub use server::Server;
 pub use validation::SchemaValidator;
