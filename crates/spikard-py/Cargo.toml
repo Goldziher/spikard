@@ -15,7 +15,9 @@ doctest = false
 
 [dependencies]
 spikard.workspace = true
+spikard-http = { path = "../spikard-http" }
 pyo3.workspace = true
+serde_json.workspace = true
 
 [dev-dependencies]
 
