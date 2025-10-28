@@ -11,8 +11,9 @@ tasks:
       - uv sync --all-extras --all-groups
       - uv tool install cargo-binstall
       - uv tool install cargo-upgrade
-      - cd crates/spikard-py && uv run maturin develop --release
-      - prek install && prek install --hook-type commit-msg
+      - task: build:py
+      - prek install
+      - prek install --hook-type commit-msg
 
   update:
     desc: "Update Python and Rust dependencies"
@@ -21,18 +22,13 @@ tasks:
       - cargo upgrade --workspace --incompatible
       - cargo update --workspace
       - uv sync --all-extras --all-groups --upgrade
-      - cd crates/spikard-py && uv run maturin develop --release
+      - task: build:py
       - prek autoupdate
 
   test:python:
     desc: "Run Python tests with pytest"
     cmds:
-      - uv run pytest tests/ -v
-
-  test:path-params:
-    desc: "Run path parameter tests only"
-    cmds:
-      - PYTHONPATH=/Users/naamanhirschfeld/workspace/spikard/packages/python uv run pytest tests/test_all_fixtures.py -k "path_params" -v
+      - PYTHONPATH=. uv run pytest packages/python/tests -v
 
   test:rust:
     desc: "Run Rust tests"
@@ -95,36 +91,39 @@ tasks:
 
   build:py:
     desc: "Build Python bindings for development"
+    dir: crates/spikard-py
     cmds:
-      - cd crates/spikard-py && uv run maturin develop --release
+      - uv run maturin develop --release
 
   build:py:debug:
     desc: "Build Python bindings in debug mode"
+    dir: crates/spikard-py
     cmds:
-      - cd crates/spikard-py && uv run maturin develop
+      - uv run maturin develop
 
   build:py:wheel:
     desc: "Build Python bindings as wheel for testing (release mode)"
+    dir: crates/spikard-py
     cmds:
-      - cd crates/spikard-py && ../../.venv/bin/maturin build --release --out ../../target/wheels
-      - uv pip install --force-reinstall target/wheels/spikard_bindings-0.1.0-cp310-abi3-macosx_11_0_arm64.whl
+      - uv run maturin build --release --out ../../target/wheels
+      - uv pip install --force-reinstall ../../target/wheels/spikard_bindings-0.1.0-cp310-abi3-macosx_11_0_arm64.whl
 
   build:local:python:
     desc: "Clean rebuild Python bindings for local testing (removes cached .so files)"
     cmds:
       - cargo clean
       - rm -rf crates/spikard-py/.venv/lib/python*/site-packages/_spikard
-      - cd crates/spikard-py && uv run maturin develop
+      - task: build:py:debug
 
   build:
     desc: "Build Rust components for development"
     cmds:
-      - cd crates/spikard-py && uv run maturin develop --release
+      - task: build:py
 
   build:debug:
     desc: "Build Rust components in debug mode"
     cmds:
-      - cd crates/spikard-py && uv run maturin develop
+      - task: build:py:debug
 
   build:cli:
     desc: "Build CLI binary"

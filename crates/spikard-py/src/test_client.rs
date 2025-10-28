@@ -11,6 +11,7 @@ use pyo3::types::PyDict;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
+use urlencoding::encode;
 
 /// A test client for making requests to a Spikard application
 ///
@@ -73,7 +74,7 @@ impl TestClient {
             let full_path = if !query_params_vec.is_empty() {
                 let query_string: Vec<String> = query_params_vec
                     .iter()
-                    .map(|(k, v)| format!("{}={}", k, v))  // Values already URL-safe
+                    .map(|(k, v)| format!("{}={}", encode(k), encode(v)))
                     .collect();
                 if path.contains('?') {
                     format!("{}&{}", path, query_string.join("&"))
@@ -512,7 +513,10 @@ fn build_full_path(path: &str, query_params: &[(String, String)]) -> String {
         return path.to_string();
     }
 
-    let query_string: Vec<String> = query_params.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
+    let query_string: Vec<String> = query_params
+        .iter()
+        .map(|(k, v)| format!("{}={}", encode(k), encode(v)))
+        .collect();
 
     if path.contains('?') {
         format!("{}&{}", path, query_string.join("&"))

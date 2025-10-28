@@ -111,7 +111,7 @@ class TestClient:
     async def get(
         self,
         path: str,
-        query_params: dict[str, str] | None = None,
+        query_params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
     ) -> TestResponse:
         """Make a GET request.

@@ -1,1 +1,1 @@
-"""Unit tests for the Python package."""
+"""Test suite package for spikard."""

@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 FIXTURES_DIR = Path(__file__).parent.parent
 
@@ -28,7 +28,7 @@ def load_fixture(category: str, name: str) -> dict[str, Any]:
     """
     path = FIXTURES_DIR / category / f"{name}.json"
     with path.open() as f:
-        return json.load(f)
+        return cast("dict[str, Any]", json.load(f))
 
 
 def load_all_fixtures(category: str) -> list[dict[str, Any]]:
@@ -46,13 +46,13 @@ def load_all_fixtures(category: str) -> list[dict[str, Any]]:
         7
     """
     category_dir = FIXTURES_DIR / category
-    fixtures = []
+    fixtures: list[dict[str, Any]] = []
 
     for path in sorted(category_dir.glob("*.json")):
         if path.name == "schema.json":
             continue
         with path.open() as f:
-            fixtures.append(json.load(f))
+            fixtures.append(cast("dict[str, Any]", json.load(f)))
 
     return fixtures
 
@@ -72,7 +72,7 @@ def get_fixture_names(category: str) -> list[str]:
         '01_simple_file_upload'
     """
     category_dir = FIXTURES_DIR / category
-    names = []
+    names: list[str] = []
 
     for path in sorted(category_dir.glob("*.json")):
         if path.name == "schema.json":

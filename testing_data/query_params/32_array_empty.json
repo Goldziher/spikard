@@ -8,14 +8,12 @@
   },
   "request": {
     "method": "GET",
-    "path": "/query/list",
+    "path": "/query/list-default",
     "query_params": {}
   },
   "expected_response": {
     "status_code": 200,
-    "body": {
-      "items": []
-    }
+    "body": []
   },
-  "notes": "Optional array query parameter, no values provided returns empty array"
+  "notes": "Optional array query parameter with default [], no values provided returns empty array"
 }

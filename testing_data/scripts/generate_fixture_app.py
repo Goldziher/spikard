@@ -11,14 +11,15 @@ rely on looking up the expected response from the fixtures themselves.
 import json
 from collections import defaultdict
 from pathlib import Path
+from typing import Any
 
 FIXTURES_DIR = Path(__file__).parent.parent
 OUTPUT_FILE = FIXTURES_DIR.parent / "tests" / "fixture_app_generated.py"
 
 
-def load_fixtures_by_category() -> dict[str, list[dict]]:
+def load_fixtures_by_category() -> dict[str, list[dict[str, Any]]]:
     """Load all fixtures grouped by category."""
-    fixtures_by_category = defaultdict(list)
+    fixtures_by_category: defaultdict[str, list[dict[str, Any]]] = defaultdict(list)
 
     for category_dir in FIXTURES_DIR.iterdir():
         if not category_dir.is_dir() or category_dir.name.startswith(".") or category_dir.name == "scripts":
@@ -31,18 +32,23 @@ def load_fixtures_by_category() -> dict[str, list[dict]]:
             try:
                 with fixture_file.open() as f:
                     fixture = json.load(f)
-                fixture["_file"] = fixture_file.stem
-                fixture["_category"] = category_dir.name
-                fixtures_by_category[category_dir.name].append(fixture)
             except (OSError, json.JSONDecodeError):
-                pass
+                continue
+
+            if not isinstance(fixture, dict):
+                continue
+
+            typed_fixture: dict[str, Any] = dict(fixture)
+            typed_fixture["_file"] = fixture_file.stem
+            typed_fixture["_category"] = category_dir.name
+            fixtures_by_category[category_dir.name].append(typed_fixture)
 
     return dict(fixtures_by_category)
 
 
-def get_unique_routes(fixtures: list[dict]) -> dict[str, list[dict]]:
+def get_unique_routes(fixtures: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
     """Group fixtures by unique route (method + path)."""
-    routes = defaultdict(list)
+    routes: defaultdict[str, list[dict[str, Any]]] = defaultdict(list)
     for fixture in fixtures:
         method = fixture["request"]["method"]
         path = fixture["request"]["path"]
@@ -87,7 +93,7 @@ def build_file_header() -> list[str]:
     ]
 
 
-def build_category_section(category: str, fixtures: list[dict]) -> list[str]:
+def build_category_section(category: str, fixtures: list[dict[str, Any]]) -> list[str]:
     """Build the code section for a single fixture category."""
     lines: list[str] = []
     routes = get_unique_routes(fixtures)
