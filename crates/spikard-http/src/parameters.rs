@@ -176,7 +176,7 @@ impl ParameterValidator {
                 errors.push(ValidationErrorDetail {
                     error_type: "missing".to_string(),
                     loc: vec![source_str.to_string(), param_def.name.clone()],
-                    msg: format!("Field required"),
+                    msg: "Field required".to_string(),
                     input: Value::Null,
                     ctx: None,
                 });
@@ -335,12 +335,11 @@ impl ParameterValidator {
                         error.ctx
                     );
                 }
-                if crate::debug::is_enabled() {
-                    if let Ok(json_errors) = serde_json::to_value(&validation_err.errors) {
-                        if let Ok(json_str) = serde_json::to_string_pretty(&json_errors) {
-                            debug_log_module!("parameters", "Serialized errors:\n{}", json_str);
-                        }
-                    }
+                if crate::debug::is_enabled()
+                    && let Ok(json_errors) = serde_json::to_value(&validation_err.errors)
+                    && let Ok(json_str) = serde_json::to_string_pretty(&json_errors)
+                {
+                    debug_log_module!("parameters", "Serialized errors:\n{}", json_str);
                 }
 
                 Err(validation_err)
@@ -517,9 +516,7 @@ impl ParameterValidator {
     /// Validate duration format (simplified - accept ISO 8601 duration or simple formats)
     fn validate_duration_format(value: &str) -> Result<(), String> {
         // Accept ISO 8601 duration (starts with P) or simple numeric formats
-        if value.starts_with('P')
-            || value.starts_with('-')
-            || value.chars().next().map_or(false, |c| c.is_ascii_digit())
+        if value.starts_with('P') || value.starts_with('-') || value.chars().next().is_some_and(|c| c.is_ascii_digit())
         {
             Ok(())
         } else {

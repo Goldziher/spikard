@@ -13,7 +13,8 @@ from typing import TypedDict
 
 import msgspec
 import pytest
-from packages.python.spikard.schema import (
+
+from spikard.schema import (
     extract_json_schema,
     is_json_schema_dict,
     is_typeddict,
