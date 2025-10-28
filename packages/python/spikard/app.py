@@ -2,13 +2,15 @@
 
 import functools
 import inspect
-import os
 import shutil
-import sys
+import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from spikard.introspection import extract_parameter_schema
+from spikard.params import ParamBase
+from spikard.schema import extract_schemas
 from spikard.types import Route
 
 
@@ -96,10 +98,6 @@ class Spikard:
         """
 
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-            from spikard.introspection import extract_parameter_schema
-            from spikard.params import ParamBase
-            from spikard.schema import extract_schemas
-
             request_schema, response_schema = extract_schemas(func)
             parameter_schema = extract_parameter_schema(func, path)
 
@@ -176,15 +174,20 @@ class Spikard:
             raise RuntimeError("spikard binary not found. Install with: pip install spikard")
 
         # Get the calling module's file path
-        frame = sys._getframe(1)
+        caller_frame = inspect.currentframe()
+        if caller_frame is None or caller_frame.f_back is None:
+            raise RuntimeError("Cannot determine module file path")
+        frame = caller_frame.f_back
         module_file = frame.f_globals.get("__file__")
+        del frame
+        del caller_frame
 
         if not module_file:
             raise RuntimeError("Cannot determine module file path")
 
         # Build command arguments
-        args = [
-            "spikard",
+        command = [
+            binary,
             "run",
             module_file,
             "--host",
@@ -196,10 +199,9 @@ class Spikard:
         ]
 
         if reload:
-            args.append("--reload")
+            command.append("--reload")
 
-        # Exec the Rust binary (replaces current process)
-        os.execvp(binary, args)
+        subprocess.run(command, check=True)
 
     def get_routes(self) -> list[Route]:
         """Get all registered routes.

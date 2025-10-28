@@ -21,7 +21,7 @@ def load_fixture(category: str, name: str) -> dict[str, Any]:
         The loaded fixture dictionary
     """
     path = FIXTURES_DIR / category / f"{name}.json"
-    with open(path) as f:
+    with path.open() as f:
         return json.load(f)
 
 
@@ -41,7 +41,7 @@ def load_all_fixtures(category: str) -> list[tuple[str, dict[str, Any]]]:
         if fixture_file.name == "schema.json":
             continue
 
-        with open(fixture_file) as f:
+        with fixture_file.open() as f:
             fixture = json.load(f)
             # Use the fixture name without extension as the test ID
             fixture_id = fixture_file.stem

@@ -41,7 +41,7 @@ def validate_category(category: str) -> tuple[int, int]:
     if not schema_path.exists():
         return (0, 0)
 
-    with open(schema_path) as f:
+    with schema_path.open() as f:
         schema = json.load(f)
 
     fixtures = sorted(category_dir.glob("*.json"))
@@ -54,7 +54,7 @@ def validate_category(category: str) -> tuple[int, int]:
     total_count = len(fixtures)
 
     for fixture_path in fixtures:
-        with open(fixture_path) as f:
+        with fixture_path.open() as f:
             try:
                 fixture = json.load(f)
                 jsonschema.validate(instance=fixture, schema=schema)

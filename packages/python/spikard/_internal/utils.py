@@ -5,8 +5,8 @@ Original source: https://github.com/litestar-org/litestar
 License: MIT (see ATTRIBUTIONS.md in project root)
 """
 
-from collections.abc import Collection, Mapping, Sequence
-from typing import Any, get_args, get_origin
+from collections.abc import Collection, Iterable, Mapping, Sequence
+from typing import Annotated, Any, get_args, get_origin
 
 
 def unwrap_annotation(annotation: Any) -> tuple[Any, tuple[Any, ...], tuple[type, ...]]:
@@ -18,8 +18,6 @@ def unwrap_annotation(annotation: Any) -> tuple[Any, tuple[Any, ...], tuple[type
     Returns:
         Tuple of (inner_type, metadata, wrappers)
     """
-    from typing import Annotated
-
     metadata: list[Any] = []
     wrappers: list[Any] = []
 
@@ -39,7 +37,7 @@ def unwrap_annotation(annotation: Any) -> tuple[Any, tuple[Any, ...], tuple[type
     return annotation, tuple(metadata), tuple(wrappers)
 
 
-def get_instantiable_origin(origin: Any, annotation: Any) -> Any:
+def get_instantiable_origin(origin: Any, _annotation: Any) -> Any:
     """Get an instantiable version of the origin type.
 
     For example, Sequence -> list, Mapping -> dict, etc.
@@ -65,7 +63,7 @@ def get_instantiable_origin(origin: Any, annotation: Any) -> Any:
     return origin
 
 
-def get_safe_generic_origin(origin: Any, annotation: Any) -> Any:
+def get_safe_generic_origin(origin: Any, _annotation: Any) -> Any:
     """Get a safe generic origin for the type.
 
     This is used for safely rebuilding generic types with different args.
@@ -126,8 +124,6 @@ def is_non_string_iterable(annotation: Any) -> bool:
     Returns:
         True if it's a non-string iterable
     """
-    from collections.abc import Iterable
-
     origin = get_origin(annotation) or annotation
 
     try:

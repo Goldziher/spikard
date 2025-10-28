@@ -5,12 +5,11 @@ and to specify default values and factories for query/body/path parameters.
 """
 
 import re
-from abc import ABC
 from collections.abc import Callable
 from typing import Any
 
 
-class ParamBase(ABC):
+class ParamBase:
     """Base class for all parameter wrappers.
 
     Provides common functionality for default values and default factories.
@@ -222,4 +221,4 @@ class _Required:
         return "..."
 
 
-Ellipsis = _Required()
+REQUIRED = _Required()
