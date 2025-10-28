@@ -19,8 +19,12 @@ Categories tested:
 - edge_cases (16 fixtures)
 """
 
+from collections.abc import Callable
+from typing import Any, cast
+
 import pytest
 
+from spikard import Spikard
 from spikard.testing import TestClient
 from tests.conftest import FIXTURES_DIR, load_all_fixtures
 from tests.fixture_app import (
@@ -32,11 +36,19 @@ from tests.fixture_app import (
     status_codes_app,
 )
 
+AppFactory = Callable[[], Spikard]
+QUERY_PARAMS_APP_FACTORY: AppFactory = cast("AppFactory", query_params_app)
+HEADERS_APP_FACTORY: AppFactory = cast("AppFactory", headers_app)
+JSON_BODIES_APP_FACTORY: AppFactory = cast("AppFactory", json_bodies_app)
+COOKIES_APP_FACTORY: AppFactory = cast("AppFactory", cookies_app)
+PATH_PARAMS_APP_FACTORY: AppFactory = cast("AppFactory", path_params_app)
+STATUS_CODES_APP_FACTORY: AppFactory = cast("AppFactory", status_codes_app)
+
 
 # Discover all fixture categories dynamically
-def get_all_categories():
+def get_all_categories() -> list[str]:
     """Get all fixture categories from the testing_data directory."""
-    categories = []
+    categories: list[str] = []
     for path in FIXTURES_DIR.iterdir():
         if path.is_dir() and not path.name.startswith("."):
             # Check if directory has fixture files
@@ -47,8 +59,8 @@ def get_all_categories():
 
 
 # Load all fixtures from all categories
-ALL_CATEGORIES = get_all_categories()
-ALL_FIXTURES = []
+ALL_CATEGORIES: list[str] = get_all_categories()
+ALL_FIXTURES: list[tuple[str, str, dict[str, Any]]] = []
 
 for category in ALL_CATEGORIES:
     fixtures = load_all_fixtures(category)
@@ -57,13 +69,13 @@ for category in ALL_CATEGORIES:
 
 
 # Map categories to their app factories
-APP_FACTORIES = {
-    "query_params": query_params_app,
-    "headers": headers_app,
-    "json_bodies": json_bodies_app,
-    "cookies": cookies_app,
-    "path_params": path_params_app,
-    "status_codes": status_codes_app,
+APP_FACTORIES: dict[str, AppFactory] = {
+    "query_params": QUERY_PARAMS_APP_FACTORY,
+    "headers": HEADERS_APP_FACTORY,
+    "json_bodies": JSON_BODIES_APP_FACTORY,
+    "cookies": COOKIES_APP_FACTORY,
+    "path_params": PATH_PARAMS_APP_FACTORY,
+    "status_codes": STATUS_CODES_APP_FACTORY,
 }
 
 
@@ -71,7 +83,7 @@ APP_FACTORIES = {
     "category,fixture_id,fixture", ALL_FIXTURES, ids=[f"{cat}::{fid}" for cat, fid, _ in ALL_FIXTURES]
 )
 @pytest.mark.asyncio
-async def test_fixture(category, fixture_id, fixture):
+async def test_fixture(category: str, fixture_id: str, fixture: dict[str, Any]) -> None:
     """Universal test for all fixtures across all categories.
 
     This test is parameterized to run once for each fixture in all categories.
@@ -85,11 +97,8 @@ async def test_fixture(category, fixture_id, fixture):
         fixture: The fixture data dictionary
     """
     # Get app factory for this category
-    if category in APP_FACTORIES:
-        app = APP_FACTORIES[category]()
-    else:
-        # For categories without specific apps yet, use query_params as fallback
-        app = query_params_app()
+    app_factory = APP_FACTORIES.get(category, QUERY_PARAMS_APP_FACTORY)
+    app = app_factory()
 
     # Create test client
     client = TestClient(app)
@@ -97,16 +106,16 @@ async def test_fixture(category, fixture_id, fixture):
     # Extract fixture data
     fixture["name"]
     fixture["description"]
-    request_spec = fixture["request"]
-    expected_response = fixture["expected_response"]
+    request_spec = cast("dict[str, Any]", fixture["request"])
+    expected_response = cast("dict[str, Any]", fixture["expected_response"])
 
     # Extract request components
-    method = request_spec["method"]
-    path = request_spec["path"]
-    query_params = request_spec.get("query_params", {})
-    headers = request_spec.get("headers", {})
+    method = cast("str", request_spec["method"])
+    path = cast("str", request_spec["path"])
+    query_params = cast("dict[str, Any]", request_spec.get("query_params", {}))
+    headers = cast("dict[str, str]", request_spec.get("headers", {}))
     body = request_spec.get("body")
-    cookies = request_spec.get("cookies", {})
+    cookies = cast("dict[str, Any]", request_spec.get("cookies", {}))
 
     if query_params:
         pass
@@ -118,9 +127,9 @@ async def test_fixture(category, fixture_id, fixture):
         pass
 
     # Extract expected response
-    expected_status = expected_response["status_code"]
+    expected_status = cast("int", expected_response["status_code"])
     expected_body = expected_response.get("body")
-    expected_headers = expected_response.get("headers", {})
+    expected_headers = cast("dict[str, str]", expected_response.get("headers", {}))
 
     # Make actual HTTP request using test client
     # Note: TestClient currently doesn't support cookies parameter
@@ -155,9 +164,13 @@ async def test_fixture(category, fixture_id, fixture):
                 path, query_params=query_params if query_params else None, headers=headers if headers else None
             )
         elif method == "OPTIONS":
-            response = await client.options(path, headers=headers if headers else None)
+            response = await client.options(
+                path, query_params=query_params if query_params else None, headers=headers if headers else None
+            )
         elif method == "HEAD":
-            response = await client.head(path, headers=headers if headers else None)
+            response = await client.head(
+                path, query_params=query_params if query_params else None, headers=headers if headers else None
+            )
         else:
             pytest.skip(f"Unsupported HTTP method: {method}")
 
@@ -180,7 +193,7 @@ async def test_fixture(category, fixture_id, fixture):
         assert actual_value == expected_value, f"Expected header {header_name}={expected_value}, got {actual_value}"
 
 
-def test_fixture_discovery():
+def test_fixture_discovery() -> None:
     """Verify all fixture categories are discovered."""
     for category in ALL_CATEGORIES:
         len([1 for cat, _, _ in ALL_FIXTURES if cat == category])
@@ -188,7 +201,7 @@ def test_fixture_discovery():
     assert len(ALL_FIXTURES) > 0, "No fixtures discovered"
 
 
-def test_all_categories_have_fixtures():
+def test_all_categories_have_fixtures() -> None:
     """Verify each category has at least one fixture."""
     for category in ALL_CATEGORIES:
         category_fixtures = [1 for cat, _, _ in ALL_FIXTURES if cat == category]

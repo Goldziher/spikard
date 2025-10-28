@@ -8,31 +8,36 @@ Tests all query_params fixtures against the test application to ensure:
 - Lists and arrays are handled properly
 """
 
+from collections.abc import Callable
+from typing import Any, cast
+
 import pytest
 
+from spikard import Spikard
 from spikard.testing import TestClient
 from tests.conftest import load_all_fixtures
 from tests.fixture_app import query_params_app
 
 # Load all query_params fixtures
-QUERY_PARAMS_FIXTURES = load_all_fixtures("query_params")
+QUERY_PARAMS_APP_FACTORY: Callable[[], Spikard] = cast("Callable[[], Spikard]", query_params_app)
+QUERY_PARAMS_FIXTURES: list[tuple[str, dict[str, Any]]] = load_all_fixtures("query_params")
 
 
 @pytest.fixture
-def app():
+def app() -> Spikard:
     """Create the query params test app."""
-    return query_params_app()
+    return QUERY_PARAMS_APP_FACTORY()
 
 
 @pytest.fixture
-def client(app):
+def client(app: Spikard) -> TestClient:
     """Create a test client for the app."""
     return TestClient(app)
 
 
 @pytest.mark.parametrize("fixture_id,fixture", QUERY_PARAMS_FIXTURES)
 @pytest.mark.asyncio
-async def test_query_params_fixture(fixture_id, fixture, client):
+async def test_query_params_fixture(fixture_id: str, fixture: dict[str, Any], client: TestClient) -> None:
     """Test query parameter handling against fixture expectations.
 
     This test is parameterized to run once for each query_params fixture.
@@ -48,17 +53,17 @@ async def test_query_params_fixture(fixture_id, fixture, client):
     # Extract fixture data
     fixture["name"]
     fixture["description"]
-    request_spec = fixture["request"]
-    expected_response = fixture["expected_response"]
+    request_spec = cast("dict[str, Any]", fixture["request"])
+    expected_response = cast("dict[str, Any]", fixture["expected_response"])
 
     # Extract request components
-    method = request_spec["method"]
-    path = request_spec["path"]
-    query_params = request_spec.get("query_params", {})
-    headers = request_spec.get("headers", {})
+    method = cast("str", request_spec["method"])
+    path = cast("str", request_spec["path"])
+    query_params = cast("dict[str, Any]", request_spec.get("query_params", {}))
+    headers = cast("dict[str, Any]", request_spec.get("headers", {}))
 
     # Extract expected response
-    expected_status = expected_response["status_code"]
+    expected_status = cast("int", expected_response["status_code"])
     expected_body = expected_response.get("body")
 
     # Make actual HTTP request using test client
@@ -86,12 +91,12 @@ async def test_query_params_fixture(fixture_id, fixture, client):
         assert actual_body == expected_body, f"Expected body {expected_body}, got {actual_body}"
 
 
-def test_query_params_fixture_count():
+def test_query_params_fixture_count() -> None:
     """Verify we have the expected number of query_params fixtures."""
     assert len(QUERY_PARAMS_FIXTURES) == 40, f"Expected 40 query_params fixtures, found {len(QUERY_PARAMS_FIXTURES)}"
 
 
-def test_query_params_fixture_names():
+def test_query_params_fixture_names() -> None:
     """Verify all fixtures have unique, descriptive names."""
     names = [fixture["name"] for _, fixture in QUERY_PARAMS_FIXTURES]
     assert len(names) == len(set(names)), "Fixture names must be unique"
@@ -101,7 +106,7 @@ def test_query_params_fixture_names():
         assert len(name) > 10, f"Fixture name too short: {name}"
 
 
-def test_query_params_fixture_sources():
+def test_query_params_fixture_sources() -> None:
     """Verify all fixtures document their source framework."""
     for fixture_id, fixture in QUERY_PARAMS_FIXTURES:
         assert "source" in fixture, f"Fixture {fixture_id} missing source field"

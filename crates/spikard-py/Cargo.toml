@@ -23,6 +23,7 @@ axum.workspace = true
 axum-test = "18"
 bytes = "1.10"
 http-body-util = "0.1"
+urlencoding = "2.1"
 
 [dev-dependencies]
 

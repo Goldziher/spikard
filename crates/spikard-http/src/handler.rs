@@ -447,6 +447,11 @@ fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
     let json_module = py.import("json")?;
     let json_str: String = json_module.call_method1("dumps", (obj,))?.extract()?;
 
+    // Replace '+00:00' with 'Z' for UTC datetimes to match FastAPI's ISO 8601 format
+    // FastAPI uses 'Z' suffix for UTC datetimes (e.g., "2023-01-01T12:00:00Z")
+    // while Python's isoformat() uses '+00:00' (e.g., "2023-01-01T12:00:00+00:00")
+    let json_str = json_str.replace("+00:00", "Z");
+
     serde_json::from_str(&json_str)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to parse JSON: {}", e)))
 }

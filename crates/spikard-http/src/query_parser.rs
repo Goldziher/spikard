@@ -51,7 +51,7 @@ pub fn parse_query_string(qs: &[u8], separator: char) -> Vec<(String, String)> {
 ///
 /// Handles:
 /// - JSON objects and arrays (if wrapped in brackets)
-/// - Booleans (true/false)
+/// - Booleans (true/false/1/0, case-insensitive)
 /// - Null
 /// - Numbers (if parse_numbers is true)
 /// - Strings (fallback)
@@ -70,7 +70,9 @@ fn decode_value(json_str: String, parse_numbers: bool) -> Value {
     }
 
     let normalized = json_str.replace('"', "");
-    let json_boolean = normalized.parse::<bool>();
+
+    // Parse boolean with support for 1/0 and case-insensitive true/false
+    let json_boolean = parse_boolean(&normalized);
     let json_null = Ok::<_, Infallible>(normalized == "null");
 
     if parse_numbers {
@@ -89,6 +91,25 @@ fn decode_value(json_str: String, parse_numbers: bool) -> Value {
         (Ok(json_boolean), _) => Value::from(json_boolean),
         (_, Ok(true)) => Value::Null,
         _ => Value::from(normalized),
+    }
+}
+
+/// Parse a boolean value from a string.
+///
+/// Accepts:
+/// - "true" (case-insensitive) → true
+/// - "false" (case-insensitive) → false
+/// - "1" → true
+/// - "0" → false
+#[inline]
+fn parse_boolean(s: &str) -> Result<bool, ()> {
+    let lower = s.to_lowercase();
+    if lower == "true" || s == "1" {
+        Ok(true)
+    } else if lower == "false" || s == "0" {
+        Ok(false)
+    } else {
+        Err(())
     }
 }
 
@@ -186,6 +207,21 @@ mod tests {
     }
 
     #[test]
+    fn parse_query_string_to_json_parses_booleans_from_numbers() {
+        // When parse_numbers is false, 1 and 0 should be parsed as booleans
+        assert_eq!(parse_query_string_to_json(b"a=1", false), json!({"a": true}));
+        assert_eq!(parse_query_string_to_json(b"a=0", false), json!({"a": false}));
+    }
+
+    #[test]
+    fn parse_query_string_to_json_parses_case_insensitive_booleans() {
+        assert_eq!(parse_query_string_to_json(b"a=True", false), json!({"a": true}));
+        assert_eq!(parse_query_string_to_json(b"a=TRUE", false), json!({"a": true}));
+        assert_eq!(parse_query_string_to_json(b"a=False", false), json!({"a": false}));
+        assert_eq!(parse_query_string_to_json(b"a=FALSE", false), json!({"a": false}));
+    }
+
+    #[test]
     fn parse_query_string_to_json_parses_multiple_values() {
         assert_eq!(
             parse_query_string_to_json(b"a=1&a=2&a=3", true),
@@ -201,5 +237,63 @@ mod tests {
     #[test]
     fn parse_query_string_to_json_parses_empty_string() {
         assert_eq!(parse_query_string_to_json(b"a=", true), json!({ "a": "" }));
+    }
+
+    #[test]
+    fn parse_query_string_to_json_parses_multiple_string_values() {
+        assert_eq!(
+            parse_query_string_to_json(b"q=foo&q=bar", true),
+            json!({ "q": ["foo", "bar"] })
+        );
+    }
+
+    #[test]
+    fn parse_query_string_to_json_parses_multiple_string_values_with_parse_numbers_false() {
+        assert_eq!(
+            parse_query_string_to_json(b"q=foo&q=bar", false),
+            json!({ "q": ["foo", "bar"] })
+        );
+    }
+
+    #[test]
+    fn parse_query_string_to_json_preserves_order_and_duplicates() {
+        // Test that order is preserved
+        assert_eq!(
+            parse_query_string_to_json(b"q=foo&q=bar&q=baz", true),
+            json!({ "q": ["foo", "bar", "baz"] })
+        );
+
+        // Test that duplicates are preserved (not deduplicated)
+        assert_eq!(
+            parse_query_string_to_json(b"q=foo&q=foo&q=bar", true),
+            json!({ "q": ["foo", "foo", "bar"] })
+        );
+    }
+
+    #[test]
+    fn test_url_encoded_special_chars_in_values() {
+        // Test case 18: email=x%40test.com&special=%26%40A.ac
+        let result = parse_query_string_to_json(b"email=x%40test.com&special=%26%40A.ac", false);
+        assert_eq!(
+            result,
+            json!({
+                "email": "x@test.com",
+                "special": "&@A.ac"
+            })
+        );
+    }
+
+    #[test]
+    fn test_url_encoded_space() {
+        // Test case 34: name=hello%20world
+        let result = parse_query_string_to_json(b"name=hello%20world", false);
+        assert_eq!(result, json!({ "name": "hello world" }));
+    }
+
+    #[test]
+    fn test_url_encoded_complex_chars() {
+        // Test case 35: name=test%26value%3D123
+        let result = parse_query_string_to_json(b"name=test%26value%3D123", false);
+        assert_eq!(result, json!({ "name": "test&value=123" }));
     }
 }

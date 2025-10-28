@@ -188,13 +188,31 @@ impl ParameterValidator {
                 // Value from query params (already type-converted by fast-query-parsers)
                 tracing::debug!("Using pre-converted JSON value: {:?}", json_value);
 
-                // Special handling for array types: if schema expects array but we got a single value,
-                // wrap it in an array. This handles cases like ?items=apple where items is list[str]
-                let final_value = if param_def.expected_type.as_deref() == Some("array") && !json_value.is_array() {
-                    tracing::debug!("Wrapping single value in array for array-typed parameter");
-                    Value::Array(vec![json_value])
+                // Special handling for boolean types: if schema expects boolean but we got integer 1 or 0,
+                // coerce to boolean. This handles cases like ?flag=1 where flag is bool
+                let coerced_value = if param_def.expected_type.as_deref() == Some("boolean") {
+                    match json_value {
+                        Value::Number(n) if n.as_i64() == Some(1) => {
+                            tracing::debug!("Coercing integer 1 to boolean true");
+                            Value::Bool(true)
+                        }
+                        Value::Number(n) if n.as_i64() == Some(0) => {
+                            tracing::debug!("Coercing integer 0 to boolean false");
+                            Value::Bool(false)
+                        }
+                        _ => json_value,
+                    }
                 } else {
                     json_value
+                };
+
+                // Special handling for array types: if schema expects array but we got a single value,
+                // wrap it in an array. This handles cases like ?items=apple where items is list[str]
+                let final_value = if param_def.expected_type.as_deref() == Some("array") && !coerced_value.is_array() {
+                    tracing::debug!("Wrapping single value in array for array-typed parameter");
+                    Value::Array(vec![coerced_value])
+                } else {
+                    coerced_value
                 };
 
                 params_map.insert(param_def.name.clone(), final_value);
@@ -659,5 +677,59 @@ mod tests {
         assert!(result.is_ok(), "Validation should succeed for 'TRUE': {:?}", result);
         let params = result.unwrap();
         assert_eq!(params, json!({"value": true}));
+    }
+
+    #[test]
+    fn test_boolean_query_parameter_coercion() {
+        // Create a schema with a boolean query parameter
+        let schema = json!({
+            "type": "object",
+            "properties": {
+                "flag": {
+                    "type": "boolean",
+                    "source": "query"
+                }
+            },
+            "required": ["flag"]
+        });
+
+        let validator = ParameterValidator::new(schema).expect("Failed to create validator");
+        let path_params = HashMap::new();
+
+        // Test integer 1 → true (as it comes from query parser with parse_numbers=true)
+        let query_params = json!({"flag": 1});
+        let result = validator.validate_and_extract(&query_params, &path_params);
+        assert!(result.is_ok(), "Validation should succeed for integer 1: {:?}", result);
+        let params = result.unwrap();
+        assert_eq!(params, json!({"flag": true}));
+
+        // Test integer 0 → false
+        let query_params = json!({"flag": 0});
+        let result = validator.validate_and_extract(&query_params, &path_params);
+        assert!(result.is_ok(), "Validation should succeed for integer 0: {:?}", result);
+        let params = result.unwrap();
+        assert_eq!(params, json!({"flag": false}));
+
+        // Test boolean true → true (should still work)
+        let query_params = json!({"flag": true});
+        let result = validator.validate_and_extract(&query_params, &path_params);
+        assert!(
+            result.is_ok(),
+            "Validation should succeed for boolean true: {:?}",
+            result
+        );
+        let params = result.unwrap();
+        assert_eq!(params, json!({"flag": true}));
+
+        // Test boolean false → false (should still work)
+        let query_params = json!({"flag": false});
+        let result = validator.validate_and_extract(&query_params, &path_params);
+        assert!(
+            result.is_ok(),
+            "Validation should succeed for boolean false: {:?}",
+            result
+        );
+        let params = result.unwrap();
+        assert_eq!(params, json!({"flag": false}));
     }
 }

@@ -8,16 +8,14 @@
   },
   "request": {
     "method": "GET",
-    "path": "/query/list",
+    "path": "/query/list-default",
     "query_params": {
-      "items": "apple"
+      "tags": "apple"
     }
   },
   "expected_response": {
     "status_code": 200,
-    "body": {
-      "items": ["apple"]
-    }
+    "body": ["apple"]
   },
   "notes": "Single value for array parameter is converted to array with one element"
 }

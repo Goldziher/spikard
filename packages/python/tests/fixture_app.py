@@ -68,27 +68,14 @@ def query_params_app():
         """Int query parameter with default value."""
         return f"foo bar {query}"
 
-    # Route: /query/list - list query parameters
+    # Route: /query/list - list query parameters (device_ids required)
     #
-    # This endpoint has TWO separate parameters testing different scenarios:
-    # - device_ids: required list[int] (tests #12, #13 - when missing should 422)
-    # - items: optional list[str] with default [] (tests #32, #33)
-    #
-    # NOTE: The test expectations are contradictory - when NO params provided:
-    #   Test #13 (device_ids focus) expects 422 (required param missing)
-    #   Test #32 (items focus) expects 200 with {"items": []}
-    #
-    # Since we can't make both true simultaneously, for now keep the original behavior
-    # where both are optional. Test #13 will need fixing at the test fixture level.
+    # This endpoint tests device_ids as a required list[int] (tests #12, #13).
+    # When missing, should return 422 validation error.
     @app.get("/query/list")
-    def query_list(device_ids: list[int] | None = None, items: list[str] = Query(default_factory=list)):
-        """List query parameters - both optional but tested independently."""
-        # When device_ids is provided (tests #12, #13)
-        if device_ids is not None:
-            return device_ids
-        # When items is provided OR empty (tests #32, #33)
-        # items has default [], so always returns {"items": [...]}
-        return {"items": items}
+    def query_list(device_ids: list[int]):
+        """List query parameter - device_ids is required."""
+        return device_ids
 
     # Route: /query/list-default - optional list with default
     @app.get("/query/list-default")

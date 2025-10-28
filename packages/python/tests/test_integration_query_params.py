@@ -6,6 +6,7 @@ real HTTP requests, verifying the framework works end-to-end.
 
 from datetime import date, datetime
 from enum import Enum
+from typing import Any
 from uuid import UUID
 
 import pytest
@@ -24,7 +25,7 @@ class Status(str, Enum):
 
 # Create test application
 @pytest.fixture
-def app():
+def app() -> Spikard:
     """Create a Spikard app for query parameter testing."""
     app = Spikard()
 
@@ -42,7 +43,7 @@ def app():
         min_price: float | None = None,
         search: str | None = Field(None, min_length=3, max_length=50),
         code: str | None = Field(None, pattern=r"^[A-Z]{3}$"),
-    ):
+    ) -> dict[str, Any]:
         """Generic endpoint for query parameter testing."""
         result = {"message": "Query parameters received", "page": page}
 
@@ -72,7 +73,7 @@ def app():
         return result
 
     @app.get("/users/{user_id}")
-    def get_user(user_id: int = Field(gt=0)):
+    def get_user(user_id: int = Field(gt=0)) -> dict[str, int]:
         """Endpoint with validated path param."""
         return {"user_id": user_id}
 
@@ -80,14 +81,14 @@ def app():
 
 
 @pytest.fixture
-def client(app):
+def client(app: Spikard) -> TestClient:
     """Create a test client for the app."""
     return TestClient(app)
 
 
 # Integration tests
 @pytest.mark.asyncio
-async def test_required_string_success(client):
+async def test_required_string_success(client: TestClient) -> None:
     """Test required string query parameter."""
     response = await client.get("/items", query_params={"q": "test", "page": "1"})
 
@@ -98,7 +99,7 @@ async def test_required_string_success(client):
 
 
 @pytest.mark.asyncio
-async def test_optional_string_missing(client):
+async def test_optional_string_missing(client: TestClient) -> None:
     """Test optional string parameter can be omitted."""
     response = await client.get("/items", query_params={"page": "1"})
 
@@ -109,7 +110,7 @@ async def test_optional_string_missing(client):
 
 
 @pytest.mark.asyncio
-async def test_int_query_param(client):
+async def test_int_query_param(client: TestClient) -> None:
     """Test integer query parameter parsing."""
     response = await client.get("/items", query_params={"page": "1", "limit": "10"})
 
@@ -120,7 +121,7 @@ async def test_int_query_param(client):
 
 
 @pytest.mark.asyncio
-async def test_int_validation_error(client):
+async def test_int_validation_error(client: TestClient) -> None:
     """Test integer validation with invalid type."""
     response = await client.get("/items", query_params={"page": "1", "limit": "not_a_number"})
 
@@ -130,7 +131,7 @@ async def test_int_validation_error(client):
 
 
 @pytest.mark.asyncio
-async def test_bool_query_param_true(client):
+async def test_bool_query_param_true(client: TestClient) -> None:
     """Test boolean query parameter with 'true' value."""
     response = await client.get("/items", query_params={"page": "1", "active": "true"})
 
@@ -140,7 +141,7 @@ async def test_bool_query_param_true(client):
 
 
 @pytest.mark.asyncio
-async def test_bool_query_param_false(client):
+async def test_bool_query_param_false(client: TestClient) -> None:
     """Test boolean query parameter with 'false' value."""
     response = await client.get("/items", query_params={"page": "1", "active": "false"})
 
@@ -150,7 +151,29 @@ async def test_bool_query_param_false(client):
 
 
 @pytest.mark.asyncio
-async def test_list_query_param(client):
+async def test_bool_query_param_1(client: TestClient) -> None:
+    """Test boolean query parameter with '1' value (should parse as true)."""
+    response = await client.get("/items", query_params={"page": "1", "active": "1"})
+
+    if response.status_code != 200:
+        pass
+    assert response.status_code == 200
+    data = response.json()
+    assert data["active"] is True
+
+
+@pytest.mark.asyncio
+async def test_bool_query_param_0(client: TestClient) -> None:
+    """Test boolean query parameter with '0' value (should parse as false)."""
+    response = await client.get("/items", query_params={"page": "1", "active": "0"})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["active"] is False
+
+
+@pytest.mark.asyncio
+async def test_list_query_param(client: TestClient) -> None:
     """Test list query parameter with multiple values."""
     response = await client.get("/items", query_params={"page": "1", "tags": ["python", "rust", "web"]})
 
@@ -160,7 +183,7 @@ async def test_list_query_param(client):
 
 
 @pytest.mark.asyncio
-async def test_enum_query_param(client):
+async def test_enum_query_param(client: TestClient) -> None:
     """Test enum query parameter."""
     response = await client.get("/items", query_params={"page": "1", "status": "active"})
 
@@ -170,7 +193,7 @@ async def test_enum_query_param(client):
 
 
 @pytest.mark.asyncio
-async def test_enum_invalid_value(client):
+async def test_enum_invalid_value(client: TestClient) -> None:
     """Test enum query parameter with invalid value."""
     response = await client.get("/items", query_params={"page": "1", "status": "invalid"})
 
@@ -180,7 +203,7 @@ async def test_enum_invalid_value(client):
 
 
 @pytest.mark.asyncio
-async def test_uuid_query_param(client):
+async def test_uuid_query_param(client: TestClient) -> None:
     """Test UUID query parameter."""
     test_uuid = "123e4567-e89b-12d3-a456-426614174000"
     response = await client.get("/items", query_params={"page": "1", "item_id": test_uuid})
@@ -191,7 +214,7 @@ async def test_uuid_query_param(client):
 
 
 @pytest.mark.asyncio
-async def test_date_query_param(client):
+async def test_date_query_param(client: TestClient) -> None:
     """Test date query parameter."""
     response = await client.get("/items", query_params={"page": "1", "created_after": "2024-01-01"})
 
@@ -201,7 +224,7 @@ async def test_date_query_param(client):
 
 
 @pytest.mark.asyncio
-async def test_float_query_param(client):
+async def test_float_query_param(client: TestClient) -> None:
     """Test float query parameter."""
     response = await client.get("/items", query_params={"page": "1", "min_price": "9.99"})
 
@@ -211,7 +234,7 @@ async def test_float_query_param(client):
 
 
 @pytest.mark.asyncio
-async def test_string_min_length_validation(client):
+async def test_string_min_length_validation(client: TestClient) -> None:
     """Test string min_length validation."""
     response = await client.get("/items", query_params={"page": "1", "search": "ab"})
 
@@ -221,7 +244,7 @@ async def test_string_min_length_validation(client):
 
 
 @pytest.mark.asyncio
-async def test_string_pattern_validation(client):
+async def test_string_pattern_validation(client: TestClient) -> None:
     """Test string pattern validation."""
     # Valid pattern
     response = await client.get("/items", query_params={"page": "1", "code": "ABC"})
@@ -233,7 +256,7 @@ async def test_string_pattern_validation(client):
 
 
 @pytest.mark.asyncio
-async def test_multiple_query_params(client):
+async def test_multiple_query_params(client: TestClient) -> None:
     """Test multiple query parameters together."""
     response = await client.get(
         "/items",
@@ -250,7 +273,7 @@ async def test_multiple_query_params(client):
 
 
 @pytest.mark.asyncio
-async def test_path_param_validation(client):
+async def test_path_param_validation(client: TestClient) -> None:
     """Test path parameter validation."""
     # Valid path param
     response = await client.get("/users/123")
