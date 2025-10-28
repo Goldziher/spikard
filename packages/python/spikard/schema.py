@@ -123,7 +123,7 @@ def extract_schemas(
     """
     try:
         type_hints = get_type_hints(func)
-    except Exception:
+    except (AttributeError, NameError, TypeError, ValueError):
         return None, None
 
     # Extract request schema from first parameter (after self/cls if present)

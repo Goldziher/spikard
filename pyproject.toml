@@ -86,6 +86,16 @@ lint.per-file-ignores."examples/**/*.py" = [
   "D102",   # Missing docstring in public method
   "D103",   # Missing docstring in public function
   "INP001", # Implicit namespace package (examples don't need __init__.py)
+  "S101",   # Assertions are fine in examples
+]
+lint.per-file-ignores."tests/*.py" = [
+  "B008",
+  "C901",
+  "E501",
+  "PLR0912",
+  "PLR0913",
+  "PLR0915",
+  "SIM108",
 ]
 lint.isort.known-first-party = [ "spikard" ]
 lint.mccabe.max-complexity = 15
@@ -131,7 +141,12 @@ python_version = "3.10"
 implicit_reexport = false
 show_error_codes = true
 strict = true
+explicit_package_bases = true
 
 [[tool.mypy.overrides]]
 module = [ "_spikard" ]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [ "jsonschema" ]
 ignore_missing_imports = true

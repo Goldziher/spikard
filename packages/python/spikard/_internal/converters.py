@@ -8,8 +8,9 @@ and supports custom decoder registration.
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import suppress
 from datetime import date, datetime, time, timedelta
-from typing import Any, Protocol, get_type_hints
+from typing import Any, get_type_hints
 
 import msgspec
 
@@ -18,13 +19,6 @@ __all__ = ("clear_decoders", "convert_params", "register_decoder")
 
 # Type alias for decoder functions
 DecoderFunc = Callable[[type, Any], Any]
-
-
-class _SupportsModelValidate(Protocol):
-    """Protocol for types that support model_validate (e.g., Pydantic models)."""
-
-    @classmethod
-    def model_validate(cls, obj: Any) -> Any: ...
 
 
 # Global registry of custom decoders
@@ -87,10 +81,8 @@ def _default_dec_hook(type_: type, obj: Any) -> Any:
     """
     # Try custom decoders first
     for decoder in _CUSTOM_DECODERS:
-        try:
+        with suppress(NotImplementedError):
             return decoder(type_, obj)
-        except NotImplementedError:
-            continue
 
     # Try Pydantic decoder
     try:
@@ -138,7 +130,7 @@ def convert_params(
     # Get type hints from handler function
     try:
         type_hints = get_type_hints(handler_func)
-    except Exception:
+    except (AttributeError, NameError, TypeError, ValueError):
         # If we can't get type hints, just return params as-is
         return params
 
@@ -162,10 +154,10 @@ def convert_params(
                 builtin_types=(datetime, date, time, timedelta),
                 dec_hook=_default_dec_hook,
             )
-        except Exception as e:
+        except (msgspec.DecodeError, msgspec.ValidationError, TypeError, ValueError) as err:
             # If conversion fails and we're not strict, keep the original value
             if strict:
-                raise ValueError(f"Failed to convert parameter '{key}' to type {target_type}: {e}") from e
+                raise ValueError(f"Failed to convert parameter '{key}' to type {target_type}: {err}") from err
             converted[key] = value
 
     return converted

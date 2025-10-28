@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from inspect import Parameter, Signature
 from typing import Any, Literal, Union, get_args, get_origin
 
+from spikard._internal.constraints import extract_constraints_from_field
 from spikard._internal.types import Empty
 from spikard._internal.utils import (
     get_instantiable_origin,
@@ -45,6 +46,74 @@ except ImportError:
     pass
 
 
+def _combine_union_args(args: tuple[Any, ...]) -> Any:
+    """Reconstruct a union type using the ``|`` operator."""
+    union_type: Any = args[0]
+    for arg in args[1:]:
+        union_type = union_type | arg
+    return union_type
+
+
+def _merge_grouped_metadata(meta: Any, is_sequence_container: bool) -> dict[str, Any]:
+    """Flatten grouped metadata entries into a single dictionary."""
+    merged: dict[str, Any] = {}
+    for sub_meta in meta:
+        merged.update(_extract_annotated_types_constraints(sub_meta, is_sequence_container))
+    return merged
+
+
+def _extract_numeric_constraints(meta: Any) -> dict[str, Any]:
+    """Extract simple numeric constraints from annotated_types metadata."""
+    if annotated_types is None:
+        return {}
+
+    numeric_constraints: tuple[tuple[type[Any], str], ...] = (
+        (annotated_types.Gt, "gt"),
+        (annotated_types.Ge, "ge"),
+        (annotated_types.Lt, "lt"),
+        (annotated_types.Le, "le"),
+        (annotated_types.MultipleOf, "multiple_of"),
+    )
+
+    for constraint_type, key in numeric_constraints:
+        if isinstance(meta, constraint_type):
+            return {key: getattr(meta, key)}
+
+    return {}
+
+
+def _extract_length_constraints(meta: Any, is_sequence_container: bool) -> dict[str, Any]:
+    """Extract length-related constraints."""
+    if annotated_types is None:
+        return {}
+
+    if isinstance(meta, annotated_types.MinLen):
+        key = "min_items" if is_sequence_container else "min_length"
+        return {key: meta.min_length}
+    if isinstance(meta, annotated_types.MaxLen):
+        key = "max_items" if is_sequence_container else "max_length"
+        return {key: meta.max_length}
+    return {}
+
+
+_PREDICATE_CONSTRAINT_MAPPING: dict[Any, dict[str, Any]] = {
+    str.islower: {"lower_case": True},
+    str.isupper: {"upper_case": True},
+    str.isascii: {"pattern": "[[:ascii:]]"},
+    str.isdigit: {"pattern": "[[:digit:]]"},
+}
+
+
+def _extract_predicate_constraints(meta: Any) -> dict[str, Any]:
+    """Extract predicate-based constraints such as str.islower/isupper."""
+    if annotated_types is None:
+        return {}
+
+    if isinstance(meta, annotated_types.Predicate):
+        return _PREDICATE_CONSTRAINT_MAPPING.get(meta.func, {})
+    return {}
+
+
 def _extract_annotated_types_constraints(meta: Any, is_sequence_container: bool) -> dict[str, Any]:
     """Extract constraints from annotated_types metadata.
 
@@ -58,44 +127,18 @@ def _extract_annotated_types_constraints(meta: Any, is_sequence_container: bool)
     if annotated_types is None:
         return {}
 
-    kwargs = {}
-
     if isinstance(meta, annotated_types.GroupedMetadata):
-        for sub_meta in meta:
-            kwargs.update(_extract_annotated_types_constraints(sub_meta, is_sequence_container))
-        return kwargs
+        return _merge_grouped_metadata(meta, is_sequence_container)
 
-    if isinstance(meta, annotated_types.Gt):
-        kwargs["gt"] = meta.gt
-    elif isinstance(meta, annotated_types.Ge):
-        kwargs["ge"] = meta.ge
-    elif isinstance(meta, annotated_types.Lt):
-        kwargs["lt"] = meta.lt
-    elif isinstance(meta, annotated_types.Le):
-        kwargs["le"] = meta.le
-    elif isinstance(meta, annotated_types.MultipleOf):
-        kwargs["multiple_of"] = meta.multiple_of
-    elif isinstance(meta, annotated_types.MinLen):
-        if is_sequence_container:
-            kwargs["min_items"] = meta.min_length
-        else:
-            kwargs["min_length"] = meta.min_length
-    elif isinstance(meta, annotated_types.MaxLen):
-        if is_sequence_container:
-            kwargs["max_items"] = meta.max_length
-        else:
-            kwargs["max_length"] = meta.max_length
-    elif isinstance(meta, annotated_types.Predicate):
-        if meta.func == str.islower:
-            kwargs["lower_case"] = True
-        elif meta.func == str.isupper:
-            kwargs["upper_case"] = True
-        elif meta.func == str.isascii:
-            kwargs["pattern"] = "[[:ascii:]]"
-        elif meta.func == str.isdigit:
-            kwargs["pattern"] = "[[:digit:]]"
+    numeric_constraints = _extract_numeric_constraints(meta)
+    if numeric_constraints:
+        return numeric_constraints
 
-    return kwargs
+    length_constraints = _extract_length_constraints(meta, is_sequence_container)
+    if length_constraints:
+        return length_constraints
+
+    return _extract_predicate_constraints(meta)
 
 
 @dataclass(frozen=True)
@@ -256,7 +299,7 @@ class FieldDefinition:
             args = tuple(arg for arg in get_args(annotation) if arg is not NoneType)
             if len(args) == 1:
                 return args[0]
-            return Union[args]
+            return _combine_union_args(args)
         return annotation
 
     @classmethod
@@ -291,10 +334,6 @@ class FieldDefinition:
         if hasattr(kwargs.get("default"), "metadata"):
             field_info = kwargs["default"]
             extra_constraints = kwargs.get("extra", {}).copy()
-
-            # Import the constraint extractor from our existing code
-            from spikard._internal.constraints import extract_constraints_from_field
-
             field_constraints = extract_constraints_from_field(field_info)
             extra_constraints.update(field_constraints)
 

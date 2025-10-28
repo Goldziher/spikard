@@ -27,7 +27,7 @@ def load_fixture(category: str, name: str) -> dict[str, Any]:
         'Simple file upload'
     """
     path = FIXTURES_DIR / category / f"{name}.json"
-    with open(path) as f:
+    with path.open() as f:
         return json.load(f)
 
 
@@ -51,7 +51,7 @@ def load_all_fixtures(category: str) -> list[dict[str, Any]]:
     for path in sorted(category_dir.glob("*.json")):
         if path.name == "schema.json":
             continue
-        with open(path) as f:
+        with path.open() as f:
             fixtures.append(json.load(f))
 
     return fixtures
@@ -98,14 +98,16 @@ def load_file_content(category: str, filename: str) -> bytes:
         b'<file content>'
     """
     path = FIXTURES_DIR / category / "files" / filename
-    with open(path, "rb") as f:
+    with path.open("rb") as f:
         return f.read()
 
 
 # Pytest parametrize helpers
 
 
-def pytest_parametrize_fixtures(category: str, fixture_names: list[str] | None = None):
+def pytest_parametrize_fixtures(
+    category: str, fixture_names: list[str] | None = None
+) -> tuple[str, list[dict[str, Any]], dict[str, Any]]:
     """Generate pytest.mark.parametrize arguments for fixtures.
 
     Args:

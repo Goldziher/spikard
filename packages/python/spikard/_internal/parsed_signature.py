@@ -52,7 +52,7 @@ class ParsedSignature:
         # Get type hints with forward references resolved
         try:
             fn_type_hints = get_type_hints(fn, include_extras=True)
-        except Exception:
+        except (AttributeError, NameError, TypeError, ValueError, RecursionError):
             # Fall back to __annotations__ if get_type_hints fails
             fn_type_hints = getattr(fn, "__annotations__", {})
 
