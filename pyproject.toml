@@ -89,6 +89,15 @@ lint.per-file-ignores."examples/**/*.py" = [
   "INP001", # Implicit namespace package (examples don't need __init__.py)
   "S101",   # Assertions are fine in examples
 ]
+lint.per-file-ignores."packages/python/tests/*.py" = [
+  "B008",
+  "C901",
+  "E501",
+  "PLR0912",
+  "PLR0913",
+  "PLR0915",
+  "SIM108",
+]
 lint.per-file-ignores."tests/*.py" = [
   "B008",
   "C901",
