@@ -51,19 +51,45 @@ impl TestClient {
         query_params: Option<&Bound<'py, PyDict>>,
         headers: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
+        // DEBUG: Log test client get() call
+        let _ = std::fs::write(
+            "/tmp/test_client_get.log",
+            format!("TestClient.get() called: path={}\n", path),
+        );
         // Extract Python data before the async block
         let path = path.to_string();
         let query_params_vec = extract_dict_to_vec(query_params)?;
+        let _ = std::fs::write(
+            "/tmp/test_client_query_params.log",
+            format!("query_params_vec: {:?}\n", query_params_vec),
+        );
         let headers_vec = extract_dict_to_vec(headers)?;
 
         let server = Arc::clone(&self.server);
 
         let fut = async move {
-            let mut request = server.get(&path);
+            let _ = std::fs::write("/tmp/test_client_async_start.log", "Async block started\n");
+            // Build full path with query string to properly handle arrays
+            let full_path = if !query_params_vec.is_empty() {
+                let query_string: Vec<String> = query_params_vec
+                    .iter()
+                    .map(|(k, v)| format!("{}={}", k, v))  // Values already URL-safe
+                    .collect();
+                if path.contains('?') {
+                    format!("{}&{}", path, query_string.join("&"))
+                } else {
+                    format!("{}?{}", path, query_string.join("&"))
+                }
+            } else {
+                path.clone()
+            };
 
-            for (key, value) in query_params_vec {
-                request = request.add_query_param(&key, &value);
-            }
+            let _ = std::fs::write("/tmp/test_client_full_path.log", format!("full_path: {}\n", full_path));
+            let mut request = server.get(&full_path);
+            let _ = std::fs::write(
+                "/tmp/test_client_request_created.log",
+                "Request created, about to await\n",
+            );
 
             for (key, value) in headers_vec {
                 let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
@@ -76,7 +102,13 @@ impl TestClient {
             }
 
             let response = request.await;
-            TestResponse::from_axum_response(response).await
+            let _ = std::fs::write(
+                "/tmp/test_client_response_received.log",
+                format!("Response received, status: {}\n", response.status_code()),
+            );
+            let test_response = TestResponse::from_axum_response(response).await?;
+            let _ = std::fs::write("/tmp/test_client_conversion_done.log", "Converted to TestResponse\n");
+            Ok(test_response)
         };
 
         pyo3_async_runtimes::tokio::future_into_py(py, fut)
@@ -366,13 +398,24 @@ impl TestResponse {
 }
 
 /// Extract a PyDict to a Vec of (String, String) tuples
+/// Handles list values by creating multiple entries with the same key
 fn extract_dict_to_vec(dict: Option<&Bound<'_, PyDict>>) -> PyResult<Vec<(String, String)>> {
     if let Some(d) = dict {
         let mut result = Vec::new();
         for (key, value) in d.iter() {
             let key: String = key.extract()?;
-            let value: String = value.str()?.extract()?;
-            result.push((key, value));
+
+            // Check if value is a list - if so, add multiple entries
+            if let Ok(list) = value.cast::<pyo3::types::PyList>() {
+                for item in list.iter() {
+                    let item_str: String = item.str()?.extract()?;
+                    result.push((key.clone(), item_str));
+                }
+            } else {
+                // Single value - convert to string
+                let value: String = value.str()?.extract()?;
+                result.push((key, value));
+            }
         }
         Ok(result)
     } else {

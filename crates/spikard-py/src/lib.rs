@@ -109,13 +109,48 @@ fn process() -> PyResult<()> {
 ///     TestClient: A test client for making requests to the app
 #[pyfunction]
 fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_client::TestClient> {
+    // DEBUG: Log test client creation
+    let _ = std::fs::write("/tmp/create_test_client.log", "create_test_client() called\n");
+    eprintln!("[UNCONDITIONAL DEBUG] create_test_client() called");
+
+    // Initialize debug logging
+    spikard_http::debug::init();
+
     // Extract routes from the Python app
     let routes_with_handlers = extract_routes_from_app(py, app)?;
+    let _ = std::fs::write(
+        "/tmp/routes_extracted.log",
+        format!("Extracted {} routes\n", routes_with_handlers.len()),
+    );
 
     // Convert to Route + Py<PyAny> pairs
     let routes: Vec<_> = routes_with_handlers
         .into_iter()
         .map(|r| {
+            let has_parameter_validator = r.metadata.parameter_schema.is_some();
+            eprintln!(
+                "[UNCONDITIONAL DEBUG] Route: {} {} has_parameter_schema={}",
+                r.metadata.method, r.metadata.path, has_parameter_validator
+            );
+
+            let parameter_validator = r.metadata.parameter_schema.and_then(|schema| {
+                eprintln!(
+                    "[UNCONDITIONAL DEBUG] Creating ParameterValidator for {} {}",
+                    r.metadata.method, r.metadata.path
+                );
+                eprintln!("[UNCONDITIONAL DEBUG] Schema: {:?}", schema);
+                match spikard_http::ParameterValidator::new(schema.clone()) {
+                    Ok(v) => {
+                        eprintln!("[UNCONDITIONAL DEBUG] ParameterValidator created successfully");
+                        Some(v)
+                    }
+                    Err(e) => {
+                        eprintln!("[UNCONDITIONAL DEBUG] Failed to create ParameterValidator: {}", e);
+                        None
+                    }
+                }
+            });
+
             let route = spikard_http::Route {
                 method: r.metadata.method.parse().unwrap_or(spikard_http::Method::Get),
                 path: r.metadata.path,
@@ -128,25 +163,39 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
                     .metadata
                     .response_schema
                     .and_then(|schema| spikard_http::SchemaValidator::new(schema).ok()),
-                parameter_validator: r
-                    .metadata
-                    .parameter_schema
-                    .and_then(|schema| spikard_http::ParameterValidator::new(schema).ok()),
+                parameter_validator,
                 is_async: r.metadata.is_async,
             };
             (route, r.handler)
         })
         .collect();
 
+    let _ = std::fs::write(
+        "/tmp/routes_converted.log",
+        format!("Converted {} routes\n", routes.len()),
+    );
+
     // Create server config (not used for test client, but needed for API)
     let config = spikard_http::ServerConfig::default();
 
     // Build Axum router with Python handlers
+    eprintln!(
+        "[UNCONDITIONAL DEBUG] Building Axum router with {} routes",
+        routes.len()
+    );
+
     let axum_router = Server::with_python_handlers(config, routes)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to build router: {}", e)))?;
 
+    let _ = std::fs::write("/tmp/axum_router_built.log", "Axum router built successfully\n");
+
     // Create test client from the router
-    test_client::TestClient::from_router(axum_router)
+    eprintln!("[UNCONDITIONAL DEBUG] Creating TestClient from Axum router");
+
+    let client = test_client::TestClient::from_router(axum_router)?;
+    let _ = std::fs::write("/tmp/test_client_created.log", "TestClient created successfully\n");
+
+    Ok(client)
 }
 
 /// Python module for spikard

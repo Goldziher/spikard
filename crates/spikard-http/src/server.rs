@@ -1,10 +1,11 @@
 //! HTTP server implementation using Tokio and Axum
 
 use crate::handler::RequestData;
+use crate::query_parser::parse_query_string_to_json;
 use crate::{PythonHandler, Router, ServerConfig};
 use axum::Router as AxumRouter;
 use axum::body::Body;
-use axum::extract::{Path, Query};
+use axum::extract::Path;
 use axum::routing::{MethodRouter, get};
 use http_body_util::BodyExt;
 use pyo3::{Py, PyAny};
@@ -14,6 +15,18 @@ use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+
+/// Extract and parse query parameters from request URI
+fn extract_query_params(uri: &axum::http::Uri) -> Value {
+    let query_string = uri.query().unwrap_or("");
+    if query_string.is_empty() {
+        Value::Object(serde_json::Map::new())
+    } else {
+        // parse_numbers=true: Auto-convert numeric strings to numbers (e.g., "123" → 123)
+        // This is essential for array parameters like ?device_ids=1&device_ids=2 → [1, 2]
+        parse_query_string_to_json(query_string.as_bytes(), true)
+    }
+}
 
 /// HTTP Server
 pub struct Server {
@@ -48,23 +61,26 @@ impl Server {
             // Extract all request data in Rust before calling Python
             let method_router: MethodRouter = match route.method.as_str() {
                 "GET" => axum::routing::get(
-                    move |path_params: Path<HashMap<String, String>>,
-                          query_params: Query<HashMap<String, String>>,
-                          req| async move {
+                    move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                        let _ = std::fs::write("/tmp/axum_route_called.log", "GET route handler called\n");
+                        let query_params = extract_query_params(req.uri());
+                        let _ = std::fs::write(
+                            "/tmp/axum_query_params.log",
+                            format!("query_params: {:?}\n", query_params),
+                        );
                         let request_data = RequestData {
                             path_params: path_params.0,
-                            query_params: query_params.0,
+                            query_params,
                             body: None, // GET requests don't have a body
                         };
                         handler.call(req, request_data).await
                     },
                 ),
                 "POST" => axum::routing::post(
-                    move |path_params: Path<HashMap<String, String>>,
-                          query_params: Query<HashMap<String, String>>,
-                          req: axum::extract::Request| async move {
+                    move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                         // Extract body for POST requests
                         let (parts, body) = req.into_parts();
+                        let query_params = extract_query_params(&parts.uri);
                         let body_bytes = body
                             .collect()
                             .await
@@ -86,7 +102,7 @@ impl Server {
 
                         let request_data = RequestData {
                             path_params: path_params.0,
-                            query_params: query_params.0,
+                            query_params,
                             body: body_value,
                         };
 
@@ -95,10 +111,9 @@ impl Server {
                     },
                 ),
                 "PUT" => axum::routing::put(
-                    move |path_params: Path<HashMap<String, String>>,
-                          query_params: Query<HashMap<String, String>>,
-                          req: axum::extract::Request| async move {
+                    move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                         let (parts, body) = req.into_parts();
+                        let query_params = extract_query_params(&parts.uri);
                         let body_bytes = body
                             .collect()
                             .await
@@ -120,7 +135,7 @@ impl Server {
 
                         let request_data = RequestData {
                             path_params: path_params.0,
-                            query_params: query_params.0,
+                            query_params,
                             body: body_value,
                         };
 
@@ -129,10 +144,9 @@ impl Server {
                     },
                 ),
                 "PATCH" => axum::routing::patch(
-                    move |path_params: Path<HashMap<String, String>>,
-                          query_params: Query<HashMap<String, String>>,
-                          req: axum::extract::Request| async move {
+                    move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                         let (parts, body) = req.into_parts();
+                        let query_params = extract_query_params(&parts.uri);
                         let body_bytes = body
                             .collect()
                             .await
@@ -154,7 +168,7 @@ impl Server {
 
                         let request_data = RequestData {
                             path_params: path_params.0,
-                            query_params: query_params.0,
+                            query_params,
                             body: body_value,
                         };
 
@@ -163,12 +177,11 @@ impl Server {
                     },
                 ),
                 "DELETE" => axum::routing::delete(
-                    move |path_params: Path<HashMap<String, String>>,
-                          query_params: Query<HashMap<String, String>>,
-                          req| async move {
+                    move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                        let query_params = extract_query_params(req.uri());
                         let request_data = RequestData {
                             path_params: path_params.0,
-                            query_params: query_params.0,
+                            query_params,
                             body: None,
                         };
                         handler.call(req, request_data).await
@@ -177,6 +190,8 @@ impl Server {
                 _ => return Err(format!("Unsupported HTTP method: {}", route.method.as_str())),
             };
 
+            // FastAPI and Axum both use {param} syntax for path parameters
+            // No conversion needed - just register the route as-is
             app = app.route(&route.path, method_router);
 
             tracing::info!("Registered route: {} {}", route.method.as_str(), route.path);

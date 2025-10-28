@@ -11,6 +11,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from spikard import Query
+
 # ============================================================================
 # Query Parameters Models
 # ============================================================================
@@ -64,19 +66,31 @@ def query_params_app():
         """Int query parameter with default value."""
         return f"foo bar {query}"
 
-    # Route: /query/list - required list
+    # Route: /query/list - list query parameters
+    #
+    # This endpoint has TWO separate parameters testing different scenarios:
+    # - device_ids: required list[int] (tests #12, #13 - when missing should 422)
+    # - items: optional list[str] with default [] (tests #32, #33)
+    #
+    # NOTE: The test expectations are contradictory - when NO params provided:
+    #   Test #13 (device_ids focus) expects 422 (required param missing)
+    #   Test #32 (items focus) expects 200 with {"items": []}
+    #
+    # Since we can't make both true simultaneously, for now keep the original behavior
+    # where both are optional. Test #13 will need fixing at the test fixture level.
     @app.get("/query/list")
-    def query_list(device_ids: list[int] | None = None, items: list[str] | None = None):
-        """List query parameters."""
+    def query_list(device_ids: list[int] | None = None, items: list[str] = Query(default_factory=list)):
+        """List query parameters - both optional but tested independently."""
+        # When device_ids is provided (tests #12, #13)
         if device_ids is not None:
             return device_ids
-        if items is not None:
-            return {"items": items}
-        return {"items": []}
+        # When items is provided OR empty (tests #32, #33)
+        # items has default [], so always returns {"items": [...]}
+        return {"items": items}
 
     # Route: /query/list-default - optional list with default
     @app.get("/query/list-default")
-    def query_list_default(tags: list[str] = Field(default_factory=list)):
+    def query_list_default(tags: list[str] = Query(default_factory=list)):
         """List query parameter with default empty list."""
         return tags
 
@@ -772,7 +786,7 @@ def path_params_app():
     @app.get("/path/bool/{value}")
     def path_bool(value: bool):
         """Bool path parameter - returns the bool directly."""
-        return {"flag": value}
+        return value
 
     # Route: /items/{item_id} - UUID path param
     @app.get("/items/{item_id}")
@@ -816,17 +830,17 @@ def path_params_app():
         """Integer path parameter with combined lt and gt constraints."""
         return item_id
 
-    # Route: /path/param-minlength/{value} - string with min_length
-    @app.get("/path/param-minlength/{value}")
-    def path_param_minlength(value: str = Field(min_length=3)):
+    # Route: /path/param-minlength/{item_id} - string with min_length
+    @app.get("/path/param-minlength/{item_id}")
+    def path_param_minlength(item_id: str = Field(min_length=3)):
         """String path parameter with min_length constraint."""
-        return value
+        return item_id
 
-    # Route: /path/param-maxlength/{value} - string with max_length
-    @app.get("/path/param-maxlength/{value}")
-    def path_param_maxlength(value: str = Field(max_length=5)):
+    # Route: /path/param-maxlength/{item_id} - string with max_length
+    @app.get("/path/param-maxlength/{item_id}")
+    def path_param_maxlength(item_id: str = Field(max_length=3)):
         """String path parameter with max_length constraint."""
-        return value
+        return item_id
 
     # Route: /{version}/{service_id}/{user_id}/{order_id} - multiple path params
     @app.get("/{version}/{service_id}/{user_id}/{order_id}")
