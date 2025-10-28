@@ -2,12 +2,12 @@
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 FIXTURES_DIR = Path(__file__).parent.parent
 
 
-def load_fixture(category: str, name: str) -> Dict[str, Any]:
+def load_fixture(category: str, name: str) -> dict[str, Any]:
     """Load a test fixture by category and name.
 
     Args:
@@ -31,7 +31,7 @@ def load_fixture(category: str, name: str) -> Dict[str, Any]:
         return json.load(f)
 
 
-def load_all_fixtures(category: str) -> List[Dict[str, Any]]:
+def load_all_fixtures(category: str) -> list[dict[str, Any]]:
     """Load all fixtures in a category.
 
     Args:
@@ -57,7 +57,7 @@ def load_all_fixtures(category: str) -> List[Dict[str, Any]]:
     return fixtures
 
 
-def get_fixture_names(category: str) -> List[str]:
+def get_fixture_names(category: str) -> list[str]:
     """Get names of all fixtures in a category.
 
     Args:
@@ -104,7 +104,8 @@ def load_file_content(category: str, filename: str) -> bytes:
 
 # Pytest parametrize helpers
 
-def pytest_parametrize_fixtures(category: str, fixture_names: Optional[List[str]] = None):
+
+def pytest_parametrize_fixtures(category: str, fixture_names: list[str] | None = None):
     """Generate pytest.mark.parametrize arguments for fixtures.
 
     Args:

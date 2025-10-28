@@ -5,11 +5,14 @@ without starting a real HTTP server. The test client is powered by Rust's axum-t
 crate for maximum performance and reliability.
 """
 
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any
 
 from _spikard import TestClient as _TestClient
 from _spikard import TestResponse as _TestResponse
 from _spikard import create_test_client as _create_test_client
+
+if TYPE_CHECKING:
+    from spikard.app import Spikard
 
 __all__ = ["TestClient", "TestResponse"]
 
@@ -20,18 +23,18 @@ class TestResponse:
     This wraps the Rust TestResponse and provides a Python-friendly interface.
     """
 
-    def __init__(self, rust_response: _TestResponse):
+    def __init__(self, rust_response: _TestResponse) -> None:
         self._response = rust_response
 
     @property
     def status_code(self) -> int:
         """Get the HTTP status code."""
-        return self._response.status_code
+        return int(self._response.status_code)
 
     @property
-    def headers(self) -> Dict[str, str]:
+    def headers(self) -> dict[str, str]:
         """Get response headers as a dictionary."""
-        return self._response.headers
+        return dict(self._response.headers)
 
     def bytes(self) -> bytes:
         """Get the response body as bytes."""
@@ -39,7 +42,7 @@ class TestResponse:
 
     def text(self) -> str:
         """Get the response body as text."""
-        return self._response.text()
+        return str(self._response.text())
 
     def json(self) -> Any:
         """Parse the response body as JSON."""
@@ -96,7 +99,7 @@ class TestClient:
         >>>     assert response.json() == {"message": "Hello, World!"}
     """
 
-    def __init__(self, app):
+    def __init__(self, app: "Spikard") -> None:
         """Create a new test client for the given Spikard application.
 
         Args:
@@ -107,8 +110,8 @@ class TestClient:
     async def get(
         self,
         path: str,
-        query_params: Optional[Dict[str, str]] = None,
-        headers: Optional[Dict[str, str]] = None,
+        query_params: dict[str, str] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> TestResponse:
         """Make a GET request.
 
@@ -126,8 +129,8 @@ class TestClient:
     async def post(
         self,
         path: str,
-        json: Optional[Any] = None,
-        headers: Optional[Dict[str, str]] = None,
+        json: Any | None = None,
+        headers: dict[str, str] | None = None,
     ) -> TestResponse:
         """Make a POST request.
 
@@ -145,8 +148,8 @@ class TestClient:
     async def put(
         self,
         path: str,
-        json: Optional[Any] = None,
-        headers: Optional[Dict[str, str]] = None,
+        json: Any | None = None,
+        headers: dict[str, str] | None = None,
     ) -> TestResponse:
         """Make a PUT request.
 
@@ -164,8 +167,8 @@ class TestClient:
     async def patch(
         self,
         path: str,
-        json: Optional[Any] = None,
-        headers: Optional[Dict[str, str]] = None,
+        json: Any | None = None,
+        headers: dict[str, str] | None = None,
     ) -> TestResponse:
         """Make a PATCH request.
 
@@ -183,7 +186,7 @@ class TestClient:
     async def delete(
         self,
         path: str,
-        headers: Optional[Dict[str, str]] = None,
+        headers: dict[str, str] | None = None,
     ) -> TestResponse:
         """Make a DELETE request.
 

@@ -14,8 +14,7 @@ pub struct SchemaValidator {
 impl SchemaValidator {
     /// Create a new validator from a JSON Schema
     pub fn new(schema: Value) -> Result<Self, String> {
-        let compiled = Validator::new(&schema)
-            .map_err(|e| format!("Invalid JSON Schema: {}", e))?;
+        let compiled = Validator::new(&schema).map_err(|e| format!("Invalid JSON Schema: {}", e))?;
 
         Ok(Self {
             compiled: Arc::new(compiled),
@@ -23,32 +22,32 @@ impl SchemaValidator {
         })
     }
 
+    /// Get the underlying JSON Schema
+    pub fn schema(&self) -> &Value {
+        &self.schema
+    }
+
     /// Validate JSON data against the schema
     pub fn validate(&self, data: &Value) -> Result<(), ValidationError> {
-        self.compiled
-            .validate(data)
-            .map_err(|e| {
-                ValidationError {
-                    errors: vec![ValidationErrorDetail {
-                        error_type: "validation_error".to_string(),
-                        location: "body".to_string(),
-                        message: e.to_string(),
-                    }],
-                }
-            })
+        self.compiled.validate(data).map_err(|e| ValidationError {
+            errors: vec![ValidationErrorDetail {
+                error_type: "validation_error".to_string(),
+                location: "body".to_string(),
+                message: e.to_string(),
+            }],
+        })
     }
 
     /// Validate and parse JSON bytes
     pub fn validate_json(&self, json_bytes: &[u8]) -> Result<Value, ValidationError> {
         // Parse JSON (zero-copy where possible)
-        let value: Value = serde_json::from_slice(json_bytes)
-            .map_err(|e| ValidationError {
-                errors: vec![ValidationErrorDetail {
-                    error_type: "json_parse_error".to_string(),
-                    location: "body".to_string(),
-                    message: format!("Invalid JSON: {}", e),
-                }],
-            })?;
+        let value: Value = serde_json::from_slice(json_bytes).map_err(|e| ValidationError {
+            errors: vec![ValidationErrorDetail {
+                error_type: "json_parse_error".to_string(),
+                location: "body".to_string(),
+                message: format!("Invalid JSON: {}", e),
+            }],
+        })?;
 
         // Validate against schema
         self.validate(&value)?;

@@ -1,43 +1,35 @@
-[build-system]
-requires = ["maturin>=1.0,<2.0"]
-build-backend = "maturin"
-
-[project]
-name = "spikard-dev"
-version = "0.1.0"
-description = "Development environment for spikard"
-authors = [{ name = "Na'aman Hirschfeld", email = "nhirschfeld@gmail.com" }]
-license = { text = "MIT" }
-requires-python = ">=3.10"
-
 [dependency-groups]
 dev = [
-    "maturin>=1.9.6",
-    "mypy>=1.18.2",
-    "prek>=0.2.10",
-    "pytest>=8.4.2",
-    "pytest-asyncio>=0.25.0",
-    "pytest-cov>=7.0.0",
-    "pytest-mock>=3.15.1",
-    "pytest-timeout>=2.4.0",
-    "ruff>=0.14.1",
-    "uv-bump",
+  "annotated-types>=0.7.0",
+  "jsonschema>=4.23.0",
+  "maturin>=1.9.6",
+  "msgspec>=0.19.0",
+  "mypy>=1.18.2",
+  "prek>=0.2.10",
+  "pydantic>=2.0.0",
+  "pytest>=8.4.2",
+  "pytest-asyncio>=0.25.0",
+  "pytest-cov>=7.0.0",
+  "pytest-mock>=3.15.1",
+  "pytest-timeout>=2.4.0",
+  "ruff>=0.14.1",
+  "uv-bump",
 ]
 
 [tool.setuptools]
-packages = []
+packages = [  ]
 
 [tool.uv]
 cache-keys = [
-    { file = "pyproject.toml" },
-    { file = "Cargo.toml" },
-    { file = "Cargo.lock" },
-    { file = "crates/**/*.rs" },
-    { file = "crates/**/Cargo.toml" },
+  { file = "pyproject.toml" },
+  { file = "Cargo.toml" },
+  { file = "Cargo.lock" },
+  { file = "crates/**/*.rs" },
+  { file = "crates/**/Cargo.toml" },
 ]
 
 [tool.uv.workspace]
-members = ["packages/python"]
+members = [ "packages/python" ]
 
 [tool.uv.sources]
 uv-bump = { git = "https://github.com/Goldziher/uv-bump" }
@@ -45,109 +37,101 @@ uv-bump = { git = "https://github.com/Goldziher/uv-bump" }
 [tool.ruff]
 target-version = "py310"
 line-length = 120
+src = [ "packages/python" ]
 format.docstring-code-line-length = 120
 format.docstring-code-format = true
 
-[tool.ruff.lint]
-select = ["ALL"]
-ignore = [
-    "ANN401",  # Dynamically typed ANY for kwargs
-    "COM812",  # Conflicts with formatter
-    "D100",    # Missing docstring in public module
-    "D104",    # Missing docstring in public package
-    "D107",    # Missing docstring in __init__
-    "D205",    # 1 blank line required between summary line and description
-    "E501",    # Line too long, handled by ruff format
-    "EM",      # Exception messages
-    "FBT",     # Boolean-typed positional argument in function definition
-    "FIX",     # We allow todo and fixme comments
-    "ISC001",  # Conflicts with formatter
-    "PLR2004", # Magic value used in comparison
-    "S110",    # try-except-pass detected
-    "S603",    # subprocess-without-shell-equals-true
-    "TD",      # We allow todo and fixme comments
-    "TRY",     # Try except block, rules are too strict
+lint.select = [ "ALL" ]
+lint.ignore = [
+  "ANN401",  # Dynamically typed ANY for kwargs
+  "COM812",  # Conflicts with formatter
+  "D100",    # Missing docstring in public module
+  "D104",    # Missing docstring in public package
+  "D107",    # Missing docstring in __init__
+  "D205",    # 1 blank line required between summary line and description
+  "E501",    # Line too long, handled by ruff format
+  "EM",      # Exception messages
+  "FBT",     # Boolean-typed positional argument in function definition
+  "FIX",     # We allow todo and fixme comments
+  "ISC001",  # Conflicts with formatter
+  "PLR2004", # Magic value used in comparison
+  "S110",    # try-except-pass detected
+  "S603",    # subprocess-without-shell-equals-true
+  "TD",      # We allow todo and fixme comments
+  "TRY",     # Try except block, rules are too strict
 ]
-
-[tool.ruff.lint.per-file-ignores]
-"**/tests/**/*.*" = [
-    "A005",    # Module shadows standard library
-    "ANN",     # Disable all annotation rules for tests
-    "ARG001",
-    "ARG002",  # Unused method argument
-    "BLE001",  # Disable blind exception catching for tests
-    "D",
-    "N806",    # Variable naming in tests
-    "N815",
-    "PLC",     # Disable all PLC rules for tests
-    "PLR0915",
-    "PLR2004",
-    "PT006",
-    "PT007",
-    "PT013",
-    "RUF012",
-    "S",
-    "SLF001",
+lint.per-file-ignores."**/tests/**/*.*" = [
+  "A005",    # Module shadows standard library
+  "ANN",     # Disable all annotation rules for tests
+  "ARG001",
+  "ARG002",  # Unused method argument
+  "BLE001",  # Disable blind exception catching for tests
+  "D",
+  "N806",    # Variable naming in tests
+  "N815",
+  "PLC",     # Disable all PLC rules for tests
+  "PLR0915",
+  "PLR2004",
+  "PT006",
+  "PT007",
+  "PT013",
+  "RUF012",
+  "S",
+  "SLF001",
 ]
-"examples/**/*.py" = [
-    "ANN202",  # Missing return type annotation for private function
-    "ARG002",  # Unused method argument (examples show interfaces)
-    "BLE001",  # Blind exception catching (common in examples)
-    "D102",    # Missing docstring in public method
-    "D103",    # Missing docstring in public function
-    "INP001",  # Implicit namespace package (examples don't need __init__.py)
+lint.per-file-ignores."examples/**/*.py" = [
+  "ANN202", # Missing return type annotation for private function
+  "ARG002", # Unused method argument (examples show interfaces)
+  "BLE001", # Blind exception catching (common in examples)
+  "D102",   # Missing docstring in public method
+  "D103",   # Missing docstring in public function
+  "INP001", # Implicit namespace package (examples don't need __init__.py)
 ]
-
-[tool.ruff.lint.isort]
-known-first-party = ["spikard"]
-
-[tool.ruff.lint.mccabe]
-max-complexity = 15
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
-
-[tool.ruff.lint.pylint]
-max-args = 10
-max-branches = 15
-max-returns = 10
+lint.isort.known-first-party = [ "spikard" ]
+lint.mccabe.max-complexity = 15
+lint.pydocstyle.convention = "google"
+lint.pylint.max-args = 10
+lint.pylint.max-branches = 15
+lint.pylint.max-returns = 10
 
 [tool.pyproject-fmt]
 keep_full_version = true
 max_supported_python = "3.14"
 
+[tool.pytest.ini_options]
+timeout = 300
+testpaths = [ "tests" ]
+python_files = [ "test_*.py", "*_test.py" ]
+norecursedirs = [ "dist", "build", "*.egg" ]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.coverage.run]
+branch = true
+omit = [ "tests/*", "scripts/*" ]
+source = [ "crates/spikard-py" ]
+
+[tool.coverage.report]
+exclude_lines = [
+  "if TYPE_CHECKING:",
+  "except ImportError:",
+  "pragma: no cover",
+  "if sys.version_info",
+  "raise NotImplementedError",
+  "if __name__ == .__main__.:",
+  "def __repr__",
+  "class .*\\bProtocol\\):",
+  "@(abc\\.)?abstractmethod",
+]
+
 [tool.mypy]
+mypy_path = "packages/python"
+exclude = [ "examples", "testing_data" ]
 python_version = "3.10"
 implicit_reexport = false
 show_error_codes = true
 strict = true
 
 [[tool.mypy.overrides]]
-module = ["spikard._spikard"]
+module = [ "_spikard" ]
 ignore_missing_imports = true
-
-[tool.pytest.ini_options]
-timeout = 300
-testpaths = ["tests"]
-python_files = ["test_*.py", "*_test.py"]
-norecursedirs = ["dist", "build", "*.egg"]
-asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
-
-[tool.coverage.run]
-branch = true
-omit = ["tests/*", "scripts/*"]
-source = ["crates/spikard-py"]
-
-[tool.coverage.report]
-exclude_lines = [
-    "if TYPE_CHECKING:",
-    "except ImportError:",
-    "pragma: no cover",
-    "if sys.version_info",
-    "raise NotImplementedError",
-    "if __name__ == .__main__.:",
-    "def __repr__",
-    "class .*\\bProtocol\\):",
-    "@(abc\\.)?abstractmethod",
-]

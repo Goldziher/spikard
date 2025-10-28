@@ -4,15 +4,17 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
-use std::sync::Arc;
 
 pub mod handler;
+pub mod parameters;
+pub mod response;
 pub mod router;
 pub mod server;
 pub mod validation;
 
 pub use handler::PythonHandler;
+pub use parameters::ParameterValidator;
+pub use response::Response;
 pub use router::{Route, RouteHandler, Router};
 pub use server::Server;
 pub use validation::SchemaValidator;
@@ -68,6 +70,7 @@ pub struct RouteMetadata {
     pub handler_name: String,
     pub request_schema: Option<Value>,
     pub response_schema: Option<Value>,
+    pub parameter_schema: Option<Value>,
     pub is_async: bool,
 }
 

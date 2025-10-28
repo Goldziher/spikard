@@ -19,6 +19,7 @@ serde_json.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
 jsonschema = "0.33"
+serde_qs = "0.15"
 pyo3.workspace = true
 pyo3-async-runtimes.workspace = true
 bytes = "1.8"

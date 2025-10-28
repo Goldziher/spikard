@@ -5,7 +5,7 @@
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use pyo3::prelude::*;
-use spikard_http::{Route, Router, Server, ServerConfig};
+use spikard_http::{Route, Server, ServerConfig};
 use std::path::PathBuf;
 
 // Access to the internal route extraction function from spikard-py
@@ -78,10 +78,9 @@ fn run_server(module_path: PathBuf, host: String, port: u16) -> Result<()> {
     // Extract routes from Python module
     let routes_with_handlers = Python::attach(|py| -> PyResult<Vec<spikard_py::RouteWithHandler>> {
         // Add current directory's venv to sys.path if it exists
-        let current_dir = std::env::current_dir()
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-                format!("Failed to get current directory: {}", e)
-            ))?;
+        let current_dir = std::env::current_dir().map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to get current directory: {}", e))
+        })?;
 
         // Add the spikard package to sys.path
         // The package is in packages/python relative to current directory
@@ -95,21 +94,18 @@ fn run_server(module_path: PathBuf, host: String, port: u16) -> Result<()> {
             tracing::warn!("Could not find spikard package at {}", spikard_package_dir.display());
         }
         // Get absolute path to module
-        let abs_path = module_path.canonicalize()
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-                format!("Failed to resolve module path: {}", e)
-            ))?;
+        let abs_path = module_path.canonicalize().map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to resolve module path: {}", e))
+        })?;
 
-        let abs_path_str = abs_path.to_str()
-            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-                "Module path contains invalid UTF-8"
-            ))?;
+        let abs_path_str = abs_path
+            .to_str()
+            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Module path contains invalid UTF-8"))?;
 
-        let module_name = abs_path.file_stem()
+        let module_name = abs_path
+            .file_stem()
             .and_then(|s| s.to_str())
-            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-                "Invalid module name"
-            ))?;
+            .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Invalid module name"))?;
 
         tracing::debug!("Loading Python module: {} from {}", module_name, abs_path_str);
 
@@ -117,8 +113,7 @@ fn run_server(module_path: PathBuf, host: String, port: u16) -> Result<()> {
         let importlib_util = py.import("importlib.util")?;
 
         // Create module spec from file location
-        let spec = importlib_util
-            .call_method1("spec_from_file_location", (module_name, abs_path_str))?;
+        let spec = importlib_util.call_method1("spec_from_file_location", (module_name, abs_path_str))?;
 
         // Create module from spec
         let module_from_spec = importlib_util.getattr("module_from_spec")?;
@@ -184,9 +179,7 @@ fn run_server(module_path: PathBuf, host: String, port: u16) -> Result<()> {
 
             tracing::info!("Server listening on {}", socket_addr);
 
-            axum::serve(listener, app)
-                .await
-                .context("Server error")
+            axum::serve(listener, app).await.context("Server error")
         })?;
 
     Ok(())

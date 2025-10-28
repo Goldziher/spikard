@@ -4,13 +4,10 @@
 import json
 import sys
 from pathlib import Path
-from typing import Optional
 
 try:
     import jsonschema
 except ImportError:
-    print("Error: jsonschema package not installed")
-    print("Install with: pip install jsonschema")
     sys.exit(1)
 
 
@@ -42,7 +39,6 @@ def validate_category(category: str) -> tuple[int, int]:
     schema_path = category_dir / "schema.json"
 
     if not schema_path.exists():
-        print(f"⚠️  {category}: No schema.json found, skipping")
         return (0, 0)
 
     with open(schema_path) as f:
@@ -52,32 +48,27 @@ def validate_category(category: str) -> tuple[int, int]:
     fixtures = [f for f in fixtures if f.name != "schema.json"]
 
     if not fixtures:
-        print(f"ℹ️  {category}: No fixtures found")
         return (0, 0)
 
     valid_count = 0
     total_count = len(fixtures)
 
-    print(f"\n📂 {category}:")
     for fixture_path in fixtures:
         with open(fixture_path) as f:
             try:
                 fixture = json.load(f)
                 jsonschema.validate(instance=fixture, schema=schema)
-                print(f"  ✅ {fixture_path.name}")
                 valid_count += 1
-            except json.JSONDecodeError as e:
-                print(f"  ❌ {fixture_path.name}: Invalid JSON - {e}")
+            except json.JSONDecodeError:
+                pass
             except jsonschema.ValidationError as e:
-                print(f"  ❌ {fixture_path.name}: Schema validation failed")
-                print(f"     {e.message}")
                 if e.path:
-                    print(f"     Path: {'.'.join(str(p) for p in e.path)}")
+                    pass
 
     return (valid_count, total_count)
 
 
-def main(category: Optional[str] = None):
+def main(category: str | None = None) -> None:
     """Validate fixtures.
 
     Args:
@@ -85,14 +76,10 @@ def main(category: Optional[str] = None):
     """
     if category:
         if category not in CATEGORIES:
-            print(f"Error: Unknown category '{category}'")
-            print(f"Available: {', '.join(CATEGORIES)}")
             sys.exit(1)
         categories = [category]
     else:
         categories = CATEGORIES
-
-    print("🔍 Validating test fixtures...\n")
 
     total_valid = 0
     total_fixtures = 0
@@ -102,15 +89,11 @@ def main(category: Optional[str] = None):
         total_valid += valid
         total_fixtures += total
 
-    print("\n" + "=" * 50)
     if total_fixtures == 0:
-        print("ℹ️  No fixtures found to validate")
+        pass
     elif total_valid == total_fixtures:
-        print(f"✅ All {total_fixtures} fixtures are valid!")
         sys.exit(0)
     else:
-        print(f"❌ {total_valid}/{total_fixtures} fixtures valid")
-        print(f"   {total_fixtures - total_valid} fixtures failed validation")
         sys.exit(1)
 
 
