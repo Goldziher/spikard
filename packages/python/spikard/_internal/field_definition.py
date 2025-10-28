@@ -201,21 +201,10 @@ class FieldDefinition:
     @property
     def is_required(self) -> bool:
         """Check if the field should be marked as a required parameter."""
-        # Check if the default value is a Pydantic FieldInfo
-        if hasattr(self.default, "__class__") and "FieldInfo" in self.default.__class__.__name__:
-            # It's a Pydantic Field
-            # In Pydantic v2, Field has a 'required' attribute
-            if hasattr(self.default, "required"):
-                return bool(self.default.required)
-            # In Pydantic v1, Field(...) sets default to Ellipsis
-            if hasattr(self.default, "default") and self.default.default is ...:
-                return True
-            # If FieldInfo has a real default value, it's optional
-            if hasattr(self.default, "default"):
-                # Check for PydanticUndefined (Pydantic v2) - means required
-                default_str = str(type(self.default.default).__name__)
-                return bool("Undefined" in default_str or "Required" in default_str)
-            return True  # FieldInfo without default attribute means required
+        # Check if the default value is a Spikard Query/Body/Path parameter wrapper
+        if hasattr(self.default, "has_default") and callable(self.default.has_default):
+            # It's a Query/Body/Path/etc wrapper
+            return not self.default.has_default()
 
         return bool(not self.is_optional and not self.is_any and not self.has_default)
 
