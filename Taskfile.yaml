@@ -29,6 +29,11 @@ tasks:
     cmds:
       - uv run pytest tests/ -v
 
+  test:path-params:
+    desc: "Run path parameter tests only"
+    cmds:
+      - PYTHONPATH=/Users/naamanhirschfeld/workspace/spikard/packages/python uv run pytest tests/test_all_fixtures.py -k "path_params" -v
+
   test:rust:
     desc: "Run Rust tests"
     cmds:
@@ -97,6 +102,12 @@ tasks:
     desc: "Build Python bindings in debug mode"
     cmds:
       - cd crates/spikard-py && uv run maturin develop
+
+  build:py:wheel:
+    desc: "Build Python bindings as wheel for testing (release mode)"
+    cmds:
+      - cd crates/spikard-py && ../../.venv/bin/maturin build --release --out ../../target/wheels
+      - uv pip install --force-reinstall target/wheels/spikard_bindings-0.1.0-cp310-abi3-macosx_11_0_arm64.whl
 
   build:local:python:
     desc: "Clean rebuild Python bindings for local testing (removes cached .so files)"
