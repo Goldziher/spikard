@@ -165,7 +165,7 @@ impl PythonHandler {
 
                     // Convert to Python kwargs - use validated params if available
                     let kwargs = if let Some(ref validated) = validated_params_for_task {
-                        validated_params_to_py_kwargs(py, validated, &request_data, &handler_obj)?
+                        validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
                     } else {
                         request_data_to_py_kwargs(py, &request_data)?
                     };
@@ -235,7 +235,7 @@ impl PythonHandler {
 
                     // Convert to Python kwargs - use validated params if available
                     let kwargs = if let Some(ref validated) = validated_params_for_task {
-                        validated_params_to_py_kwargs(py, validated, &request_data, &handler_obj)?
+                        validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
                     } else {
                         request_data_to_py_kwargs(py, &request_data)?
                     };
@@ -330,12 +330,12 @@ impl PythonHandler {
                     if type_name == "ValidationError" {
                         debug_log_module!("handler", "This is a Pydantic ValidationError!");
                         // Try to call the .json() method
-                        if let Ok(json_method) = err_value.getattr("json") {
-                            if let Ok(json_str) = json_method.call0() {
-                                let json_string = json_str.extract::<String>().ok()?;
-                                debug_log_module!("handler", "Extracted Pydantic .json(): {}", json_string);
-                                return Some(json_string);
-                            }
+                        if let Ok(json_method) = err_value.getattr("json")
+                            && let Ok(json_str) = json_method.call0()
+                        {
+                            let json_string = json_str.extract::<String>().ok()?;
+                            debug_log_module!("handler", "Extracted Pydantic .json(): {}", json_string);
+                            return Some(json_string);
                         }
                         debug_log_module!("handler", "Failed to extract .json() from ValidationError");
                     }
@@ -458,7 +458,7 @@ fn validated_params_to_py_kwargs<'py>(
     py: Python<'py>,
     validated_params: &Value,
     request_data: &RequestData,
-    handler: &Bound<'py, PyAny>,
+    handler: Bound<'py, PyAny>,
 ) -> PyResult<Bound<'py, PyDict>> {
     // Convert validated params to Python dict using json.loads
     let params_dict = json_to_python(py, validated_params)?;

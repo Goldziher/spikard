@@ -90,7 +90,7 @@ def field_definition_to_json_schema(field: FieldDefinition) -> dict[str, Any]:
             # Get enum values
             enum_class = field.annotation
             schema["enum"] = [item.value for item in enum_class]
-        except Exception:
+        except (AttributeError, TypeError, ValueError):
             # If we can't get enum values, just use string type
             schema["type"] = "string"
         return schema
@@ -113,59 +113,40 @@ def _annotation_to_json_schema(python_type: Any) -> dict[str, Any]:
     Returns:
         Basic JSON Schema dict
     """
-    # Handle None type
+    schema: dict[str, Any] | None = None
+
     if python_type is type(None):
-        return {"type": "null"}
-
-    # Handle string types
-    if python_type is str or python_type == "str":
-        return {"type": "string"}
-
-    # Handle integer types
-    if python_type is int or python_type == "int":
-        return {"type": "integer"}
-
-    # Handle float types
-    if python_type is float or python_type == "float":
-        return {"type": "number"}
-
-    # Handle boolean types
-    if python_type is bool or python_type == "bool":
-        return {"type": "boolean"}
-
-    # Handle date/datetime/time/timedelta with format
-    if python_type is datetime:
-        return {"type": "string", "format": "date-time"}
-
-    if python_type is date:
-        return {"type": "string", "format": "date"}
-
-    if python_type is time:
-        return {"type": "string", "format": "time"}
-
-    if python_type is timedelta:
-        return {"type": "string", "format": "duration"}
-
-    # Handle UUID with format
-    if python_type is UUID:
-        return {"type": "string", "format": "uuid"}
-
-    # Handle Path types as strings
-    if python_type in (Path, PurePath) or (
+        schema = {"type": "null"}
+    elif python_type in (str, "str"):
+        schema = {"type": "string"}
+    elif python_type in (int, "int"):
+        schema = {"type": "integer"}
+    elif python_type in (float, "float"):
+        schema = {"type": "number"}
+    elif python_type in (bool, "bool"):
+        schema = {"type": "boolean"}
+    elif python_type is datetime:
+        schema = {"type": "string", "format": "date-time"}
+    elif python_type is date:
+        schema = {"type": "string", "format": "date"}
+    elif python_type is time:
+        schema = {"type": "string", "format": "time"}
+    elif python_type is timedelta:
+        schema = {"type": "string", "format": "duration"}
+    elif python_type is UUID:
+        schema = {"type": "string", "format": "uuid"}
+    elif python_type in (Path, PurePath) or (
         hasattr(python_type, "__origin__") and python_type.__origin__ in (Path, PurePath)
     ):
-        return {"type": "string"}
+        schema = {"type": "string"}
+    elif python_type is dict:
+        schema = {"type": "object"}
+    elif str(python_type) == "typing.Any" or python_type is Any:
+        schema = {}
+    else:
+        schema = {"type": "string"}
 
-    # Handle dict/object types
-    if python_type is dict:
-        return {"type": "object"}
-
-    # Handle Any
-    if str(python_type) == "typing.Any" or python_type is Any:
-        return {}  # No type constraint for Any
-
-    # Default to string for unknown types
-    return {"type": "string"}
+    return schema
 
 
 def _apply_constraints(schema: dict[str, Any], constraints: dict[str, Any]) -> None:

@@ -4,6 +4,7 @@ This test suite validates that our FieldDefinition-based introspection system co
 handles all supported Python type systems and generates valid JSON schemas.
 """
 
+import importlib.util
 from dataclasses import dataclass
 from enum import Enum
 from typing import Annotated, NamedTuple, TypedDict
@@ -13,15 +14,10 @@ import jsonschema
 import pytest
 from pydantic import Field
 
-# Import msgspec if available
-try:
-    from msgspec import Struct
-
-    HAS_MSGSPEC = True
-except ImportError:
-    HAS_MSGSPEC = False
-
 from spikard.introspection import extract_parameter_schema
+
+# Import msgspec if available
+HAS_MSGSPEC = importlib.util.find_spec("msgspec") is not None
 
 
 class TestBasicTypes:
@@ -292,15 +288,15 @@ class TestSpecialTypes:
         """Test UUID type generates format constraint."""
         from datetime import date, datetime
 
-        def func(id: UUID, created: datetime, birth_date: date) -> None:
+        def func(user_id: UUID, created: datetime, birth_date: date) -> None:
             pass
 
         schema = extract_parameter_schema(func)
         assert schema is not None
 
         # UUID should have format
-        assert schema["properties"]["id"]["type"] == "string"
-        assert schema["properties"]["id"].get("format") == "uuid"
+        assert schema["properties"]["user_id"]["type"] == "string"
+        assert schema["properties"]["user_id"].get("format") == "uuid"
 
         # Datetime should have format
         assert schema["properties"]["created"]["type"] == "string"
@@ -321,7 +317,7 @@ class TestMixedScenarios:
             name: str,
             age: int | None = None,
             role: str = "user",
-            tags: list[str] | None = None,  # type: ignore[assignment]
+            tags: list[str] | None = None,
         ) -> None:
             pass
 
@@ -352,7 +348,7 @@ class TestJSONSchemaValidation:
             name: str,
             age: int,
             email: str | None = None,
-            tags: list[str] | None = None,  # type: ignore[assignment]
+            tags: list[str] | None = None,
         ) -> None:
             pass
 

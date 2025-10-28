@@ -73,6 +73,7 @@ class TestResponse:
         self._response.assert_status_server_error()
 
     def __repr__(self) -> str:
+        """Return a concise representation for debugging."""
         return f"<TestResponse status={self.status_code}>"
 
 
@@ -105,11 +106,7 @@ class TestClient:
         Args:
             app: A Spikard application instance
         """
-        with open("/tmp/python_test_client_init.log", "w") as f:
-            f.write("TestClient.__init__() called\n")
         self._client: _TestClient = _create_test_client(app)
-        with open("/tmp/python_test_client_created.log", "w") as f:
-            f.write("_create_test_client() completed\n")
 
     async def get(
         self,

@@ -2,6 +2,7 @@
 
 import asyncio
 import sys
+from typing import Any
 
 sys.path.insert(0, "/Users/naamanhirschfeld/workspace/spikard/packages/python")
 
@@ -13,25 +14,25 @@ app = Spikard()
 
 
 @app.get("/")
-async def root():
+async def root() -> dict[str, str]:
     """Root endpoint."""
     return {"message": "Hello, World!"}
 
 
 @app.get("/users/{user_id}")
-async def get_user(user_id: int):
+async def get_user(user_id: int) -> dict[str, Any]:
     """Get user by ID."""
     return {"user_id": user_id, "name": f"User {user_id}"}
 
 
 @app.get("/search")
-async def search(query: str = "default", limit: int = 10):
+async def search(query: str = "default", limit: int = 10) -> dict[str, Any]:
     """Search with query parameters."""
     return {"query": query, "limit": limit, "results": [f"Result {i + 1}" for i in range(limit)]}
 
 
 @app.post("/users")
-async def create_user(body: dict):
+async def create_user(body: dict[str, Any]) -> dict[str, Any]:
     """Create a new user."""
     return {"id": 123, "name": body.get("name"), "email": body.get("email")}
 

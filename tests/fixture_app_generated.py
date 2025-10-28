@@ -20,7 +20,7 @@ def load_category_fixtures(category: str) -> dict[str, dict]:
     for fixture_file in category_dir.glob("*.json"):
         if fixture_file.name == "schema.json":
             continue
-        with open(fixture_file) as f:
+        with fixture_file.open() as f:
             fixture = json.load(f)
             fixtures[fixture_file.stem] = fixture
     return fixtures
@@ -36,84 +36,84 @@ def content_types_app():
     app = Spikard()
 
     @app.get("/download/document.pdf")
-    async def route_content_types_91240(request):
+    async def route_content_types_76303(request):
         """Handler for GET /download/document.pdf"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/download/file.bin")
-    async def route_content_types_96517(request):
+    async def route_content_types_4483(request):
         """Handler for GET /download/file.bin"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/export/data.csv")
-    async def route_content_types_80262(request):
+    async def route_content_types_55262(request):
         """Handler for GET /export/data.csv"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/html")
-    async def route_content_types_1757(request):
+    async def route_content_types_93372(request):
         """Handler for GET /html"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/images/logo.png")
-    async def route_content_types_33365(request):
+    async def route_content_types_67833(request):
         """Handler for GET /images/logo.png"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/images/photo.jpg")
-    async def route_content_types_23949(request):
+    async def route_content_types_15964(request):
         """Handler for GET /images/photo.jpg"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/items/1")
-    async def route_content_types_81045(request):
+    async def route_content_types_4321(request):
         """Handler for GET /items/1"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/items/json")
-    async def route_content_types_3672(request):
+    async def route_content_types_53953(request):
         """Handler for GET /items/json"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/items/unicode")
-    async def route_content_types_14181(request):
+    async def route_content_types_68317(request):
         """Handler for GET /items/unicode"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/text")
-    async def route_content_types_87195(request):
+    async def route_content_types_47243(request):
         """Handler for GET /text"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/xml")
-    async def route_content_types_24954(request):
+    async def route_content_types_40949(request):
         """Handler for GET /xml"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/items/")
-    async def route_content_types_81621(request):
+    async def route_content_types_63261(request):
         """Handler for POST /items/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
@@ -132,105 +132,105 @@ def cookies_app():
     app = Spikard()
 
     @app.get("/cookie/set")
-    async def route_cookies_14656(request):
+    async def route_cookies_38261(request):
         """Handler for GET /cookie/set"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/cookies/min-length")
-    async def route_cookies_55418(request):
+    async def route_cookies_27857(request):
         """Handler for GET /cookies/min-length"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/cookies/pattern")
-    async def route_cookies_8028(request):
+    async def route_cookies_90821(request):
         """Handler for GET /cookies/pattern"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/cookies/validated")
-    async def route_cookies_89806(request):
+    async def route_cookies_79270(request):
         """Handler for GET /cookies/validated"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/items/")
-    async def route_cookies_27367(request):
+    async def route_cookies_36488(request):
         """Handler for GET /items/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/users/me")
-    async def route_cookies_44553(request):
+    async def route_cookies_71877(request):
         """Handler for GET /users/me"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/cookie/")
-    async def route_cookies_52521(request):
+    async def route_cookies_78388(request):
         """Handler for POST /cookie/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/cookies/delete")
-    async def route_cookies_79920(request):
+    async def route_cookies_11619(request):
         """Handler for POST /cookies/delete"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/cookies/multiple")
-    async def route_cookies_79902(request):
+    async def route_cookies_41917(request):
         """Handler for POST /cookies/multiple"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/cookies/samesite-lax")
-    async def route_cookies_13203(request):
+    async def route_cookies_69572(request):
         """Handler for POST /cookies/samesite-lax"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/cookies/samesite-none")
-    async def route_cookies_52312(request):
+    async def route_cookies_14983(request):
         """Handler for POST /cookies/samesite-none"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/cookies/samesite-strict")
-    async def route_cookies_73514(request):
+    async def route_cookies_17482(request):
         """Handler for POST /cookies/samesite-strict"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/cookies/session")
-    async def route_cookies_94660(request):
+    async def route_cookies_83678(request):
         """Handler for POST /cookies/session"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/cookies/set-with-domain")
-    async def route_cookies_23118(request):
+    async def route_cookies_38942(request):
         """Handler for POST /cookies/set-with-domain"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/cookies/set-with-path")
-    async def route_cookies_1959(request):
+    async def route_cookies_96431(request):
         """Handler for POST /cookies/set-with-path"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
@@ -249,28 +249,28 @@ def cors_app():
     app = Spikard()
 
     @app.get("/api/user/profile")
-    async def route_cors_38478(request):
+    async def route_cors_93771(request):
         """Handler for GET /api/user/profile"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/items/")
-    async def route_cors_27367(request):
+    async def route_cors_36488(request):
         """Handler for GET /items/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/public/data")
-    async def route_cors_16427(request):
+    async def route_cors_33185(request):
         """Handler for GET /public/data"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.options("/items/")
-    async def route_cors_53061(request):
+    async def route_cors_15143(request):
         """Handler for OPTIONS /items/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
@@ -289,42 +289,42 @@ def edge_cases_app():
     app = Spikard()
 
     @app.post("/calculations/")
-    async def route_edge_cases_18943(request):
+    async def route_edge_cases_59972(request):
         """Handler for POST /calculations/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/items/")
-    async def route_edge_cases_81621(request):
+    async def route_edge_cases_63261(request):
         """Handler for POST /items/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/nested/")
-    async def route_edge_cases_97360(request):
+    async def route_edge_cases_85939(request):
         """Handler for POST /nested/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/nulls/")
-    async def route_edge_cases_37618(request):
+    async def route_edge_cases_95928(request):
         """Handler for POST /nulls/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/numbers/")
-    async def route_edge_cases_10802(request):
+    async def route_edge_cases_2770(request):
         """Handler for POST /numbers/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/strings/")
-    async def route_edge_cases_76946(request):
+    async def route_edge_cases_1005(request):
         """Handler for POST /strings/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
@@ -343,119 +343,119 @@ def headers_app():
     app = Spikard()
 
     @app.get("/headers/accept")
-    async def route_headers_32239(request):
+    async def route_headers_74806(request):
         """Handler for GET /headers/accept"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/headers/accept-encoding")
-    async def route_headers_21836(request):
+    async def route_headers_23242(request):
         """Handler for GET /headers/accept-encoding"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/headers/accept-language")
-    async def route_headers_69492(request):
+    async def route_headers_70123(request):
         """Handler for GET /headers/accept-language"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/headers/basic-auth")
-    async def route_headers_73629(request):
+    async def route_headers_88727(request):
         """Handler for GET /headers/basic-auth"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/headers/bearer-auth")
-    async def route_headers_40554(request):
+    async def route_headers_33871(request):
         """Handler for GET /headers/bearer-auth"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/headers/content-type")
-    async def route_headers_36219(request):
+    async def route_headers_92925(request):
         """Handler for GET /headers/content-type"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/headers/host")
-    async def route_headers_67714(request):
+    async def route_headers_90782(request):
         """Handler for GET /headers/host"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/headers/max-length")
-    async def route_headers_7769(request):
+    async def route_headers_74227(request):
         """Handler for GET /headers/max-length"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/headers/multiple")
-    async def route_headers_22987(request):
+    async def route_headers_90587(request):
         """Handler for GET /headers/multiple"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/headers/origin")
-    async def route_headers_62875(request):
+    async def route_headers_65817(request):
         """Handler for GET /headers/origin"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/headers/pattern")
-    async def route_headers_35976(request):
+    async def route_headers_7671(request):
         """Handler for GET /headers/pattern"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/headers/referer")
-    async def route_headers_62868(request):
+    async def route_headers_94240(request):
         """Handler for GET /headers/referer"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/headers/underscore")
-    async def route_headers_12852(request):
+    async def route_headers_63345(request):
         """Handler for GET /headers/underscore"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/headers/validated")
-    async def route_headers_37961(request):
+    async def route_headers_85863(request):
         """Handler for GET /headers/validated"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/items/")
-    async def route_headers_27367(request):
+    async def route_headers_36488(request):
         """Handler for GET /items/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/users/me")
-    async def route_headers_44553(request):
+    async def route_headers_71877(request):
         """Handler for GET /users/me"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/echo")
-    async def route_headers_46842(request):
+    async def route_headers_6192(request):
         """Handler for POST /echo"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
@@ -474,49 +474,49 @@ def http_methods_app():
     app = Spikard()
 
     @app.delete("/items/1")
-    async def route_http_methods_65818(request):
+    async def route_http_methods_76488(request):
         """Handler for DELETE /items/1"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.delete("/items/999")
-    async def route_http_methods_51177(request):
+    async def route_http_methods_16994(request):
         """Handler for DELETE /items/999"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.head("/items/1")
-    async def route_http_methods_77170(request):
+    async def route_http_methods_43772(request):
         """Handler for HEAD /items/1"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.options("/items/")
-    async def route_http_methods_53061(request):
+    async def route_http_methods_15143(request):
         """Handler for OPTIONS /items/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.patch("/items/1")
-    async def route_http_methods_71195(request):
+    async def route_http_methods_92717(request):
         """Handler for PATCH /items/1"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.put("/items/1")
-    async def route_http_methods_27579(request):
+    async def route_http_methods_92648(request):
         """Handler for PUT /items/1"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.put("/items/999")
-    async def route_http_methods_28050(request):
+    async def route_http_methods_93313(request):
         """Handler for PUT /items/999"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
@@ -535,63 +535,63 @@ def json_bodies_app():
     app = Spikard()
 
     @app.patch("/items/1")
-    async def route_json_bodies_71195(request):
+    async def route_json_bodies_92717(request):
         """Handler for PATCH /items/1"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/events/")
-    async def route_json_bodies_13687(request):
+    async def route_json_bodies_2964(request):
         """Handler for POST /events/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/items/")
-    async def route_json_bodies_81621(request):
+    async def route_json_bodies_63261(request):
         """Handler for POST /items/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/items/?limit=10")
-    async def route_json_bodies_40587(request):
+    async def route_json_bodies_42350(request):
         """Handler for POST /items/?limit=10"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/items/list")
-    async def route_json_bodies_92761(request):
+    async def route_json_bodies_59708(request):
         """Handler for POST /items/list"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/items/list-validated")
-    async def route_json_bodies_96337(request):
+    async def route_json_bodies_88885(request):
         """Handler for POST /items/list-validated"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/items/nested")
-    async def route_json_bodies_67198(request):
+    async def route_json_bodies_2088(request):
         """Handler for POST /items/nested"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/items/optional-all")
-    async def route_json_bodies_56479(request):
+    async def route_json_bodies_61164(request):
         """Handler for POST /items/optional-all"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/items/validated")
-    async def route_json_bodies_47219(request):
+    async def route_json_bodies_89194(request):
         """Handler for POST /items/validated"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
@@ -610,63 +610,63 @@ def multipart_app():
     app = Spikard()
 
     @app.post("/")
-    async def route_multipart_79062(request):
+    async def route_multipart_87709(request):
         """Handler for POST /"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/files/document")
-    async def route_multipart_72369(request):
+    async def route_multipart_68866(request):
         """Handler for POST /files/document"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/files/image")
-    async def route_multipart_18154(request):
+    async def route_multipart_16474(request):
         """Handler for POST /files/image"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/files/images-only")
-    async def route_multipart_12804(request):
+    async def route_multipart_22502(request):
         """Handler for POST /files/images-only"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/files/list")
-    async def route_multipart_83892(request):
+    async def route_multipart_413(request):
         """Handler for POST /files/list"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/files/optional")
-    async def route_multipart_36149(request):
+    async def route_multipart_60112(request):
         """Handler for POST /files/optional"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/files/required")
-    async def route_multipart_16135(request):
+    async def route_multipart_33084(request):
         """Handler for POST /files/required"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/files/upload")
-    async def route_multipart_66397(request):
+    async def route_multipart_68352(request):
         """Handler for POST /files/upload"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/files/validated")
-    async def route_multipart_97258(request):
+    async def route_multipart_14899(request):
         """Handler for POST /files/validated"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
@@ -685,140 +685,140 @@ def path_params_app():
     app = Spikard()
 
     @app.get("/1.0/1/abc/c892496f-b1fd-4b91-bdb8-b46f92df1716")
-    async def route_path_params_5061(request):
+    async def route_path_params_28220(request):
         """Handler for GET /1.0/1/abc/c892496f-b1fd-4b91-bdb8-b46f92df1716"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/date/2023-07-15")
-    async def route_path_params_41734(request):
+    async def route_path_params_9515(request):
         """Handler for GET /date/2023-07-15"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/files/home/johndoe/myfile.txt")
-    async def route_path_params_86950(request):
+    async def route_path_params_82751(request):
         """Handler for GET /files/home/johndoe/myfile.txt"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/items/ec38df32-ceda-4cfa-9b4a-1aeb94ad551a")
-    async def route_path_params_51295(request):
+    async def route_path_params_79718(request):
         """Handler for GET /items/ec38df32-ceda-4cfa-9b4a-1aeb94ad551a"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/models/alexnet")
-    async def route_path_params_31018(request):
+    async def route_path_params_97568(request):
         """Handler for GET /models/alexnet"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/models/foo")
-    async def route_path_params_21831(request):
+    async def route_path_params_57698(request):
         """Handler for GET /models/foo"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/path/bool/1")
-    async def route_path_params_4520(request):
+    async def route_path_params_26459(request):
         """Handler for GET /path/bool/1"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/path/bool/True")
-    async def route_path_params_25691(request):
+    async def route_path_params_11569(request):
         """Handler for GET /path/bool/True"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/path/float/42.5")
-    async def route_path_params_3891(request):
+    async def route_path_params_41406(request):
         """Handler for GET /path/float/42.5"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/path/int/42")
-    async def route_path_params_9940(request):
+    async def route_path_params_87376(request):
         """Handler for GET /path/int/42"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/path/int/foobar")
-    async def route_path_params_18010(request):
+    async def route_path_params_17659(request):
         """Handler for GET /path/int/foobar"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/path/param-ge/3")
-    async def route_path_params_26057(request):
+    async def route_path_params_1147(request):
         """Handler for GET /path/param-ge/3"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/path/param-gt/2")
-    async def route_path_params_88379(request):
+    async def route_path_params_75837(request):
         """Handler for GET /path/param-gt/2"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/path/param-gt/42")
-    async def route_path_params_11546(request):
+    async def route_path_params_13593(request):
         """Handler for GET /path/param-gt/42"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/path/param-le/3")
-    async def route_path_params_46207(request):
+    async def route_path_params_18621(request):
         """Handler for GET /path/param-le/3"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/path/param-lt-gt/2")
-    async def route_path_params_72059(request):
+    async def route_path_params_19675(request):
         """Handler for GET /path/param-lt-gt/2"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/path/param-lt/2")
-    async def route_path_params_91066(request):
+    async def route_path_params_26561(request):
         """Handler for GET /path/param-lt/2"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/path/param-maxlength/foobar")
-    async def route_path_params_49201(request):
+    async def route_path_params_85033(request):
         """Handler for GET /path/param-maxlength/foobar"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/path/param-minlength/fo")
-    async def route_path_params_19501(request):
+    async def route_path_params_94388(request):
         """Handler for GET /path/param-minlength/fo"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/path/str/foobar")
-    async def route_path_params_2935(request):
+    async def route_path_params_77583(request):
         """Handler for GET /path/str/foobar"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
@@ -837,175 +837,175 @@ def query_params_app():
     app = Spikard()
 
     @app.get("/items/")
-    async def route_query_params_27367(request):
+    async def route_query_params_36488(request):
         """Handler for GET /items/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query")
-    async def route_query_params_60579(request):
+    async def route_query_params_55661(request):
         """Handler for GET /query"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/basic")
-    async def route_query_params_23465(request):
+    async def route_query_params_24546(request):
         """Handler for GET /query/basic"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/bool")
-    async def route_query_params_81230(request):
+    async def route_query_params_37535(request):
         """Handler for GET /query/bool"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/date")
-    async def route_query_params_84900(request):
+    async def route_query_params_80678(request):
         """Handler for GET /query/date"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/datetime")
-    async def route_query_params_7126(request):
+    async def route_query_params_30307(request):
         """Handler for GET /query/datetime"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/enum")
-    async def route_query_params_22731(request):
+    async def route_query_params_38641(request):
         """Handler for GET /query/enum"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/float-ge")
-    async def route_query_params_65343(request):
+    async def route_query_params_59560(request):
         """Handler for GET /query/float-ge"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/int")
-    async def route_query_params_93562(request):
+    async def route_query_params_53742(request):
         """Handler for GET /query/int"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/int-ge")
-    async def route_query_params_67033(request):
+    async def route_query_params_5428(request):
         """Handler for GET /query/int-ge"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/int-gt")
-    async def route_query_params_94022(request):
+    async def route_query_params_80265(request):
         """Handler for GET /query/int-gt"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/int-le")
-    async def route_query_params_46293(request):
+    async def route_query_params_75759(request):
         """Handler for GET /query/int-le"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/int-lt")
-    async def route_query_params_82260(request):
+    async def route_query_params_6596(request):
         """Handler for GET /query/int-lt"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/int/default")
-    async def route_query_params_1726(request):
+    async def route_query_params_84728(request):
         """Handler for GET /query/int/default"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/int/optional")
-    async def route_query_params_73491(request):
+    async def route_query_params_66793(request):
         """Handler for GET /query/int/optional"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/list")
-    async def route_query_params_29957(request):
+    async def route_query_params_62325(request):
         """Handler for GET /query/list"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/list-default")
-    async def route_query_params_48551(request):
+    async def route_query_params_48430(request):
         """Handler for GET /query/list-default"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/multi-type")
-    async def route_query_params_56953(request):
+    async def route_query_params_64462(request):
         """Handler for GET /query/multi-type"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/optional")
-    async def route_query_params_36497(request):
+    async def route_query_params_85685(request):
         """Handler for GET /query/optional"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/optional-default")
-    async def route_query_params_56337(request):
+    async def route_query_params_61565(request):
         """Handler for GET /query/optional-default"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/pattern")
-    async def route_query_params_72372(request):
+    async def route_query_params_78172(request):
         """Handler for GET /query/pattern"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/str-max-length")
-    async def route_query_params_49713(request):
+    async def route_query_params_77212(request):
         """Handler for GET /query/str-max-length"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/str-min-length")
-    async def route_query_params_83182(request):
+    async def route_query_params_58918(request):
         """Handler for GET /query/str-min-length"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/query/uuid")
-    async def route_query_params_28002(request):
+    async def route_query_params_77611(request):
         """Handler for GET /query/uuid"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/test")
-    async def route_query_params_94378(request):
+    async def route_query_params_76973(request):
         """Handler for GET /test"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
@@ -1024,105 +1024,105 @@ def status_codes_app():
     app = Spikard()
 
     @app.delete("/items/1")
-    async def route_status_codes_65818(request):
+    async def route_status_codes_76488(request):
         """Handler for DELETE /items/1"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/admin/users")
-    async def route_status_codes_33658(request):
+    async def route_status_codes_56708(request):
         """Handler for GET /admin/users"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/api/resource")
-    async def route_status_codes_14850(request):
+    async def route_status_codes_184(request):
         """Handler for GET /api/resource"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/error")
-    async def route_status_codes_46225(request):
+    async def route_status_codes_9568(request):
         """Handler for GET /error"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/files/document.pdf")
-    async def route_status_codes_59697(request):
+    async def route_status_codes_37630(request):
         """Handler for GET /files/document.pdf"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/health")
-    async def route_status_codes_22418(request):
+    async def route_status_codes_94022(request):
         """Handler for GET /health"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/items/1")
-    async def route_status_codes_81045(request):
+    async def route_status_codes_4321(request):
         """Handler for GET /items/1"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/items/999")
-    async def route_status_codes_40862(request):
+    async def route_status_codes_55698(request):
         """Handler for GET /items/999"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/old-path")
-    async def route_status_codes_42786(request):
+    async def route_status_codes_93165(request):
         """Handler for GET /old-path"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/temp-redirect")
-    async def route_status_codes_51415(request):
+    async def route_status_codes_98417(request):
         """Handler for GET /temp-redirect"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/users/me")
-    async def route_status_codes_44553(request):
+    async def route_status_codes_71877(request):
         """Handler for GET /users/me"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/items/")
-    async def route_status_codes_81621(request):
+    async def route_status_codes_63261(request):
         """Handler for POST /items/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/redirect-post")
-    async def route_status_codes_53238(request):
+    async def route_status_codes_55853(request):
         """Handler for POST /redirect-post"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/slow-endpoint")
-    async def route_status_codes_74656(request):
+    async def route_status_codes_16956(request):
         """Handler for POST /slow-endpoint"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/tasks/")
-    async def route_status_codes_81723(request):
+    async def route_status_codes_23972(request):
         """Handler for POST /tasks/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
@@ -1141,42 +1141,42 @@ def url_encoded_app():
     app = Spikard()
 
     @app.post("/form/")
-    async def route_url_encoded_14462(request):
+    async def route_url_encoded_20373(request):
         """Handler for POST /form/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/form/tags")
-    async def route_url_encoded_90446(request):
+    async def route_url_encoded_34361(request):
         """Handler for POST /form/tags"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/form/validated")
-    async def route_url_encoded_27609(request):
+    async def route_url_encoded_30919(request):
         """Handler for POST /form/validated"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/login/")
-    async def route_url_encoded_75372(request):
+    async def route_url_encoded_20142(request):
         """Handler for POST /login/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/register/")
-    async def route_url_encoded_41276(request):
+    async def route_url_encoded_76783(request):
         """Handler for POST /register/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/token")
-    async def route_url_encoded_62188(request):
+    async def route_url_encoded_27710(request):
         """Handler for POST /token"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
@@ -1195,77 +1195,77 @@ def validation_errors_app():
     app = Spikard()
 
     @app.get("/items/")
-    async def route_validation_errors_27367(request):
+    async def route_validation_errors_36488(request):
         """Handler for GET /items/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/items/?is_active=maybe")
-    async def route_validation_errors_88572(request):
+    async def route_validation_errors_67132(request):
         """Handler for GET /items/?is_active=maybe"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/items/?limit=101")
-    async def route_validation_errors_63402(request):
+    async def route_validation_errors_8563(request):
         """Handler for GET /items/?limit=101"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/items/?price=0")
-    async def route_validation_errors_23263(request):
+    async def route_validation_errors_94017(request):
         """Handler for GET /items/?price=0"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/items/?q=ab")
-    async def route_validation_errors_73869(request):
+    async def route_validation_errors_98437(request):
         """Handler for GET /items/?q=ab"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/items/?q=invalid!")
-    async def route_validation_errors_70920(request):
+    async def route_validation_errors_64940(request):
         """Handler for GET /items/?q=invalid!"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/items/?q=this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter")
-    async def route_validation_errors_36750(request):
+    async def route_validation_errors_15966(request):
         """Handler for GET /items/?q=this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/items/?skip=not_a_number")
-    async def route_validation_errors_96810(request):
+    async def route_validation_errors_96725(request):
         """Handler for GET /items/?skip=not_a_number"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/items/not-a-uuid")
-    async def route_validation_errors_59345(request):
+    async def route_validation_errors_78076(request):
         """Handler for GET /items/not-a-uuid"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.get("/models/invalid_model")
-    async def route_validation_errors_58189(request):
+    async def route_validation_errors_99929(request):
         """Handler for GET /models/invalid_model"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
         return {"status": "mock"}
 
     @app.post("/items/")
-    async def route_validation_errors_81621(request):
+    async def route_validation_errors_63261(request):
         """Handler for POST /items/"""
         # For now, return a placeholder response
         # TODO: Match request to fixture and return expected response
