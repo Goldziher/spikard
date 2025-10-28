@@ -4,7 +4,7 @@ This module converts the universal FieldDefinition IR into JSON Schema format
 that can be passed to Rust for validation and caching.
 """
 
-from datetime import date, datetime
+from datetime import date, datetime, time, timedelta
 from enum import Enum
 from pathlib import Path, PurePath
 from typing import Any
@@ -43,6 +43,10 @@ def field_definition_to_json_schema(field: FieldDefinition) -> dict[str, Any]:
             else:
                 # Fallback to basic type
                 schema = _annotation_to_json_schema(non_none_types[0])
+
+            # Apply constraints from the parent field (which may have Pydantic Field constraints)
+            _apply_constraints(schema, field.extra)
+
             # Optional fields are handled by not including them in required array
             return schema
 
@@ -129,12 +133,18 @@ def _annotation_to_json_schema(python_type: Any) -> dict[str, Any]:
     if python_type is bool or python_type == "bool":
         return {"type": "boolean"}
 
-    # Handle date/datetime with format
+    # Handle date/datetime/time/timedelta with format
     if python_type is datetime:
         return {"type": "string", "format": "date-time"}
 
     if python_type is date:
         return {"type": "string", "format": "date"}
+
+    if python_type is time:
+        return {"type": "string", "format": "time"}
+
+    if python_type is timedelta:
+        return {"type": "string", "format": "duration"}
 
     # Handle UUID with format
     if python_type is UUID:

@@ -4,6 +4,7 @@ This module provides the main entry point for parsing function signatures
 and converting them to JSON Schema for validation in Rust.
 """
 
+import re
 from collections.abc import Callable
 from typing import Any
 
@@ -13,7 +14,7 @@ from spikard._internal import (
 )
 
 
-def extract_parameter_schema(func: Callable[..., Any]) -> dict[str, Any] | None:
+def extract_parameter_schema(func: Callable[..., Any], path: str | None = None) -> dict[str, Any] | None:
     """Extract JSON Schema from function signature for parameter validation.
 
     This analyzes the function's type hints using the universal FieldDefinition IR
@@ -29,6 +30,7 @@ def extract_parameter_schema(func: Callable[..., Any]) -> dict[str, Any] | None:
 
     Args:
         func: The function to introspect
+        path: The URL path pattern (e.g., "/users/{user_id}") to extract path parameters
 
     Returns:
         JSON Schema dict or None if no parameters
@@ -40,6 +42,12 @@ def extract_parameter_schema(func: Callable[..., Any]) -> dict[str, Any] | None:
     if not parsed_sig.parameters:
         return None
 
+    # Extract path parameter names from the path pattern
+    path_param_names: set[str] = set()
+    if path:
+        # Match {param_name} patterns in the path
+        path_param_names = set(re.findall(r"\{(\w+)\}", path))
+
     schema: dict[str, Any] = {"type": "object", "properties": {}, "required": []}
 
     # Convert each parameter to JSON Schema
@@ -47,9 +55,13 @@ def extract_parameter_schema(func: Callable[..., Any]) -> dict[str, Any] | None:
         # Convert FieldDefinition to JSON Schema
         param_schema = field_definition_to_json_schema(field_def)
 
-        # All parameters come from query by default
-        # (This will be extended to support path, header, cookie params)
-        param_schema["source"] = "query"
+        # Determine parameter source
+        if param_name in path_param_names:
+            param_schema["source"] = "path"
+        else:
+            # Default to query params for now
+            # (Will be extended to support header, cookie params via annotations)
+            param_schema["source"] = "query"
 
         schema["properties"][param_name] = param_schema
 
