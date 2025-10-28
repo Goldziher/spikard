@@ -1,5 +1,6 @@
 """Spikard application class."""
 
+import functools
 import inspect
 import os
 import shutil
@@ -96,15 +97,48 @@ class Spikard:
 
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             from spikard.introspection import extract_parameter_schema
+            from spikard.params import ParamBase
             from spikard.schema import extract_schemas
 
             request_schema, response_schema = extract_schemas(func)
-            parameter_schema = extract_parameter_schema(func)
+            parameter_schema = extract_parameter_schema(func, path)
+
+            # Wrap the handler to invoke default_factory for ParamBase defaults
+            sig = inspect.signature(func)
+            wrapped_func = func
+
+            # Check if any parameters have ParamBase defaults
+            has_param_defaults = any(isinstance(param.default, ParamBase) for param in sig.parameters.values())
+
+            if has_param_defaults:
+                # Create a wrapper that processes ParamBase defaults
+                if inspect.iscoroutinefunction(func):
+
+                    @functools.wraps(func)
+                    async def async_wrapper(**kwargs: Any) -> Any:
+                        # For each parameter with ParamBase default, invoke get_default() if not provided
+                        for param_name, param in sig.parameters.items():
+                            if isinstance(param.default, ParamBase) and param_name not in kwargs:
+                                kwargs[param_name] = param.default.get_default()
+                        return await func(**kwargs)
+
+                    wrapped_func = async_wrapper
+                else:
+
+                    @functools.wraps(func)
+                    def sync_wrapper(**kwargs: Any) -> Any:
+                        # For each parameter with ParamBase default, invoke get_default() if not provided
+                        for param_name, param in sig.parameters.items():
+                            if isinstance(param.default, ParamBase) and param_name not in kwargs:
+                                kwargs[param_name] = param.default.get_default()
+                        return func(**kwargs)
+
+                    wrapped_func = sync_wrapper
 
             route = Route(
                 method=method,
                 path=path,
-                handler=func,
+                handler=wrapped_func,
                 handler_name=func.__name__,
                 request_schema=request_schema,
                 response_schema=response_schema,

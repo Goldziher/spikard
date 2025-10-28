@@ -1,5 +1,6 @@
 //! Python handler invocation from Rust
 
+use crate::debug_log_module;
 use axum::{
     body::Body,
     extract::Request,
@@ -22,7 +23,7 @@ fn is_debug_mode() -> bool {
 #[derive(Debug, Clone)]
 pub struct RequestData {
     pub path_params: HashMap<String, String>,
-    pub query_params: HashMap<String, String>,
+    pub query_params: Value,
     pub body: Option<Value>,
 }
 
@@ -75,6 +76,19 @@ impl PythonHandler {
         _req: Request<Body>,
         request_data: RequestData,
     ) -> Result<Response<Body>, (StatusCode, String)> {
+        // DEBUG: Write to file since test client captures stderr
+        let _ = std::fs::write(
+            "/tmp/spikard_debug.log",
+            format!(
+                "[UNCONDITIONAL DEBUG] PythonHandler::call() entered\n[UNCONDITIONAL DEBUG] parameter_validator present: {}\n",
+                self.parameter_validator.is_some()
+            ),
+        );
+        eprintln!("[UNCONDITIONAL DEBUG] PythonHandler::call() entered");
+        eprintln!(
+            "[UNCONDITIONAL DEBUG] parameter_validator present: {}",
+            self.parameter_validator.is_some()
+        );
         // Validate request body in Rust if validator is present
         if let Some(validator) = &self.request_validator
             && let Some(body) = &request_data.body
@@ -96,29 +110,51 @@ impl PythonHandler {
             return Err((StatusCode::BAD_REQUEST, error_msg));
         }
 
-        // Validate parameters in Rust if validator is present
-        if let Some(validator) = &self.parameter_validator
-            && let Err(errors) = validator.validate_and_extract(&request_data.query_params, &request_data.path_params)
-        {
-            let error_msg = if is_debug_mode() {
-                // In DEBUG mode, include full validation errors and request data
-                json!({
-                    "error": "Parameter validation failed",
-                    "validation_errors": format!("{:?}", errors),
-                    "path_params": request_data.path_params,
-                    "query_params": request_data.query_params,
-                })
-                .to_string()
-            } else {
-                "Parameter validation failed".to_string()
-            };
-            return Err((StatusCode::UNPROCESSABLE_ENTITY, error_msg));
-        }
+        // Validate and extract parameters in Rust if validator is present
+        // This returns a validated JSON object with properly typed values
+        let validated_params = if let Some(validator) = &self.parameter_validator {
+            // Pass query params as Value directly (fast-query-parsers already did type conversion)
+            match validator.validate_and_extract(&request_data.query_params, &request_data.path_params) {
+                Ok(params) => Some(params),
+                Err(errors) => {
+                    // Return FastAPI-compatible error format with {"detail": [...]}
+                    let mut debug_msg = format!(
+                        "[UNCONDITIONAL DEBUG] Parameter validation failed with {} errors\n",
+                        errors.errors.len()
+                    );
+                    for (i, err) in errors.errors.iter().enumerate() {
+                        debug_msg.push_str(&format!(
+                            "[UNCONDITIONAL DEBUG]   Error {}: type={}, loc={:?}, msg={}, input={}, ctx={:?}\n",
+                            i, err.error_type, err.loc, err.msg, err.input, err.ctx
+                        ));
+                    }
+                    eprintln!("{}", debug_msg);
+                    debug_log_module!(
+                        "handler",
+                        "Parameter validation failed with {} errors",
+                        errors.errors.len()
+                    );
+                    let error_body = json!({
+                        "detail": errors.errors
+                    });
+                    let error_json = serde_json::to_string_pretty(&error_body)
+                        .unwrap_or_else(|e| format!("Failed to serialize: {}", e));
+                    debug_msg.push_str(&format!("[UNCONDITIONAL DEBUG] error_body JSON: {}\n", error_json));
+                    let _ = std::fs::write("/tmp/spikard_validation_error.log", debug_msg);
+                    eprintln!("[UNCONDITIONAL DEBUG] error_body JSON: {}", error_json);
+                    debug_log_module!("handler", "Returning 422 with error body: {}", error_body.to_string());
+                    return Err((StatusCode::UNPROCESSABLE_ENTITY, error_body.to_string()));
+                }
+            }
+        } else {
+            None
+        };
 
         let handler = self.handler.clone();
         let is_async = self.is_async;
         let response_validator = self.response_validator.clone();
         let request_data_for_error = request_data.clone(); // Clone for error reporting
+        let validated_params_for_task = validated_params.clone(); // Clone for passing to task
 
         let result = if is_async {
             // For async handlers, we need to await the coroutine
@@ -127,8 +163,12 @@ impl PythonHandler {
                 Python::attach(|py| -> PyResult<ResponseResult> {
                     let handler_obj = handler.bind(py);
 
-                    // Convert all request data to Python kwargs
-                    let kwargs = request_data_to_py_kwargs(py, &request_data)?;
+                    // Convert to Python kwargs - use validated params if available
+                    let kwargs = if let Some(ref validated) = validated_params_for_task {
+                        validated_params_to_py_kwargs(py, validated, &request_data, &handler_obj)?
+                    } else {
+                        request_data_to_py_kwargs(py, &request_data)?
+                    };
 
                     // Call the handler - this returns a coroutine
                     let coroutine = if kwargs.is_empty() {
@@ -193,8 +233,12 @@ impl PythonHandler {
                 Python::attach(|py| -> PyResult<ResponseResult> {
                     let handler_obj = handler.bind(py);
 
-                    // Convert all request data to Python kwargs
-                    let kwargs = request_data_to_py_kwargs(py, &request_data)?;
+                    // Convert to Python kwargs - use validated params if available
+                    let kwargs = if let Some(ref validated) = validated_params_for_task {
+                        validated_params_to_py_kwargs(py, validated, &request_data, &handler_obj)?
+                    } else {
+                        request_data_to_py_kwargs(py, &request_data)?
+                    };
 
                     let py_result = if kwargs.is_empty() {
                         handler_obj.call0()?
@@ -273,7 +317,49 @@ impl PythonHandler {
                 })
             }
             Err(e) => {
-                // Check if this is a validation error (missing required parameter or type error)
+                eprintln!("[UNCONDITIONAL DEBUG] Handler caught error, checking if Pydantic ValidationError");
+                // Check if this is a Pydantic ValidationError by trying to extract its .json() method
+                let pydantic_errors = Python::attach(|py| -> Option<String> {
+                    let err_value = e.value(py);
+                    let type_name = err_value.get_type().name().ok()?;
+                    eprintln!("[UNCONDITIONAL DEBUG] Python exception type: {}", type_name);
+
+                    debug_log_module!("handler", "Caught Python exception: type={}", type_name);
+
+                    // Check if this is a ValidationError from pydantic_core
+                    if type_name == "ValidationError" {
+                        debug_log_module!("handler", "This is a Pydantic ValidationError!");
+                        // Try to call the .json() method
+                        if let Ok(json_method) = err_value.getattr("json") {
+                            if let Ok(json_str) = json_method.call0() {
+                                let json_string = json_str.extract::<String>().ok()?;
+                                debug_log_module!("handler", "Extracted Pydantic .json(): {}", json_string);
+                                return Some(json_string);
+                            }
+                        }
+                        debug_log_module!("handler", "Failed to extract .json() from ValidationError");
+                    }
+                    None
+                });
+
+                // If we got Pydantic validation errors, format them FastAPI-style
+                if let Some(pydantic_json) = pydantic_errors {
+                    debug_log_module!("handler", "Processing Pydantic JSON");
+                    // Parse the Pydantic JSON and wrap it in {"detail": [...]}
+                    if let Ok(errors_array) = serde_json::from_str::<serde_json::Value>(&pydantic_json) {
+                        let error_body = json!({
+                            "detail": errors_array
+                        });
+                        debug_log_module!(
+                            "handler",
+                            "Returning FastAPI-style Pydantic error with {} errors",
+                            errors_array.as_array().map(|a| a.len()).unwrap_or(0)
+                        );
+                        return Err((StatusCode::UNPROCESSABLE_ENTITY, error_body.to_string()));
+                    }
+                }
+
+                // Fallback: Check if this is a validation error (missing required parameter or type error)
                 let error_str = format!("{}", e);
                 let is_validation_error =
                     error_str.contains("missing") && error_str.contains("required") || error_str.contains("argument");
@@ -365,7 +451,40 @@ fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to parse JSON: {}", e)))
 }
 
+/// Convert validated parameters to Python keyword arguments using msgspec converter
+/// This uses already-validated parameter values and relies on Python's msgspec
+/// for type conversion based on the handler's type annotations.
+fn validated_params_to_py_kwargs<'py>(
+    py: Python<'py>,
+    validated_params: &Value,
+    request_data: &RequestData,
+    handler: &Bound<'py, PyAny>,
+) -> PyResult<Bound<'py, PyDict>> {
+    // Convert validated params to Python dict using json.loads
+    let params_dict = json_to_python(py, validated_params)?;
+
+    // Import our converter module
+    let converter_module = py.import("spikard._internal.converters")?;
+    let convert_params_func = converter_module.getattr("convert_params")?;
+
+    // Call convert_params(params_dict, handler_func)
+    // This will use msgspec to convert types based on handler's signature
+    let converted = convert_params_func.call1((params_dict, handler))?;
+
+    // Extract the converted dict
+    let kwargs = converted.cast_into::<PyDict>()?;
+
+    // Add request body if present (convert to Python dict/list)
+    if let Some(body) = &request_data.body {
+        let py_body = json_to_python(py, body)?;
+        kwargs.set_item("body", py_body)?;
+    }
+
+    Ok(kwargs)
+}
+
 /// Convert request data (path params, query params, body) to Python keyword arguments
+/// This is the fallback when no parameter validator is present
 fn request_data_to_py_kwargs<'py>(py: Python<'py>, request_data: &RequestData) -> PyResult<Bound<'py, PyDict>> {
     let kwargs = PyDict::new(py);
 
@@ -384,19 +503,14 @@ fn request_data_to_py_kwargs<'py>(py: Python<'py>, request_data: &RequestData) -
         }
     }
 
-    // Add query parameters as individual kwargs (or as a dict if they conflict with path params)
-    for (key, value) in &request_data.query_params {
-        // Only add if not already present (path params take precedence)
-        if !kwargs.contains(key)? {
-            if let Ok(int_val) = value.parse::<i64>() {
-                kwargs.set_item(key, int_val)?;
-            } else if let Ok(float_val) = value.parse::<f64>() {
-                kwargs.set_item(key, float_val)?;
-            } else if value == "true" || value == "false" {
-                let bool_val = value == "true";
-                kwargs.set_item(key, bool_val)?;
-            } else {
-                kwargs.set_item(key, value)?;
+    // Add query parameters as individual kwargs (already parsed with correct types)
+    // query_params is a JSON Value from our fast parser with types already correct
+    if let Value::Object(query_map) = &request_data.query_params {
+        for (key, value) in query_map {
+            // Only add if not already present (path params take precedence)
+            if !kwargs.contains(key.as_str())? {
+                let py_value = json_to_python(py, value)?;
+                kwargs.set_item(key.as_str(), py_value)?;
             }
         }
     }
