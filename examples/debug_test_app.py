@@ -29,12 +29,15 @@ async def type_error_endpoint():
 @app.get("/deep_error/{user_id}")
 async def deep_error(user_id: int, debug: bool = False):
     """Error deep in call stack."""
+
     def level1():
         def level2():
             def level3():
                 # Error at level 3
                 return 1 / 0
+
             return level3()
+
         return level2()
 
     result = level1()

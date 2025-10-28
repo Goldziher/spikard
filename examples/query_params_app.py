@@ -14,11 +14,7 @@ async def index():
 @app.get("/search")
 async def search(query: str = "default", limit: int = 10):
     """Search endpoint with query parameters."""
-    return {
-        "query": query,
-        "limit": limit,
-        "results": [f"Result {i+1} for '{query}'" for i in range(limit)]
-    }
+    return {"query": query, "limit": limit, "results": [f"Result {i + 1} for '{query}'" for i in range(limit)]}
 
 
 @app.get("/users/{user_id}")

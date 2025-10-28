@@ -1,9 +1,10 @@
 """Standalone routing decorators."""
 
-from typing import Callable
+from collections.abc import Callable
+from typing import Any
 
 
-def get(path: str) -> Callable:
+def get(path: str) -> Callable[..., Any]:
     """Standalone GET route decorator.
 
     Args:
@@ -23,7 +24,7 @@ def get(path: str) -> Callable:
     )
 
 
-def post(path: str) -> Callable:
+def post(path: str) -> Callable[..., Any]:
     """Standalone POST route decorator.
 
     Args:
@@ -38,7 +39,7 @@ def post(path: str) -> Callable:
     )
 
 
-def put(path: str) -> Callable:
+def put(path: str) -> Callable[..., Any]:
     """Standalone PUT route decorator.
 
     Args:
@@ -53,7 +54,7 @@ def put(path: str) -> Callable:
     )
 
 
-def patch(path: str) -> Callable:
+def patch(path: str) -> Callable[..., Any]:
     """Standalone PATCH route decorator.
 
     Args:
@@ -68,7 +69,7 @@ def patch(path: str) -> Callable:
     )
 
 
-def delete(path: str) -> Callable:
+def delete(path: str) -> Callable[..., Any]:
     """Standalone DELETE route decorator.
 
     Args:
