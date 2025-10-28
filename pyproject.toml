@@ -67,6 +67,7 @@ lint.per-file-ignores."**/tests/**/*.*" = [
   "ARG002",  # Unused method argument
   "BLE001",  # Disable blind exception catching for tests
   "D",
+  "INP001",  # Allow implicit namespace packages in tests
   "N806",    # Variable naming in tests
   "N815",
   "PLC",     # Disable all PLC rules for tests
@@ -110,7 +111,7 @@ max_supported_python = "3.14"
 
 [tool.pytest.ini_options]
 timeout = 300
-testpaths = [ "tests" ]
+testpaths = [ "packages/python/tests" ]
 python_files = [ "test_*.py", "*_test.py" ]
 norecursedirs = [ "dist", "build", "*.egg" ]
 asyncio_mode = "auto"
@@ -118,7 +119,7 @@ asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage.run]
 branch = true
-omit = [ "tests/*", "scripts/*" ]
+omit = [ "packages/python/tests/*", "scripts/*" ]
 source = [ "crates/spikard-py" ]
 
 [tool.coverage.report]
@@ -150,11 +151,3 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = [ "jsonschema" ]
 ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = [ "tests.*" ]
-disallow_untyped_defs = false
-disallow_incomplete_defs = false
-disallow_untyped_calls = false
-disallow_untyped_decorators = false
-warn_return_any = false

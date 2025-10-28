@@ -25,7 +25,7 @@ from spikard.schema import (
 class TestIsTypedDict:
     """Tests for TypedDict detection."""
 
-    def test_is_typeddict_with_typeddict(self):
+    def test_is_typeddict_with_typeddict(self) -> None:
         """TypedDict classes should be detected."""
 
         class MyTypedDict(TypedDict):
@@ -34,11 +34,11 @@ class TestIsTypedDict:
 
         assert is_typeddict(MyTypedDict) is True
 
-    def test_is_typeddict_with_regular_dict(self):
+    def test_is_typeddict_with_regular_dict(self) -> None:
         """Regular dicts should not be detected as TypedDict."""
         assert is_typeddict({"name": "test"}) is False
 
-    def test_is_typeddict_with_regular_class(self):
+    def test_is_typeddict_with_regular_class(self) -> None:
         """Regular classes should not be detected as TypedDict."""
 
         class RegularClass:
@@ -50,27 +50,27 @@ class TestIsTypedDict:
 class TestIsJsonSchemaDict:
     """Tests for JSON Schema dict detection."""
 
-    def test_is_json_schema_dict_with_type(self):
+    def test_is_json_schema_dict_with_type(self) -> None:
         """Dict with 'type' key should be detected."""
         schema = {"type": "object", "properties": {}}
         assert is_json_schema_dict(schema) is True
 
-    def test_is_json_schema_dict_with_properties(self):
+    def test_is_json_schema_dict_with_properties(self) -> None:
         """Dict with 'properties' key should be detected."""
         schema = {"properties": {"name": {"type": "string"}}}
         assert is_json_schema_dict(schema) is True
 
-    def test_is_json_schema_dict_with_ref(self):
+    def test_is_json_schema_dict_with_ref(self) -> None:
         """Dict with '$ref' key should be detected."""
         schema = {"$ref": "#/$defs/User"}
         assert is_json_schema_dict(schema) is True
 
-    def test_is_json_schema_dict_with_regular_dict(self):
+    def test_is_json_schema_dict_with_regular_dict(self) -> None:
         """Regular dict should not be detected."""
         data = {"name": "test", "age": 30}
         assert is_json_schema_dict(data) is False
 
-    def test_is_json_schema_dict_with_non_dict(self):
+    def test_is_json_schema_dict_with_non_dict(self) -> None:
         """Non-dict should not be detected."""
         assert is_json_schema_dict("not a dict") is False
 
@@ -78,7 +78,7 @@ class TestIsJsonSchemaDict:
 class TestResolveMsgspecRef:
     """Tests for msgspec $ref resolution."""
 
-    def test_resolve_msgspec_ref_with_ref(self):
+    def test_resolve_msgspec_ref_with_ref(self) -> None:
         """Should resolve top-level $ref to definition."""
         schema = {
             "$ref": "#/$defs/User",
@@ -95,13 +95,13 @@ class TestResolveMsgspecRef:
         assert "properties" in resolved
         assert "$ref" not in resolved
 
-    def test_resolve_msgspec_ref_without_ref(self):
+    def test_resolve_msgspec_ref_without_ref(self) -> None:
         """Should return schema as-is if no $ref."""
         schema = {"type": "object", "properties": {}}
         resolved = resolve_msgspec_ref(schema)
         assert resolved == schema
 
-    def test_resolve_msgspec_ref_preserves_other_defs(self):
+    def test_resolve_msgspec_ref_preserves_other_defs(self) -> None:
         """Should preserve other definitions after resolving."""
         schema = {
             "$ref": "#/$defs/User",
@@ -120,7 +120,7 @@ class TestResolveMsgspecRef:
 class TestExtractJsonSchemaPlainDict:
     """Tests for plain JSON Schema dict extraction."""
 
-    def test_extract_json_schema_plain_dict(self):
+    def test_extract_json_schema_plain_dict(self) -> None:
         """Plain JSON Schema dict should be returned as-is."""
         schema = {
             "type": "object",
@@ -134,7 +134,7 @@ class TestExtractJsonSchemaPlainDict:
         result = extract_json_schema(schema)
         assert result == schema
 
-    def test_extract_json_schema_primitives(self):
+    def test_extract_json_schema_primitives(self) -> None:
         """Primitives should return None."""
         assert extract_json_schema(None) is None
         assert extract_json_schema(int) is None
@@ -144,7 +144,7 @@ class TestExtractJsonSchemaPlainDict:
 class TestExtractJsonSchemaTypedDict:
     """Tests for TypedDict extraction via msgspec."""
 
-    def test_extract_json_schema_typeddict(self):
+    def test_extract_json_schema_typeddict(self) -> None:
         """TypedDict should be extracted via msgspec."""
 
         class User(TypedDict):
@@ -156,7 +156,7 @@ class TestExtractJsonSchemaTypedDict:
         assert schema is not None
         assert "type" in schema or "properties" in schema
 
-    def test_extract_json_schema_typeddict_optional(self):
+    def test_extract_json_schema_typeddict_optional(self) -> None:
         """TypedDict with optional fields should work."""
 
         class UserOptional(TypedDict, total=False):
@@ -170,7 +170,7 @@ class TestExtractJsonSchemaTypedDict:
 class TestExtractJsonSchemaMsgspec:
     """Tests for msgspec.Struct extraction."""
 
-    def test_extract_json_schema_msgspec_struct(self):
+    def test_extract_json_schema_msgspec_struct(self) -> None:
         """msgspec.Struct should be extracted."""
 
         class User(msgspec.Struct):
@@ -181,7 +181,7 @@ class TestExtractJsonSchemaMsgspec:
         assert schema is not None
         assert "type" in schema or "properties" in schema
 
-    def test_extract_json_schema_msgspec_struct_with_defaults(self):
+    def test_extract_json_schema_msgspec_struct_with_defaults(self) -> None:
         """msgspec.Struct with defaults should work."""
 
         class User(msgspec.Struct):
@@ -196,7 +196,7 @@ class TestExtractJsonSchemaMsgspec:
 class TestExtractJsonSchemaPydanticV2:
     """Tests for Pydantic v2 model extraction."""
 
-    def test_extract_json_schema_pydantic_v2(self):
+    def test_extract_json_schema_pydantic_v2(self) -> None:
         """Pydantic v2 models should be extracted via model_json_schema()."""
         try:
             from pydantic import BaseModel, Field
@@ -219,7 +219,7 @@ class TestExtractJsonSchemaPydanticV2:
 class TestExtractJsonSchemaPydanticV1:
     """Tests for Pydantic v1 model extraction."""
 
-    def test_extract_json_schema_pydantic_v1(self):
+    def test_extract_json_schema_pydantic_v1(self) -> None:
         """Pydantic v1 models should be extracted via schema()."""
         # Pydantic v1 is unlikely to be installed, but we test the protocol
         # This will typically be skipped
@@ -229,11 +229,11 @@ class TestExtractJsonSchemaPydanticV1:
 class TestExtractJsonSchemaErrors:
     """Tests for error handling."""
 
-    def test_extract_json_schema_unsupported_type(self):
+    def test_extract_json_schema_unsupported_type(self) -> None:
         """Unsupported types should raise TypeError."""
 
         class UnsupportedClass:
-            def __init__(self):
+            def __init__(self) -> None:
                 self.name = "test"
 
         with pytest.raises(TypeError) as exc_info:
@@ -242,7 +242,7 @@ class TestExtractJsonSchemaErrors:
         assert "Unsupported schema type" in str(exc_info.value)
         assert "UnsupportedClass" in str(exc_info.value)
 
-    def test_extract_json_schema_dataclass_raises(self):
+    def test_extract_json_schema_dataclass_raises(self) -> None:
         """Dataclasses should raise TypeError (msgspec doesn't support them)."""
         from dataclasses import dataclass
 
@@ -258,7 +258,7 @@ class TestExtractJsonSchemaErrors:
 class TestSchemaExtractionIntegration:
     """Integration tests combining multiple types."""
 
-    def test_various_types_work(self):
+    def test_various_types_work(self) -> None:
         """Test that various supported types all work."""
         # Plain JSON Schema dict
         plain_schema = {"type": "string", "minLength": 3}
@@ -278,7 +278,7 @@ class TestSchemaExtractionIntegration:
         ms_schema = extract_json_schema(MyStruct)
         assert ms_schema is not None
 
-    def test_pydantic_and_msgspec_compatibility(self):
+    def test_pydantic_and_msgspec_compatibility(self) -> None:
         """Test that Pydantic v2 and msgspec can coexist."""
         try:
             from pydantic import BaseModel

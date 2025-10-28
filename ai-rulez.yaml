@@ -48,7 +48,7 @@ rules:
     - content: Rust code in `crates/spikard`, `crates/spikard-http`, and the binding crates must avoid panics; expose fallible APIs as `Result<T, E>` and propagate with `?`. When exporting to Python (`crates/spikard-py/src`), always return `PyResult<T>` and convert domain failures with `PyErr::new_err(...)`; for Node (`crates/spikard-node/src`), return `napi::Result<T>` and build errors via `napi::Error::from_reason`. Never let an unwrap cross the FFI boundary.
       name: Cross-Language Error Boundaries
       priority: critical
-    - content: Every feature change must expand the Python-driven integration suite in `tests/` and keep the JSON fixtures under `testing_data/` in sync. Prefer validating new scenarios by adding fixture files and asserting them in `tests/test_all_fixtures.py`. Run `task test` locally before merging so the Rust, Python, and JavaScript checks that CI executes stay green.
+    - content: Every feature change must expand the Python-driven integration suite in `packages/python/tests/` and keep the JSON fixtures under `testing_data/` in sync. Prefer validating new scenarios by adding fixture files and asserting them in `packages/python/tests/test_all_fixtures.py`. Run `task test` locally before merging so the Rust, Python, and JavaScript checks that CI executes stay green.
       name: Fixture-Backed Testing
       priority: critical
     - content: Handlers under `crates/spikard-http/src` must validate headers, cookies, and payloads against the schemas in `testing_data/headers`, `testing_data/cookies`, and `testing_data/json_bodies`. Reject unexpected or malformed values with structured errors returned to the caller, and cover each guard with an integration test tied to the corresponding fixture set.
@@ -142,9 +142,9 @@ sections:
         ```
 
         ## Focused Testing
-        - Python fixtures live in `testing_data/` and tests in `tests/`; iterate quickly with pytest:
+        - Python fixtures live in `testing_data/` and tests in `packages/python/tests/`; iterate quickly with pytest:
         ```bash
-        uv run python -m pytest tests/test_integration_query_params.py
+        PYTHONPATH=. uv run pytest packages/python/tests/test_integration_query_params.py
         ```
         - Validate Rust crates individually to isolate failures:
         ```bash
@@ -184,7 +184,7 @@ sections:
         ## Python & Testing
         - Python package scaffold: `packages/python/spikard`.
         - Shared integration fixtures: `testing_data/` with schemas per scenario.
-        - Pytests under `tests/` use fixture helpers (`tests/fixture_app.py`) and sample apps in `examples/`.
+        - Pytests live in `packages/python/tests/`, using fixture helpers (`packages/python/tests/fixture_app.py`) and sample apps in `examples/`.
 
         ## Reference Docs
         - High-level design: `docs/design/00-architecture.md`.

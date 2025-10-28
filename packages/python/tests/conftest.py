@@ -2,12 +2,16 @@
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 import pytest
+from pytest import Config, Item
+
+if TYPE_CHECKING:
+    from types import ModuleType
 
 # Path to the testing data directory
-FIXTURES_DIR = Path(__file__).parent.parent / "testing_data"
+FIXTURES_DIR = Path(__file__).resolve().parents[3] / "testing_data"
 
 
 def load_fixture(category: str, name: str) -> dict[str, Any]:
@@ -22,7 +26,7 @@ def load_fixture(category: str, name: str) -> dict[str, Any]:
     """
     path = FIXTURES_DIR / category / f"{name}.json"
     with path.open() as f:
-        return json.load(f)
+        return cast("dict[str, Any]", json.load(f))
 
 
 def load_all_fixtures(category: str) -> list[tuple[str, dict[str, Any]]]:
@@ -35,14 +39,14 @@ def load_all_fixtures(category: str) -> list[tuple[str, dict[str, Any]]]:
         List of tuples containing (fixture_id, fixture_data)
     """
     category_dir = FIXTURES_DIR / category
-    fixtures = []
+    fixtures: list[tuple[str, dict[str, Any]]] = []
 
     for fixture_file in sorted(category_dir.glob("*.json")):
         if fixture_file.name == "schema.json":
             continue
 
         with fixture_file.open() as f:
-            fixture = json.load(f)
+            fixture = cast("dict[str, Any]", json.load(f))
             # Use the fixture name without extension as the test ID
             fixture_id = fixture_file.stem
             fixtures.append((fixture_id, fixture))
@@ -50,12 +54,13 @@ def load_all_fixtures(category: str) -> list[tuple[str, dict[str, Any]]]:
     return fixtures
 
 
-def pytest_collection_modifyitems(config, items):
+def pytest_collection_modifyitems(config: Config, items: list[Item]) -> None:
     """Add category marker to all tests based on their module name."""
     for item in items:
         # Extract category from test module name (e.g., test_query_params -> query_params)
-        if item.module.__name__.startswith("tests.test_"):
-            category = item.module.__name__.replace("tests.test_", "")
+        module = cast("ModuleType | None", getattr(item, "module", None))
+        if module is not None and module.__name__.startswith("tests.test_"):
+            category = module.__name__.replace("tests.test_", "")
             item.add_marker(pytest.mark.category(category))
 
 
