@@ -7,12 +7,14 @@ and supports custom decoder registration.
 
 from __future__ import annotations
 
+import inspect
 from collections.abc import Callable
 from contextlib import suppress
 from datetime import date, datetime, time, timedelta
 from typing import Any, get_type_hints
 
 import msgspec
+from pydantic.fields import FieldInfo
 
 __all__ = ("clear_decoders", "convert_params", "register_decoder")
 
@@ -134,6 +136,12 @@ def convert_params(
         # If we can't get type hints, just return params as-is
         return params
 
+    # Get function signature to handle default values
+    try:
+        sig = inspect.signature(handler_func)
+    except (ValueError, TypeError):
+        sig = None
+
     # Convert each parameter based on its type hint
     converted = {}
     for key, value in params.items():
@@ -159,5 +167,15 @@ def convert_params(
             if strict:
                 raise ValueError(f"Failed to convert parameter '{key}' to type {target_type}: {err}") from err
             converted[key] = value
+
+    # Handle parameters with Field() defaults that weren't in params
+    # This is critical because Field() creates a FieldInfo object as the default,
+    # and if we don't explicitly pass None, Python will use the FieldInfo object!
+    if sig:
+        for param_name, param in sig.parameters.items():
+            if param_name not in converted and isinstance(param.default, FieldInfo):
+                # Extract the actual default value from the FieldInfo object
+                # FieldInfo.default is the real default value (e.g., None)
+                converted[param_name] = param.default.default
 
     return converted
