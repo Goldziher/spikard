@@ -131,6 +131,7 @@ class TestClient:
         self,
         path: str,
         json: Any | None = None,
+        query_params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
     ) -> TestResponse:
         """Make a POST request.
@@ -138,18 +139,20 @@ class TestClient:
         Args:
             path: The path to request
             json: Optional JSON body
+            query_params: Optional query parameters
             headers: Optional request headers
 
         Returns:
             TestResponse: The response from the server
         """
-        rust_response = await self._client.post(path, json, headers)
+        rust_response = await self._client.post(path, json, query_params, headers)
         return TestResponse(rust_response)
 
     async def put(
         self,
         path: str,
         json: Any | None = None,
+        query_params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
     ) -> TestResponse:
         """Make a PUT request.
@@ -157,18 +160,20 @@ class TestClient:
         Args:
             path: The path to request
             json: Optional JSON body
+            query_params: Optional query parameters
             headers: Optional request headers
 
         Returns:
             TestResponse: The response from the server
         """
-        rust_response = await self._client.put(path, json, headers)
+        rust_response = await self._client.put(path, json, query_params, headers)
         return TestResponse(rust_response)
 
     async def patch(
         self,
         path: str,
         json: Any | None = None,
+        query_params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
     ) -> TestResponse:
         """Make a PATCH request.
@@ -176,27 +181,50 @@ class TestClient:
         Args:
             path: The path to request
             json: Optional JSON body
+            query_params: Optional query parameters
             headers: Optional request headers
 
         Returns:
             TestResponse: The response from the server
         """
-        rust_response = await self._client.patch(path, json, headers)
+        rust_response = await self._client.patch(path, json, query_params, headers)
         return TestResponse(rust_response)
 
     async def delete(
         self,
         path: str,
+        query_params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
     ) -> TestResponse:
         """Make a DELETE request.
 
         Args:
             path: The path to request
+            query_params: Optional query parameters
             headers: Optional request headers
 
         Returns:
             TestResponse: The response from the server
         """
-        rust_response = await self._client.delete(path, headers)
+        rust_response = await self._client.delete(path, query_params, headers)
+        return TestResponse(rust_response)
+
+    async def options(
+        self,
+        path: str,
+        query_params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> TestResponse:
+        """Make an OPTIONS request."""
+        rust_response = await self._client.options(path, query_params, headers)
+        return TestResponse(rust_response)
+
+    async def head(
+        self,
+        path: str,
+        query_params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> TestResponse:
+        """Make a HEAD request."""
+        rust_response = await self._client.head(path, query_params, headers)
         return TestResponse(rust_response)

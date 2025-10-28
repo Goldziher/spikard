@@ -7,6 +7,8 @@ This file provides fixture-driven mock servers for testing.
 Each app factory dynamically looks up responses from fixture files.
 """
 
+# mypy: ignore-errors
+
 import json
 from pathlib import Path
 

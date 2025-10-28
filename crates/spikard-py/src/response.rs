@@ -93,6 +93,7 @@ impl Response {
         httponly=false,
         samesite=None
     ))]
+    #[allow(clippy::too_many_arguments)]
     fn set_cookie(
         &mut self,
         py: Python<'_>,

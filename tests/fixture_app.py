@@ -4,6 +4,8 @@ This app is designed to work with the test fixtures in testing_data/.
 It implements endpoints that match the fixture expectations for comprehensive testing.
 """
 
+# mypy: ignore-errors
+
 from datetime import date, datetime
 from enum import Enum
 from typing import Any

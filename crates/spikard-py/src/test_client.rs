@@ -4,7 +4,7 @@
 //! without needing to start a real HTTP server.
 
 use axum::Router as AxumRouter;
-use axum::http::{HeaderName, HeaderValue};
+use axum::http::{HeaderName, HeaderValue, Method};
 use axum_test::{TestResponse as AxumTestResponse, TestServer as AxumTestServer};
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -123,12 +123,13 @@ impl TestClient {
     ///
     /// Returns:
     ///     TestResponse: The response from the server
-    #[pyo3(signature = (path, json=None, headers=None))]
+    #[pyo3(signature = (path, json=None, query_params=None, headers=None))]
     fn post<'py>(
         &self,
         py: Python<'py>,
         path: &str,
         json: Option<&Bound<'py, PyAny>>,
+        query_params: Option<&Bound<'py, PyDict>>,
         headers: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
@@ -137,12 +138,14 @@ impl TestClient {
         } else {
             None
         };
+        let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
 
         let server = Arc::clone(&self.server);
 
         let fut = async move {
-            let mut request = server.post(&path);
+            let full_path = build_full_path(&path, &query_params_vec);
+            let mut request = server.post(&full_path);
 
             if let Some(json_val) = json_value {
                 request = request.json(&json_val);
@@ -166,12 +169,13 @@ impl TestClient {
     }
 
     /// Make a PUT request
-    #[pyo3(signature = (path, json=None, headers=None))]
+    #[pyo3(signature = (path, json=None, query_params=None, headers=None))]
     fn put<'py>(
         &self,
         py: Python<'py>,
         path: &str,
         json: Option<&Bound<'py, PyAny>>,
+        query_params: Option<&Bound<'py, PyDict>>,
         headers: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
@@ -180,12 +184,14 @@ impl TestClient {
         } else {
             None
         };
+        let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
 
         let server = Arc::clone(&self.server);
 
         let fut = async move {
-            let mut request = server.put(&path);
+            let full_path = build_full_path(&path, &query_params_vec);
+            let mut request = server.put(&full_path);
 
             if let Some(json_val) = json_value {
                 request = request.json(&json_val);
@@ -209,12 +215,13 @@ impl TestClient {
     }
 
     /// Make a PATCH request
-    #[pyo3(signature = (path, json=None, headers=None))]
+    #[pyo3(signature = (path, json=None, query_params=None, headers=None))]
     fn patch<'py>(
         &self,
         py: Python<'py>,
         path: &str,
         json: Option<&Bound<'py, PyAny>>,
+        query_params: Option<&Bound<'py, PyDict>>,
         headers: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
@@ -223,12 +230,14 @@ impl TestClient {
         } else {
             None
         };
+        let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
 
         let server = Arc::clone(&self.server);
 
         let fut = async move {
-            let mut request = server.patch(&path);
+            let full_path = build_full_path(&path, &query_params_vec);
+            let mut request = server.patch(&full_path);
 
             if let Some(json_val) = json_value {
                 request = request.json(&json_val);
@@ -252,20 +261,95 @@ impl TestClient {
     }
 
     /// Make a DELETE request
-    #[pyo3(signature = (path, headers=None))]
+    #[pyo3(signature = (path, query_params=None, headers=None))]
     fn delete<'py>(
         &self,
         py: Python<'py>,
         path: &str,
+        query_params: Option<&Bound<'py, PyDict>>,
         headers: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
+        let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
 
         let server = Arc::clone(&self.server);
 
         let fut = async move {
-            let mut request = server.delete(&path);
+            let full_path = build_full_path(&path, &query_params_vec);
+            let mut request = server.delete(&full_path);
+
+            for (key, value) in headers_vec {
+                let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
+                })?;
+                let header_value = HeaderValue::from_str(&value).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
+                })?;
+                request = request.add_header(header_name, header_value);
+            }
+
+            let response = request.await;
+            TestResponse::from_axum_response(response).await
+        };
+
+        pyo3_async_runtimes::tokio::future_into_py(py, fut)
+    }
+
+    /// Make an OPTIONS request
+    #[pyo3(signature = (path, query_params=None, headers=None))]
+    fn options<'py>(
+        &self,
+        py: Python<'py>,
+        path: &str,
+        query_params: Option<&Bound<'py, PyDict>>,
+        headers: Option<&Bound<'py, PyDict>>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let path = path.to_string();
+        let query_params_vec = extract_dict_to_vec(query_params)?;
+        let headers_vec = extract_dict_to_vec(headers)?;
+
+        let server = Arc::clone(&self.server);
+
+        let fut = async move {
+            let full_path = build_full_path(&path, &query_params_vec);
+            let mut request = server.method(Method::OPTIONS, &full_path);
+
+            for (key, value) in headers_vec {
+                let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
+                })?;
+                let header_value = HeaderValue::from_str(&value).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
+                })?;
+                request = request.add_header(header_name, header_value);
+            }
+
+            let response = request.await;
+            TestResponse::from_axum_response(response).await
+        };
+
+        pyo3_async_runtimes::tokio::future_into_py(py, fut)
+    }
+
+    /// Make a HEAD request
+    #[pyo3(signature = (path, query_params=None, headers=None))]
+    fn head<'py>(
+        &self,
+        py: Python<'py>,
+        path: &str,
+        query_params: Option<&Bound<'py, PyDict>>,
+        headers: Option<&Bound<'py, PyDict>>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let path = path.to_string();
+        let query_params_vec = extract_dict_to_vec(query_params)?;
+        let headers_vec = extract_dict_to_vec(headers)?;
+
+        let server = Arc::clone(&self.server);
+
+        let fut = async move {
+            let full_path = build_full_path(&path, &query_params_vec);
+            let mut request = server.method(Method::HEAD, &full_path);
 
             for (key, value) in headers_vec {
                 let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
@@ -420,6 +504,20 @@ fn extract_dict_to_vec(dict: Option<&Bound<'_, PyDict>>) -> PyResult<Vec<(String
         Ok(result)
     } else {
         Ok(Vec::new())
+    }
+}
+
+fn build_full_path(path: &str, query_params: &[(String, String)]) -> String {
+    if query_params.is_empty() {
+        return path.to_string();
+    }
+
+    let query_string: Vec<String> = query_params.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
+
+    if path.contains('?') {
+        format!("{}&{}", path, query_string.join("&"))
+    } else {
+        format!("{}?{}", path, query_string.join("&"))
     }
 }
 

@@ -285,12 +285,11 @@ impl SchemaValidator {
                 error.ctx
             );
         }
-        if crate::debug::is_enabled() {
-            if let Ok(json_errors) = serde_json::to_value(&errors) {
-                if let Ok(json_str) = serde_json::to_string_pretty(&json_errors) {
-                    debug_log_module!("validation", "Serialized errors:\n{}", json_str);
-                }
-            }
+        if crate::debug::is_enabled()
+            && let Ok(json_errors) = serde_json::to_value(&errors)
+            && let Ok(json_str) = serde_json::to_string_pretty(&json_errors)
+        {
+            debug_log_module!("validation", "Serialized errors:\n{}", json_str);
         }
 
         Err(ValidationError { errors })
