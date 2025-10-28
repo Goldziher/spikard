@@ -15,7 +15,11 @@ pub struct SchemaValidator {
 impl SchemaValidator {
     /// Create a new validator from a JSON Schema
     pub fn new(schema: Value) -> Result<Self, String> {
-        let compiled = Validator::new(&schema).map_err(|e| format!("Invalid JSON Schema: {}", e))?;
+        // Enable format validation (UUID, date-time, etc.)
+        let compiled = jsonschema::options()
+            .should_validate_formats(true)
+            .build(&schema)
+            .map_err(|e| format!("Invalid JSON Schema: {}", e))?;
 
         Ok(Self {
             compiled: Arc::new(compiled),
