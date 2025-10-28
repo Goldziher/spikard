@@ -3,8 +3,8 @@
 //! HTTP API server for spikard
 
 use axum::{
-    routing::{get, post},
     Json, Router,
+    routing::{get, post},
 };
 use serde::{Deserialize, Serialize};
 use tower_http::trace::TraceLayer;

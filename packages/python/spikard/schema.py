@@ -1,13 +1,118 @@
 """Schema extraction utilities."""
 
 import inspect
-from dataclasses import is_dataclass
-from typing import Any, Callable, Optional, get_type_hints
+from collections.abc import Callable
+from typing import Any, Protocol, get_type_hints, runtime_checkable
+
+import msgspec
+
+
+@runtime_checkable
+class PydanticV2Model(Protocol):
+    """Protocol for Pydantic v2 models."""
+
+    @classmethod
+    def model_json_schema(cls, **kwargs: Any) -> dict[str, Any]:
+        """Generate JSON Schema for Pydantic v2 model."""
+        ...
+
+
+@runtime_checkable
+class PydanticV1Model(Protocol):
+    """Protocol for Pydantic v1 models."""
+
+    @classmethod
+    def schema(cls, **kwargs: Any) -> dict[str, Any]:
+        """Generate JSON Schema for Pydantic v1 model."""
+        ...
+
+
+def is_typeddict(obj: Any) -> bool:
+    """Check if an object is a TypedDict class.
+
+    TypedDict classes have __required_keys__ and __optional_keys__ attributes.
+
+    Args:
+        obj: Object to check
+
+    Returns:
+        True if obj is a TypedDict class
+    """
+    return isinstance(obj, type) and hasattr(obj, "__required_keys__") and hasattr(obj, "__optional_keys__")
+
+
+def is_json_schema_dict(obj: Any) -> bool:
+    """Check if an object is a plain JSON Schema dictionary.
+
+    Detects dicts that contain common JSON Schema keys.
+
+    Args:
+        obj: Object to check
+
+    Returns:
+        True if obj appears to be a JSON Schema dict
+    """
+    if not isinstance(obj, dict):
+        return False
+
+    # Common JSON Schema keys
+    json_schema_keys = {
+        "type",
+        "properties",
+        "items",
+        "additionalProperties",
+        "$schema",
+        "$ref",
+        "$defs",
+        "required",
+        "enum",
+        "minimum",
+        "maximum",
+        "minLength",
+        "maxLength",
+        "pattern",
+        "format",
+        "anyOf",
+        "oneOf",
+        "allOf",
+    }
+
+    return bool(set(obj.keys()) & json_schema_keys)
+
+
+def resolve_msgspec_ref(schema: dict[str, Any]) -> dict[str, Any]:
+    """Resolve $ref in msgspec schemas.
+
+    msgspec returns schemas with $ref and $defs. This function resolves
+    the top-level $ref and returns a clean schema.
+
+    Args:
+        schema: msgspec schema with potential $ref
+
+    Returns:
+        Resolved schema
+    """
+    if "$ref" in schema and "$defs" in schema:
+        ref_path = schema["$ref"]
+        if ref_path.startswith("#/$defs/"):
+            ref_name = ref_path.split("/")[-1]
+            if ref_name in schema["$defs"]:
+                # Get the referenced schema
+                resolved: dict[str, Any] = schema["$defs"][ref_name].copy()
+
+                # Preserve other definitions
+                other_defs = {k: v for k, v in schema["$defs"].items() if k != ref_name}
+                if other_defs:
+                    resolved["$defs"] = other_defs
+
+                return resolved
+
+    return schema
 
 
 def extract_schemas(
-    func: Callable,
-) -> tuple[Optional[dict[str, Any]], Optional[dict[str, Any]]]:
+    func: Callable[..., Any],
+) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
     """Extract request and response schemas from function signature.
 
     Args:
@@ -43,143 +148,73 @@ def extract_schemas(
     return request_schema, response_schema
 
 
-def extract_json_schema(schema_source: Any) -> Optional[dict[str, Any]]:
-    """Extract JSON Schema from various sources.
+def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:
+    """Extract JSON Schema from various Python schema sources.
 
-    Supports:
-    - Pydantic v2 models (model_json_schema)
-    - msgspec structs (__json_schema__)
-    - attrs classes
-    - dataclasses
-    - Raw dict (assumed to be JSON Schema)
+    Supports multiple schema formats through duck typing:
+    - Plain JSON Schema dicts (passed through as-is)
+    - TypedDict (via msgspec)
+    - Pydantic v2 models (via model_json_schema())
+    - Pydantic v1 models (via schema())
+    - msgspec.Struct (via msgspec.json.schema())
+
+    Logic flow:
+    1. Check if plain JSON Schema dict → return as-is
+    2. Check if TypedDict → use msgspec.json.schema() with ref resolution
+    3. Check for Pydantic v2 → call model_json_schema()
+    4. Check for Pydantic v1 → call schema()
+    5. Try msgspec.json.schema() as fallback (for msgspec.Struct)
+    6. Return None if unsupported
 
     Args:
         schema_source: Type or dict to extract schema from
 
     Returns:
         JSON Schema dict, or None if extraction fails
-    """
-    # Already a dict - assume it's JSON Schema
-    if isinstance(schema_source, dict):
-        return schema_source
 
+    Raises:
+        TypeError: If schema_source type is not supported
+    """
     # Handle None, primitives
     if schema_source is None or schema_source in (int, str, float, bool):
         return None
 
-    try:
-        # Pydantic v2
-        if hasattr(schema_source, "model_json_schema"):
+    # 1. Check if plain JSON Schema dict (not TypedDict)
+    if isinstance(schema_source, dict) and is_json_schema_dict(schema_source):
+        return dict(schema_source)
+
+    # 2. Check if TypedDict
+    if is_typeddict(schema_source):
+        try:
+            schema = msgspec.json.schema(schema_source)
+            return resolve_msgspec_ref(schema)
+        except Exception as e:
+            raise TypeError(f"Failed to extract schema from TypedDict {schema_source.__name__}: {e}") from e
+
+    # 3. Check for Pydantic v2 (via Protocol)
+    if isinstance(schema_source, type) and isinstance(schema_source, PydanticV2Model):
+        try:
             return schema_source.model_json_schema()
+        except Exception as e:
+            raise TypeError(f"Failed to extract schema from Pydantic v2 model {schema_source.__name__}: {e}") from e
 
-        # msgspec
-        if hasattr(schema_source, "__json_schema__"):
-            return schema_source.__json_schema__()
+    # 4. Check for Pydantic v1 (via Protocol)
+    if isinstance(schema_source, type) and isinstance(schema_source, PydanticV1Model):
+        try:
+            return schema_source.schema()
+        except Exception as e:
+            raise TypeError(f"Failed to extract schema from Pydantic v1 model {schema_source.__name__}: {e}") from e
 
-        # attrs
-        if hasattr(schema_source, "__attrs_attrs__"):
-            return _attrs_to_json_schema(schema_source)
-
-        # Dataclasses
-        if is_dataclass(schema_source):
-            return _dataclass_to_json_schema(schema_source)
-
-    except Exception:
-        pass
+    # 5. Try msgspec.json.schema() as fallback (for msgspec.Struct, attrs, etc.)
+    try:
+        schema = msgspec.json.schema(schema_source)
+        return resolve_msgspec_ref(schema)
+    except (TypeError, KeyError, AttributeError) as e:
+        # msgspec doesn't support this type
+        raise TypeError(
+            f"Unsupported schema type: {type(schema_source).__name__}. "
+            f"Supported types: Pydantic v1/v2 models, msgspec.Struct, TypedDict, or plain JSON Schema dict. "
+            f"Error: {e}"
+        ) from e
 
     return None
-
-
-def _dataclass_to_json_schema(cls: type) -> dict[str, Any]:
-    """Convert dataclass to JSON Schema.
-
-    Args:
-        cls: Dataclass type
-
-    Returns:
-        JSON Schema dict
-    """
-    import dataclasses
-
-    fields = dataclasses.fields(cls)
-    properties = {}
-    required = []
-
-    for field in fields:
-        field_name = field.name
-        field_type = field.type
-
-        # Simple type mapping
-        json_type = _python_type_to_json_type(field_type)
-        properties[field_name] = {"type": json_type}
-
-        # Check if required
-        if field.default is dataclasses.MISSING and field.default_factory is dataclasses.MISSING:
-            required.append(field_name)
-
-    schema = {
-        "type": "object",
-        "properties": properties,
-    }
-
-    if required:
-        schema["required"] = required
-
-    return schema
-
-
-def _attrs_to_json_schema(cls: type) -> dict[str, Any]:
-    """Convert attrs class to JSON Schema.
-
-    Args:
-        cls: attrs class type
-
-    Returns:
-        JSON Schema dict
-    """
-    import attr
-
-    fields = attr.fields(cls)
-    properties = {}
-    required = []
-
-    for field in fields:
-        field_name = field.name
-        field_type = field.type
-
-        json_type = _python_type_to_json_type(field_type)
-        properties[field_name] = {"type": json_type}
-
-        if field.default is attr.NOTHING:
-            required.append(field_name)
-
-    schema = {
-        "type": "object",
-        "properties": properties,
-    }
-
-    if required:
-        schema["required"] = required
-
-    return schema
-
-
-def _python_type_to_json_type(py_type: Any) -> str:
-    """Map Python type to JSON Schema type.
-
-    Args:
-        py_type: Python type
-
-    Returns:
-        JSON Schema type string
-    """
-    type_map = {
-        int: "integer",
-        str: "string",
-        float: "number",
-        bool: "boolean",
-        list: "array",
-        dict: "object",
-    }
-
-    return type_map.get(py_type, "string")

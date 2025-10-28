@@ -4,8 +4,9 @@ import inspect
 import os
 import shutil
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Optional, Union
+from typing import Any
 
 from spikard.types import Route
 
@@ -27,7 +28,7 @@ class Spikard:
         """Initialize Spikard application."""
         self._routes: list[Route] = []
 
-    def get(self, path: str) -> Callable:
+    def get(self, path: str) -> Callable[..., Any]:
         """Register a GET route.
 
         Args:
@@ -38,7 +39,7 @@ class Spikard:
         """
         return self._register_route("GET", path)
 
-    def post(self, path: str) -> Callable:
+    def post(self, path: str) -> Callable[..., Any]:
         """Register a POST route.
 
         Args:
@@ -49,7 +50,7 @@ class Spikard:
         """
         return self._register_route("POST", path)
 
-    def put(self, path: str) -> Callable:
+    def put(self, path: str) -> Callable[..., Any]:
         """Register a PUT route.
 
         Args:
@@ -60,7 +61,7 @@ class Spikard:
         """
         return self._register_route("PUT", path)
 
-    def patch(self, path: str) -> Callable:
+    def patch(self, path: str) -> Callable[..., Any]:
         """Register a PATCH route.
 
         Args:
@@ -71,7 +72,7 @@ class Spikard:
         """
         return self._register_route("PATCH", path)
 
-    def delete(self, path: str) -> Callable:
+    def delete(self, path: str) -> Callable[..., Any]:
         """Register a DELETE route.
 
         Args:
@@ -82,7 +83,7 @@ class Spikard:
         """
         return self._register_route("DELETE", path)
 
-    def _register_route(self, method: str, path: str) -> Callable:
+    def _register_route(self, method: str, path: str) -> Callable[..., Any]:
         """Internal method to register a route.
 
         Args:
@@ -93,10 +94,12 @@ class Spikard:
             Decorator function
         """
 
-        def decorator(func: Callable) -> Callable:
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+            from spikard.introspection import extract_parameter_schema
             from spikard.schema import extract_schemas
 
             request_schema, response_schema = extract_schemas(func)
+            parameter_schema = extract_parameter_schema(func)
 
             route = Route(
                 method=method,
@@ -105,6 +108,7 @@ class Spikard:
                 handler_name=func.__name__,
                 request_schema=request_schema,
                 response_schema=response_schema,
+                parameter_schema=parameter_schema,
                 is_async=inspect.iscoroutinefunction(func),
             )
 
@@ -135,9 +139,7 @@ class Spikard:
         # Find the Rust binary (installed with package)
         binary = shutil.which("spikard")
         if not binary:
-            raise RuntimeError(
-                "spikard binary not found. Install with: pip install spikard"
-            )
+            raise RuntimeError("spikard binary not found. Install with: pip install spikard")
 
         # Get the calling module's file path
         frame = sys._getframe(1)

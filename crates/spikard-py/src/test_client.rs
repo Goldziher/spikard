@@ -5,9 +5,9 @@
 
 use axum::Router as AxumRouter;
 use axum::http::{HeaderName, HeaderValue};
-use axum_test::{TestServer as AxumTestServer, TestResponse as AxumTestResponse};
+use axum_test::{TestResponse as AxumTestResponse, TestServer as AxumTestServer};
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList};
+use pyo3::types::PyDict;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -66,10 +66,12 @@ impl TestClient {
             }
 
             for (key, value) in headers_vec {
-                let header_name = HeaderName::from_bytes(key.as_bytes())
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e)))?;
-                let header_value = HeaderValue::from_str(&value)
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e)))?;
+                let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
+                })?;
+                let header_value = HeaderValue::from_str(&value).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
+                })?;
                 request = request.add_header(header_name, header_value);
             }
 
@@ -115,10 +117,12 @@ impl TestClient {
             }
 
             for (key, value) in headers_vec {
-                let header_name = HeaderName::from_bytes(key.as_bytes())
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e)))?;
-                let header_value = HeaderValue::from_str(&value)
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e)))?;
+                let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
+                })?;
+                let header_value = HeaderValue::from_str(&value).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
+                })?;
                 request = request.add_header(header_name, header_value);
             }
 
@@ -156,10 +160,12 @@ impl TestClient {
             }
 
             for (key, value) in headers_vec {
-                let header_name = HeaderName::from_bytes(key.as_bytes())
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e)))?;
-                let header_value = HeaderValue::from_str(&value)
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e)))?;
+                let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
+                })?;
+                let header_value = HeaderValue::from_str(&value).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
+                })?;
                 request = request.add_header(header_name, header_value);
             }
 
@@ -197,10 +203,12 @@ impl TestClient {
             }
 
             for (key, value) in headers_vec {
-                let header_name = HeaderName::from_bytes(key.as_bytes())
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e)))?;
-                let header_value = HeaderValue::from_str(&value)
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e)))?;
+                let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
+                })?;
+                let header_value = HeaderValue::from_str(&value).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
+                })?;
                 request = request.add_header(header_name, header_value);
             }
 
@@ -228,10 +236,12 @@ impl TestClient {
             let mut request = server.delete(&path);
 
             for (key, value) in headers_vec {
-                let header_name = HeaderName::from_bytes(key.as_bytes())
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e)))?;
-                let header_value = HeaderValue::from_str(&value)
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e)))?;
+                let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
+                })?;
+                let header_value = HeaderValue::from_str(&value).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
+                })?;
                 request = request.add_header(header_name, header_value);
             }
 
@@ -317,9 +327,10 @@ impl TestResponse {
         if self.status_code == expected {
             Ok(())
         } else {
-            Err(pyo3::exceptions::PyAssertionError::new_err(
-                format!("Expected status {}, got {}", expected, self.status_code)
-            ))
+            Err(pyo3::exceptions::PyAssertionError::new_err(format!(
+                "Expected status {}, got {}",
+                expected, self.status_code
+            )))
         }
     }
 
@@ -373,9 +384,7 @@ fn extract_dict_to_vec(dict: Option<&Bound<'_, PyDict>>) -> PyResult<Vec<(String
 fn python_to_json_value(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
     // Use json module to convert
     let json_module = py.import("json")?;
-    let json_str: String = json_module
-        .call_method1("dumps", (obj,))?
-        .extract()?;
+    let json_str: String = json_module.call_method1("dumps", (obj,))?.extract()?;
 
     serde_json::from_str(&json_str)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to parse JSON: {}", e)))
@@ -385,9 +394,8 @@ fn python_to_json_value(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Valu
 fn json_value_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'py, PyAny>> {
     // Use json module to convert
     let json_module = py.import("json")?;
-    let json_str = serde_json::to_string(value).map_err(|e| {
-        pyo3::exceptions::PyValueError::new_err(format!("Failed to serialize JSON: {}", e))
-    })?;
+    let json_str = serde_json::to_string(value)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to serialize JSON: {}", e)))?;
     let result = json_module.call_method1("loads", (json_str,))?;
     Ok(result)
 }

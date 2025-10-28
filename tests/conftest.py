@@ -2,16 +2,15 @@
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import pytest
-
 
 # Path to the testing data directory
 FIXTURES_DIR = Path(__file__).parent.parent / "testing_data"
 
 
-def load_fixture(category: str, name: str) -> Dict[str, Any]:
+def load_fixture(category: str, name: str) -> dict[str, Any]:
     """Load a single test fixture by category and name.
 
     Args:
@@ -26,7 +25,7 @@ def load_fixture(category: str, name: str) -> Dict[str, Any]:
         return json.load(f)
 
 
-def load_all_fixtures(category: str) -> List[tuple[str, Dict[str, Any]]]:
+def load_all_fixtures(category: str) -> list[tuple[str, dict[str, Any]]]:
     """Load all fixtures from a category.
 
     Args:

@@ -1,0 +1,200 @@
+"""Universal integration tests for all fixture categories.
+
+This module runs all 238 fixtures as real integration tests using TestClient.
+Each test makes actual HTTP requests and validates responses against expected results.
+
+Categories tested:
+- query_params (40 fixtures)
+- headers (20 fixtures)
+- json_bodies (25 fixtures)
+- cookies (15 fixtures)
+- path_params (20 fixtures)
+- status_codes (15 fixtures)
+- content_types (12 fixtures)
+- http_methods (15 fixtures)
+- cors (10 fixtures)
+- multipart (15 fixtures)
+- url_encoded (15 fixtures)
+- validation_errors (20 fixtures)
+- edge_cases (16 fixtures)
+"""
+
+import pytest
+
+from spikard.testing import TestClient
+from tests.conftest import FIXTURES_DIR, load_all_fixtures
+from tests.fixture_app import (
+    cookies_app,
+    headers_app,
+    json_bodies_app,
+    path_params_app,
+    query_params_app,
+    status_codes_app,
+)
+
+
+# Discover all fixture categories dynamically
+def get_all_categories():
+    """Get all fixture categories from the testing_data directory."""
+    categories = []
+    for path in FIXTURES_DIR.iterdir():
+        if path.is_dir() and not path.name.startswith("."):
+            # Check if directory has fixture files
+            fixture_files = list(path.glob("*.json"))
+            if fixture_files and not all(f.name == "schema.json" for f in fixture_files):
+                categories.append(path.name)
+    return sorted(categories)
+
+
+# Load all fixtures from all categories
+ALL_CATEGORIES = get_all_categories()
+ALL_FIXTURES = []
+
+for category in ALL_CATEGORIES:
+    fixtures = load_all_fixtures(category)
+    for fixture_id, fixture in fixtures:
+        ALL_FIXTURES.append((category, fixture_id, fixture))
+
+
+# Map categories to their app factories
+APP_FACTORIES = {
+    "query_params": query_params_app,
+    "headers": headers_app,
+    "json_bodies": json_bodies_app,
+    "cookies": cookies_app,
+    "path_params": path_params_app,
+    "status_codes": status_codes_app,
+}
+
+
+@pytest.mark.parametrize(
+    "category,fixture_id,fixture", ALL_FIXTURES, ids=[f"{cat}::{fid}" for cat, fid, _ in ALL_FIXTURES]
+)
+@pytest.mark.asyncio
+async def test_fixture(category, fixture_id, fixture):
+    """Universal test for all fixtures across all categories.
+
+    This test is parameterized to run once for each fixture in all categories.
+    Each fixture defines:
+    - request: The HTTP request details (method, path, params, body, headers, etc.)
+    - expected_response: The expected response (status code, body, headers)
+
+    Args:
+        category: The fixture category (e.g., 'query_params', 'headers')
+        fixture_id: The fixture file name (for test identification)
+        fixture: The fixture data dictionary
+    """
+    # Get app factory for this category
+    if category in APP_FACTORIES:
+        app = APP_FACTORIES[category]()
+    else:
+        # For categories without specific apps yet, use query_params as fallback
+        app = query_params_app()
+
+    # Create test client
+    client = TestClient(app)
+
+    # Extract fixture data
+    fixture["name"]
+    fixture["description"]
+    request_spec = fixture["request"]
+    expected_response = fixture["expected_response"]
+
+    # Extract request components
+    method = request_spec["method"]
+    path = request_spec["path"]
+    query_params = request_spec.get("query_params", {})
+    headers = request_spec.get("headers", {})
+    body = request_spec.get("body")
+    cookies = request_spec.get("cookies", {})
+
+    if query_params:
+        pass
+    if headers:
+        pass
+    if body:
+        pass
+    if cookies:
+        pass
+
+    # Extract expected response
+    expected_status = expected_response["status_code"]
+    expected_body = expected_response.get("body")
+    expected_headers = expected_response.get("headers", {})
+
+    # Make actual HTTP request using test client
+    # Note: TestClient currently doesn't support cookies parameter
+    try:
+        if method == "GET":
+            response = await client.get(
+                path, query_params=query_params if query_params else None, headers=headers if headers else None
+            )
+        elif method == "POST":
+            response = await client.post(
+                path,
+                json=body,
+                query_params=query_params if query_params else None,
+                headers=headers if headers else None,
+            )
+        elif method == "PUT":
+            response = await client.put(
+                path,
+                json=body,
+                query_params=query_params if query_params else None,
+                headers=headers if headers else None,
+            )
+        elif method == "PATCH":
+            response = await client.patch(
+                path,
+                json=body,
+                query_params=query_params if query_params else None,
+                headers=headers if headers else None,
+            )
+        elif method == "DELETE":
+            response = await client.delete(
+                path, query_params=query_params if query_params else None, headers=headers if headers else None
+            )
+        elif method == "OPTIONS":
+            response = await client.options(path, headers=headers if headers else None)
+        elif method == "HEAD":
+            response = await client.head(path, headers=headers if headers else None)
+        else:
+            pytest.skip(f"Unsupported HTTP method: {method}")
+
+    except Exception as e:
+        pytest.fail(f"Request failed with exception: {e}")
+
+    # Assert status code
+    assert response.status_code == expected_status, (
+        f"Expected status {expected_status}, got {response.status_code}. Response: {response.text()}"
+    )
+
+    # Assert body if expected
+    if expected_body is not None:
+        actual_body = response.json()
+        assert actual_body == expected_body, f"Expected body {expected_body}, got {actual_body}"
+
+    # Assert headers if expected
+    for header_name, expected_value in expected_headers.items():
+        actual_value = response.headers.get(header_name)
+        assert actual_value == expected_value, f"Expected header {header_name}={expected_value}, got {actual_value}"
+
+
+def test_fixture_discovery():
+    """Verify all fixture categories are discovered."""
+    for category in ALL_CATEGORIES:
+        len([1 for cat, _, _ in ALL_FIXTURES if cat == category])
+
+    assert len(ALL_FIXTURES) > 0, "No fixtures discovered"
+
+
+def test_all_categories_have_fixtures():
+    """Verify each category has at least one fixture."""
+    for category in ALL_CATEGORIES:
+        category_fixtures = [1 for cat, _, _ in ALL_FIXTURES if cat == category]
+        count = len(category_fixtures)
+        assert count > 0, f"Category {category} has no fixtures"
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

@@ -1,7 +1,8 @@
 """Type definitions for Spikard."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Optional
+from typing import Any
 
 
 @dataclass
@@ -10,8 +11,9 @@ class Route:
 
     method: str
     path: str
-    handler: Callable
+    handler: Callable[..., Any]
     handler_name: str
-    request_schema: Optional[dict[str, Any]]
-    response_schema: Optional[dict[str, Any]]
-    is_async: bool
+    request_schema: dict[str, Any] | None
+    response_schema: dict[str, Any] | None
+    parameter_schema: dict[str, Any] | None = None
+    is_async: bool = False

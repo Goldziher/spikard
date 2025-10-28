@@ -1,8 +1,8 @@
 //! Route management and handler registration
 
+use crate::parameters::ParameterValidator;
 use crate::validation::SchemaValidator;
 use crate::{Method, RouteMetadata};
-use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -17,6 +17,7 @@ pub struct Route {
     pub handler_name: String,
     pub request_validator: Option<SchemaValidator>,
     pub response_validator: Option<SchemaValidator>,
+    pub parameter_validator: Option<ParameterValidator>,
     pub is_async: bool,
 }
 
@@ -25,15 +26,11 @@ impl Route {
     pub fn from_metadata(metadata: RouteMetadata) -> Result<Self, String> {
         let method = metadata.method.parse()?;
 
-        let request_validator = metadata
-            .request_schema
-            .map(|schema| SchemaValidator::new(schema))
-            .transpose()?;
+        let request_validator = metadata.request_schema.map(SchemaValidator::new).transpose()?;
 
-        let response_validator = metadata
-            .response_schema
-            .map(|schema| SchemaValidator::new(schema))
-            .transpose()?;
+        let response_validator = metadata.response_schema.map(SchemaValidator::new).transpose()?;
+
+        let parameter_validator = metadata.parameter_schema.map(ParameterValidator::new).transpose()?;
 
         Ok(Self {
             method,
@@ -41,6 +38,7 @@ impl Route {
             handler_name: metadata.handler_name,
             request_validator,
             response_validator,
+            parameter_validator,
             is_async: metadata.is_async,
         })
     }
@@ -54,14 +52,12 @@ pub struct Router {
 impl Router {
     /// Create a new router
     pub fn new() -> Self {
-        Self {
-            routes: HashMap::new(),
-        }
+        Self { routes: HashMap::new() }
     }
 
     /// Add a route to the router
     pub fn add_route(&mut self, route: Route) {
-        let path_routes = self.routes.entry(route.path.clone()).or_insert_with(HashMap::new);
+        let path_routes = self.routes.entry(route.path.clone()).or_default();
         path_routes.insert(route.method.clone(), route);
     }
 
@@ -72,10 +68,7 @@ impl Router {
 
     /// Get all routes
     pub fn routes(&self) -> Vec<&Route> {
-        self.routes
-            .values()
-            .flat_map(|methods| methods.values())
-            .collect()
+        self.routes.values().flat_map(|methods| methods.values()).collect()
     }
 
     /// Get route count
@@ -105,6 +98,7 @@ mod tests {
             handler_name: "get_users".to_string(),
             request_schema: None,
             response_schema: None,
+            parameter_schema: None,
             is_async: true,
         };
 
@@ -130,6 +124,7 @@ mod tests {
                 "required": ["name"]
             })),
             response_schema: None,
+            parameter_schema: None,
             is_async: true,
         };
 

@@ -2,11 +2,11 @@
 
 import asyncio
 import sys
+
 sys.path.insert(0, "/Users/naamanhirschfeld/workspace/spikard/packages/python")
 
 from spikard import Spikard
 from spikard.testing import TestClient
-
 
 # Create a simple app for testing
 app = Spikard()
@@ -27,11 +27,7 @@ async def get_user(user_id: int):
 @app.get("/search")
 async def search(query: str = "default", limit: int = 10):
     """Search with query parameters."""
-    return {
-        "query": query,
-        "limit": limit,
-        "results": [f"Result {i+1}" for i in range(limit)]
-    }
+    return {"query": query, "limit": limit, "results": [f"Result {i + 1}" for i in range(limit)]}
 
 
 @app.post("/users")
@@ -40,59 +36,45 @@ async def create_user(body: dict):
     return {"id": 123, "name": body.get("name"), "email": body.get("email")}
 
 
-async def main():
+async def main() -> None:
     """Run all tests."""
-    print("\n🧪 Testing Spikard Test Client\n")
-
     client = TestClient(app)
 
     # Test 1: Root endpoint
-    print("Test 1: Root endpoint...")
     response = await client.get("/")
     assert response.status_code == 200
     data = response.json()
     assert data == {"message": "Hello, World!"}
-    print("  ✓ Root endpoint works")
 
     # Test 2: Path parameters
-    print("\nTest 2: Path parameters...")
     response = await client.get("/users/42")
     assert response.status_code == 200
     data = response.json()
     assert data["user_id"] == 42
     assert data["name"] == "User 42"
-    print("  ✓ Path parameters work")
 
     # Test 3: Query parameters
-    print("\nTest 3: Query parameters...")
     response = await client.get("/search", query_params={"query": "rust", "limit": "3"})
     assert response.status_code == 200
     data = response.json()
     assert data["query"] == "rust"
     assert data["limit"] == 3
     assert len(data["results"]) == 3
-    print("  ✓ Query parameters work")
 
     # Test 4: POST with JSON
-    print("\nTest 4: POST with JSON...")
     response = await client.post("/users", json={"name": "Alice", "email": "alice@example.com"})
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == "Alice"
     assert data["email"] == "alice@example.com"
-    print("  ✓ POST with JSON works")
 
     # Test 5: Response methods
-    print("\nTest 5: Response methods...")
     response = await client.get("/")
     text = response.text()
     assert "Hello, World!" in text
     body_bytes = response.bytes()
     assert b"Hello, World!" in body_bytes
     assert "content-type" in response.headers
-    print("  ✓ Response methods work")
-
-    print("\n✅ All tests passed!\n")
 
 
 if __name__ == "__main__":

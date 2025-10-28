@@ -4,15 +4,15 @@ These tests create a Spikard application and use the TestClient to make
 real HTTP requests, verifying the framework works end-to-end.
 """
 
-import pytest
-from typing import Optional, List
-from uuid import UUID
 from datetime import date, datetime
 from enum import Enum
+from uuid import UUID
+
+import pytest
+from pydantic import Field
 
 from spikard import Spikard
 from spikard.testing import TestClient
-from pydantic import Field
 
 
 # Define test app models
@@ -30,18 +30,18 @@ def app():
 
     @app.get("/items")
     def get_items(
-        q: Optional[str] = None,
+        q: str | None = None,
         page: int = 1,
-        limit: Optional[int] = None,
-        tags: Optional[List[str]] = None,
-        active: Optional[bool] = None,
-        item_id: Optional[UUID] = None,
-        status: Optional[Status] = None,
-        created_after: Optional[date] = None,
-        updated_at: Optional[datetime] = None,
-        min_price: Optional[float] = None,
-        search: Optional[str] = Field(None, min_length=3, max_length=50),
-        code: Optional[str] = Field(None, pattern=r"^[A-Z]{3}$"),
+        limit: int | None = None,
+        tags: list[str] | None = None,
+        active: bool | None = None,
+        item_id: UUID | None = None,
+        status: Status | None = None,
+        created_after: date | None = None,
+        updated_at: datetime | None = None,
+        min_price: float | None = None,
+        search: str | None = Field(None, min_length=3, max_length=50),
+        code: str | None = Field(None, pattern=r"^[A-Z]{3}$"),
     ):
         """Generic endpoint for query parameter testing."""
         result = {"message": "Query parameters received", "page": page}
@@ -152,10 +152,7 @@ async def test_bool_query_param_false(client):
 @pytest.mark.asyncio
 async def test_list_query_param(client):
     """Test list query parameter with multiple values."""
-    response = await client.get("/items", query_params={
-        "page": "1",
-        "tags": ["python", "rust", "web"]
-    })
+    response = await client.get("/items", query_params={"page": "1", "tags": ["python", "rust", "web"]})
 
     assert response.status_code == 200
     data = response.json()
@@ -238,13 +235,10 @@ async def test_string_pattern_validation(client):
 @pytest.mark.asyncio
 async def test_multiple_query_params(client):
     """Test multiple query parameters together."""
-    response = await client.get("/items", query_params={
-        "page": "2",
-        "limit": "20",
-        "q": "search term",
-        "active": "true",
-        "tags": ["tag1", "tag2"]
-    })
+    response = await client.get(
+        "/items",
+        query_params={"page": "2", "limit": "20", "q": "search term", "active": "true", "tags": ["tag1", "tag2"]},
+    )
 
     assert response.status_code == 200
     data = response.json()

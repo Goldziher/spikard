@@ -7,7 +7,7 @@ use axum::{
 };
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyTuple};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -26,6 +26,19 @@ pub struct RequestData {
     pub body: Option<Value>,
 }
 
+/// Response result from Python handler
+#[derive(Debug)]
+pub enum ResponseResult {
+    /// Custom Response object with status code and headers
+    Custom {
+        content: Value,
+        status_code: u16,
+        headers: HashMap<String, String>,
+    },
+    /// Plain JSON response (defaults to 200 OK)
+    Json(Value),
+}
+
 /// Python handler wrapper that can be called from Axum
 #[derive(Clone)]
 pub struct PythonHandler {
@@ -33,6 +46,7 @@ pub struct PythonHandler {
     is_async: bool,
     request_validator: Option<crate::SchemaValidator>,
     response_validator: Option<crate::SchemaValidator>,
+    parameter_validator: Option<crate::ParameterValidator>,
 }
 
 impl PythonHandler {
@@ -42,12 +56,14 @@ impl PythonHandler {
         is_async: bool,
         request_validator: Option<crate::SchemaValidator>,
         response_validator: Option<crate::SchemaValidator>,
+        parameter_validator: Option<crate::ParameterValidator>,
     ) -> Self {
         Self {
             handler: Arc::new(handler),
             is_async,
             request_validator,
             response_validator,
+            parameter_validator,
         }
     }
 
@@ -60,24 +76,43 @@ impl PythonHandler {
         request_data: RequestData,
     ) -> Result<Response<Body>, (StatusCode, String)> {
         // Validate request body in Rust if validator is present
-        if let Some(validator) = &self.request_validator {
-            if let Some(body) = &request_data.body {
-                if let Err(errors) = validator.validate(body) {
-                    let error_msg = if is_debug_mode() {
-                        // In DEBUG mode, include full validation errors and request data
-                        json!({
-                            "error": "Request validation failed",
-                            "validation_errors": format!("{:?}", errors),
-                            "request_body": body,
-                            "path_params": request_data.path_params,
-                            "query_params": request_data.query_params,
-                        }).to_string()
-                    } else {
-                        format!("Request validation failed")
-                    };
-                    return Err((StatusCode::BAD_REQUEST, error_msg));
-                }
-            }
+        if let Some(validator) = &self.request_validator
+            && let Some(body) = &request_data.body
+            && let Err(errors) = validator.validate(body)
+        {
+            let error_msg = if is_debug_mode() {
+                // In DEBUG mode, include full validation errors and request data
+                json!({
+                    "error": "Request validation failed",
+                    "validation_errors": format!("{:?}", errors),
+                    "request_body": body,
+                    "path_params": request_data.path_params,
+                    "query_params": request_data.query_params,
+                })
+                .to_string()
+            } else {
+                "Request validation failed".to_string()
+            };
+            return Err((StatusCode::BAD_REQUEST, error_msg));
+        }
+
+        // Validate parameters in Rust if validator is present
+        if let Some(validator) = &self.parameter_validator
+            && let Err(errors) = validator.validate_and_extract(&request_data.query_params, &request_data.path_params)
+        {
+            let error_msg = if is_debug_mode() {
+                // In DEBUG mode, include full validation errors and request data
+                json!({
+                    "error": "Parameter validation failed",
+                    "validation_errors": format!("{:?}", errors),
+                    "path_params": request_data.path_params,
+                    "query_params": request_data.query_params,
+                })
+                .to_string()
+            } else {
+                "Parameter validation failed".to_string()
+            };
+            return Err((StatusCode::UNPROCESSABLE_ENTITY, error_msg));
         }
 
         let handler = self.handler.clone();
@@ -89,7 +124,7 @@ impl PythonHandler {
             // For async handlers, we need to await the coroutine
             // This must be done inside the blocking task
             tokio::task::spawn_blocking(move || {
-                Python::attach(|py| -> PyResult<Value> {
+                Python::attach(|py| -> PyResult<ResponseResult> {
                     let handler_obj = handler.bind(py);
 
                     // Convert all request data to Python kwargs
@@ -107,7 +142,7 @@ impl PythonHandler {
                     // Check if it's actually a coroutine
                     if !coroutine.hasattr("__await__")? {
                         return Err(pyo3::exceptions::PyTypeError::new_err(
-                            "Handler marked as async but did not return a coroutine"
+                            "Handler marked as async but did not return a coroutine",
                         ));
                     }
 
@@ -141,8 +176,8 @@ impl PythonHandler {
                         new_loop.call_method1("run_until_complete", (create_task,))?
                     };
 
-                    // Convert Python result to JSON
-                    python_to_json(py, &py_result)
+                    // Convert Python result to ResponseResult
+                    python_to_response_result(py, &py_result)
                 })
             })
             .await
@@ -155,7 +190,7 @@ impl PythonHandler {
         } else {
             // For sync handlers, just call directly in blocking task
             tokio::task::spawn_blocking(move || {
-                Python::attach(|py| -> PyResult<Value> {
+                Python::attach(|py| -> PyResult<ResponseResult> {
                     let handler_obj = handler.bind(py);
 
                     // Convert all request data to Python kwargs
@@ -168,7 +203,7 @@ impl PythonHandler {
                         let empty_args = PyTuple::empty(py);
                         handler_obj.call(empty_args, Some(&kwargs))?
                     };
-                    python_to_json(py, &py_result)
+                    python_to_response_result(py, &py_result)
                 })
             })
             .await
@@ -181,26 +216,37 @@ impl PythonHandler {
         };
 
         match result {
-            Ok(json_value) => {
+            Ok(response_data) => {
+                // Check if this is a ResponseData (custom Response object) or just JSON
+                let (json_value, status_code, headers) = match response_data {
+                    ResponseResult::Custom {
+                        content,
+                        status_code,
+                        headers,
+                    } => (content, status_code, headers),
+                    ResponseResult::Json(json_value) => (json_value, 200, HashMap::new()),
+                };
+
                 // Validate response in Rust if validator is present
-                if let Some(validator) = &response_validator {
-                    if let Err(errors) = validator.validate(&json_value) {
-                        let error_msg = if is_debug_mode() {
-                            json!({
-                                "error": "Response validation failed",
-                                "validation_errors": format!("{:?}", errors),
-                                "response_body": json_value,
-                                "request_data": {
-                                    "path_params": request_data_for_error.path_params,
-                                    "query_params": request_data_for_error.query_params,
-                                    "body": request_data_for_error.body,
-                                }
-                            }).to_string()
-                        } else {
-                            format!("Internal server error")
-                        };
-                        return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
-                    }
+                if let Some(validator) = &response_validator
+                    && let Err(errors) = validator.validate(&json_value)
+                {
+                    let error_msg = if is_debug_mode() {
+                        json!({
+                            "error": "Response validation failed",
+                            "validation_errors": format!("{:?}", errors),
+                            "response_body": json_value,
+                            "request_data": {
+                                "path_params": request_data_for_error.path_params,
+                                "query_params": request_data_for_error.query_params,
+                                "body": request_data_for_error.body,
+                            }
+                        })
+                        .to_string()
+                    } else {
+                        "Internal server error".to_string()
+                    };
+                    return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
                 }
 
                 let json_bytes = serde_json::to_vec(&json_value).map_err(|e| {
@@ -210,40 +256,102 @@ impl PythonHandler {
                     )
                 })?;
 
-                Response::builder()
-                    .status(StatusCode::OK)
-                    .header("content-type", "application/json")
-                    .body(Body::from(json_bytes))
-                    .map_err(|e| {
-                        (
-                            StatusCode::INTERNAL_SERVER_ERROR,
-                            format!("Failed to build response: {}", e),
-                        )
-                    })
+                let mut response_builder = Response::builder()
+                    .status(StatusCode::from_u16(status_code).unwrap_or(StatusCode::OK))
+                    .header("content-type", "application/json");
+
+                // Add custom headers
+                for (key, value) in headers {
+                    response_builder = response_builder.header(key, value);
+                }
+
+                response_builder.body(Body::from(json_bytes)).map_err(|e| {
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        format!("Failed to build response: {}", e),
+                    )
+                })
             }
             Err(e) => {
+                // Check if this is a validation error (missing required parameter or type error)
+                let error_str = format!("{}", e);
+                let is_validation_error =
+                    error_str.contains("missing") && error_str.contains("required") || error_str.contains("argument");
+
+                let status_code = if is_validation_error {
+                    StatusCode::UNPROCESSABLE_ENTITY // 422
+                } else {
+                    StatusCode::INTERNAL_SERVER_ERROR // 500
+                };
+
                 let error_msg = if is_debug_mode() {
                     // In DEBUG mode, include Python traceback
-                    let traceback = Python::attach(|py| {
-                        get_python_traceback(py, &e)
-                    });
+                    let traceback = Python::attach(|py| get_python_traceback(py, &e));
 
                     json!({
-                        "error": "Python handler error",
-                        "exception": format!("{}", e),
+                        "error": if is_validation_error { "Validation error" } else { "Python handler error" },
+                        "exception": error_str,
                         "traceback": traceback,
                         "request_data": {
                             "path_params": request_data_for_error.path_params,
                             "query_params": request_data_for_error.query_params,
                             "body": request_data_for_error.body,
                         }
-                    }).to_string()
+                    })
+                    .to_string()
+                } else if is_validation_error {
+                    "Validation error".to_string()
                 } else {
-                    format!("Internal server error")
+                    "Internal server error".to_string()
                 };
-                Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg))
+                Err((status_code, error_msg))
             }
         }
+    }
+}
+
+/// Convert Python object to ResponseResult
+///
+/// Checks if the object is a Response instance with custom status/headers,
+/// otherwise treats it as JSON data
+fn python_to_response_result(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<ResponseResult> {
+    // Check if this is a Response object from _spikard module
+    // Response objects have: content, status_code, headers attributes
+    if obj.hasattr("status_code")? && obj.hasattr("content")? && obj.hasattr("headers")? {
+        // This is a Response object, extract its properties
+        let status_code: u16 = obj.getattr("status_code")?.extract()?;
+
+        // Extract content (can be None)
+        let content_attr = obj.getattr("content")?;
+        let content = if content_attr.is_none() {
+            Value::Null
+        } else {
+            python_to_json(py, &content_attr)?
+        };
+
+        // Extract headers (dict)
+        let headers_dict = obj.getattr("headers")?;
+        let mut headers = HashMap::new();
+
+        // Convert Python dict to HashMap
+        #[allow(deprecated)]
+        if let Ok(dict) = headers_dict.downcast::<PyDict>() {
+            for (key, value) in dict.iter() {
+                let key_str: String = key.extract()?;
+                let value_str: String = value.extract()?;
+                headers.insert(key_str, value_str);
+            }
+        }
+
+        Ok(ResponseResult::Custom {
+            content,
+            status_code,
+            headers,
+        })
+    } else {
+        // Not a Response object, treat as regular JSON
+        let json_value = python_to_json(py, obj)?;
+        Ok(ResponseResult::Json(json_value))
     }
 }
 
@@ -251,20 +359,14 @@ impl PythonHandler {
 fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
     // Use json.dumps to convert to JSON string, then parse
     let json_module = py.import("json")?;
-    let json_str: String = json_module
-        .call_method1("dumps", (obj,))?
-        .extract()?;
+    let json_str: String = json_module.call_method1("dumps", (obj,))?.extract()?;
 
-    serde_json::from_str(&json_str).map_err(|e| {
-        pyo3::exceptions::PyValueError::new_err(format!("Failed to parse JSON: {}", e))
-    })
+    serde_json::from_str(&json_str)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to parse JSON: {}", e)))
 }
 
 /// Convert request data (path params, query params, body) to Python keyword arguments
-fn request_data_to_py_kwargs<'py>(
-    py: Python<'py>,
-    request_data: &RequestData,
-) -> PyResult<Bound<'py, PyDict>> {
+fn request_data_to_py_kwargs<'py>(py: Python<'py>, request_data: &RequestData) -> PyResult<Bound<'py, PyDict>> {
     let kwargs = PyDict::new(py);
 
     // Add path parameters as individual kwargs
@@ -313,9 +415,8 @@ fn request_data_to_py_kwargs<'py>(
 fn json_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'py, PyAny>> {
     // Use json.loads to convert JSON string to Python object
     let json_module = py.import("json")?;
-    let json_str = serde_json::to_string(value).map_err(|e| {
-        pyo3::exceptions::PyValueError::new_err(format!("Failed to serialize JSON: {}", e))
-    })?;
+    let json_str = serde_json::to_string(value)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to serialize JSON: {}", e)))?;
     json_module.call_method1("loads", (json_str,))
 }
 
@@ -333,7 +434,8 @@ fn get_python_traceback(py: Python<'_>, err: &PyErr) -> String {
     let exc_traceback = err.traceback(py);
 
     // Format the traceback
-    let formatted = match exc_traceback {
+
+    match exc_traceback {
         Some(tb) => {
             // Use traceback.format_exception to get full traceback
             match traceback_module.call_method1("format_exception", (exc_type, exc_value, tb)) {
@@ -360,7 +462,5 @@ fn get_python_traceback(py: Python<'_>, err: &PyErr) -> String {
                 Err(_) => format!("{}", err),
             }
         }
-    };
-
-    formatted
+    }
 }
