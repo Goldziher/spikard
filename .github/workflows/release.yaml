@@ -97,7 +97,7 @@ jobs:
           mv spikard-${{ matrix.target }}.zip ../../../
 
       - name: Upload CLI binary artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: cli-${{ matrix.target }}
           path: |
@@ -173,7 +173,7 @@ jobs:
           pnpm run build --target ${{ matrix.settings.target }}
 
       - name: Upload NAPI artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: napi-${{ matrix.settings.target }}
           path: crates/spikard-node/*.node
@@ -219,7 +219,7 @@ jobs:
         run: uv run maturin sdist --manifest-path crates/spikard-py/Cargo.toml
 
       - name: Upload sdist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sdist
           path: target/wheels/*.tar.gz
