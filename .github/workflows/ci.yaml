@@ -73,7 +73,7 @@ jobs:
 
       - name: Upload coverage artifacts
         if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-rust-${{ github.sha }}
           path: rust-coverage.lcov
@@ -118,7 +118,7 @@ jobs:
 
       - name: Upload coverage artifacts
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-python-${{ github.sha }}
           path: coverage.lcov
