@@ -43,6 +43,51 @@ enum Commands {
         #[arg(long)]
         reload: bool,
     },
+
+    /// Code generation commands
+    #[command(subcommand)]
+    Generate(GenerateCommands),
+}
+
+#[derive(Subcommand, Debug)]
+enum GenerateCommands {
+    /// Generate OpenAPI spec from test fixtures
+    FixturesToOpenapi {
+        /// Directory containing test fixtures
+        #[arg(long, default_value = "testing_data")]
+        fixtures: PathBuf,
+
+        /// Output OpenAPI spec file
+        #[arg(long, short = 'o')]
+        output: PathBuf,
+
+        /// API title
+        #[arg(long, default_value = "Generated API")]
+        title: String,
+
+        /// API version
+        #[arg(long, default_value = "1.0.0")]
+        version: String,
+    },
+
+    /// Generate Rust server and tests from OpenAPI spec
+    OpenapiToRust {
+        /// OpenAPI spec file
+        #[arg(long)]
+        spec: PathBuf,
+
+        /// Fixtures directory (for test generation)
+        #[arg(long)]
+        fixtures: PathBuf,
+
+        /// Output directory for app code
+        #[arg(long)]
+        output: PathBuf,
+
+        /// Output directory for tests
+        #[arg(long)]
+        tests: PathBuf,
+    },
 }
 
 fn main() -> Result<()> {
@@ -66,9 +111,57 @@ fn main() -> Result<()> {
 
             run_server(module, host, port)?;
         }
+        Commands::Generate(gen_cmd) => match gen_cmd {
+            GenerateCommands::FixturesToOpenapi {
+                fixtures,
+                output,
+                title,
+                version,
+            } => {
+                handle_fixtures_to_openapi(fixtures, output, title, version)?;
+            }
+            GenerateCommands::OpenapiToRust {
+                spec,
+                fixtures,
+                output,
+                tests,
+            } => {
+                handle_openapi_to_rust(spec, fixtures, output, tests)?;
+            }
+        },
     }
 
     Ok(())
+}
+
+fn handle_fixtures_to_openapi(fixtures_dir: PathBuf, output: PathBuf, title: String, version: String) -> Result<()> {
+    use spikard_codegen::openapi::{OpenApiOptions, fixtures_to_openapi, load_fixtures_from_dir};
+
+    println!("Loading fixtures from {}...", fixtures_dir.display());
+    let fixtures = load_fixtures_from_dir(&fixtures_dir).context("Failed to load fixtures from directory")?;
+
+    println!("Found {} fixtures", fixtures.len());
+
+    println!("Generating OpenAPI specification...");
+    let options = OpenApiOptions {
+        title,
+        version,
+        description: Some("API generated from test fixtures".to_string()),
+    };
+
+    let spec = fixtures_to_openapi(fixtures, options).context("Failed to generate OpenAPI spec from fixtures")?;
+
+    println!("Writing OpenAPI spec to {}...", output.display());
+    let yaml = serde_yaml::to_string(&spec).context("Failed to serialize OpenAPI spec to YAML")?;
+
+    std::fs::write(&output, yaml).context("Failed to write OpenAPI spec file")?;
+
+    println!("✓ OpenAPI spec generated successfully!");
+    Ok(())
+}
+
+fn handle_openapi_to_rust(_spec: PathBuf, _fixtures: PathBuf, _output: PathBuf, _tests: PathBuf) -> Result<()> {
+    anyhow::bail!("OpenAPI to Rust code generation not yet implemented");
 }
 
 fn run_server(module_path: PathBuf, host: String, port: u16) -> Result<()> {
