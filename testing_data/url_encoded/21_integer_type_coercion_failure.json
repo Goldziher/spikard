@@ -1,0 +1,46 @@
+{
+  "name": "21_integer_type_coercion_failure",
+  "description": "URL-encoded form with non-numeric value for integer field should fail",
+  "category": "url_encoded",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "Type coercion failure for integer fields"
+  },
+  "handler": {
+    "route": "/products",
+    "method": "POST",
+    "content_type": "application/x-www-form-urlencoded",
+    "body_schema": {
+      "type": "object",
+      "required": ["price"],
+      "properties": {
+        "price": {
+          "type": "integer"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/products",
+    "headers": {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "body": "price=not-a-number"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["body", "price"],
+        "msg": "Value is not a valid integer",
+        "ctx": {
+          "value": "not-a-number"
+        }
+      }
+    ]
+  },
+  "tags": ["url_encoded", "type", "integer", "validation", "error"]
+}

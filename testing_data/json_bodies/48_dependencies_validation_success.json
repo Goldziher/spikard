@@ -1,0 +1,44 @@
+{
+  "name": "48_dependencies_validation_success",
+  "description": "Dependencies constraint - when A present, B is required and provided",
+  "category": "json_bodies",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "dependencies constraint validation"
+  },
+  "handler": {
+    "route": "/billing",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "credit_card": {
+          "type": "string"
+        },
+        "billing_address": {
+          "type": "string"
+        }
+      },
+      "dependencies": {
+        "credit_card": ["billing_address"]
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/billing",
+    "body": {
+      "name": "John Doe",
+      "credit_card": "1234567812345678",
+      "billing_address": "123 Main St"
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  },
+  "tags": ["json_bodies", "dependencies", "validation", "success"]
+}

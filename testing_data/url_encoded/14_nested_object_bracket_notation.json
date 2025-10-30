@@ -1,0 +1,58 @@
+{
+  "name": "14_nested_object_bracket_notation",
+  "description": "URL-encoded form with nested object using bracket notation should parse correctly",
+  "category": "url_encoded",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "nestjs",
+    "test_case": "Nested object parsing in forms"
+  },
+  "handler": {
+    "route": "/profile",
+    "method": "POST",
+    "content_type": "application/x-www-form-urlencoded",
+    "body_schema": {
+      "type": "object",
+      "required": ["user"],
+      "properties": {
+        "user": {
+          "type": "object",
+          "required": ["name", "email"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "age": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/profile",
+    "headers": {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "body": "user[name]=John%20Doe&user[email]=john@example.com&user[age]=30"
+  },
+  "expected_response": {
+    "status_code": 201,
+    "body": {
+      "user": {
+        "name": "John Doe",
+        "email": "john@example.com",
+        "age": 30
+      }
+    }
+  },
+  "tags": ["url_encoded", "nested", "objects", "validation", "success"]
+}

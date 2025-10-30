@@ -16,8 +16,15 @@
       "detail": [
         {
           "type": "string_too_short",
-          "loc": ["path", "item_id"],
-          "msg": "String should have at least 3 characters"
+          "loc": [
+            "path",
+            "item_id"
+          ],
+          "msg": "String should have at least 3 characters",
+          "input": "fo",
+          "ctx": {
+            "min_length": 3
+          }
         }
       ]
     }

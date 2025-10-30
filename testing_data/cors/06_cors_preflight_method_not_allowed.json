@@ -1,0 +1,35 @@
+{
+  "name": "06_cors_preflight_method_not_allowed",
+  "description": "CORS preflight request for non-allowed method should be rejected",
+  "category": "cors",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "http_specs",
+    "test_case": "CORS method validation"
+  },
+  "handler": {
+    "route": "/api/data",
+    "method": "GET",
+    "cors": {
+      "allowed_origins": ["https://example.com"],
+      "allowed_methods": ["GET", "POST"],
+      "allowed_headers": ["Content-Type"]
+    }
+  },
+  "request": {
+    "method": "OPTIONS",
+    "path": "/api/data",
+    "headers": {
+      "Origin": "https://example.com",
+      "Access-Control-Request-Method": "DELETE",
+      "Access-Control-Request-Headers": "Content-Type"
+    }
+  },
+  "expected_response": {
+    "status_code": 403,
+    "headers": {
+      "Access-Control-Allow-Origin": null
+    }
+  },
+  "tags": ["cors", "preflight", "method", "validation", "error"]
+}

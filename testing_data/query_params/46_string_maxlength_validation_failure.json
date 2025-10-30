@@ -1,0 +1,45 @@
+{
+  "name": "46_string_maxlength_validation_failure",
+  "description": "String query parameter exceeding maxLength constraint should fail validation",
+  "category": "query_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "litestar",
+    "test_case": "Parameter maxLength validation failure"
+  },
+  "handler": {
+    "route": "/search",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "term": {
+          "type": "string",
+          "maxLength": 10,
+          "required": true
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/search",
+    "query_params": {
+      "term": "this_is_way_too_long"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["query", "term"],
+        "msg": "String length must not exceed 10",
+        "ctx": {
+          "max_length": 10,
+          "actual_length": 21
+        }
+      }
+    ]
+  },
+  "tags": ["query_params", "string", "maxLength", "validation", "error"]
+}

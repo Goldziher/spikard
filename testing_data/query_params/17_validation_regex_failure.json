@@ -17,9 +17,16 @@
     "status_code": 422,
     "validation_errors": [
       {
-        "loc": ["query", "item_query"],
+        "type": "string_pattern_mismatch",
+        "loc": [
+          "query",
+          "item_query"
+        ],
         "msg": "String should match pattern '^fixedquery$'",
-        "type": "string_pattern_mismatch"
+        "input": "nonregexquery",
+        "ctx": {
+          "pattern": "^fixedquery$"
+        }
       }
     ]
   },

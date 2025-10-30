@@ -1,0 +1,48 @@
+{
+  "name": "29_nested_object_validation_success",
+  "description": "Nested object in JSON body should validate correctly",
+  "category": "json_bodies",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "Nested object validation with required properties"
+  },
+  "handler": {
+    "route": "/users",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["profile"],
+      "properties": {
+        "profile": {
+          "type": "object",
+          "required": ["name", "email"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            }
+          }
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/users",
+    "body": {
+      "profile": {
+        "name": "John Doe",
+        "email": "john@example.com"
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  },
+  "tags": ["json_bodies", "nested", "object", "validation", "success"]
+}

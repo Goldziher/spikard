@@ -1,0 +1,45 @@
+{
+  "name": "48_pattern_validation_email_failure",
+  "description": "String query parameter not matching regex pattern should fail validation",
+  "category": "query_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "litestar",
+    "test_case": "Parameter pattern validation failure"
+  },
+  "handler": {
+    "route": "/subscribe",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "email": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+          "required": true
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/subscribe",
+    "query_params": {
+      "email": "invalid-email"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["query", "email"],
+        "msg": "String does not match pattern",
+        "ctx": {
+          "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+          "value": "invalid-email"
+        }
+      }
+    ]
+  },
+  "tags": ["query_params", "string", "pattern", "email", "validation", "error"]
+}

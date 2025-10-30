@@ -1,0 +1,34 @@
+{
+  "name": "test_layered_parameters_validation_004",
+  "description": "Extracted from Litestar: test_layered_parameters_validation case 4",
+  "category": "query_params",
+  "source": {
+    "framework": "litestar",
+    "test_file": "tests/unit/test_kwargs/test_layered_params.py",
+    "test_function": "test_layered_parameters_validation",
+    "adapted": true
+  },
+  "handler": {
+    "route": "/{local:int}",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "self": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/{local:int}"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {}
+  },
+  "tags": [
+    "success",
+    "query"
+  ]
+}

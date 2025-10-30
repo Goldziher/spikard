@@ -1,0 +1,35 @@
+{
+  "name": "test_query_param_bool_002",
+  "description": "Extracted from Litestar: test_query_param_bool case 2",
+  "category": "query_params",
+  "source": {
+    "framework": "litestar",
+    "test_file": "tests/unit/test_signature/test_parsing.py",
+    "test_function": "test_query_param_bool",
+    "adapted": true
+  },
+  "handler": {
+    "route": "/",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "param": {
+          "type": "boolean",
+          "annotation": "bool"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {}
+  },
+  "tags": [
+    "success",
+    "query"
+  ]
+}

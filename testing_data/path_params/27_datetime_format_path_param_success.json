@@ -1,0 +1,33 @@
+{
+  "name": "27_datetime_format_path_param_success",
+  "description": "Path parameter with valid ISO 8601 datetime should be accepted",
+  "category": "path_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "litestar",
+    "test_case": "DateTime type path parameter conversion"
+  },
+  "handler": {
+    "route": "/bookings/{timestamp}",
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/bookings/2025-10-30T14:30:00Z"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "timestamp": "2025-10-30T14:30:00Z"
+    }
+  },
+  "tags": ["path_params", "datetime", "format", "iso8601", "validation", "success"]
+}

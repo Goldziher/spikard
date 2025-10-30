@@ -1,0 +1,43 @@
+{
+  "name": "15_special_characters_field_names",
+  "description": "URL-encoded form with special characters in field names should be handled correctly",
+  "category": "url_encoded",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "Special characters in form field names"
+  },
+  "handler": {
+    "route": "/data",
+    "method": "POST",
+    "content_type": "application/x-www-form-urlencoded",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "user-name": {
+          "type": "string"
+        },
+        "contact.email": {
+          "type": "string",
+          "format": "email"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/data",
+    "headers": {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "body": "user-name=JohnDoe&contact.email=john%40example.com"
+  },
+  "expected_response": {
+    "status_code": 201,
+    "body": {
+      "user-name": "JohnDoe",
+      "contact.email": "john@example.com"
+    }
+  },
+  "tags": ["url_encoded", "special_characters", "validation", "success"]
+}

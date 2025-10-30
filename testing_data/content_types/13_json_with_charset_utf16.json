@@ -1,0 +1,39 @@
+{
+  "name": "13_json_with_charset_utf16",
+  "description": "JSON with UTF-16 charset should be rejected (UTF-8 only)",
+  "category": "content_types",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "security_best_practices",
+    "test_case": "Restrict JSON charset to UTF-8"
+  },
+  "handler": {
+    "route": "/data",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/data",
+    "headers": {
+      "Content-Type": "application/json; charset=utf-16"
+    },
+    "body": {
+      "value": "test"
+    }
+  },
+  "expected_response": {
+    "status_code": 415,
+    "body": {
+      "error": "Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported."
+    }
+  },
+  "tags": ["content_types", "charset", "validation", "error"]
+}

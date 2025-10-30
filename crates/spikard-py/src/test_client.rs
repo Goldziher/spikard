@@ -41,16 +41,18 @@ impl TestClient {
     ///     path: The path to request (e.g., "/users/123")
     ///     query_params: Optional query parameters as a dict
     ///     headers: Optional headers as a dict
+    ///     cookies: Optional cookies as a dict
     ///
     /// Returns:
     ///     TestResponse: The response from the server
-    #[pyo3(signature = (path, query_params=None, headers=None))]
+    #[pyo3(signature = (path, query_params=None, headers=None, cookies=None))]
     fn get<'py>(
         &self,
         py: Python<'py>,
         path: &str,
         query_params: Option<&Bound<'py, PyDict>>,
         headers: Option<&Bound<'py, PyDict>>,
+        cookies: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         // DEBUG: Log test client get() call
         let _ = std::fs::write(
@@ -64,7 +66,18 @@ impl TestClient {
             "/tmp/test_client_query_params.log",
             format!("query_params_vec: {:?}\n", query_params_vec),
         );
-        let headers_vec = extract_dict_to_vec(headers)?;
+        let mut headers_vec = extract_dict_to_vec(headers)?;
+
+        // Convert cookies dict to Cookie header if present
+        if let Some(cookies_dict) = cookies {
+            let cookies_vec = extract_dict_to_vec(Some(cookies_dict))?;
+            if !cookies_vec.is_empty() {
+                // Format as "name1=value1; name2=value2"
+                let cookie_header_value: Vec<String> =
+                    cookies_vec.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
+                headers_vec.push(("cookie".to_string(), cookie_header_value.join("; ")));
+            }
+        }
 
         let server = Arc::clone(&self.server);
 

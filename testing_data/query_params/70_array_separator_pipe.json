@@ -1,0 +1,39 @@
+{
+  "name": "70_array_separator_pipe",
+  "description": "Array query parameter with pipe separator should parse correctly",
+  "category": "query_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "nestjs",
+    "test_case": "ParseArrayPipe with custom separator"
+  },
+  "handler": {
+    "route": "/items",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "separator": "|"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items?tags=python|rust|typescript",
+    "query_params": {
+      "tags": "python|rust|typescript"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "tags": ["python", "rust", "typescript"]
+    }
+  },
+  "tags": ["query_params", "array", "separator", "pipe", "parsing", "success"]
+}

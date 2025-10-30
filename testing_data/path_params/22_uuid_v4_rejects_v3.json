@@ -1,0 +1,44 @@
+{
+  "name": "22_uuid_v4_rejects_v3",
+  "description": "Path parameter expecting UUID v4 should reject UUID v3",
+  "category": "path_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "nestjs",
+    "test_case": "ParseUUIDPipe version mismatch rejection"
+  },
+  "handler": {
+    "route": "/items/{id}",
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "uuidVersion": "4",
+          "required": true
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items/e8b5a51d-11c8-3310-a6ab-367563f20686"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["path", "id"],
+        "msg": "UUID must be version 4",
+        "ctx": {
+          "expected_version": "4",
+          "actual_version": "3",
+          "value": "e8b5a51d-11c8-3310-a6ab-367563f20686"
+        }
+      }
+    ]
+  },
+  "tags": ["path_params", "uuid", "version", "validation", "error"]
+}

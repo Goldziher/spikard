@@ -1,0 +1,43 @@
+{
+  "name": "38_anyof_schema_success",
+  "description": "anyOf schema composition - at least one schema must match",
+  "category": "json_bodies",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "anyOf schema composition"
+  },
+  "handler": {
+    "route": "/contact",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "anyOf": [
+        {
+          "required": ["email"]
+        },
+        {
+          "required": ["phone"]
+        }
+      ]
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/contact",
+    "body": {
+      "name": "John Doe",
+      "email": "john@example.com"
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  },
+  "tags": ["json_bodies", "anyOf", "composition", "validation", "success"]
+}

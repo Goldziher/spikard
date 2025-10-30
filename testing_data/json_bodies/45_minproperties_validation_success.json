@@ -1,0 +1,30 @@
+{
+  "name": "45_minproperties_validation_success",
+  "description": "Object with properties meeting minProperties constraint should succeed",
+  "category": "json_bodies",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "minProperties constraint validation"
+  },
+  "handler": {
+    "route": "/config",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "minProperties": 2
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/config",
+    "body": {
+      "host": "localhost",
+      "port": 8080
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  },
+  "tags": ["json_bodies", "minProperties", "validation", "success"]
+}

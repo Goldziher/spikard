@@ -1,0 +1,32 @@
+{
+  "name": "10_cors_origin_null",
+  "description": "CORS request with 'null' origin should be handled according to policy",
+  "category": "cors",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "security_best_practices",
+    "test_case": "Null origin handling"
+  },
+  "handler": {
+    "route": "/api/data",
+    "method": "GET",
+    "cors": {
+      "allowed_origins": ["https://example.com"],
+      "allowed_methods": ["GET"]
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/api/data",
+    "headers": {
+      "Origin": "null"
+    }
+  },
+  "expected_response": {
+    "status_code": 403,
+    "body": {
+      "error": "Origin 'null' is not allowed"
+    }
+  },
+  "tags": ["cors", "null_origin", "security", "error"]
+}

@@ -1,0 +1,28 @@
+{
+  "name": "use_shared_schema_and_$ref_with_$id_in_response_($ref_to_$id)_5",
+  "description": "Extracted from Fastify: Use shared schema and $ref with $id in response ($ref to $id)",
+  "category": "json_bodies",
+  "source": {
+    "framework": "fastify",
+    "test_file": "test/schema-serialization.test.js",
+    "test_function": "Use shared schema and $ref with $id in response ($ref to $id)",
+    "adapted": true
+  },
+  "handler": {
+    "route": "/",
+    "method": "POST",
+    "parameters": {}
+  },
+  "request": {
+    "method": "POST",
+    "path": "/"
+  },
+  "expected_response": {
+    "status_code": 400
+  },
+  "tags": [
+    "error",
+    "validation",
+    "body"
+  ]
+}

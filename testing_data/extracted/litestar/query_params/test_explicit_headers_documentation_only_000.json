@@ -1,0 +1,28 @@
+{
+  "name": "test_explicit_headers_documentation_only_000",
+  "description": "Extracted from Litestar: test_explicit_headers_documentation_only case 0",
+  "category": "query_params",
+  "source": {
+    "framework": "litestar",
+    "test_file": "tests/unit/test_response/test_response_headers.py",
+    "test_function": "test_explicit_headers_documentation_only",
+    "adapted": true
+  },
+  "handler": {
+    "route": "/",
+    "method": "GET",
+    "parameters": {}
+  },
+  "request": {
+    "method": "GET",
+    "path": "/"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {}
+  },
+  "tags": [
+    "success",
+    "query"
+  ]
+}

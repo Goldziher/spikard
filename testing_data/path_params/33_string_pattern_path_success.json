@@ -1,0 +1,38 @@
+{
+  "name": "33_string_pattern_path_success",
+  "description": "Path parameter matching regex pattern should succeed",
+  "category": "path_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "litestar",
+    "test_case": "String pattern validation in path"
+  },
+  "handler": {
+    "route": "/repos/{owner}/{repo}",
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "owner": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9-]+$"
+        },
+        "repo": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9-_]+$"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/repos/spikard-labs/spikard-http"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "owner": "spikard-labs",
+      "repo": "spikard-http"
+    }
+  },
+  "tags": ["path_params", "string", "pattern", "validation", "success"]
+}

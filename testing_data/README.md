@@ -1,6 +1,10 @@
-# Testing Data
+# Spikard Test Fixtures
 
-Language-agnostic test fixtures for comprehensive HTTP API testing across Python, Rust, and TypeScript.
+Framework-agnostic test fixtures for comprehensive validation of Spikard's behavior across all features.
+
+**Schema:** All fixtures conform to [`00-FIXTURE-SCHEMA.json`](./00-FIXTURE-SCHEMA.json)
+
+**Status:** Migrating to Spikard-native format (removing FastAPI-specific quirks)
 
 ## 📁 Directory Structure
 

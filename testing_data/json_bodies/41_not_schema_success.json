@@ -1,0 +1,37 @@
+{
+  "name": "41_not_schema_success",
+  "description": "not schema - value must not match the schema",
+  "category": "json_bodies",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "not schema composition"
+  },
+  "handler": {
+    "route": "/users",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["username"],
+      "properties": {
+        "username": {
+          "type": "string",
+          "not": {
+            "enum": ["admin", "root", "system"]
+          }
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/users",
+    "body": {
+      "username": "john_doe"
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  },
+  "tags": ["json_bodies", "not", "composition", "validation", "success"]
+}

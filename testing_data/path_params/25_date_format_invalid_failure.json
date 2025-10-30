@@ -1,0 +1,42 @@
+{
+  "name": "25_date_format_invalid_failure",
+  "description": "Path parameter with invalid date format should fail validation",
+  "category": "path_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "litestar",
+    "test_case": "Date type path parameter validation failure"
+  },
+  "handler": {
+    "route": "/events/{date}",
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "date": {
+          "type": "string",
+          "format": "date",
+          "required": true
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/events/2025-13-45"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["path", "date"],
+        "msg": "Invalid date format",
+        "ctx": {
+          "format": "date",
+          "value": "2025-13-45"
+        }
+      }
+    ]
+  },
+  "tags": ["path_params", "date", "format", "validation", "error"]
+}

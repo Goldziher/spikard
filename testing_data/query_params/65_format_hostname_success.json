@@ -1,0 +1,36 @@
+{
+  "name": "65_format_hostname_success",
+  "description": "Query parameter with valid hostname should be accepted",
+  "category": "query_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "Format validator hostname"
+  },
+  "handler": {
+    "route": "/dns",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "host": {
+          "type": "string",
+          "format": "hostname"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/dns",
+    "query_params": {
+      "host": "api.example.com"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "host": "api.example.com"
+    }
+  },
+  "tags": ["query_params", "format", "hostname", "validation", "success"]
+}

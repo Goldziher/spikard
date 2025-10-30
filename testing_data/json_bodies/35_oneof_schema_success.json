@@ -1,0 +1,49 @@
+{
+  "name": "35_oneof_schema_success",
+  "description": "oneOf schema composition - exactly one schema must match",
+  "category": "json_bodies",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "oneOf schema composition"
+  },
+  "handler": {
+    "route": "/payment",
+    "method": "POST",
+    "body_schema": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["credit_card"],
+          "properties": {
+            "credit_card": {
+              "type": "string",
+              "pattern": "^[0-9]{16}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["paypal_email"],
+          "properties": {
+            "paypal_email": {
+              "type": "string",
+              "format": "email"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/payment",
+    "body": {
+      "credit_card": "1234567812345678"
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  },
+  "tags": ["json_bodies", "oneOf", "composition", "validation", "success"]
+}

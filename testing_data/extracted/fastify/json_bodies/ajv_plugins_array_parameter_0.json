@@ -1,0 +1,27 @@
+{
+  "name": "ajv_plugins_array_parameter_0",
+  "description": "Extracted from Fastify: Ajv plugins array parameter",
+  "category": "json_bodies",
+  "source": {
+    "framework": "fastify",
+    "test_file": "test/schema-special-usage.test.js",
+    "test_function": "Ajv plugins array parameter",
+    "adapted": true
+  },
+  "handler": {
+    "route": "/",
+    "method": "POST",
+    "parameters": {}
+  },
+  "request": {
+    "method": "POST",
+    "path": "/"
+  },
+  "expected_response": {
+    "status_code": 200
+  },
+  "tags": [
+    "success",
+    "body"
+  ]
+}

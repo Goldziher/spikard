@@ -1,0 +1,34 @@
+{
+  "name": "33_api_key_header_valid",
+  "description": "X-API-Key header with valid format should be accepted",
+  "category": "headers",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "API key header validation"
+  },
+  "handler": {
+    "route": "/api/data",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "X-API-Key": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$",
+          "required": true
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/api/data",
+    "headers": {
+      "X-API-Key": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4"
+    }
+  },
+  "expected_response": {
+    "status_code": 200
+  },
+  "tags": ["headers", "api_key", "security", "validation", "success"]
+}
