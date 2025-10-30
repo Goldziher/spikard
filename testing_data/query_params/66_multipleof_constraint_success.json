@@ -1,0 +1,36 @@
+{
+  "name": "66_multipleof_constraint_success",
+  "description": "Integer query parameter that is multiple of constraint should succeed",
+  "category": "query_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "multipleOf constraint validation"
+  },
+  "handler": {
+    "route": "/items",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "quantity": {
+          "type": "integer",
+          "multipleOf": 5
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items",
+    "query_params": {
+      "quantity": "15"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "quantity": 15
+    }
+  },
+  "tags": ["query_params", "integer", "multipleOf", "validation", "success"]
+}

@@ -18,8 +18,12 @@
       "detail": [
         {
           "type": "missing",
-          "loc": ["body", "file"],
-          "msg": "Field required"
+          "loc": [
+            "body",
+            "file"
+          ],
+          "msg": "Field required",
+          "input": "required"
         }
       ]
     }

@@ -1,0 +1,62 @@
+{
+  "name": "10_nested_error_path",
+  "description": "Validation error in nested object should have correct path in loc",
+  "category": "validation_errors",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "nestjs",
+    "test_case": "Nested error path reporting"
+  },
+  "handler": {
+    "route": "/users",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["profile"],
+      "properties": {
+        "profile": {
+          "type": "object",
+          "required": ["contact"],
+          "properties": {
+            "contact": {
+              "type": "object",
+              "required": ["email"],
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/users",
+    "body": {
+      "profile": {
+        "contact": {
+          "email": "invalid"
+        }
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["body", "profile", "contact", "email"],
+        "msg": "Invalid email format",
+        "ctx": {
+          "format": "email",
+          "value": "invalid"
+        }
+      }
+    ]
+  },
+  "tags": ["validation_errors", "nested", "path", "error_reporting"]
+}

@@ -1,0 +1,36 @@
+{
+  "name": "44_string_minlength_validation_success",
+  "description": "String query parameter meeting minLength constraint should succeed",
+  "category": "query_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "litestar",
+    "test_case": "Parameter minLength validation"
+  },
+  "handler": {
+    "route": "/search",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "term": {
+          "type": "string",
+          "minLength": 3
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/search",
+    "query_params": {
+      "term": "foo"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "term": "foo"
+    }
+  },
+  "tags": ["query_params", "string", "minLength", "validation", "success"]
+}

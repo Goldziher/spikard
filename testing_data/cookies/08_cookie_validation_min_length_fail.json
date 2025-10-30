@@ -19,8 +19,12 @@
       "detail": [
         {
           "type": "string_too_short",
-          "loc": ["cookie", "tracking_id"],
-          "msg": "String should have at least 3 characters"
+          "loc": [
+            "cookie",
+            "tracking_id"
+          ],
+          "msg": "String should have at least 3 characters",
+          "input": ""
         }
       ]
     }

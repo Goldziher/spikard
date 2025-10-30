@@ -1,0 +1,45 @@
+{
+  "name": "31_bearer_token_format_invalid",
+  "description": "Authorization header with invalid Bearer token format should fail validation",
+  "category": "headers",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "nestjs",
+    "test_case": "Bearer token format validation failure"
+  },
+  "handler": {
+    "route": "/protected",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "Authorization": {
+          "type": "string",
+          "pattern": "^Bearer [A-Za-z0-9-._~+/]+=*$",
+          "required": true
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/protected",
+    "headers": {
+      "Authorization": "Bearer invalid token with spaces"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["headers", "Authorization"],
+        "msg": "Invalid Bearer token format",
+        "ctx": {
+          "pattern": "^Bearer [A-Za-z0-9-._~+/]+=*$",
+          "value": "Bearer invalid token with spaces"
+        }
+      }
+    ]
+  },
+  "tags": ["headers", "authorization", "bearer_token", "security", "validation", "error"]
+}

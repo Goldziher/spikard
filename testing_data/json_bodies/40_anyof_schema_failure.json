@@ -1,0 +1,59 @@
+{
+  "name": "40_anyof_schema_failure",
+  "description": "anyOf schema composition - fails when no schemas match",
+  "category": "json_bodies",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "anyOf schema composition failure"
+  },
+  "handler": {
+    "route": "/contact",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string"
+        }
+      },
+      "anyOf": [
+        {
+          "required": ["email"]
+        },
+        {
+          "required": ["phone"]
+        }
+      ]
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/contact",
+    "body": {
+      "name": "John Doe"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["body"],
+        "msg": "Must match at least one schema (anyOf), but matched 0",
+        "ctx": {
+          "matched_schemas": 0
+        }
+      }
+    ]
+  },
+  "tags": ["json_bodies", "anyOf", "composition", "validation", "error"]
+}

@@ -1,0 +1,49 @@
+{
+  "name": "33_allof_schema_composition",
+  "description": "JSON Schema allOf composition should validate all schemas",
+  "category": "json_bodies",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "Schema composition with allOf"
+  },
+  "handler": {
+    "route": "/items",
+    "method": "POST",
+    "body_schema": {
+      "allOf": [
+        {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["price"],
+          "properties": {
+            "price": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/items",
+    "body": {
+      "name": "Product",
+      "price": 29.99
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  },
+  "tags": ["json_bodies", "allOf", "composition", "validation", "success"]
+}

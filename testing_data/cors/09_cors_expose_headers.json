@@ -1,0 +1,36 @@
+{
+  "name": "09_cors_expose_headers",
+  "description": "CORS response should include Access-Control-Expose-Headers for custom headers",
+  "category": "cors",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "http_specs",
+    "test_case": "CORS expose headers"
+  },
+  "handler": {
+    "route": "/api/data",
+    "method": "GET",
+    "cors": {
+      "allowed_origins": ["https://example.com"],
+      "allowed_methods": ["GET"],
+      "expose_headers": ["X-Total-Count", "X-Request-Id"]
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/api/data",
+    "headers": {
+      "Origin": "https://example.com"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "headers": {
+      "Access-Control-Allow-Origin": "https://example.com",
+      "Access-Control-Expose-Headers": "X-Total-Count, X-Request-Id",
+      "X-Total-Count": "42",
+      "X-Request-Id": "abc123"
+    }
+  },
+  "tags": ["cors", "expose_headers", "success"]
+}

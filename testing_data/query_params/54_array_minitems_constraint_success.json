@@ -1,0 +1,39 @@
+{
+  "name": "54_array_minitems_constraint_success",
+  "description": "Array query parameter meeting minItems constraint should succeed",
+  "category": "query_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "litestar",
+    "test_case": "Parameter minItems validation"
+  },
+  "handler": {
+    "route": "/items",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 2
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items",
+    "query_params": {
+      "ids": ["1", "2", "3"]
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "ids": [1, 2, 3]
+    }
+  },
+  "tags": ["query_params", "array", "minItems", "validation", "success"]
+}

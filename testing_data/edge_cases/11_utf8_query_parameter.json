@@ -1,0 +1,35 @@
+{
+  "name": "11_utf8_query_parameter",
+  "description": "Query parameter with UTF-8 characters should be handled correctly",
+  "category": "edge_cases",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "litestar",
+    "test_case": "UTF-8 encoding in query parameters"
+  },
+  "handler": {
+    "route": "/search",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "term": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/search",
+    "query_params": {
+      "term": "café"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "term": "café"
+    }
+  },
+  "tags": ["edge_cases", "utf8", "unicode", "query_params", "encoding", "success"]
+}

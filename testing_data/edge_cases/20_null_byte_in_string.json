@@ -1,0 +1,45 @@
+{
+  "name": "20_null_byte_in_string",
+  "description": "Null byte character in strings should be rejected for security",
+  "category": "edge_cases",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "security_best_practices",
+    "test_case": "Null byte injection prevention"
+  },
+  "handler": {
+    "route": "/files",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["filename"],
+      "properties": {
+        "filename": {
+          "type": "string",
+          "pattern": "^[^\\x00]+$"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/files",
+    "body": {
+      "filename": "file\u0000.txt"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["body", "filename"],
+        "msg": "String contains null byte character",
+        "ctx": {
+          "value": "file\\u0000.txt"
+        }
+      }
+    ]
+  },
+  "tags": ["edge_cases", "security", "null_byte", "validation", "error"]
+}

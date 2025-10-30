@@ -1,0 +1,36 @@
+{
+  "name": "47_pattern_validation_email_success",
+  "description": "String query parameter matching regex pattern should succeed",
+  "category": "query_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "litestar",
+    "test_case": "Parameter pattern validation"
+  },
+  "handler": {
+    "route": "/subscribe",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "email": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/subscribe",
+    "query_params": {
+      "email": "user@example.com"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "email": "user@example.com"
+    }
+  },
+  "tags": ["query_params", "string", "pattern", "email", "validation", "success"]
+}

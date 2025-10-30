@@ -1,0 +1,27 @@
+{
+  "name": "20_414_uri_too_long",
+  "description": "Request with excessively long URI should return 414",
+  "category": "status_codes",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "http_specs",
+    "test_case": "URI length limit enforcement"
+  },
+  "handler": {
+    "route": "/data",
+    "method": "GET",
+    "max_uri_length": 2048
+  },
+  "request": {
+    "method": "GET",
+    "path": "/data?{{ repeat 'param=value&' 300 times }}"
+  },
+  "expected_response": {
+    "status_code": 414,
+    "body": {
+      "error": "URI Too Long",
+      "message": "Request URI exceeds maximum allowed length of 2048 characters"
+    }
+  },
+  "tags": ["status_codes", "414", "uri_length", "error"]
+}

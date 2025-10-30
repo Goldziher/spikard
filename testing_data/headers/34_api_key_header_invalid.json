@@ -1,0 +1,45 @@
+{
+  "name": "34_api_key_header_invalid",
+  "description": "X-API-Key header with invalid format should fail validation",
+  "category": "headers",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "API key header validation failure"
+  },
+  "handler": {
+    "route": "/api/data",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "X-API-Key": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$",
+          "required": true
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/api/data",
+    "headers": {
+      "X-API-Key": "invalid-key"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["headers", "X-API-Key"],
+        "msg": "Invalid API key format",
+        "ctx": {
+          "pattern": "^[a-f0-9]{32}$",
+          "value": "invalid-key"
+        }
+      }
+    ]
+  },
+  "tags": ["headers", "api_key", "security", "validation", "error"]
+}

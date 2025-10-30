@@ -1,0 +1,38 @@
+{
+  "name": "18_unicode_normalization",
+  "description": "Unicode characters with combining diacritics should be handled correctly",
+  "category": "edge_cases",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "litestar",
+    "test_case": "Unicode normalization handling"
+  },
+  "handler": {
+    "route": "/users",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/users",
+    "body": {
+      "name": "café"
+    }
+  },
+  "expected_response": {
+    "status_code": 201,
+    "body": {
+      "name": "café"
+    }
+  },
+  "tags": ["edge_cases", "unicode", "normalization", "success"]
+}

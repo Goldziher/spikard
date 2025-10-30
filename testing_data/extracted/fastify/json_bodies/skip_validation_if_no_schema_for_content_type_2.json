@@ -1,0 +1,27 @@
+{
+  "name": "skip_validation_if_no_schema_for_content_type_2",
+  "description": "Extracted from Fastify: Skip validation if no schema for content type",
+  "category": "json_bodies",
+  "source": {
+    "framework": "fastify",
+    "test_file": "test/schema-validation.test.js",
+    "test_function": "Skip validation if no schema for content type",
+    "adapted": true
+  },
+  "handler": {
+    "route": "/",
+    "method": "POST",
+    "parameters": {}
+  },
+  "request": {
+    "method": "POST",
+    "path": "/"
+  },
+  "expected_response": {
+    "status_code": 200
+  },
+  "tags": [
+    "success",
+    "body"
+  ]
+}

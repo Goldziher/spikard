@@ -67,6 +67,10 @@ impl SchemaValidator {
                     "[VALIDATION DEBUG] schema_path_str: {}, error_msg: {}",
                     schema_path_str, error_msg
                 );
+                eprintln!("[VALIDATION DEBUG] Checking conditions NOW:");
+                eprintln!("  - minLength? {}", schema_path_str.contains("minLength"));
+                eprintln!("  - maxLength? {}", schema_path_str.contains("maxLength"));
+                eprintln!("  - /type? {}", schema_path_str.contains("/type"));
 
                 let (error_type, msg, ctx) = if schema_path_str.contains("minLength") {
                     // Extract minimum length from schema
@@ -252,6 +256,35 @@ impl SchemaValidator {
                         "Input should be a valid UUID".to_string(),
                         None,
                     )
+                } else if schema_path_str.contains("/type") {
+                    // Handle type validation errors
+                    // Determine the expected type from the schema
+                    let expected_type = self
+                        .schema
+                        .pointer(&format!("/properties/{}/type", param_name))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("unknown");
+
+                    let (error_type, msg) = match expected_type {
+                        "integer" => (
+                            "int_parsing".to_string(),
+                            "Input should be a valid integer, unable to parse string as an integer".to_string(),
+                        ),
+                        "number" => (
+                            "float_parsing".to_string(),
+                            "Input should be a valid number, unable to parse string as a number".to_string(),
+                        ),
+                        "boolean" => (
+                            "bool_parsing".to_string(),
+                            "Input should be a valid boolean".to_string(),
+                        ),
+                        "string" => ("string_type".to_string(), "Input should be a valid string".to_string()),
+                        _ => (
+                            "type_error".to_string(),
+                            format!("Input should be a valid {}", expected_type),
+                        ),
+                    };
+                    (error_type, msg, None)
                 } else {
                     eprintln!("[VALIDATION DEBUG] Fell through to default case!");
                     ("validation_error".to_string(), err.to_string(), None)

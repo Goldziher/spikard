@@ -24,6 +24,8 @@ fn is_debug_mode() -> bool {
 pub struct RequestData {
     pub path_params: HashMap<String, String>,
     pub query_params: Value,
+    pub headers: HashMap<String, String>,
+    pub cookies: HashMap<String, String>,
     pub body: Option<Value>,
 }
 
@@ -114,7 +116,12 @@ impl PythonHandler {
         // This returns a validated JSON object with properly typed values
         let validated_params = if let Some(validator) = &self.parameter_validator {
             // Pass query params as Value directly (fast-query-parsers already did type conversion)
-            match validator.validate_and_extract(&request_data.query_params, &request_data.path_params) {
+            match validator.validate_and_extract(
+                &request_data.query_params,
+                &request_data.path_params,
+                &request_data.headers,
+                &request_data.cookies,
+            ) {
                 Ok(params) => Some(params),
                 Err(errors) => {
                     // Return FastAPI-compatible error format with {"detail": [...]}

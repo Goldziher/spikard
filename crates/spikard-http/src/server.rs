@@ -28,6 +28,38 @@ fn extract_query_params(uri: &axum::http::Uri) -> Value {
     }
 }
 
+/// Extract headers from request
+fn extract_headers(headers: &axum::http::HeaderMap) -> HashMap<String, String> {
+    let mut map = HashMap::new();
+    for (name, value) in headers.iter() {
+        if let Ok(val_str) = value.to_str() {
+            // Convert header name to lowercase for consistent access
+            map.insert(name.as_str().to_lowercase(), val_str.to_string());
+        }
+    }
+    map
+}
+
+/// Extract cookies from request headers
+fn extract_cookies(headers: &axum::http::HeaderMap) -> HashMap<String, String> {
+    let mut cookies = HashMap::new();
+
+    // Look for Cookie header
+    if let Some(cookie_header) = headers.get(axum::http::header::COOKIE)
+        && let Ok(cookie_str) = cookie_header.to_str()
+    {
+        // Parse cookie header: "name1=value1; name2=value2"
+        for cookie_pair in cookie_str.split(';') {
+            let cookie_pair = cookie_pair.trim();
+            if let Some((name, value)) = cookie_pair.split_once('=') {
+                cookies.insert(name.trim().to_string(), value.trim().to_string());
+            }
+        }
+    }
+
+    cookies
+}
+
 /// HTTP Server
 pub struct Server {
     config: ServerConfig,
@@ -64,6 +96,8 @@ impl Server {
                     move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                         let _ = std::fs::write("/tmp/axum_route_called.log", "GET route handler called\n");
                         let query_params = extract_query_params(req.uri());
+                        let headers = extract_headers(req.headers());
+                        let cookies = extract_cookies(req.headers());
                         let _ = std::fs::write(
                             "/tmp/axum_query_params.log",
                             format!("query_params: {:?}\n", query_params),
@@ -71,6 +105,8 @@ impl Server {
                         let request_data = RequestData {
                             path_params: path_params.0,
                             query_params,
+                            headers,
+                            cookies,
                             body: None, // GET requests don't have a body
                         };
                         handler.call(req, request_data).await
@@ -81,6 +117,8 @@ impl Server {
                         // Extract body for POST requests
                         let (parts, body) = req.into_parts();
                         let query_params = extract_query_params(&parts.uri);
+                        let headers = extract_headers(&parts.headers);
+                        let cookies = extract_cookies(&parts.headers);
                         let body_bytes = body
                             .collect()
                             .await
@@ -103,6 +141,8 @@ impl Server {
                         let request_data = RequestData {
                             path_params: path_params.0,
                             query_params,
+                            headers,
+                            cookies,
                             body: body_value,
                         };
 
@@ -114,6 +154,8 @@ impl Server {
                     move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                         let (parts, body) = req.into_parts();
                         let query_params = extract_query_params(&parts.uri);
+                        let headers = extract_headers(&parts.headers);
+                        let cookies = extract_cookies(&parts.headers);
                         let body_bytes = body
                             .collect()
                             .await
@@ -136,6 +178,8 @@ impl Server {
                         let request_data = RequestData {
                             path_params: path_params.0,
                             query_params,
+                            headers,
+                            cookies,
                             body: body_value,
                         };
 
@@ -147,6 +191,8 @@ impl Server {
                     move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                         let (parts, body) = req.into_parts();
                         let query_params = extract_query_params(&parts.uri);
+                        let headers = extract_headers(&parts.headers);
+                        let cookies = extract_cookies(&parts.headers);
                         let body_bytes = body
                             .collect()
                             .await
@@ -169,6 +215,8 @@ impl Server {
                         let request_data = RequestData {
                             path_params: path_params.0,
                             query_params,
+                            headers,
+                            cookies,
                             body: body_value,
                         };
 
@@ -179,9 +227,13 @@ impl Server {
                 "DELETE" => axum::routing::delete(
                     move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                         let query_params = extract_query_params(req.uri());
+                        let headers = extract_headers(req.headers());
+                        let cookies = extract_cookies(req.headers());
                         let request_data = RequestData {
                             path_params: path_params.0,
                             query_params,
+                            headers,
+                            cookies,
                             body: None,
                         };
                         handler.call(req, request_data).await

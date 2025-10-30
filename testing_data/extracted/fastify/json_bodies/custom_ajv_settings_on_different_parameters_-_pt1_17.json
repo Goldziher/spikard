@@ -1,0 +1,27 @@
+{
+  "name": "custom_ajv_settings_on_different_parameters_-_pt1_17",
+  "description": "Extracted from Fastify: Custom AJV settings on different parameters - pt1",
+  "category": "json_bodies",
+  "source": {
+    "framework": "fastify",
+    "test_file": "test/schema-validation.test.js",
+    "test_function": "Custom AJV settings on different parameters - pt1",
+    "adapted": true
+  },
+  "handler": {
+    "route": "/api/:id",
+    "method": "POST",
+    "parameters": {}
+  },
+  "request": {
+    "method": "POST",
+    "path": "/api/42"
+  },
+  "expected_response": {
+    "status_code": 200
+  },
+  "tags": [
+    "success",
+    "body"
+  ]
+}

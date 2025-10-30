@@ -22,8 +22,12 @@
       "detail": [
         {
           "type": "missing",
-          "loc": ["body", "name"],
-          "msg": "Field required"
+          "loc": [
+            "body",
+            "name"
+          ],
+          "msg": "Field required",
+          "input": ""
         }
       ]
     }

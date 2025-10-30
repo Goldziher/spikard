@@ -1,0 +1,28 @@
+{
+  "name": "supports_async_ajv_validation_10",
+  "description": "Extracted from Fastify: Supports async AJV validation",
+  "category": "json_bodies",
+  "source": {
+    "framework": "fastify",
+    "test_file": "test/schema-special-usage.test.js",
+    "test_function": "Supports async AJV validation",
+    "adapted": true
+  },
+  "handler": {
+    "route": "/",
+    "method": "POST",
+    "parameters": {}
+  },
+  "request": {
+    "method": "POST",
+    "path": "/"
+  },
+  "expected_response": {
+    "status_code": 400
+  },
+  "tags": [
+    "error",
+    "validation",
+    "body"
+  ]
+}

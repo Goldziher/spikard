@@ -1,0 +1,35 @@
+{
+  "name": "13_empty_string_query_param_preserved",
+  "description": "Empty string query parameter should be preserved, not treated as missing",
+  "category": "edge_cases",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "Empty query parameter handling"
+  },
+  "handler": {
+    "route": "/items",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "filter": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items?filter=",
+    "query_params": {
+      "filter": ""
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "filter": ""
+    }
+  },
+  "tags": ["edge_cases", "empty_string", "query_params", "success"]
+}

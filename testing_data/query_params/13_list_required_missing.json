@@ -14,9 +14,13 @@
     "status_code": 422,
     "validation_errors": [
       {
-        "loc": ["query", "device_ids"],
+        "type": "missing",
+        "loc": [
+          "query",
+          "device_ids"
+        ],
         "msg": "Field required",
-        "type": "missing"
+        "input": null
       }
     ]
   },

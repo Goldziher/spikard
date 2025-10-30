@@ -1,0 +1,42 @@
+{
+  "name": "32_string_maxlength_path_failure",
+  "description": "Path parameter with string exceeding maxLength constraint should fail",
+  "category": "path_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "litestar",
+    "test_case": "String maxLength validation failure in path"
+  },
+  "handler": {
+    "route": "/users/{username}",
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "username": {
+          "type": "string",
+          "maxLength": 20,
+          "required": true
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/users/this_username_is_way_too_long_to_be_valid"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["path", "username"],
+        "msg": "String length must not exceed 20",
+        "ctx": {
+          "max_length": 20,
+          "actual_length": 42
+        }
+      }
+    ]
+  },
+  "tags": ["path_params", "string", "maxLength", "validation", "error"]
+}

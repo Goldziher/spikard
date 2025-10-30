@@ -1,0 +1,36 @@
+{
+  "name": "51_integer_ge_constraint_boundary",
+  "description": "Integer query parameter equal to minimum should succeed with ge constraint",
+  "category": "query_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "litestar",
+    "test_case": "Parameter ge (greater than or equal) boundary validation"
+  },
+  "handler": {
+    "route": "/items",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items",
+    "query_params": {
+      "offset": "0"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "offset": 0
+    }
+  },
+  "tags": ["query_params", "integer", "ge", "minimum", "boundary", "validation", "success"]
+}

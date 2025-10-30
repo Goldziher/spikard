@@ -1,0 +1,48 @@
+{
+  "name": "17_pattern_validation_failure",
+  "description": "URL-encoded form field violating regex pattern should fail",
+  "category": "url_encoded",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "litestar",
+    "test_case": "Regex pattern validation in forms"
+  },
+  "handler": {
+    "route": "/accounts",
+    "method": "POST",
+    "content_type": "application/x-www-form-urlencoded",
+    "body_schema": {
+      "type": "object",
+      "required": ["account_id"],
+      "properties": {
+        "account_id": {
+          "type": "string",
+          "pattern": "^ACC-[0-9]{6}$"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/accounts",
+    "headers": {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "body": "account_id=INVALID123"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["body", "account_id"],
+        "msg": "String does not match pattern '^ACC-[0-9]{6}$'",
+        "ctx": {
+          "pattern": "^ACC-[0-9]{6}$",
+          "value": "INVALID123"
+        }
+      }
+    ]
+  },
+  "tags": ["url_encoded", "pattern", "validation", "error"]
+}

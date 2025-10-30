@@ -1,0 +1,36 @@
+{
+  "name": "52_integer_le_constraint_boundary",
+  "description": "Integer query parameter equal to maximum should succeed with le constraint",
+  "category": "query_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "litestar",
+    "test_case": "Parameter le (less than or equal) boundary validation"
+  },
+  "handler": {
+    "route": "/items",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "limit": {
+          "type": "integer",
+          "maximum": 100
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items",
+    "query_params": {
+      "limit": "100"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "limit": 100
+    }
+  },
+  "tags": ["query_params", "integer", "le", "maximum", "boundary", "validation", "success"]
+}

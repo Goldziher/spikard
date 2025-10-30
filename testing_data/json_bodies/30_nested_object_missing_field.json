@@ -1,0 +1,57 @@
+{
+  "name": "30_nested_object_missing_field",
+  "description": "Nested object missing required field should fail validation",
+  "category": "json_bodies",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "Nested object validation failure"
+  },
+  "handler": {
+    "route": "/users",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["profile"],
+      "properties": {
+        "profile": {
+          "type": "object",
+          "required": ["name", "email"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            }
+          }
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/users",
+    "body": {
+      "profile": {
+        "name": "John Doe"
+      }
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["body", "profile", "email"],
+        "msg": "Field required",
+        "ctx": {
+          "required": true
+        }
+      }
+    ]
+  },
+  "tags": ["json_bodies", "nested", "object", "validation", "error", "required"]
+}

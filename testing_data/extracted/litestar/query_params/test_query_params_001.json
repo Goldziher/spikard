@@ -1,0 +1,54 @@
+{
+  "name": "test_query_params_001",
+  "description": "Extracted from Litestar: test_query_params case 1",
+  "category": "query_params",
+  "source": {
+    "framework": "litestar",
+    "test_file": "tests/unit/test_kwargs/test_query_params.py",
+    "test_function": "test_query_params",
+    "adapted": true
+  },
+  "handler": {
+    "route": "/",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "page": {
+          "type": "integer",
+          "annotation": "int"
+        },
+        "page_size": {
+          "type": "integer",
+          "annotation": "int"
+        },
+        "brands": {
+          "type": "array",
+          "annotation": "list[str]",
+          "items": {
+            "type": "string"
+          }
+        },
+        "from_date": {
+          "type": "string",
+          "annotation": "Optional[datetime]"
+        },
+        "to_date": {
+          "type": "string",
+          "annotation": "Optional[datetime]"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {}
+  },
+  "tags": [
+    "success",
+    "query"
+  ]
+}

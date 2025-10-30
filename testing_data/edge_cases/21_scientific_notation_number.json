@@ -1,0 +1,38 @@
+{
+  "name": "21_scientific_notation_number",
+  "description": "Numbers in scientific notation should be parsed correctly",
+  "category": "edge_cases",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "Scientific notation parsing"
+  },
+  "handler": {
+    "route": "/calculate",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["value"],
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/calculate",
+    "body": {
+      "value": 1.23e5
+    }
+  },
+  "expected_response": {
+    "status_code": 201,
+    "body": {
+      "value": 123000
+    }
+  },
+  "tags": ["edge_cases", "numeric", "scientific_notation", "success"]
+}

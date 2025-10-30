@@ -1,0 +1,33 @@
+{
+  "name": "24_date_format_path_param_success",
+  "description": "Path parameter with valid ISO date format should be accepted",
+  "category": "path_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "litestar",
+    "test_case": "Date type path parameter conversion"
+  },
+  "handler": {
+    "route": "/events/{date}",
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "date": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/events/2025-10-30"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "date": "2025-10-30"
+    }
+  },
+  "tags": ["path_params", "date", "format", "iso8601", "validation", "success"]
+}
