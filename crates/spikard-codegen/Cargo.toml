@@ -1,0 +1,43 @@
+[package]
+name = "spikard-codegen"
+version = "0.1.0"
+edition = "2021"
+authors = ["Spikard Contributors"]
+description = "Code generation and configuration management for Spikard"
+license = "MIT"
+repository = "https://github.com/Goldziher/spikard"
+
+[dependencies]
+# Configuration parsing
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+
+# Error handling
+thiserror = "2.0"
+anyhow = "1.0"
+
+# Template engine
+handlebars = "6.0"
+tera = "1.20"
+
+# JSON Schema
+jsonschema = "0.26"
+schemars = "0.8"
+
+# Utilities
+indexmap = { version = "2.0", features = ["serde"] }
+regex = "1.11"
+
+[dev-dependencies]
+insta = "1.40"  # For snapshot testing
+tempfile = "3.0"
+
+[features]
+default = []
+# Enable all generators
+full = ["python", "typescript", "rust", "openapi"]
+python = []
+typescript = []
+rust = []
+openapi = []

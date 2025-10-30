@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/spikard",
     "crates/spikard-cli",
+    "crates/spikard-codegen",
     "crates/spikard-http",
     "crates/spikard-py",
     "crates/spikard-node",
