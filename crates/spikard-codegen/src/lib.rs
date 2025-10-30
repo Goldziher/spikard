@@ -36,6 +36,7 @@
 pub mod error;
 pub mod generators;
 pub mod ir;
+pub mod openapi;
 pub mod parser;
 
 pub use error::{CodegenError, Result};
