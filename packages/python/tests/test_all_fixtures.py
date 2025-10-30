@@ -129,14 +129,20 @@ async def test_fixture(category: str, fixture_id: str, fixture: dict[str, Any]) 
     # Extract expected response
     expected_status = cast("int", expected_response["status_code"])
     expected_body = expected_response.get("body")
+
+    # Handle validation_errors field - transform to body format
+    if expected_body is None and "validation_errors" in expected_response:
+        expected_body = {"detail": expected_response["validation_errors"]}
+
     expected_headers = cast("dict[str, str]", expected_response.get("headers", {}))
 
     # Make actual HTTP request using test client
-    # Note: TestClient currently doesn't support cookies parameter
     try:
         if method == "GET":
             response = await client.get(
-                path, query_params=query_params if query_params else None, headers=headers if headers else None
+                path,
+                query_params=query_params if query_params else None,
+                headers=headers if headers else None,
             )
         elif method == "POST":
             response = await client.post(

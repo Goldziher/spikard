@@ -16,8 +16,15 @@
       "detail": [
         {
           "type": "string_too_long",
-          "loc": ["path", "item_id"],
-          "msg": "String should have at most 3 characters"
+          "loc": [
+            "path",
+            "item_id"
+          ],
+          "msg": "String should have at most 3 characters",
+          "input": "foobar",
+          "ctx": {
+            "max_length": 3
+          }
         }
       ]
     }

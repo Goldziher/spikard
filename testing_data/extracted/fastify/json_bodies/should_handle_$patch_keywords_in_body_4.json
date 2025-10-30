@@ -1,0 +1,27 @@
+{
+  "name": "should_handle_$patch_keywords_in_body_4",
+  "description": "Extracted from Fastify: Should handle $patch keywords in body",
+  "category": "json_bodies",
+  "source": {
+    "framework": "fastify",
+    "test_file": "test/schema-special-usage.test.js",
+    "test_function": "Should handle $patch keywords in body",
+    "adapted": true
+  },
+  "handler": {
+    "route": "/",
+    "method": "POST",
+    "parameters": {}
+  },
+  "request": {
+    "method": "POST",
+    "path": "/"
+  },
+  "expected_response": {
+    "status_code": 200
+  },
+  "tags": [
+    "success",
+    "body"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "name": "14_content_type_case_insensitive",
+  "description": "Content-Type header should be case-insensitive",
+  "category": "content_types",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "http_specs",
+    "test_case": "Case-insensitive Content-Type parsing"
+  },
+  "handler": {
+    "route": "/data",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/data",
+    "headers": {
+      "Content-Type": "APPLICATION/JSON"
+    },
+    "body": {
+      "name": "test"
+    }
+  },
+  "expected_response": {
+    "status_code": 201,
+    "body": {
+      "name": "test"
+    }
+  },
+  "tags": ["content_types", "case_insensitive", "success"]
+}

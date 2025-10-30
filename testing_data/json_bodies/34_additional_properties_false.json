@@ -1,0 +1,51 @@
+{
+  "name": "34_additional_properties_false",
+  "description": "Schema with additionalProperties false should reject extra fields",
+  "category": "json_bodies",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "Strict schema validation with no additional properties"
+  },
+  "handler": {
+    "route": "/users",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/users",
+    "body": {
+      "name": "John",
+      "email": "john@example.com",
+      "extra_field": "should fail"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["body", "extra_field"],
+        "msg": "Additional properties are not allowed",
+        "ctx": {
+          "additional_properties": false,
+          "unexpected_field": "extra_field"
+        }
+      }
+    ]
+  },
+  "tags": ["json_bodies", "additionalProperties", "strict", "validation", "error"]
+}

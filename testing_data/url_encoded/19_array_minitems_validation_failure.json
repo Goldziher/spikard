@@ -1,0 +1,51 @@
+{
+  "name": "19_array_minitems_validation_failure",
+  "description": "URL-encoded array with fewer items than minItems should fail",
+  "category": "url_encoded",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "nestjs",
+    "test_case": "minItems validation on array fields"
+  },
+  "handler": {
+    "route": "/tags",
+    "method": "POST",
+    "content_type": "application/x-www-form-urlencoded",
+    "body_schema": {
+      "type": "object",
+      "required": ["tags"],
+      "properties": {
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/tags",
+    "headers": {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "body": "tags[]=single"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["body", "tags"],
+        "msg": "Array must contain at least 2 items",
+        "ctx": {
+          "min_items": 2,
+          "actual_items": 1
+        }
+      }
+    ]
+  },
+  "tags": ["url_encoded", "arrays", "minItems", "validation", "error"]
+}

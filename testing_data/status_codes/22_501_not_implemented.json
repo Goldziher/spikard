@@ -1,0 +1,26 @@
+{
+  "name": "22_501_not_implemented",
+  "description": "Unsupported HTTP method should return 501",
+  "category": "status_codes",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "http_specs",
+    "test_case": "Unsupported method handling"
+  },
+  "handler": {
+    "route": "/data",
+    "method": "GET"
+  },
+  "request": {
+    "method": "TRACE",
+    "path": "/data"
+  },
+  "expected_response": {
+    "status_code": 501,
+    "body": {
+      "error": "Not Implemented",
+      "message": "The TRACE method is not supported by this server"
+    }
+  },
+  "tags": ["status_codes", "501", "unsupported_method", "error"]
+}

@@ -1,0 +1,51 @@
+{
+  "name": "20_file_mime_spoofing_jpeg_as_png",
+  "description": "File with JPEG magic number but PNG MIME type should be rejected (spoofing detection)",
+  "category": "multipart",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "nestjs",
+    "test_case": "FileTypeValidator spoofing detection reverse"
+  },
+  "handler": {
+    "route": "/upload",
+    "method": "POST",
+    "parameters": {
+      "files": {
+        "image": {
+          "required": true,
+          "content_type": ["image/png"],
+          "validate_magic_numbers": true
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/upload",
+    "files": [
+      {
+        "field_name": "image",
+        "filename": "fake.png",
+        "content_type": "image/png",
+        "magic_bytes": "ffd8ffe0"
+      }
+    ]
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["files", "image"],
+        "msg": "File type mismatch: MIME type is image/png but magic numbers indicate image/jpeg",
+        "ctx": {
+          "declared_mime": "image/png",
+          "detected_type": "image/jpeg",
+          "magic_bytes": "ffd8ffe0"
+        }
+      }
+    ]
+  },
+  "tags": ["multipart", "file", "magic_number", "spoofing", "security", "validation", "error"]
+}

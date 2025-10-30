@@ -1,0 +1,37 @@
+{
+  "name": "19_missing_content_type_default_json",
+  "description": "Missing Content-Type header should default to JSON when body is present",
+  "category": "content_types",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "Default content-type handling"
+  },
+  "handler": {
+    "route": "/data",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/data",
+    "body": {
+      "name": "test"
+    }
+  },
+  "expected_response": {
+    "status_code": 201,
+    "body": {
+      "name": "test"
+    }
+  },
+  "tags": ["content_types", "default", "success"]
+}

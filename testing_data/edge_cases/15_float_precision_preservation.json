@@ -1,0 +1,37 @@
+{
+  "name": "15_float_precision_preservation",
+  "description": "High-precision floating point numbers should be preserved without loss",
+  "category": "edge_cases",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "Floating point precision handling"
+  },
+  "handler": {
+    "route": "/calculate",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["value"],
+      "properties": {
+        "value": {
+          "type": "number"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/calculate",
+    "body": {
+      "value": 3.141592653589793
+    }
+  },
+  "expected_response": {
+    "status_code": 201,
+    "body": {
+      "value": 3.141592653589793
+    }
+  },
+  "tags": ["edge_cases", "float", "precision", "success"]
+}

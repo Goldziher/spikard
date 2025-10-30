@@ -1,0 +1,36 @@
+{
+  "name": "43_scientific_notation_float",
+  "description": "Query parameter with scientific notation float should parse correctly",
+  "category": "query_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "nestjs",
+    "test_case": "Scientific notation in ParseFloatPipe"
+  },
+  "handler": {
+    "route": "/stats",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "threshold": {
+          "type": "number",
+          "annotation": "float"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/stats",
+    "query_params": {
+      "threshold": "1.5e-3"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "threshold": 0.0015
+    }
+  },
+  "tags": ["query_params", "float", "scientific_notation", "type_coercion", "edge_case", "success"]
+}

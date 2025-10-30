@@ -1,0 +1,36 @@
+{
+  "name": "15_multipart_boundary_required",
+  "description": "Multipart content-type without boundary parameter should fail",
+  "category": "content_types",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "http_specs",
+    "test_case": "Multipart boundary parameter validation"
+  },
+  "handler": {
+    "route": "/upload",
+    "method": "POST",
+    "content_type": "multipart/form-data",
+    "parameters": {
+      "files": {
+        "document": {
+          "required": true
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/upload",
+    "headers": {
+      "Content-Type": "multipart/form-data"
+    }
+  },
+  "expected_response": {
+    "status_code": 400,
+    "body": {
+      "error": "multipart/form-data requires 'boundary' parameter"
+    }
+  },
+  "tags": ["content_types", "multipart", "boundary", "validation", "error"]
+}

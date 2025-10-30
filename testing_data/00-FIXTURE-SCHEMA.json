@@ -1,0 +1,338 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Spikard Test Fixture Schema",
+  "description": "Unified schema for all Spikard test fixtures across parameter types, bodies, and validation scenarios",
+  "type": "object",
+  "required": ["name", "description", "handler", "request", "expected_response"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Human-readable test case name",
+      "minLength": 1,
+      "examples": ["Required string query parameter - success"]
+    },
+    "description": {
+      "type": "string",
+      "description": "What this test validates and why it matters",
+      "minLength": 1,
+      "examples": ["Validates that required query parameters are properly extracted and validated"]
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "path_params",
+        "query_params",
+        "headers",
+        "cookies",
+        "json_bodies",
+        "multipart",
+        "url_encoded",
+        "content_types",
+        "status_codes",
+        "validation_errors",
+        "edge_cases",
+        "http_methods",
+        "dependency_injection",
+        "middleware",
+        "lifecycle_hooks"
+      ],
+      "description": "Test category for organization"
+    },
+    "source": {
+      "type": "object",
+      "description": "Source framework and test reference (for test data extracted from other frameworks)",
+      "properties": {
+        "framework": {
+          "type": "string",
+          "enum": ["spikard", "litestar", "fastapi", "fastify", "nestjs", "express", "robyn"],
+          "description": "Source framework (spikard = native test)"
+        },
+        "test_file": {
+          "type": "string",
+          "description": "Path to original test file relative to framework root"
+        },
+        "test_function": {
+          "type": "string",
+          "description": "Name of the test function"
+        },
+        "adapted": {
+          "type": "boolean",
+          "description": "Whether this test was adapted from the source (true) or is a direct copy (false)",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "handler": {
+      "type": "object",
+      "description": "Handler definition - describes the route and parameter schema",
+      "required": ["route", "method"],
+      "properties": {
+        "route": {
+          "type": "string",
+          "description": "Route pattern with parameter placeholders (e.g., '/users/{user_id:int}')",
+          "minLength": 1,
+          "examples": ["/users/{user_id:int}", "/items", "/search"]
+        },
+        "method": {
+          "type": "string",
+          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
+          "description": "HTTP method"
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Parameter definitions organized by source",
+          "properties": {
+            "path": {
+              "type": "object",
+              "description": "Path parameter schemas",
+              "additionalProperties": {
+                "type": "object",
+                "description": "JSON Schema for this path parameter"
+              }
+            },
+            "query": {
+              "type": "object",
+              "description": "Query parameter schemas",
+              "additionalProperties": {
+                "type": "object",
+                "description": "JSON Schema for this query parameter"
+              }
+            },
+            "header": {
+              "type": "object",
+              "description": "Header parameter schemas",
+              "additionalProperties": {
+                "type": "object",
+                "description": "JSON Schema for this header"
+              }
+            },
+            "cookie": {
+              "type": "object",
+              "description": "Cookie parameter schemas",
+              "additionalProperties": {
+                "type": "object",
+                "description": "JSON Schema for this cookie"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "body_schema": {
+          "type": "object",
+          "description": "JSON Schema for request body (for POST/PUT/PATCH)",
+          "examples": [
+            {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string", "minLength": 1 },
+                "email": { "type": "string", "format": "email" }
+              },
+              "required": ["name", "email"]
+            }
+          ]
+        },
+        "response_schema": {
+          "type": "object",
+          "description": "JSON Schema for response body (for documentation/validation)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "request": {
+      "type": "object",
+      "description": "HTTP request details",
+      "required": ["method", "path"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
+          "description": "HTTP method"
+        },
+        "path": {
+          "type": "string",
+          "description": "Request path without query string",
+          "minLength": 1,
+          "examples": ["/users/123", "/items", "/search"]
+        },
+        "query_params": {
+          "type": "object",
+          "description": "Query parameters as key-value pairs. Arrays represented as JSON arrays.",
+          "additionalProperties": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "number" },
+              { "type": "boolean" },
+              { "type": "null" },
+              {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    { "type": "string" },
+                    { "type": "number" },
+                    { "type": "boolean" }
+                  ]
+                }
+              }
+            ]
+          },
+          "examples": [{ "page": 1, "limit": 10, "tags": ["rust", "web"] }]
+        },
+        "query_string": {
+          "type": "string",
+          "description": "Raw query string for exact encoding tests (e.g., 'a=1&b=2&b=3')"
+        },
+        "headers": {
+          "type": "object",
+          "description": "HTTP headers (lowercase keys preferred)",
+          "additionalProperties": { "type": "string" },
+          "examples": [{ "content-type": "application/json", "x-api-key": "secret" }]
+        },
+        "cookies": {
+          "type": "object",
+          "description": "Cookies as key-value pairs",
+          "additionalProperties": { "type": "string" },
+          "examples": [{ "session": "abc123", "theme": "dark" }]
+        },
+        "body": {
+          "description": "Request body (any JSON type)",
+          "examples": [
+            { "name": "Alice", "email": "alice@example.com" },
+            ["item1", "item2"],
+            "plain string"
+          ]
+        },
+        "body_raw": {
+          "type": "string",
+          "description": "Raw request body string (for multipart, url-encoded, or exact byte testing)"
+        },
+        "content_type": {
+          "type": "string",
+          "description": "Content-Type header (convenience field, also in headers)",
+          "examples": ["application/json", "multipart/form-data", "application/x-www-form-urlencoded"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "expected_response": {
+      "type": "object",
+      "description": "Expected HTTP response",
+      "required": ["status_code"],
+      "properties": {
+        "status_code": {
+          "type": "integer",
+          "description": "Expected HTTP status code",
+          "minimum": 100,
+          "maximum": 599,
+          "examples": [200, 201, 400, 422, 500]
+        },
+        "body": {
+          "description": "Expected response body (any JSON type)"
+        },
+        "body_partial": {
+          "type": "object",
+          "description": "Partial body match (check only these fields exist with these values)",
+          "additionalProperties": true
+        },
+        "headers": {
+          "type": "object",
+          "description": "Expected response headers (partial match)",
+          "additionalProperties": { "type": "string" }
+        },
+        "validation_errors": {
+          "type": "array",
+          "description": "Expected validation errors for 422 responses (Spikard format)",
+          "items": {
+            "type": "object",
+            "required": ["loc", "msg", "type"],
+            "properties": {
+              "loc": {
+                "type": "array",
+                "description": "Error location path (e.g., ['query', 'param_name'], ['body', 'field'])",
+                "items": { "type": "string" },
+                "minItems": 1
+              },
+              "msg": {
+                "type": "string",
+                "description": "Error message",
+                "minLength": 1
+              },
+              "type": {
+                "type": "string",
+                "description": "Error type (e.g., 'missing', 'string_too_short', 'int_parsing')",
+                "minLength": 1
+              },
+              "input": {
+                "description": "The input value that caused the error (null if missing)"
+              },
+              "ctx": {
+                "type": "object",
+                "description": "Additional context (e.g., min_length, gt, pattern)",
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "tags": {
+      "type": "array",
+      "description": "Tags for filtering/organization",
+      "items": { "type": "string" },
+      "examples": [["validation", "required"], ["edge-case", "unicode"], ["performance"]]
+    },
+    "skip": {
+      "type": "boolean",
+      "description": "Whether to skip this test (for WIP or known issues)",
+      "default": false
+    },
+    "skip_reason": {
+      "type": "string",
+      "description": "Reason for skipping (if skip=true)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about this test case"
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "name": "Required string query parameter - success",
+      "description": "Validates that a required string query parameter is properly extracted",
+      "category": "query_params",
+      "source": {
+        "framework": "spikard",
+        "adapted": false
+      },
+      "handler": {
+        "route": "/search",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "q": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/search",
+        "query_params": {
+          "q": "rust web framework"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "query": "rust web framework"
+        }
+      },
+      "tags": ["validation", "required", "string"]
+    }
+  ]
+}

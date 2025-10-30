@@ -1,0 +1,27 @@
+{
+  "name": "should_emit_a_warning_for_every_route_with_undefined_schema_14",
+  "description": "Extracted from Fastify: Should emit a warning for every route with undefined schema",
+  "category": "query_params",
+  "source": {
+    "framework": "fastify",
+    "test_file": "test/schema-feature.test.js",
+    "test_function": "Should emit a warning for every route with undefined schema",
+    "adapted": true
+  },
+  "handler": {
+    "route": "/undefinedBody/:id",
+    "method": "GET",
+    "parameters": {}
+  },
+  "request": {
+    "method": "GET",
+    "path": "/undefinedBody/123"
+  },
+  "expected_response": {
+    "status_code": 200
+  },
+  "tags": [
+    "success",
+    "query"
+  ]
+}

@@ -16,8 +16,15 @@
       "detail": [
         {
           "type": "greater_than",
-          "loc": ["path", "item_id"],
-          "msg": "Input should be greater than 3"
+          "loc": [
+            "path",
+            "item_id"
+          ],
+          "msg": "Input should be greater than 3",
+          "input": 2,
+          "ctx": {
+            "gt": 3
+          }
         }
       ]
     }

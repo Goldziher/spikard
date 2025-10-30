@@ -1,0 +1,45 @@
+{
+  "name": "59_format_email_failure",
+  "description": "Query parameter with invalid email format should fail validation",
+  "category": "query_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "Format validator email failure"
+  },
+  "handler": {
+    "route": "/subscribe",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "required": true
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/subscribe",
+    "query_params": {
+      "email": "not-an-email"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["query", "email"],
+        "msg": "Invalid email format",
+        "ctx": {
+          "format": "email",
+          "value": "not-an-email"
+        }
+      }
+    ]
+  },
+  "tags": ["query_params", "format", "email", "validation", "error"]
+}

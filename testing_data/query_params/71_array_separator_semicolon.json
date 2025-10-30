@@ -1,0 +1,39 @@
+{
+  "name": "71_array_separator_semicolon",
+  "description": "Array query parameter with semicolon separator should parse correctly",
+  "category": "query_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "nestjs",
+    "test_case": "ParseArrayPipe with semicolon separator"
+  },
+  "handler": {
+    "route": "/items",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "colors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "separator": ";"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items?colors=red;green;blue",
+    "query_params": {
+      "colors": "red;green;blue"
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "colors": ["red", "green", "blue"]
+    }
+  },
+  "tags": ["query_params", "array", "separator", "semicolon", "parsing", "success"]
+}

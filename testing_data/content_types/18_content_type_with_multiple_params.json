@@ -1,0 +1,39 @@
+{
+  "name": "18_content_type_with_multiple_params",
+  "description": "Content-Type with multiple parameters should be parsed correctly",
+  "category": "content_types",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "http_specs",
+    "test_case": "Multiple Content-Type parameters"
+  },
+  "handler": {
+    "route": "/data",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/data",
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8; boundary=something"
+    },
+    "body": {
+      "value": "test"
+    }
+  },
+  "expected_response": {
+    "status_code": 201,
+    "body": {
+      "value": "test"
+    }
+  },
+  "tags": ["content_types", "parameters", "parsing", "success"]
+}

@@ -27,6 +27,8 @@ tasks:
 
   test:python:
     desc: "Run Python tests with pytest"
+    deps:
+      - build:py
     cmds:
       - PYTHONPATH=. uv run pytest packages/python/tests -v
 
@@ -91,15 +93,13 @@ tasks:
 
   build:py:
     desc: "Build Python bindings for development"
-    dir: crates/spikard-py
     cmds:
-      - uv run maturin develop --release
+      - uv pip install -e crates/spikard-py --config-settings='--build-option=--release'
 
   build:py:debug:
     desc: "Build Python bindings in debug mode"
-    dir: crates/spikard-py
     cmds:
-      - uv run maturin develop
+      - uv pip install -e crates/spikard-py
 
   build:py:wheel:
     desc: "Build Python bindings as wheel for testing (release mode)"
@@ -112,7 +112,7 @@ tasks:
     desc: "Clean rebuild Python bindings for local testing (removes cached .so files)"
     cmds:
       - cargo clean
-      - rm -rf crates/spikard-py/.venv/lib/python*/site-packages/_spikard
+      - rm -rf .venv/lib/python*/site-packages/_spikard
       - task: build:py:debug
 
   build:

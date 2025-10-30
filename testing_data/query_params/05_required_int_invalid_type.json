@@ -17,9 +17,13 @@
     "status_code": 422,
     "validation_errors": [
       {
-        "loc": ["query", "query"],
+        "type": "int_parsing",
+        "loc": [
+          "query",
+          "query"
+        ],
         "msg": "Input should be a valid integer, unable to parse string as an integer",
-        "type": "int_parsing"
+        "input": "baz"
       }
     ]
   }

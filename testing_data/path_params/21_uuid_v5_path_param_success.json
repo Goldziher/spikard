@@ -1,0 +1,34 @@
+{
+  "name": "21_uuid_v5_path_param_success",
+  "description": "Path parameter with valid UUID v5 should be accepted",
+  "category": "path_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "nestjs",
+    "test_case": "ParseUUIDPipe version 5 validation"
+  },
+  "handler": {
+    "route": "/items/{id}",
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "uuidVersion": "5"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items/630eb68f-e0fa-5ecc-887a-7c7a62614681"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "id": "630eb68f-e0fa-5ecc-887a-7c7a62614681"
+    }
+  },
+  "tags": ["path_params", "uuid", "v5", "format", "validation", "success"]
+}

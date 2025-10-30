@@ -1,0 +1,49 @@
+{
+  "name": "69_array_uniqueitems_failure",
+  "description": "Array query parameter with duplicate items should fail when uniqueItems is true",
+  "category": "query_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "uniqueItems constraint validation failure"
+  },
+  "handler": {
+    "route": "/items",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "uniqueItems": true,
+          "required": true
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items",
+    "query_params": {
+      "ids": ["1", "2", "2", "3"]
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["query", "ids"],
+        "msg": "Array items must be unique",
+        "ctx": {
+          "unique_items": true,
+          "duplicate_value": 2,
+          "duplicate_index": 2
+        }
+      }
+    ]
+  },
+  "tags": ["query_params", "array", "uniqueItems", "validation", "error"]
+}

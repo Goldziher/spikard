@@ -16,8 +16,15 @@
       "detail": [
         {
           "type": "enum",
-          "loc": ["path", "model_name"],
-          "msg": "Input should be 'alexnet', 'resnet' or 'lenet'"
+          "loc": [
+            "path",
+            "model_name"
+          ],
+          "msg": "Input should be 'alexnet', 'resnet' or 'lenet'",
+          "input": "foo",
+          "ctx": {
+            "expected": "'alexnet', 'resnet' or 'lenet'"
+          }
         }
       ]
     }

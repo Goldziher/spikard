@@ -1,0 +1,33 @@
+{
+  "name": "29_decimal_path_param_success",
+  "description": "Path parameter with decimal/money value should be accepted",
+  "category": "path_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "litestar",
+    "test_case": "Decimal type path parameter conversion"
+  },
+  "handler": {
+    "route": "/prices/{amount}",
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "amount": {
+          "type": "string",
+          "format": "decimal"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/prices/19.99"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "amount": "19.99"
+    }
+  },
+  "tags": ["path_params", "decimal", "format", "money", "validation", "success"]
+}

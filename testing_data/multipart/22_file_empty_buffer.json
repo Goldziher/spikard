@@ -1,0 +1,48 @@
+{
+  "name": "22_file_empty_buffer",
+  "description": "File with empty buffer should fail validation",
+  "category": "multipart",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "nestjs",
+    "test_case": "FileTypeValidator empty buffer rejection"
+  },
+  "handler": {
+    "route": "/upload",
+    "method": "POST",
+    "parameters": {
+      "files": {
+        "file": {
+          "required": true,
+          "validate_magic_numbers": true
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/upload",
+    "files": [
+      {
+        "field_name": "file",
+        "filename": "empty.txt",
+        "content_type": "text/plain",
+        "magic_bytes": ""
+      }
+    ]
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["files", "file"],
+        "msg": "File buffer is empty",
+        "ctx": {
+          "buffer_size": 0
+        }
+      }
+    ]
+  },
+  "tags": ["multipart", "file", "empty", "edge_case", "validation", "error"]
+}

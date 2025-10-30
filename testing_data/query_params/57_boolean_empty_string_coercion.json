@@ -1,0 +1,35 @@
+{
+  "name": "57_boolean_empty_string_coercion",
+  "description": "Boolean query parameter with empty string should coerce to false",
+  "category": "query_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "nestjs",
+    "test_case": "ParseBoolPipe empty string coercion"
+  },
+  "handler": {
+    "route": "/items",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "active": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items",
+    "query_params": {
+      "active": ""
+    }
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "active": false
+    }
+  },
+  "tags": ["query_params", "boolean", "empty_string", "type_coercion", "edge_case", "success"]
+}

@@ -23,8 +23,12 @@
       "detail": [
         {
           "type": "missing",
-          "loc": ["body", "price"],
-          "msg": "Field required"
+          "loc": [
+            "body",
+            "price"
+          ],
+          "msg": "Field required",
+          "input": "1"
         }
       ]
     }

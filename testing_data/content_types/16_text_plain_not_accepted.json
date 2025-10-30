@@ -1,0 +1,38 @@
+{
+  "name": "16_text_plain_not_accepted",
+  "description": "text/plain content-type should be rejected when JSON is expected",
+  "category": "content_types",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "Strict content-type validation"
+  },
+  "handler": {
+    "route": "/data",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["data"],
+      "properties": {
+        "data": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/data",
+    "headers": {
+      "Content-Type": "text/plain"
+    },
+    "body": "{\"data\": \"value\"}"
+  },
+  "expected_response": {
+    "status_code": 415,
+    "body": {
+      "error": "Unsupported Media Type. Expected application/json"
+    }
+  },
+  "tags": ["content_types", "validation", "error"]
+}

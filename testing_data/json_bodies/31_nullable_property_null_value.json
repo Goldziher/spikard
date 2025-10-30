@@ -1,0 +1,38 @@
+{
+  "name": "31_nullable_property_null_value",
+  "description": "Nullable property with null value should be accepted",
+  "category": "json_bodies",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastify",
+    "test_case": "Nullable property validation"
+  },
+  "handler": {
+    "route": "/users",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": ["string", "null"]
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/users",
+    "body": {
+      "name": "Test User",
+      "description": null
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  },
+  "tags": ["json_bodies", "nullable", "validation", "success"]
+}

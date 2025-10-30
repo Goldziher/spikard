@@ -1,0 +1,35 @@
+{
+  "name": "test_cookie_params_004",
+  "description": "Extracted from Litestar: test_cookie_params case 4",
+  "category": "query_params",
+  "source": {
+    "framework": "litestar",
+    "test_file": "tests/unit/test_kwargs/test_cookie_params.py",
+    "test_function": "test_cookie_params",
+    "adapted": true
+  },
+  "handler": {
+    "route": "/",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "special_cookie": {
+          "type": "string",
+          "annotation": "t_type"
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {}
+  },
+  "tags": [
+    "success",
+    "query"
+  ]
+}

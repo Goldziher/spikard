@@ -1,0 +1,74 @@
+{
+  "name": "09_multiple_validation_errors",
+  "description": "Multiple validation errors should be returned together in batch",
+  "category": "validation_errors",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "nestjs",
+    "test_case": "Batch validation error collection"
+  },
+  "handler": {
+    "route": "/users",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["name", "email", "age"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 3
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "age": {
+          "type": "integer",
+          "minimum": 18
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/users",
+    "body": {
+      "name": "ab",
+      "email": "invalid-email",
+      "age": 15
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["body", "name"],
+        "msg": "String length must be at least 3",
+        "ctx": {
+          "min_length": 3,
+          "actual_length": 2
+        }
+      },
+      {
+        "type": "validation_error",
+        "loc": ["body", "email"],
+        "msg": "Invalid email format",
+        "ctx": {
+          "format": "email",
+          "value": "invalid-email"
+        }
+      },
+      {
+        "type": "validation_error",
+        "loc": ["body", "age"],
+        "msg": "Value must be at least 18",
+        "ctx": {
+          "minimum": 18,
+          "value": 15
+        }
+      }
+    ]
+  },
+  "tags": ["validation_errors", "multiple", "batch", "error_reporting"]
+}

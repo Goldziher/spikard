@@ -1,0 +1,45 @@
+{
+  "name": "50_integer_gt_constraint_failure",
+  "description": "Integer query parameter equal to exclusive minimum should fail validation",
+  "category": "query_params",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "litestar",
+    "test_case": "Parameter gt (greater than) validation failure"
+  },
+  "handler": {
+    "route": "/items",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "limit": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "required": true
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/items",
+    "query_params": {
+      "limit": "0"
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["query", "limit"],
+        "msg": "Value must be greater than 0",
+        "ctx": {
+          "exclusive_minimum": 0,
+          "value": 0
+        }
+      }
+    ]
+  },
+  "tags": ["query_params", "integer", "gt", "exclusiveMinimum", "validation", "error"]
+}

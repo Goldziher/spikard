@@ -1,0 +1,49 @@
+{
+  "name": "16_minlength_validation_failure",
+  "description": "URL-encoded form field violating minLength constraint should fail",
+  "category": "url_encoded",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "litestar",
+    "test_case": "minLength validation in forms"
+  },
+  "handler": {
+    "route": "/users",
+    "method": "POST",
+    "content_type": "application/x-www-form-urlencoded",
+    "body_schema": {
+      "type": "object",
+      "required": ["username"],
+      "properties": {
+        "username": {
+          "type": "string",
+          "minLength": 3
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/users",
+    "headers": {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "body": "username=ab"
+  },
+  "expected_response": {
+    "status_code": 422,
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["body", "username"],
+        "msg": "String length must be at least 3",
+        "ctx": {
+          "min_length": 3,
+          "actual_length": 2,
+          "value": "ab"
+        }
+      }
+    ]
+  },
+  "tags": ["url_encoded", "minLength", "validation", "error"]
+}
