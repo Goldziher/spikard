@@ -102,7 +102,7 @@ mod tests {
 
     #[test]
     fn test_validate_invalid_version() {
-        let mut config = Config {
+        let config = Config {
             version: "2.0".to_string(),
             name: "test-service".to_string(),
             description: None,
