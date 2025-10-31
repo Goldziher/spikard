@@ -196,24 +196,26 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
         let schema_json = serde_json::to_string(&schema).unwrap().replace('"', "\\\"");
         format!(
             r#"async fn {}(
-    axum::extract::Query(query_params): axum::extract::Query<HashMap<String, String>>,
+    uri: axum::http::Uri,
 ) -> impl axum::response::IntoResponse {{
     use spikard_http::parameters::ParameterValidator;
+    use spikard_http::query_parser::parse_query_string_to_json;
     use std::collections::HashMap;
 
     // Parse schema and create validator
     let schema: Value = serde_json::from_str("{}").unwrap();
     let validator = ParameterValidator::new(schema).unwrap();
 
-    // Convert query params to JSON Value for validation
-    let query_json: Value = query_params.iter()
-        .map(|(k, v)| (k.clone(), Value::String(v.clone())))
-        .collect::<serde_json::Map<String, Value>>()
-        .into();
+    // Parse query string using Spikard's parser (auto-converts types)
+    let query_params = if let Some(query_str) = uri.query() {{
+        parse_query_string_to_json(query_str.as_bytes(), true)
+    }} else {{
+        Value::Object(serde_json::Map::new())
+    }};
 
     // Validate parameters
     match validator.validate_and_extract(
-        &query_json,
+        &query_params,  // parsed query params with correct types
         &HashMap::new(),  // path params
         &HashMap::new(),  // headers
         &HashMap::new(),  // cookies
@@ -237,10 +239,18 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
         // No schema available - simple echo handler
         format!(
             r#"async fn {}(
-    axum::extract::Query(params): axum::extract::Query<HashMap<String, String>>,
+    uri: axum::http::Uri,
 ) -> Json<Value> {{
-    // No validation schema - just echo params
-    Json(json!(params))
+    use spikard_http::query_parser::parse_query_string_to_json;
+
+    // Parse query params using Spikard's parser
+    let params = if let Some(query_str) = uri.query() {{
+        parse_query_string_to_json(query_str.as_bytes(), true)
+    }} else {{
+        Value::Object(serde_json::Map::new())
+    }};
+
+    Json(params)
 }}"#,
             handler_name
         )
