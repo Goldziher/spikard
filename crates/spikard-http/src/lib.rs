@@ -5,6 +5,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+pub mod cors;
 pub mod debug;
 pub mod handler;
 pub mod middleware;
@@ -65,6 +66,17 @@ impl std::str::FromStr for Method {
     }
 }
 
+/// CORS configuration for a route
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CorsConfig {
+    pub allowed_origins: Vec<String>,
+    pub allowed_methods: Vec<String>,
+    pub allowed_headers: Vec<String>,
+    pub expose_headers: Option<Vec<String>>,
+    pub max_age: Option<u32>,
+    pub allow_credentials: Option<bool>,
+}
+
 /// Route metadata extracted from Python
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RouteMetadata {
@@ -75,6 +87,7 @@ pub struct RouteMetadata {
     pub response_schema: Option<Value>,
     pub parameter_schema: Option<Value>,
     pub is_async: bool,
+    pub cors: Option<CorsConfig>,
 }
 
 /// Server configuration

@@ -91,6 +91,7 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
         response_schema: response_schema_value,
         parameter_schema: parameter_schema_value,
         is_async,
+        cors: None,
     })
 }
 
