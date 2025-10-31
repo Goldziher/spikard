@@ -96,20 +96,13 @@ impl PythonHandler {
         if let Some(validator) = &self.request_validator {
             if let Some(body) = &request_data.body {
                 if let Err(errors) = validator.validate(body) {
-                    let error_msg = if is_debug_mode() {
-                        // In DEBUG mode, include full validation errors and request data
-                        json!({
-                            "error": "Request validation failed",
-                            "validation_errors": format!("{:?}", errors),
-                            "request_body": body,
-                            "path_params": request_data.path_params,
-                            "query_params": request_data.query_params,
-                        })
-                        .to_string()
-                    } else {
-                        "Request validation failed".to_string()
-                    };
-                    return Err((StatusCode::BAD_REQUEST, error_msg));
+                    // Return FastAPI-compatible error format
+                    let error_body = json!({
+                        "detail": errors.errors
+                    });
+                    let error_json = serde_json::to_string_pretty(&error_body)
+                        .unwrap_or_else(|e| format!("Failed to serialize: {}", e));
+                    return Err((StatusCode::UNPROCESSABLE_ENTITY, error_json));
                 }
             }
         }

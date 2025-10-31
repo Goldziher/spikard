@@ -56,7 +56,23 @@ impl SchemaValidator {
             .map(|err| {
                 // Parse jsonschema errors to FastAPI format
                 let instance_path = err.instance_path.to_string();
-                let param_name = if instance_path.starts_with('/') && instance_path.len() > 1 {
+                let schema_path_str = err.schema_path.as_str();
+                let error_msg = err.to_string();
+
+                // For required field errors, extract field name from error message
+                // Error message format: '"field_name" is a required property'
+                let param_name = if schema_path_str == "/required" {
+                    // Extract field name from error message
+                    if let Some(start) = error_msg.find('"') {
+                        if let Some(end) = error_msg[start + 1..].find('"') {
+                            error_msg[start + 1..start + 1 + end].to_string()
+                        } else {
+                            "body".to_string()
+                        }
+                    } else {
+                        "body".to_string()
+                    }
+                } else if instance_path.starts_with('/') && instance_path.len() > 1 {
                     instance_path[1..].to_string()
                 } else if instance_path.is_empty() {
                     "body".to_string()
@@ -66,10 +82,6 @@ impl SchemaValidator {
 
                 // Get the input value that failed validation
                 let input_value = err.instance.clone().into_owned();
-
-                // Determine error type and message based on validation kind
-                let schema_path_str = err.schema_path.as_str();
-                let error_msg = err.to_string();
 
                 // Debug logging to see what we're working with
                 eprintln!(
@@ -294,6 +306,9 @@ impl SchemaValidator {
                         ),
                     };
                     (error_type, msg, None)
+                } else if schema_path_str == "/required" {
+                    // Handle required field errors
+                    ("missing".to_string(), "Field required".to_string(), None)
                 } else {
                     eprintln!("[VALIDATION DEBUG] Fell through to default case!");
                     ("validation_error".to_string(), err.to_string(), None)

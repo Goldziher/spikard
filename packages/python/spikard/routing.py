@@ -18,10 +18,18 @@ def get(path: str) -> Callable[..., Any]:
         async def get_user(user_id: int):
             return {"id": user_id}
     """
-    raise NotImplementedError(
-        "Standalone decorators require an app instance. "
-        "Use app.get() instead, or create an app = Spikard() instance first."
-    )
+
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        from spikard.app import Spikard
+
+        app = Spikard._current_instance
+        if app is None:
+            raise RuntimeError(
+                "No Spikard app instance found. Create a Spikard() instance before using route decorators."
+            )
+        return app._register_route("GET", path)(func)
+
+    return decorator
 
 
 def post(path: str) -> Callable[..., Any]:
@@ -33,10 +41,18 @@ def post(path: str) -> Callable[..., Any]:
     Returns:
         Decorator function
     """
-    raise NotImplementedError(
-        "Standalone decorators require an app instance. "
-        "Use app.post() instead, or create an app = Spikard() instance first."
-    )
+
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        from spikard.app import Spikard
+
+        app = Spikard._current_instance
+        if app is None:
+            raise RuntimeError(
+                "No Spikard app instance found. Create a Spikard() instance before using route decorators."
+            )
+        return app._register_route("POST", path)(func)
+
+    return decorator
 
 
 def put(path: str) -> Callable[..., Any]:
@@ -48,10 +64,18 @@ def put(path: str) -> Callable[..., Any]:
     Returns:
         Decorator function
     """
-    raise NotImplementedError(
-        "Standalone decorators require an app instance. "
-        "Use app.put() instead, or create an app = Spikard() instance first."
-    )
+
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        from spikard.app import Spikard
+
+        app = Spikard._current_instance
+        if app is None:
+            raise RuntimeError(
+                "No Spikard app instance found. Create a Spikard() instance before using route decorators."
+            )
+        return app._register_route("PUT", path)(func)
+
+    return decorator
 
 
 def patch(path: str) -> Callable[..., Any]:
@@ -63,10 +87,18 @@ def patch(path: str) -> Callable[..., Any]:
     Returns:
         Decorator function
     """
-    raise NotImplementedError(
-        "Standalone decorators require an app instance. "
-        "Use app.patch() instead, or create an app = Spikard() instance first."
-    )
+
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        from spikard.app import Spikard
+
+        app = Spikard._current_instance
+        if app is None:
+            raise RuntimeError(
+                "No Spikard app instance found. Create a Spikard() instance before using route decorators."
+            )
+        return app._register_route("PATCH", path)(func)
+
+    return decorator
 
 
 def delete(path: str) -> Callable[..., Any]:
@@ -78,7 +110,129 @@ def delete(path: str) -> Callable[..., Any]:
     Returns:
         Decorator function
     """
-    raise NotImplementedError(
-        "Standalone decorators require an app instance. "
-        "Use app.delete() instead, or create an app = Spikard() instance first."
-    )
+
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        from spikard.app import Spikard
+
+        app = Spikard._current_instance
+        if app is None:
+            raise RuntimeError(
+                "No Spikard app instance found. Create a Spikard() instance before using route decorators."
+            )
+        return app._register_route("DELETE", path)(func)
+
+    return decorator
+
+
+def head(path: str) -> Callable[..., Any]:
+    """Standalone HEAD route decorator.
+
+    Args:
+        path: URL path pattern
+
+    Returns:
+        Decorator function
+    """
+
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        from spikard.app import Spikard
+
+        app = Spikard._current_instance
+        if app is None:
+            raise RuntimeError(
+                "No Spikard app instance found. Create a Spikard() instance before using route decorators."
+            )
+        return app._register_route("HEAD", path)(func)
+
+    return decorator
+
+
+def options(path: str) -> Callable[..., Any]:
+    """Standalone OPTIONS route decorator.
+
+    Args:
+        path: URL path pattern
+
+    Returns:
+        Decorator function
+    """
+
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        from spikard.app import Spikard
+
+        app = Spikard._current_instance
+        if app is None:
+            raise RuntimeError(
+                "No Spikard app instance found. Create a Spikard() instance before using route decorators."
+            )
+        return app._register_route("OPTIONS", path)(func)
+
+    return decorator
+
+
+def trace(path: str) -> Callable[..., Any]:
+    """Standalone TRACE route decorator.
+
+    Args:
+        path: URL path pattern
+
+    Returns:
+        Decorator function
+    """
+
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        from spikard.app import Spikard
+
+        app = Spikard._current_instance
+        if app is None:
+            raise RuntimeError(
+                "No Spikard app instance found. Create a Spikard() instance before using route decorators."
+            )
+        return app._register_route("TRACE", path)(func)
+
+    return decorator
+
+
+def route(
+    path: str,
+    http_method: str | list[str] | tuple[str, ...] = "GET",
+) -> Callable[..., Any]:
+    """Standalone route decorator with explicit HTTP method(s).
+
+    Args:
+        path: URL path pattern
+        http_method: HTTP method(s) - can be a single string like "GET"
+                    or a sequence like ["GET", "HEAD"] or ("POST", "PUT")
+
+    Returns:
+        Decorator function
+
+    Example:
+        @route("/users", http_method="GET")
+        async def get_users():
+            return []
+
+        @route("/resource/{id}", http_method=["GET", "HEAD"])
+        async def get_resource(id: int):
+            return {"id": id}
+    """
+
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        from spikard.app import Spikard
+
+        app = Spikard._current_instance
+        if app is None:
+            raise RuntimeError(
+                "No Spikard app instance found. Create a Spikard() instance before using route decorators."
+            )
+
+        # Normalize to list of methods
+        methods = [http_method] if isinstance(http_method, str) else list(http_method)
+
+        # Register the route for each method
+        for method in methods:
+            app._register_route(method.upper(), path)(func)
+
+        return func
+
+    return decorator
