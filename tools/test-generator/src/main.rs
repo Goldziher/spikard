@@ -3,12 +3,15 @@
 //! Internal tool for generating test infrastructure from fixtures.
 //! Generates test applications and test suites for Rust, Python, and TypeScript.
 
+mod fixture_analysis;
+mod python_app;
+mod python_tests;
 mod rust_app;
 mod rust_tests;
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use spikard_codegen::openapi::{fixtures_to_openapi, load_fixtures_from_dir, OpenApiOptions};
+use spikard_codegen::openapi::{OpenApiOptions, fixtures_to_openapi, load_fixtures_from_dir};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -104,11 +107,10 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
             rust_tests::generate_rust_tests(&fixtures, &output)?;
         }
         "python" => {
-            println!("TODO: Generate Python/pytest test suite");
-            // Will generate:
-            // - e2e/python/tests/test_query_params.py
-            // - e2e/python/tests/test_path_params.py
-            // - etc.
+            // Generate test app first
+            python_app::generate_python_app(&fixtures, &output)?;
+            // Then generate tests
+            python_tests::generate_python_tests(&fixtures, &output)?;
         }
         "typescript" => {
             println!("TODO: Generate TypeScript/Vitest test suite");

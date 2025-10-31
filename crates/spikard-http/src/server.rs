@@ -131,192 +131,280 @@ impl Server {
     }
 
     /// Create a new server with Python handlers
+    ///
+    /// Routes are grouped by path before registration to support multiple HTTP methods
+    /// for the same path (e.g., GET /data and POST /data). Axum requires that all methods
+    /// for a path be merged into a single MethodRouter before calling `.route()`.
     pub fn with_python_handlers(
         _config: ServerConfig,
         routes: Vec<(crate::Route, Py<PyAny>)>,
     ) -> Result<AxumRouter, String> {
         let mut app = AxumRouter::new();
 
-        // Add routes with Python handlers
+        // Group routes by path first to handle multiple methods for the same path.
+        // This prevents duplicate route registration errors when the same path has
+        // multiple HTTP methods (e.g., GET /api/data and POST /api/data).
+        let mut routes_by_path: HashMap<String, Vec<(crate::Route, Py<PyAny>)>> = HashMap::new();
         for (route, handler_py) in routes {
-            let handler = PythonHandler::new(
-                handler_py,
-                route.is_async,
-                route.request_validator.clone(),
-                route.response_validator.clone(),
-                route.parameter_validator.clone(),
-            );
+            routes_by_path
+                .entry(route.path.clone())
+                .or_default()
+                .push((route, handler_py));
+        }
 
-            // Create Axum route based on HTTP method
-            // Extract all request data in Rust before calling Python
-            let method_router: MethodRouter = match route.method.as_str() {
-                "GET" => axum::routing::get(
-                    move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                        let _ = std::fs::write("/tmp/axum_route_called.log", "GET route handler called\n");
-                        let query_params = extract_query_params(req.uri());
-                        let headers = extract_headers(req.headers());
-                        let cookies = extract_cookies(req.headers());
-                        let _ = std::fs::write(
-                            "/tmp/axum_query_params.log",
-                            format!("query_params: {:?}\n", query_params),
-                        );
-                        let request_data = RequestData {
-                            path_params: path_params.0,
-                            query_params,
-                            headers,
-                            cookies,
-                            body: None, // GET requests don't have a body
-                        };
-                        handler.call(req, request_data).await
-                    },
-                ),
-                "POST" => axum::routing::post(
-                    move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                        // Extract body for POST requests
-                        let (parts, body) = req.into_parts();
-                        let body_bytes = body
-                            .collect()
-                            .await
-                            .map_err(|e| {
-                                (
-                                    axum::http::StatusCode::BAD_REQUEST,
-                                    format!("Failed to read body: {}", e),
-                                )
-                            })?
-                            .to_bytes();
+        // Sort paths alphabetically for consistent route registration order
+        let mut sorted_paths: Vec<String> = routes_by_path.keys().cloned().collect();
+        sorted_paths.sort();
 
-                        // Validate Content-Type and Content-Length before processing
-                        validate_content_type(&parts.headers, body_bytes.len())?;
+        // Process each path with all its methods
+        for path in sorted_paths {
+            let route_handlers = routes_by_path.remove(&path).unwrap();
 
-                        let query_params = extract_query_params(&parts.uri);
-                        let headers = extract_headers(&parts.headers);
-                        let cookies = extract_cookies(&parts.headers);
+            // Group by method within this path (last handler wins for duplicates)
+            // This handles multiple test fixtures testing the same route+method combination
+            let mut handlers_by_method: HashMap<crate::Method, (crate::Route, Py<PyAny>)> = HashMap::new();
+            for (route, handler_py) in route_handlers {
+                // Last handler wins if multiple fixtures test the same route+method
+                let method = route.method.clone();
+                handlers_by_method.insert(method, (route, handler_py));
+            }
 
-                        let body_value = if !body_bytes.is_empty() {
-                            serde_json::from_slice::<Value>(&body_bytes)
-                                .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?
-                                .into()
-                        } else {
-                            None
-                        };
+            let mut combined_router: Option<MethodRouter> = None;
 
-                        let request_data = RequestData {
-                            path_params: path_params.0,
-                            query_params,
-                            headers,
-                            cookies,
-                            body: body_value,
-                        };
+            for (_method, (route, handler_py)) in handlers_by_method {
+                let handler = PythonHandler::new(
+                    handler_py,
+                    route.is_async,
+                    route.request_validator.clone(),
+                    route.response_validator.clone(),
+                    route.parameter_validator.clone(),
+                );
 
-                        let req = axum::extract::Request::from_parts(parts, Body::empty());
-                        handler.call(req, request_data).await
-                    },
-                ),
-                "PUT" => axum::routing::put(
-                    move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                        let (parts, body) = req.into_parts();
-                        let body_bytes = body
-                            .collect()
-                            .await
-                            .map_err(|e| {
-                                (
-                                    axum::http::StatusCode::BAD_REQUEST,
-                                    format!("Failed to read body: {}", e),
-                                )
-                            })?
-                            .to_bytes();
+                // Create Axum route based on HTTP method
+                // Extract all request data in Rust before calling Python
+                let method_router: MethodRouter = match route.method.as_str() {
+                    "GET" => axum::routing::get(
+                        move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                            let _ = std::fs::write("/tmp/axum_route_called.log", "GET route handler called\n");
+                            let query_params = extract_query_params(req.uri());
+                            let headers = extract_headers(req.headers());
+                            let cookies = extract_cookies(req.headers());
+                            let _ = std::fs::write(
+                                "/tmp/axum_query_params.log",
+                                format!("query_params: {:?}\n", query_params),
+                            );
+                            let request_data = RequestData {
+                                path_params: path_params.0,
+                                query_params,
+                                headers,
+                                cookies,
+                                body: None, // GET requests don't have a body
+                            };
+                            handler.call(req, request_data).await
+                        },
+                    ),
+                    "POST" => axum::routing::post(
+                        move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                            // Extract body for POST requests
+                            let (parts, body) = req.into_parts();
+                            let body_bytes = body
+                                .collect()
+                                .await
+                                .map_err(|e| {
+                                    (
+                                        axum::http::StatusCode::BAD_REQUEST,
+                                        format!("Failed to read body: {}", e),
+                                    )
+                                })?
+                                .to_bytes();
 
-                        // Validate Content-Type and Content-Length before processing
-                        validate_content_type(&parts.headers, body_bytes.len())?;
+                            // Validate Content-Type and Content-Length before processing
+                            validate_content_type(&parts.headers, body_bytes.len())?;
 
-                        let query_params = extract_query_params(&parts.uri);
-                        let headers = extract_headers(&parts.headers);
-                        let cookies = extract_cookies(&parts.headers);
+                            let query_params = extract_query_params(&parts.uri);
+                            let headers = extract_headers(&parts.headers);
+                            let cookies = extract_cookies(&parts.headers);
 
-                        let body_value = if !body_bytes.is_empty() {
-                            serde_json::from_slice::<Value>(&body_bytes)
-                                .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?
-                                .into()
-                        } else {
-                            None
-                        };
+                            let body_value = if !body_bytes.is_empty() {
+                                serde_json::from_slice::<Value>(&body_bytes)
+                                    .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?
+                                    .into()
+                            } else {
+                                None
+                            };
 
-                        let request_data = RequestData {
-                            path_params: path_params.0,
-                            query_params,
-                            headers,
-                            cookies,
-                            body: body_value,
-                        };
+                            let request_data = RequestData {
+                                path_params: path_params.0,
+                                query_params,
+                                headers,
+                                cookies,
+                                body: body_value,
+                            };
 
-                        let req = axum::extract::Request::from_parts(parts, Body::empty());
-                        handler.call(req, request_data).await
-                    },
-                ),
-                "PATCH" => axum::routing::patch(
-                    move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                        let (parts, body) = req.into_parts();
-                        let body_bytes = body
-                            .collect()
-                            .await
-                            .map_err(|e| {
-                                (
-                                    axum::http::StatusCode::BAD_REQUEST,
-                                    format!("Failed to read body: {}", e),
-                                )
-                            })?
-                            .to_bytes();
+                            let req = axum::extract::Request::from_parts(parts, Body::empty());
+                            handler.call(req, request_data).await
+                        },
+                    ),
+                    "PUT" => axum::routing::put(
+                        move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                            let (parts, body) = req.into_parts();
+                            let body_bytes = body
+                                .collect()
+                                .await
+                                .map_err(|e| {
+                                    (
+                                        axum::http::StatusCode::BAD_REQUEST,
+                                        format!("Failed to read body: {}", e),
+                                    )
+                                })?
+                                .to_bytes();
 
-                        // Validate Content-Type and Content-Length before processing
-                        validate_content_type(&parts.headers, body_bytes.len())?;
+                            // Validate Content-Type and Content-Length before processing
+                            validate_content_type(&parts.headers, body_bytes.len())?;
 
-                        let query_params = extract_query_params(&parts.uri);
-                        let headers = extract_headers(&parts.headers);
-                        let cookies = extract_cookies(&parts.headers);
+                            let query_params = extract_query_params(&parts.uri);
+                            let headers = extract_headers(&parts.headers);
+                            let cookies = extract_cookies(&parts.headers);
 
-                        let body_value = if !body_bytes.is_empty() {
-                            serde_json::from_slice::<Value>(&body_bytes)
-                                .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?
-                                .into()
-                        } else {
-                            None
-                        };
+                            let body_value = if !body_bytes.is_empty() {
+                                serde_json::from_slice::<Value>(&body_bytes)
+                                    .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?
+                                    .into()
+                            } else {
+                                None
+                            };
 
-                        let request_data = RequestData {
-                            path_params: path_params.0,
-                            query_params,
-                            headers,
-                            cookies,
-                            body: body_value,
-                        };
+                            let request_data = RequestData {
+                                path_params: path_params.0,
+                                query_params,
+                                headers,
+                                cookies,
+                                body: body_value,
+                            };
 
-                        let req = axum::extract::Request::from_parts(parts, Body::empty());
-                        handler.call(req, request_data).await
-                    },
-                ),
-                "DELETE" => axum::routing::delete(
-                    move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                        let query_params = extract_query_params(req.uri());
-                        let headers = extract_headers(req.headers());
-                        let cookies = extract_cookies(req.headers());
-                        let request_data = RequestData {
-                            path_params: path_params.0,
-                            query_params,
-                            headers,
-                            cookies,
-                            body: None,
-                        };
-                        handler.call(req, request_data).await
-                    },
-                ),
-                _ => return Err(format!("Unsupported HTTP method: {}", route.method.as_str())),
-            };
+                            let req = axum::extract::Request::from_parts(parts, Body::empty());
+                            handler.call(req, request_data).await
+                        },
+                    ),
+                    "PATCH" => axum::routing::patch(
+                        move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                            let (parts, body) = req.into_parts();
+                            let body_bytes = body
+                                .collect()
+                                .await
+                                .map_err(|e| {
+                                    (
+                                        axum::http::StatusCode::BAD_REQUEST,
+                                        format!("Failed to read body: {}", e),
+                                    )
+                                })?
+                                .to_bytes();
 
-            // FastAPI and Axum both use {param} syntax for path parameters
-            // No conversion needed - just register the route as-is
-            app = app.route(&route.path, method_router);
+                            // Validate Content-Type and Content-Length before processing
+                            validate_content_type(&parts.headers, body_bytes.len())?;
 
-            tracing::info!("Registered route: {} {}", route.method.as_str(), route.path);
+                            let query_params = extract_query_params(&parts.uri);
+                            let headers = extract_headers(&parts.headers);
+                            let cookies = extract_cookies(&parts.headers);
+
+                            let body_value = if !body_bytes.is_empty() {
+                                serde_json::from_slice::<Value>(&body_bytes)
+                                    .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?
+                                    .into()
+                            } else {
+                                None
+                            };
+
+                            let request_data = RequestData {
+                                path_params: path_params.0,
+                                query_params,
+                                headers,
+                                cookies,
+                                body: body_value,
+                            };
+
+                            let req = axum::extract::Request::from_parts(parts, Body::empty());
+                            handler.call(req, request_data).await
+                        },
+                    ),
+                    "DELETE" => axum::routing::delete(
+                        move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                            let query_params = extract_query_params(req.uri());
+                            let headers = extract_headers(req.headers());
+                            let cookies = extract_cookies(req.headers());
+                            let request_data = RequestData {
+                                path_params: path_params.0,
+                                query_params,
+                                headers,
+                                cookies,
+                                body: None,
+                            };
+                            handler.call(req, request_data).await
+                        },
+                    ),
+                    "HEAD" => axum::routing::head(
+                        move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                            let query_params = extract_query_params(req.uri());
+                            let headers = extract_headers(req.headers());
+                            let cookies = extract_cookies(req.headers());
+                            let request_data = RequestData {
+                                path_params: path_params.0,
+                                query_params,
+                                headers,
+                                cookies,
+                                body: None,
+                            };
+                            handler.call(req, request_data).await
+                        },
+                    ),
+                    "OPTIONS" => axum::routing::options(
+                        move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                            let query_params = extract_query_params(req.uri());
+                            let headers = extract_headers(req.headers());
+                            let cookies = extract_cookies(req.headers());
+                            let request_data = RequestData {
+                                path_params: path_params.0,
+                                query_params,
+                                headers,
+                                cookies,
+                                body: None,
+                            };
+                            handler.call(req, request_data).await
+                        },
+                    ),
+                    "TRACE" => axum::routing::trace(
+                        move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                            let query_params = extract_query_params(req.uri());
+                            let headers = extract_headers(req.headers());
+                            let cookies = extract_cookies(req.headers());
+                            let request_data = RequestData {
+                                path_params: path_params.0,
+                                query_params,
+                                headers,
+                                cookies,
+                                body: None,
+                            };
+                            handler.call(req, request_data).await
+                        },
+                    ),
+                    _ => return Err(format!("Unsupported HTTP method: {}", route.method.as_str())),
+                };
+
+                // Merge method routers for the same path
+                combined_router = Some(match combined_router {
+                    None => method_router,
+                    Some(existing) => existing.merge(method_router),
+                });
+
+                tracing::info!("Registered route: {} {}", route.method.as_str(), path);
+            }
+
+            // Register the combined router for this path
+            if let Some(router) = combined_router {
+                // FastAPI and Axum both use {param} syntax for path parameters
+                // No conversion needed - just register the route as-is
+                app = app.route(&path, router);
+            }
         }
 
         // Add middleware

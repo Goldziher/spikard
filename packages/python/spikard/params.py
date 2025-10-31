@@ -59,20 +59,22 @@ class Query(ParamBase):
     Use this to specify defaults for query string parameters, similar to FastAPI.
 
     Examples:
-        >>> @app.get("/items/")
+        >>> from spikard import get
+        >>>
+        >>> @get("/items/")
         >>> def get_items(tags: list[str] = Query(default_factory=list)):
         ...     return {"tags": tags}
         >>>
-        >>> @app.get("/items/")
+        >>> @get("/items/")
         >>> def get_items(limit: int = Query(default=10)):
         ...     return {"limit": limit}
         >>>
-        >>> @app.get("/items/")
+        >>> @get("/items/")
         >>> def get_items(date: datetime.date = Query(default_factory=datetime.date.today)):
         ...     return {"date": date}
         >>>
         >>> # With custom JSON schema for validation
-        >>> @app.get("/items/")
+        >>> @get("/items/")
         >>> def get_items(limit: int = Query(default=10, schema={"minimum": 1, "maximum": 100})):
         ...     return {"limit": limit}
 
@@ -93,12 +95,14 @@ class Body(ParamBase):
     Use this to specify defaults for request body parameters.
 
     Examples:
-        >>> @app.post("/items/")
+        >>> from spikard import post
+        >>>
+        >>> @post("/items/")
         >>> def create_item(data: dict = Body(default_factory=dict)):
         ...     return data
         >>>
         >>> # With custom JSON schema for validation
-        >>> @app.post("/items/")
+        >>> @post("/items/")
         >>> def create_item(data: dict = Body(schema={"required": ["name", "price"]})):
         ...     return data
 
@@ -128,18 +132,20 @@ class Header(ParamBase):
     Use this as a default parameter value to inject header values into route handlers.
 
     Examples:
-        >>> @app.get("/items/")
+        >>> from spikard import get
+        >>>
+        >>> @get("/items/")
         >>> def get_items(user_agent: str = Header(default="unknown")):
         ...     return {"user_agent": user_agent}
         >>>
-        >>> @app.get("/users/me")
+        >>> @get("/users/me")
         >>> def get_user(authorization: str | None = Header(default=None)):
         ...     if authorization:
         ...         return {"authenticated": True}
         ...     return {"authenticated": False}
         >>>
         >>> # With custom JSON schema
-        >>> @app.get("/items/")
+        >>> @get("/items/")
         >>> def get_items(api_key: str = Header(schema={"minLength": 32})):
         ...     return {"authenticated": True}
 
@@ -173,18 +179,20 @@ class Cookie(ParamBase):
     Use this as a default parameter value to inject cookie values into route handlers.
 
     Examples:
-        >>> @app.get("/items/")
+        >>> from spikard import get
+        >>>
+        >>> @get("/items/")
         >>> def get_items(session_id: str | None = Cookie(default=None)):
         ...     return {"session_id": session_id}
         >>>
-        >>> @app.get("/users/me")
+        >>> @get("/users/me")
         >>> def get_user(key: str = Cookie(schema={"minLength": 10})):
         ...     if key == "secret":
         ...         return {"username": "secret"}
         ...     return {"error": "Invalid key"}
         >>>
         >>> # With default factory
-        >>> @app.get("/items/")
+        >>> @get("/items/")
         >>> def get_items(session_data: dict = Cookie(default_factory=dict)):
         ...     return session_data
 
