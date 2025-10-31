@@ -81,7 +81,12 @@ impl SchemaValidator {
                 };
 
                 // Get the input value that failed validation
-                let input_value = err.instance.clone().into_owned();
+                // For missing required fields, use empty string instead of the whole object
+                let input_value = if schema_path_str == "/required" {
+                    Value::String("".to_string())
+                } else {
+                    err.instance.clone().into_owned()
+                };
 
                 // Debug logging to see what we're working with
                 eprintln!(
