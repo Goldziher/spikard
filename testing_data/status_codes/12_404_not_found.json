@@ -6,9 +6,13 @@
     "test_file": "tests/test_tutorial/test_response_model/test_tutorial001.py",
     "test_function": "test_get_nonexistent_item"
   },
+  "handler": {
+    "route": "/status-test/{code}",
+    "method": "GET"
+  },
   "request": {
     "method": "GET",
-    "path": "/items/999"
+    "path": "/status-test/404"
   },
   "expected_response": {
     "status_code": 404,
