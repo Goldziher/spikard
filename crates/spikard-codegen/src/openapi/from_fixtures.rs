@@ -38,6 +38,9 @@ pub struct FixtureHandler {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub body_schema: Option<Value>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cors: Option<Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

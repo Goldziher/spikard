@@ -71,9 +71,13 @@ impl std::str::FromStr for Method {
 pub struct CorsConfig {
     pub allowed_origins: Vec<String>,
     pub allowed_methods: Vec<String>,
+    #[serde(default)]
     pub allowed_headers: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub expose_headers: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub max_age: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub allow_credentials: Option<bool>,
 }
 
