@@ -19,5 +19,18 @@
       "value": 1
     }
   },
-  "notes": "gt=0 constraint, value 1 is valid (just above boundary)"
+  "notes": "gt=0 constraint, value 1 is valid (just above boundary)",
+  "handler": {
+    "route": "/query/int-gt",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "value": {
+          "type": "integer",
+          "annotation": "int",
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  }
 }

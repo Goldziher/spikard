@@ -19,5 +19,17 @@
       "flag": true
     }
   },
-  "notes": "Boolean conversion: 'true' -> true"
+  "notes": "Boolean conversion: 'true' -> true",
+  "handler": {
+    "route": "/query/bool",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "flag": {
+          "type": "boolean",
+          "annotation": "bool"
+        }
+      }
+    }
+  }
 }

@@ -15,5 +15,22 @@
     "status_code": 200,
     "body": []
   },
-  "notes": "Optional array query parameter with default [], no values provided returns empty array"
+  "notes": "Optional array query parameter with default [], no values provided returns empty array",
+  "handler": {
+    "route": "/query/list-default",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "tags": {
+          "type": "array",
+          "annotation": "list[str]",
+          "items": {
+            "type": "string"
+          },
+          "optional": true,
+          "default": []
+        }
+      }
+    }
+  }
 }

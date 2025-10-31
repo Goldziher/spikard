@@ -14,5 +14,22 @@
     "status_code": 200,
     "body": []
   },
-  "notes": "List with default=[] returns empty list when no params provided"
+  "notes": "List with default=[] returns empty list when no params provided",
+  "handler": {
+    "route": "/query/list-default",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "tags": {
+          "type": "array",
+          "annotation": "list[str]",
+          "items": {
+            "type": "string"
+          },
+          "optional": true,
+          "default": []
+        }
+      }
+    }
+  }
 }

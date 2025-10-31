@@ -19,5 +19,18 @@
       "item_query": "fixedquery"
     }
   },
-  "notes": "Regex pattern: ^fixedquery$"
+  "notes": "Regex pattern: ^fixedquery$",
+  "handler": {
+    "route": "/items/",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "item_query": {
+          "type": "string",
+          "annotation": "str",
+          "pattern": "^fixedquery$"
+        }
+      }
+    }
+  }
 }

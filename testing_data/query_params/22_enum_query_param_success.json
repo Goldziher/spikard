@@ -19,5 +19,22 @@
       "model": "alexnet"
     }
   },
-  "notes": "Enum values: alexnet, resnet, lenet"
+  "notes": "Enum values: alexnet, resnet, lenet",
+  "handler": {
+    "route": "/query/enum",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "model": {
+          "type": "string",
+          "annotation": "str",
+          "enum": [
+            "alexnet",
+            "resnet",
+            "lenet"
+          ]
+        }
+      }
+    }
+  }
 }

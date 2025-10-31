@@ -11,14 +11,36 @@
     "path": "/items/",
     "query_string": "q=foo&q=bar",
     "query_params": {
-      "q": ["foo", "bar"]
+      "q": [
+        "foo",
+        "bar"
+      ]
     }
   },
   "expected_response": {
     "status_code": 200,
     "body": {
-      "q": ["foo", "bar"]
+      "q": [
+        "foo",
+        "bar"
+      ]
     }
   },
-  "notes": "List[str] with ?q=foo&q=bar"
+  "notes": "List[str] with ?q=foo&q=bar",
+  "handler": {
+    "route": "/items/",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "q": {
+          "type": "array",
+          "annotation": "list[str]",
+          "items": {
+            "type": "string"
+          },
+          "optional": true
+        }
+      }
+    }
+  }
 }
