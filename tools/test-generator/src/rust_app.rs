@@ -200,6 +200,7 @@ fn generate_router_config(route_map: &HashMap<(String, String), Vec<&Fixture>>) 
 fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String {
     let handler_name = route_method_to_handler_name(route, method);
     let has_path_params = route.contains('{');
+    let has_body = method == "POST" || method == "PUT" || method == "PATCH";
 
     eprintln!(
         "[HANDLER GEN] Generating handler for {} {} with {} fixtures{}",
@@ -212,8 +213,21 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
         eprintln!("[HANDLER GEN]   - Fixture: {}", f.name);
     }
 
+    // Try to build a parameter schema
+    let param_schema = build_parameter_schema(fixtures);
+
+    // Try to infer body schema for POST/PUT/PATCH
+    let body_schema = if has_body { infer_body_schema(fixtures) } else { None };
+
+    if let Some(body_schema) = &body_schema {
+        eprintln!(
+            "[HANDLER GEN] Inferred body schema: {}",
+            serde_json::to_string_pretty(body_schema).unwrap()
+        );
+    }
+
     // Try to build a schema from fixtures with handler.parameters
-    if let Some(schema) = build_parameter_schema(fixtures) {
+    if let Some(schema) = param_schema {
         eprintln!(
             "[HANDLER GEN] Built schema: {}",
             serde_json::to_string_pretty(&schema).unwrap()
@@ -242,15 +256,45 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
             )
         };
 
+        // Generate handler with param validation and optional body validation
+        let body_validator_code = if let Some(ref body_schema) = body_schema {
+            let body_schema_json = serde_json::to_string(body_schema)
+                .unwrap()
+                .replace('\\', "\\\\")
+                .replace('"', "\\\"");
+            format!(
+                r#"
+    // Parse body schema and create body validator
+    let body_schema: Value = serde_json::from_str("{}").unwrap();
+    let body_validator = spikard_http::SchemaValidator::new(body_schema).unwrap();"#,
+                body_schema_json
+            )
+        } else {
+            String::new()
+        };
+
+        let _body_validation_code = if body_schema.is_some() {
+            r#"
+    // Validate request body
+    if let Err(err) = body_validator.validate(&body) {
+        let error_response = serde_json::json!({
+            "detail": err.errors
+        });
+        return (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response));
+    }"#
+        } else {
+            ""
+        };
+
         format!(
             r#"{} {{
     use spikard_http::parameters::ParameterValidator;
     use spikard_http::query_parser::parse_query_string_to_json;
     use std::collections::HashMap;
 
-    // Parse schema and create validator
+    // Parse parameter schema and create validator
     let schema: Value = serde_json::from_str("{}").unwrap();
-    let validator = ParameterValidator::new(schema).unwrap();
+    let validator = ParameterValidator::new(schema).unwrap();{}
 
     // Parse query string using Spikard's parser (auto-converts types)
     let query_params = if let Some(query_str) = uri.query() {{
@@ -279,7 +323,37 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
 }}"#,
             handler_signature,
             schema_json,
+            body_validator_code,
             if has_path_params { "" } else { "HashMap::new(), //" }
+        )
+    } else if let Some(body_schema) = body_schema {
+        // No parameter schema but we have body schema
+        let body_schema_json = serde_json::to_string(&body_schema)
+            .unwrap()
+            .replace('\\', "\\\\")
+            .replace('"', "\\\"");
+
+        format!(
+            r#"async fn {}(
+    axum::extract::Json(body): axum::extract::Json<Value>,
+) -> impl axum::response::IntoResponse {{
+    use spikard_http::SchemaValidator;
+
+    // Parse body schema and create validator
+    let body_schema: Value = serde_json::from_str("{}").unwrap();
+    let body_validator = SchemaValidator::new(body_schema).unwrap();
+
+    // Validate request body
+    if let Err(err) = body_validator.validate(&body) {{
+        let error_response = serde_json::json!({{
+            "detail": err.errors
+        }});
+        return (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response));
+    }}
+
+    (axum::http::StatusCode::OK, Json(body))
+}}"#,
+            handler_name, body_schema_json
         )
     } else {
         // No schema available - simple echo handler
@@ -468,6 +542,125 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
         }))
     } else {
         None
+    }
+}
+
+/// Infer body schema from fixtures by analyzing request bodies
+/// This uses the jsonschema crate's inference capabilities
+fn infer_body_schema(fixtures: &[&Fixture]) -> Option<Value> {
+    use serde_json::json;
+
+    // Collect all request bodies from success cases (status 200/201)
+    let mut success_bodies: Vec<&Value> = Vec::new();
+    let mut failure_bodies: Vec<&Value> = Vec::new();
+
+    for fixture in fixtures {
+        if let Some(body) = &fixture.request.body {
+            let status = fixture.expected_response.status_code;
+            if (200..300).contains(&status) {
+                success_bodies.push(body);
+            } else if status == 422 {
+                // Validation failures help us understand constraints
+                failure_bodies.push(body);
+            }
+        }
+    }
+
+    // If no bodies to analyze, no schema
+    if success_bodies.is_empty() {
+        return None;
+    }
+
+    // Infer schema by analyzing the structure of success bodies
+    // We'll build a schema that accepts all successful requests
+    let mut properties = serde_json::Map::new();
+    let mut required_fields = std::collections::HashSet::new();
+
+    // First, collect all fields from all success bodies
+    for body in &success_bodies {
+        if let Value::Object(obj) = body {
+            for (key, value) in obj {
+                required_fields.insert(key.clone());
+
+                // Infer type from value
+                if !properties.contains_key(key) {
+                    properties.insert(key.clone(), infer_type_from_value(value));
+                }
+            }
+        }
+    }
+
+    // Now check which fields are actually required by seeing if any success case omits them
+    for body in &success_bodies {
+        if let Value::Object(obj) = body {
+            // If a field is missing in a successful request, it's optional
+            for field in required_fields.clone().iter() {
+                if !obj.contains_key(field) {
+                    required_fields.remove(field);
+                }
+            }
+        }
+    }
+
+    if properties.is_empty() {
+        return None;
+    }
+
+    let required: Vec<String> = required_fields.into_iter().collect();
+    Some(json!({
+        "type": "object",
+        "properties": properties,
+        "required": required,
+        "additionalProperties": true  // Allow extra fields by default
+    }))
+}
+
+/// Infer JSON Schema type from a JSON value
+fn infer_type_from_value(value: &Value) -> Value {
+    use serde_json::json;
+
+    match value {
+        Value::Null => json!({"type": ["string", "null"]}), // Nullable
+        Value::Bool(_) => json!({"type": "boolean"}),
+        Value::Number(n) => {
+            if n.is_f64() {
+                json!({"type": "number"})
+            } else {
+                json!({"type": "integer"})
+            }
+        }
+        Value::String(s) => {
+            // Try to detect format from string content
+            if s.contains("T") && s.contains(":") && (s.ends_with("Z") || s.contains("+")) {
+                json!({"type": "string", "format": "date-time"})
+            } else if s.len() == 10 && s.matches('-').count() == 2 {
+                json!({"type": "string", "format": "date"})
+            } else if s.len() == 36 && s.matches('-').count() == 4 {
+                json!({"type": "string", "format": "uuid"})
+            } else {
+                json!({"type": "string"})
+            }
+        }
+        Value::Array(arr) => {
+            if let Some(first) = arr.first() {
+                json!({
+                    "type": "array",
+                    "items": infer_type_from_value(first)
+                })
+            } else {
+                json!({"type": "array"})
+            }
+        }
+        Value::Object(obj) => {
+            let mut props = serde_json::Map::new();
+            for (key, val) in obj {
+                props.insert(key.clone(), infer_type_from_value(val));
+            }
+            json!({
+                "type": "object",
+                "properties": props
+            })
+        }
     }
 }
 

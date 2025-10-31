@@ -33,7 +33,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -89,7 +89,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("GET").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -132,7 +144,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -188,7 +200,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("GET").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -232,7 +256,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -288,7 +312,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("GET").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -332,7 +368,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -388,7 +424,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("POST").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -432,7 +480,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -488,7 +536,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("GET").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -532,7 +592,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -588,7 +648,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("GET").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -631,7 +703,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -687,7 +759,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("GET").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -731,7 +815,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -787,7 +871,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("GET").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -831,7 +927,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -887,7 +983,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("POST").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -932,7 +1040,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -988,7 +1096,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("GET").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -1032,7 +1152,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1088,7 +1208,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("POST").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -1131,7 +1263,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1187,7 +1319,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("POST").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -1231,7 +1375,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1287,7 +1431,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("POST").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -1331,7 +1487,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1387,7 +1543,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("POST").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -1431,7 +1599,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1487,7 +1655,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("POST").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -1531,7 +1711,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1587,7 +1767,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("POST").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -1630,7 +1822,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1686,7 +1878,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("POST").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -1731,7 +1935,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1787,7 +1991,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("GET").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -1831,7 +2047,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1887,7 +2103,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("GET").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -1931,7 +2159,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1987,7 +2215,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("POST").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -2031,7 +2271,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2087,7 +2327,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("GET").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
@@ -2131,7 +2383,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2187,7 +2439,19 @@ mod validation_errors {
             }
         }
 
-        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+        // Build request with optional body
+        let mut request_builder = Request::builder().method("POST").uri(uri);
+
+        // Add body if present in fixture
+        let body = if let Some(request_body) = fixture["request"]["body"].as_object() {
+            request_builder = request_builder.header("content-type", "application/json");
+            let body_str = serde_json::to_string(request_body).unwrap();
+            Body::from(body_str)
+        } else {
+            Body::empty()
+        };
+
+        let request = request_builder.body(body).unwrap();
 
         // Send request
         let response = app.oneshot(request).await.unwrap();
