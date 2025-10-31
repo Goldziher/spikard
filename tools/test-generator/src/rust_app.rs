@@ -213,6 +213,23 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
         eprintln!("[HANDLER GEN]   - Fixture: {}", f.name);
     }
 
+    // Determine success status code - use the most common success status (200-299)
+    // from fixtures, defaulting to 200 for GET/DELETE or 201 for POST/PUT/PATCH
+    let success_status = {
+        let mut status_counts: std::collections::HashMap<u16, usize> = std::collections::HashMap::new();
+        for fixture in fixtures {
+            let status = fixture.expected_response.status_code;
+            if (200..300).contains(&status) {
+                *status_counts.entry(status).or_insert(0) += 1;
+            }
+        }
+        status_counts
+            .into_iter()
+            .max_by_key(|(_, count)| *count)
+            .map(|(status, _)| status)
+            .unwrap_or_else(|| if has_body { 201 } else { 200 })
+    };
+
     // Try to build a parameter schema
     let param_schema = build_parameter_schema(fixtures);
 
@@ -311,7 +328,7 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
         &HashMap::new(),
     ) {{
         Ok(validated) => {{
-            (axum::http::StatusCode::OK, Json(validated))
+            (axum::http::StatusCode::from_u16({}).unwrap(), Json(validated))
         }}
         Err(err) => {{
             let error_response = serde_json::json!({{
@@ -324,7 +341,8 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
             handler_signature,
             schema_json,
             body_validator_code,
-            if has_path_params { "" } else { "HashMap::new(), //" }
+            if has_path_params { "" } else { "HashMap::new(), //" },
+            success_status
         )
     } else if let Some(body_schema) = body_schema {
         // No parameter schema but we have body schema
@@ -351,9 +369,9 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
         return (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response));
     }}
 
-    (axum::http::StatusCode::OK, Json(body))
+    (axum::http::StatusCode::from_u16({}).unwrap(), Json(body))
 }}"#,
-            handler_name, body_schema_json
+            handler_name, body_schema_json, success_status
         )
     } else {
         // No schema available - simple echo handler
@@ -546,13 +564,14 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
 }
 
 /// Infer body schema from fixtures by analyzing request bodies
-/// This uses the jsonschema crate's inference capabilities
+/// This analyzes both success and failure cases to infer constraints
 fn infer_body_schema(fixtures: &[&Fixture]) -> Option<Value> {
     use serde_json::json;
+    use std::collections::{HashMap, HashSet};
 
-    // Collect all request bodies from success cases (status 200/201)
+    // Collect all request bodies from success and failure cases
     let mut success_bodies: Vec<&Value> = Vec::new();
-    let mut failure_bodies: Vec<&Value> = Vec::new();
+    let mut validation_failures: Vec<(&Value, &Value)> = Vec::new(); // (request_body, error_details)
 
     for fixture in fixtures {
         if let Some(body) = &fixture.request.body {
@@ -561,7 +580,9 @@ fn infer_body_schema(fixtures: &[&Fixture]) -> Option<Value> {
                 success_bodies.push(body);
             } else if status == 422 {
                 // Validation failures help us understand constraints
-                failure_bodies.push(body);
+                if let Some(error_body) = &fixture.expected_response.body {
+                    validation_failures.push((body, error_body));
+                }
             }
         }
     }
@@ -572,9 +593,8 @@ fn infer_body_schema(fixtures: &[&Fixture]) -> Option<Value> {
     }
 
     // Infer schema by analyzing the structure of success bodies
-    // We'll build a schema that accepts all successful requests
     let mut properties = serde_json::Map::new();
-    let mut required_fields = std::collections::HashSet::new();
+    let mut required_fields = HashSet::new();
 
     // First, collect all fields from all success bodies
     for body in &success_bodies {
@@ -590,13 +610,134 @@ fn infer_body_schema(fixtures: &[&Fixture]) -> Option<Value> {
         }
     }
 
-    // Now check which fields are actually required by seeing if any success case omits them
+    // Check which fields are required (present in all success cases)
     for body in &success_bodies {
         if let Value::Object(obj) = body {
-            // If a field is missing in a successful request, it's optional
             for field in required_fields.clone().iter() {
                 if !obj.contains_key(field) {
                     required_fields.remove(field);
+                }
+            }
+        }
+    }
+
+    // Analyze validation failures to extract constraints
+    let mut field_constraints: HashMap<String, Vec<(String, Value)>> = HashMap::new();
+
+    for (_req_body, error_body) in validation_failures {
+        if let Some(details) = error_body.get("detail").and_then(|d| d.as_array()) {
+            for error in details {
+                if let Some(loc) = error.get("loc").and_then(|l| l.as_array()) {
+                    // Extract field name from location (e.g., ["body", "name"] -> "name")
+                    if loc.len() >= 2 {
+                        if let Some(field_name) = loc[1].as_str() {
+                            let error_type = error.get("type").and_then(|t| t.as_str()).unwrap_or("");
+
+                            // Extract constraint from context
+                            if let Some(ctx) = error.get("ctx").and_then(|c| c.as_object()) {
+                                let constraints = field_constraints.entry(field_name.to_string()).or_default();
+
+                                match error_type {
+                                    "string_too_short" => {
+                                        if let Some(min_len) = ctx.get("min_length") {
+                                            constraints.push(("minLength".to_string(), min_len.clone()));
+                                        }
+                                    }
+                                    "string_too_long" => {
+                                        if let Some(max_len) = ctx.get("max_length") {
+                                            constraints.push(("maxLength".to_string(), max_len.clone()));
+                                        }
+                                    }
+                                    "string_pattern_mismatch" => {
+                                        if let Some(pattern) = ctx.get("pattern") {
+                                            constraints.push(("pattern".to_string(), pattern.clone()));
+                                        }
+                                    }
+                                    "enum" => {
+                                        // Extract enum values from error message or context
+                                        if let Some(expected) = ctx.get("expected") {
+                                            // Parse "'electronics', 'clothing' or 'books'" into array
+                                            if let Some(expected_str) = expected.as_str() {
+                                                let values: Vec<String> = expected_str
+                                                    .split(", ")
+                                                    .map(|s| s.trim_matches(&['\'', ' ', 'o', 'r'][..]))
+                                                    .filter(|s| !s.is_empty() && *s != "or")
+                                                    .map(|s| s.to_string())
+                                                    .collect();
+                                                if !values.is_empty() {
+                                                    constraints.push(("enum".to_string(), json!(values)));
+                                                }
+                                            }
+                                        }
+                                    }
+                                    "greater_than_equal" => {
+                                        if let Some(ge) = ctx.get("ge") {
+                                            constraints.push(("minimum".to_string(), ge.clone()));
+                                        }
+                                    }
+                                    "less_than_equal" => {
+                                        if let Some(le) = ctx.get("le") {
+                                            constraints.push(("maximum".to_string(), le.clone()));
+                                        }
+                                    }
+                                    "greater_than" => {
+                                        if let Some(gt) = ctx.get("gt") {
+                                            constraints.push(("exclusiveMinimum".to_string(), gt.clone()));
+                                        }
+                                    }
+                                    "less_than" => {
+                                        if let Some(lt) = ctx.get("lt") {
+                                            constraints.push(("exclusiveMaximum".to_string(), lt.clone()));
+                                        }
+                                    }
+                                    "too_short" => {
+                                        // Array min items
+                                        if let Some(min_items) = ctx.get("min_length") {
+                                            constraints.push(("minItems".to_string(), min_items.clone()));
+                                        }
+                                    }
+                                    "too_long" => {
+                                        // Array max items
+                                        if let Some(max_items) = ctx.get("max_length") {
+                                            constraints.push(("maxItems".to_string(), max_items.clone()));
+                                        }
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Merge constraints into properties
+    for (field_name, constraints) in field_constraints {
+        if let Some(field_schema) = properties.get_mut(&field_name) {
+            if let Some(schema_obj) = field_schema.as_object_mut() {
+                for (constraint_key, constraint_value) in constraints {
+                    schema_obj.insert(constraint_key, constraint_value);
+                }
+            }
+        }
+    }
+
+    // Handle nullable fields - if we see null values in success cases, allow null
+    for body in &success_bodies {
+        if let Value::Object(obj) = body {
+            for (key, value) in obj {
+                if value.is_null() {
+                    if let Some(field_schema) = properties.get_mut(key) {
+                        if let Some(schema_obj) = field_schema.as_object_mut() {
+                            // Make the type nullable by converting to array if needed
+                            if let Some(type_val) = schema_obj.get("type") {
+                                if let Some(type_str) = type_val.as_str() {
+                                    schema_obj.insert("type".to_string(), json!([type_str, "null"]));
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
