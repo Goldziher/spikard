@@ -30,7 +30,7 @@ tasks:
     deps:
       - build:py
     cmds:
-      - PYTHONPATH=. uv run pytest packages/python/tests -v
+      - PYTHONPATH=. uv run pytest e2e/python/tests -v
 
   test:rust:
     desc: "Run Rust tests"
