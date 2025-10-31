@@ -207,8 +207,8 @@ impl ParameterValidator {
                 // Value from query params (already type-converted by fast-query-parsers)
                 tracing::debug!("Using pre-converted JSON value: {:?}", json_value);
 
-                // Special handling for boolean types: if schema expects boolean but we got integer 1 or 0,
-                // coerce to boolean. This handles cases like ?flag=1 where flag is bool
+                // Special handling for boolean types: if schema expects boolean but we got integer 1/0 or empty string,
+                // coerce to boolean. This handles cases like ?flag=1 or ?flag= where flag is bool
                 let coerced_value = if param_def.expected_type.as_deref() == Some("boolean") {
                     match json_value {
                         Value::Number(n) if n.as_i64() == Some(1) => {
@@ -217,6 +217,10 @@ impl ParameterValidator {
                         }
                         Value::Number(n) if n.as_i64() == Some(0) => {
                             tracing::debug!("Coercing integer 0 to boolean false");
+                            Value::Bool(false)
+                        }
+                        Value::String(s) if s.is_empty() => {
+                            tracing::debug!("Coercing empty string to boolean false");
                             Value::Bool(false)
                         }
                         _ => json_value,
