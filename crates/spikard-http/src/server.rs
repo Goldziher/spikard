@@ -16,6 +16,66 @@ use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+/// Validate Content-Type header and related requirements
+fn validate_content_type(
+    headers: &axum::http::HeaderMap,
+    body_size: usize,
+) -> Result<(), (axum::http::StatusCode, String)> {
+    // Check Content-Type header if present
+    #[allow(clippy::collapsible_if)]
+    if let Some(content_type_header) = headers.get(axum::http::header::CONTENT_TYPE) {
+        if let Ok(content_type_str) = content_type_header.to_str() {
+            // Parse Content-Type to extract media type and parameters
+            let parts: Vec<&str> = content_type_str.split(';').map(|s| s.trim()).collect();
+            let media_type = parts[0].to_lowercase();
+
+            // Validation 1: multipart/form-data MUST have boundary parameter
+            if media_type == "multipart/form-data" {
+                let has_boundary = parts.iter().skip(1).any(|part| part.starts_with("boundary="));
+                if !has_boundary {
+                    let error_body = serde_json::json!({
+                        "error": "multipart/form-data requires 'boundary' parameter"
+                    });
+                    return Err((axum::http::StatusCode::BAD_REQUEST, error_body.to_string()));
+                }
+            }
+
+            // Validation 2: JSON content type charset must be UTF-8 (or absent)
+            if media_type == "application/json" {
+                for part in parts.iter().skip(1) {
+                    if part.starts_with("charset=") {
+                        let charset = part.trim_start_matches("charset=").trim();
+                        // Only UTF-8 is allowed (case-insensitive)
+                        if !charset.eq_ignore_ascii_case("utf-8") && !charset.eq_ignore_ascii_case("utf8") {
+                            let error_body = serde_json::json!({
+                                "error": format!("Unsupported charset '{}' for JSON. Only UTF-8 is supported.", charset)
+                            });
+                            return Err((axum::http::StatusCode::UNSUPPORTED_MEDIA_TYPE, error_body.to_string()));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Validation 3: Content-Length must match actual body size
+    #[allow(clippy::collapsible_if)]
+    if let Some(content_length_header) = headers.get(axum::http::header::CONTENT_LENGTH) {
+        if let Ok(content_length_str) = content_length_header.to_str() {
+            if let Ok(declared_length) = content_length_str.parse::<usize>() {
+                if declared_length != body_size {
+                    let error_body = serde_json::json!({
+                        "error": "Content-Length header does not match actual body size"
+                    });
+                    return Err((axum::http::StatusCode::BAD_REQUEST, error_body.to_string()));
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
 /// Extract and parse query parameters from request URI
 fn extract_query_params(uri: &axum::http::Uri) -> Value {
     let query_string = uri.query().unwrap_or("");
@@ -45,14 +105,12 @@ fn extract_cookies(headers: &axum::http::HeaderMap) -> HashMap<String, String> {
     let mut cookies = HashMap::new();
 
     // Look for Cookie header
-    if let Some(cookie_header) = headers.get(axum::http::header::COOKIE)
-        && let Ok(cookie_str) = cookie_header.to_str()
-    {
-        // Parse cookie header: "name1=value1; name2=value2"
-        for cookie_pair in cookie_str.split(';') {
-            let cookie_pair = cookie_pair.trim();
-            if let Some((name, value)) = cookie_pair.split_once('=') {
-                cookies.insert(name.trim().to_string(), value.trim().to_string());
+    #[allow(clippy::collapsible_if)]
+    if let Some(cookie_header) = headers.get(axum::http::header::COOKIE) {
+        if let Ok(cookie_str) = cookie_header.to_str() {
+            // Parse cookies using the cookie crate for RFC 6265 compliance and proper percent-decoding
+            for cookie in cookie::Cookie::split_parse(cookie_str).flatten() {
+                cookies.insert(cookie.name().to_string(), cookie.value().to_string());
             }
         }
     }
@@ -116,9 +174,6 @@ impl Server {
                     move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                         // Extract body for POST requests
                         let (parts, body) = req.into_parts();
-                        let query_params = extract_query_params(&parts.uri);
-                        let headers = extract_headers(&parts.headers);
-                        let cookies = extract_cookies(&parts.headers);
                         let body_bytes = body
                             .collect()
                             .await
@@ -129,6 +184,13 @@ impl Server {
                                 )
                             })?
                             .to_bytes();
+
+                        // Validate Content-Type and Content-Length before processing
+                        validate_content_type(&parts.headers, body_bytes.len())?;
+
+                        let query_params = extract_query_params(&parts.uri);
+                        let headers = extract_headers(&parts.headers);
+                        let cookies = extract_cookies(&parts.headers);
 
                         let body_value = if !body_bytes.is_empty() {
                             serde_json::from_slice::<Value>(&body_bytes)
@@ -153,9 +215,6 @@ impl Server {
                 "PUT" => axum::routing::put(
                     move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                         let (parts, body) = req.into_parts();
-                        let query_params = extract_query_params(&parts.uri);
-                        let headers = extract_headers(&parts.headers);
-                        let cookies = extract_cookies(&parts.headers);
                         let body_bytes = body
                             .collect()
                             .await
@@ -166,6 +225,13 @@ impl Server {
                                 )
                             })?
                             .to_bytes();
+
+                        // Validate Content-Type and Content-Length before processing
+                        validate_content_type(&parts.headers, body_bytes.len())?;
+
+                        let query_params = extract_query_params(&parts.uri);
+                        let headers = extract_headers(&parts.headers);
+                        let cookies = extract_cookies(&parts.headers);
 
                         let body_value = if !body_bytes.is_empty() {
                             serde_json::from_slice::<Value>(&body_bytes)
@@ -190,9 +256,6 @@ impl Server {
                 "PATCH" => axum::routing::patch(
                     move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                         let (parts, body) = req.into_parts();
-                        let query_params = extract_query_params(&parts.uri);
-                        let headers = extract_headers(&parts.headers);
-                        let cookies = extract_cookies(&parts.headers);
                         let body_bytes = body
                             .collect()
                             .await
@@ -203,6 +266,13 @@ impl Server {
                                 )
                             })?
                             .to_bytes();
+
+                        // Validate Content-Type and Content-Length before processing
+                        validate_content_type(&parts.headers, body_bytes.len())?;
+
+                        let query_params = extract_query_params(&parts.uri);
+                        let headers = extract_headers(&parts.headers);
+                        let cookies = extract_cookies(&parts.headers);
 
                         let body_value = if !body_bytes.is_empty() {
                             serde_json::from_slice::<Value>(&body_bytes)

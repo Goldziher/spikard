@@ -6,6 +6,10 @@
     "test_file": "tests/test_methods.py",
     "test_function": "test_put_create"
   },
+  "handler": {
+    "route": "/items/{id}",
+    "method": "PUT"
+  },
   "request": {
     "method": "PUT",
     "path": "/items/999",

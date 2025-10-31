@@ -7,6 +7,7 @@ use serde_json::Value;
 
 pub mod debug;
 pub mod handler;
+pub mod middleware;
 pub mod parameters;
 pub mod query_parser;
 pub mod response;

@@ -6,6 +6,18 @@
     "test_file": "tests/test_tutorial/test_cookie_params/test_tutorial001.py",
     "test_function": "test_cookie_max_length"
   },
+  "handler": {
+    "route": "/cookies/validated",
+    "method": "GET",
+    "parameters": {
+      "cookies": {
+        "session_id": {
+          "type": "string",
+          "maxLength": 20
+        }
+      }
+    }
+  },
   "request": {
     "method": "GET",
     "path": "/cookies/validated",

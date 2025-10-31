@@ -138,11 +138,12 @@ fn run_server(module_path: PathBuf, host: String, port: u16) -> Result<()> {
     let routes: Vec<(Route, Py<PyAny>)> = routes_with_handlers
         .into_iter()
         .map(|rwh| {
+            let path = rwh.metadata.path.clone();
             Route::from_metadata(rwh.metadata)
                 .map(|route| (route, rwh.handler))
-                .map_err(|e| anyhow::anyhow!("Failed to create route: {}", e))
+                .map_err(|e| anyhow::anyhow!("Failed to create route for {}: {}", path, e))
         })
-        .collect::<Result<Vec<_>>>()?;
+        .collect::<Result<Vec<_>, _>>()?;
 
     // Configure server
     let config = ServerConfig {
@@ -161,7 +162,7 @@ fn run_server(module_path: PathBuf, host: String, port: u16) -> Result<()> {
 
     // Build Axum router with Python handlers
     let app = Server::with_python_handlers(config.clone(), routes)
-        .map_err(|e| anyhow::anyhow!("Failed to build router: {}", e))?;
+        .map_err(|e| anyhow::anyhow!("Failed to build Axum router with Python handlers: {}", e))?;
 
     // Run server
     tokio::runtime::Builder::new_multi_thread()
@@ -172,14 +173,14 @@ fn run_server(module_path: PathBuf, host: String, port: u16) -> Result<()> {
             let addr = format!("{}:{}", config.host, config.port);
             let socket_addr: std::net::SocketAddr = addr
                 .parse()
-                .map_err(|e| anyhow::anyhow!("Invalid socket address: {}", e))?;
+                .with_context(|| format!("Invalid socket address: {}", addr))?;
             let listener = tokio::net::TcpListener::bind(socket_addr)
                 .await
-                .context("Failed to bind to address")?;
+                .with_context(|| format!("Failed to bind to {}:{}", config.host, config.port))?;
 
             tracing::info!("Server listening on {}", socket_addr);
 
-            axum::serve(listener, app).await.context("Server error")
+            axum::serve(listener, app).await.context("Server unexpectedly stopped")
         })?;
 
     Ok(())

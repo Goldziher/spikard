@@ -6,6 +6,22 @@
     "test_file": "tests/test_tutorial/test_request_form_models/test_tutorial001.py",
     "test_function": "test_form_boolean"
   },
+  "handler": {
+    "route": "/form/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["username"],
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "subscribe": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/form/",

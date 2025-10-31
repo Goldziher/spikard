@@ -27,6 +27,9 @@ This directory contains all design documents for the Spikard framework.
 |----------|--------|-------------|
 | [01-validation-strategy.md](./01-validation-strategy.md) | 🟢 Active | JSON Schema-based validation approach across all bindings |
 | [02-testing-strategy.md](./02-testing-strategy.md) | 🟢 Active | Fixture-driven testing methodology (367 comprehensive test scenarios) |
+| [03-ecosystem-audit-2025.md](./03-ecosystem-audit-2025.md) | 🟢 Active | **⭐ Comprehensive ecosystem audit** - identifies 12 areas where we're reinventing the wheel (~770 lines of code to remove) |
+| [03-ecosystem-audit-2025-summary.md](./03-ecosystem-audit-2025-summary.md) | 🟢 Active | Quick reference guide for ecosystem audit - critical issues and quick wins |
+| [03-ecosystem-alternatives.md](./03-ecosystem-alternatives.md) | 🟢 Active | Detailed comparison of alternative crates (cookies, date/time, validation, etc.) |
 | [08-metaprogramming-test-system.md](./08-metaprogramming-test-system.md) | 🟡 Draft | Dynamic test and handler generation from fixtures |
 
 ### API Design & Code Generation
@@ -64,6 +67,11 @@ This directory contains all design documents for the Spikard framework.
 2. Read [00-architecture.md](./00-architecture.md) - Understand the layers
 3. Read [01-validation-strategy.md](./01-validation-strategy.md) - Core validation approach
 4. Read [03-api-design.md](./03-api-design.md) - User-facing APIs
+
+### For Addressing Technical Debt ⭐ NEW
+1. [03-ecosystem-audit-2025-summary.md](./03-ecosystem-audit-2025-summary.md) - Start here for critical issues
+2. [03-ecosystem-audit-2025.md](./03-ecosystem-audit-2025.md) - Full audit with migration strategy
+3. [03-ecosystem-alternatives.md](./03-ecosystem-alternatives.md) - Compare alternative libraries
 
 ### For Implementing Middleware/Hooks
 1. [05-middleware-lifecycle-optimization.md](./05-middleware-lifecycle-optimization.md) - Primary design
@@ -158,6 +166,9 @@ Our design documents are informed by:
 | 2025-01 | OpenAPI 3.1 generation from JSON Schema | 06-observability-openapi.md | ✅ Decided |
 | 2025-01 | Binding-level DI (not Rust-based) | 07-dependency-injection-analysis.md | ✅ Decided |
 | 2025-01 | TypeScript functional API (no decorators) | 03-api-design.md | ✅ Decided |
+| 2025-10-31 | Replace manual cookie parsing with `cookie` crate | 03-ecosystem-audit-2025.md | 🔴 High Priority |
+| 2025-10-31 | Replace manual date/time validation with `jiff` or `chrono` | 03-ecosystem-audit-2025.md | 🔴 High Priority |
+| 2025-10-31 | Add `garde` or `validator` for declarative validation | 03-ecosystem-audit-2025.md | 🔴 High Priority |
 
 ---
 
