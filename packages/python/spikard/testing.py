@@ -84,12 +84,12 @@ class TestClient:
     a real HTTP server. All requests are handled in-memory using Rust's axum-test.
 
     Example:
-        >>> from spikard import Spikard
+        >>> from spikard import Spikard, get
         >>> from spikard.testing import TestClient
         >>>
         >>> app = Spikard()
         >>>
-        >>> @app.get("/hello")
+        >>> @get("/hello")
         >>> async def hello():
         >>>     return {"message": "Hello, World!"}
         >>>

@@ -27,64 +27,12 @@ class ServerConfig:
 class Spikard:
     """Main application class for Spikard framework."""
 
+    _current_instance: "Spikard | None" = None
+
     def __init__(self) -> None:
         """Initialize Spikard application."""
         self._routes: list[Route] = []
-
-    def get(self, path: str) -> Callable[..., Any]:
-        """Register a GET route.
-
-        Args:
-            path: URL path pattern (e.g., "/users/{user_id}")
-
-        Returns:
-            Decorator function
-        """
-        return self._register_route("GET", path)
-
-    def post(self, path: str) -> Callable[..., Any]:
-        """Register a POST route.
-
-        Args:
-            path: URL path pattern
-
-        Returns:
-            Decorator function
-        """
-        return self._register_route("POST", path)
-
-    def put(self, path: str) -> Callable[..., Any]:
-        """Register a PUT route.
-
-        Args:
-            path: URL path pattern
-
-        Returns:
-            Decorator function
-        """
-        return self._register_route("PUT", path)
-
-    def patch(self, path: str) -> Callable[..., Any]:
-        """Register a PATCH route.
-
-        Args:
-            path: URL path pattern
-
-        Returns:
-            Decorator function
-        """
-        return self._register_route("PATCH", path)
-
-    def delete(self, path: str) -> Callable[..., Any]:
-        """Register a DELETE route.
-
-        Args:
-            path: URL path pattern
-
-        Returns:
-            Decorator function
-        """
-        return self._register_route("DELETE", path)
+        Spikard._current_instance = self
 
     def _register_route(self, method: str, path: str) -> Callable[..., Any]:
         """Internal method to register a route.
