@@ -8,7 +8,7 @@
     "test_case": "Negative number handling in ParseIntPipe"
   },
   "handler": {
-    "route": "/items",
+    "route": "/items/negative",
     "method": "GET",
     "parameters": {
       "query": {
@@ -21,7 +21,7 @@
   },
   "request": {
     "method": "GET",
-    "path": "/items",
+    "path": "/items/negative",
     "query_params": {
       "offset": "-10"
     }
