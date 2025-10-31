@@ -8,6 +8,7 @@ members = [
     "crates/spikard-py",
     "crates/spikard-node",
     "crates/spikard-wasm",
+    "tools/test-generator",
 ]
 
 [workspace.package]

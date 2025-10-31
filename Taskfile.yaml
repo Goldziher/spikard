@@ -147,6 +147,46 @@ tasks:
     cmds:
       - pnpm run build:all
 
+  generate:openapi:
+    desc: "Generate OpenAPI spec from test fixtures"
+    cmds:
+      - mkdir -p openapi-specs
+      - cargo run --manifest-path tools/test-generator/Cargo.toml -- openapi --fixtures testing_data --output openapi-specs/full.yaml --title "Spikard Test API" --version "1.0.0"
+
+  generate:tests:rust:
+    desc: "Generate Rust test suite from fixtures"
+    cmds:
+      - rm -rf e2e/rust/tests
+      - mkdir -p e2e/rust
+      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang rust --fixtures testing_data --output e2e/rust
+
+  generate:tests:python:
+    desc: "Generate Python test suite from fixtures"
+    cmds:
+      - rm -rf e2e/python/tests
+      - mkdir -p e2e/python
+      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang python --fixtures testing_data --output e2e/python
+
+  generate:tests:typescript:
+    desc: "Generate TypeScript test suite from fixtures"
+    cmds:
+      - rm -rf e2e/typescript/tests
+      - mkdir -p e2e/typescript
+      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang typescript --fixtures testing_data --output e2e/typescript
+
+  generate:tests:
+    desc: "Generate all test suites from fixtures"
+    cmds:
+      - task: generate:tests:rust
+      - task: generate:tests:python
+      - task: generate:tests:typescript
+
+  clean:generated:
+    desc: "Remove all generated test infrastructure"
+    cmds:
+      - rm -rf e2e/*/tests e2e/*/app
+      - rm -rf openapi-specs/
+
   build:js:
     desc: "Build all JavaScript/TypeScript packages (node, wasm)"
     cmds:

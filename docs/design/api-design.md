@@ -13,7 +13,27 @@ Spikard is a **Rust-first, multi-language web framework** that provides:
 
 ## Core Design Decisions
 
-### 1. Route Decorators (Litestar-style)
+### Language-First Design
+- Rust-first API that can be idiomatically reflected in other languages
+- Each binding respects the host language's conventions and patterns
+
+### Inspiration Sources
+- **Fastify** (TypeScript): Effective schema-first design and plugin architecture
+- **Axum** (Rust): High-performance, composable HTTP with type-safe extractors
+- **Litestar** (Python): Clean decorator API and dependency injection patterns
+- **Future languages**: Go (fiber/echo), Ruby (rails/sinatra), PHP (laravel/symfony)
+
+### Code Generation
+**See**: [codegen-strategy.md](./codegen-strategy.md) for complete design
+
+Code generation is a **test infrastructure tool** in this repository:
+- Generates complete test suites from fixtures (Rust, Python/pytest, TypeScript/Vitest)
+- Generates minimal test apps to validate fixture scenarios
+- Lives in `e2e/<lang>/` and can be regenerated at will
+- **NOT a published feature** - internal tooling for maintaining test coverage
+- Full codegen feature (OpenAPI → production apps) is future work
+
+### 1. Route Decorators (Python: Litestar-style)
 
 Following Litestar's excellent design pattern:
 
@@ -24,6 +44,9 @@ from spikard import get, post, put, patch, delete, head, options, route
 **NOT** `app.get()` - decorators are imported directly and used on handler functions.
 
 ### 2. Schema Libraries Support
+
+#### Rust
+- ? TBD
 
 #### Python
 Support ALL major Python schema libraries via `msgspec` conversion to JSON Schema:
@@ -49,7 +72,15 @@ Support major TypeScript schema libraries via JSON Schema extraction:
 - ✅ **ArkType** (newer, growing)
 - ✅ **Raw object literal** with JSON Schema
 
-**Requirement**: Must provide `.toJSONSchema()` method or similar API.
+#### Ruby
+
+TBD
+
+#### PHP
+
+TBD
+
+**Requirement**: Must provide `.toJSONSchema()` method or similar API. We can target a set of conventional names - in different langueges - interface driven design.
 
 ### 3. No Decorators in TypeScript
 
@@ -358,7 +389,7 @@ app.post('/users', {
 #### 1. Zod (Primary, Built-in)
 
 ```typescript
-import { z } from 'spikard'; // Re-exported from 'zod'
+import { z } from 'zod'; // NOT: never re-export third party code.,
 
 const User = z.object({
   name: z.string(),
