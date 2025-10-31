@@ -1,6 +1,7 @@
 //! Rust test app generation
 
 use anyhow::{Context, Result};
+use serde_json::Value;
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
@@ -157,6 +158,7 @@ fn generate_lib_rs(categories: &HashMap<String, Vec<Fixture>>) -> String {
 use axum::{{routing::{{get, post, put, patch, delete, head, options, trace}}, Json, Router}};
 use serde_json::{{json, Value}};
 use std::collections::HashMap;
+use spikard_http::parameters::ParameterValidator;
 
 pub fn create_app() -> Router {{
     Router::new()
@@ -186,41 +188,122 @@ fn generate_router_config(route_map: &HashMap<(String, String), Vec<&Fixture>>) 
 }
 
 fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String {
-    use std::collections::HashSet;
-
     let handler_name = route_method_to_handler_name(route, method);
 
-    // Collect all query parameters from all fixtures using this route/method
-    let mut query_params = HashSet::new();
-    for fixture in fixtures {
-        if let Some(query_map) = &fixture.request.query_params {
-            for key in query_map.keys() {
-                query_params.insert(key.clone());
-            }
-        }
-    }
-
-    // Generate a simple handler that extracts query params as a HashMap
-    if !query_params.is_empty() {
+    // Try to build a schema from fixtures with handler.parameters
+    if let Some(schema) = build_parameter_schema(fixtures) {
+        // Generate handler with validation
+        let schema_json = serde_json::to_string(&schema).unwrap().replace('"', "\\\"");
         format!(
-            r#"async fn {}(axum::extract::Query(params): axum::extract::Query<HashMap<String, String>>) -> Json<Value> {{
-    // Extract and return query parameters
+            r#"async fn {}(
+    axum::extract::Query(query_params): axum::extract::Query<HashMap<String, String>>,
+) -> impl axum::response::IntoResponse {{
+    use spikard_http::parameters::ParameterValidator;
+    use std::collections::HashMap;
+
+    // Parse schema and create validator
+    let schema: Value = serde_json::from_str("{}").unwrap();
+    let validator = ParameterValidator::new(schema).unwrap();
+
+    // Convert query params to JSON Value for validation
+    let query_json: Value = query_params.iter()
+        .map(|(k, v)| (k.clone(), Value::String(v.clone())))
+        .collect::<serde_json::Map<String, Value>>()
+        .into();
+
+    // Validate parameters
+    match validator.validate_and_extract(
+        &query_json,
+        &HashMap::new(),  // path params
+        &HashMap::new(),  // headers
+        &HashMap::new(),  // cookies
+    ) {{
+        Ok(validated) => {{
+            // Return validated data
+            (axum::http::StatusCode::OK, Json(validated))
+        }}
+        Err(err) => {{
+            // Return validation error as 422
+            let error_response = serde_json::json!({{
+                "detail": err.errors
+            }});
+            (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))
+        }}
+    }}
+}}"#,
+            handler_name, schema_json
+        )
+    } else {
+        // No schema available - simple echo handler
+        format!(
+            r#"async fn {}(
+    axum::extract::Query(params): axum::extract::Query<HashMap<String, String>>,
+) -> Json<Value> {{
+    // No validation schema - just echo params
     Json(json!(params))
 }}"#,
             handler_name
         )
-    } else {
-        // No query params - simple handler
-        format!(
-            r#"async fn {}() -> Json<Value> {{
-    Json(json!({{
-        "route": "{}",
-        "method": "{}"
-    }}))
-}}"#,
-            handler_name, route, method
-        )
     }
+}
+
+/// Build a JSON Schema for parameter validation from fixtures
+fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
+    use serde_json::json;
+
+    // Try to find a fixture with handler.parameters
+    for fixture in fixtures {
+        if let Some(handler) = &fixture.handler {
+            if let Some(params) = &handler.parameters {
+                // Convert handler.parameters to JSON Schema format
+                let mut properties = serde_json::Map::new();
+                let mut required = Vec::new();
+
+                // Process query parameters
+                if let Some(query_params) = params.get("query").and_then(|v| v.as_object()) {
+                    for (param_name, param_def) in query_params {
+                        if let Some(param_obj) = param_def.as_object() {
+                            let mut prop = serde_json::Map::new();
+
+                            // Copy type and other fields
+                            if let Some(param_type) = param_obj.get("type") {
+                                prop.insert("type".to_string(), param_type.clone());
+                            }
+
+                            // Add source field for ParameterValidator
+                            prop.insert("source".to_string(), json!("query"));
+
+                            // Copy format, minimum, maximum, pattern, etc.
+                            for (key, value) in param_obj {
+                                if key != "annotation" && key != "type" {
+                                    prop.insert(key.clone(), value.clone());
+                                }
+                            }
+
+                            properties.insert(param_name.clone(), Value::Object(prop));
+
+                            // Mark as required if not optional (check for default or optional flag)
+                            if !param_obj.contains_key("default")
+                                && !param_obj.get("optional").and_then(|v| v.as_bool()).unwrap_or(false)
+                            {
+                                required.push(param_name.clone());
+                            }
+                        }
+                    }
+                }
+
+                if !properties.is_empty() {
+                    return Some(json!({
+                        "type": "object",
+                        "properties": properties,
+                        "required": required
+                    }));
+                }
+            }
+        }
+    }
+
+    None
 }
 
 fn route_method_to_handler_name(route: &str, method: &str) -> String {

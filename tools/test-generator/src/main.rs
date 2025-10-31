@@ -8,7 +8,7 @@ mod rust_tests;
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use spikard_codegen::openapi::{OpenApiOptions, fixtures_to_openapi, load_fixtures_from_dir};
+use spikard_codegen::openapi::{fixtures_to_openapi, load_fixtures_from_dir, OpenApiOptions};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
