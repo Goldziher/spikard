@@ -3,6 +3,7 @@
 //! Internal tool for generating test infrastructure from fixtures.
 //! Generates test applications and test suites for Rust, Python, and TypeScript.
 
+mod rust_app;
 mod rust_tests;
 
 use anyhow::{Context, Result};
@@ -96,7 +97,12 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
     println!("Generating {} tests to {}...", lang, output.display());
 
     match lang {
-        "rust" => rust_tests::generate_rust_tests(&fixtures, &output)?,
+        "rust" => {
+            // Generate test app first
+            rust_app::generate_rust_app(&fixtures, &output)?;
+            // Then generate tests
+            rust_tests::generate_rust_tests(&fixtures, &output)?;
+        }
         "python" => {
             println!("TODO: Generate Python/pytest test suite");
             // Will generate:
