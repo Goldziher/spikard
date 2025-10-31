@@ -11,9 +11,31 @@
     "route": "/api/data",
     "method": "POST",
     "cors": {
-      "allowed_origins": ["https://example.com"],
-      "allowed_methods": ["POST"],
-      "allowed_headers": ["Content-Type"]
+      "allowed_origins": [
+        "https://example.com"
+      ],
+      "allowed_methods": [
+        "POST"
+      ],
+      "allowed_headers": [
+        "Content-Type"
+      ]
+    },
+    "parameters": {
+      "headers": {
+        "Origin": {
+          "type": "string",
+          "optional": true
+        },
+        "Access-Control-Request-Method": {
+          "type": "string",
+          "optional": true
+        },
+        "Access-Control-Request-Headers": {
+          "type": "string",
+          "optional": true
+        }
+      }
     }
   },
   "request": {
@@ -31,5 +53,11 @@
       "Access-Control-Allow-Origin": null
     }
   },
-  "tags": ["cors", "preflight", "headers", "validation", "error"]
+  "tags": [
+    "cors",
+    "preflight",
+    "headers",
+    "validation",
+    "error"
+  ]
 }

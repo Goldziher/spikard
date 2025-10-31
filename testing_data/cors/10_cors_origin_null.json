@@ -11,8 +11,20 @@
     "route": "/api/data",
     "method": "GET",
     "cors": {
-      "allowed_origins": ["https://example.com"],
-      "allowed_methods": ["GET"]
+      "allowed_origins": [
+        "https://example.com"
+      ],
+      "allowed_methods": [
+        "GET"
+      ]
+    },
+    "parameters": {
+      "headers": {
+        "Origin": {
+          "type": "string",
+          "optional": true
+        }
+      }
     }
   },
   "request": {
@@ -28,5 +40,10 @@
       "error": "Origin 'null' is not allowed"
     }
   },
-  "tags": ["cors", "null_origin", "security", "error"]
+  "tags": [
+    "cors",
+    "null_origin",
+    "security",
+    "error"
+  ]
 }
