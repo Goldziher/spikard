@@ -1200,6 +1200,105 @@ mod path_params {
     }
 
     #[tokio::test]
+    async fn test_path_params_path_parameter_type_syntax_with_override() {
+        // Fixture: Path parameter type syntax with override
+        // Description: Tests that explicit parameter schema overrides auto-generated type syntax schema
+        // Expected status: 200
+
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/path_params/38_type_syntax_override.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/type-syntax/items-count/50".to_string();
+
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
+            let query_string = query_params
+                .iter()
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
+    }
+
+    #[tokio::test]
     async fn test_path_params_20_uuid_v3_path_param_success() {
         // Fixture: 20_uuid_v3_path_param_success
         // Description: Path parameter with valid UUID v3 should be accepted
@@ -1597,6 +1696,105 @@ mod path_params {
     }
 
     #[tokio::test]
+    async fn test_path_params_path_parameter_type_syntax_invalid_uuid() {
+        // Fixture: Path parameter type syntax - invalid UUID
+        // Description: Tests that :uuid type syntax properly validates and rejects invalid UUIDs
+        // Expected status: 422
+
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/path_params/39_type_syntax_invalid_uuid.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/type-syntax/items/not-a-uuid".to_string();
+
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
+            let query_string = query_params
+                .iter()
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
+            response.status()
+        );
+    }
+
+    #[tokio::test]
     async fn test_path_params_path_type_parameter_file_path() {
         // Fixture: Path type parameter - file path
         // Description: Tests path type parameter that captures remaining path segments
@@ -1617,6 +1815,105 @@ mod path_params {
 
         // Build request
         let mut uri = "/files/home/johndoe/myfile.txt".to_string();
+
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
+            let query_string = query_params
+                .iter()
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_path_params_path_parameter_with_type_syntax_uuid() {
+        // Fixture: Path parameter with type syntax - UUID
+        // Description: Tests path parameter with :uuid type syntax auto-generates correct schema
+        // Expected status: 200
+
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/path_params/36_type_syntax_uuid.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/type-syntax/items/550e8400-e29b-41d4-a716-446655440000".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
@@ -2711,6 +3008,105 @@ mod path_params {
 
         // Build request
         let mut uri = "/path/float/42.5".to_string();
+
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
+            let query_string = query_params
+                .iter()
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_path_params_path_parameter_with_type_syntax_integer() {
+        // Fixture: Path parameter with type syntax - integer
+        // Description: Tests path parameter with :int type syntax auto-generates correct schema
+        // Expected status: 200
+
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/path_params/37_type_syntax_int.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/type-syntax/users/42".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {

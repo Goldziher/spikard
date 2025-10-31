@@ -324,6 +324,7 @@ impl SchemaValidator {
                 error.ctx
             );
         }
+        #[allow(clippy::collapsible_if)]
         if crate::debug::is_enabled() {
             if let Ok(json_errors) = serde_json::to_value(&errors) {
                 if let Ok(json_str) = serde_json::to_string_pretty(&json_errors) {

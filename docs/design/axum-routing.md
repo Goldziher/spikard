@@ -217,10 +217,190 @@ Flow:
 - `crates/spikard-http/src/parameters.rs` - Parameter validation
 - `packages/python/spikard/routing.py` - Python decorator API
 
+## Path Parameter Type Syntax (Design Decision)
+
+### Motivation
+
+While JSON Schema in the `parameters.path` section provides full validation capabilities, it requires duplication of type information between the route and schema:
+
+```json
+{
+  "route": "/items/{id}",
+  "parameters": {
+    "path": {
+      "id": { "type": "string", "format": "uuid" }
+    }
+  }
+}
+```
+
+To improve developer experience, we support **inline type hints** in route patterns inspired by ASP.NET Core.
+
+### Syntax
+
+Route paths can include type hints using colon notation:
+
+```
+/items/{id:uuid}
+/users/{user_id:int}/posts/{post_id:int}
+/products/{sku:string}
+/events/{date:date}
+```
+
+### Supported Type Hints
+
+| Syntax | JSON Schema Equivalent | Example |
+|--------|------------------------|---------|
+| `{param:int}` | `type: integer` | `/items/{count:int}` |
+| `{param:string}` | `type: string` | `/users/{name:string}` |
+| `{param:uuid}` | `type: string, format: uuid` | `/items/{id:uuid}` |
+| `{param:float}` | `type: number` | `/prices/{amount:float}` |
+| `{param:bool}` | `type: boolean` | `/flags/{enabled:bool}` |
+| `{param:date}` | `type: string, format: date` | `/events/{date:date}` |
+| `{param:datetime}` | `type: string, format: date-time` | `/logs/{timestamp:datetime}` |
+| `{param:path}` | `type: string` (catch-all, includes `/`) | `/files/{filepath:path}` |
+
+### Behavior: Option 1 (Auto-Generation with Override)
+
+**Design Philosophy**: Type hints **auto-generate** parameter schemas. Explicit schemas **override** auto-generated ones.
+
+#### Example 1: Type Hint Only
+
+```json
+{
+  "route": "/items/{id:uuid}/{count:int}"
+}
+```
+
+**Auto-generates:**
+
+```json
+{
+  "route": "/items/{id:uuid}/{count:int}",
+  "parameters": {
+    "path": {
+      "id": { "type": "string", "format": "uuid" },
+      "count": { "type": "integer" }
+    }
+  }
+}
+```
+
+#### Example 2: Type Hint + Constraints
+
+To add validation constraints, you **must repeat the type** in the schema:
+
+```json
+{
+  "route": "/items/{id:uuid}/{count:int}",
+  "parameters": {
+    "path": {
+      "id": { "type": "string", "format": "uuid" },  // Type from hint (repeated)
+      "count": {
+        "type": "integer",     // Must repeat type from hint
+        "minimum": 0,          // Add constraint
+        "maximum": 100
+      }
+    }
+  }
+}
+```
+
+#### Example 3: Override Type Hint
+
+Explicit schema **completely replaces** auto-generated schema:
+
+```json
+{
+  "route": "/items/{id:uuid}",  // Hint says uuid
+  "parameters": {
+    "path": {
+      "id": {
+        "type": "integer"  // Override: now accepts integer, not UUID
+      }
+    }
+  }
+}
+```
+
+**Warning**: Conflicting types should emit a warning but allow the override.
+
+### Rationale for Option 1 (vs. Option 2 Merge)
+
+We chose **Override** over **Merge** behavior because:
+
+1. **Explicit is better than implicit**: Schema is complete and self-documenting
+2. **No magic merging**: Clear precedence rules (explicit schema wins)
+3. **Conflict resolution**: Easy to understand - last one wins
+4. **Debugging**: Can see full schema without parsing route
+5. **Flexibility**: Can override type hints when needed
+
+**Trade-off**: Some type information duplication, but:
+- Type hints are **optional** - use them for simple cases
+- Explicit schemas provide full control when needed
+- Clear separation between route syntax and validation rules
+
+### Implementation Notes
+
+1. **Parser**: Extract type hints from `{param:type}` during route parsing
+2. **Schema Generation**: Only auto-generate if `parameters.path.{param}` is NOT defined
+3. **Validation**: Warn if route hint conflicts with explicit schema type
+4. **Backward Compatibility**: Routes without type hints work as before (100% compatible)
+
+### Examples
+
+#### Simple CRUD
+
+```json
+{
+  "route": "/users/{id:uuid}",
+  "method": "GET"
+}
+```
+
+No explicit schema needed - auto-validates UUID format.
+
+#### Constrained Integer
+
+```json
+{
+  "route": "/items/{count:int}",
+  "parameters": {
+    "path": {
+      "count": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100
+      }
+    }
+  }
+}
+```
+
+Type hint provides base type, schema adds constraints.
+
+#### String with Pattern
+
+```json
+{
+  "route": "/users/{username:string}",
+  "parameters": {
+    "path": {
+      "username": {
+        "type": "string",
+        "pattern": "^[a-z0-9_]+$",
+        "minLength": 3,
+        "maxLength": 20
+      }
+    }
+  }
+}
+```
+
 ## Future Enhancements
 
 1. **Regex path parameters**: Support for patterns like `/files/{path:.*}` using Axum's regex support
-2. **Path parameter constraints**: Type hints in path patterns (e.g., `/users/{user_id:int}`)
+2. **Custom type aliases**: Allow defining custom types (e.g., `{id:userid}` → predefined schema)
 3. **serde_qs integration**: For complex nested query parameters
 4. **Route grouping**: Prefix-based route groups with shared middleware
 5. **Route introspection**: API to query registered routes at runtime
