@@ -207,7 +207,11 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
             serde_json::to_string_pretty(&schema).unwrap()
         );
         // Generate handler with validation
-        let schema_json = serde_json::to_string(&schema).unwrap().replace('"', "\\\"");
+        // Serialize to JSON and escape for embedding in Rust string literal
+        let schema_json = serde_json::to_string(&schema)
+            .unwrap()
+            .replace('\\', "\\\\")  // Escape backslashes first!
+            .replace('"', "\\\""); // Then escape quotes
         format!(
             r#"async fn {}(
     uri: axum::http::Uri,
