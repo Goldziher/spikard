@@ -82,8 +82,32 @@ fn generate_app_file(fixtures_by_category: &HashMap<String, Vec<Fixture>>) -> Re
     // Group all fixtures by route and method
     let routes = group_fixtures_by_route(&all_fixtures);
 
+    // Sort routes to ensure more specific routes (without path params) come before generic ones
+    // This prevents /items/{id} from matching before /items/unicode
+    let mut sorted_routes: Vec<_> = routes.into_iter().collect();
+    sorted_routes.sort_by(|a, b| {
+        let (route_a, method_a) = &a.0;
+        let (route_b, method_b) = &b.0;
+
+        // First, sort by presence of path parameters (routes without params first)
+        let has_param_a = route_a.contains('{');
+        let has_param_b = route_b.contains('{');
+
+        match (has_param_a, has_param_b) {
+            (false, true) => std::cmp::Ordering::Less,  // a (no params) before b (has params)
+            (true, false) => std::cmp::Ordering::Greater, // b (no params) before a (has params)
+            _ => {
+                // If both have params or both don't, sort by path length (longer first for specificity)
+                // Then by route name, then by method
+                route_b.len().cmp(&route_a.len())
+                    .then_with(|| route_a.cmp(route_b))
+                    .then_with(|| method_a.cmp(method_b))
+            }
+        }
+    });
+
     // Generate handlers
-    for ((route, method), route_fixtures) in routes {
+    for ((route, method), route_fixtures) in sorted_routes {
         let handler = generate_handler(&route, &method, &route_fixtures, &mut handler_names)?;
         if !handler.is_empty() {
             code.push_str(&handler);
