@@ -2768,7 +2768,7 @@ mod status_codes {
         let app = spikard_e2e_app::create_app();
 
         // Build request
-        let mut uri = "/data?{{ repeat 'param=value&' 300 times }}".to_string();
+        let mut uri = "/data".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {

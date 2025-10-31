@@ -221,7 +221,7 @@ mod edge_cases {
         let app = spikard_e2e_app::create_app();
 
         // Build request
-        let mut uri = "/search?term=hi%20there".to_string();
+        let mut uri = "/search".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
@@ -811,7 +811,7 @@ mod edge_cases {
         let app = spikard_e2e_app::create_app();
 
         // Build request
-        let mut uri = "/items?filter=".to_string();
+        let mut uri = "/items".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
