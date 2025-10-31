@@ -29,6 +29,11 @@ fn is_method_allowed(method: &str, allowed_methods: &[String]) -> bool {
 
 /// Check if headers are allowed by the CORS configuration
 fn are_headers_allowed(requested_headers: &str, allowed_headers: &[String]) -> bool {
+    // If allowed_headers is empty, allow all headers
+    if allowed_headers.is_empty() {
+        return true;
+    }
+
     // Parse comma-separated header list
     let headers: Vec<&str> = requested_headers
         .split(',')
@@ -73,10 +78,11 @@ pub fn handle_preflight(headers: &HeaderMap, cors_config: &CorsConfig) -> Result
     }
 
     // Get requested headers
-    if let Some(requested_headers) = headers
+    let requested_headers_str = headers
         .get("access-control-request-headers")
-        .and_then(|v| v.to_str().ok())
-    {
+        .and_then(|v| v.to_str().ok());
+
+    if let Some(requested_headers) = requested_headers_str {
         #[allow(clippy::collapsible_if)]
         if !are_headers_allowed(requested_headers, &cors_config.allowed_headers) {
             return Err((StatusCode::FORBIDDEN).into_response());
@@ -107,7 +113,13 @@ pub fn handle_preflight(headers: &HeaderMap, cors_config: &CorsConfig) -> Result
     );
 
     // Allow-Headers
-    let headers_str = cors_config.allowed_headers.join(", ");
+    // If allowed_headers is empty, echo back the requested headers (allow all)
+    // Otherwise, use the configured allowed_headers
+    let headers_str = if cors_config.allowed_headers.is_empty() {
+        requested_headers_str.unwrap_or("*").to_string()
+    } else {
+        cors_config.allowed_headers.join(", ")
+    };
     response_headers.insert(
         "access-control-allow-headers",
         HeaderValue::from_str(&headers_str).unwrap_or(HeaderValue::from_static("Content-Type")),

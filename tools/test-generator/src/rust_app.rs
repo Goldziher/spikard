@@ -2,7 +2,7 @@
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -164,6 +164,7 @@ fn generate_lib_rs(categories: &HashMap<String, Vec<Fixture>>) -> String {
         r#"//! Generated route handlers
 
 use axum::{{routing, routing::{{get, post, put, patch, delete, head, options, trace}}, Json, Router, middleware}};
+use axum::response::IntoResponse;
 use serde_json::{{json, Value}};
 use std::collections::HashMap;
 use spikard_http::parameters::ParameterValidator;
@@ -244,6 +245,31 @@ fn generate_router_config(route_map: &HashMap<(String, String), Vec<&Fixture>>) 
         .join("\n")
 }
 
+/// Generate a CORS preflight handler that uses spikard_http::cors::handle_preflight
+fn generate_cors_preflight_handler(handler_name: &str, cors_config: &Value) -> String {
+    // Serialize the CORS config to a Rust-embeddable JSON string
+    let cors_json = serde_json::to_string(cors_config)
+        .unwrap()
+        .replace('\\', "\\\\")
+        .replace('"', "\\\"");
+
+    format!(
+        r#"async fn {}(
+    headers: axum::http::HeaderMap,
+) -> axum::response::Result<axum::response::Response<axum::body::Body>, axum::response::Response<axum::body::Body>> {{
+    use spikard_http::cors::handle_preflight;
+    use spikard_http::CorsConfig;
+
+    // Parse CORS configuration
+    let cors_config: CorsConfig = serde_json::from_str("{}").unwrap();
+
+    // Handle the preflight request
+    handle_preflight(&headers, &cors_config)
+}}"#,
+        handler_name, cors_json
+    )
+}
+
 fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String {
     let handler_name = route_method_to_handler_name(route, method);
     let has_path_params = route.contains('{');
@@ -258,6 +284,16 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
     );
     for f in fixtures {
         eprintln!("[HANDLER GEN]   - Fixture: {}", f.name);
+    }
+
+    // Check if this handler has CORS configuration
+    let cors_config = extract_cors_config(fixtures);
+
+    // For OPTIONS methods with CORS config, generate a CORS preflight handler
+    if method == "OPTIONS" {
+        if let Some(ref cors_cfg) = cors_config {
+            return generate_cors_preflight_handler(&handler_name, cors_cfg);
+        }
     }
 
     // Determine success status code - use the most common success status (200-299)
@@ -378,12 +414,48 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
             ""
         };
 
+        // Generate CORS validation code if CORS config is present
+        let cors_validation_code = if let Some(ref cors_cfg) = cors_config {
+            let cors_json = serde_json::to_string(cors_cfg)
+                .unwrap()
+                .replace('\\', "\\\\")
+                .replace('"', "\\\"");
+            format!(
+                r#"
+    // CORS validation
+    use spikard_http::cors::{{validate_cors_request, add_cors_headers}};
+    use spikard_http::CorsConfig;
+
+    let cors_config: CorsConfig = serde_json::from_str("{}").unwrap();
+    let origin = headers.get("origin").and_then(|v| v.to_str().ok());
+
+    // Validate CORS request - returns 403 if origin not allowed
+    if let Err(err_response) = validate_cors_request(origin, &cors_config) {{
+        return err_response;
+    }}"#,
+                cors_json
+            )
+        } else {
+            String::new()
+        };
+
+        // Generate CORS header addition code if CORS config is present
+        let cors_headers_code = if cors_config.is_some() {
+            r#"
+    // Add CORS headers to response
+    let mut response = (axum::http::StatusCode::from_u16(status_code).unwrap(), Json(validated)).into_response();
+    response = add_cors_headers(response, origin, &cors_config);
+    response"#
+        } else {
+            r#"(axum::http::StatusCode::from_u16(status_code).unwrap(), Json(validated))"#
+        };
+
         format!(
             r#"{} {{
     use spikard_http::parameters::ParameterValidator;
     use spikard_http::query_parser::parse_query_string_to_json;
     use std::collections::HashMap;
-
+{}
     // Parse parameter schema and create validator
     let schema: Value = serde_json::from_str("{}").unwrap();
     let validator = ParameterValidator::new(schema).unwrap();{}
@@ -415,21 +487,29 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
         &cookies,
     ) {{
         Ok(validated) => {{
-            (axum::http::StatusCode::from_u16({}).unwrap(), Json(validated))
+            let status_code = {};
+            {}
         }}
         Err(err) => {{
             let error_response = serde_json::json!({{
                 "detail": err.errors
             }});
-            (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))
+            {}
         }}
     }}
 }}"#,
             handler_signature,
+            cors_validation_code,
             schema_json,
             body_validator_code,
             if has_path_params { "" } else { "HashMap::new(), //" },
-            success_status
+            success_status,
+            cors_headers_code,
+            if cors_config.is_some() {
+                "(axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response)).into_response()"
+            } else {
+                "(axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))"
+            }
         )
     } else if let Some(body_schema) = body_schema {
         // No parameter schema but we have body schema
@@ -438,12 +518,62 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
             .replace('\\', "\\\\")
             .replace('"', "\\\"");
 
-        format!(
-            r#"async fn {}(
-    axum::extract::Json(body): axum::extract::Json<Value>,
-) -> impl axum::response::IntoResponse {{
-    use spikard_http::SchemaValidator;
+        // Generate CORS code for body-only handler
+        let cors_validation_code = if let Some(ref cors_cfg) = cors_config {
+            let cors_json = serde_json::to_string(cors_cfg)
+                .unwrap()
+                .replace('\\', "\\\\")
+                .replace('"', "\\\"");
+            format!(
+                r#"
+    // CORS validation
+    use spikard_http::cors::{{validate_cors_request, add_cors_headers}};
+    use spikard_http::CorsConfig;
 
+    let cors_config: CorsConfig = serde_json::from_str("{}").unwrap();
+    let origin = headers.get("origin").and_then(|v| v.to_str().ok());
+
+    // Validate CORS request - returns 403 if origin not allowed
+    if let Err(err_response) = validate_cors_request(origin, &cors_config) {{
+        return err_response;
+    }}"#,
+                cors_json
+            )
+        } else {
+            String::new()
+        };
+
+        let handler_sig = if cors_config.is_some() {
+            format!(
+                r#"async fn {}(
+    headers: axum::http::HeaderMap,
+    axum::extract::Json(body): axum::extract::Json<Value>,
+) -> impl axum::response::IntoResponse"#,
+                handler_name
+            )
+        } else {
+            format!(
+                r#"async fn {}(
+    axum::extract::Json(body): axum::extract::Json<Value>,
+) -> impl axum::response::IntoResponse"#,
+                handler_name
+            )
+        };
+
+        let cors_headers_code = if cors_config.is_some() {
+            r#"
+    // Add CORS headers to response
+    let mut response = (axum::http::StatusCode::from_u16(status_code).unwrap(), Json(body)).into_response();
+    response = add_cors_headers(response, origin, &cors_config);
+    response"#
+        } else {
+            r#"(axum::http::StatusCode::from_u16(status_code).unwrap(), Json(body))"#
+        };
+
+        format!(
+            r#"{} {{
+    use spikard_http::SchemaValidator;
+{}
     // Parse body schema and create validator
     let body_schema: Value = serde_json::from_str("{}").unwrap();
     let body_validator = SchemaValidator::new(body_schema).unwrap();
@@ -453,21 +583,81 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
         let error_response = serde_json::json!({{
             "detail": err.errors
         }});
-        return (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response));
+        return {};
     }}
 
-    (axum::http::StatusCode::from_u16({}).unwrap(), Json(body))
+    let status_code = {};
+    {}
 }}"#,
-            handler_name, body_schema_json, success_status
+            handler_sig,
+            cors_validation_code,
+            body_schema_json,
+            if cors_config.is_some() {
+                "(axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response)).into_response()"
+            } else {
+                "(axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))"
+            },
+            success_status,
+            cors_headers_code
         )
     } else {
         // No schema available - simple echo handler
-        format!(
-            r#"async fn {}(
-    uri: axum::http::Uri,
-) -> Json<Value> {{
-    use spikard_http::query_parser::parse_query_string_to_json;
+        // Generate CORS code for simple echo handler
+        let cors_validation_code = if let Some(ref cors_cfg) = cors_config {
+            let cors_json = serde_json::to_string(cors_cfg)
+                .unwrap()
+                .replace('\\', "\\\\")
+                .replace('"', "\\\"");
+            format!(
+                r#"
+    // CORS validation
+    use spikard_http::cors::{{validate_cors_request, add_cors_headers}};
+    use spikard_http::CorsConfig;
 
+    let cors_config: CorsConfig = serde_json::from_str("{}").unwrap();
+    let origin = headers.get("origin").and_then(|v| v.to_str().ok());
+
+    // Validate CORS request - returns 403 if origin not allowed
+    if let Err(err_response) = validate_cors_request(origin, &cors_config) {{
+        return err_response;
+    }}"#,
+                cors_json
+            )
+        } else {
+            String::new()
+        };
+
+        let handler_sig = if cors_config.is_some() {
+            format!(
+                r#"async fn {}(
+    headers: axum::http::HeaderMap,
+    uri: axum::http::Uri,
+) -> impl axum::response::IntoResponse"#,
+                handler_name
+            )
+        } else {
+            format!(
+                r#"async fn {}(
+    uri: axum::http::Uri,
+) -> Json<Value>"#,
+                handler_name
+            )
+        };
+
+        let cors_headers_code = if cors_config.is_some() {
+            r#"
+    // Add CORS headers to response
+    let mut response = Json(params).into_response();
+    response = add_cors_headers(response, origin, &cors_config);
+    response"#
+        } else {
+            r#"Json(params)"#
+        };
+
+        format!(
+            r#"{} {{
+    use spikard_http::query_parser::parse_query_string_to_json;
+{}
     // Parse query params using Spikard's parser
     let params = if let Some(query_str) = uri.query() {{
         parse_query_string_to_json(query_str.as_bytes(), true)
@@ -475,9 +665,9 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
         Value::Object(serde_json::Map::new())
     }};
 
-    Json(params)
+    {}
 }}"#,
-            handler_name
+            handler_sig, cors_validation_code, cors_headers_code
         )
     }
 }
@@ -528,6 +718,19 @@ fn type_hint_to_schema(type_hint: &str) -> serde_json::Map<String, Value> {
     }
 
     schema
+}
+
+/// Extract CORS configuration from fixtures if present
+/// Returns the CORS config from the first fixture that has one
+fn extract_cors_config(fixtures: &[&Fixture]) -> Option<Value> {
+    for fixture in fixtures {
+        if let Some(handler) = &fixture.handler {
+            if let Some(cors) = &handler.cors {
+                return Some(cors.clone());
+            }
+        }
+    }
+    None
 }
 
 /// Build a JSON Schema for parameter validation from fixtures
