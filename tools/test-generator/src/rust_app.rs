@@ -2,7 +2,7 @@
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
+use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -189,12 +189,14 @@ fn generate_router_config(route_map: &HashMap<(String, String), Vec<&Fixture>>) 
 
 fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String {
     let handler_name = route_method_to_handler_name(route, method);
+    let has_path_params = route.contains('{');
 
     eprintln!(
-        "[HANDLER GEN] Generating handler for {} {} with {} fixtures",
+        "[HANDLER GEN] Generating handler for {} {} with {} fixtures{}",
         method,
         route,
-        fixtures.len()
+        fixtures.len(),
+        if has_path_params { " (with path params)" } else { "" }
     );
     for f in fixtures {
         eprintln!("[HANDLER GEN]   - Fixture: {}", f.name);
@@ -212,10 +214,26 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
             .unwrap()
             .replace('\\', "\\\\")  // Escape backslashes first!
             .replace('"', "\\\""); // Then escape quotes
-        format!(
-            r#"async fn {}(
+
+        let handler_signature = if has_path_params {
+            format!(
+                r#"async fn {}(
+    axum::extract::Path(path_params): axum::extract::Path<HashMap<String, String>>,
     uri: axum::http::Uri,
-) -> impl axum::response::IntoResponse {{
+) -> impl axum::response::IntoResponse"#,
+                handler_name
+            )
+        } else {
+            format!(
+                r#"async fn {}(
+    uri: axum::http::Uri,
+) -> impl axum::response::IntoResponse"#,
+                handler_name
+            )
+        };
+
+        format!(
+            r#"{} {{
     use spikard_http::parameters::ParameterValidator;
     use spikard_http::query_parser::parse_query_string_to_json;
     use std::collections::HashMap;
@@ -233,17 +251,15 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
 
     // Validate parameters
     match validator.validate_and_extract(
-        &query_params,  // parsed query params with correct types
-        &HashMap::new(),  // path params
-        &HashMap::new(),  // headers
-        &HashMap::new(),  // cookies
+        &query_params,
+        &{}path_params,
+        &HashMap::new(),
+        &HashMap::new(),
     ) {{
         Ok(validated) => {{
-            // Return validated data
             (axum::http::StatusCode::OK, Json(validated))
         }}
         Err(err) => {{
-            // Return validation error as 422
             let error_response = serde_json::json!({{
                 "detail": err.errors
             }});
@@ -251,7 +267,9 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
         }}
     }}
 }}"#,
-            handler_name, schema_json
+            handler_signature,
+            schema_json,
+            if has_path_params { "" } else { "HashMap::new(), //" }
         )
     } else {
         // No schema available - simple echo handler
@@ -289,42 +307,50 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
     for fixture in fixtures {
         if let Some(handler) = &fixture.handler {
             if let Some(params) = &handler.parameters {
-                // Process query parameters
-                if let Some(query_params) = params.get("query").and_then(|v| v.as_object()) {
-                    for (param_name, param_def) in query_params {
-                        if let Some(param_obj) = param_def.as_object() {
-                            // Get or create property for this parameter
-                            let prop = properties.entry(param_name.clone()).or_insert_with(|| {
-                                let mut p = serde_json::Map::new();
-                                p.insert("source".to_string(), json!("query"));
-                                Value::Object(p)
-                            });
+                // Process both query and path parameters
+                for (source, param_source_name) in &[("query", "query"), ("path", "path")] {
+                    if let Some(source_params) = params.get(*param_source_name).and_then(|v| v.as_object()) {
+                        for (param_name, param_def) in source_params {
+                            if let Some(param_obj) = param_def.as_object() {
+                                // Get or create property for this parameter
+                                let prop = properties.entry(param_name.clone()).or_insert_with(|| {
+                                    let mut p = serde_json::Map::new();
+                                    p.insert("source".to_string(), json!(source));
+                                    Value::Object(p)
+                                });
 
-                            if let Some(prop_map) = prop.as_object_mut() {
-                                // Set type if not already set
-                                if !prop_map.contains_key("type") {
-                                    if let Some(param_type) = param_obj.get("type") {
-                                        prop_map.insert("type".to_string(), param_type.clone());
+                                if let Some(prop_map) = prop.as_object_mut() {
+                                    // Set type if not already set
+                                    if !prop_map.contains_key("type") {
+                                        if let Some(param_type) = param_obj.get("type") {
+                                            prop_map.insert("type".to_string(), param_type.clone());
+                                        }
                                     }
-                                }
 
-                                // Merge constraint fields (take union of all constraints)
-                                for (key, value) in param_obj {
-                                    if key != "annotation" && key != "type" && key != "required" {
-                                        // Merge: keep the existing value or add new one
-                                        prop_map.entry(key.clone()).or_insert(value.clone());
+                                    // Merge ALL constraint fields (take union)
+                                    // This means tests get the most restrictive schema
+                                    for (key, value) in param_obj {
+                                        if key != "annotation" && key != "type" && key != "required" {
+                                            // Use entry API to only insert if not already present
+                                            prop_map.entry(key.clone()).or_insert(value.clone());
+                                        }
                                     }
-                                }
 
-                                // Track if this fixture requires this parameter
-                                let is_required = !param_obj.contains_key("default")
-                                    && !param_obj.contains_key("optional")
-                                    && param_obj.get("required").and_then(|v| v.as_bool()).unwrap_or(true);
+                                    // Track if this fixture requires this parameter
+                                    // Path parameters are always required by default
+                                    let is_required = if *source == "path" {
+                                        true
+                                    } else {
+                                        !param_obj.contains_key("default")
+                                            && !param_obj.contains_key("optional")
+                                            && param_obj.get("required").and_then(|v| v.as_bool()).unwrap_or(true)
+                                    };
 
-                                let entry = param_fixture_count.entry(param_name.clone()).or_insert((0, 0));
-                                entry.0 += 1; // fixtures with this param
-                                if is_required {
-                                    entry.1 += 1; // fixtures requiring this param
+                                    let entry = param_fixture_count.entry(param_name.clone()).or_insert((0, 0));
+                                    entry.0 += 1; // fixtures with this param
+                                    if is_required {
+                                        entry.1 += 1; // fixtures requiring this param
+                                    }
                                 }
                             }
                         }

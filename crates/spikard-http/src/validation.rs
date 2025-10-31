@@ -15,8 +15,10 @@ pub struct SchemaValidator {
 impl SchemaValidator {
     /// Create a new validator from a JSON Schema
     pub fn new(schema: Value) -> Result<Self, String> {
-        // Enable format validation (UUID, date-time, etc.)
+        // Enable format validation (UUID, date-time, time, etc.)
+        // Use Draft 2020-12 for better format support (includes time, duration, etc.)
         let compiled = jsonschema::options()
+            .with_draft(jsonschema::Draft::Draft202012)
             .should_validate_formats(true)
             .build(&schema)
             .map_err(|e| format!("Invalid JSON Schema: {}", e))?;
@@ -322,11 +324,12 @@ impl SchemaValidator {
                 error.ctx
             );
         }
-        if crate::debug::is_enabled()
-            && let Ok(json_errors) = serde_json::to_value(&errors)
-            && let Ok(json_str) = serde_json::to_string_pretty(&json_errors)
-        {
-            debug_log_module!("validation", "Serialized errors:\n{}", json_str);
+        if crate::debug::is_enabled() {
+            if let Ok(json_errors) = serde_json::to_value(&errors) {
+                if let Ok(json_str) = serde_json::to_string_pretty(&json_errors) {
+                    debug_log_module!("validation", "Serialized errors:\n{}", json_str);
+                }
+            }
         }
 
         Err(ValidationError { errors })

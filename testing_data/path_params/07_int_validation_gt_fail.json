@@ -1,10 +1,23 @@
 {
   "name": "Integer path parameter with gt constraint - failure",
   "description": "Tests integer path parameter with gt validation fails when value too small",
+  "category": "path_params",
   "source": {
     "framework": "fastapi",
     "test_file": "tests/test_path.py",
     "test_function": "test_path_param_gt_2"
+  },
+  "handler": {
+    "route": "/path/param-gt/{item_id}",
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "item_id": {
+          "type": "integer",
+          "exclusiveMinimum": 3
+        }
+      }
+    }
   },
   "request": {
     "method": "GET",

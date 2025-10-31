@@ -1,10 +1,23 @@
 {
   "name": "String path parameter with max_length - failure",
   "description": "Tests string path parameter with max_length validation fails when too long",
+  "category": "path_params",
   "source": {
     "framework": "fastapi",
     "test_file": "tests/test_path.py",
     "test_function": "test_path_param_maxlength_foobar"
+  },
+  "handler": {
+    "route": "/path/param-maxlength/{item_id}",
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "item_id": {
+          "type": "string",
+          "maxLength": 3
+        }
+      }
+    }
   },
   "request": {
     "method": "GET",
