@@ -5,266 +5,1064 @@
 mod multipart {
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_multiple_values_for_same_field_name() {
         // Fixture: Multiple values for same field name
         // Description: Multiple files uploaded with the same field name (array-like behavior)
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: Multiple values for same field name");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/multipart/07_multiple_values_same_field.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_19_file_mime_spoofing_png_as_jpeg() {
         // Fixture: 19_file_mime_spoofing_png_as_jpeg
         // Description: File with PNG magic number but JPEG MIME type should be rejected (spoofing detection)
-
-        // TODO: Load fixture and execute test
         // Expected status: 422
 
-        todo!("Implement test for fixture: 19_file_mime_spoofing_png_as_jpeg");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json =
+            std::fs::read_to_string("../../testing_data/multipart/19_file_mime_spoofing_png_as_jpeg.json")
+                .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/upload".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_20_file_mime_spoofing_jpeg_as_png() {
         // Fixture: 20_file_mime_spoofing_jpeg_as_png
         // Description: File with JPEG magic number but PNG MIME type should be rejected (spoofing detection)
-
-        // TODO: Load fixture and execute test
         // Expected status: 422
 
-        todo!("Implement test for fixture: 20_file_mime_spoofing_jpeg_as_png");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json =
+            std::fs::read_to_string("../../testing_data/multipart/20_file_mime_spoofing_jpeg_as_png.json")
+                .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/upload".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_21_file_pdf_magic_number_success() {
         // Fixture: 21_file_pdf_magic_number_success
         // Description: File with correct PDF magic number should be accepted
-
-        // TODO: Load fixture and execute test
         // Expected status: 201
 
-        todo!("Implement test for fixture: 21_file_pdf_magic_number_success");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json =
+            std::fs::read_to_string("../../testing_data/multipart/21_file_pdf_magic_number_success.json")
+                .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/upload".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(201).unwrap(),
+            "Expected status 201, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_content_type_validation_invalid_type() {
         // Fixture: Content-Type validation - invalid type
         // Description: Tests file upload with disallowed content type
-
-        // TODO: Load fixture and execute test
         // Expected status: 422
 
-        todo!("Implement test for fixture: Content-Type validation - invalid type");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/multipart/15_content_type_validation_fail.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/files/images-only".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_pdf_file_upload() {
         // Fixture: PDF file upload
         // Description: Tests uploading a PDF document
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: PDF file upload");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/multipart/13_pdf_file_upload.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/files/document".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_file_list_upload_array_of_files() {
         // Fixture: File list upload (array of files)
         // Description: Tests uploading multiple files as a list parameter
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: File list upload (array of files)");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/multipart/10_file_list_upload.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/files/list".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_optional_file_upload_provided() {
         // Fixture: Optional file upload - provided
         // Description: Tests optional file parameter when file is provided
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: Optional file upload - provided");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json =
+            std::fs::read_to_string("../../testing_data/multipart/09_optional_file_upload_provided.json")
+                .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/files/optional".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_file_size_validation_too_large() {
         // Fixture: File size validation - too large
         // Description: Tests file upload exceeding max size limit
-
-        // TODO: Load fixture and execute test
         // Expected status: 413
 
-        todo!("Implement test for fixture: File size validation - too large");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/multipart/14_file_size_validation_fail.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/files/validated".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(413).unwrap(),
+            "Expected status 413, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_mixed_files_and_form_data() {
         // Fixture: Mixed files and form data
         // Description: Multipart request with both file uploads and regular form fields
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: Mixed files and form data");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/multipart/04_mixed_files_and_data.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_simple_file_upload() {
         // Fixture: Simple file upload
         // Description: Single file upload with text/plain content type
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: Simple file upload");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/multipart/01_simple_file_upload.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_empty_file_upload() {
         // Fixture: Empty file upload
         // Description: Tests uploading a file with zero bytes
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: Empty file upload");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/multipart/11_empty_file_upload.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/files/upload".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_optional_file_upload_missing() {
         // Fixture: Optional file upload - missing
         // Description: Tests optional file parameter when no file is provided
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: Optional file upload - missing");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/multipart/08_optional_file_upload_missing.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/files/optional".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_file_upload_without_filename() {
         // Fixture: File upload without filename
         // Description: Upload file content without providing a filename
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: File upload without filename");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/multipart/06_file_without_filename.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_18_file_magic_number_jpeg_success() {
         // Fixture: 18_file_magic_number_jpeg_success
         // Description: File with correct JPEG magic number and matching MIME type should be accepted
-
-        // TODO: Load fixture and execute test
         // Expected status: 201
 
-        todo!("Implement test for fixture: 18_file_magic_number_jpeg_success");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json =
+            std::fs::read_to_string("../../testing_data/multipart/18_file_magic_number_jpeg_success.json")
+                .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/upload".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(201).unwrap(),
+            "Expected status 201, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_22_file_empty_buffer() {
         // Fixture: 22_file_empty_buffer
         // Description: File with empty buffer should fail validation
-
-        // TODO: Load fixture and execute test
         // Expected status: 422
 
-        todo!("Implement test for fixture: 22_file_empty_buffer");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/multipart/22_file_empty_buffer.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/upload".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_17_file_magic_number_png_success() {
         // Fixture: 17_file_magic_number_png_success
         // Description: File with correct PNG magic number and matching MIME type should be accepted
-
-        // TODO: Load fixture and execute test
         // Expected status: 201
 
-        todo!("Implement test for fixture: 17_file_magic_number_png_success");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json =
+            std::fs::read_to_string("../../testing_data/multipart/17_file_magic_number_png_success.json")
+                .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/upload".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(201).unwrap(),
+            "Expected status 201, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_form_data_without_files() {
         // Fixture: Form data without files
         // Description: Multipart form with only text fields, no file uploads
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: Form data without files");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/multipart/02_form_data_only.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_multiple_file_uploads() {
         // Fixture: Multiple file uploads
         // Description: Upload multiple files in a single multipart request
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: Multiple file uploads");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/multipart/03_multiple_files.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_file_upload_with_custom_headers() {
         // Fixture: File upload with custom headers
         // Description: File upload with additional custom headers in the multipart section
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: File upload with custom headers");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/multipart/05_file_with_custom_headers.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_required_file_upload_missing() {
         // Fixture: Required file upload - missing
         // Description: Tests required file parameter when no file is provided
-
-        // TODO: Load fixture and execute test
         // Expected status: 422
 
-        todo!("Implement test for fixture: Required file upload - missing");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/multipart/16_required_file_missing.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/files/required".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_multipart_image_file_upload() {
         // Fixture: Image file upload
         // Description: Tests uploading an image file (JPEG)
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: Image file upload");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/multipart/12_image_file_upload.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/files/image".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 }
