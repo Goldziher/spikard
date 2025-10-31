@@ -55,13 +55,13 @@ def extract_parameter_schema(func: Callable[..., Any], path: str | None = None) 
         # Convert FieldDefinition to JSON Schema
         param_schema = field_definition_to_json_schema(field_def)
 
-        # Determine parameter source
-        if param_name in path_param_names:
-            param_schema["source"] = "path"
-        else:
-            # Default to query params for now
-            # (Will be extended to support header, cookie params via annotations)
-            param_schema["source"] = "query"
+        # Determine parameter source (if not already set from Field constraints)
+        if "source" not in param_schema:
+            if param_name in path_param_names:
+                param_schema["source"] = "path"
+            else:
+                # Default to query params
+                param_schema["source"] = "query"
 
         schema["properties"][param_name] = param_schema
 

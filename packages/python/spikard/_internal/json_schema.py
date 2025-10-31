@@ -158,6 +158,10 @@ def _apply_constraints(schema: dict[str, Any], constraints: dict[str, Any]) -> N
         schema: The JSON Schema dict to modify
         constraints: Dictionary of constraint names to values
     """
+    # Parameter source (cookie, header, query, path, body)
+    if "source" in constraints:
+        schema["source"] = constraints["source"]
+
     # String constraints
     if "min_length" in constraints:
         schema["minLength"] = constraints["min_length"]

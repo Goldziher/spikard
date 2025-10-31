@@ -11,6 +11,45 @@ License: MIT (see ATTRIBUTIONS.md in project root)
 from typing import Any, get_args, get_origin
 
 
+def _extract_from_metadata_item(item: Any) -> dict[str, Any]:
+    """Extract constraints from a single metadata item.
+
+    Args:
+        item: Metadata item from Pydantic FieldInfo
+
+    Returns:
+        Dictionary of constraint names to values
+    """
+    constraints: dict[str, Any] = {}
+    item_type = type(item).__name__
+
+    # Handle annotated_types constraints
+    if item_type == "MinLen":
+        constraints["min_length"] = item.min_length
+    elif item_type == "MaxLen":
+        constraints["max_length"] = item.max_length
+    elif item_type == "Gt":
+        constraints["gt"] = item.gt
+    elif item_type == "Ge":
+        constraints["ge"] = item.ge
+    elif item_type == "Lt":
+        constraints["lt"] = item.lt
+    elif item_type == "Le":
+        constraints["le"] = item.le
+    elif item_type == "MultipleOf":
+        constraints["multiple_of"] = item.multiple_of
+    # Handle Pydantic's _PydanticGeneralMetadata
+    elif item_type == "_PydanticGeneralMetadata":
+        if hasattr(item, "pattern") and item.pattern is not None:
+            constraints["pattern"] = item.pattern
+        if hasattr(item, "min_length") and item.min_length is not None:
+            constraints["min_length"] = item.min_length
+        if hasattr(item, "max_length") and item.max_length is not None:
+            constraints["max_length"] = item.max_length
+
+    return constraints
+
+
 def extract_constraints_from_field(field_info: Any) -> dict[str, Any]:
     """Extract JSON Schema constraints from a Pydantic FieldInfo object.
 
@@ -25,34 +64,18 @@ def extract_constraints_from_field(field_info: Any) -> dict[str, Any]:
     if not hasattr(field_info, "metadata"):
         return constraints
 
-    # Iterate through metadata items
+    # Extract source from json_schema_extra if present
+    if (
+        hasattr(field_info, "json_schema_extra")
+        and isinstance(field_info.json_schema_extra, dict)
+        and "source" in field_info.json_schema_extra
+    ):
+        constraints["source"] = field_info.json_schema_extra["source"]
+
+    # Iterate through metadata items and merge constraints
     for item in field_info.metadata:
-        item_type = type(item).__name__
-
-        # Handle annotated_types constraints
-        if item_type == "MinLen":
-            constraints["min_length"] = item.min_length
-        elif item_type == "MaxLen":
-            constraints["max_length"] = item.max_length
-        elif item_type == "Gt":
-            constraints["gt"] = item.gt
-        elif item_type == "Ge":
-            constraints["ge"] = item.ge
-        elif item_type == "Lt":
-            constraints["lt"] = item.lt
-        elif item_type == "Le":
-            constraints["le"] = item.le
-        elif item_type == "MultipleOf":
-            constraints["multiple_of"] = item.multiple_of
-
-        # Handle Pydantic's _PydanticGeneralMetadata
-        elif item_type == "_PydanticGeneralMetadata":
-            if hasattr(item, "pattern") and item.pattern is not None:
-                constraints["pattern"] = item.pattern
-            if hasattr(item, "min_length") and item.min_length is not None:
-                constraints["min_length"] = item.min_length
-            if hasattr(item, "max_length") and item.max_length is not None:
-                constraints["max_length"] = item.max_length
+        item_constraints = _extract_from_metadata_item(item)
+        constraints.update(item_constraints)
 
     return constraints
 
