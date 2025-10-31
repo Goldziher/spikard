@@ -20,15 +20,15 @@
   },
   "request": {
     "method": "GET",
-    "path": "/search?term=hello%20world%21",
+    "path": "/search?term=hi%20there",
     "query_params": {
-      "term": "hello world!"
+      "term": "hi there"
     }
   },
   "expected_response": {
     "status_code": 200,
     "body": {
-      "term": "hello world!"
+      "term": "hi there"
     }
   },
   "tags": ["edge_cases", "percent_encoding", "query_params", "decoding", "success"]
