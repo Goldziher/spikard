@@ -397,20 +397,29 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
                     if let Some(source_params) = params.get(*param_source_name).and_then(|v| v.as_object()) {
                         for (param_name, param_def) in source_params {
                             if let Some(param_obj) = param_def.as_object() {
-                                // OVERRIDE behavior: explicit schema completely replaces auto-generated schema
-                                // This implements Option 1 from the design decision
-                                let mut prop_map = serde_json::Map::new();
-                                prop_map.insert("source".to_string(), json!(source));
+                                // Get or create property for this parameter
+                                let prop = properties.entry(param_name.clone()).or_insert_with(|| {
+                                    let mut p = serde_json::Map::new();
+                                    p.insert("source".to_string(), json!(source));
+                                    Value::Object(p)
+                                });
 
-                                // Copy ALL fields from explicit schema (full override)
-                                for (key, value) in param_obj {
-                                    if key != "annotation" && key != "required" {
-                                        prop_map.insert(key.clone(), value.clone());
+                                if let Some(prop_map) = prop.as_object_mut() {
+                                    // Merge constraint fields from this fixture's schema
+                                    // Type should be consistent across fixtures, take first one
+                                    if !prop_map.contains_key("type") {
+                                        if let Some(param_type) = param_obj.get("type") {
+                                            prop_map.insert("type".to_string(), param_type.clone());
+                                        }
+                                    }
+
+                                    // Merge ALL constraint fields (union approach)
+                                    for (key, value) in param_obj {
+                                        if key != "annotation" && key != "type" && key != "required" {
+                                            prop_map.entry(key.clone()).or_insert(value.clone());
+                                        }
                                     }
                                 }
-
-                                // Replace any auto-generated schema with explicit schema
-                                properties.insert(param_name.clone(), Value::Object(prop_map.clone()));
 
                                 // Track if this fixture requires this parameter
                                 // Path parameters are always required by default
