@@ -12,7 +12,11 @@
     "body_schema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "type": "object",
-      "required": ["id", "name", "price"],
+      "required": [
+        "id",
+        "name",
+        "price"
+      ],
       "properties": {
         "id": {
           "type": "integer"
@@ -24,6 +28,13 @@
         "price": {
           "type": "number",
           "exclusiveMinimum": 0
+        }
+      }
+    },
+    "parameters": {
+      "path": {
+        "id": {
+          "type": "string"
         }
       }
     }
@@ -46,13 +57,19 @@
       "detail": [
         {
           "type": "string_too_short",
-          "loc": ["body", "name"],
+          "loc": [
+            "body",
+            "name"
+          ],
           "msg": "String should have at least 3 characters",
           "input": "X"
         },
         {
           "type": "greater_than",
-          "loc": ["body", "price"],
+          "loc": [
+            "body",
+            "price"
+          ],
           "msg": "Input should be greater than 0",
           "input": -10
         }

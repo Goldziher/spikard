@@ -8,7 +8,14 @@
   },
   "handler": {
     "route": "/items/{id}",
-    "method": "DELETE"
+    "method": "DELETE",
+    "parameters": {
+      "path": {
+        "id": {
+          "type": "string"
+        }
+      }
+    }
   },
   "request": {
     "method": "DELETE",

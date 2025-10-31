@@ -10,9 +10,24 @@
     "route": "/items/",
     "method": "GET",
     "cors": {
-      "allowed_origins": ["https://example.com"],
-      "allowed_methods": ["GET", "POST"],
-      "allowed_headers": ["Content-Type"]
+      "allowed_origins": [
+        "https://example.com"
+      ],
+      "allowed_methods": [
+        "GET",
+        "POST"
+      ],
+      "allowed_headers": [
+        "Content-Type"
+      ]
+    },
+    "parameters": {
+      "headers": {
+        "Origin": {
+          "type": "string",
+          "optional": true
+        }
+      }
     }
   },
   "request": {

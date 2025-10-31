@@ -9,7 +9,14 @@
   },
   "handler": {
     "route": "/type-syntax/users/{user_id:int}",
-    "method": "GET"
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "user_id": {
+          "type": "string"
+        }
+      }
+    }
   },
   "request": {
     "method": "GET",

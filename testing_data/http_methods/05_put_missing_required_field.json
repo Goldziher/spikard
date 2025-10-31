@@ -8,7 +8,31 @@
   },
   "handler": {
     "route": "/items/{id}",
-    "method": "PUT"
+    "method": "PUT",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "price"
+      ]
+    },
+    "parameters": {
+      "path": {
+        "id": {
+          "type": "string"
+        }
+      }
+    }
   },
   "request": {
     "method": "PUT",

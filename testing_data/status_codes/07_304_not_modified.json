@@ -8,7 +8,20 @@
   },
   "handler": {
     "route": "/status-test/{code}",
-    "method": "GET"
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "code": {
+          "type": "string"
+        }
+      },
+      "headers": {
+        "If-None-Match": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    }
   },
   "request": {
     "method": "GET",

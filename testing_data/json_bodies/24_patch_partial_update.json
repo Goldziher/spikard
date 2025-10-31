@@ -8,7 +8,25 @@
   },
   "handler": {
     "route": "/items/{id}",
-    "method": "PATCH"
+    "method": "PATCH",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "price": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "price"
+      ]
+    },
+    "parameters": {
+      "path": {
+        "id": {
+          "type": "string"
+        }
+      }
+    }
   },
   "request": {
     "method": "PATCH",

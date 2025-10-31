@@ -10,7 +10,15 @@
   "handler": {
     "route": "/data",
     "method": "GET",
-    "max_header_size": 8192
+    "max_header_size": 8192,
+    "parameters": {
+      "headers": {
+        "X-Large-Header": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    }
   },
   "request": {
     "method": "GET",
@@ -26,5 +34,10 @@
       "message": "Request headers exceed maximum allowed size of 8192 bytes"
     }
   },
-  "tags": ["status_codes", "431", "header_size", "error"]
+  "tags": [
+    "status_codes",
+    "431",
+    "header_size",
+    "error"
+  ]
 }

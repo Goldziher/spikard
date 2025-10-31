@@ -9,7 +9,14 @@
   },
   "handler": {
     "route": "/type-syntax/items/{id:uuid}",
-    "method": "GET"
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "id": {
+          "type": "string"
+        }
+      }
+    }
   },
   "request": {
     "method": "GET",
