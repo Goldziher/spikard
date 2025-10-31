@@ -616,6 +616,7 @@ fn merge_schemas(schemas: &[Value]) -> Value {
         let mut min_props: Option<u64> = None;
         let mut max_props: Option<u64> = None;
         let mut additional_props: Option<Value> = None;
+        let mut all_definitions: HashMap<String, Value> = HashMap::new();
 
         for schema in schemas {
             // Collect required fields from this schema
@@ -658,6 +659,19 @@ fn merge_schemas(schemas: &[Value]) -> Value {
                         additional_props = Some(json!(false));
                     }
                 }
+
+                // Collect definitions (for $ref support)
+                if let Some(defs) = obj.get("definitions").and_then(|d| d.as_object()) {
+                    for (key, value) in defs {
+                        all_definitions.insert(key.clone(), value.clone());
+                    }
+                }
+                // Also handle $defs (Draft 2019-09+)
+                if let Some(defs) = obj.get("$defs").and_then(|d| d.as_object()) {
+                    for (key, value) in defs {
+                        all_definitions.insert(key.clone(), value.clone());
+                    }
+                }
             }
         }
 
@@ -689,6 +703,9 @@ fn merge_schemas(schemas: &[Value]) -> Value {
         }
         if let Some(additional) = additional_props {
             merged.insert("additionalProperties".to_string(), additional);
+        }
+        if !all_definitions.is_empty() {
+            merged.insert("definitions".to_string(), json!(all_definitions));
         }
 
         Value::Object(merged)
@@ -724,12 +741,7 @@ fn infer_body_schema(fixtures: &[&Fixture]) -> Option<Value> {
         }
     }
 
-    // If no bodies to analyze, no schema
-    if success_bodies.is_empty() {
-        return None;
-    }
-
-    // Infer schema by analyzing the structure of success bodies
+    // Infer schema by analyzing the structure of success bodies (if any)
     let mut properties = serde_json::Map::new();
     let mut required_fields = HashSet::new();
 
@@ -742,6 +754,19 @@ fn infer_body_schema(fixtures: &[&Fixture]) -> Option<Value> {
                 // Infer type from value
                 if !properties.contains_key(key) {
                     properties.insert(key.clone(), infer_type_from_value(value));
+                }
+            }
+        }
+    }
+
+    // If no success bodies, try to infer from failure request bodies
+    if success_bodies.is_empty() && !validation_failures.is_empty() {
+        for (body, _) in &validation_failures {
+            if let Value::Object(obj) = body {
+                for (key, value) in obj {
+                    if !properties.contains_key(key) {
+                        properties.insert(key.clone(), infer_type_from_value(value));
+                    }
                 }
             }
         }
