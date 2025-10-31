@@ -18,20 +18,20 @@ thiserror = "2.0"
 anyhow = "1.0"
 
 # Template engine
-handlebars = "6.0"
+handlebars = "6.3"
 tera = "1.20"
 
 # JSON Schema
-jsonschema = "0.26"
-schemars = "0.8"
+jsonschema = "0.33"
+schemars = "1.0"
 
 # Utilities
-indexmap = { version = "2.0", features = ["serde"] }
-regex = "1.11"
+indexmap = { version = "2.12", features = ["serde"] }
+regex = "1.12"
 
 [dev-dependencies]
-insta = "1.40"  # For snapshot testing
-tempfile = "3.0"
+insta = "1.43"  # For snapshot testing
+tempfile = "3.23"
 
 [features]
 default = []
