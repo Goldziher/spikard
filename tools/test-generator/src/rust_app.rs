@@ -233,12 +233,41 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
     // Try to build a parameter schema
     let param_schema = build_parameter_schema(fixtures);
 
-    // Try to infer body schema for POST/PUT/PATCH
-    let body_schema = if has_body { infer_body_schema(fixtures) } else { None };
+    // Try to get explicit body schema first, fallback to inference
+    let body_schema = if has_body {
+        // Collect all explicit body schemas from fixtures
+        let explicit_schemas: Vec<Value> = fixtures
+            .iter()
+            .filter_map(|f| f.handler.as_ref().and_then(|h| h.body_schema.as_ref()).cloned())
+            .collect();
+
+        if !explicit_schemas.is_empty() {
+            // If all explicit schemas are identical, use that one
+            if explicit_schemas.iter().all(|s| s == &explicit_schemas[0]) {
+                Some(explicit_schemas[0].clone())
+            } else {
+                // Multiple different schemas - combine them with anyOf
+                use serde_json::json;
+                eprintln!("[HANDLER GEN] Multiple different body schemas found, combining with anyOf");
+                Some(json!({
+                    "anyOf": explicit_schemas
+                }))
+            }
+        } else {
+            // No explicit schemas, try inference
+            infer_body_schema(fixtures)
+        }
+    } else {
+        None
+    };
 
     if let Some(body_schema) = &body_schema {
+        let is_explicit = fixtures
+            .iter()
+            .any(|f| f.handler.as_ref().and_then(|h| h.body_schema.as_ref()).is_some());
         eprintln!(
-            "[HANDLER GEN] Inferred body schema: {}",
+            "[HANDLER GEN] {} body schema: {}",
+            if is_explicit { "Using explicit" } else { "Inferred" },
             serde_json::to_string_pretty(body_schema).unwrap()
         );
     }
