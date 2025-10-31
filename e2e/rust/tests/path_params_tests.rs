@@ -5,105 +5,6 @@
 mod path_params {
 
     #[tokio::test]
-    async fn test_path_params_22_uuid_v4_rejects_v3() {
-        // Fixture: 22_uuid_v4_rejects_v3
-        // Description: Path parameter expecting UUID v4 should reject UUID v3
-        // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
-
-        // Load fixture
-        let fixture_json = std::fs::read_to_string("../../testing_data/path_params/22_uuid_v4_rejects_v3.json")
-            .expect("Failed to read fixture file");
-        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
-
-        // Create app
-        let app = spikard_e2e_app::create_app();
-
-        // Build request
-        let mut uri = "/items/e8b5a51d-11c8-3310-a6ab-367563f20686".to_string();
-
-        // Use query_string if provided (for exact encoding control), otherwise build from query_params
-        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
-            if !query_string.is_empty() {
-                uri.push_str("?");
-                uri.push_str(query_string);
-            }
-        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
-
-            // Define the query component encoding set (RFC 3986)
-            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
-            // Plus query-specific: &, =, +
-            const QUERY: &AsciiSet = &CONTROLS
-                .add(b' ')
-                .add(b'"')
-                .add(b'#')
-                .add(b'<')
-                .add(b'>')
-                .add(b'%')
-                .add(b'{')
-                .add(b'}')
-                .add(b'|')
-                .add(b'\\')
-                .add(b'^')
-                .add(b'`')
-                .add(b'&')
-                .add(b'=')
-                .add(b'+');
-
-            let query_string = query_params
-                .iter()
-                .flat_map(|(k, v)| {
-                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
-                    match v {
-                        Value::String(s) => {
-                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
-                            vec![format!("{}={}", key, value)]
-                        }
-                        Value::Number(n) => vec![format!("{}={}", key, n)],
-                        Value::Bool(b) => vec![format!("{}={}", key, b)],
-                        Value::Array(arr) => {
-                            // For arrays, repeat the key for each value
-                            arr.iter()
-                                .filter_map(|item| match item {
-                                    Value::String(s) => {
-                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
-                                    }
-                                    Value::Number(n) => Some(format!("{}={}", key, n)),
-                                    _ => None,
-                                })
-                                .collect::<Vec<_>>()
-                        }
-                        _ => vec![],
-                    }
-                })
-                .collect::<Vec<_>>()
-                .join("&");
-            if !query_string.is_empty() {
-                uri.push_str("?");
-                uri.push_str(&query_string);
-            }
-        }
-
-        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
-
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
-
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
-    }
-
-    #[tokio::test]
     async fn test_path_params_boolean_path_parameter_true() {
         // Fixture: Boolean path parameter - True
         // Description: Tests boolean path parameter with 'True' string value
@@ -132,7 +33,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -231,7 +132,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -331,7 +232,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -431,7 +332,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -531,7 +432,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -631,7 +532,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -730,7 +631,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -830,7 +731,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -930,7 +831,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1029,7 +930,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1128,7 +1029,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1228,7 +1129,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1327,7 +1228,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1426,7 +1327,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1526,7 +1427,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1625,7 +1526,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1724,7 +1625,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1824,7 +1725,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1923,7 +1824,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2023,7 +1924,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2122,7 +2023,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2222,7 +2123,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2322,7 +2223,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2421,7 +2322,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2520,7 +2421,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2619,7 +2520,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2719,7 +2620,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2818,7 +2719,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2917,107 +2818,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
-
-            // Define the query component encoding set (RFC 3986)
-            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
-            // Plus query-specific: &, =, +
-            const QUERY: &AsciiSet = &CONTROLS
-                .add(b' ')
-                .add(b'"')
-                .add(b'#')
-                .add(b'<')
-                .add(b'>')
-                .add(b'%')
-                .add(b'{')
-                .add(b'}')
-                .add(b'|')
-                .add(b'\\')
-                .add(b'^')
-                .add(b'`')
-                .add(b'&')
-                .add(b'=')
-                .add(b'+');
-
-            let query_string = query_params
-                .iter()
-                .flat_map(|(k, v)| {
-                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
-                    match v {
-                        Value::String(s) => {
-                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
-                            vec![format!("{}={}", key, value)]
-                        }
-                        Value::Number(n) => vec![format!("{}={}", key, n)],
-                        Value::Bool(b) => vec![format!("{}={}", key, b)],
-                        Value::Array(arr) => {
-                            // For arrays, repeat the key for each value
-                            arr.iter()
-                                .filter_map(|item| match item {
-                                    Value::String(s) => {
-                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
-                                    }
-                                    Value::Number(n) => Some(format!("{}={}", key, n)),
-                                    _ => None,
-                                })
-                                .collect::<Vec<_>>()
-                        }
-                        _ => vec![],
-                    }
-                })
-                .collect::<Vec<_>>()
-                .join("&");
-            if !query_string.is_empty() {
-                uri.push_str("?");
-                uri.push_str(&query_string);
-            }
-        }
-
-        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
-
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
-
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
-    }
-
-    #[tokio::test]
-    async fn test_path_params_26_time_format_path_param_success() {
-        // Fixture: 26_time_format_path_param_success
-        // Description: Path parameter with valid time format should be accepted
-        // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
-
-        // Load fixture
-        let fixture_json =
-            std::fs::read_to_string("../../testing_data/path_params/26_time_format_path_param_success.json")
-                .expect("Failed to read fixture file");
-        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
-
-        // Create app
-        let app = spikard_e2e_app::create_app();
-
-        // Build request
-        let mut uri = "/schedule/14:30:00".to_string();
-
-        // Use query_string if provided (for exact encoding control), otherwise build from query_params
-        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
-            if !query_string.is_empty() {
-                uri.push_str("?");
-                uri.push_str(query_string);
-            }
-        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -3116,7 +2917,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -3215,7 +3016,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -3314,7 +3115,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -3385,105 +3186,6 @@ mod path_params {
     }
 
     #[tokio::test]
-    async fn test_path_params_23_uuid_v4_rejects_v5() {
-        // Fixture: 23_uuid_v4_rejects_v5
-        // Description: Path parameter expecting UUID v4 should reject UUID v5
-        // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
-
-        // Load fixture
-        let fixture_json = std::fs::read_to_string("../../testing_data/path_params/23_uuid_v4_rejects_v5.json")
-            .expect("Failed to read fixture file");
-        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
-
-        // Create app
-        let app = spikard_e2e_app::create_app();
-
-        // Build request
-        let mut uri = "/items/630eb68f-e0fa-5ecc-887a-7c7a62614681".to_string();
-
-        // Use query_string if provided (for exact encoding control), otherwise build from query_params
-        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
-            if !query_string.is_empty() {
-                uri.push_str("?");
-                uri.push_str(query_string);
-            }
-        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
-
-            // Define the query component encoding set (RFC 3986)
-            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
-            // Plus query-specific: &, =, +
-            const QUERY: &AsciiSet = &CONTROLS
-                .add(b' ')
-                .add(b'"')
-                .add(b'#')
-                .add(b'<')
-                .add(b'>')
-                .add(b'%')
-                .add(b'{')
-                .add(b'}')
-                .add(b'|')
-                .add(b'\\')
-                .add(b'^')
-                .add(b'`')
-                .add(b'&')
-                .add(b'=')
-                .add(b'+');
-
-            let query_string = query_params
-                .iter()
-                .flat_map(|(k, v)| {
-                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
-                    match v {
-                        Value::String(s) => {
-                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
-                            vec![format!("{}={}", key, value)]
-                        }
-                        Value::Number(n) => vec![format!("{}={}", key, n)],
-                        Value::Bool(b) => vec![format!("{}={}", key, b)],
-                        Value::Array(arr) => {
-                            // For arrays, repeat the key for each value
-                            arr.iter()
-                                .filter_map(|item| match item {
-                                    Value::String(s) => {
-                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
-                                    }
-                                    Value::Number(n) => Some(format!("{}={}", key, n)),
-                                    _ => None,
-                                })
-                                .collect::<Vec<_>>()
-                        }
-                        _ => vec![],
-                    }
-                })
-                .collect::<Vec<_>>()
-                .join("&");
-            if !query_string.is_empty() {
-                uri.push_str("?");
-                uri.push_str(&query_string);
-            }
-        }
-
-        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
-
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
-
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
-    }
-
-    #[tokio::test]
     async fn test_path_params_boolean_path_parameter_numeric_1() {
         // Fixture: Boolean path parameter - numeric 1
         // Description: Tests boolean path parameter with '1' converts to true
@@ -3512,7 +3214,7 @@ mod path_params {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
