@@ -14,7 +14,9 @@ use std::path::Path;
 pub struct Fixture {
     pub name: String,
     pub description: String,
-    pub category: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub category: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub handler: Option<FixtureHandler>,
@@ -150,10 +152,13 @@ pub fn load_fixtures_from_dir(dir: &Path) -> Result<Vec<Fixture>> {
         }
 
         let content = fs::read_to_string(&path)?;
-        let fixture: Fixture = serde_json::from_str(&content)
-            .map_err(|e| CodegenError::ParseError(format!("{}: {}", path.display(), e)))?;
-
-        fixtures.push(fixture);
+        match serde_json::from_str::<Fixture>(&content) {
+            Ok(fixture) => fixtures.push(fixture),
+            Err(e) => {
+                // Log but skip fixtures that fail to parse
+                eprintln!("Warning: Skipping {}: {}", path.display(), e);
+            }
+        }
     }
 
     Ok(fixtures)

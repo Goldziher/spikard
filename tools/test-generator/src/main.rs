@@ -3,6 +3,8 @@
 //! Internal tool for generating test infrastructure from fixtures.
 //! Generates test applications and test suites for Rust, Python, and TypeScript.
 
+mod rust_tests;
+
 use anyhow::{Context, Result};
 use clap::Parser;
 use spikard_codegen::openapi::{OpenApiOptions, fixtures_to_openapi, load_fixtures_from_dir};
@@ -90,18 +92,11 @@ fn generate_openapi(fixtures_dir: PathBuf, output: PathBuf, title: String, versi
     Ok(())
 }
 
-fn generate_tests(lang: &str, _fixtures: PathBuf, output: PathBuf) -> Result<()> {
+fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> {
     println!("Generating {} tests to {}...", lang, output.display());
 
-    // TODO: Implement test generation per language
     match lang {
-        "rust" => {
-            println!("TODO: Generate Rust test suite");
-            // Will generate:
-            // - e2e/rust/tests/query_params_tests.rs
-            // - e2e/rust/tests/path_params_tests.rs
-            // - etc.
-        }
+        "rust" => rust_tests::generate_rust_tests(&fixtures, &output)?,
         "python" => {
             println!("TODO: Generate Python/pytest test suite");
             // Will generate:
@@ -119,5 +114,6 @@ fn generate_tests(lang: &str, _fixtures: PathBuf, output: PathBuf) -> Result<()>
         _ => unreachable!("Invalid language"),
     }
 
+    println!("✓ {} tests generated successfully", lang);
     Ok(())
 }

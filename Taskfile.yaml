@@ -159,6 +159,7 @@ tasks:
       - rm -rf e2e/rust/tests
       - mkdir -p e2e/rust
       - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang rust --fixtures testing_data --output e2e/rust
+      - cargo fmt --manifest-path e2e/rust/Cargo.toml
 
   generate:tests:python:
     desc: "Generate Python test suite from fixtures"
@@ -186,6 +187,31 @@ tasks:
     cmds:
       - rm -rf e2e/*/tests e2e/*/app
       - rm -rf openapi-specs/
+
+  test:e2e:rust:
+    desc: "Run Rust e2e tests"
+    dir: e2e/rust
+    cmds:
+      - cargo test --all-features
+
+  test:e2e:python:
+    desc: "Run Python e2e tests"
+    dir: e2e/python
+    cmds:
+      - uv run pytest tests/ -v
+
+  test:e2e:typescript:
+    desc: "Run TypeScript e2e tests"
+    dir: e2e/typescript
+    cmds:
+      - pnpm test
+
+  test:e2e:
+    desc: "Run all e2e tests"
+    cmds:
+      - task: test:e2e:rust
+      - task: test:e2e:python
+      - task: test:e2e:typescript
 
   build:js:
     desc: "Build all JavaScript/TypeScript packages (node, wasm)"
