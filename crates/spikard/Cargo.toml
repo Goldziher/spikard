@@ -15,5 +15,6 @@ path = "src/lib.rs"
 [dependencies]
 thiserror.workspace = true
 serde.workspace = true
+anyhow = "1.0"
 
 [dev-dependencies]

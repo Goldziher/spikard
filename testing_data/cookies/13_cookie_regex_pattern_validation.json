@@ -6,6 +6,18 @@
     "test_file": "tests/test_tutorial/test_cookie_params/test_tutorial001.py",
     "test_function": "test_cookie_pattern"
   },
+  "handler": {
+    "route": "/cookies/pattern",
+    "method": "GET",
+    "parameters": {
+      "cookies": {
+        "tracking_id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{8}$"
+        }
+      }
+    }
+  },
   "request": {
     "method": "GET",
     "path": "/cookies/pattern",

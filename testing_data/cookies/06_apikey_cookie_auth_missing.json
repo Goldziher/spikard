@@ -6,6 +6,22 @@
     "test_file": "tests/test_security_api_key_cookie.py",
     "test_function": "test_security_api_key_no_key"
   },
+  "handler": {
+    "route": "/users/me",
+    "method": "GET",
+    "parameters": {
+      "cookies": {
+        "key": {
+          "type": "string"
+        }
+      }
+    },
+    "security": {
+      "type": "apiKey",
+      "in": "cookie",
+      "name": "key"
+    }
+  },
   "request": {
     "method": "GET",
     "path": "/users/me"

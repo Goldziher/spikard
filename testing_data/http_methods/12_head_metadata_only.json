@@ -6,6 +6,10 @@
     "test_file": "tests/test_methods.py",
     "test_function": "test_head_request"
   },
+  "handler": {
+    "route": "/items/{id}",
+    "method": "HEAD"
+  },
   "request": {
     "method": "HEAD",
     "path": "/items/1"

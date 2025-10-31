@@ -17,11 +17,20 @@ impl SchemaValidator {
     pub fn new(schema: Value) -> Result<Self, String> {
         // Enable format validation (UUID, date-time, time, etc.)
         // Use Draft 2020-12 for better format support (includes time, duration, etc.)
+        // Use the 'regex' engine instead of 'fancy-regex' for ReDoS protection
+        // The regex crate provides guaranteed linear-time matching, preventing
+        // catastrophic backtracking from malicious regex patterns in schemas
         let compiled = jsonschema::options()
             .with_draft(jsonschema::Draft::Draft202012)
             .should_validate_formats(true)
+            .with_pattern_options(jsonschema::PatternOptions::regex())
             .build(&schema)
-            .map_err(|e| format!("Invalid JSON Schema: {}", e))?;
+            .map_err(|e| {
+                // Use anyhow for better error context internally, then convert to String
+                anyhow::anyhow!("Invalid JSON Schema")
+                    .context(format!("Schema compilation failed: {}", e))
+                    .to_string()
+            })?;
 
         Ok(Self {
             compiled: Arc::new(compiled),
@@ -36,9 +45,7 @@ impl SchemaValidator {
 
     /// Validate JSON data against the schema
     pub fn validate(&self, data: &Value) -> Result<(), ValidationError> {
-        eprintln!("[VALIDATION DEBUG] validate() called with data: {:?}", data);
         let validation_errors: Vec<_> = self.compiled.iter_errors(data).collect();
-        eprintln!("[VALIDATION DEBUG] Found {} validation errors", validation_errors.len());
 
         if validation_errors.is_empty() {
             return Ok(());
@@ -489,5 +496,44 @@ mod tests {
             Value::String("this_is_way_too_long".to_string())
         );
         assert_eq!(serialized_error["ctx"], json!({"max_length": 10}));
+    }
+
+    #[test]
+    fn test_exclusive_minimum() {
+        let schema = json!({
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "required": ["id", "name", "price"],
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 3
+                },
+                "price": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                }
+            }
+        });
+
+        let validator = SchemaValidator::new(schema).unwrap();
+
+        // Test data with violations: name too short, price negative
+        let data = json!({
+            "id": 1,
+            "name": "X",
+            "price": -10
+        });
+
+        let result = validator.validate(&data);
+        eprintln!("Validation result: {:?}", result);
+
+        assert!(result.is_err(), "Should have validation errors");
+        let err = result.unwrap_err();
+        eprintln!("Errors: {:?}", err.errors);
+        assert_eq!(err.errors.len(), 2, "Should have 2 errors");
     }
 }

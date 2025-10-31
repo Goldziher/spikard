@@ -6,6 +6,10 @@
     "test_file": "tests/test_tutorial/test_body_updates/test_tutorial001.py",
     "test_function": "test_patch_partial_update"
   },
+  "handler": {
+    "route": "/items/{id}",
+    "method": "PATCH"
+  },
   "request": {
     "method": "PATCH",
     "path": "/items/1",

@@ -6,6 +6,18 @@
     "test_file": "tests/test_compat_params_v1.py",
     "test_function": "test_cookie_tracking_id_too_short"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "GET",
+    "parameters": {
+      "cookies": {
+        "tracking_id": {
+          "type": "string",
+          "minLength": 3
+        }
+      }
+    }
+  },
   "request": {
     "method": "GET",
     "path": "/items/",

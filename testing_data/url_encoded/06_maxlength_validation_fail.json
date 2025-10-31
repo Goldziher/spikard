@@ -6,6 +6,20 @@
     "test_file": "tests/test_tutorial/test_request_form_models/test_tutorial001.py",
     "test_function": "test_form_maxlength_fail"
   },
+  "handler": {
+    "route": "/form/validated",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["username"],
+      "properties": {
+        "username": {
+          "type": "string",
+          "maxLength": 20
+        }
+      }
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/form/validated",

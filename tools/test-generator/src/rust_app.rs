@@ -89,6 +89,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+cookie = "0.18"
 "#
     .to_string()
 }
@@ -122,10 +123,17 @@ async fn main() {
 fn generate_lib_rs(categories: &HashMap<String, Vec<Fixture>>) -> String {
     let mut routes = Vec::new();
 
-    // Collect all unique routes
+    // Collect all unique routes, but PRIORITIZE non-validation_errors categories
+    // validation_errors fixtures use generic schemas just to test error reporting
     let mut route_map: HashMap<(String, String), Vec<&Fixture>> = HashMap::new();
 
-    for fixtures in categories.values() {
+    for (category, fixtures) in categories {
+        // Skip validation_errors category when building handler schemas
+        // These fixtures are designed to test error responses, not define the handler schema
+        if category == "validation_errors" {
+            continue;
+        }
+
         for fixture in fixtures {
             // Use handler.route if available, otherwise fall back to request.path
             let route = if let Some(handler) = &fixture.handler {
@@ -155,7 +163,7 @@ fn generate_lib_rs(categories: &HashMap<String, Vec<Fixture>>) -> String {
     format!(
         r#"//! Generated route handlers
 
-use axum::{{routing::{{get, post, put, patch, delete, head, options, trace}}, Json, Router}};
+use axum::{{routing::{{get, post, put, patch, delete, head, options, trace}}, Json, Router, middleware}};
 use serde_json::{{json, Value}};
 use std::collections::HashMap;
 use spikard_http::parameters::ParameterValidator;
@@ -163,6 +171,7 @@ use spikard_http::parameters::ParameterValidator;
 pub fn create_app() -> Router {{
     Router::new()
 {}
+        .layer(middleware::from_fn(spikard_http::middleware::validate_content_type_middleware))
 }}
 
 {}
@@ -286,6 +295,7 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
             format!(
                 r#"async fn {}(
     axum::extract::Path(path_params): axum::extract::Path<HashMap<String, String>>,
+    headers: axum::http::HeaderMap,
     uri: axum::http::Uri,
 ) -> impl axum::response::IntoResponse"#,
                 handler_name
@@ -293,6 +303,7 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
         } else {
             format!(
                 r#"async fn {}(
+    headers: axum::http::HeaderMap,
     uri: axum::http::Uri,
 ) -> impl axum::response::IntoResponse"#,
                 handler_name
@@ -346,12 +357,24 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
         Value::Object(serde_json::Map::new())
     }};
 
+    // Extract cookies from Cookie header using the cookie crate for RFC 6265 compliance
+    let mut cookies = HashMap::new();
+    if let Some(cookie_header) = headers.get(axum::http::header::COOKIE) {{
+        if let Ok(cookie_str) = cookie_header.to_str() {{
+            for result in cookie::Cookie::split_parse(cookie_str) {{
+                if let Ok(cookie) = result {{
+                    cookies.insert(cookie.name().to_string(), cookie.value().to_string());
+                }}
+            }}
+        }}
+    }}
+
     // Validate parameters
     match validator.validate_and_extract(
         &query_params,
         &{}path_params,
         &HashMap::new(),
-        &HashMap::new(),
+        &cookies,
     ) {{
         Ok(validated) => {{
             (axum::http::StatusCode::from_u16({}).unwrap(), Json(validated))
@@ -510,8 +533,8 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
     for fixture in fixtures {
         if let Some(handler) = &fixture.handler {
             if let Some(params) = &handler.parameters {
-                // Process both query and path parameters
-                for (source, param_source_name) in &[("query", "query"), ("path", "path")] {
+                // Process query, path, and cookie parameters
+                for (source, param_source_name) in &[("query", "query"), ("path", "path"), ("cookie", "cookies")] {
                     if let Some(source_params) = params.get(*param_source_name).and_then(|v| v.as_object()) {
                         for (param_name, param_def) in source_params {
                             if let Some(param_obj) = param_def.as_object() {
@@ -562,20 +585,36 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
         }
     }
 
-    // Only mark as required if ALL fixtures (not just those using the param) require it
-    // This means: if a fixture doesn't mention a param, it's implicitly optional for that route
+    // Parameters are required in the schema only if ALL fixtures on the route require them
+    // For parameters used by only some fixtures, we rely on the "optional" field in properties
     let total_fixtures = fixtures.len();
     let required_set: HashSet<String> = param_fixture_count
         .iter()
-        .filter_map(|(param_name, (_total_with_param, required_count))| {
-            // Only required if every single fixture on this route requires it
-            if *required_count == total_fixtures {
+        .filter_map(|(param_name, (fixtures_with_param, required_count))| {
+            // Only add to required set if:
+            // 1. All fixtures that define this param require it (required_count == fixtures_with_param)
+            // 2. AND all fixtures on this route define it (fixtures_with_param == total_fixtures)
+            if required_count == fixtures_with_param && *fixtures_with_param == total_fixtures {
                 Some(param_name.clone())
             } else {
                 None
             }
         })
         .collect();
+
+    // For parameters not used by all fixtures, ensure they're marked as optional if not already
+    for (param_name, (fixtures_with_param, _)) in param_fixture_count.iter() {
+        if *fixtures_with_param < total_fixtures {
+            if let Some(prop) = properties.get_mut(param_name) {
+                if let Some(prop_obj) = prop.as_object_mut() {
+                    // Only add optional:true if it's not already set
+                    if !prop_obj.contains_key("optional") {
+                        prop_obj.insert("optional".to_string(), json!(true));
+                    }
+                }
+            }
+        }
+    }
 
     if !properties.is_empty() {
         let required: Vec<String> = required_set.into_iter().collect();
@@ -634,10 +673,38 @@ fn merge_schemas(schemas: &[Value]) -> Value {
             }
             required_sets.push(schema_required);
             if let Some(obj) = schema.as_object() {
-                // Merge properties
+                // Merge properties (with recursive merging for nested objects)
                 if let Some(props) = obj.get("properties").and_then(|p| p.as_object()) {
                     for (key, value) in props {
-                        all_properties.insert(key.clone(), value.clone());
+                        if let Some(existing) = all_properties.get(key) {
+                            // Property already exists - try to merge it
+                            if let (Some(existing_obj), Some(new_obj)) = (existing.as_object(), value.as_object()) {
+                                // Both are objects - check if both are simple object schemas
+                                let existing_is_object = existing_obj.get("type") == Some(&json!("object"));
+                                let new_is_object = new_obj.get("type") == Some(&json!("object"));
+
+                                if existing_is_object && new_is_object {
+                                    // Recursively merge these two object schemas
+                                    let merged_property = merge_schemas(&[existing.clone(), value.clone()]);
+                                    all_properties.insert(key.clone(), merged_property);
+                                } else {
+                                    // Both are schema objects but not both "type": "object"
+                                    // Merge their constraints (for strings, numbers, arrays, etc.)
+                                    let mut merged = existing_obj.clone();
+                                    for (constraint_key, constraint_value) in new_obj {
+                                        // Merge constraints, keeping both
+                                        if !merged.contains_key(constraint_key) {
+                                            merged.insert(constraint_key.clone(), constraint_value.clone());
+                                        }
+                                    }
+                                    all_properties.insert(key.clone(), Value::Object(merged));
+                                }
+                            }
+                            // If not both objects, keep existing
+                        } else {
+                            // New property - just insert it
+                            all_properties.insert(key.clone(), value.clone());
+                        }
                     }
                 }
 
