@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 
 FIXTURES_DIR = Path(__file__).parent.parent
-OUTPUT_FILE = FIXTURES_DIR.parent / "tests" / "fixture_app_generated.py"
+OUTPUT_FILE = FIXTURES_DIR.parent / "packages" / "python" / "tests" / "fixture_app_generated.py"
 
 
 def load_fixtures_by_category() -> dict[str, list[dict[str, Any]]]:
@@ -68,6 +68,8 @@ def build_file_header() -> list[str]:
         "This file provides fixture-driven mock servers for testing.",
         "Each app factory dynamically looks up responses from fixture files.",
         '"""',
+        "",
+        "# type: ignore",
         "",
         "import json",
         "from pathlib import Path",

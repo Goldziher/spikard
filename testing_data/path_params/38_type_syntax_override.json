@@ -1,0 +1,34 @@
+{
+  "name": "Path parameter type syntax with override",
+  "description": "Tests that explicit parameter schema overrides auto-generated type syntax schema",
+  "category": "path_params",
+  "source": {
+    "framework": "spikard",
+    "test_file": "type_syntax_demo",
+    "test_function": "test_type_syntax_override"
+  },
+  "handler": {
+    "route": "/type-syntax/items-count/{count:int}",
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/type-syntax/items-count/50"
+  },
+  "expected_response": {
+    "status_code": 200,
+    "body": {
+      "count": "50"
+    }
+  },
+  "notes": "Type syntax :int generates base schema, explicit parameters add constraints via override"
+}
