@@ -5,278 +5,1111 @@
 mod status_codes {
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_408_request_timeout() {
         // Fixture: 408 Request Timeout
         // Description: Tests 408 status code when request takes too long
-
-        // TODO: Load fixture and execute test
         // Expected status: 408
 
-        todo!("Implement test for fixture: 408 Request Timeout");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/17_408_request_timeout.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/slow-endpoint".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(408).unwrap(),
+            "Expected status 408, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_404_not_found_resource_not_found() {
         // Fixture: 404 Not Found - Resource not found
         // Description: Tests 404 Not Found for non-existent resource
-
-        // TODO: Load fixture and execute test
         // Expected status: 404
 
-        todo!("Implement test for fixture: 404 Not Found - Resource not found");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/12_404_not_found.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/items/999".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(404).unwrap(),
+            "Expected status 404, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_503_service_unavailable_server_overload() {
         // Fixture: 503 Service Unavailable - Server overload
         // Description: Tests 503 Service Unavailable during maintenance or overload
-
-        // TODO: Load fixture and execute test
         // Expected status: 503
 
-        todo!("Implement test for fixture: 503 Service Unavailable - Server overload");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/15_503_service_unavailable.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/health".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(503).unwrap(),
+            "Expected status 503, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_422_unprocessable_entity_validation_error() {
         // Fixture: 422 Unprocessable Entity - Validation error
         // Description: Tests 422 for validation errors (Pydantic)
-
-        // TODO: Load fixture and execute test
         // Expected status: 422
 
-        todo!("Implement test for fixture: 422 Unprocessable Entity - Validation error");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/13_422_validation_error.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/items/".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_302_found_temporary_redirect() {
         // Fixture: 302 Found - Temporary redirect
         // Description: Tests 302 temporary redirect response
-
-        // TODO: Load fixture and execute test
         // Expected status: 302
 
-        todo!("Implement test for fixture: 302 Found - Temporary redirect");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/06_302_found_temporary.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/temp-redirect".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(302).unwrap(),
+            "Expected status 302, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_304_not_modified_cached_content_valid() {
         // Fixture: 304 Not Modified - Cached content valid
         // Description: Tests 304 Not Modified for cached resources
-
-        // TODO: Load fixture and execute test
         // Expected status: 304
 
-        todo!("Implement test for fixture: 304 Not Modified - Cached content valid");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/07_304_not_modified.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/items/1".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(304).unwrap(),
+            "Expected status 304, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_400_bad_request_invalid_request() {
         // Fixture: 400 Bad Request - Invalid request
         // Description: Tests 400 Bad Request for malformed request
-
-        // TODO: Load fixture and execute test
         // Expected status: 400
 
-        todo!("Implement test for fixture: 400 Bad Request - Invalid request");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/09_400_bad_request.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/items/".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(400).unwrap(),
+            "Expected status 400, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_22_501_not_implemented() {
         // Fixture: 22_501_not_implemented
         // Description: Unsupported HTTP method should return 501
-
-        // TODO: Load fixture and execute test
         // Expected status: 501
 
-        todo!("Implement test for fixture: 22_501_not_implemented");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/22_501_not_implemented.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/data".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("TRACE").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(501).unwrap(),
+            "Expected status 501, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_204_no_content_success_with_no_body() {
         // Fixture: 204 No Content - Success with no body
         // Description: Tests 204 No Content response for successful DELETE
-
-        // TODO: Load fixture and execute test
         // Expected status: 204
 
-        todo!("Implement test for fixture: 204 No Content - Success with no body");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/04_204_no_content.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/items/1".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder()
+            .method("DELETE")
+            .uri(uri)
+            .body(Body::empty())
+            .unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(204).unwrap(),
+            "Expected status 204, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_301_moved_permanently_permanent_redirect() {
         // Fixture: 301 Moved Permanently - Permanent redirect
         // Description: Tests 301 permanent redirect response
-
-        // TODO: Load fixture and execute test
         // Expected status: 301
 
-        todo!("Implement test for fixture: 301 Moved Permanently - Permanent redirect");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/05_301_moved_permanently.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/old-path".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(301).unwrap(),
+            "Expected status 301, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_201_created_resource_created() {
         // Fixture: 201 Created - Resource created
         // Description: Tests 201 Created response for successful POST request
-
-        // TODO: Load fixture and execute test
         // Expected status: 201
 
-        todo!("Implement test for fixture: 201 Created - Resource created");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/02_201_created.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/items/".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(201).unwrap(),
+            "Expected status 201, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_202_accepted_request_accepted_for_processing() {
         // Fixture: 202 Accepted - Request accepted for processing
         // Description: Tests 202 Accepted for async processing
-
-        // TODO: Load fixture and execute test
         // Expected status: 202
 
-        todo!("Implement test for fixture: 202 Accepted - Request accepted for processing");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/03_202_accepted.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/tasks/".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(202).unwrap(),
+            "Expected status 202, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_307_temporary_redirect_method_preserved() {
         // Fixture: 307 Temporary Redirect - Method preserved
         // Description: Tests 307 temporary redirect with method preservation
-
-        // TODO: Load fixture and execute test
         // Expected status: 307
 
-        todo!("Implement test for fixture: 307 Temporary Redirect - Method preserved");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/08_307_temporary_redirect.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/redirect-post".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(307).unwrap(),
+            "Expected status 307, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_500_internal_server_error_server_error() {
         // Fixture: 500 Internal Server Error - Server error
         // Description: Tests 500 Internal Server Error for unhandled exceptions
-
-        // TODO: Load fixture and execute test
         // Expected status: 500
 
-        todo!("Implement test for fixture: 500 Internal Server Error - Server error");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/14_500_internal_server_error.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/error".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(500).unwrap(),
+            "Expected status 500, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_20_414_uri_too_long() {
         // Fixture: 20_414_uri_too_long
         // Description: Request with excessively long URI should return 414
-
-        // TODO: Load fixture and execute test
         // Expected status: 414
 
-        todo!("Implement test for fixture: 20_414_uri_too_long");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/20_414_uri_too_long.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/data?{{ repeat 'param=value&' 300 times }}".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(414).unwrap(),
+            "Expected status 414, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_401_unauthorized_missing_authentication() {
         // Fixture: 401 Unauthorized - Missing authentication
         // Description: Tests 401 Unauthorized when authentication is missing
-
-        // TODO: Load fixture and execute test
         // Expected status: 401
 
-        todo!("Implement test for fixture: 401 Unauthorized - Missing authentication");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/10_401_unauthorized.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/users/me".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(401).unwrap(),
+            "Expected status 401, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_23_503_service_unavailable() {
         // Fixture: 23_503_service_unavailable
         // Description: Service temporarily unavailable should return 503 with Retry-After
-
-        // TODO: Load fixture and execute test
         // Expected status: 503
 
-        todo!("Implement test for fixture: 23_503_service_unavailable");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/23_503_service_unavailable.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/data".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(503).unwrap(),
+            "Expected status 503, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_19_413_payload_too_large() {
         // Fixture: 19_413_payload_too_large
         // Description: Request with body exceeding max size should return 413
-
-        // TODO: Load fixture and execute test
         // Expected status: 413
 
-        todo!("Implement test for fixture: 19_413_payload_too_large");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/19_413_payload_too_large.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/upload".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(413).unwrap(),
+            "Expected status 413, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_403_forbidden_insufficient_permissions() {
         // Fixture: 403 Forbidden - Insufficient permissions
         // Description: Tests 403 Forbidden when user lacks permissions
-
-        // TODO: Load fixture and execute test
         // Expected status: 403
 
-        todo!("Implement test for fixture: 403 Forbidden - Insufficient permissions");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/11_403_forbidden.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/admin/users".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(403).unwrap(),
+            "Expected status 403, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_21_431_request_header_fields_too_large() {
         // Fixture: 21_431_request_header_fields_too_large
         // Description: Request with excessively large headers should return 431
-
-        // TODO: Load fixture and execute test
         // Expected status: 431
 
-        todo!("Implement test for fixture: 21_431_request_header_fields_too_large");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json =
+            std::fs::read_to_string("../../testing_data/status_codes/21_431_request_header_fields_too_large.json")
+                .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/data".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(431).unwrap(),
+            "Expected status 431, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_429_too_many_requests() {
         // Fixture: 429 Too Many Requests
         // Description: Tests 429 status code for rate limiting
-
-        // TODO: Load fixture and execute test
         // Expected status: 429
 
-        todo!("Implement test for fixture: 429 Too Many Requests");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/18_429_too_many_requests.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/api/resource".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(429).unwrap(),
+            "Expected status 429, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_200_ok_success() {
         // Fixture: 200 OK - Success
         // Description: Tests standard 200 OK response for successful GET request
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: 200 OK - Success");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/01_200_ok_success.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/items/1".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_status_codes_206_partial_content() {
         // Fixture: 206 Partial Content
         // Description: Tests 206 status code for range requests
-
-        // TODO: Load fixture and execute test
         // Expected status: 206
 
-        todo!("Implement test for fixture: 206 Partial Content");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/16_206_partial_content.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/files/document.pdf".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("GET").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(206).unwrap(),
+            "Expected status 206, got {:?}",
+            response.status()
+        );
     }
 }

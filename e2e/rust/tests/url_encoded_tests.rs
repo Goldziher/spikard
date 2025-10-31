@@ -5,266 +5,1066 @@
 mod url_encoded {
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_simple_form_submission_success() {
         // Fixture: Simple form submission - success
         // Description: Tests basic URL-encoded form with username and password
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: Simple form submission - success");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/url_encoded/01_simple_form_success.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/login/".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_15_special_characters_field_names() {
         // Fixture: 15_special_characters_field_names
         // Description: URL-encoded form with special characters in field names should be handled correctly
-
-        // TODO: Load fixture and execute test
         // Expected status: 201
 
-        todo!("Implement test for fixture: 15_special_characters_field_names");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json =
+            std::fs::read_to_string("../../testing_data/url_encoded/15_special_characters_field_names.json")
+                .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/data".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(201).unwrap(),
+            "Expected status 201, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_pattern_validation_fail() {
         // Fixture: Pattern validation - fail
         // Description: Tests form field with regex pattern constraint failure
-
-        // TODO: Load fixture and execute test
         // Expected status: 422
 
-        todo!("Implement test for fixture: Pattern validation - fail");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/url_encoded/07_pattern_validation_fail.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/form/validated".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_22_additional_properties_strict_failure() {
         // Fixture: 22_additional_properties_strict_failure
         // Description: URL-encoded form with extra fields when additionalProperties is false should fail
-
-        // TODO: Load fixture and execute test
         // Expected status: 422
 
-        todo!("Implement test for fixture: 22_additional_properties_strict_failure");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json =
+            std::fs::read_to_string("../../testing_data/url_encoded/22_additional_properties_strict_failure.json")
+                .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/settings".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_17_pattern_validation_failure() {
         // Fixture: 17_pattern_validation_failure
         // Description: URL-encoded form field violating regex pattern should fail
-
-        // TODO: Load fixture and execute test
         // Expected status: 422
 
-        todo!("Implement test for fixture: 17_pattern_validation_failure");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/url_encoded/17_pattern_validation_failure.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/accounts".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_20_format_email_validation_failure() {
         // Fixture: 20_format_email_validation_failure
         // Description: URL-encoded form with invalid email format should fail
-
-        // TODO: Load fixture and execute test
         // Expected status: 422
 
-        todo!("Implement test for fixture: 20_format_email_validation_failure");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json =
+            std::fs::read_to_string("../../testing_data/url_encoded/20_format_email_validation_failure.json")
+                .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/subscribe".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_multiple_values_for_same_field() {
         // Fixture: Multiple values for same field
         // Description: Tests form field with multiple values (array)
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: Multiple values for same field");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/url_encoded/08_multiple_values_same_field.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/form/tags".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_required_field_missing_validation_error() {
         // Fixture: Required field missing - validation error
         // Description: Tests validation error when required form field is missing
-
-        // TODO: Load fixture and execute test
         // Expected status: 422
 
-        todo!("Implement test for fixture: Required field missing - validation error");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/url_encoded/02_required_field_missing.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/login/".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_13_array_field_success() {
         // Fixture: 13_array_field_success
         // Description: URL-encoded form with array field using bracket notation should parse correctly
-
-        // TODO: Load fixture and execute test
         // Expected status: 201
 
-        todo!("Implement test for fixture: 13_array_field_success");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/url_encoded/13_array_field_success.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/register".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(201).unwrap(),
+            "Expected status 201, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_numeric_field_type_conversion() {
         // Fixture: Numeric field type conversion
         // Description: Tests conversion of form string value to numeric type
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: Numeric field type conversion");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/url_encoded/11_numeric_field_conversion.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/form/".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_special_characters_encoding() {
         // Fixture: Special characters encoding
         // Description: Tests URL encoding of special characters in form data
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: Special characters encoding");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/url_encoded/04_special_chars_encoding.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/form/".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_boolean_field_conversion() {
         // Fixture: Boolean field conversion
         // Description: Tests conversion of form string value to boolean
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: Boolean field conversion");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/url_encoded/12_boolean_field_conversion.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/form/".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_empty_string_value() {
         // Fixture: Empty string value
         // Description: Tests form field with empty string value
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: Empty string value");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/url_encoded/09_empty_string_value.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/form/".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_oauth2_password_grant_flow() {
         // Fixture: OAuth2 password grant flow
         // Description: Tests OAuth2 password grant with form data
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: OAuth2 password grant flow");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/url_encoded/10_oauth_password_grant.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/token".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_19_array_minitems_validation_failure() {
         // Fixture: 19_array_minitems_validation_failure
         // Description: URL-encoded array with fewer items than minItems should fail
-
-        // TODO: Load fixture and execute test
         // Expected status: 422
 
-        todo!("Implement test for fixture: 19_array_minitems_validation_failure");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json =
+            std::fs::read_to_string("../../testing_data/url_encoded/19_array_minitems_validation_failure.json")
+                .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/tags".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_optional_field_missing_success() {
         // Fixture: Optional field missing - success
         // Description: Tests form with optional field omitted
-
-        // TODO: Load fixture and execute test
         // Expected status: 200
 
-        todo!("Implement test for fixture: Optional field missing - success");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/url_encoded/03_optional_field_missing.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/register/".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(200).unwrap(),
+            "Expected status 200, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_14_nested_object_bracket_notation() {
         // Fixture: 14_nested_object_bracket_notation
         // Description: URL-encoded form with nested object using bracket notation should parse correctly
-
-        // TODO: Load fixture and execute test
         // Expected status: 201
 
-        todo!("Implement test for fixture: 14_nested_object_bracket_notation");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json =
+            std::fs::read_to_string("../../testing_data/url_encoded/14_nested_object_bracket_notation.json")
+                .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/profile".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(201).unwrap(),
+            "Expected status 201, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_string_max_length_validation_fail() {
         // Fixture: String max_length validation - fail
         // Description: Tests form field with max_length constraint failure
-
-        // TODO: Load fixture and execute test
         // Expected status: 422
 
-        todo!("Implement test for fixture: String max_length validation - fail");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/url_encoded/06_maxlength_validation_fail.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/form/validated".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_18_integer_minimum_validation_failure() {
         // Fixture: 18_integer_minimum_validation_failure
         // Description: URL-encoded integer field below minimum should fail
-
-        // TODO: Load fixture and execute test
         // Expected status: 422
 
-        todo!("Implement test for fixture: 18_integer_minimum_validation_failure");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json =
+            std::fs::read_to_string("../../testing_data/url_encoded/18_integer_minimum_validation_failure.json")
+                .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/products".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_21_integer_type_coercion_failure() {
         // Fixture: 21_integer_type_coercion_failure
         // Description: URL-encoded form with non-numeric value for integer field should fail
-
-        // TODO: Load fixture and execute test
         // Expected status: 422
 
-        todo!("Implement test for fixture: 21_integer_type_coercion_failure");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json =
+            std::fs::read_to_string("../../testing_data/url_encoded/21_integer_type_coercion_failure.json")
+                .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/products".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_16_minlength_validation_failure() {
         // Fixture: 16_minlength_validation_failure
         // Description: URL-encoded form field violating minLength constraint should fail
-
-        // TODO: Load fixture and execute test
         // Expected status: 422
 
-        todo!("Implement test for fixture: 16_minlength_validation_failure");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json =
+            std::fs::read_to_string("../../testing_data/url_encoded/16_minlength_validation_failure.json")
+                .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/users".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
+            response.status()
+        );
     }
 
     #[tokio::test]
-    #[ignore = "Test not yet implemented"]
     async fn test_url_encoded_string_min_length_validation_fail() {
         // Fixture: String min_length validation - fail
         // Description: Tests form field with min_length constraint failure
-
-        // TODO: Load fixture and execute test
         // Expected status: 422
 
-        todo!("Implement test for fixture: String min_length validation - fail");
+        use axum::body::Body;
+        use axum::http::{Request, StatusCode};
+        use serde_json::Value;
+        use tower::ServiceExt;
+
+        // Load fixture
+        let fixture_json = std::fs::read_to_string("../../testing_data/url_encoded/05_minlength_validation_fail.json")
+            .expect("Failed to read fixture file");
+        let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
+
+        // Create app
+        let app = spikard_e2e_app::create_app();
+
+        // Build request
+        let mut uri = "/form/validated".to_string();
+
+        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            let query_string = query_params
+                .iter()
+                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+                .join("&");
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(&query_string);
+            }
+        }
+
+        let request = Request::builder().method("POST").uri(uri).body(Body::empty()).unwrap();
+
+        // Send request
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert status code
+        assert_eq!(
+            response.status(),
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
+            response.status()
+        );
     }
 }
