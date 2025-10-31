@@ -879,15 +879,28 @@ fn route_method_to_handler_name(route: &str, method: &str) -> String {
     // Strip type hints like {param:type} -> {param}
     let route_without_types = strip_type_hints(route);
 
+    // Check if route ends with '/' before processing
+    let ends_with_slash = route_without_types.ends_with('/') && route_without_types.len() > 1;
+
     let mut route_part = route_without_types
         .trim_start_matches('/')
+        .trim_end_matches('/')  // Remove trailing slash before processing
         .replace(['/', '-', '.'], "_")
-        .replace(['{', '}'], "");
+        .replace(['{', '}'], "")
+        .to_string();
 
     // If the route starts with a digit after processing, prefix with underscore
     if route_part.chars().next().is_some_and(|c| c.is_ascii_digit()) {
         route_part = format!("_{}", route_part);
     }
 
-    format!("{}_{}_handler", method.to_lowercase(), route_part)
+    // Handle root route
+    if route_part.is_empty() {
+        format!("{}_root_handler", method.to_lowercase())
+    } else if ends_with_slash {
+        // Add _slash suffix to differentiate /items/ from /items
+        format!("{}_{}_slash_handler", method.to_lowercase(), route_part)
+    } else {
+        format!("{}_{}_handler", method.to_lowercase(), route_part)
+    }
 }
