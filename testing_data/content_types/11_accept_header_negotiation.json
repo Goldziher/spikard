@@ -6,9 +6,13 @@
     "test_file": "tests/test_response_model.py",
     "test_function": "test_accept_negotiation"
   },
+  "handler": {
+    "route": "/accept-test/{id}",
+    "method": "GET"
+  },
   "request": {
     "method": "GET",
-    "path": "/items/1",
+    "path": "/accept-test/1",
     "headers": {
       "Accept": "application/json"
     }

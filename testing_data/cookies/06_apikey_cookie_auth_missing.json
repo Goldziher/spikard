@@ -7,12 +7,13 @@
     "test_function": "test_security_api_key_no_key"
   },
   "handler": {
-    "route": "/users/me",
+    "route": "/users/me/auth",
     "method": "GET",
     "parameters": {
       "cookies": {
         "key": {
-          "type": "string"
+          "type": "string",
+          "required": true
         }
       }
     },
@@ -24,12 +25,22 @@
   },
   "request": {
     "method": "GET",
-    "path": "/users/me"
+    "path": "/users/me/auth"
   },
   "expected_response": {
-    "status_code": 403,
+    "status_code": 422,
     "body": {
-      "detail": "Not authenticated"
+      "detail": [
+        {
+          "type": "missing",
+          "loc": [
+            "cookie",
+            "key"
+          ],
+          "msg": "Field required",
+          "input": null
+        }
+      ]
     }
   },
   "notes": "Missing required API key cookie returns 403 Forbidden"

@@ -2,7 +2,7 @@
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -163,7 +163,7 @@ fn generate_lib_rs(categories: &HashMap<String, Vec<Fixture>>) -> String {
     format!(
         r#"//! Generated route handlers
 
-use axum::{{routing::{{get, post, put, patch, delete, head, options, trace}}, Json, Router, middleware}};
+use axum::{{routing, routing::{{get, post, put, patch, delete, head, options, trace}}, Json, Router, middleware}};
 use serde_json::{{json, Value}};
 use std::collections::HashMap;
 use spikard_http::parameters::ParameterValidator;
@@ -190,17 +190,55 @@ fn strip_type_hints(route: &str) -> String {
 }
 
 fn generate_router_config(route_map: &HashMap<(String, String), Vec<&Fixture>>) -> String {
-    let mut routes: Vec<_> = route_map.keys().collect();
-    routes.sort();
+    use std::collections::BTreeMap;
 
-    routes
+    // Group routes by path (not by method)
+    let mut path_methods: BTreeMap<String, Vec<String>> = BTreeMap::new();
+
+    for (route, method) in route_map.keys() {
+        let axum_route = strip_type_hints(route);
+        path_methods.entry(axum_route.clone()).or_default().push(method.clone());
+    }
+
+    // Sort methods within each route for deterministic output
+    for methods in path_methods.values_mut() {
+        methods.sort();
+    }
+
+    // Generate route registration code
+    path_methods
         .iter()
-        .map(|(route, method)| {
-            let handler_name = route_method_to_handler_name(route, method);
-            let method_lower = method.to_lowercase();
-            // Strip type hints for Axum (it doesn't understand :type syntax)
-            let axum_route = strip_type_hints(route);
-            format!("        .route(\"{}\", {}({}))", axum_route, method_lower, handler_name)
+        .map(|(axum_route, methods)| {
+            if methods.len() == 1 {
+                // Single method - use simple routing
+                let method = &methods[0];
+                let method_lower = method.to_lowercase();
+                let handler_name = route_method_to_handler_name(axum_route, method);
+                format!("        .route(\"{}\", {}({}))", axum_route, method_lower, handler_name)
+            } else {
+                // Multiple methods - chain them together
+                // Use the first method's function directly, then chain others
+                let first_method = &methods[0];
+                let first_method_lower = first_method.to_lowercase();
+                let first_handler_name = route_method_to_handler_name(axum_route, first_method);
+
+                let remaining_chains: Vec<String> = methods[1..]
+                    .iter()
+                    .map(|method| {
+                        let method_lower = method.to_lowercase();
+                        let handler_name = route_method_to_handler_name(axum_route, method);
+                        format!(".{}({})", method_lower, handler_name)
+                    })
+                    .collect();
+
+                format!(
+                    "        .route(\"{}\", {}({}){})",
+                    axum_route,
+                    first_method_lower,
+                    first_handler_name,
+                    remaining_chains.join("")
+                )
+            }
         })
         .collect::<Vec<_>>()
         .join("\n")

@@ -9,6 +9,24 @@ use axum::{
 };
 use serde_json::json;
 
+/// Validate Content-Length header matches actual body size
+#[allow(clippy::result_large_err, clippy::collapsible_if)]
+fn validate_content_length(headers: &HeaderMap, actual_size: usize) -> Result<(), Response> {
+    if let Some(content_length_header) = headers.get(axum::http::header::CONTENT_LENGTH) {
+        if let Ok(content_length_str) = content_length_header.to_str() {
+            if let Ok(declared_length) = content_length_str.parse::<usize>() {
+                if declared_length != actual_size {
+                    let error_body = json!({
+                        "error": "Content-Length header does not match actual body size"
+                    });
+                    return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
 /// Middleware to validate Content-Type headers and related requirements
 pub async fn validate_content_type_middleware(request: Request, next: Next) -> Result<Response, Response> {
     use axum::body::to_bytes;
@@ -93,6 +111,10 @@ pub async fn validate_content_type_middleware(request: Request, next: Next) -> R
                             return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
                         }
                     };
+
+                    // Validate Content-Length matches actual body size
+                    validate_content_length(headers, body_bytes.len())?;
+
                     // Parse URL-encoded form data to JSON
                     let json_body = if body_bytes.is_empty() {
                         // Empty form data becomes empty JSON object
@@ -133,6 +155,10 @@ pub async fn validate_content_type_middleware(request: Request, next: Next) -> R
                             return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
                         }
                     };
+
+                    // Validate Content-Length matches actual body size
+                    validate_content_length(headers, body_bytes.len())?;
+
                     (parts, Body::from(body_bytes))
                 }
             } else {
@@ -146,6 +172,10 @@ pub async fn validate_content_type_middleware(request: Request, next: Next) -> R
                         return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
                     }
                 };
+
+                // Validate Content-Length matches actual body size
+                validate_content_length(headers, body_bytes.len())?;
+
                 (parts, Body::from(body_bytes))
             }
         } else {
@@ -159,6 +189,10 @@ pub async fn validate_content_type_middleware(request: Request, next: Next) -> R
                     return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
                 }
             };
+
+            // Validate Content-Length matches actual body size
+            validate_content_length(headers, body_bytes.len())?;
+
             (parts, Body::from(body_bytes))
         };
 
@@ -181,14 +215,11 @@ pub async fn validate_content_type_middleware(request: Request, next: Next) -> R
 /// - Nested objects: profile[name]=John → {"profile": {"name": "John"}}
 /// - Type conversion: age=30 → {"age": 30}, active=true → {"active": true}
 /// - Multiple values: tags=a&tags=b → {"tags": ["a", "b"]}
-/// - Empty strings: Handled by serde_qs when brackets present, otherwise converted to boolean false
+/// - Empty strings: Preserved as empty strings (unlike query parameter parsing)
 ///
 /// Strategy:
-/// - If brackets present → use serde_qs (handles nested objects, arrays with [], preserves empty strings)
-/// - Otherwise → use query_parser (handles duplicate keys, type conversion)
-///
-/// Known limitation: Empty string values without brackets (e.g., "field=") are converted to boolean false
-/// by the query parser. This is acceptable for most use cases.
+/// - If brackets present → use serde_qs (handles nested objects, arrays with [])
+/// - Otherwise → use custom parser that preserves empty strings and handles duplicate keys
 fn parse_urlencoded_to_json(data: &[u8]) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
     use std::collections::HashMap;
     let body_str = std::str::from_utf8(data)?;
@@ -202,10 +233,95 @@ fn parse_urlencoded_to_json(data: &[u8]) -> Result<serde_json::Value, Box<dyn st
         convert_types_recursive(&mut json_value);
         Ok(json_value)
     } else {
-        // Use query parser (handles duplicate keys by creating arrays automatically)
-        // This also does type conversion
-        Ok(crate::query_parser::parse_query_string_to_json(data, true))
+        // Use custom parser that preserves empty strings (unlike query_parser which converts them to false)
+        Ok(parse_urlencoded_simple(data))
     }
+}
+
+/// Parse simple URL-encoded data (no brackets) while preserving empty strings
+fn parse_urlencoded_simple(data: &[u8]) -> serde_json::Value {
+    use rustc_hash::FxHashMap;
+    use urlencoding::decode;
+
+    let mut array_map: FxHashMap<String, Vec<serde_json::Value>> = FxHashMap::default();
+
+    // Parse query string manually
+    let body_str = String::from_utf8_lossy(data);
+    let body_str = body_str.replace('+', " ");
+
+    for pair in body_str.split('&') {
+        if pair.is_empty() {
+            continue;
+        }
+
+        let (key, value) = if let Some((k, v)) = pair.split_once('=') {
+            (
+                decode(k).unwrap_or_default().to_string(),
+                decode(v).unwrap_or_default().to_string(),
+            )
+        } else {
+            (pair.to_string(), String::new())
+        };
+
+        // Convert value to appropriate type, but preserve empty strings
+        let json_value = convert_string_to_json_value(&value);
+
+        match array_map.get_mut(&key) {
+            Some(entry) => {
+                entry.push(json_value);
+            }
+            None => {
+                array_map.insert(key, vec![json_value]);
+            }
+        }
+    }
+
+    // Convert to final JSON, collapsing single-item arrays
+    array_map
+        .iter()
+        .map(|(key, value)| {
+            if value.len() == 1 {
+                (key, value[0].clone())
+            } else {
+                (key, serde_json::Value::Array(value.clone()))
+            }
+        })
+        .collect::<serde_json::Value>()
+}
+
+/// Convert a string value to appropriate JSON type while preserving empty strings
+fn convert_string_to_json_value(s: &str) -> serde_json::Value {
+    // Preserve empty strings (don't convert to false like query_parser does)
+    if s.is_empty() {
+        return serde_json::Value::String(String::new());
+    }
+
+    // Try to parse as number
+    if let Ok(i) = s.parse::<i64>() {
+        return serde_json::Value::Number(i.into());
+    }
+    #[allow(clippy::collapsible_if)]
+    if let Ok(f) = s.parse::<f64>() {
+        if let Some(n) = serde_json::Number::from_f64(f) {
+            return serde_json::Value::Number(n);
+        }
+    }
+
+    // Try to parse as boolean
+    let lower = s.to_lowercase();
+    if lower == "true" {
+        return serde_json::Value::Bool(true);
+    } else if lower == "false" {
+        return serde_json::Value::Bool(false);
+    }
+
+    // Parse null
+    if s == "null" {
+        return serde_json::Value::Null;
+    }
+
+    // Return as string
+    serde_json::Value::String(s.to_string())
 }
 
 /// Recursively convert string values to appropriate types (numbers, booleans)

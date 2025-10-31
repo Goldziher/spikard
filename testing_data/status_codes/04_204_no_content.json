@@ -6,9 +6,13 @@
     "test_file": "tests/test_tutorial/test_response_model/test_tutorial001.py",
     "test_function": "test_delete_item"
   },
+  "handler": {
+    "route": "/status-test/{code}",
+    "method": "DELETE"
+  },
   "request": {
     "method": "DELETE",
-    "path": "/items/1"
+    "path": "/status-test/204"
   },
   "expected_response": {
     "status_code": 204
