@@ -1,0 +1,123 @@
+//! Test Generator
+//!
+//! Internal tool for generating test infrastructure from fixtures.
+//! Generates test applications and test suites for Rust, Python, and TypeScript.
+
+use anyhow::{Context, Result};
+use clap::Parser;
+use spikard_codegen::openapi::{OpenApiOptions, fixtures_to_openapi, load_fixtures_from_dir};
+use std::path::PathBuf;
+
+#[derive(Parser, Debug)]
+#[command(author, version, about = "Generate test infrastructure from fixtures")]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Parser, Debug)]
+enum Commands {
+    /// Generate OpenAPI spec from fixtures
+    Openapi {
+        /// Fixtures directory
+        #[arg(long, default_value = "testing_data")]
+        fixtures: PathBuf,
+
+        /// Output file
+        #[arg(long, short = 'o')]
+        output: PathBuf,
+
+        /// API title
+        #[arg(long, default_value = "Test API")]
+        title: String,
+
+        /// API version
+        #[arg(long, default_value = "1.0.0")]
+        version: String,
+    },
+
+    /// Generate test suite for a language
+    Tests {
+        /// Target language
+        #[arg(long, value_parser = ["rust", "python", "typescript"])]
+        lang: String,
+
+        /// Fixtures directory
+        #[arg(long, default_value = "testing_data")]
+        fixtures: PathBuf,
+
+        /// Output directory
+        #[arg(long, short = 'o')]
+        output: PathBuf,
+    },
+}
+
+fn main() -> Result<()> {
+    let cli = Cli::parse();
+
+    match cli.command {
+        Commands::Openapi {
+            fixtures,
+            output,
+            title,
+            version,
+        } => generate_openapi(fixtures, output, title, version)?,
+        Commands::Tests { lang, fixtures, output } => generate_tests(&lang, fixtures, output)?,
+    }
+
+    Ok(())
+}
+
+fn generate_openapi(fixtures_dir: PathBuf, output: PathBuf, title: String, version: String) -> Result<()> {
+    println!("Loading fixtures from {}...", fixtures_dir.display());
+    let fixtures = load_fixtures_from_dir(&fixtures_dir).context("Failed to load fixtures")?;
+
+    println!("Found {} fixtures", fixtures.len());
+
+    let options = OpenApiOptions {
+        title,
+        version,
+        description: Some("Generated from test fixtures".to_string()),
+    };
+
+    let spec = fixtures_to_openapi(fixtures, options).context("Failed to generate OpenAPI spec")?;
+
+    let yaml = serde_yaml::to_string(&spec).context("Failed to serialize OpenAPI spec")?;
+
+    std::fs::write(&output, yaml).context("Failed to write OpenAPI spec")?;
+
+    println!("✓ OpenAPI spec generated: {}", output.display());
+    Ok(())
+}
+
+fn generate_tests(lang: &str, _fixtures: PathBuf, output: PathBuf) -> Result<()> {
+    println!("Generating {} tests to {}...", lang, output.display());
+
+    // TODO: Implement test generation per language
+    match lang {
+        "rust" => {
+            println!("TODO: Generate Rust test suite");
+            // Will generate:
+            // - e2e/rust/tests/query_params_tests.rs
+            // - e2e/rust/tests/path_params_tests.rs
+            // - etc.
+        }
+        "python" => {
+            println!("TODO: Generate Python/pytest test suite");
+            // Will generate:
+            // - e2e/python/tests/test_query_params.py
+            // - e2e/python/tests/test_path_params.py
+            // - etc.
+        }
+        "typescript" => {
+            println!("TODO: Generate TypeScript/Vitest test suite");
+            // Will generate:
+            // - e2e/typescript/tests/query_params.test.ts
+            // - e2e/typescript/tests/path_params.test.ts
+            // - etc.
+        }
+        _ => unreachable!("Invalid language"),
+    }
+
+    Ok(())
+}
