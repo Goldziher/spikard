@@ -2,7 +2,7 @@
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -172,6 +172,14 @@ pub fn create_app() -> Router {{
     )
 }
 
+/// Strip type hints from route pattern (e.g., {param:type} -> {param})
+fn strip_type_hints(route: &str) -> String {
+    regex::Regex::new(r"\{([^:}]+):[^}]+\}")
+        .unwrap()
+        .replace_all(route, "{$1}")
+        .to_string()
+}
+
 fn generate_router_config(route_map: &HashMap<(String, String), Vec<&Fixture>>) -> String {
     let mut routes: Vec<_> = route_map.keys().collect();
     routes.sort();
@@ -181,7 +189,9 @@ fn generate_router_config(route_map: &HashMap<(String, String), Vec<&Fixture>>) 
         .map(|(route, method)| {
             let handler_name = route_method_to_handler_name(route, method);
             let method_lower = method.to_lowercase();
-            format!("        .route(\"{}\", {}({}))", route, method_lower, handler_name)
+            // Strip type hints for Axum (it doesn't understand :type syntax)
+            let axum_route = strip_type_hints(route);
+            format!("        .route(\"{}\", {}({}))", axum_route, method_lower, handler_name)
         })
         .collect::<Vec<_>>()
         .join("\n")
@@ -293,6 +303,54 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
     }
 }
 
+/// Parse type hints from route pattern like {param:type}
+/// Returns: (param_name, type_hint)
+fn parse_type_hints(route: &str) -> Vec<(String, String)> {
+    let re = regex::Regex::new(r"\{([^:}]+):([^}]+)\}").unwrap();
+    re.captures_iter(route)
+        .map(|cap| (cap[1].to_string(), cap[2].to_string()))
+        .collect()
+}
+
+/// Convert type hint to JSON Schema
+fn type_hint_to_schema(type_hint: &str) -> serde_json::Map<String, Value> {
+    use serde_json::json;
+    let mut schema = serde_json::Map::new();
+
+    match type_hint {
+        "int" => {
+            schema.insert("type".to_string(), json!("integer"));
+        }
+        "float" => {
+            schema.insert("type".to_string(), json!("number"));
+        }
+        "bool" => {
+            schema.insert("type".to_string(), json!("boolean"));
+        }
+        "uuid" => {
+            schema.insert("type".to_string(), json!("string"));
+            schema.insert("format".to_string(), json!("uuid"));
+        }
+        "date" => {
+            schema.insert("type".to_string(), json!("string"));
+            schema.insert("format".to_string(), json!("date"));
+        }
+        "datetime" => {
+            schema.insert("type".to_string(), json!("string"));
+            schema.insert("format".to_string(), json!("date-time"));
+        }
+        "string" | "path" => {
+            schema.insert("type".to_string(), json!("string"));
+        }
+        _ => {
+            // Unknown type hint, default to string
+            schema.insert("type".to_string(), json!("string"));
+        }
+    }
+
+    schema
+}
+
 /// Build a JSON Schema for parameter validation from fixtures
 /// Merges parameter definitions from ALL fixtures for the route
 fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
@@ -304,6 +362,33 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
     // Track which params are required by ALL fixtures vs only SOME fixtures
     let mut param_fixture_count: std::collections::HashMap<String, (usize, usize)> = std::collections::HashMap::new(); // (fixtures_with_param, fixtures_requiring_param)
 
+    // Extract route from first fixture to parse type hints
+    let route = if let Some(handler) = &fixtures[0].handler {
+        handler.route.clone()
+    } else {
+        fixtures[0]
+            .request
+            .path
+            .split('?')
+            .next()
+            .unwrap_or(&fixtures[0].request.path)
+            .to_string()
+    };
+
+    // Parse type hints from route and auto-generate schemas
+    let type_hints = parse_type_hints(&route);
+    for (param_name, type_hint) in type_hints {
+        // Only auto-generate if not already explicitly defined
+        // We'll check this below when processing handler.parameters
+        let schema = type_hint_to_schema(&type_hint);
+        let mut prop = serde_json::Map::new();
+        prop.insert("source".to_string(), json!("path"));
+        for (key, value) in schema {
+            prop.insert(key, value);
+        }
+        properties.insert(param_name.clone(), Value::Object(prop));
+    }
+
     for fixture in fixtures {
         if let Some(handler) = &fixture.handler {
             if let Some(params) = &handler.parameters {
@@ -312,45 +397,35 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
                     if let Some(source_params) = params.get(*param_source_name).and_then(|v| v.as_object()) {
                         for (param_name, param_def) in source_params {
                             if let Some(param_obj) = param_def.as_object() {
-                                // Get or create property for this parameter
-                                let prop = properties.entry(param_name.clone()).or_insert_with(|| {
-                                    let mut p = serde_json::Map::new();
-                                    p.insert("source".to_string(), json!(source));
-                                    Value::Object(p)
-                                });
+                                // OVERRIDE behavior: explicit schema completely replaces auto-generated schema
+                                // This implements Option 1 from the design decision
+                                let mut prop_map = serde_json::Map::new();
+                                prop_map.insert("source".to_string(), json!(source));
 
-                                if let Some(prop_map) = prop.as_object_mut() {
-                                    // Set type if not already set
-                                    if !prop_map.contains_key("type") {
-                                        if let Some(param_type) = param_obj.get("type") {
-                                            prop_map.insert("type".to_string(), param_type.clone());
-                                        }
+                                // Copy ALL fields from explicit schema (full override)
+                                for (key, value) in param_obj {
+                                    if key != "annotation" && key != "required" {
+                                        prop_map.insert(key.clone(), value.clone());
                                     }
+                                }
 
-                                    // Merge ALL constraint fields (take union)
-                                    // This means tests get the most restrictive schema
-                                    for (key, value) in param_obj {
-                                        if key != "annotation" && key != "type" && key != "required" {
-                                            // Use entry API to only insert if not already present
-                                            prop_map.entry(key.clone()).or_insert(value.clone());
-                                        }
-                                    }
+                                // Replace any auto-generated schema with explicit schema
+                                properties.insert(param_name.clone(), Value::Object(prop_map.clone()));
 
-                                    // Track if this fixture requires this parameter
-                                    // Path parameters are always required by default
-                                    let is_required = if *source == "path" {
-                                        true
-                                    } else {
-                                        !param_obj.contains_key("default")
-                                            && !param_obj.contains_key("optional")
-                                            && param_obj.get("required").and_then(|v| v.as_bool()).unwrap_or(true)
-                                    };
+                                // Track if this fixture requires this parameter
+                                // Path parameters are always required by default
+                                let is_required = if *source == "path" {
+                                    true
+                                } else {
+                                    !param_obj.contains_key("default")
+                                        && !param_obj.contains_key("optional")
+                                        && param_obj.get("required").and_then(|v| v.as_bool()).unwrap_or(true)
+                                };
 
-                                    let entry = param_fixture_count.entry(param_name.clone()).or_insert((0, 0));
-                                    entry.0 += 1; // fixtures with this param
-                                    if is_required {
-                                        entry.1 += 1; // fixtures requiring this param
-                                    }
+                                let entry = param_fixture_count.entry(param_name.clone()).or_insert((0, 0));
+                                entry.0 += 1; // fixtures with this param
+                                if is_required {
+                                    entry.1 += 1; // fixtures requiring this param
                                 }
                             }
                         }
@@ -388,7 +463,10 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
 }
 
 fn route_method_to_handler_name(route: &str, method: &str) -> String {
-    let mut route_part = route
+    // Strip type hints like {param:type} -> {param}
+    let route_without_types = strip_type_hints(route);
+
+    let mut route_part = route_without_types
         .trim_start_matches('/')
         .replace(['/', '-', '.'], "_")
         .replace(['{', '}'], "");
