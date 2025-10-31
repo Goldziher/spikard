@@ -220,7 +220,7 @@ mod validation_errors {
         let app = spikard_e2e_app::create_app();
 
         // Build request
-        let mut uri = "/items/?is_active=maybe".to_string();
+        let mut uri = "/items/".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
@@ -811,7 +811,7 @@ mod validation_errors {
         let app = spikard_e2e_app::create_app();
 
         // Build request
-        let mut uri = "/items/?price=0".to_string();
+        let mut uri = "/items/".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
@@ -1008,7 +1008,7 @@ mod validation_errors {
         let app = spikard_e2e_app::create_app();
 
         // Build request
-        let mut uri = "/items/?q=invalid!".to_string();
+        let mut uri = "/items/".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
@@ -1401,7 +1401,7 @@ mod validation_errors {
         let app = spikard_e2e_app::create_app();
 
         // Build request
-        let mut uri = "/items/?q=ab".to_string();
+        let mut uri = "/items/".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
@@ -1795,8 +1795,7 @@ mod validation_errors {
         let app = spikard_e2e_app::create_app();
 
         // Build request
-        let mut uri = "/items/?q=this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter"
-            .to_string();
+        let mut uri = "/items/".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
@@ -3371,7 +3370,7 @@ mod validation_errors {
         let app = spikard_e2e_app::create_app();
 
         // Build request
-        let mut uri = "/items/?skip=not_a_number".to_string();
+        let mut uri = "/items/".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
@@ -3962,7 +3961,7 @@ mod validation_errors {
         let app = spikard_e2e_app::create_app();
 
         // Build request
-        let mut uri = "/items/?limit=101".to_string();
+        let mut uri = "/items/".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
