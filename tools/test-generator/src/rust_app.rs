@@ -279,9 +279,12 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
 /// Merges parameter definitions from ALL fixtures for the route
 fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
     use serde_json::json;
+    use std::collections::HashSet;
 
     // Merge all parameter definitions from all fixtures
     let mut properties = serde_json::Map::new();
+    // Track which params are required by ALL fixtures vs only SOME fixtures
+    let mut param_fixture_count: std::collections::HashMap<String, (usize, usize)> = std::collections::HashMap::new(); // (fixtures_with_param, fixtures_requiring_param)
 
     for fixture in fixtures {
         if let Some(handler) = &fixture.handler {
@@ -313,10 +316,16 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
                                     }
                                 }
 
-                                // Track required parameters - only mark as required if ALL fixtures require it
-                                // For now, make all parameters optional to allow different test cases
-                                // TODO: track per-fixture requirements and only mark as required if unanimous
-                                let _ = param_obj; // Silence unused warning for now
+                                // Track if this fixture requires this parameter
+                                let is_required = !param_obj.contains_key("default")
+                                    && !param_obj.contains_key("optional")
+                                    && param_obj.get("required").and_then(|v| v.as_bool()).unwrap_or(true);
+
+                                let entry = param_fixture_count.entry(param_name.clone()).or_insert((0, 0));
+                                entry.0 += 1; // fixtures with this param
+                                if is_required {
+                                    entry.1 += 1; // fixtures requiring this param
+                                }
                             }
                         }
                     }
@@ -325,11 +334,27 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
         }
     }
 
+    // Only mark as required if ALL fixtures (not just those using the param) require it
+    // This means: if a fixture doesn't mention a param, it's implicitly optional for that route
+    let total_fixtures = fixtures.len();
+    let required_set: HashSet<String> = param_fixture_count
+        .iter()
+        .filter_map(|(param_name, (_total_with_param, required_count))| {
+            // Only required if every single fixture on this route requires it
+            if *required_count == total_fixtures {
+                Some(param_name.clone())
+            } else {
+                None
+            }
+        })
+        .collect();
+
     if !properties.is_empty() {
+        let required: Vec<String> = required_set.into_iter().collect();
         Some(json!({
             "type": "object",
             "properties": properties,
-            "required": []
+            "required": required
         }))
     } else {
         None
