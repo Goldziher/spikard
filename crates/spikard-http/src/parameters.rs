@@ -62,10 +62,11 @@ impl ParameterValidator {
     fn extract_parameter_defs(schema: &Value) -> Result<Vec<ParameterDef>, String> {
         let mut defs = Vec::new();
 
-        let properties = schema
-            .get("properties")
-            .and_then(|p| p.as_object())
-            .ok_or("Schema must have 'properties' object")?;
+        let properties = schema.get("properties").and_then(|p| p.as_object()).ok_or_else(|| {
+            anyhow::anyhow!("Parameter schema validation failed")
+                .context("Schema must have 'properties' object")
+                .to_string()
+        })?;
 
         let required_list = schema
             .get("required")
@@ -74,18 +75,29 @@ impl ParameterValidator {
             .unwrap_or_default();
 
         for (name, prop) in properties {
-            let source_str = prop
-                .get("source")
-                .and_then(|s| s.as_str())
-                .ok_or_else(|| format!("Parameter '{}' missing 'source' field", name))?;
+            let source_str = prop.get("source").and_then(|s| s.as_str()).ok_or_else(|| {
+                anyhow::anyhow!("Invalid parameter schema")
+                    .context(format!("Parameter '{}' missing required 'source' field", name))
+                    .to_string()
+            })?;
 
-            let source = ParameterSource::from_str(source_str)
-                .ok_or_else(|| format!("Invalid source '{}' for parameter '{}'", source_str, name))?;
+            let source = ParameterSource::from_str(source_str).ok_or_else(|| {
+                anyhow::anyhow!("Invalid parameter schema")
+                    .context(format!(
+                        "Invalid source '{}' for parameter '{}' (expected: query, path, header, or cookie)",
+                        source_str, name
+                    ))
+                    .to_string()
+            })?;
 
             let expected_type = prop.get("type").and_then(|t| t.as_str()).map(String::from);
             let format = prop.get("format").and_then(|f| f.as_str()).map(String::from);
 
-            let required = required_list.contains(&name.as_str());
+            // A parameter is required if:
+            // 1. It's in the schema-level "required" array, OR
+            // 2. It doesn't have "optional": true in its property definition
+            let is_optional = prop.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
+            let required = required_list.contains(&name.as_str()) || !is_optional;
 
             defs.push(ParameterDef {
                 name: name.clone(),
@@ -361,11 +373,13 @@ impl ParameterValidator {
                         error.ctx
                     );
                 }
-                if crate::debug::is_enabled()
-                    && let Ok(json_errors) = serde_json::to_value(&validation_err.errors)
-                    && let Ok(json_str) = serde_json::to_string_pretty(&json_errors)
-                {
-                    debug_log_module!("parameters", "Serialized errors:\n{}", json_str);
+                #[allow(clippy::collapsible_if)]
+                if crate::debug::is_enabled() {
+                    if let Ok(json_errors) = serde_json::to_value(&validation_err.errors) {
+                        if let Ok(json_str) = serde_json::to_string_pretty(&json_errors) {
+                            debug_log_module!("parameters", "Serialized errors:\n{}", json_str);
+                        }
+                    }
                 }
 
                 Err(validation_err)
@@ -429,125 +443,41 @@ impl ParameterValidator {
 
     /// Validate ISO 8601 date format: YYYY-MM-DD
     fn validate_date_format(value: &str) -> Result<(), String> {
-        // Simple regex-like validation for YYYY-MM-DD
-        if value.len() != 10 {
-            return Err("Invalid date format".to_string());
-        }
-
-        let parts: Vec<&str> = value.split('-').collect();
-        if parts.len() != 3 {
-            return Err("Invalid date format".to_string());
-        }
-
-        // Validate year (4 digits)
-        if parts[0].len() != 4 || !parts[0].chars().all(|c| c.is_ascii_digit()) {
-            return Err("Invalid year".to_string());
-        }
-
-        // Validate month (2 digits, 01-12)
-        if parts[1].len() != 2 || !parts[1].chars().all(|c| c.is_ascii_digit()) {
-            return Err("Invalid month".to_string());
-        }
-        let month: u32 = parts[1].parse().map_err(|_| "Invalid month".to_string())?;
-        if !(1..=12).contains(&month) {
-            return Err("Month must be between 01 and 12".to_string());
-        }
-
-        // Validate day (2 digits, 01-31)
-        if parts[2].len() != 2 || !parts[2].chars().all(|c| c.is_ascii_digit()) {
-            return Err("Invalid day".to_string());
-        }
-        let day: u32 = parts[2].parse().map_err(|_| "Invalid day".to_string())?;
-        if !(1..=31).contains(&day) {
-            return Err("Day must be between 01 and 31".to_string());
-        }
-
-        Ok(())
+        // Use jiff for proper date parsing and validation
+        // This will reject invalid dates like "2023-02-30"
+        jiff::civil::Date::strptime("%Y-%m-%d", value)
+            .map(|_| ())
+            .map_err(|e| format!("Invalid date format: {}", e))
     }
 
     /// Validate ISO 8601 datetime format
     fn validate_datetime_format(value: &str) -> Result<(), String> {
-        // Accept formats like: 2023-07-15T10:30:00 or 2023-07-15T10:30:00Z or 2023-07-15T10:30:00+00:00
-        // Simplified validation - just check for basic structure
-        if !value.contains('T') {
-            return Err("Invalid datetime format: missing 'T' separator".to_string());
-        }
-
-        let parts: Vec<&str> = value.split('T').collect();
-        if parts.len() != 2 {
-            return Err("Invalid datetime format".to_string());
-        }
-
-        // Validate date part
-        Self::validate_date_format(parts[0])?;
-
-        // Validate time part (basic check)
-        let time_part = parts[1]
-            .trim_end_matches('Z')
-            .split('+')
-            .next()
-            .unwrap()
-            .split('-')
-            .next()
-            .unwrap();
-        if time_part.is_empty() {
-            return Err("Invalid time part".to_string());
-        }
-
-        Ok(())
+        // Use jiff for proper ISO 8601 datetime parsing with timezone support
+        // Accepts: 2023-07-15T10:30:00, 2023-07-15T10:30:00Z, 2023-07-15T10:30:00+00:00
+        use std::str::FromStr;
+        jiff::Timestamp::from_str(value)
+            .map(|_| ())
+            .map_err(|e| format!("Invalid datetime format: {}", e))
     }
 
     /// Validate ISO 8601 time format: HH:MM:SS or HH:MM:SS.ffffff
     fn validate_time_format(value: &str) -> Result<(), String> {
-        // Split by '.' to handle microseconds
-        let main_part = value.split('.').next().unwrap();
-        let parts: Vec<&str> = main_part.split(':').collect();
-
-        if parts.len() < 2 || parts.len() > 3 {
-            return Err("Invalid time format".to_string());
-        }
-
-        // Validate hours (00-23)
-        if parts[0].len() != 2 || !parts[0].chars().all(|c| c.is_ascii_digit()) {
-            return Err("Invalid hours".to_string());
-        }
-        let hours: u32 = parts[0].parse().map_err(|_| "Invalid hours".to_string())?;
-        if hours > 23 {
-            return Err("Hours must be between 00 and 23".to_string());
-        }
-
-        // Validate minutes (00-59)
-        if parts[1].len() != 2 || !parts[1].chars().all(|c| c.is_ascii_digit()) {
-            return Err("Invalid minutes".to_string());
-        }
-        let minutes: u32 = parts[1].parse().map_err(|_| "Invalid minutes".to_string())?;
-        if minutes > 59 {
-            return Err("Minutes must be between 00 and 59".to_string());
-        }
-
-        // Validate seconds if present (00-59)
-        if parts.len() == 3 {
-            if parts[2].len() != 2 || !parts[2].chars().all(|c| c.is_ascii_digit()) {
-                return Err("Invalid seconds".to_string());
-            }
-            let seconds: u32 = parts[2].parse().map_err(|_| "Invalid seconds".to_string())?;
-            if seconds > 59 {
-                return Err("Seconds must be between 00 and 59".to_string());
-            }
-        }
-
-        Ok(())
+        // Use jiff for proper time parsing
+        // Supports various formats: HH:MM, HH:MM:SS, HH:MM:SS.ffffff
+        jiff::civil::Time::strptime("%H:%M:%S", value)
+            .or_else(|_| jiff::civil::Time::strptime("%H:%M", value))
+            .map(|_| ())
+            .map_err(|e| format!("Invalid time format: {}", e))
     }
 
     /// Validate duration format (simplified - accept ISO 8601 duration or simple formats)
     fn validate_duration_format(value: &str) -> Result<(), String> {
-        // Accept ISO 8601 duration (starts with P) or simple numeric formats
-        if value.starts_with('P') || value.starts_with('-') || value.chars().next().is_some_and(|c| c.is_ascii_digit())
-        {
-            Ok(())
-        } else {
-            Err("Invalid duration format".to_string())
-        }
+        // Use jiff for proper ISO 8601 duration parsing
+        // Accepts formats like: PT1H30M, P1DT12H, PT45S, etc.
+        use std::str::FromStr;
+        jiff::Span::from_str(value)
+            .map(|_| ())
+            .map_err(|e| format!("Invalid duration format: {}", e))
     }
 
     /// Create a validation schema without the "source" fields

@@ -210,10 +210,92 @@ async fn test_{category}_{case_name}() {{
         .method("{method}")
         .uri(uri);
 
+    // Add headers from fixture if present
+    if let Some(headers) = fixture["request"]["headers"].as_object() {{
+        for (key, value) in headers {{
+            if let Some(value_str) = value.as_str() {{
+                request_builder = request_builder.header(key.as_str(), value_str);
+            }}
+        }}
+    }}
+
+    // Add cookies from fixture if present
+    if let Some(cookies) = fixture["request"]["cookies"].as_object() {{
+        let cookie_header: Vec<String> = cookies
+            .iter()
+            .map(|(name, value)| {{
+                if let Some(value_str) = value.as_str() {{
+                    format!("{{}}={{}}", name, value_str)
+                }} else {{
+                    format!("{{}}={{}}", name, value)
+                }}
+            }})
+            .collect();
+        if !cookie_header.is_empty() {{
+            request_builder = request_builder.header("cookie", cookie_header.join("; "));
+        }}
+    }}
+
     // Add body if present in fixture
-    let body = if let Some(request_body) = fixture["request"]["body"].as_object() {{
-        request_builder = request_builder.header("content-type", "application/json");
+    let body = if let Some(request_body) = fixture["request"]["body"].as_str() {{
+        // Body is already encoded as a string (e.g., URL-encoded form data)
+        // Don't override Content-Type if already set
+        Body::from(request_body.to_string())
+    }} else if let Some(request_body) = fixture["request"]["body"].as_object() {{
+        // Body is a JSON object, encode it
+        // Only add content-type header if not already set by fixture headers
+        if fixture["request"]["headers"]["Content-Type"].is_null() {{
+            request_builder = request_builder.header("content-type", "application/json");
+        }}
         let body_str = serde_json::to_string(request_body).unwrap();
+        Body::from(body_str)
+    }} else if let Some(form_data) = fixture["request"]["form_data"].as_object() {{
+        // Handle URL-encoded form data
+        use percent_encoding::{{percent_encode, NON_ALPHANUMERIC}};
+
+        let form_params: Vec<String> = form_data
+            .iter()
+            .flat_map(|(key, value)| {{
+                match value {{
+                    serde_json::Value::Array(arr) => {{
+                        // For arrays, repeat the key for each value
+                        arr.iter()
+                            .map(|item| {{
+                                let encoded_value = match item {{
+                                    serde_json::Value::String(s) => percent_encode(s.as_bytes(), NON_ALPHANUMERIC).to_string(),
+                                    serde_json::Value::Number(n) => n.to_string(),
+                                    serde_json::Value::Bool(b) => b.to_string(),
+                                    _ => percent_encode(item.to_string().as_bytes(), NON_ALPHANUMERIC).to_string(),
+                                }};
+                                format!("{{}}={{}}", key, encoded_value)
+                            }})
+                            .collect::<Vec<_>>()
+                    }}
+                    serde_json::Value::String(s) => {{
+                        let encoded_value = percent_encode(s.as_bytes(), NON_ALPHANUMERIC).to_string();
+                        vec![format!("{{}}={{}}", key, encoded_value)]
+                    }}
+                    serde_json::Value::Number(n) => {{
+                        vec![format!("{{}}={{}}", key, n)]
+                    }}
+                    serde_json::Value::Bool(b) => {{
+                        vec![format!("{{}}={{}}", key, b)]
+                    }}
+                    _ => {{
+                        let encoded_value = percent_encode(value.to_string().as_bytes(), NON_ALPHANUMERIC).to_string();
+                        vec![format!("{{}}={{}}", key, encoded_value)]
+                    }}
+                }}
+            }})
+            .collect();
+
+        let body_str = form_params.join("&");
+
+        // Only add content-type header if not already set by fixture headers
+        if fixture["request"]["headers"]["Content-Type"].is_null() {{
+            request_builder = request_builder.header("content-type", "application/x-www-form-urlencoded");
+        }}
+
         Body::from(body_str)
     }} else {{
         Body::empty()

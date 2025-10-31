@@ -6,6 +6,28 @@
     "test_file": "tests/test_methods.py",
     "test_function": "test_put_validation"
   },
+  "handler": {
+    "route": "/items/{id}",
+    "method": "PUT",
+    "body_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "required": ["id", "name", "price"],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 3
+        },
+        "price": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  },
   "request": {
     "method": "PUT",
     "path": "/items/1",

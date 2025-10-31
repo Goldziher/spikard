@@ -92,24 +92,26 @@ impl PythonHandler {
             self.parameter_validator.is_some()
         );
         // Validate request body in Rust if validator is present
-        if let Some(validator) = &self.request_validator
-            && let Some(body) = &request_data.body
-            && let Err(errors) = validator.validate(body)
-        {
-            let error_msg = if is_debug_mode() {
-                // In DEBUG mode, include full validation errors and request data
-                json!({
-                    "error": "Request validation failed",
-                    "validation_errors": format!("{:?}", errors),
-                    "request_body": body,
-                    "path_params": request_data.path_params,
-                    "query_params": request_data.query_params,
-                })
-                .to_string()
-            } else {
-                "Request validation failed".to_string()
-            };
-            return Err((StatusCode::BAD_REQUEST, error_msg));
+        #[allow(clippy::collapsible_if)]
+        if let Some(validator) = &self.request_validator {
+            if let Some(body) = &request_data.body {
+                if let Err(errors) = validator.validate(body) {
+                    let error_msg = if is_debug_mode() {
+                        // In DEBUG mode, include full validation errors and request data
+                        json!({
+                            "error": "Request validation failed",
+                            "validation_errors": format!("{:?}", errors),
+                            "request_body": body,
+                            "path_params": request_data.path_params,
+                            "query_params": request_data.query_params,
+                        })
+                        .to_string()
+                    } else {
+                        "Request validation failed".to_string()
+                    };
+                    return Err((StatusCode::BAD_REQUEST, error_msg));
+                }
+            }
         }
 
         // Validate and extract parameters in Rust if validator is present
@@ -279,25 +281,26 @@ impl PythonHandler {
                 };
 
                 // Validate response in Rust if validator is present
-                if let Some(validator) = &response_validator
-                    && let Err(errors) = validator.validate(&json_value)
-                {
-                    let error_msg = if is_debug_mode() {
-                        json!({
-                            "error": "Response validation failed",
-                            "validation_errors": format!("{:?}", errors),
-                            "response_body": json_value,
-                            "request_data": {
-                                "path_params": request_data_for_error.path_params,
-                                "query_params": request_data_for_error.query_params,
-                                "body": request_data_for_error.body,
-                            }
-                        })
-                        .to_string()
-                    } else {
-                        "Internal server error".to_string()
-                    };
-                    return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
+                #[allow(clippy::collapsible_if)]
+                if let Some(validator) = &response_validator {
+                    if let Err(errors) = validator.validate(&json_value) {
+                        let error_msg = if is_debug_mode() {
+                            json!({
+                                "error": "Response validation failed",
+                                "validation_errors": format!("{:?}", errors),
+                                "response_body": json_value,
+                                "request_data": {
+                                    "path_params": request_data_for_error.path_params,
+                                    "query_params": request_data_for_error.query_params,
+                                    "body": request_data_for_error.body,
+                                }
+                            })
+                            .to_string()
+                        } else {
+                            "Internal server error".to_string()
+                        };
+                        return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
+                    }
                 }
 
                 let json_bytes = serde_json::to_vec(&json_value).map_err(|e| {
@@ -337,12 +340,13 @@ impl PythonHandler {
                     if type_name == "ValidationError" {
                         debug_log_module!("handler", "This is a Pydantic ValidationError!");
                         // Try to call the .json() method
-                        if let Ok(json_method) = err_value.getattr("json")
-                            && let Ok(json_str) = json_method.call0()
-                        {
-                            let json_string = json_str.extract::<String>().ok()?;
-                            debug_log_module!("handler", "Extracted Pydantic .json(): {}", json_string);
-                            return Some(json_string);
+                        #[allow(clippy::collapsible_if)]
+                        if let Ok(json_method) = err_value.getattr("json") {
+                            if let Ok(json_str) = json_method.call0() {
+                                let json_string = json_str.extract::<String>().ok()?;
+                                debug_log_module!("handler", "Extracted Pydantic .json(): {}", json_string);
+                                return Some(json_string);
+                            }
                         }
                         debug_log_module!("handler", "Failed to extract .json() from ValidationError");
                     }

@@ -6,6 +6,21 @@
     "test_file": "tests/test_tutorial/test_cookie_param_models/test_tutorial001.py",
     "test_function": "test_cookie_param_model_invalid"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "GET",
+    "parameters": {
+      "cookies": {
+        "session_id": {
+          "type": "string"
+        },
+        "fatebook_tracker": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    }
+  },
   "request": {
     "method": "GET",
     "path": "/items/",

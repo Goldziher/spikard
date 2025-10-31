@@ -24,10 +24,14 @@ lazy_static = "1.5"
 regex = "1"
 rustc-hash = "2.1"
 urlencoding = "2.1"
+mime = "0.3"
+jiff = "0.1"
 pyo3.workspace = true
 pyo3-async-runtimes.workspace = true
 bytes = "1.10"
 http-body-util = "0.1"
 axum-test = "18"
+anyhow = "1.0"
+cookie = "0.18"
 
 [dev-dependencies]

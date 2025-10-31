@@ -6,6 +6,26 @@
     "test_file": "tests/test_tutorial/test_request_forms/test_tutorial001.py",
     "test_function": "test_post_form_optional_omitted"
   },
+  "handler": {
+    "route": "/register/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "required": ["username", "password"],
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "email": {
+          "type": ["string", "null"],
+          "format": "email"
+        }
+      }
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/register/",
