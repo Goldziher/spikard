@@ -46,7 +46,7 @@ pub struct FixtureRequest {
     pub path: String,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub query_params: Option<HashMap<String, String>>,
+    pub query_params: Option<HashMap<String, Value>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub headers: Option<HashMap<String, String>>,

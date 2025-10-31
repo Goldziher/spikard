@@ -64,9 +64,7 @@ fn discover_fixture_categories(fixtures_dir: &Path) -> Result<HashMap<String, Ve
 }
 
 fn generate_cargo_toml() -> String {
-    r#"[workspace]
-
-[package]
+    r#"[package]
 name = "spikard-e2e-app"
 version = "0.1.0"
 edition = "2021"
@@ -81,6 +79,8 @@ name = "spikard-e2e-app"
 path = "src/main.rs"
 
 [dependencies]
+# Use Spikard itself - this is a test of Spikard!
+spikard-http = { path = "../../../crates/spikard-http" }
 axum = "0.8"
 tokio = { version = "1", features = ["full"] }
 tower = "0.5"
@@ -126,12 +126,22 @@ fn generate_lib_rs(categories: &HashMap<String, Vec<Fixture>>) -> String {
 
     for fixtures in categories.values() {
         for fixture in fixtures {
-            if let Some(handler) = &fixture.handler {
-                route_map
-                    .entry((handler.route.clone(), handler.method.clone()))
-                    .or_default()
-                    .push(fixture);
-            }
+            // Use handler.route if available, otherwise fall back to request.path
+            let route = if let Some(handler) = &fixture.handler {
+                handler.route.clone()
+            } else {
+                // Extract just the path without query string
+                fixture
+                    .request
+                    .path
+                    .split('?')
+                    .next()
+                    .unwrap_or(&fixture.request.path)
+                    .to_string()
+            };
+
+            let method = fixture.request.method.clone();
+            route_map.entry((route, method)).or_default().push(fixture);
         }
     }
 
@@ -144,8 +154,9 @@ fn generate_lib_rs(categories: &HashMap<String, Vec<Fixture>>) -> String {
     format!(
         r#"//! Generated route handlers
 
-use axum::{{routing::{{get, post, put, patch, delete}}, Json, Router}};
+use axum::{{routing::{{get, post, put, patch, delete, head, options, trace}}, Json, Router}};
 use serde_json::{{json, Value}};
+use std::collections::HashMap;
 
 pub fn create_app() -> Router {{
     Router::new()
@@ -174,27 +185,54 @@ fn generate_router_config(route_map: &HashMap<(String, String), Vec<&Fixture>>) 
         .join("\n")
 }
 
-fn generate_handler(route: &str, method: &str, _fixtures: &[&Fixture]) -> String {
+fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String {
+    use std::collections::HashSet;
+
     let handler_name = route_method_to_handler_name(route, method);
 
-    // For now, generate a simple echo handler
-    format!(
-        r#"async fn {}() -> Json<Value> {{
+    // Collect all query parameters from all fixtures using this route/method
+    let mut query_params = HashSet::new();
+    for fixture in fixtures {
+        if let Some(query_map) = &fixture.request.query_params {
+            for key in query_map.keys() {
+                query_params.insert(key.clone());
+            }
+        }
+    }
+
+    // Generate a simple handler that extracts query params as a HashMap
+    if !query_params.is_empty() {
+        format!(
+            r#"async fn {}(axum::extract::Query(params): axum::extract::Query<HashMap<String, String>>) -> Json<Value> {{
+    // Extract and return query parameters
+    Json(json!(params))
+}}"#,
+            handler_name
+        )
+    } else {
+        // No query params - simple handler
+        format!(
+            r#"async fn {}() -> Json<Value> {{
     Json(json!({{
         "route": "{}",
-        "method": "{}",
-        "message": "Handler not yet implemented"
+        "method": "{}"
     }}))
 }}"#,
-        handler_name, route, method
-    )
+            handler_name, route, method
+        )
+    }
 }
 
 fn route_method_to_handler_name(route: &str, method: &str) -> String {
-    let route_part = route
+    let mut route_part = route
         .trim_start_matches('/')
-        .replace(['/', '-'], "_")
+        .replace(['/', '-', '.'], "_")
         .replace(['{', '}'], "");
+
+    // If the route starts with a digit after processing, prefix with underscore
+    if route_part.chars().next().is_some_and(|c| c.is_ascii_digit()) {
+        route_part = format!("_{}", route_part);
+    }
 
     format!("{}_{}_handler", method.to_lowercase(), route_part)
 }
