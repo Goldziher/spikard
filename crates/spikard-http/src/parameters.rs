@@ -93,11 +93,10 @@ impl ParameterValidator {
             let expected_type = prop.get("type").and_then(|t| t.as_str()).map(String::from);
             let format = prop.get("format").and_then(|f| f.as_str()).map(String::from);
 
-            // A parameter is required if:
-            // 1. It's in the schema-level "required" array, OR
-            // 2. It doesn't have "optional": true in its property definition
+            // A parameter is required if it's in the schema-level "required" array.
+            // The "optional" field at the property level can override this if explicitly set to true.
             let is_optional = prop.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
-            let required = required_list.contains(&name.as_str()) || !is_optional;
+            let required = required_list.contains(&name.as_str()) && !is_optional;
 
             defs.push(ParameterDef {
                 name: name.clone(),
