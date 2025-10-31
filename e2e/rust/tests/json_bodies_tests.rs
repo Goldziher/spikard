@@ -26,10 +26,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -74,10 +125,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/api/v1/data".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -122,10 +224,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -171,10 +324,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/validated".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -219,10 +423,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/nested".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -267,10 +522,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -315,10 +621,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -363,10 +720,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/events/".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -412,10 +820,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/config".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -461,10 +920,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/config".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -510,10 +1020,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/validated".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -558,10 +1119,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -607,10 +1219,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/payment".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -655,10 +1318,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/nested".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -703,10 +1417,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/users".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -752,10 +1517,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/validated".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -800,10 +1616,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/data".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -849,10 +1716,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/billing".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -897,10 +1815,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/1".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -946,10 +1915,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/users".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -994,10 +2014,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/events/".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1043,10 +2114,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/validated".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1091,10 +2213,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1139,10 +2312,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/contact".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1188,10 +2412,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/contact".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1236,10 +2511,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1284,10 +2610,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/validated".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1333,10 +2710,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/payment".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1382,10 +2810,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/list-validated".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1430,10 +2909,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/contact".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1478,10 +3008,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/optional-all".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1527,10 +3108,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/validated".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1576,10 +3208,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/billing".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1624,10 +3307,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1672,10 +3406,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1720,10 +3505,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/payment".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1768,10 +3604,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1816,10 +3703,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1864,10 +3802,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1913,10 +3902,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/config".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -1961,10 +4001,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/?limit=10".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -2009,10 +4100,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/users".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -2057,10 +4199,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/api/v1/data".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -2105,10 +4298,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/products".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -2154,10 +4398,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/users".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -2203,10 +4498,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/users".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -2251,10 +4597,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -2300,10 +4697,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/users".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {
@@ -2348,10 +4796,61 @@ mod json_bodies {
         // Build request
         let mut uri = "/items/list".to_string();
 
-        if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
+        if let Some(query_string) = fixture["request"]["query_string"].as_str() {
+            if !query_string.is_empty() {
+                uri.push_str("?");
+                uri.push_str(query_string);
+            }
+        } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
+            const QUERY: &AsciiSet = &CONTROLS
+                .add(b' ')
+                .add(b'"')
+                .add(b'#')
+                .add(b'<')
+                .add(b'>')
+                .add(b'%')
+                .add(b'{')
+                .add(b'}')
+                .add(b'|')
+                .add(b'\\')
+                .add(b'^')
+                .add(b'`')
+                .add(b'&')
+                .add(b'=')
+                .add(b'+');
+
             let query_string = query_params
                 .iter()
-                .map(|(k, v)| format!("{}={}", k, v.as_str().unwrap_or("")))
+                .flat_map(|(k, v)| {
+                    let key = percent_encode(k.as_bytes(), QUERY).to_string();
+                    match v {
+                        Value::String(s) => {
+                            let value = percent_encode(s.as_bytes(), QUERY).to_string();
+                            vec![format!("{}={}", key, value)]
+                        }
+                        Value::Number(n) => vec![format!("{}={}", key, n)],
+                        Value::Bool(b) => vec![format!("{}={}", key, b)],
+                        Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
+                            arr.iter()
+                                .filter_map(|item| match item {
+                                    Value::String(s) => {
+                                        Some(format!("{}={}", key, percent_encode(s.as_bytes(), QUERY)))
+                                    }
+                                    Value::Number(n) => Some(format!("{}={}", key, n)),
+                                    _ => None,
+                                })
+                                .collect::<Vec<_>>()
+                        }
+                        _ => vec![],
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join("&");
             if !query_string.is_empty() {

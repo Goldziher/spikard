@@ -19,5 +19,18 @@
       "value": 100
     }
   },
-  "notes": "le=100 constraint, value 100 is valid (boundary test)"
+  "notes": "le=100 constraint, value 100 is valid (boundary test)",
+  "handler": {
+    "route": "/query/int-le",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "value": {
+          "type": "integer",
+          "annotation": "int",
+          "maximum": 100
+        }
+      }
+    }
+  }
 }

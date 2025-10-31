@@ -19,5 +19,18 @@
       "timestamp": "2024-01-15T10:30:00Z"
     }
   },
-  "notes": "Datetime query parameter in ISO 8601 format with UTC timezone"
+  "notes": "Datetime query parameter in ISO 8601 format with UTC timezone",
+  "handler": {
+    "route": "/query/datetime",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "timestamp": {
+          "type": "string",
+          "annotation": "str",
+          "format": "date-time"
+        }
+      }
+    }
+  }
 }

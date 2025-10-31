@@ -19,5 +19,18 @@
       "value": 49
     }
   },
-  "notes": "lt=50 constraint, value 49 is valid (just below boundary)"
+  "notes": "lt=50 constraint, value 49 is valid (just below boundary)",
+  "handler": {
+    "route": "/query/int-lt",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "value": {
+          "type": "integer",
+          "annotation": "int",
+          "exclusiveMaximum": 50
+        }
+      }
+    }
+  }
 }

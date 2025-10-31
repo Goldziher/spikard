@@ -11,12 +11,33 @@
     "path": "/query/list",
     "query_string": "device_ids=1&device_ids=2",
     "query_params": {
-      "device_ids": [1, 2]
+      "device_ids": [
+        1,
+        2
+      ]
     }
   },
   "expected_response": {
     "status_code": 200,
-    "body": [1, 2]
+    "body": [
+      1,
+      2
+    ]
   },
-  "notes": "Multiple values with same key: ?device_ids=1&device_ids=2"
+  "notes": "Multiple values with same key: ?device_ids=1&device_ids=2",
+  "handler": {
+    "route": "/query/list",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "device_ids": {
+          "type": "array",
+          "annotation": "list[int]",
+          "items": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
 }

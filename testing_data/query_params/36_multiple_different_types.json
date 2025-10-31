@@ -25,5 +25,29 @@
       "score": 95.5
     }
   },
-  "notes": "Multiple query params: str, int, bool, float - all properly typed"
+  "notes": "Multiple query params: str, int, bool, float - all properly typed",
+  "handler": {
+    "route": "/query/multi-type",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "name": {
+          "type": "string",
+          "annotation": "str"
+        },
+        "age": {
+          "type": "integer",
+          "annotation": "int"
+        },
+        "active": {
+          "type": "boolean",
+          "annotation": "bool"
+        },
+        "score": {
+          "type": "number",
+          "annotation": "float"
+        }
+      }
+    }
+  }
 }

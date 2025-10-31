@@ -19,5 +19,18 @@
       "event_date": "2024-01-15"
     }
   },
-  "notes": "Date query parameter in ISO format (YYYY-MM-DD)"
+  "notes": "Date query parameter in ISO format (YYYY-MM-DD)",
+  "handler": {
+    "route": "/query/date",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "event_date": {
+          "type": "string",
+          "annotation": "str",
+          "format": "date"
+        }
+      }
+    }
+  }
 }

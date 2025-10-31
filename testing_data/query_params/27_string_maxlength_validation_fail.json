@@ -19,7 +19,10 @@
       "detail": [
         {
           "type": "string_too_long",
-          "loc": ["query", "name"],
+          "loc": [
+            "query",
+            "name"
+          ],
           "msg": "String should have at most 10 characters",
           "input": "this_is_way_too_long",
           "ctx": {
@@ -29,5 +32,18 @@
       ]
     }
   },
-  "notes": "max_length=10 constraint, value has 20 characters"
+  "notes": "max_length=10 constraint, value has 20 characters",
+  "handler": {
+    "route": "/query/str-max-length",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "name": {
+          "type": "string",
+          "annotation": "str",
+          "maxLength": 10
+        }
+      }
+    }
+  }
 }

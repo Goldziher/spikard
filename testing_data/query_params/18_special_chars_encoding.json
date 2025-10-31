@@ -22,5 +22,21 @@
       "special": "&@A.ac"
     }
   },
-  "notes": "URL-encoded: @ becomes %40, & becomes %26"
+  "notes": "URL-encoded: @ becomes %40, & becomes %26",
+  "handler": {
+    "route": "/test",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "email": {
+          "type": "string",
+          "annotation": "str"
+        },
+        "special": {
+          "type": "string",
+          "annotation": "str"
+        }
+      }
+    }
+  }
 }

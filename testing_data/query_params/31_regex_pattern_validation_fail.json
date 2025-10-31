@@ -19,7 +19,10 @@
       "detail": [
         {
           "type": "string_pattern_mismatch",
-          "loc": ["query", "code"],
+          "loc": [
+            "query",
+            "code"
+          ],
           "msg": "String should match pattern '^[0-9]{3,}$'",
           "input": "abc123",
           "ctx": {
@@ -29,5 +32,18 @@
       ]
     }
   },
-  "notes": "Pattern requires at least 3 digits only, 'abc123' contains letters"
+  "notes": "Pattern requires at least 3 digits only, 'abc123' contains letters",
+  "handler": {
+    "route": "/query/pattern",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "code": {
+          "type": "string",
+          "annotation": "str",
+          "pattern": "^[0-9]{3,}$"
+        }
+      }
+    }
+  }
 }

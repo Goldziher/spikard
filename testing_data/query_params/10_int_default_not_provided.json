@@ -14,5 +14,19 @@
     "status_code": 200,
     "body": "foo bar 10"
   },
-  "notes": "Default value is 10"
+  "notes": "Default value is 10",
+  "handler": {
+    "route": "/query/int/default",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "query": {
+          "type": "integer",
+          "annotation": "int",
+          "optional": true,
+          "default": 10
+        }
+      }
+    }
+  }
 }

@@ -17,5 +17,19 @@
       "limit": 10
     }
   },
-  "notes": "Optional int parameter with default value of 10 when not provided"
+  "notes": "Optional int parameter with default value of 10 when not provided",
+  "handler": {
+    "route": "/query/optional-default",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "limit": {
+          "type": "integer",
+          "annotation": "int",
+          "optional": true,
+          "default": 10
+        }
+      }
+    }
+  }
 }

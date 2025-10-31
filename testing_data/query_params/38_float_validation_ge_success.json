@@ -19,5 +19,18 @@
       "price": 0.01
     }
   },
-  "notes": "Float with ge=0.01 constraint, value 0.01 is valid (boundary test)"
+  "notes": "Float with ge=0.01 constraint, value 0.01 is valid (boundary test)",
+  "handler": {
+    "route": "/query/float-ge",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "price": {
+          "type": "number",
+          "annotation": "float",
+          "minimum": 0.01
+        }
+      }
+    }
+  }
 }

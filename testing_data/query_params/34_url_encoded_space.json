@@ -19,5 +19,17 @@
       "name": "hello world"
     }
   },
-  "notes": "Space in query parameter should be properly decoded from %20 or +"
+  "notes": "Space in query parameter should be properly decoded from %20 or +",
+  "handler": {
+    "route": "/query/basic",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "name": {
+          "type": "string",
+          "annotation": "str"
+        }
+      }
+    }
+  }
 }
