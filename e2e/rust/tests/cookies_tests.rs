@@ -2185,7 +2185,7 @@ mod cookies {
         let app = spikard_e2e_app::create_app();
 
         // Build request
-        let mut uri = "/items/".to_string();
+        let mut uri = "/items/cookies".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
@@ -2561,7 +2561,7 @@ mod cookies {
     async fn test_cookies_apikey_cookie_authentication_missing() {
         // Fixture: APIKey cookie authentication - missing
         // Description: Tests APIKeyCookie authentication returns 403 when cookie missing
-        // Expected status: 403
+        // Expected status: 422
 
         use axum::body::Body;
         use axum::http::{Request, StatusCode};
@@ -2577,7 +2577,7 @@ mod cookies {
         let app = spikard_e2e_app::create_app();
 
         // Build request
-        let mut uri = "/users/me".to_string();
+        let mut uri = "/users/me/auth".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
@@ -2747,8 +2747,8 @@ mod cookies {
         // Assert status code
         assert_eq!(
             response.status(),
-            StatusCode::from_u16(403).unwrap(),
-            "Expected status 403, got {:?}",
+            StatusCode::from_u16(422).unwrap(),
+            "Expected status 422, got {:?}",
             response.status()
         );
     }

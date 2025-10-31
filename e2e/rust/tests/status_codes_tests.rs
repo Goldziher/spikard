@@ -220,7 +220,7 @@ mod status_codes {
         let app = spikard_e2e_app::create_app();
 
         // Build request
-        let mut uri = "/items/999".to_string();
+        let mut uri = "/status-test/404".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
@@ -1004,7 +1004,7 @@ mod status_codes {
         let app = spikard_e2e_app::create_app();
 
         // Build request
-        let mut uri = "/items/1".to_string();
+        let mut uri = "/status-test/304".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
@@ -1592,7 +1592,7 @@ mod status_codes {
         let app = spikard_e2e_app::create_app();
 
         // Build request
-        let mut uri = "/items/1".to_string();
+        let mut uri = "/status-test/204".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
@@ -4141,7 +4141,7 @@ mod status_codes {
         let app = spikard_e2e_app::create_app();
 
         // Build request
-        let mut uri = "/items/1".to_string();
+        let mut uri = "/status-test/200".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {

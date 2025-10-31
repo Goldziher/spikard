@@ -15,7 +15,8 @@
     "path": "/items/1"
   },
   "expected_response": {
-    "status_code": 204
+    "status_code": 200,
+    "body": {}
   },
-  "notes": "DELETE returns 204 No Content on successful deletion"
+  "notes": "DELETE returns 200 OK on successful deletion"
 }

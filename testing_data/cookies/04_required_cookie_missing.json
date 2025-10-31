@@ -7,7 +7,7 @@
     "test_function": "test_cookie_param_model_invalid"
   },
   "handler": {
-    "route": "/items/",
+    "route": "/items/cookies",
     "method": "GET",
     "parameters": {
       "cookies": {
@@ -23,7 +23,7 @@
   },
   "request": {
     "method": "GET",
-    "path": "/items/",
+    "path": "/items/cookies",
     "cookies": {
       "fatebook_tracker": "tracker456"
     }

@@ -6,9 +6,13 @@
     "test_file": "tests/test_responses.py",
     "test_function": "test_not_modified"
   },
+  "handler": {
+    "route": "/status-test/{code}",
+    "method": "GET"
+  },
   "request": {
     "method": "GET",
-    "path": "/items/1",
+    "path": "/status-test/304",
     "headers": {
       "If-None-Match": "\"abc123\""
     }
