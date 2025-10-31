@@ -101,16 +101,16 @@ fn decode_value(json_str: String, parse_numbers: bool) -> Value {
 /// - "false" (case-insensitive) → false
 /// - "1" → true
 /// - "0" → false
-/// - "" (empty string) → false
+/// - "" (empty string) → Err (don't coerce, preserve as empty string)
 #[inline]
 fn parse_boolean(s: &str) -> Result<bool, ()> {
     let lower = s.to_lowercase();
     if lower == "true" || s == "1" {
         Ok(true)
-    } else if lower == "false" || s == "0" || s.is_empty() {
+    } else if lower == "false" || s == "0" {
         Ok(false)
     } else {
-        Err(())
+        Err(())  // Don't coerce empty strings - let validation handle it
     }
 }
 
