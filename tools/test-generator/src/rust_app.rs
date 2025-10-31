@@ -246,12 +246,9 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
             if explicit_schemas.iter().all(|s| s == &explicit_schemas[0]) {
                 Some(explicit_schemas[0].clone())
             } else {
-                // Multiple different schemas - combine them with anyOf
-                use serde_json::json;
-                eprintln!("[HANDLER GEN] Multiple different body schemas found, combining with anyOf");
-                Some(json!({
-                    "anyOf": explicit_schemas
-                }))
+                // Multiple different schemas - try to merge them intelligently
+                eprintln!("[HANDLER GEN] Multiple different body schemas found, attempting intelligent merge");
+                Some(merge_schemas(&explicit_schemas))
             }
         } else {
             // No explicit schemas, try inference
@@ -589,6 +586,117 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
         }))
     } else {
         None
+    }
+}
+
+/// Merge multiple schemas intelligently by combining constraints
+/// For simple object schemas with constraints like minProperties/maxProperties,
+/// merge the constraints. For complex schemas (anyOf, oneOf, etc.), use anyOf wrapper.
+fn merge_schemas(schemas: &[Value]) -> Value {
+    use serde_json::json;
+    use std::collections::HashMap;
+
+    // Check if all schemas are simple object schemas (can be merged)
+    let all_simple_objects = schemas.iter().all(|s| {
+        s.get("type") == Some(&json!("object"))
+            && !s
+                .as_object()
+                .map(|o| o.contains_key("oneOf") || o.contains_key("anyOf") || o.contains_key("allOf"))
+                .unwrap_or(false)
+    });
+
+    if all_simple_objects && schemas.len() > 1 {
+        // Merge object schemas by combining constraints
+        let mut merged = serde_json::Map::new();
+        merged.insert("type".to_string(), json!("object"));
+
+        // Collect all constraints from all schemas
+        let mut all_properties: HashMap<String, Value> = HashMap::new();
+        let mut required_sets: Vec<std::collections::HashSet<String>> = Vec::new();
+        let mut min_props: Option<u64> = None;
+        let mut max_props: Option<u64> = None;
+        let mut additional_props: Option<Value> = None;
+
+        for schema in schemas {
+            // Collect required fields from this schema
+            let mut schema_required = std::collections::HashSet::new();
+            if let Some(req) = schema
+                .as_object()
+                .and_then(|o| o.get("required"))
+                .and_then(|r| r.as_array())
+            {
+                for item in req {
+                    if let Some(field) = item.as_str() {
+                        schema_required.insert(field.to_string());
+                    }
+                }
+            }
+            required_sets.push(schema_required);
+            if let Some(obj) = schema.as_object() {
+                // Merge properties
+                if let Some(props) = obj.get("properties").and_then(|p| p.as_object()) {
+                    for (key, value) in props {
+                        all_properties.insert(key.clone(), value.clone());
+                    }
+                }
+
+                // Note: We'll handle required fields separately to take intersection, not union
+
+                // Take the most restrictive minProperties
+                if let Some(min) = obj.get("minProperties").and_then(|v| v.as_u64()) {
+                    min_props = Some(min_props.map_or(min, |current| current.max(min)));
+                }
+
+                // Take the most restrictive maxProperties
+                if let Some(max) = obj.get("maxProperties").and_then(|v| v.as_u64()) {
+                    max_props = Some(max_props.map_or(max, |current| current.min(max)));
+                }
+
+                // additionalProperties: take false if any schema has it
+                if let Some(additional) = obj.get("additionalProperties") {
+                    if additional == &json!(false) {
+                        additional_props = Some(json!(false));
+                    }
+                }
+            }
+        }
+
+        // Compute intersection of required fields (only fields required in ALL schemas)
+        let required_intersection: Vec<String> = if !required_sets.is_empty() {
+            // Start with the first set
+            let mut intersection = required_sets[0].clone();
+            // Intersect with all other sets
+            for req_set in &required_sets[1..] {
+                intersection.retain(|field| req_set.contains(field));
+            }
+            intersection.into_iter().collect()
+        } else {
+            Vec::new()
+        };
+
+        // Build merged schema
+        if !all_properties.is_empty() {
+            merged.insert("properties".to_string(), json!(all_properties));
+        }
+        if !required_intersection.is_empty() {
+            merged.insert("required".to_string(), json!(required_intersection));
+        }
+        if let Some(min) = min_props {
+            merged.insert("minProperties".to_string(), json!(min));
+        }
+        if let Some(max) = max_props {
+            merged.insert("maxProperties".to_string(), json!(max));
+        }
+        if let Some(additional) = additional_props {
+            merged.insert("additionalProperties".to_string(), additional);
+        }
+
+        Value::Object(merged)
+    } else {
+        // Complex schemas or incompatible - use anyOf
+        json!({
+            "anyOf": schemas
+        })
     }
 }
 
