@@ -16,5 +16,18 @@
   "expected_response": {
     "status_code": 200,
     "body": "foo bar baz"
+  },
+  "handler": {
+    "route": "/query/optional",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "query": {
+          "type": "string",
+          "annotation": "str",
+          "optional": true
+        }
+      }
+    }
   }
 }

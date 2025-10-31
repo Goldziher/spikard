@@ -19,12 +19,28 @@
       "detail": [
         {
           "type": "uuid_parsing",
-          "loc": ["query", "item_id"],
+          "loc": [
+            "query",
+            "item_id"
+          ],
           "msg": "Input should be a valid UUID",
           "input": "not-a-uuid"
         }
       ]
     }
   },
-  "notes": "Invalid UUID format should return 422 validation error"
+  "notes": "Invalid UUID format should return 422 validation error",
+  "handler": {
+    "route": "/query/uuid",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "item_id": {
+          "type": "string",
+          "annotation": "str",
+          "format": "uuid"
+        }
+      }
+    }
+  }
 }

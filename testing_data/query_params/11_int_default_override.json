@@ -17,5 +17,19 @@
     "status_code": 200,
     "body": "foo bar 50"
   },
-  "notes": "Default value is 10, but overridden to 50"
+  "notes": "Default value is 10, but overridden to 50",
+  "handler": {
+    "route": "/query/int/default",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "query": {
+          "type": "integer",
+          "annotation": "int",
+          "optional": true,
+          "default": 10
+        }
+      }
+    }
+  }
 }

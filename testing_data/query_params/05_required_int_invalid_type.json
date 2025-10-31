@@ -26,5 +26,17 @@
         "input": "baz"
       }
     ]
+  },
+  "handler": {
+    "route": "/query/int",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "query": {
+          "type": "integer",
+          "annotation": "int"
+        }
+      }
+    }
   }
 }

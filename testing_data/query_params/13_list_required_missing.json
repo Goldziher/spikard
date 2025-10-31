@@ -24,5 +24,20 @@
       }
     ]
   },
-  "notes": "List without default requires at least one value"
+  "notes": "List without default requires at least one value",
+  "handler": {
+    "route": "/query/list",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "device_ids": {
+          "type": "array",
+          "annotation": "list[int]",
+          "items": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
 }

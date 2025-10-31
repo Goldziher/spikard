@@ -15,7 +15,26 @@
   },
   "expected_response": {
     "status_code": 200,
-    "body": ["apple"]
+    "body": [
+      "apple"
+    ]
   },
-  "notes": "Single value for array parameter is converted to array with one element"
+  "notes": "Single value for array parameter is converted to array with one element",
+  "handler": {
+    "route": "/query/list-default",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "tags": {
+          "type": "array",
+          "annotation": "list[str]",
+          "items": {
+            "type": "string"
+          },
+          "optional": true,
+          "default": []
+        }
+      }
+    }
+  }
 }

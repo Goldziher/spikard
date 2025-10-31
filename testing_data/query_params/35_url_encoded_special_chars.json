@@ -19,5 +19,17 @@
       "name": "test&value=123"
     }
   },
-  "notes": "Special characters &, =, etc should be properly decoded from %26, %3D"
+  "notes": "Special characters &, =, etc should be properly decoded from %26, %3D",
+  "handler": {
+    "route": "/query/basic",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "name": {
+          "type": "string",
+          "annotation": "str"
+        }
+      }
+    }
+  }
 }

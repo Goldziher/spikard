@@ -19,7 +19,10 @@
       "detail": [
         {
           "type": "enum",
-          "loc": ["query", "model"],
+          "loc": [
+            "query",
+            "model"
+          ],
           "msg": "Input should be 'alexnet', 'resnet' or 'lenet'",
           "input": "vgg16",
           "ctx": {
@@ -29,5 +32,22 @@
       ]
     }
   },
-  "notes": "Valid enum values: alexnet, resnet, lenet. 'vgg16' is invalid"
+  "notes": "Valid enum values: alexnet, resnet, lenet. 'vgg16' is invalid",
+  "handler": {
+    "route": "/query/enum",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "model": {
+          "type": "string",
+          "annotation": "str",
+          "enum": [
+            "alexnet",
+            "resnet",
+            "lenet"
+          ]
+        }
+      }
+    }
+  }
 }

@@ -19,5 +19,18 @@
       "item_id": "c892496f-b1fd-4b91-bdb8-b46f92df1716"
     }
   },
-  "notes": "UUID query parameter validation"
+  "notes": "UUID query parameter validation",
+  "handler": {
+    "route": "/query/uuid",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "item_id": {
+          "type": "string",
+          "annotation": "str",
+          "format": "uuid"
+        }
+      }
+    }
+  }
 }

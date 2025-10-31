@@ -19,5 +19,18 @@
       "value": 10
     }
   },
-  "notes": "ge=10 constraint, value 10 is valid (boundary test)"
+  "notes": "ge=10 constraint, value 10 is valid (boundary test)",
+  "handler": {
+    "route": "/query/int-ge",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "value": {
+          "type": "integer",
+          "annotation": "int",
+          "minimum": 10
+        }
+      }
+    }
+  }
 }
