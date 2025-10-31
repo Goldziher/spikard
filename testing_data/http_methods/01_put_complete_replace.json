@@ -8,7 +8,41 @@
   },
   "handler": {
     "route": "/items/{id}",
-    "method": "PUT"
+    "method": "PUT",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number"
+        },
+        "in_stock": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "description",
+        "id",
+        "in_stock",
+        "name",
+        "price"
+      ]
+    },
+    "parameters": {
+      "path": {
+        "id": {
+          "type": "string"
+        }
+      }
+    }
   },
   "request": {
     "method": "PUT",

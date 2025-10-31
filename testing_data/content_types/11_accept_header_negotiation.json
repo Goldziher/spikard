@@ -8,7 +8,14 @@
   },
   "handler": {
     "route": "/accept-test/{id}",
-    "method": "GET"
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "id": {
+          "type": "string"
+        }
+      }
+    }
   },
   "request": {
     "method": "GET",

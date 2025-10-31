@@ -8,7 +8,14 @@
   },
   "handler": {
     "route": "/items/{id}",
-    "method": "HEAD"
+    "method": "HEAD",
+    "parameters": {
+      "path": {
+        "id": {
+          "type": "string"
+        }
+      }
+    }
   },
   "request": {
     "method": "HEAD",
