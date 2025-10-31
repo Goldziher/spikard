@@ -114,7 +114,8 @@ fn generate_category_test_file(category: &str, fixtures: &[(Fixture, String)]) -
 
         let fixture_path = format!("../../testing_data/{}/{}", category, filename);
         let method = &fixture.request.method;
-        let path = &fixture.request.path;
+        // Extract path without query string (before '?')
+        let path = fixture.request.path.split('?').next().unwrap_or(&fixture.request.path);
         let expected_status = fixture.expected_response.status_code;
 
         let test_case = format!(
