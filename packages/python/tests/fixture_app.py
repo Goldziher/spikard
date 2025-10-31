@@ -204,6 +204,81 @@ def query_params_app():
         """Endpoint with validated path param and query params."""
         return {"user_id": user_id}
 
+    # Route: /items - generic items endpoint for various query param tests
+    @app.get("/items")
+    def get_items_no_slash(
+        offset: int | None = None,
+        limit: int | None = Field(None, gt=0, le=100),
+        ids: list[int] | None = Field(None, min_length=1, max_length=5),
+        tags: list[str] | None = Field(None, max_length=3),
+        active: bool | None = None,
+        quantity: int | None = Field(None, multiple_of=5),
+        colors: list[str] | None = None,
+    ):
+        """Generic items endpoint for various query parameter tests."""
+        result: dict[str, Any] = {}
+        if offset is not None:
+            result["offset"] = offset
+        if limit is not None:
+            result["limit"] = limit
+        if ids is not None:
+            result["ids"] = ids
+        if tags is not None:
+            result["tags"] = tags
+        if active is not None:
+            result["active"] = active
+        if quantity is not None:
+            result["quantity"] = quantity
+        if colors is not None:
+            result["colors"] = colors
+        return result
+
+    # Route: /stats - scientific notation float test
+    @app.get("/stats")
+    def get_stats(threshold: float):
+        """Endpoint for scientific notation float tests."""
+        return {"threshold": threshold}
+
+    # Route: /search - string length validation tests
+    @app.get("/search")
+    def search(query: str = Field(min_length=3, max_length=50)):
+        """Search endpoint with string length constraints."""
+        return {"query": query}
+
+    # Route: /subscribe - email pattern validation
+    @app.get("/subscribe")
+    def subscribe(email: str = Field(pattern=r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")):
+        """Subscribe endpoint with email pattern validation."""
+        return {"email": email}
+
+    # Route: /network - IP address format validation
+    @app.get("/network")
+    def network_info(
+        ipv4: str | None = Field(
+            None, pattern=r"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+        ),
+        ipv6: str | None = None,
+    ):
+        """Network endpoint with IP format validation."""
+        result: dict[str, Any] = {}
+        if ipv4 is not None:
+            result["ipv4"] = ipv4
+        if ipv6 is not None:
+            result["ipv6"] = ipv6
+        return result
+
+    # Route: /dns - hostname format validation
+    @app.get("/dns")
+    def dns_lookup(hostname: str):
+        """DNS lookup endpoint with hostname validation."""
+        return {"hostname": hostname}
+
+    # Route: /redirect - URI format validation
+    @app.get("/redirect")
+    def redirect_to(url: str):
+        """Redirect endpoint with URI validation."""
+        return {"url": url}
+
     return app
 
 
