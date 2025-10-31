@@ -244,6 +244,11 @@ class FieldDefinition:
     @property
     def is_required(self) -> bool:
         """Check if the field should be marked as a required parameter."""
+        # Check if the default value is a Pydantic FieldInfo
+        if hasattr(self.default, "is_required") and callable(self.default.is_required):
+            # It's a Pydantic Field() - use its is_required() method
+            return bool(self.default.is_required())
+
         # Check if the default value is a Spikard Query/Body/Path parameter wrapper
         if hasattr(self.default, "has_default") and callable(self.default.has_default):
             # It's a Query/Body/Path/etc wrapper
