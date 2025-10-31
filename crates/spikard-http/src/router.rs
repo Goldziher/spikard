@@ -100,6 +100,7 @@ mod tests {
             response_schema: None,
             parameter_schema: None,
             is_async: true,
+            cors: None,
         };
 
         let route = Route::from_metadata(metadata).unwrap();
@@ -126,6 +127,7 @@ mod tests {
             response_schema: None,
             parameter_schema: None,
             is_async: true,
+            cors: None,
         };
 
         let route = Route::from_metadata(metadata).unwrap();
