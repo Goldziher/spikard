@@ -78,19 +78,6 @@ impl PythonHandler {
         _req: Request<Body>,
         request_data: RequestData,
     ) -> Result<Response<Body>, (StatusCode, String)> {
-        // DEBUG: Write to file since test client captures stderr
-        let _ = std::fs::write(
-            "/tmp/spikard_debug.log",
-            format!(
-                "[UNCONDITIONAL DEBUG] PythonHandler::call() entered\n[UNCONDITIONAL DEBUG] parameter_validator present: {}\n",
-                self.parameter_validator.is_some()
-            ),
-        );
-        eprintln!("[UNCONDITIONAL DEBUG] PythonHandler::call() entered");
-        eprintln!(
-            "[UNCONDITIONAL DEBUG] parameter_validator present: {}",
-            self.parameter_validator.is_some()
-        );
         // Validate request body in Rust if validator is present
         #[allow(clippy::collapsible_if)]
         if let Some(validator) = &self.request_validator {
@@ -120,17 +107,6 @@ impl PythonHandler {
                 Ok(params) => Some(params),
                 Err(errors) => {
                     // Return FastAPI-compatible error format with {"detail": [...]}
-                    let mut debug_msg = format!(
-                        "[UNCONDITIONAL DEBUG] Parameter validation failed with {} errors\n",
-                        errors.errors.len()
-                    );
-                    for (i, err) in errors.errors.iter().enumerate() {
-                        debug_msg.push_str(&format!(
-                            "[UNCONDITIONAL DEBUG]   Error {}: type={}, loc={:?}, msg={}, input={}, ctx={:?}\n",
-                            i, err.error_type, err.loc, err.msg, err.input, err.ctx
-                        ));
-                    }
-                    eprintln!("{}", debug_msg);
                     debug_log_module!(
                         "handler",
                         "Parameter validation failed with {} errors",
@@ -139,11 +115,6 @@ impl PythonHandler {
                     let error_body = json!({
                         "detail": errors.errors
                     });
-                    let error_json = serde_json::to_string_pretty(&error_body)
-                        .unwrap_or_else(|e| format!("Failed to serialize: {}", e));
-                    debug_msg.push_str(&format!("[UNCONDITIONAL DEBUG] error_body JSON: {}\n", error_json));
-                    let _ = std::fs::write("/tmp/spikard_validation_error.log", debug_msg);
-                    eprintln!("[UNCONDITIONAL DEBUG] error_body JSON: {}", error_json);
                     debug_log_module!("handler", "Returning 422 with error body: {}", error_body.to_string());
                     return Err((StatusCode::UNPROCESSABLE_ENTITY, error_body.to_string()));
                 }
@@ -320,12 +291,10 @@ impl PythonHandler {
                 })
             }
             Err(e) => {
-                eprintln!("[UNCONDITIONAL DEBUG] Handler caught error, checking if Pydantic ValidationError");
                 // Check if this is a Pydantic ValidationError by trying to extract its .json() method
                 let pydantic_errors = Python::attach(|py| -> Option<String> {
                     let err_value = e.value(py);
                     let type_name = err_value.get_type().name().ok()?;
-                    eprintln!("[UNCONDITIONAL DEBUG] Python exception type: {}", type_name);
 
                     debug_log_module!("handler", "Caught Python exception: type={}", type_name);
 
