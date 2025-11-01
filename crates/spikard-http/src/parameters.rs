@@ -233,7 +233,7 @@ impl ParameterValidator {
                                     "float_parsing",
                                     "Input should be a valid number, unable to parse string as a number",
                                 ),
-                                (Some("boolean"), _) => ("bool_parsing", "Input should be a valid boolean"),
+                                (Some("boolean"), _) => ("bool_parsing", "Input should be a valid boolean, unable to interpret input"),
                                 (Some("string"), Some("date")) => ("date_parsing", "Input should be a valid date"),
                                 (Some("string"), Some("date-time")) => {
                                     ("datetime_parsing", "Input should be a valid datetime")

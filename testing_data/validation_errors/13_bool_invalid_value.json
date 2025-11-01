@@ -8,7 +8,7 @@
   },
   "request": {
     "method": "GET",
-    "path": "/items/?is_active=maybe"
+    "path": "/items/?q=test&is_active=maybe"
   },
   "expected_response": {
     "status_code": 422,
