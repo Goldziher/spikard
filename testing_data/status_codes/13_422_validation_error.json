@@ -6,6 +6,26 @@
     "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
     "test_function": "test_validation_error"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "price": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "price",
+        "name"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/",

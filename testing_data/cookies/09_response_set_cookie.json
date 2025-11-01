@@ -6,6 +6,15 @@
     "test_file": "tests/test_tutorial/test_response_cookies/test_tutorial001.py",
     "test_function": "test_path_operation"
   },
+  "handler": {
+    "route": "/cookie/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/cookie/"

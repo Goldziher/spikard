@@ -6,6 +6,15 @@
     "test_file": "tests/test_responses.py",
     "test_function": "test_redirect_307"
   },
+  "handler": {
+    "route": "/redirect-post",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/redirect-post"

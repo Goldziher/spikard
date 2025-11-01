@@ -6,6 +6,42 @@
     "test_file": "tests/test_numeric_limits.py",
     "test_function": "test_float_precision"
   },
+  "handler": {
+    "route": "/calculations/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "value1": {
+          "type": "number"
+        },
+        "value2": {
+          "type": "number"
+        },
+        "expected_sum": {
+          "type": "number"
+        },
+        "precise_value": {
+          "type": "number"
+        },
+        "very_small": {
+          "type": "number"
+        },
+        "very_large": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value1",
+        "value2",
+        "expected_sum",
+        "precise_value",
+        "very_small",
+        "very_large"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/calculations/",

@@ -6,6 +6,13 @@
     "test_file": "tests/test_request_body.py",
     "test_function": "test_malformed_json"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "POST",
+    "body_schema": {
+      "type": "string"
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/",

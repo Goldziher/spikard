@@ -6,6 +6,22 @@
     "test_file": "tests/test_timeouts.py",
     "test_function": "test_request_timeout"
   },
+  "handler": {
+    "route": "/slow-endpoint",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "data"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/slow-endpoint",

@@ -6,6 +6,30 @@
     "test_file": "tests/test_validate_response.py",
     "test_function": "test_multiple_validation_errors"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "type": "integer"
+        },
+        "quantity": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "price",
+        "quantity"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/",

@@ -6,6 +6,23 @@
     "test_file": "tests/test_tutorial/test_request_files/test_tutorial001.py",
     "test_function": "test_optional_file_provided"
   },
+  "handler": {
+    "route": "/files/optional",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string",
+          "format": "binary"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "file"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/files/optional",

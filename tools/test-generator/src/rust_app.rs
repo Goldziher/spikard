@@ -1,4 +1,55 @@
 //! Rust test app generation
+//!
+//! # Purpose
+//!
+//! This module generates **MINIMAL** test applications from JSON fixtures to test Spikard's
+//! internal behavior. The generated apps are NOT production code - they are scaffolding to
+//! exercise Spikard's validation, routing, and error handling.
+//!
+//! # Critical Philosophy
+//!
+//! **The fixtures define Spikard's behavior, not the test app's behavior.**
+//!
+//! - Fixtures are specifications for how Spikard should handle requests
+//! - Test apps are the simplest possible implementation to exercise Spikard
+//! - All validation, error handling, status codes are handled BY SPIKARD
+//! - Generated handlers contain NO business logic, NO smart routing, NO special cases
+//!
+//! # What NOT to Generate
+//!
+//! ❌ Do NOT add business logic (e.g., parsing status codes from path params)
+//! ❌ Do NOT implement conditional behavior based on request data
+//! ❌ Do NOT duplicate validation logic (Spikard does this!)
+//! ❌ Do NOT add smart error handling (Spikard handles errors!)
+//!
+//! # What TO Generate
+//!
+//! ✓ Register routes from fixtures using Axum
+//! ✓ Set up Spikard's validators with schemas from fixtures
+//! ✓ Call Spikard's validation methods
+//! ✓ Return simple success responses when validation passes
+//! ✓ Let Spikard return structured errors when validation fails
+//!
+//! # Example Generated Handler
+//!
+//! ```rust,ignore
+//! async fn handle_items_get(uri: axum::http::Uri) -> impl axum::response::IntoResponse {
+//!     let schema: Value = serde_json::from_str(SCHEMA_JSON).unwrap();
+//!     let validator = ParameterValidator::new(schema).unwrap();
+//!
+//!     match validator.validate_and_extract(&query_params, ...) {
+//!         Ok(validated) => (StatusCode::OK, Json(validated)),
+//!         Err(err) => (StatusCode::UNPROCESSABLE_ENTITY, Json(err.to_json()))
+//!     }
+//! }
+//! ```
+//!
+//! Notice how simple this is - Spikard does all the work!
+//!
+//! # Goal
+//!
+//! Use fixtures to drive TDD development of Spikard's Rust engine and ensure
+//! consistent behavior across all language bindings (Rust, Python, TypeScript, Ruby).
 
 use anyhow::{Context, Result};
 use serde_json::Value;
@@ -7,7 +58,8 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-use crate::fixture_analysis::{infer_body_schema, merge_schemas};
+// Removed fixture_analysis - no more schema inference!
+// Fixtures MUST provide explicit schemas.
 
 pub fn generate_rust_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     println!("Generating Rust test app at {}...", output_dir.display());
@@ -274,6 +326,16 @@ fn generate_cors_preflight_handler(handler_name: &str, cors_config: &Value) -> S
     )
 }
 
+/// Generate a minimal handler for a route/method combination.
+///
+/// This creates the SIMPLEST possible handler that:
+/// 1. Sets up Spikard's validators from fixture schemas
+/// 2. Calls Spikard's validation methods
+/// 3. Returns a fixed success status when validation passes
+/// 4. Lets Spikard return structured errors when validation fails
+///
+/// The handler contains NO business logic, NO conditional behavior, NO parameter parsing
+/// for dynamic behavior. It exists only to exercise Spikard's functionality.
 fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String {
     let handler_name = route_method_to_handler_name(route, method);
     let has_path_params = route.contains('{');
@@ -290,6 +352,11 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
         eprintln!("[HANDLER GEN]   - Fixture: {}", f.name);
     }
 
+    // Validate that required schemas are present
+    if !validate_required_schemas(route, method, fixtures, has_path_params, has_body) {
+        eprintln!("\n⚠️  WARNING: Continuing with schema validation errors - handler may fail at runtime\n");
+    }
+
     // Check if this handler has CORS configuration
     let cors_config = extract_cors_config(fixtures);
 
@@ -302,6 +369,11 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
 
     // Determine success status code - use the most common success status (200-299)
     // from fixtures, defaulting to 200 for GET/DELETE or 201 for POST/PUT/PATCH
+    //
+    // IMPORTANT: This is a FIXED status code for success responses. We do NOT parse
+    // status codes from path parameters or add any conditional logic. The test app
+    // should be minimal - Spikard handles all validation and error status codes.
+    // Error cases (400, 422, 500, etc.) are handled by Spikard's validation layer.
     let success_status = {
         let mut status_counts: std::collections::HashMap<u16, usize> = std::collections::HashMap::new();
         for fixture in fixtures {
@@ -320,41 +392,27 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
     // Try to build a parameter schema
     let param_schema = build_parameter_schema(fixtures);
 
-    // Try to get explicit body schema first, fallback to inference
+    // Extract explicit body schema - NO inference, NO merging
     let body_schema = if has_body {
-        // Collect all explicit body schemas from fixtures
-        let explicit_schemas: Vec<Value> = fixtures
-            .iter()
-            .filter_map(|f| f.handler.as_ref().and_then(|h| h.body_schema.as_ref()).cloned())
-            .collect();
-
-        if !explicit_schemas.is_empty() {
-            // If all explicit schemas are identical, use that one
-            if explicit_schemas.iter().all(|s| s == &explicit_schemas[0]) {
-                Some(explicit_schemas[0].clone())
-            } else {
-                // Multiple different schemas - try to merge them intelligently
-                eprintln!("[HANDLER GEN] Multiple different body schemas found, attempting intelligent merge");
-                Some(merge_schemas(&explicit_schemas))
+        // Find the FIRST fixture with explicit handler.body_schema
+        let mut explicit_schema = None;
+        for fixture in fixtures {
+            if let Some(handler) = &fixture.handler {
+                if let Some(schema) = &handler.body_schema {
+                    eprintln!(
+                        "[SCHEMA EXTRACT] Using explicit body_schema from fixture: {}",
+                        fixture.name
+                    );
+                    explicit_schema = Some(schema.clone());
+                    break;
+                }
             }
-        } else {
-            // No explicit schemas, try inference
-            infer_body_schema(fixtures)
         }
+
+        explicit_schema
     } else {
         None
     };
-
-    if let Some(body_schema) = &body_schema {
-        let is_explicit = fixtures
-            .iter()
-            .any(|f| f.handler.as_ref().and_then(|h| h.body_schema.as_ref()).is_some());
-        eprintln!(
-            "[HANDLER GEN] {} body schema: {}",
-            if is_explicit { "Using explicit" } else { "Inferred" },
-            serde_json::to_string_pretty(body_schema).unwrap()
-        );
-    }
 
     // Try to build a schema from fixtures with handler.parameters
     if let Some(schema) = param_schema {
@@ -516,7 +574,7 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
             schema_json,
             body_validator_code,
             if has_path_params { "" } else { "HashMap::new(), //" },
-            success_status,
+            success_status, // Fixed success status - no dynamic logic!
             cors_headers_code,
             if cors_config.is_some() {
                 "(axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response)).into_response()"
@@ -685,54 +743,6 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
     }
 }
 
-/// Parse type hints from route pattern like {param:type}
-/// Returns: (param_name, type_hint)
-fn parse_type_hints(route: &str) -> Vec<(String, String)> {
-    let re = regex::Regex::new(r"\{([^:}]+):([^}]+)\}").unwrap();
-    re.captures_iter(route)
-        .map(|cap| (cap[1].to_string(), cap[2].to_string()))
-        .collect()
-}
-
-/// Convert type hint to JSON Schema
-fn type_hint_to_schema(type_hint: &str) -> serde_json::Map<String, Value> {
-    use serde_json::json;
-    let mut schema = serde_json::Map::new();
-
-    match type_hint {
-        "int" => {
-            schema.insert("type".to_string(), json!("integer"));
-        }
-        "float" => {
-            schema.insert("type".to_string(), json!("number"));
-        }
-        "bool" => {
-            schema.insert("type".to_string(), json!("boolean"));
-        }
-        "uuid" => {
-            schema.insert("type".to_string(), json!("string"));
-            schema.insert("format".to_string(), json!("uuid"));
-        }
-        "date" => {
-            schema.insert("type".to_string(), json!("string"));
-            schema.insert("format".to_string(), json!("date"));
-        }
-        "datetime" => {
-            schema.insert("type".to_string(), json!("string"));
-            schema.insert("format".to_string(), json!("date-time"));
-        }
-        "string" | "path" => {
-            schema.insert("type".to_string(), json!("string"));
-        }
-        _ => {
-            // Unknown type hint, default to string
-            schema.insert("type".to_string(), json!("string"));
-        }
-    }
-
-    schema
-}
-
 /// Extract CORS configuration from fixtures if present
 /// Returns the CORS config from the first fixture that has one
 fn extract_cors_config(fixtures: &[&Fixture]) -> Option<Value> {
@@ -746,140 +756,123 @@ fn extract_cors_config(fixtures: &[&Fixture]) -> Option<Value> {
     None
 }
 
-/// Build a JSON Schema for parameter validation from fixtures
-/// Merges parameter definitions from ALL fixtures for the route
-fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
-    use serde_json::json;
-    use std::collections::HashSet;
+/// Validate that required schemas are present for the route
+/// Prints clear error messages and returns false if validation fails
+fn validate_required_schemas(
+    route: &str,
+    method: &str,
+    fixtures: &[&Fixture],
+    has_path_params: bool,
+    has_body: bool,
+) -> bool {
+    let mut valid = true;
 
-    // Merge all parameter definitions from all fixtures
-    let mut properties = serde_json::Map::new();
-    // Track which params are required by ALL fixtures vs only SOME fixtures
-    let mut param_fixture_count: std::collections::HashMap<String, (usize, usize)> = std::collections::HashMap::new(); // (fixtures_with_param, fixtures_requiring_param)
+    // Check if route needs parameters (has path params or query params in fixtures)
+    let needs_parameters = has_path_params
+        || fixtures
+            .iter()
+            .any(|f| f.request.path.contains('?') || f.handler.as_ref().and_then(|h| h.parameters.as_ref()).is_some());
 
-    // Extract route from first fixture to parse type hints
-    let route = if let Some(handler) = &fixtures[0].handler {
-        handler.route.clone()
-    } else {
-        fixtures[0]
-            .request
-            .path
-            .split('?')
-            .next()
-            .unwrap_or(&fixtures[0].request.path)
-            .to_string()
-    };
+    if needs_parameters {
+        let has_parameters = fixtures
+            .iter()
+            .any(|f| f.handler.as_ref().and_then(|h| h.parameters.as_ref()).is_some());
 
-    // Parse type hints from route and auto-generate schemas
-    let type_hints = parse_type_hints(&route);
-    for (param_name, type_hint) in type_hints {
-        // Only auto-generate if not already explicitly defined
-        // We'll check this below when processing handler.parameters
-        let schema = type_hint_to_schema(&type_hint);
-        let mut prop = serde_json::Map::new();
-        prop.insert("source".to_string(), json!("path"));
-        for (key, value) in schema {
-            prop.insert(key, value);
+        if !has_parameters {
+            eprintln!("\n╔════════════════════════════════════════════════════════════╗");
+            eprintln!("║ ERROR: Missing Required Schema                            ║");
+            eprintln!("╚════════════════════════════════════════════════════════════╝");
+            eprintln!("Route: {} {}", method, route);
+            eprintln!("Issue: Route requires parameters but no handler.parameters found");
+            eprintln!("\nFixtures checked ({}):", fixtures.len());
+            for f in fixtures {
+                eprintln!("  - {}", f.name);
+            }
+            eprintln!("\nFix: Add handler.parameters section to at least one fixture");
+            eprintln!("Example:");
+            eprintln!(
+                r#"  "handler": {{
+    "route": "{}",
+    "parameters": {{
+      "query": {{
+        "param_name": {{
+          "type": "string",
+          "required": true
+        }}
+      }}
+    }}
+  }}"#,
+                route
+            );
+            valid = false;
         }
-        properties.insert(param_name.clone(), Value::Object(prop));
     }
 
+    // Check if POST/PUT/PATCH needs body schema
+    if has_body {
+        let has_body_schema = fixtures
+            .iter()
+            .any(|f| f.handler.as_ref().and_then(|h| h.body_schema.as_ref()).is_some());
+
+        if !has_body_schema {
+            eprintln!("\n╔════════════════════════════════════════════════════════════╗");
+            eprintln!("║ ERROR: Missing Required Schema                            ║");
+            eprintln!("╚════════════════════════════════════════════════════════════╝");
+            eprintln!("Route: {} {}", method, route);
+            eprintln!(
+                "Issue: {} requests typically require explicit handler.body_schema",
+                method
+            );
+            eprintln!("\nFixtures checked ({}):", fixtures.len());
+            for f in fixtures {
+                eprintln!("  - {}", f.name);
+            }
+            eprintln!("\nFix: Add handler.body_schema section to at least one fixture");
+            eprintln!("Example:");
+            eprintln!(
+                r#"  "handler": {{
+    "route": "{}",
+    "body_schema": {{
+      "type": "object",
+      "properties": {{
+        "name": {{"type": "string"}},
+        "count": {{"type": "integer"}}
+      }},
+      "required": ["name"]
+    }}
+  }}"#,
+                route
+            );
+            valid = false;
+        }
+    }
+
+    valid
+}
+
+/// Extract explicit parameter schema from fixtures
+/// Takes the FIRST fixture that has handler.parameters defined and returns it as-is.
+/// NO inference, NO merging, NO building - just direct extraction.
+fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
+    // Find the first fixture with explicit handler.parameters
     for fixture in fixtures {
         if let Some(handler) = &fixture.handler {
             if let Some(params) = &handler.parameters {
-                // Process query, path, and cookie parameters
-                for (source, param_source_name) in &[("query", "query"), ("path", "path"), ("cookie", "cookies")] {
-                    if let Some(source_params) = params.get(*param_source_name).and_then(|v| v.as_object()) {
-                        for (param_name, param_def) in source_params {
-                            if let Some(param_obj) = param_def.as_object() {
-                                // Get or create property for this parameter
-                                let prop = properties.entry(param_name.clone()).or_insert_with(|| {
-                                    let mut p = serde_json::Map::new();
-                                    p.insert("source".to_string(), json!(source));
-                                    Value::Object(p)
-                                });
-
-                                if let Some(prop_map) = prop.as_object_mut() {
-                                    // Merge constraint fields from this fixture's schema
-                                    // Type should be consistent across fixtures, take first one
-                                    if !prop_map.contains_key("type") {
-                                        if let Some(param_type) = param_obj.get("type") {
-                                            prop_map.insert("type".to_string(), param_type.clone());
-                                        }
-                                    }
-
-                                    // Merge ALL constraint fields (union approach)
-                                    for (key, value) in param_obj {
-                                        if key != "annotation" && key != "type" && key != "required" {
-                                            prop_map.entry(key.clone()).or_insert(value.clone());
-                                        }
-                                    }
-                                }
-
-                                // Track if this fixture requires this parameter
-                                // Path parameters are always required by default
-                                let is_required = if *source == "path" {
-                                    true
-                                } else {
-                                    !param_obj.contains_key("default")
-                                        && !param_obj.contains_key("optional")
-                                        && param_obj.get("required").and_then(|v| v.as_bool()).unwrap_or(true)
-                                };
-
-                                let entry = param_fixture_count.entry(param_name.clone()).or_insert((0, 0));
-                                entry.0 += 1; // fixtures with this param
-                                if is_required {
-                                    entry.1 += 1; // fixtures requiring this param
-                                }
-                            }
-                        }
-                    }
-                }
+                eprintln!(
+                    "[SCHEMA EXTRACT] Using explicit parameters from fixture: {}",
+                    fixture.name
+                );
+                return Some(params.clone());
             }
         }
     }
 
-    // Parameters are required in the schema only if ALL fixtures on the route require them
-    // For parameters used by only some fixtures, we rely on the "optional" field in properties
-    let total_fixtures = fixtures.len();
-    let required_set: HashSet<String> = param_fixture_count
-        .iter()
-        .filter_map(|(param_name, (fixtures_with_param, required_count))| {
-            // Only add to required set if:
-            // 1. All fixtures that define this param require it (required_count == fixtures_with_param)
-            // 2. AND all fixtures on this route define it (fixtures_with_param == total_fixtures)
-            if required_count == fixtures_with_param && *fixtures_with_param == total_fixtures {
-                Some(param_name.clone())
-            } else {
-                None
-            }
-        })
-        .collect();
-
-    // For parameters not used by all fixtures, ensure they're marked as optional if not already
-    for (param_name, (fixtures_with_param, _)) in param_fixture_count.iter() {
-        if *fixtures_with_param < total_fixtures {
-            if let Some(prop) = properties.get_mut(param_name) {
-                if let Some(prop_obj) = prop.as_object_mut() {
-                    // Only add optional:true if it's not already set
-                    if !prop_obj.contains_key("optional") {
-                        prop_obj.insert("optional".to_string(), json!(true));
-                    }
-                }
-            }
-        }
-    }
-
-    if !properties.is_empty() {
-        let required: Vec<String> = required_set.into_iter().collect();
-        Some(json!({
-            "type": "object",
-            "properties": properties,
-            "required": required
-        }))
-    } else {
-        None
-    }
+    // No explicit parameters found
+    eprintln!(
+        "[SCHEMA EXTRACT] No explicit handler.parameters found in {} fixtures",
+        fixtures.len()
+    );
+    None
 }
 
 /// Merge multiple schemas intelligently by combining constraints

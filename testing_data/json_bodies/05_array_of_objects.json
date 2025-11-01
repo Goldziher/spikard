@@ -6,6 +6,49 @@
     "test_file": "tests/test_tutorial/test_body_nested_models/test_tutorial009.py",
     "test_function": "test_array_of_objects"
   },
+  "handler": {
+    "route": "/items/list",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "url",
+              "name"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "tags",
+        "images"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/list",
@@ -14,10 +57,19 @@
     },
     "body": {
       "name": "Product Bundle",
-      "tags": ["electronics", "gadget"],
+      "tags": [
+        "electronics",
+        "gadget"
+      ],
       "images": [
-        {"url": "https://example.com/img1.jpg", "name": "Front"},
-        {"url": "https://example.com/img2.jpg", "name": "Back"}
+        {
+          "url": "https://example.com/img1.jpg",
+          "name": "Front"
+        },
+        {
+          "url": "https://example.com/img2.jpg",
+          "name": "Back"
+        }
       ]
     }
   },
@@ -25,10 +77,19 @@
     "status_code": 200,
     "body": {
       "name": "Product Bundle",
-      "tags": ["electronics", "gadget"],
+      "tags": [
+        "electronics",
+        "gadget"
+      ],
       "images": [
-        {"url": "https://example.com/img1.jpg", "name": "Front"},
-        {"url": "https://example.com/img2.jpg", "name": "Back"}
+        {
+          "url": "https://example.com/img1.jpg",
+          "name": "Front"
+        },
+        {
+          "url": "https://example.com/img2.jpg",
+          "name": "Back"
+        }
       ]
     }
   },

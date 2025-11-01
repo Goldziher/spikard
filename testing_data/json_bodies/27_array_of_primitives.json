@@ -6,6 +6,36 @@
     "test_file": "tests/test_tutorial/test_body_nested_models/test_tutorial009.py",
     "test_function": "test_array_of_primitives"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ratings": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "tags",
+        "ratings"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/",
@@ -14,16 +44,34 @@
     },
     "body": {
       "name": "Product",
-      "tags": ["electronics", "gadget", "new"],
-      "ratings": [4.5, 4.8, 5.0, 4.2]
+      "tags": [
+        "electronics",
+        "gadget",
+        "new"
+      ],
+      "ratings": [
+        4.5,
+        4.8,
+        5.0,
+        4.2
+      ]
     }
   },
   "expected_response": {
     "status_code": 200,
     "body": {
       "name": "Product",
-      "tags": ["electronics", "gadget", "new"],
-      "ratings": [4.5, 4.8, 5.0, 4.2]
+      "tags": [
+        "electronics",
+        "gadget",
+        "new"
+      ],
+      "ratings": [
+        4.5,
+        4.8,
+        5.0,
+        4.2
+      ]
     }
   },
   "notes": "Array of strings (tags) and array of floats (ratings)"

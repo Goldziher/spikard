@@ -6,6 +6,15 @@
     "test_file": "tests/test_responses.py",
     "test_function": "test_delete_cookie"
   },
+  "handler": {
+    "route": "/cookies/delete",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/cookies/delete",

@@ -6,6 +6,20 @@
     "test_file": "tests/test_tutorial/test_request_files/test_tutorial003.py",
     "test_function": "test_invalid_content_type"
   },
+  "handler": {
+    "route": "/files/images-only",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string",
+          "format": "binary"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/files/images-only",

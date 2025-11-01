@@ -6,6 +6,19 @@
     "test_file": "tests/test_formparsers.py",
     "test_function": "test_multipart_request_data"
   },
+  "handler": {
+    "route": "/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "some": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/",

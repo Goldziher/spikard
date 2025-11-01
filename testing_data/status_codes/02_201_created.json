@@ -6,6 +6,22 @@
     "test_file": "tests/test_tutorial/test_response_model/test_tutorial001.py",
     "test_function": "test_create_item"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/",

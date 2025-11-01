@@ -6,6 +6,31 @@
     "test_file": "tests/test_tutorial/test_body_multiple_params/test_tutorial001.py",
     "test_function": "test_array_min_items"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number"
+        },
+        "tags": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "price",
+        "tags"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/",

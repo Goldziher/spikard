@@ -6,6 +6,20 @@
     "test_file": "tests/test_responses.py",
     "test_function": "test_set_cookie_with_domain"
   },
+  "handler": {
+    "route": "/cookies/set-with-domain",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": ["value"],
+      "additionalProperties": false
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/cookies/set-with-domain",
