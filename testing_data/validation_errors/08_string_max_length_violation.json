@@ -8,7 +8,10 @@
   },
   "request": {
     "method": "GET",
-    "path": "/items/?q=this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter"
+    "path": "/items/?q=this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter",
+    "headers": {
+      "x-token": "test-token"
+    }
   },
   "expected_response": {
     "status_code": 422,

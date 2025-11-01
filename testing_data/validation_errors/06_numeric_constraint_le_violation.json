@@ -8,7 +8,10 @@
   },
   "request": {
     "method": "GET",
-    "path": "/items/?q=test&limit=101"
+    "path": "/items/?q=test&limit=101",
+    "headers": {
+      "x-token": "test-token"
+    }
   },
   "expected_response": {
     "status_code": 422,
