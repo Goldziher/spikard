@@ -12,6 +12,7 @@ from uuid import UUID
 from pydantic import Field
 
 from spikard import Spikard
+from spikard.params import Header
 from spikard.routing import delete, get, post
 
 
@@ -204,13 +205,15 @@ def validation_errors_app() -> Spikard:
     """Create a Spikard app for validation error testing."""
     app = Spikard()
 
-    # GET /items/ - Main endpoint that requires q and accepts many other params for testing validations
+    # GET /items/ - Main endpoint that requires q and x-token header, accepts many params for testing validations
     # This route is used by most query param validation tests, including fixture 02 (missing required)
+    # Fixture 19 tests missing required header
     @get("/items/")
     def get_items_validation(
         q: str = Field(
-            min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_-]+$"
+            ..., min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_-]+$"
         ),  # REQUIRED - fixture 02 tests missing, 07/08 test length, 09 tests pattern
+        x_token: str = Header(...),  # type: ignore[assignment]  # REQUIRED header - fixture 19 tests missing header
         skip: int | None = None,
         limit: int | None = Field(None, le=100),  # fixture 06 tests le constraint
         price: float | None = Field(None, gt=0, le=1000),
