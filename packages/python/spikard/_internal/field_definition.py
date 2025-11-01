@@ -345,6 +345,30 @@ class FieldDefinition:
             if extra_constraints:
                 kwargs["extra"] = extra_constraints
 
+        # Check if the default is a ParamBase (Header, Cookie, Query, etc.) and extract source
+        default_val = kwargs.get("default")
+        if default_val is not Empty and hasattr(default_val, "__class__"):
+            class_name = default_val.__class__.__name__
+            if class_name in ("Header", "Cookie", "Query", "Path", "Body"):
+                extra_constraints = kwargs.get("extra", {}).copy()
+                # Map class name to source type
+                source_map = {
+                    "Header": "header",
+                    "Cookie": "cookie",
+                    "Query": "query",
+                    "Path": "path",
+                    "Body": "body",
+                }
+                extra_constraints["source"] = source_map.get(class_name, "query")
+
+                # Also extract schema if present
+                if hasattr(default_val, "schema") and getattr(default_val, "schema", None):
+                    schema_dict = default_val.schema  # type: ignore[union-attr]
+                    if schema_dict:
+                        extra_constraints.update(schema_dict)
+
+                kwargs["extra"] = extra_constraints
+
         kwargs.setdefault("annotation", unwrapped)
         kwargs.setdefault("args", annotation_args)
         kwargs.setdefault("default", Empty)
