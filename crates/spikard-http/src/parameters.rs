@@ -186,9 +186,15 @@ impl ParameterValidator {
                     ParameterSource::Header => "header",
                     ParameterSource::Cookie => "cookie",
                 };
+                // For headers, use the HTTP header name (with hyphens) in error location
+                let param_name_for_error = if param_def.source == ParameterSource::Header {
+                    param_def.name.replace('_', "-")
+                } else {
+                    param_def.name.clone()
+                };
                 errors.push(ValidationErrorDetail {
                     error_type: "missing".to_string(),
-                    loc: vec![source_str.to_string(), param_def.name.clone()],
+                    loc: vec![source_str.to_string(), param_name_for_error],
                     msg: "Field required".to_string(),
                     input: Value::Null,
                     ctx: None,
@@ -249,9 +255,15 @@ impl ParameterValidator {
                                 }
                                 _ => ("type_error", "Invalid value"),
                             };
+                        // For headers, use the HTTP header name (with hyphens) in error location
+                        let param_name_for_error = if param_def.source == ParameterSource::Header {
+                            param_def.name.replace('_', "-")
+                        } else {
+                            param_def.name.clone()
+                        };
                         errors.push(ValidationErrorDetail {
                             error_type: error_type.to_string(),
-                            loc: vec![source_str.to_string(), param_def.name.clone()],
+                            loc: vec![source_str.to_string(), param_name_for_error],
                             msg: error_msg.to_string(),
                             input: Value::String(value_str.clone()),
                             ctx: None,
