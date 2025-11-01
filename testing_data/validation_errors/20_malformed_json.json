@@ -23,11 +23,12 @@
       "detail": "1 validation error in request",
       "errors": [
         {
-          "type": "json_invalid",
+          "type": "type_error",
           "loc": [
+            "body",
             "body"
           ],
-          "msg": "Invalid JSON: expected value at line 1 column 26",
+          "msg": "Input should be a valid unknown",
           "input": "{\"name\": \"Item\", \"price\": }"
         }
       ]

@@ -31,13 +31,13 @@
       "detail": "1 validation error in request",
       "errors": [
         {
-          "type": "string_type",
+          "type": "type_error",
           "loc": [
             "body",
             "tags",
-            2
+            "2"
           ],
-          "msg": "Input should be a valid string",
+          "msg": "Input should be a valid unknown",
           "input": 123
         }
       ]
