@@ -2,7 +2,7 @@
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -92,6 +92,7 @@ serde_json = "1.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 cookie = "0.18"
+form_urlencoded = "1.2"
 "#
     .to_string()
 }
@@ -167,6 +168,7 @@ fn generate_lib_rs(categories: &HashMap<String, Vec<Fixture>>) -> String {
 
 use axum::{{routing, routing::{{get, post, put, patch, delete, head, options, trace}}, Json, Router, middleware}};
 use axum::response::IntoResponse;
+use form_urlencoded;
 use serde_json::{{json, Value}};
 use std::collections::HashMap;
 use spikard_http::parameters::ParameterValidator;
@@ -469,6 +471,14 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
         Value::Object(serde_json::Map::new())
     }};
 
+    // Also extract raw query params as HashMap<String, String> for error reporting
+    let mut raw_query_params = HashMap::new();
+    if let Some(query_str) = uri.query() {{
+        for (key, value) in form_urlencoded::parse(query_str.as_bytes()) {{
+            raw_query_params.insert(key.to_string(), value.to_string());
+        }}
+    }}
+
     // Extract cookies from Cookie header using the cookie crate for RFC 6265 compliance
     let mut cookies = HashMap::new();
     if let Some(cookie_header) = headers.get(axum::http::header::COOKIE) {{
@@ -484,6 +494,7 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
     // Validate parameters
     match validator.validate_and_extract(
         &query_params,
+        &raw_query_params,
         &{}path_params,
         &HashMap::new(),
         &cookies,
