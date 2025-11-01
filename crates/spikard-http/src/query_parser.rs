@@ -110,7 +110,7 @@ fn parse_boolean(s: &str) -> Result<bool, ()> {
     } else if lower == "false" || s == "0" {
         Ok(false)
     } else {
-        Err(())  // Don't coerce empty strings - let validation handle it
+        Err(()) // Don't coerce empty strings - let validation handle it
     }
 }
 

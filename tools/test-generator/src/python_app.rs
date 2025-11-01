@@ -94,12 +94,14 @@ fn generate_app_file(fixtures_by_category: &HashMap<String, Vec<Fixture>>) -> Re
         let has_param_b = route_b.contains('{');
 
         match (has_param_a, has_param_b) {
-            (false, true) => std::cmp::Ordering::Less,  // a (no params) before b (has params)
+            (false, true) => std::cmp::Ordering::Less, // a (no params) before b (has params)
             (true, false) => std::cmp::Ordering::Greater, // b (no params) before a (has params)
             _ => {
                 // If both have params or both don't, sort by path length (longer first for specificity)
                 // Then by route name, then by method
-                route_b.len().cmp(&route_a.len())
+                route_b
+                    .len()
+                    .cmp(&route_a.len())
                     .then_with(|| route_a.cmp(route_b))
                     .then_with(|| method_a.cmp(method_b))
             }
@@ -272,6 +274,7 @@ fn generate_handler(
 }
 
 /// Generate CORS preflight handler
+#[allow(dead_code)]
 fn generate_cors_preflight_handler(handler_name: &str, route: &str, _cors_config: &Value) -> Result<String> {
     let mut code = String::new();
 
@@ -399,10 +402,8 @@ fn json_type_to_python(schema: &Value) -> Result<String> {
                     "date-time" => "datetime",
                     _ => "str",
                 }
-            } else if schema.get("enum").is_some() {
-                "str" // TODO: Generate enum types
             } else {
-                "str"
+                "str" // handles both enum and other string types
             }
         }
         "integer" => "int",

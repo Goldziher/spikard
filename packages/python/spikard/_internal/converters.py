@@ -139,12 +139,21 @@ def convert_params(
     # Get function signature to handle default values
     try:
         sig = inspect.signature(handler_func)
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, AttributeError):
         sig = None
+
+    # Get function signature to know which parameters the handler accepts
+    handler_params = set()
+    if sig:
+        handler_params = set(sig.parameters.keys())
 
     # Convert each parameter based on its type hint
     converted = {}
     for key, value in params.items():
+        # Skip parameters that the handler doesn't accept
+        if sig and key not in handler_params:
+            continue
+
         if key not in type_hints:
             # No type hint, keep as-is
             converted[key] = value
