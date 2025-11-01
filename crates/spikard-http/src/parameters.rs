@@ -231,29 +231,38 @@ impl ParameterValidator {
                             ParameterSource::Cookie => "cookie",
                         };
                         // Map type/format to FastAPI error type and message
+                        // For format validations, use the detailed error message from the validator
                         let (error_type, error_msg) =
                             match (param_def.expected_type.as_deref(), param_def.format.as_deref()) {
                                 (Some("integer"), _) => (
                                     "int_parsing",
-                                    "Input should be a valid integer, unable to parse string as an integer",
+                                    "Input should be a valid integer, unable to parse string as an integer".to_string(),
                                 ),
                                 (Some("number"), _) => (
                                     "float_parsing",
-                                    "Input should be a valid number, unable to parse string as a number",
+                                    "Input should be a valid number, unable to parse string as a number".to_string(),
                                 ),
                                 (Some("boolean"), _) => (
                                     "bool_parsing",
-                                    "Input should be a valid boolean, unable to interpret input",
+                                    "Input should be a valid boolean, unable to interpret input".to_string(),
                                 ),
-                                (Some("string"), Some("date")) => ("date_parsing", "Input should be a valid date"),
+                                // For format validations, use detailed error message from validator
+                                (Some("string"), Some("uuid")) => {
+                                    ("uuid_parsing", format!("Input should be a valid UUID, {}", e))
+                                }
+                                (Some("string"), Some("date")) => {
+                                    ("date_parsing", format!("Input should be a valid date, {}", e))
+                                }
                                 (Some("string"), Some("date-time")) => {
-                                    ("datetime_parsing", "Input should be a valid datetime")
+                                    ("datetime_parsing", format!("Input should be a valid datetime, {}", e))
                                 }
-                                (Some("string"), Some("time")) => ("time_parsing", "Input should be a valid time"),
+                                (Some("string"), Some("time")) => {
+                                    ("time_parsing", format!("Input should be a valid time, {}", e))
+                                }
                                 (Some("string"), Some("duration")) => {
-                                    ("duration_parsing", "Input should be a valid duration")
+                                    ("duration_parsing", format!("Input should be a valid duration, {}", e))
                                 }
-                                _ => ("type_error", "Invalid value"),
+                                _ => ("type_error", e.clone()),
                             };
                         // For headers, use the HTTP header name (with hyphens) in error location
                         let param_name_for_error = if param_def.source == ParameterSource::Header {
@@ -264,7 +273,7 @@ impl ParameterValidator {
                         errors.push(ValidationErrorDetail {
                             error_type: error_type.to_string(),
                             loc: vec![source_str.to_string(), param_name_for_error],
-                            msg: error_msg.to_string(),
+                            msg: error_msg,
                             input: Value::String(value_str.clone()),
                             ctx: None,
                         });
@@ -375,6 +384,11 @@ impl ParameterValidator {
         // Handle date/time formats first (they have type "string" with format)
         if let Some(fmt) = format {
             match fmt {
+                "uuid" => {
+                    // Validate UUID format
+                    Self::validate_uuid_format(value)?;
+                    return Ok(json!(value));
+                }
                 "date" => {
                     // Validate ISO 8601 date format: YYYY-MM-DD
                     Self::validate_date_format(value)?;
@@ -461,6 +475,18 @@ impl ParameterValidator {
         jiff::Span::from_str(value)
             .map(|_| ())
             .map_err(|e| format!("Invalid duration format: {}", e))
+    }
+
+    /// Validate UUID format
+    fn validate_uuid_format(value: &str) -> Result<(), String> {
+        // Parse UUID to validate format
+        // Accepts standard UUID format: 8-4-4-4-12 hex digits with hyphens
+        use std::str::FromStr;
+        uuid::Uuid::from_str(value)
+            .map(|_| ())
+            .map_err(|_e| format!("invalid character: expected an optional prefix of `urn:uuid:` followed by [0-9a-fA-F-], found `{}` at {}",
+                value.chars().next().unwrap_or('?'),
+                value.chars().position(|c| !c.is_ascii_hexdigit() && c != '-').unwrap_or(0)))
     }
 
     /// Create a validation schema without the "source" fields
