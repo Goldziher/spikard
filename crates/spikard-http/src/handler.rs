@@ -169,7 +169,7 @@ impl PythonHandler {
                     let kwargs = if let Some(ref validated) = validated_params_for_task {
                         validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
                     } else {
-                        request_data_to_py_kwargs(py, &request_data)?
+                        request_data_to_py_kwargs(py, &request_data, handler_obj.clone())?
                     };
 
                     // Call the handler - this returns a coroutine
@@ -239,7 +239,7 @@ impl PythonHandler {
                     let kwargs = if let Some(ref validated) = validated_params_for_task {
                         validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
                     } else {
-                        request_data_to_py_kwargs(py, &request_data)?
+                        request_data_to_py_kwargs(py, &request_data, handler_obj.clone())?
                     };
 
                     let py_result = if kwargs.is_empty() {
@@ -470,7 +470,13 @@ fn validated_params_to_py_kwargs<'py>(
     handler: Bound<'py, PyAny>,
 ) -> PyResult<Bound<'py, PyDict>> {
     // Convert validated params to Python dict using json.loads
-    let params_dict = json_to_python(py, validated_params)?;
+    let params_dict = json_to_python(py, validated_params)?.cast_into::<PyDict>()?;
+
+    // Add request body to params BEFORE convert_params so it gets type-converted too
+    if let Some(body) = &request_data.body {
+        let py_body = json_to_python(py, body)?;
+        params_dict.set_item("body", py_body)?;
+    }
 
     // Import our converter module
     let converter_module = py.import("spikard._internal.converters")?;
@@ -483,18 +489,16 @@ fn validated_params_to_py_kwargs<'py>(
     // Extract the converted dict
     let kwargs = converted.cast_into::<PyDict>()?;
 
-    // Add request body if present (convert to Python dict/list)
-    if let Some(body) = &request_data.body {
-        let py_body = json_to_python(py, body)?;
-        kwargs.set_item("body", py_body)?;
-    }
-
     Ok(kwargs)
 }
 
 /// Convert request data (path params, query params, body) to Python keyword arguments
 /// This is the fallback when no parameter validator is present
-fn request_data_to_py_kwargs<'py>(py: Python<'py>, request_data: &RequestData) -> PyResult<Bound<'py, PyDict>> {
+fn request_data_to_py_kwargs<'py>(
+    py: Python<'py>,
+    request_data: &RequestData,
+    handler: Bound<'py, PyAny>,
+) -> PyResult<Bound<'py, PyDict>> {
     let kwargs = PyDict::new(py);
 
     // Add path parameters as individual kwargs
@@ -531,7 +535,11 @@ fn request_data_to_py_kwargs<'py>(py: Python<'py>, request_data: &RequestData) -
         kwargs.set_item("body", py_body)?;
     }
 
-    Ok(kwargs)
+    // Use convert_params to convert types based on handler signature
+    let converter_module = py.import("spikard._internal.converters")?;
+    let convert_params_func = converter_module.getattr("convert_params")?;
+    let converted = convert_params_func.call1((kwargs, handler))?;
+    Ok(converted.cast_into::<PyDict>()?)
 }
 
 /// Convert JSON Value to Python object

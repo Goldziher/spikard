@@ -874,7 +874,6 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
 /// Merge multiple schemas intelligently by combining constraints
 /// For simple object schemas with constraints like minProperties/maxProperties,
 /// merge the constraints. For complex schemas (anyOf, oneOf, etc.), use anyOf wrapper.
-
 fn route_method_to_handler_name(route: &str, method: &str) -> String {
     // Strip type hints like {param:type} -> {param}
     let route_without_types = strip_type_hints(route);
