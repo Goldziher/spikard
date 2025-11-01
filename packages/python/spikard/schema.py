@@ -1,10 +1,12 @@
 """Schema extraction utilities."""
 
+import dataclasses
 import inspect
 from collections.abc import Callable
 from typing import Any, Protocol, get_type_hints, runtime_checkable
 
 import msgspec
+from pydantic import TypeAdapter
 
 
 @runtime_checkable
@@ -148,7 +150,7 @@ def extract_schemas(
     return request_schema, response_schema
 
 
-def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:
+def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C901, PLR0912
     """Extract JSON Schema from various Python schema sources.
 
     Supports multiple schema formats through duck typing:
@@ -205,7 +207,57 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:
         except Exception as e:
             raise TypeError(f"Failed to extract schema from Pydantic v1 model {schema_source.__name__}: {e}") from e
 
-    # 5. Try msgspec.json.schema() as fallback (for msgspec.Struct, attrs, etc.)
+    # 5. Check for dataclass
+    if isinstance(schema_source, type) and dataclasses.is_dataclass(schema_source):
+        try:
+            # Use Pydantic TypeAdapter for dataclass schema extraction
+            adapter = TypeAdapter(schema_source)
+            return adapter.json_schema()
+        except Exception as e:
+            raise TypeError(f"Failed to extract schema from dataclass {schema_source.__name__}: {e}") from e
+
+    # 6. Check for NamedTuple (check for _fields attribute)
+    if isinstance(schema_source, type) and hasattr(schema_source, "_fields"):
+        try:
+            # NamedTuple schema needs to be built manually as an object schema
+            # (msgspec and Pydantic treat it as array, but we want object semantics for HTTP)
+            type_hints = get_type_hints(schema_source)
+            properties = {}
+            required = list(schema_source._fields)
+
+            for field_name in schema_source._fields:
+                field_type = type_hints.get(field_name)
+                if field_type:
+                    # Get basic type mapping
+                    if field_type is str:
+                        properties[field_name] = {"type": "string"}
+                    elif field_type is int:
+                        properties[field_name] = {"type": "integer"}
+                    elif field_type is float:
+                        properties[field_name] = {"type": "number"}
+                    elif field_type is bool:
+                        properties[field_name] = {"type": "boolean"}
+                    else:
+                        # For complex types, recursively extract schema
+                        field_schema = extract_json_schema(field_type)
+                        if field_schema:
+                            properties[field_name] = field_schema
+                        else:
+                            # Fallback to generic object
+                            properties[field_name] = {}
+                else:
+                    properties[field_name] = {}
+
+            return {
+                "type": "object",
+                "properties": properties,
+                "required": required,
+                "title": schema_source.__name__,
+            }
+        except Exception as e:
+            raise TypeError(f"Failed to extract schema from NamedTuple {schema_source.__name__}: {e}") from e
+
+    # 7. Try msgspec.json.schema() as fallback (for msgspec.Struct, attrs, etc.)
     try:
         schema = msgspec.json.schema(schema_source)
         return resolve_msgspec_ref(schema)
@@ -213,7 +265,7 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:
         # msgspec doesn't support this type
         raise TypeError(
             f"Unsupported schema type: {type(schema_source).__name__}. "
-            f"Supported types: Pydantic v1/v2 models, msgspec.Struct, TypedDict, or plain JSON Schema dict. "
+            f"Supported types: Pydantic v1/v2 models, msgspec.Struct, TypedDict, dataclass, NamedTuple, or plain JSON Schema dict. "
             f"Error: {e}"
         ) from e
 

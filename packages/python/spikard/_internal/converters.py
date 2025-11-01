@@ -17,7 +17,6 @@ from __future__ import annotations
 import inspect
 from collections.abc import Callable
 from contextlib import suppress
-from dataclasses import is_dataclass
 from datetime import date, datetime, time, timedelta
 from typing import Any, get_origin, get_type_hints
 
@@ -85,11 +84,7 @@ def _is_typed_dict(type_: type) -> bool:
 
     TypedDict is special - it's just type hints at runtime, the actual value is a dict.
     """
-    return (
-        hasattr(type_, "__annotations__")
-        and hasattr(type_, "__total__")
-        and hasattr(type_, "__required_keys__")
-    )
+    return hasattr(type_, "__annotations__") and hasattr(type_, "__total__") and hasattr(type_, "__required_keys__")
 
 
 def _default_dec_hook(type_: type, obj: Any) -> Any:
@@ -119,7 +114,7 @@ def _default_dec_hook(type_: type, obj: Any) -> Any:
     raise NotImplementedError
 
 
-def convert_params(
+def convert_params(  # noqa: C901, PLR0912
     params: dict[str, Any],
     handler_func: Callable[..., Any],
     *,
@@ -187,7 +182,7 @@ def convert_params(
 
         # FAST PATH 1: Plain dict types (no conversion needed)
         # Examples: dict, dict[str, Any], Dict[str, int]
-        if target_type == dict or origin == dict:
+        if dict in (target_type, origin):
             converted[key] = value
             continue
 
@@ -197,10 +192,22 @@ def convert_params(
             converted[key] = value
             continue
 
-        # FAST PATH 3+: Use msgspec for all other types
+        # FAST PATH 3: NamedTuple (construct from dict using **kwargs)
+        # NamedTuple can't be constructed by msgspec from objects, only arrays
+        # But we can construct it directly from a dict using **kwargs
+        if isinstance(target_type, type) and hasattr(target_type, "_fields") and isinstance(value, dict):
+            try:
+                converted[key] = target_type(**value)
+                continue
+            except (TypeError, ValueError) as err:
+                if strict:
+                    raise ValueError(f"Failed to convert parameter '{key}' to NamedTuple {target_type}: {err}") from err
+                converted[key] = value
+                continue
+
+        # FAST PATH 4+: Use msgspec for all other types
         # msgspec natively supports:
         # - dataclass: Fast construction via __init__
-        # - NamedTuple: Fast construction via __new__
         # - msgspec.Struct: Fastest (C implementation)
         # - Pydantic: Via _default_dec_hook calling model_validate
         try:
