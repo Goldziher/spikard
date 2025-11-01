@@ -2,7 +2,14 @@
 
 This module handles converting validated JSON data from Rust into Python types
 based on handler signatures. It uses msgspec for fast, type-aware conversion
-and supports custom decoder registration.
+and supports multiple type systems:
+
+- Plain dict: No conversion (fastest)
+- TypedDict: No runtime conversion, just type hints (fastest)
+- dataclass: Native msgspec support (fast)
+- NamedTuple: Native msgspec support (fast)
+- msgspec.Struct: Native msgspec support (fastest typed)
+- Pydantic: Custom decoder via model_validate (slower)
 """
 
 from __future__ import annotations
@@ -10,8 +17,9 @@ from __future__ import annotations
 import inspect
 from collections.abc import Callable
 from contextlib import suppress
+from dataclasses import is_dataclass
 from datetime import date, datetime, time, timedelta
-from typing import Any, get_type_hints
+from typing import Any, get_origin, get_type_hints
 
 import msgspec
 from pydantic.fields import FieldInfo
@@ -72,6 +80,18 @@ def _pydantic_decoder(type_: type, obj: Any) -> Any:
     raise NotImplementedError
 
 
+def _is_typed_dict(type_: type) -> bool:
+    """Check if a type is a TypedDict.
+
+    TypedDict is special - it's just type hints at runtime, the actual value is a dict.
+    """
+    return (
+        hasattr(type_, "__annotations__")
+        and hasattr(type_, "__total__")
+        and hasattr(type_, "__required_keys__")
+    )
+
+
 def _default_dec_hook(type_: type, obj: Any) -> Any:
     """Default decoder hook that tries custom decoders, then Pydantic.
 
@@ -80,6 +100,9 @@ def _default_dec_hook(type_: type, obj: Any) -> Any:
     1. Custom user-registered decoders
     2. Pydantic model_validate
     3. Raise NotImplementedError to let msgspec handle it
+
+    Note: msgspec natively handles dataclass, NamedTuple, and msgspec.Struct,
+    so those types won't reach this hook.
     """
     # Try custom decoders first
     for decoder in _CUSTOM_DECODERS:
@@ -160,7 +183,26 @@ def convert_params(
             continue
 
         target_type = type_hints[key]
+        origin = get_origin(target_type)
 
+        # FAST PATH 1: Plain dict types (no conversion needed)
+        # Examples: dict, dict[str, Any], Dict[str, int]
+        if target_type == dict or origin == dict:
+            converted[key] = value
+            continue
+
+        # FAST PATH 2: TypedDict (no runtime conversion, just type hints)
+        # TypedDict is a dict at runtime - no conversion needed
+        if _is_typed_dict(target_type):
+            converted[key] = value
+            continue
+
+        # FAST PATH 3+: Use msgspec for all other types
+        # msgspec natively supports:
+        # - dataclass: Fast construction via __init__
+        # - NamedTuple: Fast construction via __new__
+        # - msgspec.Struct: Fastest (C implementation)
+        # - Pydantic: Via _default_dec_hook calling model_validate
         try:
             # Use msgspec.convert for type conversion
             # builtin_types tells msgspec that these types can be constructed from strings
