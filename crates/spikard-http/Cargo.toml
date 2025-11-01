@@ -26,6 +26,7 @@ rustc-hash = "2.1"
 urlencoding = "2.1"
 mime = "0.3"
 jiff = "0.1"
+uuid = "1.11"
 pyo3.workspace = true
 pyo3-async-runtimes.workspace = true
 bytes = "1.10"
