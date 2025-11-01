@@ -124,6 +124,7 @@ impl ParameterValidator {
     pub fn validate_and_extract(
         &self,
         query_params: &Value,
+        raw_query_params: &HashMap<String, String>,
         path_params: &HashMap<String, String>,
         headers: &HashMap<String, String>,
         cookies: &HashMap<String, String>,
@@ -341,7 +342,7 @@ impl ParameterValidator {
                 tracing::debug!("Validation failed: {:?}", validation_err);
 
                 // Fix location paths to use correct source (path/query/header/cookie)
-                // instead of "body"
+                // instead of "body", and use raw string values for query params
                 for error in &mut validation_err.errors {
                     if error.loc.len() >= 2 && error.loc[0] == "body" {
                         let param_name = &error.loc[1];
@@ -354,6 +355,15 @@ impl ParameterValidator {
                                 ParameterSource::Cookie => "cookie",
                             };
                             error.loc[0] = source_str.to_string();
+
+                            // For query parameters, replace the input value with the raw string
+                            // TODO: This currently doesn't work because validation errors come from
+                            // jsonschema validation which happens after type conversion
+                            if param_def.source == ParameterSource::Query {
+                                if let Some(raw_value) = raw_query_params.get(&param_def.name) {
+                                    error.input = Value::String(raw_value.clone());
+                                }
+                            }
                         }
                     }
                 }

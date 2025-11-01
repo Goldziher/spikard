@@ -88,6 +88,24 @@ fn extract_query_params(uri: &axum::http::Uri) -> Value {
     }
 }
 
+/// Extract raw query parameters as strings (no type conversion)
+/// Used for validation error messages to show the actual input values
+fn extract_raw_query_params(uri: &axum::http::Uri) -> HashMap<String, String> {
+    let query_string = uri.query().unwrap_or("");
+    if query_string.is_empty() {
+        HashMap::new()
+    } else {
+        // Parse without number conversion to get raw string values
+        // For arrays, we just take the first value since validation errors typically show one value
+        crate::query_parser::parse_query_string(query_string.as_bytes(), '&')
+            .into_iter()
+            .fold(HashMap::new(), |mut acc, (k, v)| {
+                acc.entry(k).or_insert(v);
+                acc
+            })
+    }
+}
+
 /// Extract headers from request
 fn extract_headers(headers: &axum::http::HeaderMap) -> HashMap<String, String> {
     let mut map = HashMap::new();
@@ -187,6 +205,7 @@ impl Server {
                         move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                             let _ = std::fs::write("/tmp/axum_route_called.log", "GET route handler called\n");
                             let query_params = extract_query_params(req.uri());
+                            let raw_query_params = extract_raw_query_params(req.uri());
                             let headers = extract_headers(req.headers());
                             let cookies = extract_cookies(req.headers());
                             let _ = std::fs::write(
@@ -196,6 +215,7 @@ impl Server {
                             let request_data = RequestData {
                                 path_params: path_params.0,
                                 query_params,
+                                raw_query_params,
                                 headers,
                                 cookies,
                                 body: None, // GET requests don't have a body
@@ -222,6 +242,7 @@ impl Server {
                             validate_content_type(&parts.headers, body_bytes.len())?;
 
                             let query_params = extract_query_params(&parts.uri);
+                            let raw_query_params = extract_raw_query_params(&parts.uri);
                             let headers = extract_headers(&parts.headers);
                             let cookies = extract_cookies(&parts.headers);
 
@@ -236,6 +257,7 @@ impl Server {
                             let request_data = RequestData {
                                 path_params: path_params.0,
                                 query_params,
+                                raw_query_params,
                                 headers,
                                 cookies,
                                 body: body_value,
@@ -263,6 +285,7 @@ impl Server {
                             validate_content_type(&parts.headers, body_bytes.len())?;
 
                             let query_params = extract_query_params(&parts.uri);
+                            let raw_query_params = extract_raw_query_params(&parts.uri);
                             let headers = extract_headers(&parts.headers);
                             let cookies = extract_cookies(&parts.headers);
 
@@ -277,6 +300,7 @@ impl Server {
                             let request_data = RequestData {
                                 path_params: path_params.0,
                                 query_params,
+                                raw_query_params,
                                 headers,
                                 cookies,
                                 body: body_value,
@@ -304,6 +328,7 @@ impl Server {
                             validate_content_type(&parts.headers, body_bytes.len())?;
 
                             let query_params = extract_query_params(&parts.uri);
+                            let raw_query_params = extract_raw_query_params(&parts.uri);
                             let headers = extract_headers(&parts.headers);
                             let cookies = extract_cookies(&parts.headers);
 
@@ -318,6 +343,7 @@ impl Server {
                             let request_data = RequestData {
                                 path_params: path_params.0,
                                 query_params,
+                                raw_query_params,
                                 headers,
                                 cookies,
                                 body: body_value,
@@ -330,11 +356,13 @@ impl Server {
                     "DELETE" => axum::routing::delete(
                         move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                             let query_params = extract_query_params(req.uri());
+                            let raw_query_params = extract_raw_query_params(req.uri());
                             let headers = extract_headers(req.headers());
                             let cookies = extract_cookies(req.headers());
                             let request_data = RequestData {
                                 path_params: path_params.0,
                                 query_params,
+                                raw_query_params,
                                 headers,
                                 cookies,
                                 body: None,
@@ -345,11 +373,13 @@ impl Server {
                     "HEAD" => axum::routing::head(
                         move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                             let query_params = extract_query_params(req.uri());
+                            let raw_query_params = extract_raw_query_params(req.uri());
                             let headers = extract_headers(req.headers());
                             let cookies = extract_cookies(req.headers());
                             let request_data = RequestData {
                                 path_params: path_params.0,
                                 query_params,
+                                raw_query_params,
                                 headers,
                                 cookies,
                                 body: None,
@@ -360,11 +390,13 @@ impl Server {
                     "OPTIONS" => axum::routing::options(
                         move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                             let query_params = extract_query_params(req.uri());
+                            let raw_query_params = extract_raw_query_params(req.uri());
                             let headers = extract_headers(req.headers());
                             let cookies = extract_cookies(req.headers());
                             let request_data = RequestData {
                                 path_params: path_params.0,
                                 query_params,
+                                raw_query_params,
                                 headers,
                                 cookies,
                                 body: None,
@@ -375,11 +407,13 @@ impl Server {
                     "TRACE" => axum::routing::trace(
                         move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                             let query_params = extract_query_params(req.uri());
+                            let raw_query_params = extract_raw_query_params(req.uri());
                             let headers = extract_headers(req.headers());
                             let cookies = extract_cookies(req.headers());
                             let request_data = RequestData {
                                 path_params: path_params.0,
                                 query_params,
+                                raw_query_params,
                                 headers,
                                 cookies,
                                 body: None,
