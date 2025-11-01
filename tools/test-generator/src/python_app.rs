@@ -19,6 +19,21 @@ use std::path::Path;
 
 use crate::fixture_analysis::infer_body_schema;
 
+/// Convert JSON string to Python dict syntax
+/// Replaces JSON literals (true, false, null) with Python equivalents (True, False, None)
+fn json_to_python_dict(json_str: &str) -> String {
+    json_str
+        .replace(":true", ":True")
+        .replace(":false", ":False")
+        .replace(":null", ":None")
+        .replace("[true", "[True")
+        .replace("[false", "[False")
+        .replace("[null", "[None")
+        .replace(",true", ",True")
+        .replace(",false", ",False")
+        .replace(",null", ",None")
+}
+
 /// Type system to use for request body parameter
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum BodyType {
@@ -220,22 +235,17 @@ fn generate_handler(
     };
 
     // Extract body schema - try explicit first, then infer from fixtures
-    let has_body = method == "POST" || method == "PUT" || method == "PATCH";
-    let body_schema = if has_body {
-        // Try explicit body schema first
-        if let Some(handler) = handler_opt {
-            if let Some(ref explicit_schema) = handler.body_schema {
-                Some(explicit_schema.clone())
-            } else {
-                // No explicit schema, try inference
-                infer_body_schema(fixtures)
-            }
+    // Per RFC 9110/5789: No method syntactically REQUIRES a body
+    let body_schema = if let Some(handler) = handler_opt {
+        if let Some(ref explicit_schema) = handler.body_schema {
+            Some(explicit_schema.clone())
         } else {
-            // No handler field, try inference
+            // No explicit schema, try inference
             infer_body_schema(fixtures)
         }
     } else {
-        None
+        // No handler field, try inference
+        infer_body_schema(fixtures)
     };
 
     let (body_model, model_name) = if let Some(ref schema) = body_schema {
@@ -260,22 +270,19 @@ fn generate_handler(
     }
 
     // Add decorator
-    // For PlainDict handlers, pass explicit body_schema since we can't extract it from dict[str, Any]
+    // Emit body_schema only when present (RFC 9110: no method requires a body)
     if let Some(ref schema) = body_schema {
-        if body_type == BodyType::PlainDict {
-            // Serialize the schema as JSON for the Python decorator
-            let schema_json = serde_json::to_string(schema).unwrap_or_else(|_| "{}".to_string());
-            code.push_str(&format!(
-                "@{}(\"{}\", body_schema={})\n",
-                method.to_lowercase(),
-                route,
-                schema_json
-            ));
-        } else {
-            // For typed models, schema is extracted from type hints
-            code.push_str(&format!("@{}(\"{}\")\n", method.to_lowercase(), route));
-        }
+        // Serialize the schema as JSON then convert to Python dict syntax
+        let schema_json = serde_json::to_string(schema).unwrap_or_else(|_| "{}".to_string());
+        let schema_python = json_to_python_dict(&schema_json);
+        code.push_str(&format!(
+            "@{}(\"{}\", body_schema={})\n",
+            method.to_lowercase(),
+            route,
+            schema_python
+        ));
     } else {
+        // No body schema - decorator without body_schema parameter
         code.push_str(&format!("@{}(\"{}\")\n", method.to_lowercase(), route));
     }
 
