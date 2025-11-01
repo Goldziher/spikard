@@ -166,21 +166,10 @@ impl TestClient {
                 k.eq_ignore_ascii_case("content-type") && v.contains("application/x-www-form-urlencoded")
             });
 
-            // Add headers FIRST (before body encoding)
-            for (key, value) in headers_vec {
-                let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
-                })?;
-                let header_value = HeaderValue::from_str(&value).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
-                })?;
-                request = request.add_header(header_name, header_value);
-            }
-
-            // Encode body based on Content-Type
+            // Add headers and body
             if let Some(json_val) = json_value {
                 if is_form_encoded {
-                    // For form-encoded requests, convert JSON object to URL-encoded string
+                    // For form-encoded requests, manually set Content-Type header and body bytes
                     if let serde_json::Value::Object(map) = &json_val {
                         let form_data: Vec<String> = map
                             .iter()
@@ -195,11 +184,35 @@ impl TestClient {
                                 format!("{}={}", urlencoding::encode(k), urlencoding::encode(&value_str))
                             })
                             .collect();
-                        request = request.text(form_data.join("&"));
+                        let form_body = form_data.join("&");
+
+                        // Set Content-Type header
+                        request = request.add_header(
+                            HeaderName::from_static("content-type"),
+                            HeaderValue::from_static("application/x-www-form-urlencoded"),
+                        );
+
+                        // Set body as bytes (doesn't set Content-Type)
+                        request = request.bytes(bytes::Bytes::from(form_body));
                     }
                 } else {
                     request = request.json(&json_val);
                 }
+            }
+
+            // Add remaining headers (skip Content-Type for form-encoded since we set it above)
+            for (key, value) in headers_vec {
+                if is_form_encoded && key.eq_ignore_ascii_case("content-type") {
+                    continue;
+                }
+
+                let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
+                })?;
+                let header_value = HeaderValue::from_str(&value).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
+                })?;
+                request = request.add_header(header_name, header_value);
             }
 
             let response = request.await;
