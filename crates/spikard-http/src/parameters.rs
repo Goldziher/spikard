@@ -166,7 +166,9 @@ impl ParameterValidator {
                 }
                 ParameterSource::Header => {
                     // Headers come as strings
-                    headers.get(&param_def.name)
+                    // Convert underscore to hyphen for header lookup (x_token -> x-token)
+                    let header_name = param_def.name.replace('_', "-");
+                    headers.get(&header_name)
                 }
                 ParameterSource::Cookie => {
                     // Cookies come as strings
@@ -233,7 +235,10 @@ impl ParameterValidator {
                                     "float_parsing",
                                     "Input should be a valid number, unable to parse string as a number",
                                 ),
-                                (Some("boolean"), _) => ("bool_parsing", "Input should be a valid boolean, unable to interpret input"),
+                                (Some("boolean"), _) => (
+                                    "bool_parsing",
+                                    "Input should be a valid boolean, unable to interpret input",
+                                ),
                                 (Some("string"), Some("date")) => ("date_parsing", "Input should be a valid date"),
                                 (Some("string"), Some("date-time")) => {
                                     ("datetime_parsing", "Input should be a valid datetime")
