@@ -31,8 +31,7 @@
           "type": "string"
         },
         "special_chars": {
-          "type": "string",
-          "format": "email"
+          "type": "string"
         }
       },
       "additionalProperties": false,
