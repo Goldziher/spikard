@@ -12,6 +12,7 @@ from uuid import UUID
 from pydantic import Field
 
 from spikard import Spikard
+from spikard.routing import delete, get, post
 
 
 class Status(str, Enum):
@@ -26,7 +27,7 @@ def query_params_app() -> Spikard:
     """Create a Spikard app for query parameter testing."""
     app = Spikard()
 
-    @app.get("/items")
+    @get("/items")
     def get_items(
         q: str | None = None,
         page: int = 1,
@@ -69,7 +70,7 @@ def query_params_app() -> Spikard:
 
         return result
 
-    @app.get("/users/{user_id}")
+    @get("/users/{user_id}")
     def get_user(user_id: int = Field(gt=0)) -> dict[str, int]:
         """Endpoint with validated path param."""
         return {"user_id": user_id}
@@ -81,7 +82,7 @@ def cookies_app() -> Spikard:
     """Create a Spikard app for cookie testing."""
     app = Spikard()
 
-    @app.get("/items/cookies")
+    @get("/items/cookies")
     def get_items_cookies(
         session_id: str,
         fatebook_tracker: str | None = None,
@@ -92,7 +93,7 @@ def cookies_app() -> Spikard:
             result["fatebook_tracker"] = fatebook_tracker
         return result
 
-    @app.get("/users/me/auth")
+    @get("/users/me/auth")
     def get_users_me_auth(
         key: str,
     ) -> dict[str, Any]:
@@ -106,7 +107,7 @@ def headers_app() -> Spikard:
     """Create a Spikard app for header testing."""
     app = Spikard()
 
-    @app.get("/items")
+    @get("/items")
     def get_items_headers(
         user_agent: str | None = None,
         x_api_key: str | None = None,
@@ -126,30 +127,44 @@ def json_bodies_app() -> Spikard:
     """Create a Spikard app for JSON body testing."""
     app = Spikard()
 
-    @app.post("/users")
-    def post_users(
-        username: str,
-        email: str,
-        age: int | None = None,
-    ) -> dict[str, Any]:
+    @post(
+        "/users",
+        body_schema={
+            "type": "object",
+            "required": ["username", "email"],
+            "properties": {
+                "username": {"type": "string"},
+                "email": {"type": "string"},
+                "age": {"type": "integer"},
+            },
+        },
+    )
+    def post_users(body: dict[str, Any]) -> dict[str, Any]:
         """Endpoint for JSON body testing."""
-        result: dict[str, Any] = {"username": username, "email": email}
-        if age is not None:
-            result["age"] = age
+        result: dict[str, Any] = {"username": body["username"], "email": body["email"]}
+        if "age" in body:
+            result["age"] = body["age"]
         return result
 
-    @app.post("/items")
-    def post_items(
-        name: str,
-        description: str | None = None,
-        price: float | None = None,
-    ) -> dict[str, Any]:
+    @post(
+        "/items/",
+        body_schema={
+            "type": "object",
+            "required": ["name", "price"],
+            "properties": {
+                "name": {"type": "string"},
+                "description": {"type": "string"},
+                "price": {"type": "number"},
+            },
+        },
+    )
+    def post_items(body: dict[str, Any]) -> dict[str, Any]:
         """Endpoint for JSON body testing."""
-        result: dict[str, Any] = {"name": name}
-        if description is not None:
-            result["description"] = description
-        if price is not None:
-            result["price"] = price
+        result: dict[str, Any] = {"name": body["name"]}
+        if "description" in body:
+            result["description"] = body["description"]
+        if "price" in body:
+            result["price"] = body["price"]
         return result
 
     return app
@@ -159,20 +174,133 @@ def path_params_app() -> Spikard:
     """Create a Spikard app for path parameter testing."""
     app = Spikard()
 
-    @app.get("/items/{item_id}")
+    @get("/items/{item_id}")
     def get_item(item_id: int) -> dict[str, int]:
         """Endpoint for path parameter testing."""
         return {"item_id": item_id}
 
-    @app.get("/users/{user_id}")
+    @get("/users/{user_id}")
     def get_user(user_id: str) -> dict[str, str]:
         """Endpoint for string path parameter testing."""
         return {"user_id": user_id}
 
-    @app.get("/products/{product_id}")
+    @get("/products/{product_id}")
     def get_product(product_id: UUID) -> dict[str, str]:
         """Endpoint for UUID path parameter testing."""
         return {"product_id": str(product_id)}
+
+    return app
+
+
+def validation_errors_app() -> Spikard:
+    """Create a Spikard app for validation error testing."""
+    app = Spikard()
+
+    # GET /items/ - Main endpoint that accepts many optional params for testing different validations
+    # Note: q is optional here to allow testing other parameter validations
+    # Fixture 02 specifically tests missing required param with this same route
+    @get("/items/")
+    def get_items_validation(
+        q: str | None = Field(None, min_length=3),  # Optional but when provided must be >= 3 chars
+        skip: int | None = None,
+        price: float | None = Field(None, gt=0, le=1000),
+        search: str | None = Field(None, min_length=3, max_length=50),
+        code: str | None = Field(None, pattern=r"^[A-Z]{3}$"),
+        status: Status | None = None,
+        tags: list[str] | None = Field(None, min_length=1, max_length=10),
+        created_after: date | None = None,
+        active: bool | None = None,
+    ) -> dict[str, Any]:
+        """Endpoint for query parameter validation testing."""
+        result: dict[str, Any] = {"message": "Query parameters received"}
+        if q is not None:
+            result["q"] = q
+        if skip is not None:
+            result["skip"] = skip
+        if price is not None:
+            result["price"] = price
+        if search is not None:
+            result["search"] = search
+        if code is not None:
+            result["code"] = code
+        if status is not None:
+            result["status"] = status
+        if tags is not None:
+            result["tags"] = tags
+        if created_after is not None:
+            result["created_after"] = created_after.isoformat()
+        if active is not None:
+            result["active"] = active
+        return result
+
+    # GET /items/{item_id} - for UUID path param validation
+    @get("/items/{item_id}")
+    def get_item_validation(item_id: UUID) -> dict[str, str]:
+        """Endpoint for UUID path parameter validation."""
+        return {"item_id": str(item_id)}
+
+    # GET /models/{model_id} - for UUID path param validation
+    @get("/models/{model_id}")
+    def get_model_validation(model_id: UUID) -> dict[str, str]:
+        """Endpoint for UUID path parameter validation."""
+        return {"model_id": str(model_id)}
+
+    # POST /items/ - for body validation errors
+    @post(
+        "/items/",
+        body_schema={
+            "type": "object",
+            "required": ["name", "price"],
+            "properties": {
+                "name": {"type": "string"},
+                "description": {"type": "string"},
+                "price": {"type": "number"},
+                "tags": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "minItems": 1,
+                    "maxItems": 10,
+                },
+                "metadata": {
+                    "type": "object",
+                    "properties": {
+                        "category": {"type": "string"},
+                        "rating": {"type": "number"},
+                    },
+                },
+            },
+        },
+    )
+    def post_items_validation(body: dict[str, Any]) -> dict[str, Any]:
+        """Endpoint for JSON body validation testing."""
+        result: dict[str, Any] = {"name": body["name"], "price": body["price"]}
+        if "description" in body:
+            result["description"] = body["description"]
+        if "tags" in body:
+            result["tags"] = body["tags"]
+        if "metadata" in body:
+            result["metadata"] = body["metadata"]
+        return result
+
+    # POST /users - for body validation errors
+    @post(
+        "/users",
+        body_schema={
+            "type": "object",
+            "required": ["username", "email"],
+            "properties": {
+                "username": {"type": "string"},
+                "email": {"type": "string"},
+                "age": {"type": "integer"},
+            },
+        },
+    )
+    def post_users_validation(body: dict[str, Any]) -> dict[str, Any]:
+        """Endpoint for JSON body validation testing."""
+        result: dict[str, Any] = {"username": body["username"], "email": body["email"]}
+        if "age" in body:
+            result["age"] = body["age"]
+        return result
 
     return app
 
@@ -181,17 +309,17 @@ def status_codes_app() -> Spikard:
     """Create a Spikard app for status code testing."""
     app = Spikard()
 
-    @app.get("/status-test/{code}")
+    @get("/status-test/{code}")
     def get_status_test(code: int) -> dict[str, int]:
         """Endpoint for status code testing."""
         return {"code": code}
 
-    @app.post("/items")
+    @post("/items")
     def post_items_status(name: str) -> dict[str, str]:
         """Endpoint for testing 201 Created."""
         return {"name": name, "id": "123"}
 
-    @app.delete("/items/{item_id}")
+    @delete("/items/{item_id}")
     def delete_item(item_id: int) -> dict[str, str]:
         """Endpoint for testing 204 No Content."""
         return {"message": "deleted"}
