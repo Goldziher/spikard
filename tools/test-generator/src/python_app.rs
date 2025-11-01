@@ -12,12 +12,10 @@
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
-
-use crate::fixture_analysis::infer_body_schema;
 
 /// Convert JSON string to Python dict syntax
 /// Replaces JSON literals (true, false, null) with Python equivalents (True, False, None)
@@ -234,18 +232,25 @@ fn generate_handler(
         vec![]
     };
 
-    // Extract body schema - try explicit first, then infer from fixtures
+    // Extract explicit body schema - NO inference
     // Per RFC 9110/5789: No method syntactically REQUIRES a body
     let body_schema = if let Some(handler) = handler_opt {
         if let Some(ref explicit_schema) = handler.body_schema {
+            eprintln!(
+                "[SCHEMA EXTRACT] Using explicit body_schema from fixture: {}",
+                first.name
+            );
             Some(explicit_schema.clone())
         } else {
-            // No explicit schema, try inference
-            infer_body_schema(fixtures)
+            eprintln!(
+                "[SCHEMA EXTRACT] No explicit handler.body_schema in fixture: {}",
+                first.name
+            );
+            None
         }
     } else {
-        // No handler field, try inference
-        infer_body_schema(fixtures)
+        eprintln!("[SCHEMA EXTRACT] No handler section in fixture: {}", first.name);
+        None
     };
 
     let (body_model, model_name) = if let Some(ref schema) = body_schema {

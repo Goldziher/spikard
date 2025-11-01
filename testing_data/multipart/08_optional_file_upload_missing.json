@@ -6,6 +6,15 @@
     "test_file": "tests/test_tutorial/test_request_files/test_tutorial001.py",
     "test_function": "test_optional_file_missing"
   },
+  "handler": {
+    "route": "/files/optional",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/files/optional",

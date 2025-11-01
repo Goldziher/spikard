@@ -6,6 +6,30 @@
     "test_file": "tests/test_numeric_limits.py",
     "test_function": "test_large_integers"
   },
+  "handler": {
+    "route": "/numbers/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "max_safe_int": {
+          "type": "integer"
+        },
+        "large_int": {
+          "type": "integer"
+        },
+        "negative_large": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "max_safe_int",
+        "large_int",
+        "negative_large"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/numbers/",

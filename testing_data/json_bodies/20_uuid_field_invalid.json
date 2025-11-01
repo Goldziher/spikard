@@ -6,6 +6,26 @@
     "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
     "test_function": "test_uuid_field_invalid"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "item_id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "item_id"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/",

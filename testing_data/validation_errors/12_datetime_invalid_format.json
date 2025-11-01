@@ -6,6 +6,30 @@
     "test_file": "tests/test_datetime/test_tutorial001.py",
     "test_function": "test_datetime_invalid"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number"
+        },
+        "created_at": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "price",
+        "created_at"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/",

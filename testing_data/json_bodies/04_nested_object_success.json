@@ -6,6 +6,43 @@
     "test_file": "tests/test_tutorial/test_body_nested_models/test_tutorial001.py",
     "test_function": "test_nested_model"
   },
+  "handler": {
+    "route": "/items/nested",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number"
+        },
+        "image": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "url",
+            "name"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "price",
+        "image"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/nested",

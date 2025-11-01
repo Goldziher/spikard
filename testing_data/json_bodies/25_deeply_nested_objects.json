@@ -6,6 +6,73 @@
     "test_file": "tests/test_tutorial/test_body_nested_models/test_tutorial001.py",
     "test_function": "test_deeply_nested"
   },
+  "handler": {
+    "route": "/items/nested",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number"
+        },
+        "seller": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "address": {
+              "type": "object",
+              "properties": {
+                "street": {
+                  "type": "string"
+                },
+                "city": {
+                  "type": "string"
+                },
+                "country": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "name",
+                    "code"
+                  ]
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "street",
+                "city",
+                "country"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "address"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "price",
+        "seller"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/nested",

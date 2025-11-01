@@ -6,6 +6,22 @@
     "test_file": "tests/test_tutorial/test_response_model/test_tutorial001.py",
     "test_function": "test_async_task"
   },
+  "handler": {
+    "route": "/tasks/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "task"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/tasks/",

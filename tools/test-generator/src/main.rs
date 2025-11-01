@@ -3,7 +3,6 @@
 //! Internal tool for generating test infrastructure from fixtures.
 //! Generates test applications and test suites for Rust, Python, and TypeScript.
 
-mod fixture_analysis;
 mod python_app;
 mod python_tests;
 mod rust_app;
@@ -11,7 +10,7 @@ mod rust_tests;
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use spikard_codegen::openapi::{fixtures_to_openapi, load_fixtures_from_dir, OpenApiOptions};
+use spikard_codegen::openapi::{OpenApiOptions, fixtures_to_openapi, load_fixtures_from_dir};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]

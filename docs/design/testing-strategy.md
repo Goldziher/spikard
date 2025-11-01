@@ -6,10 +6,47 @@ Spikard uses a **fixture-driven testing approach** where all test scenarios are 
 
 ## Core Philosophy
 
-**Write once, test everywhere**: Each test scenario is a JSON fixture that defines:
+### Write Once, Test Everywhere
+
+Each test scenario is a JSON fixture that defines:
 - Request details (method, path, query params, headers, cookies, body)
 - Expected response (status code, headers, body)
 - Metadata (description, source test from FastAPI/Starlette/Litestar)
+
+### Test Fixtures → Spikard Development (Not Test App Development)
+
+**Critical Principle**: The fixtures are for developing and testing **Spikard's internals**, not for building complex test applications.
+
+**What this means:**
+- **Fixtures define Spikard's behavior specification** - each fixture documents how Spikard should handle a specific scenario
+- **Test apps must be MINIMAL** - they contain no business logic, no "smart" routing, no special case handling
+- **Spikard does the work** - validation, routing, error handling, status codes all handled by Spikard's engine
+- **Test apps are scaffolding** - they exist only to exercise Spikard's functionality
+
+**Example of what NOT to do:**
+```rust
+// ❌ BAD: Test app contains business logic
+async fn handle_status_test(Path(code): Path<String>) -> Response {
+    // Parsing status code from path - this is business logic!
+    let status = code.parse::<u16>().unwrap_or(200);
+    StatusCode::from_u16(status).unwrap()
+}
+```
+
+**Example of what TO do:**
+```rust
+// ✓ GOOD: Minimal handler, let Spikard do validation
+async fn handle_items(query: Query<ItemParams>) -> Response {
+    // Spikard validated query params - just return success
+    Json(json!({"items": []}))
+}
+```
+
+**The Goal:**
+- Use fixtures to drive TDD development of Spikard's Rust engine
+- Ensure consistent behavior across all language bindings (Rust, Python, TypeScript, Ruby)
+- Test that Spikard correctly handles validation, errors, routing, status codes
+- Keep test apps as simple as possible - they're not the code under test!
 
 ## Fixture Structure
 
@@ -103,41 +140,59 @@ Each directory contains:
 
 ## Test Implementation
 
-### Python Integration Tests
+### Test Generator (E2E Tests)
 
-Located in `packages/python/tests/test_all_fixtures.py`:
+For end-to-end testing, we use a **test generator** that creates minimal test applications from fixtures:
 
-```python
-import pytest
-import json
-from pathlib import Path
+**Location**: `tools/test-generator/`
 
-@pytest.mark.parametrize("fixture_file", discover_fixtures())
-def test_fixture(fixture_file, test_client):
-    """Universal fixture-based test runner."""
-    with open(fixture_file) as f:
-        fixture = json.load(f)
+**Purpose**:
+- Generate minimal Rust and Python test applications from fixtures
+- Create test suites that verify Spikard handles each scenario correctly
+- Output lives in `e2e/rust/` and `e2e/python/`
 
-    # Make request using fixture data
-    request = fixture["request"]
-    response = test_client.request(
-        method=request["method"],
-        url=request["path"],
-        params=request.get("query_params"),
-        headers=request.get("headers"),
-        json=request.get("body"),
-    )
+**Key Principle**: The generator creates the **simplest possible handlers** that:
+1. Register routes from fixtures
+2. Use Spikard's validation (what we're testing!)
+3. Return success responses when validation passes
+4. Let Spikard handle all errors, validation failures, status codes
 
-    # Assert response matches expected
-    expected = fixture["expected_response"]
-    assert response.status_code == expected["status_code"]
-    if "body" in expected:
-        assert response.json() == expected["body"]
+**What the generator should NOT do:**
+- Add business logic to handle different scenarios
+- Parse parameters to determine behavior (e.g., parsing status codes from paths)
+- Implement smart routing or conditional responses
+- Duplicate logic that Spikard should handle
+
+**What the generator SHOULD do:**
+- Create one handler per unique route/method from fixtures
+- Set up Spikard's validators with schemas from fixtures
+- Return simple success responses
+- Trust Spikard to handle validation, errors, and edge cases
+
+**Example generated handler:**
+```rust
+// Simple handler - Spikard does all the validation work
+async fn handle_items_get(
+    uri: axum::http::Uri,
+    headers: axum::http::HeaderMap,
+) -> impl axum::response::IntoResponse {
+    // Schema from fixture
+    let schema: Value = serde_json::from_str(SCHEMA_JSON).unwrap();
+    let validator = ParameterValidator::new(schema).unwrap();
+
+    // Extract and validate - Spikard handles this!
+    match validator.validate_and_extract(&query_params, ...) {
+        Ok(validated) => {
+            // Success - return 200 with validated data
+            (StatusCode::OK, Json(validated))
+        },
+        Err(err) => {
+            // Spikard already formatted the error - just return it
+            (StatusCode::UNPROCESSABLE_ENTITY, Json(err.to_json()))
+        }
+    }
+}
 ```
-
-### Rust Tests
-
-Similar approach in Rust using `serde_json` to load fixtures.
 
 ## Benefits
 

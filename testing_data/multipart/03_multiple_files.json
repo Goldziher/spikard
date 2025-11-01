@@ -6,6 +6,28 @@
     "test_file": "tests/test_formparsers.py",
     "test_function": "test_multipart_request_multiple_files"
   },
+  "handler": {
+    "route": "/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "test1": {
+          "type": "string",
+          "format": "binary"
+        },
+        "test2": {
+          "type": "string",
+          "format": "binary"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "test1",
+        "test2"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/",

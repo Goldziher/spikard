@@ -6,6 +6,56 @@
     "test_file": "tests/test_validate_response_recursive/test_validate_response_recursive.py",
     "test_function": "test_nested_validation_error"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number"
+        },
+        "seller": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "address": {
+              "type": "object",
+              "properties": {
+                "city": {
+                  "type": "string"
+                },
+                "zip_code": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "city",
+                "zip_code"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "address"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "price",
+        "seller"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/",
