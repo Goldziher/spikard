@@ -1,15 +1,55 @@
 //! Python test app generator
 //!
 //! Generates a Spikard Python application from fixtures for e2e testing.
+//!
+//! Rotates through all Python type systems to ensure validation works with:
+//! - Plain dict (fastest, no conversion)
+//! - TypedDict (typed hints, no runtime conversion)
+//! - dataclass (stdlib, mutable)
+//! - NamedTuple (stdlib, immutable)
+//! - msgspec.Struct (fastest typed)
+//! - Pydantic BaseModel (popular, slower)
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
 use crate::fixture_analysis::infer_body_schema;
+
+/// Type system to use for request body parameter
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum BodyType {
+    /// Plain dict[str, Any] - no conversion needed (fastest)
+    PlainDict,
+    /// TypedDict - type hints only, no runtime conversion (fastest)
+    TypedDict,
+    /// @dataclass - stdlib mutable typed object
+    Dataclass,
+    /// NamedTuple - stdlib immutable typed tuple
+    NamedTuple,
+    /// msgspec.Struct - fastest typed conversion
+    MsgspecStruct,
+    /// Pydantic BaseModel - popular but slower
+    Pydantic,
+}
+
+impl BodyType {
+    /// Rotate through all type systems to ensure comprehensive testing
+    fn for_index(index: usize) -> Self {
+        match index % 6 {
+            0 => BodyType::PlainDict,
+            1 => BodyType::TypedDict,
+            2 => BodyType::Dataclass,
+            3 => BodyType::NamedTuple,
+            4 => BodyType::MsgspecStruct,
+            5 => BodyType::Pydantic,
+            _ => unreachable!(),
+        }
+    }
+}
 
 /// Generate Python test application from fixtures
 pub fn generate_python_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
@@ -54,10 +94,12 @@ fn generate_app_file(fixtures_by_category: &HashMap<String, Vec<Fixture>>) -> Re
 
     // Imports
     code.push_str("\"\"\"Generated E2E test application.\"\"\"\n\n");
+    code.push_str("from dataclasses import asdict, dataclass\n");
     code.push_str("from datetime import date, datetime\n");
     code.push_str("from enum import Enum\n");
-    code.push_str("from typing import Any\n");
+    code.push_str("from typing import Any, NamedTuple, TypedDict\n");
     code.push_str("from uuid import UUID\n\n");
+    code.push_str("import msgspec\n");
     code.push_str("from pydantic import BaseModel, Field\n");
     code.push_str("from spikard import Spikard, get, post, put, patch, delete, head, options, trace\n\n");
 
@@ -108,9 +150,10 @@ fn generate_app_file(fixtures_by_category: &HashMap<String, Vec<Fixture>>) -> Re
         }
     });
 
-    // Generate handlers
-    for ((route, method), route_fixtures) in sorted_routes {
-        let handler = generate_handler(&route, &method, &route_fixtures, &mut handler_names)?;
+    // Generate handlers - rotate through all type systems for comprehensive testing
+    for (handler_index, ((route, method), route_fixtures)) in sorted_routes.into_iter().enumerate() {
+        let body_type = BodyType::for_index(handler_index);
+        let handler = generate_handler(&route, &method, &route_fixtures, &mut handler_names, body_type)?;
         if !handler.is_empty() {
             code.push_str(&handler);
             code.push_str("\n\n");
@@ -155,6 +198,7 @@ fn generate_handler(
     method: &str,
     fixtures: &[&Fixture],
     handler_names: &mut HashMap<String, usize>,
+    body_type: BodyType,
 ) -> Result<String> {
     // All HTTP methods are now supported
     // (no need to skip any methods)
@@ -200,7 +244,7 @@ fn generate_handler(
     let (body_model, model_name) = if let Some(ref schema) = body_schema {
         let model_name_base = format!("{}Body", capitalize(&handler_name));
         let model_name = make_unique_name(&model_name_base, handler_names);
-        let model_code = extract_body_model(schema, &model_name)?;
+        let model_code = extract_body_model(schema, &model_name, body_type)?;
         (Some(model_code), Some(model_name))
     } else {
         (None, None)
@@ -224,9 +268,13 @@ fn generate_handler(
     // Function signature
     code.push_str(&format!("def {}(\n", handler_name));
 
-    // Add body parameter if present
-    if let Some(ref model_nm) = model_name {
-        code.push_str(&format!("    body: {},\n", model_nm));
+    // Add body parameter if present - type annotation depends on BodyType
+    if body_schema.is_some() {
+        let body_param_type = match body_type {
+            BodyType::PlainDict => "dict[str, Any]".to_string(),
+            _ => model_name.as_deref().unwrap_or("dict[str, Any]").to_string(),
+        };
+        code.push_str(&format!("    body: {},\n", body_param_type));
     }
 
     // Add other parameters - required first, then optional (Python syntax requirement)
@@ -255,10 +303,31 @@ fn generate_handler(
         code.push_str("    # Echo back parameters for testing\n");
         code.push_str("    result = {}\n");
 
-        // Add body parameters to result
-        if model_name.is_some() {
+        // Add body parameters to result - conversion depends on BodyType
+        if body_schema.is_some() {
             code.push_str("    if body:\n");
-            code.push_str("        result.update(body.model_dump())\n");
+            match body_type {
+                BodyType::PlainDict | BodyType::TypedDict => {
+                    // Already a dict at runtime
+                    code.push_str("        result.update(body)\n");
+                }
+                BodyType::Dataclass => {
+                    // Use dataclasses.asdict()
+                    code.push_str("        result.update(asdict(body))\n");
+                }
+                BodyType::NamedTuple => {
+                    // Use ._asdict()
+                    code.push_str("        result.update(body._asdict())\n");
+                }
+                BodyType::MsgspecStruct => {
+                    // Use msgspec.to_builtins()
+                    code.push_str("        result.update(msgspec.to_builtins(body))\n");
+                }
+                BodyType::Pydantic => {
+                    // Use .model_dump()
+                    code.push_str("        result.update(body.model_dump())\n");
+                }
+            }
         }
 
         // Add other parameters to result
@@ -358,11 +427,166 @@ fn make_unique_name(base_name: &str, used_names: &mut HashMap<String, usize>) ->
     }
 }
 
-/// Extract body model definition
-fn extract_body_model(schema: &Value, model_name: &str) -> Result<String> {
+/// Extract body model definition - generates code for different type systems
+fn extract_body_model(schema: &Value, model_name: &str, body_type: BodyType) -> Result<String> {
+    match body_type {
+        BodyType::PlainDict => {
+            // No model needed - handler will use dict[str, Any]
+            Ok(String::new())
+        }
+        BodyType::TypedDict => generate_typed_dict(schema, model_name),
+        BodyType::Dataclass => generate_dataclass(schema, model_name),
+        BodyType::NamedTuple => generate_namedtuple(schema, model_name),
+        BodyType::MsgspecStruct => generate_msgspec_struct(schema, model_name),
+        BodyType::Pydantic => generate_pydantic_model(schema, model_name),
+    }
+}
+
+/// Generate TypedDict definition
+fn generate_typed_dict(schema: &Value, model_name: &str) -> Result<String> {
+    let mut code = String::new();
+    code.push_str(&format!("class {}(TypedDict):\n", model_name));
+    code.push_str("    \"\"\"Request body type (TypedDict - runtime is dict).\"\"\"\n\n");
+
+    if let Some(obj) = schema.as_object() {
+        if let Some(properties) = obj.get("properties").and_then(|v| v.as_object()) {
+            let required_fields: Vec<String> = obj
+                .get("required")
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+                .unwrap_or_default();
+
+            for (prop_name, prop_schema) in properties {
+                let prop_type = json_type_to_python(prop_schema)?;
+                let is_required = required_fields.contains(prop_name);
+                let python_prop_name = to_python_identifier(prop_name);
+
+                if is_required {
+                    code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+                } else {
+                    code.push_str(&format!("    {}: {} | None\n", python_prop_name, prop_type));
+                }
+            }
+        }
+    }
+
+    Ok(code)
+}
+
+/// Generate dataclass definition
+fn generate_dataclass(schema: &Value, model_name: &str) -> Result<String> {
+    let mut code = String::new();
+    code.push_str("@dataclass\n");
+    code.push_str(&format!("class {}:\n", model_name));
+    code.push_str("    \"\"\"Request body dataclass.\"\"\"\n\n");
+
+    if let Some(obj) = schema.as_object() {
+        if let Some(properties) = obj.get("properties").and_then(|v| v.as_object()) {
+            let required_fields: Vec<String> = obj
+                .get("required")
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+                .unwrap_or_default();
+
+            for (prop_name, prop_schema) in properties {
+                let prop_type = json_type_to_python(prop_schema)?;
+                let is_required = required_fields.contains(prop_name);
+                let python_prop_name = to_python_identifier(prop_name);
+
+                if is_required {
+                    code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+                } else {
+                    code.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
+                }
+            }
+        }
+    }
+
+    Ok(code)
+}
+
+/// Generate NamedTuple definition
+fn generate_namedtuple(schema: &Value, model_name: &str) -> Result<String> {
+    let mut code = String::new();
+    code.push_str(&format!("class {}(NamedTuple):\n", model_name));
+    code.push_str("    \"\"\"Request body NamedTuple (immutable).\"\"\"\n\n");
+
+    if let Some(obj) = schema.as_object() {
+        if let Some(properties) = obj.get("properties").and_then(|v| v.as_object()) {
+            let required_fields: Vec<String> = obj
+                .get("required")
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+                .unwrap_or_default();
+
+            // Separate required and optional fields
+            // NamedTuple requires all fields without defaults to come before fields with defaults
+            let mut required_props: Vec<(&String, &Value)> = Vec::new();
+            let mut optional_props: Vec<(&String, &Value)> = Vec::new();
+
+            for (prop_name, prop_schema) in properties {
+                if required_fields.contains(prop_name) {
+                    required_props.push((prop_name, prop_schema));
+                } else {
+                    optional_props.push((prop_name, prop_schema));
+                }
+            }
+
+            // Output required fields first
+            for (prop_name, prop_schema) in required_props {
+                let prop_type = json_type_to_python(prop_schema)?;
+                let python_prop_name = to_python_identifier(prop_name);
+                code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+            }
+
+            // Then output optional fields
+            for (prop_name, prop_schema) in optional_props {
+                let prop_type = json_type_to_python(prop_schema)?;
+                let python_prop_name = to_python_identifier(prop_name);
+                code.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
+            }
+        }
+    }
+
+    Ok(code)
+}
+
+/// Generate msgspec.Struct definition
+fn generate_msgspec_struct(schema: &Value, model_name: &str) -> Result<String> {
+    let mut code = String::new();
+    code.push_str(&format!("class {}(msgspec.Struct):\n", model_name));
+    code.push_str("    \"\"\"Request body msgspec.Struct (fast typed).\"\"\"\n\n");
+
+    if let Some(obj) = schema.as_object() {
+        if let Some(properties) = obj.get("properties").and_then(|v| v.as_object()) {
+            let required_fields: Vec<String> = obj
+                .get("required")
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+                .unwrap_or_default();
+
+            for (prop_name, prop_schema) in properties {
+                let prop_type = json_type_to_python(prop_schema)?;
+                let is_required = required_fields.contains(prop_name);
+                let python_prop_name = to_python_identifier(prop_name);
+
+                if is_required {
+                    code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+                } else {
+                    code.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
+                }
+            }
+        }
+    }
+
+    Ok(code)
+}
+
+/// Generate Pydantic BaseModel definition
+fn generate_pydantic_model(schema: &Value, model_name: &str) -> Result<String> {
     let mut code = String::new();
     code.push_str(&format!("class {}(BaseModel):\n", model_name));
-    code.push_str("    \"\"\"Request body model.\"\"\"\n\n");
+    code.push_str("    \"\"\"Request body Pydantic model.\"\"\"\n\n");
 
     if let Some(obj) = schema.as_object() {
         if let Some(properties) = obj.get("properties").and_then(|v| v.as_object()) {
