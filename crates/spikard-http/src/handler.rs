@@ -25,6 +25,7 @@ fn is_debug_mode() -> bool {
 pub struct RequestData {
     pub path_params: HashMap<String, String>,
     pub query_params: Value,
+    pub raw_query_params: HashMap<String, String>, // Raw string values for validation errors
     pub headers: HashMap<String, String>,
     pub cookies: HashMap<String, String>,
     pub body: Option<Value>,
@@ -100,6 +101,7 @@ impl PythonHandler {
             // Pass query params as Value directly (fast-query-parsers already did type conversion)
             match validator.validate_and_extract(
                 &request_data.query_params,
+                &request_data.raw_query_params,
                 &request_data.path_params,
                 &request_data.headers,
                 &request_data.cookies,
