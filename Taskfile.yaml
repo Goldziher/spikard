@@ -26,14 +26,14 @@ tasks:
       - prek autoupdate
 
   test:python:
-    desc: "Run Python tests with pytest"
+    desc: "Run Python integration tests"
     deps:
       - build:py
     cmds:
-      - PYTHONPATH=. uv run pytest e2e/python/tests -v
+      - PYTHONPATH=packages/python uv run pytest packages/python/tests -v
 
   test:rust:
-    desc: "Run Rust tests"
+    desc: "Run Rust workspace tests"
     cmds:
       - cargo test --workspace --release
 
@@ -154,60 +154,56 @@ tasks:
       - cargo run --manifest-path tools/test-generator/Cargo.toml -- openapi --fixtures testing_data --output openapi-specs/full.yaml --title "Spikard Test API" --version "1.0.0"
 
   generate:tests:rust:
-    desc: "Generate Rust test suite from fixtures"
+    desc: "Generate Rust e2e test suite from fixtures"
     cmds:
-      - rm -rf e2e/rust/tests
-      - mkdir -p e2e/rust
-      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang rust --fixtures testing_data --output e2e/rust
+      - rm -rf e2e/rust
+      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang rust --output e2e/rust
       - cargo fmt --manifest-path e2e/rust/Cargo.toml
 
   generate:tests:python:
-    desc: "Generate Python test suite from fixtures"
+    desc: "Generate Python e2e test suite from fixtures"
     cmds:
-      - rm -rf e2e/python/tests
-      - mkdir -p e2e/python
-      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang python --fixtures testing_data --output e2e/python
+      - rm -rf e2e/python
+      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang python --output e2e/python
 
   generate:tests:typescript:
-    desc: "Generate TypeScript test suite from fixtures"
+    desc: "Generate TypeScript e2e test suite from fixtures"
     cmds:
-      - rm -rf e2e/typescript/tests
-      - mkdir -p e2e/typescript
-      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang typescript --fixtures testing_data --output e2e/typescript
+      - rm -rf e2e/typescript
+      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang typescript --output e2e/typescript
 
   generate:tests:
-    desc: "Generate all test suites from fixtures"
+    desc: "Generate all e2e test suites from fixtures"
     cmds:
       - task: generate:tests:rust
       - task: generate:tests:python
       - task: generate:tests:typescript
 
   clean:generated:
-    desc: "Remove all generated test infrastructure"
+    desc: "Remove all generated e2e test infrastructure"
     cmds:
-      - rm -rf e2e/*/tests e2e/*/app
+      - rm -rf e2e/
       - rm -rf openapi-specs/
 
   test:e2e:rust:
-    desc: "Run Rust e2e tests"
-    dir: e2e/rust
+    desc: "Run Rust e2e tests (fixture-driven integration tests)"
     cmds:
-      - cargo test --all-features
+      - PYTHONPATH=packages/python cargo test --manifest-path e2e/rust/Cargo.toml
 
   test:e2e:python:
-    desc: "Run Python e2e tests"
+    desc: "Run Python e2e tests (fixture-driven integration tests)"
     dir: e2e/python
     cmds:
-      - uv run pytest tests/ -v
+      - PYTHONPATH=../../packages/python uv run pytest tests/ -v
 
   test:e2e:typescript:
-    desc: "Run TypeScript e2e tests"
+    desc: "Run TypeScript e2e tests (fixture-driven integration tests)"
     dir: e2e/typescript
     cmds:
       - pnpm test
 
   test:e2e:
-    desc: "Run all e2e tests"
+    desc: "Run all e2e fixture-driven integration tests"
     cmds:
       - task: test:e2e:rust
       - task: test:e2e:python

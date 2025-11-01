@@ -20,8 +20,8 @@ mod validation_errors {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_Invalid_UUID_format();
 
         // Build request
         let mut uri = "/items/not-a-uuid".to_string();
@@ -216,8 +216,8 @@ mod validation_errors {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_Invalid_boolean_value();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -413,8 +413,8 @@ mod validation_errors {
                 .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_Missing_required_query_parameter();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -610,8 +610,8 @@ mod validation_errors {
                 .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_Array_max_items_constraint_violation();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -807,8 +807,8 @@ mod validation_errors {
                 .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_Numeric_constraint_violation___gt__greater_than();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -1004,8 +1004,8 @@ mod validation_errors {
                 .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_String_regex_pattern_mismatch();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -1200,8 +1200,8 @@ mod validation_errors {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_Invalid_enum_value();
 
         // Build request
         let mut uri = "/models/invalid_model".to_string();
@@ -1397,8 +1397,8 @@ mod validation_errors {
                 .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_String_min_length_constraint_violation();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -1594,8 +1594,8 @@ mod validation_errors {
                 .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_Multiple_validation_errors();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -1791,8 +1791,8 @@ mod validation_errors {
                 .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_String_max_length_constraint_violation();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -1988,8 +1988,8 @@ mod validation_errors {
                 .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_Nested_object_validation_error();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -2184,8 +2184,8 @@ mod validation_errors {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_10_nested_error_path();
 
         // Build request
         let mut uri = "/profiles".to_string();
@@ -2381,8 +2381,8 @@ mod validation_errors {
                 .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_Invalid_datetime_format();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -2578,8 +2578,8 @@ mod validation_errors {
                 .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_Array_item_validation_error();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -2775,8 +2775,8 @@ mod validation_errors {
                 .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_Missing_required_body_field();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -2972,8 +2972,8 @@ mod validation_errors {
                 .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_Body_field_type_error___string_for_float();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -3168,8 +3168,8 @@ mod validation_errors {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_Malformed_JSON_body();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -3366,8 +3366,8 @@ mod validation_errors {
         .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_Query_param_type_error___string_provided_for_int();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -3563,8 +3563,8 @@ mod validation_errors {
                 .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_Header_validation_error();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -3760,8 +3760,8 @@ mod validation_errors {
                 .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_09_multiple_validation_errors();
 
         // Build request
         let mut uri = "/users".to_string();
@@ -3957,8 +3957,8 @@ mod validation_errors {
                 .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_Numeric_constraint_violation___le__less_than_or_equal();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -4154,8 +4154,8 @@ mod validation_errors {
                 .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_validation_errors_Array_min_items_constraint_violation();
 
         // Build request
         let mut uri = "/items/".to_string();
