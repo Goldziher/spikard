@@ -17,10 +17,15 @@
   },
   "request": {
     "method": "POST",
-    "path": "/redirect-post"
+    "path": "/redirect-post",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {}
   },
   "expected_response": {
     "status_code": 307,
+    "body": {},
     "headers": {
       "location": "/target-post"
     }
