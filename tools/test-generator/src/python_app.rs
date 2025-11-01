@@ -109,15 +109,12 @@ fn generate_app_file(fixtures_by_category: &HashMap<String, Vec<Fixture>>) -> Re
     // Track handler names to make them unique
     let mut handler_names = HashMap::new();
 
-    // Collect all fixtures across categories (skip validation_errors category like Rust does)
+    // Collect all fixtures across categories
+    // INCLUDE validation_errors for schema inference (to identify required fields)
     let mut all_fixtures = Vec::new();
-    for (category, fixtures) in fixtures_by_category.iter() {
-        // Skip validation_errors category - these test error responses, not handler schemas
-        if category == "validation_errors" {
-            continue;
-        }
-
-        // Include ALL fixtures - generate handlers even for fixtures without explicit handler field
+    for (_category, fixtures) in fixtures_by_category.iter() {
+        // Include ALL fixtures - validation_errors are crucial for schema inference
+        // (they identify required fields via "missing" errors)
         all_fixtures.extend(fixtures.iter().cloned());
     }
 
@@ -488,16 +485,31 @@ fn generate_dataclass(schema: &Value, model_name: &str) -> Result<String> {
                 .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
                 .unwrap_or_default();
 
-            for (prop_name, prop_schema) in properties {
-                let prop_type = json_type_to_python(prop_schema)?;
-                let is_required = required_fields.contains(prop_name);
-                let python_prop_name = to_python_identifier(prop_name);
+            // Separate required and optional fields
+            // dataclass requires all fields without defaults to come before fields with defaults
+            let mut required_props: Vec<(&String, &Value)> = Vec::new();
+            let mut optional_props: Vec<(&String, &Value)> = Vec::new();
 
-                if is_required {
-                    code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+            for (prop_name, prop_schema) in properties {
+                if required_fields.contains(prop_name) {
+                    required_props.push((prop_name, prop_schema));
                 } else {
-                    code.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
+                    optional_props.push((prop_name, prop_schema));
                 }
+            }
+
+            // Output required fields first
+            for (prop_name, prop_schema) in required_props {
+                let prop_type = json_type_to_python(prop_schema)?;
+                let python_prop_name = to_python_identifier(prop_name);
+                code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+            }
+
+            // Then output optional fields
+            for (prop_name, prop_schema) in optional_props {
+                let prop_type = json_type_to_python(prop_schema)?;
+                let python_prop_name = to_python_identifier(prop_name);
+                code.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
             }
         }
     }
