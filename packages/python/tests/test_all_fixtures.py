@@ -34,15 +34,17 @@ from tests.fixture_app import (
     path_params_app,
     query_params_app,
     status_codes_app,
+    validation_errors_app,
 )
 
 AppFactory = Callable[[], Spikard]
-QUERY_PARAMS_APP_FACTORY: AppFactory = cast("AppFactory", query_params_app)
-HEADERS_APP_FACTORY: AppFactory = cast("AppFactory", headers_app)
-JSON_BODIES_APP_FACTORY: AppFactory = cast("AppFactory", json_bodies_app)
-COOKIES_APP_FACTORY: AppFactory = cast("AppFactory", cookies_app)
-PATH_PARAMS_APP_FACTORY: AppFactory = cast("AppFactory", path_params_app)
-STATUS_CODES_APP_FACTORY: AppFactory = cast("AppFactory", status_codes_app)
+QUERY_PARAMS_APP_FACTORY: AppFactory = query_params_app
+HEADERS_APP_FACTORY: AppFactory = headers_app
+JSON_BODIES_APP_FACTORY: AppFactory = json_bodies_app
+COOKIES_APP_FACTORY: AppFactory = cookies_app
+PATH_PARAMS_APP_FACTORY: AppFactory = path_params_app
+STATUS_CODES_APP_FACTORY: AppFactory = status_codes_app
+VALIDATION_ERRORS_APP_FACTORY: AppFactory = validation_errors_app
 
 
 # Discover all fixture categories dynamically
@@ -76,6 +78,11 @@ APP_FACTORIES: dict[str, AppFactory] = {
     "cookies": COOKIES_APP_FACTORY,
     "path_params": PATH_PARAMS_APP_FACTORY,
     "status_codes": STATUS_CODES_APP_FACTORY,
+    "validation_errors": VALIDATION_ERRORS_APP_FACTORY,
+    "url_encoded": JSON_BODIES_APP_FACTORY,  # Similar to json_bodies
+    "multipart": JSON_BODIES_APP_FACTORY,  # File uploads use similar routes
+    "http_methods": JSON_BODIES_APP_FACTORY,  # Tests different methods on same routes
+    "edge_cases": QUERY_PARAMS_APP_FACTORY,  # Edge cases mostly around query params
 }
 
 
