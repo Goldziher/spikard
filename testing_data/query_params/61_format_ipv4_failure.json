@@ -29,17 +29,32 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["query", "ip"],
-        "msg": "Invalid IPv4 address format",
-        "ctx": {
-          "format": "ipv4",
-          "value": "999.999.999.999"
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "query",
+            "ip"
+          ],
+          "msg": "Invalid IPv4 address format",
+          "ctx": {
+            "format": "ipv4",
+            "value": "999.999.999.999"
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["query_params", "format", "ipv4", "validation", "error"]
+  "tags": [
+    "query_params",
+    "format",
+    "ipv4",
+    "validation",
+    "error"
+  ]
 }

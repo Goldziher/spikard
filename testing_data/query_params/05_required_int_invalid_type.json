@@ -15,17 +15,23 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "int_parsing",
-        "loc": [
-          "query",
-          "query"
-        ],
-        "msg": "Input should be a valid integer, unable to parse string as an integer",
-        "input": "baz"
-      }
-    ]
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "int_parsing",
+          "loc": [
+            "query",
+            "query"
+          ],
+          "msg": "Input should be a valid integer, unable to parse string as an integer",
+          "input": "baz"
+        }
+      ]
+    }
   },
   "handler": {
     "route": "/query/int",

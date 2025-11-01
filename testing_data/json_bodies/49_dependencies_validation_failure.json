@@ -24,7 +24,9 @@
         }
       },
       "dependencies": {
-        "credit_card": ["billing_address"]
+        "credit_card": [
+          "billing_address"
+        ]
       }
     }
   },
@@ -38,17 +40,32 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["body"],
-        "msg": "When 'credit_card' is present, 'billing_address' is required",
-        "ctx": {
-          "dependency": "credit_card",
-          "required_fields": ["billing_address"]
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "body"
+          ],
+          "msg": "When 'credit_card' is present, 'billing_address' is required",
+          "ctx": {
+            "dependency": "credit_card",
+            "required_fields": [
+              "billing_address"
+            ]
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["json_bodies", "dependencies", "validation", "error"]
+  "tags": [
+    "json_bodies",
+    "dependencies",
+    "validation",
+    "error"
+  ]
 }

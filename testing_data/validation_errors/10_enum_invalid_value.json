@@ -13,10 +13,17 @@
   "expected_response": {
     "status_code": 422,
     "body": {
-      "detail": [
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
         {
           "type": "enum",
-          "loc": ["path", "model_name"],
+          "loc": [
+            "path",
+            "model_name"
+          ],
           "msg": "Input should be 'alexnet', 'resnet' or 'lenet'",
           "input": "invalid_model",
           "ctx": {

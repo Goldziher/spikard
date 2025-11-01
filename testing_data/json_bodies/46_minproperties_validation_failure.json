@@ -24,17 +24,30 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["body"],
-        "msg": "Object must have at least 2 properties",
-        "ctx": {
-          "min_properties": 2,
-          "actual_properties": 1
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "body"
+          ],
+          "msg": "Object must have at least 2 properties",
+          "ctx": {
+            "min_properties": 2,
+            "actual_properties": 1
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["json_bodies", "minProperties", "validation", "error"]
+  "tags": [
+    "json_bodies",
+    "minProperties",
+    "validation",
+    "error"
+  ]
 }

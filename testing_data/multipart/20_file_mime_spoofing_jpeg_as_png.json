@@ -14,7 +14,9 @@
       "files": {
         "image": {
           "required": true,
-          "content_type": ["image/png"],
+          "content_type": [
+            "image/png"
+          ],
           "validate_magic_numbers": true
         }
       }
@@ -34,18 +36,35 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["files", "image"],
-        "msg": "File type mismatch: MIME type is image/png but magic numbers indicate image/jpeg",
-        "ctx": {
-          "declared_mime": "image/png",
-          "detected_type": "image/jpeg",
-          "magic_bytes": "ffd8ffe0"
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "files",
+            "image"
+          ],
+          "msg": "File type mismatch: MIME type is image/png but magic numbers indicate image/jpeg",
+          "ctx": {
+            "declared_mime": "image/png",
+            "detected_type": "image/jpeg",
+            "magic_bytes": "ffd8ffe0"
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["multipart", "file", "magic_number", "spoofing", "security", "validation", "error"]
+  "tags": [
+    "multipart",
+    "file",
+    "magic_number",
+    "spoofing",
+    "security",
+    "validation",
+    "error"
+  ]
 }

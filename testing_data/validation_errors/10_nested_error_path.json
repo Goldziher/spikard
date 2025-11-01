@@ -12,15 +12,21 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["profile"],
+      "required": [
+        "profile"
+      ],
       "properties": {
         "profile": {
           "type": "object",
-          "required": ["contact"],
+          "required": [
+            "contact"
+          ],
           "properties": {
             "contact": {
               "type": "object",
-              "required": ["email"],
+              "required": [
+                "email"
+              ],
               "properties": {
                 "email": {
                   "type": "string",
@@ -46,17 +52,33 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["body", "profile", "contact", "email"],
-        "msg": "Invalid email format",
-        "ctx": {
-          "format": "email",
-          "value": "invalid"
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "body",
+            "profile",
+            "contact",
+            "email"
+          ],
+          "msg": "Invalid email format",
+          "ctx": {
+            "format": "email",
+            "value": "invalid"
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["validation_errors", "nested", "path", "error_reporting"]
+  "tags": [
+    "validation_errors",
+    "nested",
+    "path",
+    "error_reporting"
+  ]
 }

@@ -12,12 +12,18 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["username"],
+      "required": [
+        "username"
+      ],
       "properties": {
         "username": {
           "type": "string",
           "not": {
-            "enum": ["admin", "root", "system"]
+            "enum": [
+              "admin",
+              "root",
+              "system"
+            ]
           }
         }
       }
@@ -32,16 +38,31 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["body", "username"],
-        "msg": "Must not match the schema",
-        "ctx": {
-          "prohibited_value": "admin"
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "body",
+            "username"
+          ],
+          "msg": "Must not match the schema",
+          "ctx": {
+            "prohibited_value": "admin"
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["json_bodies", "not", "composition", "validation", "error"]
+  "tags": [
+    "json_bodies",
+    "not",
+    "composition",
+    "validation",
+    "error"
+  ]
 }

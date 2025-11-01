@@ -13,10 +13,17 @@
   "expected_response": {
     "status_code": 422,
     "body": {
-      "detail": [
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
         {
           "type": "bool_parsing",
-          "loc": ["query", "is_active"],
+          "loc": [
+            "query",
+            "is_active"
+          ],
           "msg": "Input should be a valid boolean, unable to interpret input",
           "input": "maybe"
         }

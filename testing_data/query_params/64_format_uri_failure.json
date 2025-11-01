@@ -29,17 +29,32 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["query", "url"],
-        "msg": "Invalid URI format",
-        "ctx": {
-          "format": "uri",
-          "value": "not a uri"
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "query",
+            "url"
+          ],
+          "msg": "Invalid URI format",
+          "ctx": {
+            "format": "uri",
+            "value": "not a uri"
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["query_params", "format", "uri", "validation", "error"]
+  "tags": [
+    "query_params",
+    "format",
+    "uri",
+    "validation",
+    "error"
+  ]
 }

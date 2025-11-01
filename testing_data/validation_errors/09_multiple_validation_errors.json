@@ -12,7 +12,11 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["name", "email", "age"],
+      "required": [
+        "name",
+        "email",
+        "age"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -40,35 +44,55 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["body", "name"],
-        "msg": "String length must be at least 3",
-        "ctx": {
-          "min_length": 3,
-          "actual_length": 2
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "3 validation errors in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "body",
+            "name"
+          ],
+          "msg": "String length must be at least 3",
+          "ctx": {
+            "min_length": 3,
+            "actual_length": 2
+          }
+        },
+        {
+          "type": "validation_error",
+          "loc": [
+            "body",
+            "email"
+          ],
+          "msg": "Invalid email format",
+          "ctx": {
+            "format": "email",
+            "value": "invalid-email"
+          }
+        },
+        {
+          "type": "validation_error",
+          "loc": [
+            "body",
+            "age"
+          ],
+          "msg": "Value must be at least 18",
+          "ctx": {
+            "minimum": 18,
+            "value": 15
+          }
         }
-      },
-      {
-        "type": "validation_error",
-        "loc": ["body", "email"],
-        "msg": "Invalid email format",
-        "ctx": {
-          "format": "email",
-          "value": "invalid-email"
-        }
-      },
-      {
-        "type": "validation_error",
-        "loc": ["body", "age"],
-        "msg": "Value must be at least 18",
-        "ctx": {
-          "minimum": 18,
-          "value": 15
-        }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["validation_errors", "multiple", "batch", "error_reporting"]
+  "tags": [
+    "validation_errors",
+    "multiple",
+    "batch",
+    "error_reporting"
+  ]
 }

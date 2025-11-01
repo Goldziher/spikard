@@ -12,11 +12,16 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["profile"],
+      "required": [
+        "profile"
+      ],
       "properties": {
         "profile": {
           "type": "object",
-          "required": ["name", "email"],
+          "required": [
+            "name",
+            "email"
+          ],
           "properties": {
             "name": {
               "type": "string",
@@ -42,16 +47,33 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["body", "profile", "email"],
-        "msg": "Field required",
-        "ctx": {
-          "required": true
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "body",
+            "profile",
+            "email"
+          ],
+          "msg": "Field required",
+          "ctx": {
+            "required": true
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["json_bodies", "nested", "object", "validation", "error", "required"]
+  "tags": [
+    "json_bodies",
+    "nested",
+    "object",
+    "validation",
+    "error",
+    "required"
+  ]
 }

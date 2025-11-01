@@ -15,20 +15,26 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "string_pattern_mismatch",
-        "loc": [
-          "query",
-          "item_query"
-        ],
-        "msg": "String should match pattern '^fixedquery$'",
-        "input": "nonregexquery",
-        "ctx": {
-          "pattern": "^fixedquery$"
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "string_pattern_mismatch",
+          "loc": [
+            "query",
+            "item_query"
+          ],
+          "msg": "String should match pattern '^fixedquery$'",
+          "input": "nonregexquery",
+          "ctx": {
+            "pattern": "^fixedquery$"
+          }
         }
-      }
-    ]
+      ]
+    }
   },
   "notes": "Regex pattern: ^fixedquery$ - value doesn't match",
   "handler": {

@@ -29,17 +29,32 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["query", "email"],
-        "msg": "Invalid email format",
-        "ctx": {
-          "format": "email",
-          "value": "not-an-email"
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "query",
+            "email"
+          ],
+          "msg": "Invalid email format",
+          "ctx": {
+            "format": "email",
+            "value": "not-an-email"
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["query_params", "format", "email", "validation", "error"]
+  "tags": [
+    "query_params",
+    "format",
+    "email",
+    "validation",
+    "error"
+  ]
 }

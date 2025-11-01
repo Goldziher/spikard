@@ -29,17 +29,33 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["query", "email"],
-        "msg": "String does not match pattern",
-        "ctx": {
-          "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
-          "value": "invalid-email"
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "query",
+            "email"
+          ],
+          "msg": "String does not match pattern",
+          "ctx": {
+            "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+            "value": "invalid-email"
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["query_params", "string", "pattern", "email", "validation", "error"]
+  "tags": [
+    "query_params",
+    "string",
+    "pattern",
+    "email",
+    "validation",
+    "error"
+  ]
 }
