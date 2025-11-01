@@ -67,16 +67,16 @@ pub fn generate_rust_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     // Load fixtures from all subdirectories
     let categories = discover_fixture_categories(fixtures_dir)?;
 
-    let app_dir = output_dir.join("app");
-    fs::create_dir_all(&app_dir).context("Failed to create app directory")?;
+    // Generate directly in output_dir (no app/ subdirectory)
+    fs::create_dir_all(output_dir).context("Failed to create output directory")?;
 
     // Generate Cargo.toml
     let cargo_toml = generate_cargo_toml();
-    fs::write(app_dir.join("Cargo.toml"), cargo_toml).context("Failed to write Cargo.toml")?;
+    fs::write(output_dir.join("Cargo.toml"), cargo_toml).context("Failed to write Cargo.toml")?;
     println!("  ✓ Generated Cargo.toml");
 
     // Generate src directory
-    let src_dir = app_dir.join("src");
+    let src_dir = output_dir.join("src");
     fs::create_dir_all(&src_dir).context("Failed to create src directory")?;
 
     // Generate main.rs
@@ -125,6 +125,9 @@ version = "0.1.0"
 edition = "2021"
 publish = false
 
+# Opt out of parent workspace
+[workspace]
+
 [lib]
 name = "spikard_e2e_app"
 path = "src/lib.rs"
@@ -135,7 +138,7 @@ path = "src/main.rs"
 
 [dependencies]
 # Use Spikard itself - this is a test of Spikard!
-spikard-http = { path = "../../../crates/spikard-http" }
+spikard-http = { path = "../../crates/spikard-http" }
 axum = "0.8"
 tokio = { version = "1", features = ["full"] }
 tower = "0.5"
@@ -145,6 +148,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 cookie = "0.18"
 form_urlencoded = "1.2"
+percent-encoding = "2.3"
 "#
     .to_string()
 }
@@ -176,49 +180,21 @@ async fn main() {
 }
 
 fn generate_lib_rs(categories: &HashMap<String, Vec<Fixture>>) -> String {
-    let mut routes = Vec::new();
+    let mut handlers = Vec::new();
+    let mut app_functions = Vec::new();
 
-    // Collect all unique routes, but PRIORITIZE non-validation_errors categories
-    // validation_errors fixtures use generic schemas just to test error reporting
-    let mut route_map: HashMap<(String, String), Vec<&Fixture>> = HashMap::new();
-
+    // Generate one handler per fixture (no grouping!)
     for (category, fixtures) in categories {
-        // Skip validation_errors category when building handler schemas
-        // These fixtures are designed to test error responses, not define the handler schema
-        if category == "validation_errors" {
-            continue;
-        }
-
         for fixture in fixtures {
-            // Use handler.route if available, otherwise fall back to request.path
-            // ALWAYS strip query strings - routes should group by path only
-            let route_with_query = if let Some(handler) = &fixture.handler {
-                handler.route.clone()
-            } else {
-                fixture.request.path.clone()
-            };
-
-            // Strip query string to ensure all fixtures for the same path are grouped together
-            // E.g., "/items/?limit=10" and "/items/" both become "/items/"
-            let route = route_with_query
-                .split('?')
-                .next()
-                .unwrap_or(&route_with_query)
-                .to_string();
-
-            let method = fixture.request.method.clone();
-            route_map.entry((route, method)).or_default().push(fixture);
+            // Generate unique handler for this fixture
+            let (handler_code, app_fn_code) = generate_fixture_handler_and_app(category, fixture);
+            handlers.push(handler_code);
+            app_functions.push(app_fn_code);
         }
-    }
-
-    // Generate handlers
-    for ((route, method), fixtures) in &route_map {
-        let handler = generate_handler(route, method, fixtures);
-        routes.push(handler);
     }
 
     format!(
-        r#"//! Generated route handlers
+        r#"//! Generated route handlers - one handler per fixture for complete isolation
 
 use axum::{{routing, routing::{{get, post, put, patch, delete, head, options, trace}}, Json, Router, middleware}};
 use axum::response::IntoResponse;
@@ -227,17 +203,73 @@ use serde_json::{{json, Value}};
 use std::collections::HashMap;
 use spikard_http::parameters::ParameterValidator;
 
-pub fn create_app() -> Router {{
-    Router::new()
-{}
-        .layer(middleware::from_fn(spikard_http::middleware::validate_content_type_middleware))
+#[derive(Clone, Copy)]
+pub struct CorsConfig {{
+    allow_origin: &'static str,
+    allow_methods: &'static str,
+    allow_headers: &'static str,
 }}
 
+// Default app for backwards compatibility (empty)
+pub fn create_app() -> Router {{
+    Router::new()
+}}
+
+// Per-fixture app functions
+{}
+
+// Handler functions
 {}
 "#,
-        generate_router_config(&route_map),
-        routes.join("\n\n")
+        app_functions.join("\n\n"),
+        handlers.join("\n\n"),
     )
+}
+
+/// Generate handler and app function for a single fixture
+/// Returns (handler_code, app_function_code)
+fn generate_fixture_handler_and_app(category: &str, fixture: &Fixture) -> (String, String) {
+    // Create unique names based on category and fixture name
+    let fixture_id = format!("{}_{}", category, sanitize_name(&fixture.name));
+    let handler_name = format!("{}_handler", fixture_id);
+    let app_fn_name = format!("create_app_{}", fixture_id);
+
+    // Get route from handler or request
+    let route = if let Some(handler) = &fixture.handler {
+        handler.route.clone()
+    } else {
+        fixture.request.path.clone()
+    };
+
+    // Strip query string from route
+    let route_path = route.split('?').next().unwrap_or(&route).to_string();
+    let axum_route = strip_type_hints(&route_path);
+
+    let method = fixture.request.method.as_str();
+    let method_lower = method.to_lowercase();
+
+    // Generate handler code
+    let handler_code = generate_single_handler(fixture, &handler_name);
+
+    // Generate app function
+    let app_fn_code = format!(
+        r#"/// App for fixture: {}
+pub fn {}() -> Router {{
+    Router::new()
+        .route("{}", {}({}))
+        .layer(middleware::from_fn(spikard_http::middleware::validate_content_type_middleware))
+}}"#,
+        fixture.name, app_fn_name, axum_route, method_lower, handler_name
+    );
+
+    (handler_code, app_fn_code)
+}
+
+/// Sanitize fixture name to valid Rust identifier
+fn sanitize_name(name: &str) -> String {
+    name.replace(|c: char| !c.is_alphanumeric() && c != '_', "_")
+        .trim_matches('_')
+        .to_string()
 }
 
 /// Strip type hints and query strings from route pattern
@@ -255,6 +287,62 @@ fn strip_type_hints(route: &str) -> String {
         .to_string()
 }
 
+/// Generate handler for a single fixture (reusing existing generate_handler logic)
+fn generate_single_handler(fixture: &Fixture, handler_name: &str) -> String {
+    // For now, reuse the existing generate_handler with a single-fixture array
+    // This will be refactored later to be more direct
+    generate_handler_with_name(&fixture.request.method, &[fixture], handler_name)
+}
+
+/// Build parameter schema from a single fixture's parameters
+#[allow(dead_code)]
+fn build_param_schema_from_fixture(params: &Value) -> Option<Value> {
+    use serde_json::json;
+
+    let mut properties = serde_json::Map::new();
+    let mut required = Vec::new();
+
+    for (source_name, source_params) in params.as_object()? {
+        if let Some(source_obj) = source_params.as_object() {
+            for (param_name, param_def) in source_obj {
+                if let Some(mut param_obj) = param_def.as_object().cloned() {
+                    // Add source field
+                    param_obj.insert("source".to_string(), json!(source_name));
+
+                    // Determine if required
+                    let has_default = param_obj.contains_key("default");
+                    let is_optional = param_obj.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
+                    let explicitly_required = param_obj.get("required").and_then(|v| v.as_bool()).unwrap_or(false);
+
+                    let is_required = if source_name == "path" || explicitly_required {
+                        true
+                    } else {
+                        !(has_default || is_optional)
+                    };
+
+                    if is_required {
+                        required.push(param_name.clone());
+                    }
+
+                    // Remove non-JSON-Schema fields
+                    param_obj.remove("annotation");
+                    param_obj.remove("required");
+                    param_obj.remove("optional");
+
+                    properties.insert(param_name.clone(), Value::Object(param_obj));
+                }
+            }
+        }
+    }
+
+    Some(json!({
+        "type": "object",
+        "properties": properties,
+        "required": required
+    }))
+}
+
+#[allow(dead_code)]
 fn generate_router_config(route_map: &HashMap<(String, String), Vec<&Fixture>>) -> String {
     use std::collections::BTreeMap;
 
@@ -335,6 +423,18 @@ fn generate_cors_preflight_handler(handler_name: &str, cors_config: &Value) -> S
     )
 }
 
+/// Generate handler with explicit name (for per-fixture handlers)
+fn generate_handler_with_name(method: &str, fixtures: &[&Fixture], handler_name: &str) -> String {
+    let route = if let Some(handler) = fixtures[0].handler.as_ref() {
+        handler.route.as_str()
+    } else {
+        fixtures[0].request.path.as_str()
+    };
+    let route_path = route.split('?').next().unwrap_or(route);
+    let has_path_params = route_path.contains('{');
+    generate_handler_impl(method, fixtures, handler_name, has_path_params)
+}
+
 /// Generate a minimal handler for a route/method combination.
 ///
 /// This creates the SIMPLEST possible handler that:
@@ -345,26 +445,15 @@ fn generate_cors_preflight_handler(handler_name: &str, cors_config: &Value) -> S
 ///
 /// The handler contains NO business logic, NO conditional behavior, NO parameter parsing
 /// for dynamic behavior. It exists only to exercise Spikard's functionality.
+#[allow(dead_code)]
 fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String {
     let handler_name = route_method_to_handler_name(route, method);
     let has_path_params = route.contains('{');
+    generate_handler_impl(method, fixtures, &handler_name, has_path_params)
+}
+
+fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str, has_path_params: bool) -> String {
     let has_body = method == "POST" || method == "PUT" || method == "PATCH";
-
-    eprintln!(
-        "[HANDLER GEN] Generating handler for {} {} with {} fixtures{}",
-        method,
-        route,
-        fixtures.len(),
-        if has_path_params { " (with path params)" } else { "" }
-    );
-    for f in fixtures {
-        eprintln!("[HANDLER GEN]   - Fixture: {}", f.name);
-    }
-
-    // Validate that required schemas are present
-    if !validate_required_schemas(route, method, fixtures, has_path_params, has_body) {
-        eprintln!("\n⚠️  WARNING: Continuing with schema validation errors - handler may fail at runtime\n");
-    }
 
     // Check if this handler has CORS configuration
     let cors_config = extract_cors_config(fixtures);
@@ -372,7 +461,7 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
     // For OPTIONS methods with CORS config, generate a CORS preflight handler
     if method == "OPTIONS" {
         if let Some(ref cors_cfg) = cors_config {
-            return generate_cors_preflight_handler(&handler_name, cors_cfg);
+            return generate_cors_preflight_handler(handler_name, cors_cfg);
         }
     }
 
@@ -767,6 +856,7 @@ fn extract_cors_config(fixtures: &[&Fixture]) -> Option<Value> {
 
 /// Validate that required schemas are present for the route
 /// Prints clear error messages and returns false if validation fails
+#[allow(dead_code)]
 fn validate_required_schemas(
     route: &str,
     method: &str,
@@ -957,6 +1047,7 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
 /// Merge multiple schemas intelligently by combining constraints
 /// For simple object schemas with constraints like minProperties/maxProperties,
 /// merge the constraints. For complex schemas (anyOf, oneOf, etc.), use anyOf wrapper.
+#[allow(dead_code)]
 fn route_method_to_handler_name(route: &str, method: &str) -> String {
     // Strip query string (e.g., "/items/?limit=10" -> "/items/")
     let route_without_query = route.split('?').next().unwrap_or(route);

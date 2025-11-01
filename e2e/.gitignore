@@ -1,9 +1,0 @@
-# Generated test infrastructure
-# Can be safely deleted and regenerated via `task generate:tests`
-*/tests/
-*/app/
-
-# Keep manual support files
-!*/conftest.py
-!*/setup.ts
-!*/common/
