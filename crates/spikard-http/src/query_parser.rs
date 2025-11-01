@@ -237,15 +237,15 @@ mod tests {
 
     #[test]
     fn parse_query_string_to_json_parses_empty_string() {
-        // Empty strings are coerced to boolean false (NestJS-style behavior)
-        // This is intentional for query parameter handling where ?active= should mean active=false
-        assert_eq!(parse_query_string_to_json(b"a=", true), json!({ "a": false }));
+        // Empty strings are preserved as empty strings
+        // They will be coerced to boolean false later in parameters.rs if the schema type is boolean
+        assert_eq!(parse_query_string_to_json(b"a=", true), json!({ "a": "" }));
     }
 
     #[test]
     fn parse_query_string_to_json_parses_empty_string_without_number_parsing() {
-        // When parse_numbers=false, empty strings are still coerced to boolean false
-        assert_eq!(parse_query_string_to_json(b"a=", false), json!({ "a": false }));
+        // When parse_numbers=false, empty strings are preserved as strings
+        assert_eq!(parse_query_string_to_json(b"a=", false), json!({ "a": "" }));
     }
 
     #[test]
