@@ -69,7 +69,8 @@ def extract_parameter_schema(func: Callable[..., Any], path: str | None = None) 
     for idx, (param_name, field_def) in enumerate(parsed_sig.parameters.items()):
         # Skip the first parameter if it's a structured body type
         # (it's handled by request_schema from extract_schemas)
-        if idx == 0 and first_param_is_body:
+        # Also skip if parameter name is "body" (even for dict[str, Any])
+        if idx == 0 and (first_param_is_body or param_name == "body"):
             continue
 
         # Convert FieldDefinition to JSON Schema
@@ -125,7 +126,7 @@ def _is_structured_type(annotation: Any) -> bool:
 
     # Check for Pydantic BaseModel
     try:
-        from pydantic import BaseModel
+        from pydantic import BaseModel  # noqa: PLC0415
 
         if issubclass(annotation, BaseModel):
             return True
@@ -134,7 +135,7 @@ def _is_structured_type(annotation: Any) -> bool:
 
     # Check for msgspec.Struct
     try:
-        import msgspec
+        import msgspec  # noqa: PLC0415
 
         if issubclass(annotation, msgspec.Struct):
             return True
