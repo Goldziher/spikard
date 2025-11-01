@@ -81,10 +81,13 @@ impl SchemaValidator {
                 };
 
                 // Get the input value that failed validation
-                // For missing required fields, use empty string instead of the whole object
+                // For missing required fields, use the actual input object that was provided
+                // For other errors, use the field value that failed validation
                 let input_value = if schema_path_str == "/required" {
-                    Value::String("".to_string())
+                    // For required field errors, return the actual input object
+                    data.clone()
                 } else {
+                    // For other validation errors, return the field value
                     err.instance.clone().into_owned()
                 };
 
