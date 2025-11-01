@@ -140,6 +140,7 @@ impl ParameterValidator {
 
         let mut params_map = serde_json::Map::new();
         let mut errors = Vec::new();
+        let mut raw_values_map: HashMap<String, String> = HashMap::new(); // Track raw values for error messages
 
         // Process each parameter definition
         for param_def in &self.parameter_defs {
@@ -151,42 +152,32 @@ impl ParameterValidator {
                 param_def.expected_type
             );
 
-            // Get raw value based on source
-            // For query params, we get a Value (from fast-query-parsers which already did type conversion)
-            // For path params, we get strings that need coercion
-            let (raw_value_json, raw_value_string) = match param_def.source {
+            // Get raw value based on source - using raw strings for pre-validation
+            // This implements the "pre-validation" approach which is ~2x faster than
+            // dual-track parsing (see benchmarks/validation_approaches.py)
+            let raw_value_string = match param_def.source {
                 ParameterSource::Query => {
-                    // Query params come as JSON Value (already parsed by fast-query-parsers)
-                    let val = if let Value::Object(map) = query_params {
-                        map.get(&param_def.name).cloned()
-                    } else {
-                        None
-                    };
-                    (val, None)
+                    // Use raw query params (strings) for pre-validation
+                    raw_query_params.get(&param_def.name)
                 }
                 ParameterSource::Path => {
                     // Path params come as strings
-                    (None, path_params.get(&param_def.name))
+                    path_params.get(&param_def.name)
                 }
                 ParameterSource::Header => {
                     // Headers come as strings
-                    (None, headers.get(&param_def.name))
+                    headers.get(&param_def.name)
                 }
                 ParameterSource::Cookie => {
                     // Cookies come as strings
-                    (None, cookies.get(&param_def.name))
+                    cookies.get(&param_def.name)
                 }
             };
 
-            tracing::debug!(
-                "raw_value_json for {}: {:?}, raw_value_string: {:?}",
-                param_def.name,
-                raw_value_json,
-                raw_value_string
-            );
+            tracing::debug!("raw_value_string for {}: {:?}", param_def.name, raw_value_string);
 
             // Handle required parameters
-            if param_def.required && raw_value_json.is_none() && raw_value_string.is_none() {
+            if param_def.required && raw_value_string.is_none() {
                 let source_str = match param_def.source {
                     ParameterSource::Query => "query",
                     ParameterSource::Path => "path",
@@ -203,44 +194,8 @@ impl ParameterValidator {
                 continue;
             }
 
-            // Process value based on whether it's already JSON or needs coercion
-            if let Some(json_value) = raw_value_json {
-                // Value from query params (already type-converted by fast-query-parsers)
-                tracing::debug!("Using pre-converted JSON value: {:?}", json_value);
-
-                // Special handling for boolean types: if schema expects boolean but we got integer 1/0 or empty string,
-                // coerce to boolean. This handles cases like ?flag=1 or ?flag= where flag is bool
-                let coerced_value = if param_def.expected_type.as_deref() == Some("boolean") {
-                    match json_value {
-                        Value::Number(n) if n.as_i64() == Some(1) => {
-                            tracing::debug!("Coercing integer 1 to boolean true");
-                            Value::Bool(true)
-                        }
-                        Value::Number(n) if n.as_i64() == Some(0) => {
-                            tracing::debug!("Coercing integer 0 to boolean false");
-                            Value::Bool(false)
-                        }
-                        Value::String(s) if s.is_empty() => {
-                            tracing::debug!("Coercing empty string to boolean false");
-                            Value::Bool(false)
-                        }
-                        _ => json_value,
-                    }
-                } else {
-                    json_value
-                };
-
-                // Special handling for array types: if schema expects array but we got a single value,
-                // wrap it in an array. This handles cases like ?items=apple where items is list[str]
-                let final_value = if param_def.expected_type.as_deref() == Some("array") && !coerced_value.is_array() {
-                    tracing::debug!("Wrapping single value in array for array-typed parameter");
-                    Value::Array(vec![coerced_value])
-                } else {
-                    coerced_value
-                };
-
-                params_map.insert(param_def.name.clone(), final_value);
-            } else if let Some(value_str) = raw_value_string {
+            // Pre-validation: Convert and validate raw string value
+            if let Some(value_str) = raw_value_string {
                 // Value from path params (still a string, needs coercion)
                 tracing::debug!(
                     "Coercing value '{}' to type {:?} with format {:?}",
@@ -255,7 +210,9 @@ impl ParameterValidator {
                 ) {
                     Ok(coerced) => {
                         tracing::debug!("Coerced to: {:?}", coerced);
+                        // Store both the coerced value and the raw string
                         params_map.insert(param_def.name.clone(), coerced);
+                        raw_values_map.insert(param_def.name.clone(), value_str.clone());
                     }
                     Err(e) => {
                         tracing::debug!("Coercion failed: {}", e);
@@ -342,7 +299,7 @@ impl ParameterValidator {
                 tracing::debug!("Validation failed: {:?}", validation_err);
 
                 // Fix location paths to use correct source (path/query/header/cookie)
-                // instead of "body", and use raw string values for query params
+                // instead of "body", and use raw string values for all parameters
                 for error in &mut validation_err.errors {
                     if error.loc.len() >= 2 && error.loc[0] == "body" {
                         let param_name = &error.loc[1];
@@ -356,13 +313,9 @@ impl ParameterValidator {
                             };
                             error.loc[0] = source_str.to_string();
 
-                            // For query parameters, replace the input value with the raw string
-                            // TODO: This currently doesn't work because validation errors come from
-                            // jsonschema validation which happens after type conversion
-                            if param_def.source == ParameterSource::Query {
-                                if let Some(raw_value) = raw_query_params.get(&param_def.name) {
-                                    error.input = Value::String(raw_value.clone());
-                                }
+                            // Replace the input value with the raw string (pre-validation approach)
+                            if let Some(raw_value) = raw_values_map.get(&param_def.name) {
+                                error.input = Value::String(raw_value.clone());
                             }
                         }
                     }

@@ -196,13 +196,15 @@ def validation_errors_app() -> Spikard:
     """Create a Spikard app for validation error testing."""
     app = Spikard()
 
-    # GET /items/ - Main endpoint that accepts many optional params for testing different validations
-    # Note: q is optional here to allow testing other parameter validations
-    # Fixture 02 specifically tests missing required param with this same route
+    # GET /items/ - Main endpoint that requires q and accepts many other params for testing validations
+    # This route is used by most query param validation tests, including fixture 02 (missing required)
     @get("/items/")
     def get_items_validation(
-        q: str | None = Field(None, min_length=3),  # Optional but when provided must be >= 3 chars
+        q: str = Field(
+            min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_-]+$"
+        ),  # REQUIRED - fixture 02 tests missing, 07/08 test length, 09 tests pattern
         skip: int | None = None,
+        limit: int | None = Field(None, le=100),  # fixture 06 tests le constraint
         price: float | None = Field(None, gt=0, le=1000),
         search: str | None = Field(None, min_length=3, max_length=50),
         code: str | None = Field(None, pattern=r"^[A-Z]{3}$"),
@@ -212,11 +214,11 @@ def validation_errors_app() -> Spikard:
         active: bool | None = None,
     ) -> dict[str, Any]:
         """Endpoint for query parameter validation testing."""
-        result: dict[str, Any] = {"message": "Query parameters received"}
-        if q is not None:
-            result["q"] = q
+        result: dict[str, Any] = {"message": "Query parameters received", "q": q}
         if skip is not None:
             result["skip"] = skip
+        if limit is not None:
+            result["limit"] = limit
         if price is not None:
             result["price"] = price
         if search is not None:

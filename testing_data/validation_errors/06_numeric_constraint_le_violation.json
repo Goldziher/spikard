@@ -8,7 +8,7 @@
   },
   "request": {
     "method": "GET",
-    "path": "/items/?limit=101"
+    "path": "/items/?q=test&limit=101"
   },
   "expected_response": {
     "status_code": 422,
