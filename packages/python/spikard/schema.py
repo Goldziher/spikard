@@ -150,7 +150,7 @@ def extract_schemas(
     return request_schema, response_schema
 
 
-def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C901, PLR0912
+def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C901, PLR0912, PLR0915
     """Extract JSON Schema from various Python schema sources.
 
     Supports multiple schema formats through duck typing:
@@ -223,7 +223,9 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C
             # (msgspec and Pydantic treat it as array, but we want object semantics for HTTP)
             type_hints = get_type_hints(schema_source)
             properties = {}
-            required = list(schema_source._fields)
+            # Only fields without defaults are required
+            field_defaults = getattr(schema_source, "_field_defaults", {})
+            required = [f for f in schema_source._fields if f not in field_defaults]
 
             for field_name in schema_source._fields:
                 field_type = type_hints.get(field_name)
