@@ -53,7 +53,7 @@
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -859,10 +859,30 @@ fn validate_required_schemas(
     valid
 }
 
-/// Extract explicit parameter schema from fixtures
-/// Takes the FIRST fixture that has handler.parameters defined and returns it as-is.
-/// NO inference, NO merging, NO building - just direct extraction.
+/// Extract explicit parameter schema from fixtures and transform to JSON Schema format
+///
+/// Takes the FIRST fixture that has handler.parameters and transforms it from:
+/// ```json
+/// {
+///   "query": { "param1": { "type": "string" } },
+///   "path": { "param2": { "type": "integer" } }
+/// }
+/// ```
+///
+/// To the format that ParameterValidator expects:
+/// ```json
+/// {
+///   "type": "object",
+///   "properties": {
+///     "param1": { "type": "string", "source": "query" },
+///     "param2": { "type": "integer", "source": "path" }
+///   },
+///   "required": ["param1", "param2"]
+/// }
+/// ```
 fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
+    use serde_json::json;
+
     // Find the first fixture with explicit handler.parameters
     for fixture in fixtures {
         if let Some(handler) = &fixture.handler {
@@ -871,7 +891,57 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
                     "[SCHEMA EXTRACT] Using explicit parameters from fixture: {}",
                     fixture.name
                 );
-                return Some(params.clone());
+
+                // Transform to JSON Schema format with properties and source fields
+                let mut properties = serde_json::Map::new();
+                let mut required = Vec::new();
+
+                // Process each source (query, path, header, cookie)
+                for (source_name, source_params) in params.as_object().unwrap_or(&serde_json::Map::new()) {
+                    if let Some(source_obj) = source_params.as_object() {
+                        for (param_name, param_def) in source_obj {
+                            // Clone the parameter definition and add the source field
+                            if let Some(mut param_obj) = param_def.as_object().cloned() {
+                                param_obj.insert("source".to_string(), json!(source_name));
+
+                                // Check if required (following FastAPI semantics):
+                                // - Path params: always required
+                                // - Query/Header/Cookie: required unless has default or optional: true
+                                let has_default = param_obj.contains_key("default");
+                                let is_optional = param_obj.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
+                                let explicitly_required =
+                                    param_obj.get("required").and_then(|v| v.as_bool()).unwrap_or(false);
+
+                                let is_required = if source_name == "path" || explicitly_required {
+                                    true // Path params always required, or explicitly marked
+                                } else if has_default || is_optional {
+                                    false // Has default or marked optional
+                                } else {
+                                    true // Default: required if no default and not optional
+                                };
+
+                                if is_required {
+                                    required.push(param_name.clone());
+                                }
+
+                                // Remove annotation field (not part of JSON Schema)
+                                param_obj.remove("annotation");
+                                // Remove required field (handled at schema level)
+                                param_obj.remove("required");
+                                // Remove optional field (handled at schema level)
+                                param_obj.remove("optional");
+
+                                properties.insert(param_name.clone(), Value::Object(param_obj));
+                            }
+                        }
+                    }
+                }
+
+                return Some(json!({
+                    "type": "object",
+                    "properties": properties,
+                    "required": required
+                }));
             }
         }
     }
