@@ -6,6 +6,47 @@
     "test_file": "tests/test_special_chars.py",
     "test_function": "test_special_strings"
   },
+  "handler": {
+    "route": "/strings/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "empty_string": {
+          "type": "string"
+        },
+        "whitespace": {
+          "type": "string"
+        },
+        "tabs_newlines": {
+          "type": "string"
+        },
+        "quotes": {
+          "type": "string"
+        },
+        "backslashes": {
+          "type": "string"
+        },
+        "unicode_escapes": {
+          "type": "string"
+        },
+        "special_chars": {
+          "type": "string",
+          "format": "email"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "empty_string",
+        "whitespace",
+        "tabs_newlines",
+        "quotes",
+        "backslashes",
+        "unicode_escapes",
+        "special_chars"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/strings/",

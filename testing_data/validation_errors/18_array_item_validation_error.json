@@ -6,6 +6,33 @@
     "test_file": "tests/test_union_body.py",
     "test_function": "test_array_item_validation"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "price",
+        "tags"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/",

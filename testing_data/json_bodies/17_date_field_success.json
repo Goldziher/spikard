@@ -6,6 +6,26 @@
     "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
     "test_function": "test_date_field"
   },
+  "handler": {
+    "route": "/events/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "event_date": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "event_date"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/events/",

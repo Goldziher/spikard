@@ -6,6 +6,23 @@
     "test_file": "tests/test_tutorial/test_request_files/test_tutorial003.py",
     "test_function": "test_upload_pdf"
   },
+  "handler": {
+    "route": "/files/document",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "document": {
+          "type": "string",
+          "format": "binary"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "document"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/files/document",

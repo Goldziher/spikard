@@ -6,6 +6,45 @@
     "test_file": "tests/test_null_handling.py",
     "test_function": "test_null_vs_empty"
   },
+  "handler": {
+    "route": "/nulls/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "explicit_null": {
+          "type": "null"
+        },
+        "empty_string": {
+          "type": "string"
+        },
+        "empty_array": {
+          "type": "array",
+          "items": {}
+        },
+        "empty_object": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "zero_number": {
+          "type": "integer"
+        },
+        "false_boolean": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "explicit_null",
+        "empty_string",
+        "empty_array",
+        "empty_object",
+        "zero_number",
+        "false_boolean"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/nulls/",

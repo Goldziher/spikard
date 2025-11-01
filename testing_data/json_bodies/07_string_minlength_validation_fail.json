@@ -6,6 +6,26 @@
     "test_file": "tests/test_tutorial/test_body_fields/test_tutorial001.py",
     "test_function": "test_string_too_short"
   },
+  "handler": {
+    "route": "/items/validated",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "price"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/validated",

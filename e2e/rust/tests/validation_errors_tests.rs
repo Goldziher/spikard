@@ -33,7 +33,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -133,7 +133,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -229,7 +229,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -329,7 +329,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -426,7 +426,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -526,7 +526,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -623,7 +623,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -723,7 +723,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -820,7 +820,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -920,7 +920,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -1017,7 +1017,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1117,7 +1117,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -1213,7 +1213,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1313,7 +1313,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -1410,7 +1410,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1510,7 +1510,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -1607,7 +1607,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1707,7 +1707,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -1804,7 +1804,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1904,7 +1904,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -2001,7 +2001,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2101,7 +2101,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -2188,7 +2188,7 @@ mod validation_errors {
         let app = spikard_e2e_app::create_app();
 
         // Build request
-        let mut uri = "/users".to_string();
+        let mut uri = "/profiles".to_string();
 
         // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
@@ -2197,7 +2197,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2297,7 +2297,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -2394,7 +2394,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2494,7 +2494,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -2591,7 +2591,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2691,7 +2691,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -2788,7 +2788,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2888,7 +2888,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -2985,7 +2985,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -3085,7 +3085,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -3181,7 +3181,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -3281,7 +3281,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -3379,7 +3379,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -3479,7 +3479,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -3576,7 +3576,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -3676,7 +3676,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -3773,7 +3773,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -3873,7 +3873,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -3970,7 +3970,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -4070,7 +4070,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -4167,7 +4167,7 @@ mod validation_errors {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -4267,7 +4267,7 @@ mod validation_errors {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()

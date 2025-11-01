@@ -6,6 +6,13 @@
     "test_file": "tests/test_tutorial/test_response_model/test_tutorial001.py",
     "test_function": "test_bad_request"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "POST",
+    "body_schema": {
+      "type": "string"
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/",

@@ -6,6 +6,27 @@
     "test_file": "tests/test_tutorial/test_body_nested_models/test_tutorial009.py",
     "test_function": "test_empty_array"
   },
+  "handler": {
+    "route": "/items/list-validated",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "tags"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/list-validated",

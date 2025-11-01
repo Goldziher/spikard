@@ -6,6 +6,32 @@
     "test_file": "tests/test_formparsers.py",
     "test_function": "test_multi_items_app"
   },
+  "handler": {
+    "route": "/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "binary"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "files"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/",
@@ -27,7 +53,11 @@
       }
     ],
     "data": {
-      "tags": ["python", "rust", "web"]
+      "tags": [
+        "python",
+        "rust",
+        "web"
+      ]
     }
   },
   "expected_response": {
@@ -47,7 +77,11 @@
           "content_type": "text/plain"
         }
       ],
-      "tags": ["python", "rust", "web"]
+      "tags": [
+        "python",
+        "rust",
+        "web"
+      ]
     }
   }
 }

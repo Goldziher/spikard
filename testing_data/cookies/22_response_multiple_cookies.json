@@ -6,6 +6,23 @@
     "test_file": "tests/test_responses.py",
     "test_function": "test_set_multiple_cookies"
   },
+  "handler": {
+    "route": "/cookies/multiple",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "type": "string"
+        },
+        "session": {
+          "type": "string"
+        }
+      },
+      "required": ["user", "session"],
+      "additionalProperties": false
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/cookies/multiple",

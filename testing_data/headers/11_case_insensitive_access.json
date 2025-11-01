@@ -6,13 +6,31 @@
     "test_file": "tests/test_datastructures.py",
     "test_function": "test_headers"
   },
+  "handler": {
+    "route": "/echo",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "test": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "test"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/echo",
     "headers": {
       "content-type": "application/json"
     },
-    "body": {"test": "data"}
+    "body": {
+      "test": "data"
+    }
   },
   "expected_response": {
     "status_code": 200,

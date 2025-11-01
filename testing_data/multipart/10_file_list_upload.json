@@ -6,6 +6,26 @@
     "test_file": "tests/test_tutorial/test_request_files/test_tutorial002.py",
     "test_function": "test_upload_file_list"
   },
+  "handler": {
+    "route": "/files/list",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "binary"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "files"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/files/list",
@@ -27,7 +47,10 @@
   "expected_response": {
     "status_code": 200,
     "body": {
-      "filenames": ["file1.txt", "file2.txt"],
+      "filenames": [
+        "file1.txt",
+        "file2.txt"
+      ],
       "total_size": 35
     }
   },

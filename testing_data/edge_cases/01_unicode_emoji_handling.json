@@ -6,6 +6,37 @@
     "test_file": "tests/test_unicode.py",
     "test_function": "test_unicode_emoji"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "emoji_reactions": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "description",
+        "tags",
+        "emoji_reactions"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/",
@@ -13,20 +44,28 @@
       "Content-Type": "application/json; charset=utf-8"
     },
     "body": {
-      "name": "Coffee Shop ☕",
-      "description": "Best café in München 🇩🇪",
-      "tags": ["食べ物", "音楽", "💰"],
-      "emoji_reactions": "👍❤️😂🎉"
+      "name": "Coffee Shop \u2615",
+      "description": "Best caf\u00e9 in M\u00fcnchen \ud83c\udde9\ud83c\uddea",
+      "tags": [
+        "\u98df\u3079\u7269",
+        "\u97f3\u697d",
+        "\ud83d\udcb0"
+      ],
+      "emoji_reactions": "\ud83d\udc4d\u2764\ufe0f\ud83d\ude02\ud83c\udf89"
     }
   },
   "expected_response": {
     "status_code": 200,
     "body": {
       "id": 1,
-      "name": "Coffee Shop ☕",
-      "description": "Best café in München 🇩🇪",
-      "tags": ["食べ物", "音楽", "💰"],
-      "emoji_reactions": "👍❤️😂🎉"
+      "name": "Coffee Shop \u2615",
+      "description": "Best caf\u00e9 in M\u00fcnchen \ud83c\udde9\ud83c\uddea",
+      "tags": [
+        "\u98df\u3079\u7269",
+        "\u97f3\u697d",
+        "\ud83d\udcb0"
+      ],
+      "emoji_reactions": "\ud83d\udc4d\u2764\ufe0f\ud83d\ude02\ud83c\udf89"
     }
   },
   "notes": "Server correctly handles UTF-8 encoded Unicode and multi-byte emoji characters"

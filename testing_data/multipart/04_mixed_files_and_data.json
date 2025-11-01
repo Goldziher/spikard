@@ -6,6 +6,32 @@
     "test_file": "tests/test_formparsers.py",
     "test_function": "test_multi_items"
   },
+  "handler": {
+    "route": "/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string",
+          "format": "binary"
+        },
+        "username": {
+          "type": "string"
+        },
+        "age": {
+          "type": "string"
+        },
+        "active": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "file"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/",

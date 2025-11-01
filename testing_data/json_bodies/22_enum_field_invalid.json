@@ -6,6 +6,26 @@
     "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
     "test_function": "test_enum_field_invalid"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "category"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/",

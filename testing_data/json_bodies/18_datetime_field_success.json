@@ -6,6 +6,27 @@
     "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
     "test_function": "test_datetime_field"
   },
+  "handler": {
+    "route": "/events/",
+    "method": "POST",
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "created_at"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/events/",

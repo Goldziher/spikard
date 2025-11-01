@@ -6,6 +6,33 @@
     "test_file": "tests/test_tutorial/test_body_multiple_params/test_tutorial003.py",
     "test_function": "test_body_with_query"
   },
+  "handler": {
+    "route": "/items/?limit=10",
+    "method": "POST",
+    "parameters": {
+      "query": {
+        "limit": {
+          "type": "integer"
+        }
+      }
+    },
+    "body_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "price"
+      ]
+    }
+  },
   "request": {
     "method": "POST",
     "path": "/items/?limit=10",
