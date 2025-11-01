@@ -408,6 +408,9 @@ impl Server {
         }
 
         // Add middleware
+        app = app.layer(axum::middleware::from_fn(
+            crate::middleware::validate_content_type_middleware,
+        ));
         app = app.layer(TraceLayer::new_for_http());
 
         Ok(app)

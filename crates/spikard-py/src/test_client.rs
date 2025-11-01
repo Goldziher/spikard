@@ -161,10 +161,12 @@ impl TestClient {
             let full_path = build_full_path(&path, &query_params_vec);
             let mut request = server.post(&full_path);
 
-            if let Some(json_val) = json_value {
-                request = request.json(&json_val);
-            }
+            // Check if this is a URL-encoded form request BEFORE encoding body
+            let is_form_encoded = headers_vec.iter().any(|(k, v)| {
+                k.eq_ignore_ascii_case("content-type") && v.contains("application/x-www-form-urlencoded")
+            });
 
+            // Add headers FIRST (before body encoding)
             for (key, value) in headers_vec {
                 let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
                     PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
@@ -173,6 +175,31 @@ impl TestClient {
                     PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
                 })?;
                 request = request.add_header(header_name, header_value);
+            }
+
+            // Encode body based on Content-Type
+            if let Some(json_val) = json_value {
+                if is_form_encoded {
+                    // For form-encoded requests, convert JSON object to URL-encoded string
+                    if let serde_json::Value::Object(map) = &json_val {
+                        let form_data: Vec<String> = map
+                            .iter()
+                            .map(|(k, v)| {
+                                let value_str = match v {
+                                    serde_json::Value::String(s) => s.clone(),
+                                    serde_json::Value::Number(n) => n.to_string(),
+                                    serde_json::Value::Bool(b) => b.to_string(),
+                                    serde_json::Value::Null => String::new(),
+                                    _ => serde_json::to_string(v).unwrap_or_default(),
+                                };
+                                format!("{}={}", urlencoding::encode(k), urlencoding::encode(&value_str))
+                            })
+                            .collect();
+                        request = request.text(form_data.join("&"));
+                    }
+                } else {
+                    request = request.json(&json_val);
+                }
             }
 
             let response = request.await;

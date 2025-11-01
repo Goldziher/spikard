@@ -59,6 +59,9 @@ pub struct FixtureRequest {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub body: Option<Value>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub form_data: Option<HashMap<String, Value>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

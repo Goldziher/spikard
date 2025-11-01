@@ -161,6 +161,12 @@ fn generate_test_function(fixture: &Fixture) -> Result<String> {
         request_kwargs.push("json=json_data");
     }
 
+    // Add form data (for URL-encoded forms)
+    if let Some(ref form_data) = fixture.request.form_data {
+        code.push_str(&format!("    json_data = {}\n", hashmap_to_python(form_data)));
+        request_kwargs.push("json=json_data");
+    }
+
     // Make request
     let kwargs_str = if request_kwargs.is_empty() {
         String::new()
@@ -251,6 +257,15 @@ fn generate_body_assertions(code: &mut String, body: &serde_json::Value, path: &
             code.push_str(&format!("    assert {} == {}\n", path, json_to_python(body)));
         }
     }
+}
+
+/// Convert HashMap to Python dict literal
+fn hashmap_to_python(map: &HashMap<String, serde_json::Value>) -> String {
+    let items: Vec<String> = map
+        .iter()
+        .map(|(k, v)| format!("\"{}\": {}", k, json_to_python(v)))
+        .collect();
+    format!("{{{}}}", items.join(", "))
 }
 
 /// Convert JSON value to Python literal
