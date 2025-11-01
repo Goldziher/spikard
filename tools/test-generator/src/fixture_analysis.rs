@@ -3,7 +3,7 @@
 //! Shared logic for analyzing fixtures and inferring JSON schemas.
 //! Used by both Rust and Python app generators.
 
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 use spikard_codegen::openapi::Fixture;
 use std::collections::{HashMap, HashSet};
 
