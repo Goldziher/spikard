@@ -14,6 +14,7 @@
     },
     "body": {
       "name": "Product",
+      "price": 10.0,
       "seller": {
         "name": "Jo",
         "address": {
@@ -31,19 +32,6 @@
       "status": 422,
       "detail": "3 validation errors in request",
       "errors": [
-        {
-          "type": "string_too_short",
-          "loc": [
-            "body",
-            "seller",
-            "name"
-          ],
-          "msg": "String should have at least 3 characters",
-          "input": "Jo",
-          "ctx": {
-            "min_length": 3
-          }
-        },
         {
           "type": "string_too_short",
           "loc": [
@@ -70,6 +58,19 @@
           "input": "123",
           "ctx": {
             "min_length": 5
+          }
+        },
+        {
+          "type": "string_too_short",
+          "loc": [
+            "body",
+            "seller",
+            "name"
+          ],
+          "msg": "String should have at least 3 characters",
+          "input": "Jo",
+          "ctx": {
+            "min_length": 3
           }
         }
       ]
