@@ -14,16 +14,29 @@
     },
     "body": {
       "name": "Item",
-      "prices": [10.0, 20.0, "invalid", 30.0]
+      "prices": [
+        10.0,
+        20.0,
+        "invalid",
+        30.0
+      ]
     }
   },
   "expected_response": {
     "status_code": 422,
     "body": {
-      "detail": [
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
         {
           "type": "float_parsing",
-          "loc": ["body", "prices", 2],
+          "loc": [
+            "body",
+            "prices",
+            2
+          ],
           "msg": "Input should be a valid number, unable to parse string as a number",
           "input": "invalid"
         }

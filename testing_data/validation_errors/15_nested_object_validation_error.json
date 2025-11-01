@@ -26,10 +26,18 @@
   "expected_response": {
     "status_code": 422,
     "body": {
-      "detail": [
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "3 validation errors in request",
+      "errors": [
         {
           "type": "string_too_short",
-          "loc": ["body", "seller", "name"],
+          "loc": [
+            "body",
+            "seller",
+            "name"
+          ],
           "msg": "String should have at least 3 characters",
           "input": "Jo",
           "ctx": {
@@ -38,7 +46,12 @@
         },
         {
           "type": "string_too_short",
-          "loc": ["body", "seller", "address", "city"],
+          "loc": [
+            "body",
+            "seller",
+            "address",
+            "city"
+          ],
           "msg": "String should have at least 3 characters",
           "input": "SF",
           "ctx": {
@@ -47,7 +60,12 @@
         },
         {
           "type": "string_too_short",
-          "loc": ["body", "seller", "address", "zip_code"],
+          "loc": [
+            "body",
+            "seller",
+            "address",
+            "zip_code"
+          ],
           "msg": "String should have at least 5 characters",
           "input": "123",
           "ctx": {

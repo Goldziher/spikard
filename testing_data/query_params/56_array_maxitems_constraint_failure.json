@@ -27,22 +27,44 @@
     "method": "GET",
     "path": "/items",
     "query_params": {
-      "tags": ["a", "b", "c", "d", "e", "f"]
+      "tags": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f"
+      ]
     }
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["query", "tags"],
-        "msg": "Array must not contain more than 5 items",
-        "ctx": {
-          "max_items": 5,
-          "actual_items": 6
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "query",
+            "tags"
+          ],
+          "msg": "Array must not contain more than 5 items",
+          "ctx": {
+            "max_items": 5,
+            "actual_items": 6
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["query_params", "array", "maxItems", "validation", "error"]
+  "tags": [
+    "query_params",
+    "array",
+    "maxItems",
+    "validation",
+    "error"
+  ]
 }

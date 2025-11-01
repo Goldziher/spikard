@@ -28,10 +28,17 @@
   "expected_response": {
     "status_code": 422,
     "body": {
-      "detail": [
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
         {
           "type": "string_pattern_mismatch",
-          "loc": ["cookie", "tracking_id"],
+          "loc": [
+            "cookie",
+            "tracking_id"
+          ],
           "msg": "String should match pattern '^[A-Z0-9]{8}$'",
           "input": "invalid-format",
           "ctx": {

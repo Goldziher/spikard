@@ -13,7 +13,9 @@
     "content_type": "application/x-www-form-urlencoded",
     "body_schema": {
       "type": "object",
-      "required": ["email"],
+      "required": [
+        "email"
+      ],
       "properties": {
         "email": {
           "type": "string",
@@ -32,17 +34,32 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["body", "email"],
-        "msg": "Invalid email format",
-        "ctx": {
-          "format": "email",
-          "value": "not-an-email"
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "body",
+            "email"
+          ],
+          "msg": "Invalid email format",
+          "ctx": {
+            "format": "email",
+            "value": "not-an-email"
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["url_encoded", "format", "email", "validation", "error"]
+  "tags": [
+    "url_encoded",
+    "format",
+    "email",
+    "validation",
+    "error"
+  ]
 }

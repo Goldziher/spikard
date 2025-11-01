@@ -28,10 +28,17 @@
   "expected_response": {
     "status_code": 422,
     "body": {
-      "detail": [
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
         {
           "type": "string_too_long",
-          "loc": ["cookie", "session_id"],
+          "loc": [
+            "cookie",
+            "session_id"
+          ],
           "msg": "String should have at most 20 characters",
           "input": "this_cookie_value_is_way_too_long",
           "ctx": {

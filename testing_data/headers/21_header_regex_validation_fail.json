@@ -16,10 +16,17 @@
   "expected_response": {
     "status_code": 422,
     "body": {
-      "detail": [
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
         {
           "type": "string_pattern_mismatch",
-          "loc": ["header", "x-request-id"],
+          "loc": [
+            "header",
+            "x-request-id"
+          ],
           "msg": "String should match pattern '^[0-9]{3,}$'",
           "input": "invalid-format",
           "ctx": {

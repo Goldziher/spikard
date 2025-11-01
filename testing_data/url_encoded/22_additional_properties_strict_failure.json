@@ -13,11 +13,16 @@
     "content_type": "application/x-www-form-urlencoded",
     "body_schema": {
       "type": "object",
-      "required": ["theme"],
+      "required": [
+        "theme"
+      ],
       "properties": {
         "theme": {
           "type": "string",
-          "enum": ["light", "dark"]
+          "enum": [
+            "light",
+            "dark"
+          ]
         }
       },
       "additionalProperties": false
@@ -33,16 +38,30 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["body", "unknown_field"],
-        "msg": "Additional properties are not allowed",
-        "ctx": {
-          "property": "unknown_field"
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "body",
+            "unknown_field"
+          ],
+          "msg": "Additional properties are not allowed",
+          "ctx": {
+            "property": "unknown_field"
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["url_encoded", "additionalProperties", "validation", "error"]
+  "tags": [
+    "url_encoded",
+    "additionalProperties",
+    "validation",
+    "error"
+  ]
 }

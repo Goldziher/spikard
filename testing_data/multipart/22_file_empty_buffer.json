@@ -33,16 +33,32 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["files", "file"],
-        "msg": "File buffer is empty",
-        "ctx": {
-          "buffer_size": 0
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "files",
+            "file"
+          ],
+          "msg": "File buffer is empty",
+          "ctx": {
+            "buffer_size": 0
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["multipart", "file", "empty", "edge_case", "validation", "error"]
+  "tags": [
+    "multipart",
+    "file",
+    "empty",
+    "edge_case",
+    "validation",
+    "error"
+  ]
 }

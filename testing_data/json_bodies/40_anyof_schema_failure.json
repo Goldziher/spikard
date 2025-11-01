@@ -12,7 +12,9 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string"
@@ -27,10 +29,14 @@
       },
       "anyOf": [
         {
-          "required": ["email"]
+          "required": [
+            "email"
+          ]
         },
         {
-          "required": ["phone"]
+          "required": [
+            "phone"
+          ]
         }
       ]
     }
@@ -44,16 +50,30 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["body"],
-        "msg": "Must match at least one schema (anyOf), but matched 0",
-        "ctx": {
-          "matched_schemas": 0
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "body"
+          ],
+          "msg": "Must match at least one schema (anyOf), but matched 0",
+          "ctx": {
+            "matched_schemas": 0
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["json_bodies", "anyOf", "composition", "validation", "error"]
+  "tags": [
+    "json_bodies",
+    "anyOf",
+    "composition",
+    "validation",
+    "error"
+  ]
 }

@@ -12,7 +12,10 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["version", "data"],
+      "required": [
+        "version",
+        "data"
+      ],
       "properties": {
         "version": {
           "type": "string",
@@ -34,17 +37,31 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["body", "version"],
-        "msg": "Value must be exactly '1.0'",
-        "ctx": {
-          "const": "1.0",
-          "value": "2.0"
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "body",
+            "version"
+          ],
+          "msg": "Value must be exactly '1.0'",
+          "ctx": {
+            "const": "1.0",
+            "value": "2.0"
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["json_bodies", "const", "validation", "error"]
+  "tags": [
+    "json_bodies",
+    "const",
+    "validation",
+    "error"
+  ]
 }

@@ -32,20 +32,26 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": [
-          "body",
-          "content"
-        ],
-        "msg": "String length must not exceed 10000",
-        "ctx": {
-          "max_length": 10000,
-          "actual_length": 10001
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "body",
+            "content"
+          ],
+          "msg": "String length must not exceed 10000",
+          "ctx": {
+            "max_length": 10000,
+            "actual_length": 10001
+          }
         }
-      }
-    ]
+      ]
+    }
   },
   "tags": [
     "edge_cases",

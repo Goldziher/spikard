@@ -12,17 +12,23 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "missing",
-        "loc": [
-          "query",
-          "device_ids"
-        ],
-        "msg": "Field required",
-        "input": null
-      }
-    ]
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "missing",
+          "loc": [
+            "query",
+            "device_ids"
+          ],
+          "msg": "Field required",
+          "input": null
+        }
+      ]
+    }
   },
   "notes": "List without default requires at least one value",
   "handler": {

@@ -29,17 +29,32 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["headers", "X-API-Key"],
-        "msg": "Invalid API key format",
-        "ctx": {
-          "pattern": "^[a-f0-9]{32}$",
-          "value": "invalid-key"
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "headers",
+            "X-API-Key"
+          ],
+          "msg": "Invalid API key format",
+          "ctx": {
+            "pattern": "^[a-f0-9]{32}$",
+            "value": "invalid-key"
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["headers", "api_key", "security", "validation", "error"]
+  "tags": [
+    "headers",
+    "api_key",
+    "security",
+    "validation",
+    "error"
+  ]
 }

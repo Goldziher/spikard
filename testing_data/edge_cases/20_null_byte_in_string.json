@@ -12,7 +12,9 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["filename"],
+      "required": [
+        "filename"
+      ],
       "properties": {
         "filename": {
           "type": "string",
@@ -30,16 +32,31 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["body", "filename"],
-        "msg": "String contains null byte character",
-        "ctx": {
-          "value": "file\\u0000.txt"
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "body",
+            "filename"
+          ],
+          "msg": "String contains null byte character",
+          "ctx": {
+            "value": "file\\u0000.txt"
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["edge_cases", "security", "null_byte", "validation", "error"]
+  "tags": [
+    "edge_cases",
+    "security",
+    "null_byte",
+    "validation",
+    "error"
+  ]
 }

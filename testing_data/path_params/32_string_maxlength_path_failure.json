@@ -26,17 +26,32 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["path", "username"],
-        "msg": "String length must not exceed 20",
-        "ctx": {
-          "max_length": 20,
-          "actual_length": 42
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "path",
+            "username"
+          ],
+          "msg": "String length must not exceed 20",
+          "ctx": {
+            "max_length": 20,
+            "actual_length": 42
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["path_params", "string", "maxLength", "validation", "error"]
+  "tags": [
+    "path_params",
+    "string",
+    "maxLength",
+    "validation",
+    "error"
+  ]
 }

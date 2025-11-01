@@ -29,17 +29,32 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["query", "quantity"],
-        "msg": "Value must be a multiple of 5",
-        "ctx": {
-          "multiple_of": 5,
-          "value": 17
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "query",
+            "quantity"
+          ],
+          "msg": "Value must be a multiple of 5",
+          "ctx": {
+            "multiple_of": 5,
+            "value": 17
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["query_params", "integer", "multipleOf", "validation", "error"]
+  "tags": [
+    "query_params",
+    "integer",
+    "multipleOf",
+    "validation",
+    "error"
+  ]
 }
