@@ -39,12 +39,12 @@
       "detail": "1 validation error in request",
       "errors": [
         {
-          "type": "too_long",
+          "type": "validation_error",
           "loc": [
             "body",
             "tags"
           ],
-          "msg": "List should have at most 10 items after validation, not 11",
+          "msg": "[\"tag1\",\"tag2\",\"tag3\",\"tag4\",\"tag5\",\"tag6\",\"tag7\",\"tag8\",\"tag9\",\"tag10\",\"tag11\"] has more than 10 items",
           "input": [
             "tag1",
             "tag2",
@@ -57,12 +57,7 @@
             "tag9",
             "tag10",
             "tag11"
-          ],
-          "ctx": {
-            "field_type": "List",
-            "max_length": 10,
-            "actual_length": 11
-          }
+          ]
         }
       ]
     }
