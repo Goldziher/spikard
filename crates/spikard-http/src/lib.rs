@@ -10,6 +10,7 @@ pub mod debug;
 pub mod handler;
 pub mod middleware;
 pub mod parameters;
+pub mod problem;
 pub mod query_parser;
 pub mod response;
 pub mod router;
@@ -18,6 +19,7 @@ pub mod validation;
 
 pub use handler::PythonHandler;
 pub use parameters::ParameterValidator;
+pub use problem::{CONTENT_TYPE_PROBLEM_JSON, ProblemDetails};
 pub use response::Response;
 pub use router::{Route, RouteHandler, Router};
 pub use server::Server;
