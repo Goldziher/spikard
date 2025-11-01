@@ -51,39 +51,39 @@
       "detail": "3 validation errors in request",
       "errors": [
         {
-          "type": "validation_error",
-          "loc": [
-            "body",
-            "name"
-          ],
-          "msg": "String length must be at least 3",
-          "ctx": {
-            "min_length": 3,
-            "actual_length": 2
-          }
-        },
-        {
-          "type": "validation_error",
-          "loc": [
-            "body",
-            "email"
-          ],
-          "msg": "Invalid email format",
-          "ctx": {
-            "format": "email",
-            "value": "invalid-email"
-          }
-        },
-        {
-          "type": "validation_error",
+          "type": "greater_than_equal",
           "loc": [
             "body",
             "age"
           ],
-          "msg": "Value must be at least 18",
+          "msg": "Input should be greater than or equal to 18",
+          "input": 15,
           "ctx": {
-            "minimum": 18,
-            "value": 15
+            "ge": 18
+          }
+        },
+        {
+          "type": "string_pattern_mismatch",
+          "loc": [
+            "body",
+            "email"
+          ],
+          "msg": "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'",
+          "input": "invalid-email",
+          "ctx": {
+            "pattern": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
+          }
+        },
+        {
+          "type": "string_too_short",
+          "loc": [
+            "body",
+            "name"
+          ],
+          "msg": "String should have at least 3 characters",
+          "input": "ab",
+          "ctx": {
+            "min_length": 3
           }
         }
       ]
