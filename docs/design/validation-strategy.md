@@ -1,16 +1,24 @@
 # Validation Strategy
 
+**Standards**: RFC 8259 (JSON), JSON Schema 2020-12 (IETF Internet-Draft)
+
 ## Overview
 
 All validation happens in **Rust** for maximum performance, while maintaining excellent developer experience in Python and TypeScript by leveraging existing schema libraries.
 
 ## Core Strategy
 
-**Pragmatic approach:** Don't reinvent Pydantic or Zod. Use JSON Schema as the interchange format.
+**Pragmatic approach:** Don't reinvent Pydantic or Zod. Use JSON Schema (IETF Internet-Draft 2020-12) as the interchange format.
 
 ```
 Pydantic/msgspec/Zod → JSON Schema → Rust Validator → Validated Data
 ```
+
+### Standards Compliance
+
+- **JSON Format**: RFC 8259 (The JavaScript Object Notation (JSON) Data Interchange Format, December 2017, STD 90)
+- **Schema Validation**: JSON Schema 2020-12 (IETF Internet-Draft, not yet an RFC)
+- **HTTP Semantics**: RFC 9110 (for error responses and content negotiation)
 
 ## Request Body Validation
 
@@ -282,3 +290,22 @@ For parameters:
 - Existing type systems developers know
 
 This is the **pragmatic approach** - leverage existing tools, optimize the critical path.
+
+## References
+
+### IETF Standards
+- [RFC 8259: The JavaScript Object Notation (JSON) Data Interchange Format](https://www.rfc-editor.org/rfc/rfc8259.html) (December 2017, STD 90)
+- [RFC 9110: HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110.html) (June 2022, Internet Standard 97)
+
+### Specifications
+- [JSON Schema 2020-12](https://json-schema.org/draft/2020-12/json-schema-core.html) - Current JSON Schema specification (IETF Internet-Draft)
+- [JSON Schema Validation](https://json-schema.org/draft/2020-12/json-schema-validation.html) - Validation keywords and semantics
+
+### Alternative Standards
+- [RFC 8927: JSON Type Definition (JTD)](https://www.rfc-editor.org/rfc/rfc8927.html) - Alternative to JSON Schema, optimized for code generation
+
+### Implementation Libraries
+- [jsonschema-rs](https://github.com/Stranger6667/jsonschema-rs) - Fast JSON Schema validator for Rust
+- [Pydantic](https://docs.pydantic.dev/) - Python data validation using type hints
+- [msgspec](https://jcristharif.com/msgspec/) - Fast Python serialization and validation
+- [Zod](https://zod.dev/) - TypeScript-first schema validation

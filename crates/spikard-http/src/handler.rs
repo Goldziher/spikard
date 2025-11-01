@@ -1,6 +1,7 @@
 //! Python handler invocation from Rust
 
 use crate::debug_log_module;
+use crate::problem::ProblemDetails;
 use axum::{
     body::Body,
     extract::Request,
@@ -83,13 +84,12 @@ impl PythonHandler {
         if let Some(validator) = &self.request_validator {
             if let Some(body) = &request_data.body {
                 if let Err(errors) = validator.validate(body) {
-                    // Return FastAPI-compatible error format
-                    let error_body = json!({
-                        "detail": errors.errors
-                    });
-                    let error_json = serde_json::to_string_pretty(&error_body)
+                    // Return RFC 9457 Problem Details format
+                    let problem = ProblemDetails::from_validation_error(&errors);
+                    let error_json = problem
+                        .to_json_pretty()
                         .unwrap_or_else(|e| format!("Failed to serialize: {}", e));
-                    return Err((StatusCode::UNPROCESSABLE_ENTITY, error_json));
+                    return Err((problem.status_code(), error_json));
                 }
             }
         }
@@ -106,17 +106,18 @@ impl PythonHandler {
             ) {
                 Ok(params) => Some(params),
                 Err(errors) => {
-                    // Return FastAPI-compatible error format with {"detail": [...]}
+                    // Return RFC 9457 Problem Details format
                     debug_log_module!(
                         "handler",
                         "Parameter validation failed with {} errors",
                         errors.errors.len()
                     );
-                    let error_body = json!({
-                        "detail": errors.errors
-                    });
-                    debug_log_module!("handler", "Returning 422 with error body: {}", error_body.to_string());
-                    return Err((StatusCode::UNPROCESSABLE_ENTITY, error_body.to_string()));
+                    let problem = ProblemDetails::from_validation_error(&errors);
+                    let error_json = problem
+                        .to_json_pretty()
+                        .unwrap_or_else(|e| format!("Failed to serialize: {}", e));
+                    debug_log_module!("handler", "Returning 422 with RFC 9457 error: {}", error_json);
+                    return Err((problem.status_code(), error_json));
                 }
             }
         } else {
@@ -315,20 +316,32 @@ impl PythonHandler {
                     None
                 });
 
-                // If we got Pydantic validation errors, format them FastAPI-style
+                // If we got Pydantic validation errors, format them as RFC 9457
                 if let Some(pydantic_json) = pydantic_errors {
                     debug_log_module!("handler", "Processing Pydantic JSON");
-                    // Parse the Pydantic JSON and wrap it in {"detail": [...]}
+                    // Parse the Pydantic JSON and convert to RFC 9457 Problem Details
                     if let Ok(errors_array) = serde_json::from_str::<serde_json::Value>(&pydantic_json) {
-                        let error_body = json!({
-                            "detail": errors_array
-                        });
+                        let error_count = errors_array.as_array().map(|a| a.len()).unwrap_or(0);
+                        let detail = if error_count == 1 {
+                            "1 validation error in request".to_string()
+                        } else {
+                            format!("{} validation errors in request", error_count)
+                        };
+
+                        let problem = ProblemDetails::new(
+                            ProblemDetails::TYPE_VALIDATION_ERROR,
+                            "Request Validation Failed",
+                            StatusCode::UNPROCESSABLE_ENTITY,
+                        )
+                        .with_detail(detail)
+                        .with_extension("errors", errors_array);
+
                         debug_log_module!(
                             "handler",
-                            "Returning FastAPI-style Pydantic error with {} errors",
-                            errors_array.as_array().map(|a| a.len()).unwrap_or(0)
+                            "Returning RFC 9457 Pydantic error with {} errors",
+                            error_count
                         );
-                        return Err((StatusCode::UNPROCESSABLE_ENTITY, error_body.to_string()));
+                        return Err((problem.status_code(), problem.to_json_pretty().unwrap_or_default()));
                     }
                 }
 
@@ -337,33 +350,36 @@ impl PythonHandler {
                 let is_validation_error =
                     error_str.contains("missing") && error_str.contains("required") || error_str.contains("argument");
 
-                let status_code = if is_validation_error {
-                    StatusCode::UNPROCESSABLE_ENTITY // 422
-                } else {
-                    StatusCode::INTERNAL_SERVER_ERROR // 500
-                };
-
-                let error_msg = if is_debug_mode() {
+                let problem = if is_validation_error {
+                    // Use RFC 9457 for validation errors
+                    ProblemDetails::new(
+                        ProblemDetails::TYPE_VALIDATION_ERROR,
+                        "Request Validation Failed",
+                        StatusCode::UNPROCESSABLE_ENTITY,
+                    )
+                    .with_detail(error_str.clone())
+                } else if is_debug_mode() {
                     // In DEBUG mode, include Python traceback
                     let traceback = Python::attach(|py| get_python_traceback(py, &e));
+                    let request_data_json = json!({
+                        "path_params": request_data_for_error.path_params,
+                        "query_params": request_data_for_error.query_params,
+                        "body": request_data_for_error.body,
+                    });
 
-                    json!({
-                        "error": if is_validation_error { "Validation error" } else { "Python handler error" },
-                        "exception": error_str,
-                        "traceback": traceback,
-                        "request_data": {
-                            "path_params": request_data_for_error.path_params,
-                            "query_params": request_data_for_error.query_params,
-                            "body": request_data_for_error.body,
-                        }
-                    })
-                    .to_string()
-                } else if is_validation_error {
-                    "Validation error".to_string()
+                    ProblemDetails::internal_server_error_debug(
+                        "Python handler raised an exception",
+                        error_str,
+                        traceback,
+                        request_data_json,
+                    )
                 } else {
-                    "Internal server error".to_string()
+                    // In production mode, show minimal error
+                    ProblemDetails::internal_server_error("An unexpected error occurred")
                 };
-                Err((status_code, error_msg))
+
+                let error_msg = problem.to_json_pretty().unwrap_or_default();
+                Err((problem.status_code(), error_msg))
             }
         }
     }

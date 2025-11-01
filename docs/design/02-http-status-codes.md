@@ -1,16 +1,17 @@
 # HTTP Status Code Strategy
 
 **Date**: 2025-10-31
-**Status**: Draft
+**Status**: Accepted
+**Standards**: RFC 9110 (HTTP Semantics, June 2022, Internet Standard 97)
 **Related**: [Validation Strategy](01-validation-strategy.md)
 
 ## Overview
 
-This document defines Spikard's strategy for HTTP status codes, particularly distinguishing between **400 Bad Request** and **422 Unprocessable Entity** for error responses.
+This document defines Spikard's strategy for HTTP status codes, particularly distinguishing between **400 Bad Request** and **422 Unprocessable Content** for error responses.
 
 ## Guiding Principles
 
-We diverge from FastAPI's status code conventions to follow industry best practices based on RFC 7231 and GitHub's API guidelines. Our approach prioritizes clear semantic distinctions between syntax and validation errors.
+We follow IETF standards (RFC 9110) rather than framework-specific conventions. Our approach prioritizes clear semantic distinctions between syntactic errors (400) and semantic validation failures (422), aligned with the current HTTP specification.
 
 ## Status Code Usage
 
@@ -36,13 +37,16 @@ Use **400 Bad Request** for errors where the server cannot understand or parse t
 }
 ```
 
-### 422 Unprocessable Entity
+### 422 Unprocessable Content
 
-Use **422 Unprocessable Entity** for errors where:
+Use **422 Unprocessable Content** for errors where:
 - The request is syntactically correct and the server understands it
+- The content type is supported (not a 415 error)
 - The JSON is valid and parseable
 - Field types are correct
 - But the values fail semantic validation or business logic rules
+
+**Note**: RFC 9110 (June 2022) renamed this from "Unprocessable Entity" (RFC 4918) to "Unprocessable Content" to better reflect its semantics.
 
 **Examples:**
 - String doesn't match regex pattern (e.g., `pattern: r"^[A-Z]{3}$"`)
@@ -87,15 +91,19 @@ Use **422 Unprocessable Entity** for errors where:
 
 ## Rationale
 
-### Why Not Follow FastAPI?
+### Standards-Based Approach
 
-FastAPI returns 422 for almost all client errors, including missing required fields. This overloads 422 with too many error types and loses the semantic distinction between "I don't understand your request" (400) and "I understand your request but the values are invalid" (422).
+Per **RFC 9110 Section 15.5.1** (400 Bad Request):
+> "The 400 (Bad Request) status code indicates that the server cannot or will not process the request due to something that is perceived to be a client error (e.g., malformed request syntax, invalid request message framing, or deceptive request routing)."
+
+Per **RFC 9110 Section 15.5.23** (422 Unprocessable Content):
+> "The 422 (Unprocessable Content) status code indicates that the server understands the content type of the request content (hence a 415 (Unsupported Media Type) status code is inappropriate), and the syntax of the request content is correct, but it was unable to process the contained instructions."
 
 ### Industry Alignment
 
 Our approach aligns with:
+- **IETF HTTP Standards**: RFC 9110 (June 2022)
 - **GitHub's API**: Uses 400 for structural errors and 422 for validation errors
-- **RFC 7231**: "The 400 (Bad Request) status code indicates that the server cannot or will not process the request due to something that is perceived to be a client error"
 - **Common practice**: Separating parsing/structural errors from validation errors
 
 ### Implementation Benefits
@@ -143,7 +151,17 @@ For streaming multipart requests, parsing errors during stream processing should
 
 ## References
 
-- [StackOverflow: 400 vs 422](https://stackoverflow.com/questions/16133923/400-vs-422-response-to-post-of-data)
-- [RFC 7231 § 6.5.1 - 400 Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)
-- [RFC 4918 § 11.2 - 422 Unprocessable Entity](https://tools.ietf.org/html/rfc4918#section-11.2)
-- [GitHub API v3 - Client Errors](https://docs.github.com/en/rest/overview/resources-in-the-rest-api#client-errors)
+### IETF Standards
+- [RFC 9110: HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110.html) (June 2022, Internet Standard 97)
+  - [Section 15.5.1: 400 Bad Request](https://www.rfc-editor.org/rfc/rfc9110.html#section-15.5.1)
+  - [Section 15.5.23: 422 Unprocessable Content](https://www.rfc-editor.org/rfc/rfc9110.html#section-15.5.23)
+- [RFC 9111: HTTP Caching](https://www.rfc-editor.org/rfc/rfc9111.html) (June 2022, Internet Standard 98)
+- [RFC 9112: HTTP/1.1](https://www.rfc-editor.org/rfc/rfc9112.html) (June 2022, Internet Standard 99)
+
+### Related Resources
+- [GitHub API - Client Errors](https://docs.github.com/en/rest/overview/resources-in-the-rest-api#client-errors)
+- [HTTP Status Code Registry](https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml)
+
+### Historical Context
+- RFC 7231 (obsoleted by RFC 9110) - Previous HTTP semantics specification
+- RFC 4918 (WebDAV) - Originally introduced 422 as "Unprocessable Entity", now part of RFC 9110 as "Unprocessable Content"

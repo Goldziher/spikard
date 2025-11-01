@@ -1,6 +1,7 @@
 # Observability and OpenAPI Generation
 
 **Date:** January 2025
+**Standards**: OpenAPI 3.1, JSON Schema 2020-12, OpenTelemetry Specification
 **Research-driven design document based on 2024-2025 ecosystem analysis**
 
 ## Executive Summary
@@ -741,16 +742,29 @@ def test_python_handler_context_propagation(test_client):
 
 ## 10. References
 
-### Crates
+### IETF Standards
+- [RFC 9110: HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110.html) (June 2022, Internet Standard 97)
+- [RFC 8259: JSON Data Interchange Format](https://www.rfc-editor.org/rfc/rfc8259.html) (December 2017, STD 90)
+
+### Specifications (Non-RFC)
+- [OpenAPI 3.1 Specification](https://spec.openapis.org/oas/v3.1.0) - API documentation format (OpenAPI Initiative)
+- [JSON Schema 2020-12](https://json-schema.org/draft/2020-12/json-schema-core.html) - Schema format (IETF Internet-Draft)
+- [OpenTelemetry Specification](https://opentelemetry.io/docs/specs/otel/) - Observability standard (CNCF)
+- [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/) - Standard attributes
+
+### Implementation Libraries
+
+#### Rust
 - [opentelemetry-rust](https://github.com/open-telemetry/opentelemetry-rust) - Official Rust implementation
 - [axum-tracing-opentelemetry](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk) - Axum integration
 - [pyo3-opentelemetry](https://github.com/rigetti/pyo3-opentelemetry) - Python context propagation
 - [utoipa](https://github.com/juhaku/utoipa) - OpenAPI generation (alternative approach)
 
-### Specifications
-- [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/) - Standard attributes
-- [OpenAPI 3.1 Specification](https://spec.openapis.org/oas/v3.1.0) - API documentation format
-- [JSON Schema 2020-12](https://json-schema.org/draft/2020-12/json-schema-core.html) - Schema format
+#### Python
+- [opentelemetry-python](https://github.com/open-telemetry/opentelemetry-python) - Official Python implementation
+
+#### TypeScript/JavaScript
+- [opentelemetry-js](https://github.com/open-telemetry/opentelemetry-js) - Official JavaScript implementation
 
 ### Examples
 - [rust-tonic-tracing-otel](https://github.com/sdd/rust-tonic-tracing-otel) - PyO3 + OTEL example
