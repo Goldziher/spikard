@@ -53,7 +53,7 @@
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
+use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -191,18 +191,20 @@ fn generate_lib_rs(categories: &HashMap<String, Vec<Fixture>>) -> String {
 
         for fixture in fixtures {
             // Use handler.route if available, otherwise fall back to request.path
-            let route = if let Some(handler) = &fixture.handler {
+            // ALWAYS strip query strings - routes should group by path only
+            let route_with_query = if let Some(handler) = &fixture.handler {
                 handler.route.clone()
             } else {
-                // Extract just the path without query string
-                fixture
-                    .request
-                    .path
-                    .split('?')
-                    .next()
-                    .unwrap_or(&fixture.request.path)
-                    .to_string()
+                fixture.request.path.clone()
             };
+
+            // Strip query string to ensure all fixtures for the same path are grouped together
+            // E.g., "/items/?limit=10" and "/items/" both become "/items/"
+            let route = route_with_query
+                .split('?')
+                .next()
+                .unwrap_or(&route_with_query)
+                .to_string();
 
             let method = fixture.request.method.clone();
             route_map.entry((route, method)).or_default().push(fixture);
@@ -238,11 +240,18 @@ pub fn create_app() -> Router {{
     )
 }
 
-/// Strip type hints from route pattern (e.g., {param:type} -> {param})
+/// Strip type hints and query strings from route pattern
+/// Examples:
+/// - {param:type} -> {param}
+/// - /items/?limit=10 -> /items/
 fn strip_type_hints(route: &str) -> String {
+    // First strip query string
+    let route_without_query = route.split('?').next().unwrap_or(route);
+
+    // Then strip type hints
     regex::Regex::new(r"\{([^:}]+):[^}]+\}")
         .unwrap()
-        .replace_all(route, "{$1}")
+        .replace_all(route_without_query, "{$1}")
         .to_string()
 }
 
@@ -879,8 +888,11 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
 /// For simple object schemas with constraints like minProperties/maxProperties,
 /// merge the constraints. For complex schemas (anyOf, oneOf, etc.), use anyOf wrapper.
 fn route_method_to_handler_name(route: &str, method: &str) -> String {
+    // Strip query string (e.g., "/items/?limit=10" -> "/items/")
+    let route_without_query = route.split('?').next().unwrap_or(route);
+
     // Strip type hints like {param:type} -> {param}
-    let route_without_types = strip_type_hints(route);
+    let route_without_types = strip_type_hints(route_without_query);
 
     // Check if route ends with '/' before processing
     let ends_with_slash = route_without_types.ends_with('/') && route_without_types.len() > 1;
