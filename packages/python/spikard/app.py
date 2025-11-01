@@ -27,20 +27,20 @@ class ServerConfig:
 class Spikard:
     """Main application class for Spikard framework."""
 
-    _current_instance: "Spikard | None" = None
+    current_instance: "Spikard | None" = None
 
     def __init__(self) -> None:
         """Initialize Spikard application."""
         self._routes: list[Route] = []
-        Spikard._current_instance = self
+        Spikard.current_instance = self
 
-    def _register_route(
+    def register_route(
         self,
         method: str,
         path: str,
         *,
         body_schema: dict[str, Any] | None = None,
-    ) -> Callable[..., Any]:
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Internal method to register a route.
 
         Args:

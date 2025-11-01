@@ -1,13 +1,16 @@
 """Standalone routing decorators."""
 
-# ruff: noqa: PLC0415, SLF001
-# mypy: disable-error-code="no-any-return"
+from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from spikard.app import Spikard
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
-def get(path: str) -> Callable[..., Any]:
+def get(path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Standalone GET route decorator.
 
     Args:
@@ -23,120 +26,113 @@ def get(path: str) -> Callable[..., Any]:
     """
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        from spikard.app import Spikard
-
-        app = Spikard._current_instance
+        app = Spikard.current_instance
         if app is None:
             raise RuntimeError(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
             )
-        return app._register_route("GET", path)(func)
+        return app.register_route("GET", path, body_schema=None)(func)
 
     return decorator
 
 
-def post(path: str, *, body_schema: dict[str, Any] | None = None) -> Callable[..., Any]:
+def post(path: str, *, body_schema: dict[str, Any] | None = None) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Standalone POST route decorator.
 
     Args:
         path: URL path pattern
-        body_schema: Optional explicit JSON Schema for request body validation.
-                     Useful when using dict[str, Any] or other generic types.
-                     Takes precedence over schema extracted from type hints.
+        body_schema: Optional JSON Schema for request body validation.
+                     Per RFC 9110, bodies are semantically expected but not syntactically required.
 
     Returns:
         Decorator function
     """
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        from spikard.app import Spikard
-
-        app = Spikard._current_instance
+        app = Spikard.current_instance
         if app is None:
             raise RuntimeError(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
             )
-        return app._register_route("POST", path, body_schema=body_schema)(func)
+        return app.register_route("POST", path, body_schema=body_schema)(func)
 
     return decorator
 
 
-def put(path: str, *, body_schema: dict[str, Any] | None = None) -> Callable[..., Any]:
+def put(path: str, *, body_schema: dict[str, Any] | None = None) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Standalone PUT route decorator.
 
     Args:
         path: URL path pattern
-        body_schema: Optional explicit JSON Schema for request body validation.
-                     Useful when using dict[str, Any] or other generic types.
-                     Takes precedence over schema extracted from type hints.
+        body_schema: Optional JSON Schema for request body validation.
+                     Per RFC 9110, bodies are semantically expected but not syntactically required.
 
     Returns:
         Decorator function
     """
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        from spikard.app import Spikard
-
-        app = Spikard._current_instance
+        app = Spikard.current_instance
         if app is None:
             raise RuntimeError(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
             )
-        return app._register_route("PUT", path, body_schema=body_schema)(func)
+        return app.register_route("PUT", path, body_schema=body_schema)(func)
 
     return decorator
 
 
-def patch(path: str, *, body_schema: dict[str, Any] | None = None) -> Callable[..., Any]:
+def patch(
+    path: str, *, body_schema: dict[str, Any] | None = None
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Standalone PATCH route decorator.
 
     Args:
         path: URL path pattern
-        body_schema: Optional explicit JSON Schema for request body validation.
-                     Useful when using dict[str, Any] or other generic types.
-                     Takes precedence over schema extracted from type hints.
+        body_schema: Optional JSON Schema for request body validation.
+                     Per RFC 5789, bodies are strongly implied but not syntactically required.
 
     Returns:
         Decorator function
     """
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        from spikard.app import Spikard
-
-        app = Spikard._current_instance
+        app = Spikard.current_instance
         if app is None:
             raise RuntimeError(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
             )
-        return app._register_route("PATCH", path, body_schema=body_schema)(func)
+        return app.register_route("PATCH", path, body_schema=body_schema)(func)
 
     return decorator
 
 
-def delete(path: str) -> Callable[..., Any]:
+def delete(
+    path: str, *, body_schema: dict[str, Any] | None = None
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Standalone DELETE route decorator.
 
     Args:
         path: URL path pattern
+        body_schema: Optional JSON Schema for request body validation.
+                     Per RFC 9110, bodies are allowed but optional for DELETE.
 
     Returns:
         Decorator function
     """
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        from spikard.app import Spikard
-
-        app = Spikard._current_instance
+        app = Spikard.current_instance
         if app is None:
             raise RuntimeError(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
             )
-        return app._register_route("DELETE", path)(func)
+        return app.register_route("DELETE", path, body_schema=body_schema)(func)
 
     return decorator
 
 
-def head(path: str) -> Callable[..., Any]:
+def head(path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Standalone HEAD route decorator.
 
     Args:
@@ -147,19 +143,17 @@ def head(path: str) -> Callable[..., Any]:
     """
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        from spikard.app import Spikard
-
-        app = Spikard._current_instance
+        app = Spikard.current_instance
         if app is None:
             raise RuntimeError(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
             )
-        return app._register_route("HEAD", path)(func)
+        return app.register_route("HEAD", path, body_schema=None)(func)
 
     return decorator
 
 
-def options(path: str) -> Callable[..., Any]:
+def options(path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Standalone OPTIONS route decorator.
 
     Args:
@@ -170,19 +164,17 @@ def options(path: str) -> Callable[..., Any]:
     """
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        from spikard.app import Spikard
-
-        app = Spikard._current_instance
+        app = Spikard.current_instance
         if app is None:
             raise RuntimeError(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
             )
-        return app._register_route("OPTIONS", path)(func)
+        return app.register_route("OPTIONS", path, body_schema=None)(func)
 
     return decorator
 
 
-def trace(path: str) -> Callable[..., Any]:
+def trace(path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Standalone TRACE route decorator.
 
     Args:
@@ -193,14 +185,12 @@ def trace(path: str) -> Callable[..., Any]:
     """
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        from spikard.app import Spikard
-
-        app = Spikard._current_instance
+        app = Spikard.current_instance
         if app is None:
             raise RuntimeError(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
             )
-        return app._register_route("TRACE", path)(func)
+        return app.register_route("TRACE", path, body_schema=None)(func)
 
     return decorator
 
@@ -208,13 +198,16 @@ def trace(path: str) -> Callable[..., Any]:
 def route(
     path: str,
     http_method: str | list[str] | tuple[str, ...] = "GET",
-) -> Callable[..., Any]:
+    *,
+    body_schema: dict[str, Any] | None = None,
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Standalone route decorator with explicit HTTP method(s).
 
     Args:
         path: URL path pattern
         http_method: HTTP method(s) - can be a single string like "GET"
                     or a sequence like ["GET", "HEAD"] or ("POST", "PUT")
+        body_schema: JSON Schema for request body validation (required for POST/PUT/PATCH)
 
     Returns:
         Decorator function
@@ -227,12 +220,14 @@ def route(
         @route("/resource/{id}", http_method=["GET", "HEAD"])
         async def get_resource(id: int):
             return {"id": id}
+
+        @route("/items", http_method="POST", body_schema={"type": "object", ...})
+        async def create_item(body: dict[str, Any]):
+            return {"ok": True}
     """
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        from spikard.app import Spikard
-
-        app = Spikard._current_instance
+        app = Spikard.current_instance
         if app is None:
             raise RuntimeError(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
@@ -243,7 +238,8 @@ def route(
 
         # Register the route for each method
         for method in methods:
-            app._register_route(method.upper(), path)(func)
+            method_upper = method.upper()
+            app.register_route(method_upper, path, body_schema=body_schema)(func)
 
         return func
 
