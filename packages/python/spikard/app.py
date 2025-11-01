@@ -34,12 +34,19 @@ class Spikard:
         self._routes: list[Route] = []
         Spikard._current_instance = self
 
-    def _register_route(self, method: str, path: str) -> Callable[..., Any]:
+    def _register_route(
+        self,
+        method: str,
+        path: str,
+        *,
+        body_schema: dict[str, Any] | None = None,
+    ) -> Callable[..., Any]:
         """Internal method to register a route.
 
         Args:
             method: HTTP method
             path: URL path pattern
+            body_schema: Optional explicit body schema (takes precedence over type hint extraction)
 
         Returns:
             Decorator function
@@ -48,6 +55,10 @@ class Spikard:
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             request_schema, response_schema = extract_schemas(func)
             parameter_schema = extract_parameter_schema(func, path)
+
+            # Explicit body_schema takes precedence over extracted request_schema
+            if body_schema is not None:
+                request_schema = body_schema
 
             # Wrap the handler to invoke default_factory for ParamBase defaults
             sig = inspect.signature(func)

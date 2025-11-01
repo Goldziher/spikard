@@ -1,5 +1,8 @@
 """Standalone routing decorators."""
 
+# ruff: noqa: PLC0415, SLF001
+# mypy: disable-error-code="no-any-return"
+
 from collections.abc import Callable
 from typing import Any
 
@@ -32,11 +35,14 @@ def get(path: str) -> Callable[..., Any]:
     return decorator
 
 
-def post(path: str) -> Callable[..., Any]:
+def post(path: str, *, body_schema: dict[str, Any] | None = None) -> Callable[..., Any]:
     """Standalone POST route decorator.
 
     Args:
         path: URL path pattern
+        body_schema: Optional explicit JSON Schema for request body validation.
+                     Useful when using dict[str, Any] or other generic types.
+                     Takes precedence over schema extracted from type hints.
 
     Returns:
         Decorator function
@@ -50,16 +56,19 @@ def post(path: str) -> Callable[..., Any]:
             raise RuntimeError(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
             )
-        return app._register_route("POST", path)(func)
+        return app._register_route("POST", path, body_schema=body_schema)(func)
 
     return decorator
 
 
-def put(path: str) -> Callable[..., Any]:
+def put(path: str, *, body_schema: dict[str, Any] | None = None) -> Callable[..., Any]:
     """Standalone PUT route decorator.
 
     Args:
         path: URL path pattern
+        body_schema: Optional explicit JSON Schema for request body validation.
+                     Useful when using dict[str, Any] or other generic types.
+                     Takes precedence over schema extracted from type hints.
 
     Returns:
         Decorator function
@@ -73,16 +82,19 @@ def put(path: str) -> Callable[..., Any]:
             raise RuntimeError(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
             )
-        return app._register_route("PUT", path)(func)
+        return app._register_route("PUT", path, body_schema=body_schema)(func)
 
     return decorator
 
 
-def patch(path: str) -> Callable[..., Any]:
+def patch(path: str, *, body_schema: dict[str, Any] | None = None) -> Callable[..., Any]:
     """Standalone PATCH route decorator.
 
     Args:
         path: URL path pattern
+        body_schema: Optional explicit JSON Schema for request body validation.
+                     Useful when using dict[str, Any] or other generic types.
+                     Takes precedence over schema extracted from type hints.
 
     Returns:
         Decorator function
@@ -96,7 +108,7 @@ def patch(path: str) -> Callable[..., Any]:
             raise RuntimeError(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
             )
-        return app._register_route("PATCH", path)(func)
+        return app._register_route("PATCH", path, body_schema=body_schema)(func)
 
     return decorator
 
