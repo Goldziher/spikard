@@ -13,7 +13,9 @@
     "content_type": "application/x-www-form-urlencoded",
     "body_schema": {
       "type": "object",
-      "required": ["tags"],
+      "required": [
+        "tags"
+      ],
       "properties": {
         "tags": {
           "type": "array",
@@ -35,17 +37,32 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["body", "tags"],
-        "msg": "Array must contain at least 2 items",
-        "ctx": {
-          "min_items": 2,
-          "actual_items": 1
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "body",
+            "tags"
+          ],
+          "msg": "Array must contain at least 2 items",
+          "ctx": {
+            "min_items": 2,
+            "actual_items": 1
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["url_encoded", "arrays", "minItems", "validation", "error"]
+  "tags": [
+    "url_encoded",
+    "arrays",
+    "minItems",
+    "validation",
+    "error"
+  ]
 }

@@ -14,18 +14,39 @@
     },
     "body": {
       "name": "Item",
-      "tags": ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6"]
+      "tags": [
+        "tag1",
+        "tag2",
+        "tag3",
+        "tag4",
+        "tag5",
+        "tag6"
+      ]
     }
   },
   "expected_response": {
     "status_code": 422,
     "body": {
-      "detail": [
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
         {
           "type": "too_long",
-          "loc": ["body", "tags"],
+          "loc": [
+            "body",
+            "tags"
+          ],
           "msg": "List should have at most 5 items after validation, not 6",
-          "input": ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6"],
+          "input": [
+            "tag1",
+            "tag2",
+            "tag3",
+            "tag4",
+            "tag5",
+            "tag6"
+          ],
           "ctx": {
             "field_type": "List",
             "max_length": 5,

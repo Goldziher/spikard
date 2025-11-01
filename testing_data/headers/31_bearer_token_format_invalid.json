@@ -29,17 +29,33 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["headers", "Authorization"],
-        "msg": "Invalid Bearer token format",
-        "ctx": {
-          "pattern": "^Bearer [A-Za-z0-9-._~+/]+=*$",
-          "value": "Bearer invalid token with spaces"
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "headers",
+            "Authorization"
+          ],
+          "msg": "Invalid Bearer token format",
+          "ctx": {
+            "pattern": "^Bearer [A-Za-z0-9-._~+/]+=*$",
+            "value": "Bearer invalid token with spaces"
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["headers", "authorization", "bearer_token", "security", "validation", "error"]
+  "tags": [
+    "headers",
+    "authorization",
+    "bearer_token",
+    "security",
+    "validation",
+    "error"
+  ]
 }

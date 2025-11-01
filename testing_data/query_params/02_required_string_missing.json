@@ -12,17 +12,23 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "missing",
-        "loc": [
-          "query",
-          "query"
-        ],
-        "msg": "Field required",
-        "input": null
-      }
-    ]
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "missing",
+          "loc": [
+            "query",
+            "query"
+          ],
+          "msg": "Field required",
+          "input": null
+        }
+      ]
+    }
   },
   "handler": {
     "route": "/query",

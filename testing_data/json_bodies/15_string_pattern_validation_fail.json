@@ -20,10 +20,17 @@
   "expected_response": {
     "status_code": 422,
     "body": {
-      "detail": [
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
         {
           "type": "string_pattern_mismatch",
-          "loc": ["body", "sku"],
+          "loc": [
+            "body",
+            "sku"
+          ],
           "msg": "String should match pattern '^[A-Z]{3}[0-9]{4}$'",
           "input": "ABC-123",
           "ctx": {

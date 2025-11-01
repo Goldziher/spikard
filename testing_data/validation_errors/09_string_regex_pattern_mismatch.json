@@ -13,10 +13,17 @@
   "expected_response": {
     "status_code": 422,
     "body": {
-      "detail": [
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
         {
           "type": "string_pattern_mismatch",
-          "loc": ["query", "q"],
+          "loc": [
+            "query",
+            "q"
+          ],
           "msg": "String should match pattern '^[a-zA-Z0-9_-]+$'",
           "input": "invalid!",
           "ctx": {

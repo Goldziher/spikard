@@ -13,7 +13,9 @@
     "content_type": "application/x-www-form-urlencoded",
     "body_schema": {
       "type": "object",
-      "required": ["quantity"],
+      "required": [
+        "quantity"
+      ],
       "properties": {
         "quantity": {
           "type": "integer",
@@ -32,17 +34,31 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["body", "quantity"],
-        "msg": "Value must be at least 1",
-        "ctx": {
-          "minimum": 1,
-          "actual_value": 0
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "body",
+            "quantity"
+          ],
+          "msg": "Value must be at least 1",
+          "ctx": {
+            "minimum": 1,
+            "actual_value": 0
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["url_encoded", "minimum", "validation", "error"]
+  "tags": [
+    "url_encoded",
+    "minimum",
+    "validation",
+    "error"
+  ]
 }

@@ -29,17 +29,33 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["query", "limit"],
-        "msg": "Value must not exceed 100",
-        "ctx": {
-          "maximum": 100,
-          "value": 101
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "query",
+            "limit"
+          ],
+          "msg": "Value must not exceed 100",
+          "ctx": {
+            "maximum": 100,
+            "value": 101
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["query_params", "integer", "le", "maximum", "validation", "error"]
+  "tags": [
+    "query_params",
+    "integer",
+    "le",
+    "maximum",
+    "validation",
+    "error"
+  ]
 }

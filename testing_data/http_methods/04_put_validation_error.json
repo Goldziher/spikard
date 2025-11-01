@@ -54,7 +54,11 @@
   "expected_response": {
     "status_code": 422,
     "body": {
-      "detail": [
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "2 validation errors in request",
+      "errors": [
         {
           "type": "string_too_short",
           "loc": [

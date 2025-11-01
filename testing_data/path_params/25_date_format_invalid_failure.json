@@ -26,17 +26,32 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["path", "date"],
-        "msg": "Invalid date format",
-        "ctx": {
-          "format": "date",
-          "value": "2025-13-45"
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "path",
+            "date"
+          ],
+          "msg": "Invalid date format",
+          "ctx": {
+            "format": "date",
+            "value": "2025-13-45"
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["path_params", "date", "format", "validation", "error"]
+  "tags": [
+    "path_params",
+    "date",
+    "format",
+    "validation",
+    "error"
+  ]
 }

@@ -20,10 +20,17 @@
   "expected_response": {
     "status_code": 422,
     "body": {
-      "detail": [
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
         {
           "type": "float_parsing",
-          "loc": ["body", "price"],
+          "loc": [
+            "body",
+            "price"
+          ],
           "msg": "Input should be a valid number, unable to parse string as a number",
           "input": "not_a_float"
         }

@@ -11,7 +11,9 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["username"],
+      "required": [
+        "username"
+      ],
       "properties": {
         "username": {
           "type": "string",
@@ -33,10 +35,17 @@
   "expected_response": {
     "status_code": 422,
     "body": {
-      "detail": [
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
         {
           "type": "string_too_short",
-          "loc": ["body", "username"],
+          "loc": [
+            "body",
+            "username"
+          ],
           "msg": "String should have at least 3 characters",
           "input": "ab",
           "ctx": {

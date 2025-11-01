@@ -12,7 +12,9 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string"
@@ -35,17 +37,32 @@
   },
   "expected_response": {
     "status_code": 422,
-    "validation_errors": [
-      {
-        "type": "validation_error",
-        "loc": ["body", "extra_field"],
-        "msg": "Additional properties are not allowed",
-        "ctx": {
-          "additional_properties": false,
-          "unexpected_field": "extra_field"
+    "body": {
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "validation_error",
+          "loc": [
+            "body",
+            "extra_field"
+          ],
+          "msg": "Additional properties are not allowed",
+          "ctx": {
+            "additional_properties": false,
+            "unexpected_field": "extra_field"
+          }
         }
-      }
-    ]
+      ]
+    }
   },
-  "tags": ["json_bodies", "additionalProperties", "strict", "validation", "error"]
+  "tags": [
+    "json_bodies",
+    "additionalProperties",
+    "strict",
+    "validation",
+    "error"
+  ]
 }
