@@ -265,9 +265,10 @@ def validation_errors_app() -> Spikard:
             "type": "object",
             "required": ["name", "price"],
             "properties": {
-                "name": {"type": "string"},
+                "name": {"type": "string", "minLength": 3},
                 "description": {"type": "string"},
-                "price": {"type": "number"},
+                "price": {"type": "number", "exclusiveMinimum": 0},
+                "quantity": {"type": "integer"},
                 "tags": {
                     "type": "array",
                     "items": {"type": "string"},
@@ -289,30 +290,30 @@ def validation_errors_app() -> Spikard:
         result: dict[str, Any] = {"name": body["name"], "price": body["price"]}
         if "description" in body:
             result["description"] = body["description"]
+        if "quantity" in body:
+            result["quantity"] = body["quantity"]
         if "tags" in body:
             result["tags"] = body["tags"]
         if "metadata" in body:
             result["metadata"] = body["metadata"]
         return result
 
-    # POST /users - for body validation errors
+    # POST /users - for body validation errors (fixture 09)
     @post(
         "/users",
         body_schema={
             "type": "object",
-            "required": ["username", "email"],
+            "required": ["name", "email", "age"],
             "properties": {
-                "username": {"type": "string"},
-                "email": {"type": "string"},
-                "age": {"type": "integer"},
+                "name": {"type": "string", "minLength": 3},
+                "email": {"type": "string", "format": "email"},
+                "age": {"type": "integer", "minimum": 18},
             },
         },
     )
     def post_users_validation(body: dict[str, Any]) -> dict[str, Any]:
         """Endpoint for JSON body validation testing."""
-        result: dict[str, Any] = {"username": body["username"], "email": body["email"]}
-        if "age" in body:
-            result["age"] = body["age"]
+        result: dict[str, Any] = {"name": body["name"], "email": body["email"], "age": body["age"]}
         return result
 
     return app

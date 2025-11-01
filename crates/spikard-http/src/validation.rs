@@ -278,13 +278,39 @@ impl SchemaValidator {
                             None,
                         )
                     }
-                } else if schema_path_str.contains("format") && error_msg.contains("uuid") {
-                    // Handle UUID format validation
-                    (
-                        "uuid_parsing".to_string(),
-                        "Input should be a valid UUID".to_string(),
-                        None,
-                    )
+                } else if schema_path_str.contains("format") {
+                    // Handle format validation (email, uuid, date, datetime, etc.)
+                    if error_msg.contains("email") {
+                        // Email format validation - convert to pattern-based validation
+                        let email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$";
+                        let ctx = serde_json::json!({"pattern": email_pattern});
+                        (
+                            "string_pattern_mismatch".to_string(),
+                            format!("String should match pattern '{}'", email_pattern),
+                            Some(ctx),
+                        )
+                    } else if error_msg.contains("uuid") {
+                        (
+                            "uuid_parsing".to_string(),
+                            "Input should be a valid UUID".to_string(),
+                            None,
+                        )
+                    } else if error_msg.contains("date-time") {
+                        (
+                            "datetime_parsing".to_string(),
+                            "Input should be a valid datetime".to_string(),
+                            None,
+                        )
+                    } else if error_msg.contains("date") {
+                        (
+                            "date_parsing".to_string(),
+                            "Input should be a valid date".to_string(),
+                            None,
+                        )
+                    } else {
+                        // Generic format error
+                        ("format_error".to_string(), err.to_string(), None)
+                    }
                 } else if schema_path_str.contains("/type") {
                     // Handle type validation errors
                     // Determine the expected type from the schema
