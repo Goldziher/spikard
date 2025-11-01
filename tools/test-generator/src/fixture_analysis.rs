@@ -80,11 +80,9 @@ pub fn infer_body_schema(fixtures: &[&Fixture]) -> Option<Value> {
 
     // Apply constraints to properties
     for (field_name, constraints) in field_constraints {
-        if let Some(prop_schema) = properties.get_mut(&field_name) {
-            if let Value::Object(ref mut prop_obj) = prop_schema {
-                for (constraint_name, constraint_value) in constraints {
-                    prop_obj.insert(constraint_name, constraint_value);
-                }
+        if let Some(Value::Object(ref mut prop_obj)) = properties.get_mut(&field_name) {
+            for (constraint_name, constraint_value) in constraints {
+                prop_obj.insert(constraint_name, constraint_value);
             }
         }
     }
