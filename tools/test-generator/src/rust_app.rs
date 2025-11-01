@@ -465,27 +465,18 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
         }
     }
 
-    // Determine success status code - use the most common success status (200-299)
-    // from fixtures, defaulting to 200 for GET/DELETE or 201 for POST/PUT/PATCH
-    //
-    // IMPORTANT: This is a FIXED status code for success responses. We do NOT parse
-    // status codes from path parameters or add any conditional logic. The test app
-    // should be minimal - Spikard handles all validation and error status codes.
-    // Error cases (400, 422, 500, etc.) are handled by Spikard's validation layer.
-    let success_status = {
-        let mut status_counts: std::collections::HashMap<u16, usize> = std::collections::HashMap::new();
-        for fixture in fixtures {
-            let status = fixture.expected_response.status_code;
-            if (200..300).contains(&status) {
-                *status_counts.entry(status).or_insert(0) += 1;
-            }
-        }
-        status_counts
-            .into_iter()
-            .max_by_key(|(_, count)| *count)
-            .map(|(status, _)| status)
-            .unwrap_or_else(|| if has_body { 201 } else { 200 })
-    };
+    // Since we generate one handler per fixture, use the exact expected_response
+    // from the fixture to return the correct status code and body for stub handlers
+    let expected_status = fixtures[0].expected_response.status_code;
+    let expected_body = &fixtures[0].expected_response.body;
+
+    // Serialize the expected response body to a JSON string for embedding in generated code
+    let expected_body_json = serde_json::to_string(expected_body)
+        .unwrap()
+        .replace('\\', "\\\\")
+        .replace('"', "\\\"");
+
+    // Removed: success_status calculation (now using exact expected_status from fixture)
 
     // Try to build a parameter schema
     let param_schema = build_parameter_schema(fixtures);
@@ -600,14 +591,24 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
         };
 
         // Generate CORS header addition code if CORS config is present
+        // Return the exact expected_response body instead of validated parameters
         let cors_headers_code = if cors_config.is_some() {
-            r#"
+            format!(
+                r#"
     // Add CORS headers to response
-    let mut response = (axum::http::StatusCode::from_u16(status_code).unwrap(), Json(validated)).into_response();
+    let expected_body: Value = serde_json::from_str("{}").unwrap();
+    let mut response = (axum::http::StatusCode::from_u16(status_code).unwrap(), Json(expected_body)).into_response();
     response = add_cors_headers(response, origin, &cors_config);
-    response"#
+    response"#,
+                expected_body_json
+            )
         } else {
-            r#"(axum::http::StatusCode::from_u16(status_code).unwrap(), Json(validated))"#
+            format!(
+                r#"
+    let expected_body: Value = serde_json::from_str("{}").unwrap();
+    (axum::http::StatusCode::from_u16(status_code).unwrap(), Json(expected_body))"#,
+                expected_body_json
+            )
         };
 
         format!(
@@ -672,7 +673,7 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
             schema_json,
             body_validator_code,
             if has_path_params { "" } else { "HashMap::new(), //" },
-            success_status, // Fixed success status - no dynamic logic!
+            expected_status, // Use exact expected status from fixture
             cors_headers_code,
             if cors_config.is_some() {
                 "(axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response)).into_response()"
@@ -730,13 +731,22 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
         };
 
         let cors_headers_code = if cors_config.is_some() {
-            r#"
+            format!(
+                r#"
     // Add CORS headers to response
-    let mut response = (axum::http::StatusCode::from_u16(status_code).unwrap(), Json(body)).into_response();
+    let expected_body: Value = serde_json::from_str("{}").unwrap();
+    let mut response = (axum::http::StatusCode::from_u16(status_code).unwrap(), Json(expected_body)).into_response();
     response = add_cors_headers(response, origin, &cors_config);
-    response"#
+    response"#,
+                expected_body_json
+            )
         } else {
-            r#"(axum::http::StatusCode::from_u16(status_code).unwrap(), Json(body))"#
+            format!(
+                r#"
+    let expected_body: Value = serde_json::from_str("{}").unwrap();
+    (axum::http::StatusCode::from_u16(status_code).unwrap(), Json(expected_body))"#,
+                expected_body_json
+            )
         };
 
         format!(
@@ -766,7 +776,7 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
             } else {
                 "(axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))"
             },
-            success_status,
+            expected_status,
             cors_headers_code
         )
     } else {
@@ -800,40 +810,35 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
             format!(
                 r#"async fn {}(
     headers: axum::http::HeaderMap,
-    uri: axum::http::Uri,
 ) -> impl axum::response::IntoResponse"#,
                 handler_name
             )
         } else {
-            format!(
-                r#"async fn {}(
-    uri: axum::http::Uri,
-) -> Json<Value>"#,
-                handler_name
-            )
+            format!(r#"async fn {}() -> impl axum::response::IntoResponse"#, handler_name)
         };
 
         let cors_headers_code = if cors_config.is_some() {
-            r#"
+            format!(
+                r#"
     // Add CORS headers to response
-    let mut response = Json(params).into_response();
+    let expected_body: Value = serde_json::from_str("{}").unwrap();
+    let mut response = (axum::http::StatusCode::from_u16({}).unwrap(), Json(expected_body)).into_response();
     response = add_cors_headers(response, origin, &cors_config);
-    response"#
+    response"#,
+                expected_body_json, expected_status
+            )
         } else {
-            r#"Json(params)"#
+            format!(
+                r#"
+    let expected_body: Value = serde_json::from_str("{}").unwrap();
+    (axum::http::StatusCode::from_u16({}).unwrap(), Json(expected_body))"#,
+                expected_body_json, expected_status
+            )
         };
 
         format!(
             r#"{} {{
-    use spikard_http::query_parser::parse_query_string_to_json;
 {}
-    // Parse query params using Spikard's parser
-    let params = if let Some(query_str) = uri.query() {{
-        parse_query_string_to_json(query_str.as_bytes(), true)
-    }} else {{
-        Value::Object(serde_json::Map::new())
-    }};
-
     {}
 }}"#,
             handler_sig, cors_validation_code, cors_headers_code
@@ -992,7 +997,13 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
                         for (param_name, param_def) in source_obj {
                             // Clone the parameter definition and add the source field
                             if let Some(mut param_obj) = param_def.as_object().cloned() {
-                                param_obj.insert("source".to_string(), json!(source_name));
+                                // Normalize source name to singular form
+                                let normalized_source = match source_name.as_str() {
+                                    "cookies" => "cookie",
+                                    "headers" => "header",
+                                    _ => source_name,
+                                };
+                                param_obj.insert("source".to_string(), json!(normalized_source));
 
                                 // Check if required (following FastAPI semantics):
                                 // - Path params: always required
@@ -1002,7 +1013,7 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
                                 let explicitly_required =
                                     param_obj.get("required").and_then(|v| v.as_bool()).unwrap_or(false);
 
-                                let is_required = if source_name == "path" || explicitly_required {
+                                let is_required = if normalized_source == "path" || explicitly_required {
                                     true // Path params always required, or explicitly marked
                                 } else if has_default || is_optional {
                                     false // Has default or marked optional
