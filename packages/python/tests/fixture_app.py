@@ -23,6 +23,14 @@ class Status(str, Enum):
     pending = "pending"
 
 
+class ModelName(str, Enum):
+    """Model name enum for testing."""
+
+    alexnet = "alexnet"
+    resnet = "resnet"
+    lenet = "lenet"
+
+
 def query_params_app() -> Spikard:
     """Create a Spikard app for query parameter testing."""
     app = Spikard()
@@ -212,6 +220,7 @@ def validation_errors_app() -> Spikard:
         tags: list[str] | None = Field(None, min_length=1, max_length=10),
         created_after: date | None = None,
         active: bool | None = None,
+        is_active: bool | None = None,  # fixture 13 tests bool validation
     ) -> dict[str, Any]:
         """Endpoint for query parameter validation testing."""
         result: dict[str, Any] = {"message": "Query parameters received", "q": q}
@@ -233,6 +242,8 @@ def validation_errors_app() -> Spikard:
             result["created_after"] = created_after.isoformat()
         if active is not None:
             result["active"] = active
+        if is_active is not None:
+            result["is_active"] = is_active
         return result
 
     # GET /items/{item_id} - for UUID path param validation
@@ -241,11 +252,11 @@ def validation_errors_app() -> Spikard:
         """Endpoint for UUID path parameter validation."""
         return {"item_id": str(item_id)}
 
-    # GET /models/{model_id} - for UUID path param validation
-    @get("/models/{model_id}")
-    def get_model_validation(model_id: UUID) -> dict[str, str]:
-        """Endpoint for UUID path parameter validation."""
-        return {"model_id": str(model_id)}
+    # GET /models/{model_name} - for enum path param validation (fixture 10)
+    @get("/models/{model_name}")
+    def get_model_validation(model_name: ModelName) -> dict[str, str]:
+        """Endpoint for enum path parameter validation."""
+        return {"model_name": model_name.value}
 
     # POST /items/ - for body validation errors
     @post(
