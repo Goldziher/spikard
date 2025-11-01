@@ -36,24 +36,150 @@ def query_params_app() -> Spikard:
     """Create a Spikard app for query parameter testing."""
     app = Spikard()
 
+    # Basic query routes
+    @get("/query")
+    def get_query(query: str) -> str:
+        """Required string query parameter."""
+        return f"foo bar {query}"
+
+    @get("/query/int")
+    def get_query_int(query: int) -> str:
+        """Required integer query parameter."""
+        return f"foo bar {query}"
+
+    @get("/query/optional")
+    def get_query_optional(query: str | None = None) -> str:
+        """Optional string query parameter."""
+        return f"foo bar {query}"
+
+    @get("/query/int/optional")
+    def get_query_int_optional(query: int | None = None) -> str:
+        """Optional integer query parameter."""
+        return f"foo bar {query}"
+
+    @get("/query/int/default")
+    def get_query_int_default(query: int = 10) -> str:
+        """Integer query parameter with default value."""
+        return f"foo bar {query}"
+
+    @get("/query/optional-default")
+    def get_query_optional_default(q: str = "default") -> dict[str, str]:
+        """String query parameter with default value."""
+        return {"q": q}
+
+    # Boolean parameters
+    @get("/query/bool")
+    def get_query_bool(flag: bool) -> dict[str, bool]:
+        """Boolean query parameter."""
+        return {"flag": flag}
+
+    @get("/query/basic")
+    def get_query_basic(q: str) -> dict[str, str]:
+        """Basic required string parameter."""
+        return {"q": q}
+
+    # UUID parameters
+    @get("/query/uuid")
+    def get_query_uuid(item_id: UUID) -> dict[str, str]:
+        """UUID query parameter."""
+        return {"item_id": str(item_id)}
+
+    # Enum parameters
+    @get("/query/enum")
+    def get_query_enum(model: ModelName) -> dict[str, str]:
+        """Enum query parameter."""
+        return {"model": model.value}
+
+    # Date/datetime parameters
+    @get("/query/date")
+    def get_query_date(event_date: date) -> dict[str, str]:
+        """Date query parameter."""
+        return {"event_date": event_date.isoformat()}
+
+    @get("/query/datetime")
+    def get_query_datetime(event_datetime: datetime) -> dict[str, str]:
+        """Datetime query parameter."""
+        return {"event_datetime": event_datetime.isoformat()}
+
+    # List parameters
+    @get("/query/list")
+    def get_query_list(device_ids: list[int]) -> list[int]:
+        """List of integers query parameter."""
+        return device_ids
+
+    @get("/query/list-default")
+    def get_query_list_default(tags: list[str] | None = None) -> dict[str, Any]:
+        """List with default empty value."""
+        return {"tags": tags if tags is not None else []}
+
+    # Validation constraint routes
+    @get("/query/int-ge")
+    def get_query_int_ge(value: int = Field(ge=10)) -> dict[str, int]:
+        """Integer with ge (>=) constraint."""
+        return {"value": value}
+
+    @get("/query/int-gt")
+    def get_query_int_gt(value: int = Field(gt=0)) -> dict[str, int]:
+        """Integer with gt (>) constraint."""
+        return {"value": value}
+
+    @get("/query/int-le")
+    def get_query_int_le(value: int = Field(le=100)) -> dict[str, int]:
+        """Integer with le (<=) constraint."""
+        return {"value": value}
+
+    @get("/query/int-lt")
+    def get_query_int_lt(value: int = Field(lt=100)) -> dict[str, int]:
+        """Integer with lt (<) constraint."""
+        return {"value": value}
+
+    @get("/query/float-ge")
+    def get_query_float_ge(value: float = Field(ge=0.0)) -> dict[str, float]:
+        """Float with ge (>=) constraint."""
+        return {"value": value}
+
+    # String validation routes
+    @get("/query/str-min-length")
+    def get_query_str_min_length(name: str = Field(min_length=3)) -> dict[str, str]:
+        """String with minimum length constraint."""
+        return {"name": name}
+
+    @get("/query/str-max-length")
+    def get_query_str_max_length(name: str = Field(max_length=10)) -> dict[str, str]:
+        """String with maximum length constraint."""
+        return {"name": name}
+
+    @get("/query/pattern")
+    def get_query_pattern(code: str = Field(pattern=r"^[A-Z]{3}-\d{3}$")) -> dict[str, str]:
+        """String with regex pattern constraint."""
+        return {"code": code}
+
+    @get("/query/multi-type")
+    def get_query_multi_type(q: str, page: int = 1) -> dict[str, Any]:
+        """Multiple query parameters of different types."""
+        return {"q": q, "page": page}
+
+    # Application-specific routes
     @get("/items")
     def get_items(
         q: str | None = None,
         page: int = 1,
-        limit: int | None = None,
+        limit: int | None = Field(None, gt=0),
         tags: list[str] | None = None,
         active: bool | None = None,
         item_id: UUID | None = None,
         status: Status | None = None,
         created_after: date | None = None,
         updated_at: datetime | None = None,
-        min_price: float | None = None,
+        min_price: float | None = Field(None, ge=0.0),
         search: str | None = Field(None, min_length=3, max_length=50),
         code: str | None = Field(None, pattern=r"^[A-Z]{3}$"),
     ) -> dict[str, Any]:
         """Generic endpoint for query parameter testing."""
-        result = {"message": "Query parameters received", "page": page}
+        result: dict[str, Any] = {}
 
+        if page != 1:
+            result["page"] = page
         if q is not None:
             result["q"] = q
         if limit is not None:
@@ -65,7 +191,7 @@ def query_params_app() -> Spikard:
         if item_id is not None:
             result["item_id"] = str(item_id)
         if status is not None:
-            result["status"] = status
+            result["status"] = status.value
         if created_after is not None:
             result["created_after"] = created_after.isoformat()
         if updated_at is not None:
@@ -78,6 +204,71 @@ def query_params_app() -> Spikard:
             result["code"] = code
 
         return result
+
+    @get("/items/")
+    def get_items_slash(
+        limit: int | None = Field(None, gt=0),
+        offset: int = 0,
+        item_query: str | None = Field(None, pattern=r"^fixedquery$"),
+    ) -> dict[str, Any]:
+        """Items endpoint with trailing slash."""
+        result: dict[str, Any] = {}
+        if limit is not None:
+            result["limit"] = limit
+        if offset != 0:
+            result["offset"] = offset
+        if item_query is not None:
+            result["item_query"] = item_query
+        return result
+
+    @get("/items/negative")
+    def get_items_negative(
+        limit: int = Field(gt=-10, lt=0),
+    ) -> dict[str, int]:
+        """Items endpoint testing negative values."""
+        return {"limit": limit}
+
+    @get("/subscribe")
+    def get_subscribe(
+        email: str = Field(pattern=r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"),
+    ) -> dict[str, str]:
+        """Subscription endpoint with email pattern validation."""
+        return {"email": email}
+
+    @get("/search")
+    def get_search(term: str = Field(min_length=3, max_length=10)) -> dict[str, str]:
+        """Search endpoint with string length constraints."""
+        return {"term": term}
+
+    @get("/stats")
+    def get_stats(metric: str, value: float) -> dict[str, Any]:
+        """Stats endpoint with multiple parameters."""
+        return {"metric": metric, "value": value}
+
+    @get("/network")
+    def get_network(ip: str) -> dict[str, str]:
+        """Network endpoint with IP parameter."""
+        return {"ip": ip}
+
+    @get("/network/ipv6")
+    def get_network_ipv6(ip: str) -> dict[str, str]:
+        """Network endpoint for IPv6."""
+        return {"ip": ip}
+
+    @get("/dns")
+    def get_dns(domain: str) -> dict[str, str]:
+        """DNS lookup endpoint."""
+        return {"domain": domain}
+
+    @get("/redirect")
+    def get_redirect(url: str) -> dict[str, str]:
+        """Redirect endpoint."""
+        return {"url": url}
+
+    @get("/test")
+    def get_test(param: str) -> dict[str, str]:
+        """Generic test endpoint."""
+        return {"param": param}
 
     @get("/users/{user_id}")
     def get_user(user_id: int = Field(gt=0)) -> dict[str, int]:
