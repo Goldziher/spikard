@@ -21,8 +21,8 @@ mod headers {
                 .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Header_regex_validation___success();
 
         // Build request
         let mut uri = "/headers/pattern".to_string();
@@ -34,7 +34,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -134,7 +134,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -217,8 +217,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_33_api_key_header_valid();
 
         // Build request
         let mut uri = "/api/data".to_string();
@@ -230,7 +230,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -330,7 +330,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -413,8 +413,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Content_Type_header___application_json();
 
         // Build request
         let mut uri = "/headers/content-type".to_string();
@@ -426,7 +426,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -526,7 +526,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -609,8 +609,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Accept_Language_header();
 
         // Build request
         let mut uri = "/headers/accept-language".to_string();
@@ -622,7 +622,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -722,7 +722,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -805,8 +805,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_X_API_Key_required_header___success();
 
         // Build request
         let mut uri = "/users/me".to_string();
@@ -818,7 +818,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -918,7 +918,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -1002,8 +1002,8 @@ mod headers {
                 .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Header_validation___max_length_constraint_fail();
 
         // Build request
         let mut uri = "/headers/max-length".to_string();
@@ -1015,7 +1015,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1115,7 +1115,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -1198,8 +1198,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_X_API_Key_required_header___missing();
 
         // Build request
         let mut uri = "/users/me".to_string();
@@ -1211,7 +1211,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1311,7 +1311,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -1394,8 +1394,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Origin_header();
 
         // Build request
         let mut uri = "/headers/origin".to_string();
@@ -1407,7 +1407,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1507,7 +1507,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -1590,8 +1590,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_User_Agent_header___default_value();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -1603,7 +1603,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1703,7 +1703,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -1786,8 +1786,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_32_bearer_token_missing_prefix();
 
         // Build request
         let mut uri = "/protected".to_string();
@@ -1799,7 +1799,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -1899,7 +1899,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -1982,8 +1982,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Optional_header_with_None_default___missing();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -1995,7 +1995,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2095,7 +2095,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -2178,8 +2178,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Header_regex_validation___fail();
 
         // Build request
         let mut uri = "/headers/pattern".to_string();
@@ -2191,7 +2191,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2291,7 +2291,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -2374,8 +2374,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_31_bearer_token_format_invalid();
 
         // Build request
         let mut uri = "/protected".to_string();
@@ -2387,7 +2387,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2487,7 +2487,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -2570,8 +2570,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_X_API_Key_optional_header___success();
 
         // Build request
         let mut uri = "/users/me".to_string();
@@ -2583,7 +2583,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2683,7 +2683,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -2766,8 +2766,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Authorization_header___success();
 
         // Build request
         let mut uri = "/users/me".to_string();
@@ -2779,7 +2779,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -2879,7 +2879,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -2962,8 +2962,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_30_bearer_token_format_valid();
 
         // Build request
         let mut uri = "/protected".to_string();
@@ -2975,7 +2975,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -3075,7 +3075,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -3158,8 +3158,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Authorization_header___missing();
 
         // Build request
         let mut uri = "/users/me".to_string();
@@ -3171,7 +3171,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -3271,7 +3271,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -3354,8 +3354,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Accept_header___JSON();
 
         // Build request
         let mut uri = "/headers/accept".to_string();
@@ -3367,7 +3367,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -3467,7 +3467,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -3550,8 +3550,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Accept_Encoding_header();
 
         // Build request
         let mut uri = "/headers/accept-encoding".to_string();
@@ -3563,7 +3563,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -3663,7 +3663,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -3746,8 +3746,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Authorization_header___wrong_scheme();
 
         // Build request
         let mut uri = "/users/me".to_string();
@@ -3759,7 +3759,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -3859,7 +3859,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -3942,8 +3942,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Header_validation___min_length_constraint();
 
         // Build request
         let mut uri = "/headers/validated".to_string();
@@ -3955,7 +3955,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -4055,7 +4055,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -4138,8 +4138,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Basic_authentication___success();
 
         // Build request
         let mut uri = "/headers/basic-auth".to_string();
@@ -4151,7 +4151,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -4251,7 +4251,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -4334,8 +4334,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Bearer_token_authentication___missing();
 
         // Build request
         let mut uri = "/headers/bearer-auth".to_string();
@@ -4347,7 +4347,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -4447,7 +4447,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -4530,8 +4530,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_X_API_Key_optional_header___missing();
 
         // Build request
         let mut uri = "/users/me".to_string();
@@ -4543,7 +4543,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -4643,7 +4643,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -4726,8 +4726,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Multiple_custom_headers();
 
         // Build request
         let mut uri = "/headers/multiple".to_string();
@@ -4739,7 +4739,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -4839,7 +4839,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -4922,8 +4922,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_34_api_key_header_invalid();
 
         // Build request
         let mut uri = "/api/data".to_string();
@@ -4935,7 +4935,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -5035,7 +5035,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -5118,8 +5118,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Bearer_token_authentication___success();
 
         // Build request
         let mut uri = "/headers/bearer-auth".to_string();
@@ -5131,7 +5131,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -5231,7 +5231,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -5314,8 +5314,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Host_header();
 
         // Build request
         let mut uri = "/headers/host".to_string();
@@ -5327,7 +5327,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -5427,7 +5427,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -5510,8 +5510,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Referer_header();
 
         // Build request
         let mut uri = "/headers/referer".to_string();
@@ -5523,7 +5523,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -5623,7 +5623,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -5706,8 +5706,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Header_with_underscore_conversion___explicit();
 
         // Build request
         let mut uri = "/headers/underscore".to_string();
@@ -5719,7 +5719,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -5819,7 +5819,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -5902,8 +5902,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_Header_case_insensitivity___access();
 
         // Build request
         let mut uri = "/echo".to_string();
@@ -5915,7 +5915,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -6015,7 +6015,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()
@@ -6098,8 +6098,8 @@ mod headers {
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
-        // Create app
-        let app = spikard_e2e_app::create_app();
+        // Create app for this specific fixture
+        let app = spikard_e2e_app::create_app_headers_User_Agent_header___custom_value();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -6111,7 +6111,7 @@ mod headers {
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
+            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 
             // Define the query component encoding set (RFC 3986)
             // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
@@ -6211,7 +6211,7 @@ mod headers {
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
             // Handle URL-encoded form data
-            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
+            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
 
             let form_params: Vec<String> = form_data
                 .iter()

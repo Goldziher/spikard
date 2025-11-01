@@ -39,6 +39,13 @@ pub fn generate_rust_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
     Ok(())
 }
 
+/// Sanitize fixture name to valid Rust identifier (must match rust_app.rs logic)
+fn sanitize_fixture_name(name: &str) -> String {
+    name.replace(|c: char| !c.is_alphanumeric() && c != '_', "_")
+        .trim_matches('_')
+        .to_string()
+}
+
 fn discover_fixture_categories(fixtures_dir: &Path) -> Result<HashMap<String, Vec<(Fixture, String)>>> {
     let mut categories = HashMap::new();
 
@@ -112,6 +119,10 @@ fn generate_category_test_file(category: &str, fixtures: &[(Fixture, String)]) -
             case_name = case_name.replace("__", "_");
         }
 
+        // Generate the fixture-specific app function name (must match rust_app.rs logic)
+        let fixture_id = format!("{}_{}", category, sanitize_fixture_name(&fixture.name));
+        let app_fn_name = format!("create_app_{}", fixture_id);
+
         let fixture_path = format!("../../testing_data/{}/{}", category, filename);
         let method = &fixture.request.method;
         // Extract path without query string (before '?')
@@ -137,8 +148,8 @@ async fn test_{category}_{case_name}() {{
     let fixture: Value = serde_json::from_str(&fixture_json)
         .expect("Failed to parse fixture JSON");
 
-    // Create app
-    let app = spikard_e2e_app::create_app();
+    // Create app for this specific fixture
+    let app = spikard_e2e_app::{app_fn_name}();
 
     // Build request
     let mut uri = "{path}".to_string();
