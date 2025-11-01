@@ -12,7 +12,7 @@
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -260,7 +260,24 @@ fn generate_handler(
     }
 
     // Add decorator
-    code.push_str(&format!("@{}(\"{}\")\n", method.to_lowercase(), route));
+    // For PlainDict handlers, pass explicit body_schema since we can't extract it from dict[str, Any]
+    if let Some(ref schema) = body_schema {
+        if body_type == BodyType::PlainDict {
+            // Serialize the schema as JSON for the Python decorator
+            let schema_json = serde_json::to_string(schema).unwrap_or_else(|_| "{}".to_string());
+            code.push_str(&format!(
+                "@{}(\"{}\", body_schema={})\n",
+                method.to_lowercase(),
+                route,
+                schema_json
+            ));
+        } else {
+            // For typed models, schema is extracted from type hints
+            code.push_str(&format!("@{}(\"{}\")\n", method.to_lowercase(), route));
+        }
+    } else {
+        code.push_str(&format!("@{}(\"{}\")\n", method.to_lowercase(), route));
+    }
 
     // Function signature
     code.push_str(&format!("def {}(\n", handler_name));
