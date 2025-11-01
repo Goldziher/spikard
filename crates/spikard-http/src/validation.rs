@@ -80,6 +80,16 @@ impl SchemaValidator {
                     instance_path
                 };
 
+                // Split nested paths (e.g., "profile/contact/email") into separate loc components
+                let loc_parts: Vec<String> = if param_name.contains('/') {
+                    // Build loc path: ["body", "profile", "contact", "email"]
+                    let mut parts = vec!["body".to_string()];
+                    parts.extend(param_name.split('/').map(|s| s.to_string()));
+                    parts
+                } else {
+                    vec!["body".to_string(), param_name.clone()]
+                };
+
                 // Get the input value that failed validation
                 // For missing required fields, use the actual input object that was provided
                 // For other errors, use the field value that failed validation
@@ -101,11 +111,19 @@ impl SchemaValidator {
                 eprintln!("  - maxLength? {}", schema_path_str.contains("maxLength"));
                 eprintln!("  - /type? {}", schema_path_str.contains("/type"));
 
+                // Build JSON Pointer path for nested properties
+                // e.g., "seller/name" -> "/properties/seller/properties/name"
+                let schema_prop_path = if param_name.contains('/') {
+                    format!("/properties/{}", param_name.replace('/', "/properties/"))
+                } else {
+                    format!("/properties/{}", param_name)
+                };
+
                 let (error_type, msg, ctx) = if schema_path_str.contains("minLength") {
                     // Extract minimum length from schema
                     if let Some(min_len) = self
                         .schema
-                        .pointer(&format!("/properties/{}/minLength", param_name))
+                        .pointer(&format!("{}/minLength", schema_prop_path))
                         .and_then(|v| v.as_u64())
                     {
                         let ctx = serde_json::json!({"min_length": min_len});
@@ -121,7 +139,7 @@ impl SchemaValidator {
                     // Extract maximum length from schema
                     if let Some(max_len) = self
                         .schema
-                        .pointer(&format!("/properties/{}/maxLength", param_name))
+                        .pointer(&format!("{}/maxLength", schema_prop_path))
                         .and_then(|v| v.as_u64())
                     {
                         let ctx = serde_json::json!({"max_length": max_len});
@@ -139,7 +157,7 @@ impl SchemaValidator {
                     // Handle exclusive minimum (gt constraint)
                     if let Some(min_val) = self
                         .schema
-                        .pointer(&format!("/properties/{}/exclusiveMinimum", param_name))
+                        .pointer(&format!("{}/exclusiveMinimum", schema_prop_path))
                         .and_then(|v| v.as_i64())
                     {
                         let ctx = serde_json::json!({"gt": min_val});
@@ -159,7 +177,7 @@ impl SchemaValidator {
                     // Handle inclusive minimum (ge constraint)
                     if let Some(min_val) = self
                         .schema
-                        .pointer(&format!("/properties/{}/minimum", param_name))
+                        .pointer(&format!("{}/minimum", schema_prop_path))
                         .and_then(|v| v.as_i64())
                     {
                         let ctx = serde_json::json!({"ge": min_val});
@@ -181,7 +199,7 @@ impl SchemaValidator {
                     // Handle exclusive maximum (lt constraint)
                     if let Some(max_val) = self
                         .schema
-                        .pointer(&format!("/properties/{}/exclusiveMaximum", param_name))
+                        .pointer(&format!("{}/exclusiveMaximum", schema_prop_path))
                         .and_then(|v| v.as_i64())
                     {
                         let ctx = serde_json::json!({"lt": max_val});
@@ -201,7 +219,7 @@ impl SchemaValidator {
                     // Handle inclusive maximum (le constraint)
                     if let Some(max_val) = self
                         .schema
-                        .pointer(&format!("/properties/{}/maximum", param_name))
+                        .pointer(&format!("{}/maximum", schema_prop_path))
                         .and_then(|v| v.as_i64())
                     {
                         let ctx = serde_json::json!({"le": max_val});
@@ -221,7 +239,7 @@ impl SchemaValidator {
                     // Handle enum validation
                     if let Some(enum_values) = self
                         .schema
-                        .pointer(&format!("/properties/{}/enum", param_name))
+                        .pointer(&format!("{}/enum", schema_prop_path))
                         .and_then(|v| v.as_array())
                     {
                         // Format as 'value1', 'value2' or 'value3'
@@ -265,7 +283,7 @@ impl SchemaValidator {
                     // Handle regex pattern validation
                     if let Some(pattern) = self
                         .schema
-                        .pointer(&format!("/properties/{}/pattern", param_name))
+                        .pointer(&format!("{}/pattern", schema_prop_path))
                         .and_then(|v| v.as_str())
                     {
                         let ctx = serde_json::json!({"pattern": pattern});
@@ -316,7 +334,7 @@ impl SchemaValidator {
                     // Determine the expected type from the schema
                     let expected_type = self
                         .schema
-                        .pointer(&format!("/properties/{}/type", param_name))
+                        .pointer(&format!("{}/type", schema_prop_path))
                         .and_then(|v| v.as_str())
                         .unwrap_or("unknown");
 
@@ -355,7 +373,7 @@ impl SchemaValidator {
 
                 let detail = ValidationErrorDetail {
                     error_type,
-                    loc: vec!["body".to_string(), param_name],
+                    loc: loc_parts,
                     msg,
                     input: input_value,
                     ctx,
