@@ -6,8 +6,8 @@ and supports multiple type systems:
 
 - Plain dict: No conversion (fastest)
 - TypedDict: No runtime conversion, just type hints (fastest)
-- dataclass: Native msgspec support (fast)
-- NamedTuple: Native msgspec support (fast)
+- dataclass: Direct construction via **kwargs (fast, Python 3.14 compatible)
+- NamedTuple: Direct construction via **kwargs (fast)
 - msgspec.Struct: Native msgspec support (fastest typed)
 - Pydantic: Custom decoder via model_validate (slower)
 """
@@ -17,6 +17,7 @@ from __future__ import annotations
 import inspect
 from collections.abc import Callable
 from contextlib import suppress
+from dataclasses import is_dataclass
 from datetime import date, datetime, time, timedelta
 from typing import Any, get_origin, get_type_hints
 
@@ -114,7 +115,7 @@ def _default_dec_hook(type_: type, obj: Any) -> Any:
     raise NotImplementedError
 
 
-def convert_params(  # noqa: C901, PLR0912
+def convert_params(  # noqa: C901, PLR0912, PLR0915
     params: dict[str, Any],
     handler_func: Callable[..., Any],
     *,
@@ -192,7 +193,20 @@ def convert_params(  # noqa: C901, PLR0912
             converted[key] = value
             continue
 
-        # FAST PATH 3: NamedTuple (construct from dict using **kwargs)
+        # FAST PATH 3: dataclass (construct from dict using **kwargs)
+        # msgspec.convert has issues with dataclasses in Python 3.14+
+        # Use direct construction which is reliable and equally fast
+        if is_dataclass(target_type) and isinstance(value, dict):
+            try:
+                converted[key] = target_type(**value)  # type: ignore[operator]
+                continue
+            except (TypeError, ValueError) as err:
+                if strict:
+                    raise ValueError(f"Failed to convert parameter '{key}' to dataclass {target_type}: {err}") from err
+                converted[key] = value
+                continue
+
+        # FAST PATH 4: NamedTuple (construct from dict using **kwargs)
         # NamedTuple can't be constructed by msgspec from objects, only arrays
         # But we can construct it directly from a dict using **kwargs
         if isinstance(target_type, type) and hasattr(target_type, "_fields") and isinstance(value, dict):
@@ -205,11 +219,11 @@ def convert_params(  # noqa: C901, PLR0912
                 converted[key] = value
                 continue
 
-        # FAST PATH 4+: Use msgspec for all other types
+        # FAST PATH 5+: Use msgspec for all other types
         # msgspec natively supports:
-        # - dataclass: Fast construction via __init__
         # - msgspec.Struct: Fastest (C implementation)
         # - Pydantic: Via _default_dec_hook calling model_validate
+        # Note: dataclass is now handled above via direct construction
         try:
             # Use msgspec.convert for type conversion
             # builtin_types tells msgspec that these types can be constructed from strings
