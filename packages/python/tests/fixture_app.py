@@ -272,6 +272,7 @@ def validation_errors_app() -> Spikard:
                 "description": {"type": "string"},
                 "price": {"type": "number", "exclusiveMinimum": 0},
                 "quantity": {"type": "integer"},
+                "created_at": {"type": "string", "format": "date-time"},
                 "tags": {
                     "type": "array",
                     "items": {"type": "string"},
@@ -285,6 +286,20 @@ def validation_errors_app() -> Spikard:
                         "rating": {"type": "number"},
                     },
                 },
+                "seller": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string", "minLength": 3},
+                        "email": {"type": "string", "format": "email"},
+                        "address": {
+                            "type": "object",
+                            "properties": {
+                                "city": {"type": "string", "minLength": 3},
+                                "zip_code": {"type": "string", "minLength": 5},
+                            },
+                        },
+                    },
+                },
             },
         },
     )
@@ -295,10 +310,14 @@ def validation_errors_app() -> Spikard:
             result["description"] = body["description"]
         if "quantity" in body:
             result["quantity"] = body["quantity"]
+        if "created_at" in body:
+            result["created_at"] = body["created_at"]
         if "tags" in body:
             result["tags"] = body["tags"]
         if "metadata" in body:
             result["metadata"] = body["metadata"]
+        if "seller" in body:
+            result["seller"] = body["seller"]
         return result
 
     # POST /users - for body validation errors (fixture 09)
@@ -318,6 +337,33 @@ def validation_errors_app() -> Spikard:
         """Endpoint for JSON body validation testing."""
         result: dict[str, Any] = {"name": body["name"], "email": body["email"], "age": body["age"]}
         return result
+
+    # POST /profiles - for nested validation testing (fixture 10)
+    @post(
+        "/profiles",
+        body_schema={
+            "type": "object",
+            "required": ["profile"],
+            "properties": {
+                "profile": {
+                    "type": "object",
+                    "required": ["contact"],
+                    "properties": {
+                        "contact": {
+                            "type": "object",
+                            "required": ["email"],
+                            "properties": {
+                                "email": {"type": "string", "format": "email"},
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    )
+    def post_profiles_validation(body: dict[str, Any]) -> dict[str, Any]:
+        """Endpoint for nested validation testing."""
+        return {"profile": body["profile"]}
 
     return app
 

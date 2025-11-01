@@ -14,11 +14,11 @@
     },
     "body": {
       "name": "Item",
-      "prices": [
-        10.0,
-        20.0,
-        "invalid",
-        30.0
+      "price": 10.0,
+      "tags": [
+        "tag1",
+        "tag2",
+        123
       ]
     }
   },
@@ -31,14 +31,14 @@
       "detail": "1 validation error in request",
       "errors": [
         {
-          "type": "float_parsing",
+          "type": "string_type",
           "loc": [
             "body",
-            "prices",
+            "tags",
             2
           ],
-          "msg": "Input should be a valid number, unable to parse string as a number",
-          "input": "invalid"
+          "msg": "Input should be a valid string",
+          "input": 123
         }
       ]
     }

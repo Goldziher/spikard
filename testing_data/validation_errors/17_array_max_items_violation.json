@@ -14,13 +14,19 @@
     },
     "body": {
       "name": "Item",
+      "price": 10.0,
       "tags": [
         "tag1",
         "tag2",
         "tag3",
         "tag4",
         "tag5",
-        "tag6"
+        "tag6",
+        "tag7",
+        "tag8",
+        "tag9",
+        "tag10",
+        "tag11"
       ]
     }
   },
@@ -38,19 +44,24 @@
             "body",
             "tags"
           ],
-          "msg": "List should have at most 5 items after validation, not 6",
+          "msg": "List should have at most 10 items after validation, not 11",
           "input": [
             "tag1",
             "tag2",
             "tag3",
             "tag4",
             "tag5",
-            "tag6"
+            "tag6",
+            "tag7",
+            "tag8",
+            "tag9",
+            "tag10",
+            "tag11"
           ],
           "ctx": {
             "field_type": "List",
-            "max_length": 5,
-            "actual_length": 6
+            "max_length": 10,
+            "actual_length": 11
           }
         }
       ]
