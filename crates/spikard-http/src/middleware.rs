@@ -311,9 +311,9 @@ fn try_parse_integer(s: &str) -> Option<serde_json::Value> {
 
 /// Try to parse a string as a float
 fn try_parse_float(s: &str) -> Option<serde_json::Value> {
-    s.parse::<f64>().ok().and_then(|f| {
-        serde_json::Number::from_f64(f).map(serde_json::Value::Number)
-    })
+    s.parse::<f64>()
+        .ok()
+        .and_then(|f| serde_json::Number::from_f64(f).map(serde_json::Value::Number))
 }
 
 /// Try to parse a string as a boolean (true/false, case-insensitive)
@@ -487,7 +487,10 @@ fn is_json_content_type(mime: &mime::Mime) -> bool {
 #[allow(clippy::result_large_err)]
 fn validate_content_type_headers(headers: &HeaderMap, _declared_body_size: usize) -> Result<(), Response> {
     // Check Content-Type header if present
-    if let Some(content_type_str) = headers.get(axum::http::header::CONTENT_TYPE).and_then(|h| h.to_str().ok()) {
+    if let Some(content_type_str) = headers
+        .get(axum::http::header::CONTENT_TYPE)
+        .and_then(|h| h.to_str().ok())
+    {
         // Parse Content-Type using the mime crate
         let parsed_mime = match content_type_str.parse::<mime::Mime>() {
             Ok(m) => m,
@@ -512,6 +515,7 @@ fn validate_content_type_headers(headers: &HeaderMap, _declared_body_size: usize
         }
 
         // Validation 2: JSON content types (including +json variants) must use UTF-8 charset (or have no charset)
+        #[allow(clippy::collapsible_if)]
         if is_json_content_type(&parsed_mime) {
             if let Some(charset) = parsed_mime.get_param(mime::CHARSET).map(|c| c.as_str()) {
                 // Only UTF-8 is allowed (the mime crate normalizes charset names)

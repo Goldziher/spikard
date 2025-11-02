@@ -1,7 +1,7 @@
 """E2E tests for cookies."""
 
-import pytest
 from typing import Any
+
 
 async def test_25_cookie_samesite_lax(client: Any) -> None:
     """Cookie with SameSite=Lax attribute should be validated."""
@@ -230,7 +230,7 @@ async def test_optional_cookie_parameter__missing(client: Any) -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "ads_id" in response_data
-    assert response_data["ads_id"] == None
+    assert response_data["ads_id"] is None
 
 
 async def test_apikey_cookie_authentication__missing(client: Any) -> None:
@@ -244,7 +244,7 @@ async def test_apikey_cookie_authentication__missing(client: Any) -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "input" in response_data["errors"][0]
-    assert response_data["errors"][0]["input"] == None
+    assert response_data["errors"][0]["input"] is None
     assert "loc" in response_data["errors"][0]
     assert len(response_data["errors"][0]["loc"]) == 2
     assert response_data["errors"][0]["loc"][0] == "cookie"
@@ -365,9 +365,9 @@ async def test_response_set_cookie__basic(client: Any) -> None:
 async def test_multiple_cookies__success(client: Any) -> None:
     """Tests multiple cookie parameters in a single request."""
     cookies = {
-        "googall_tracker": "ga789",
-        "fatebook_tracker": "tracker456",
         "session_id": "session123",
+        "fatebook_tracker": "tracker456",
+        "googall_tracker": "ga789",
     }
     response = await client.get("/items/", cookies=cookies)
 
@@ -400,5 +400,3 @@ async def test_response_cookie_with_domain_attribute(client: Any) -> None:
     response_data = response.json()
     assert "message" in response_data
     assert response_data["message"] == "Cookie set with domain"
-
-

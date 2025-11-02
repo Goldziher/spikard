@@ -1,14 +1,14 @@
 """E2E tests for http_methods."""
 
-import pytest
 from typing import Any
+
 
 async def test_options__cors_preflight_request(client: Any) -> None:
     """Tests OPTIONS method for CORS preflight."""
     headers = {
         "Origin": "https://example.com",
-        "Access-Control-Request-Method": "POST",
         "Access-Control-Request-Headers": "Content-Type",
+        "Access-Control-Request-Method": "POST",
     }
     response = await client.options("/items/", headers=headers)
 
@@ -20,7 +20,7 @@ async def test_delete__remove_resource(client: Any) -> None:
     response = await client.delete("/items/1")
 
     assert response.status_code == 200
-    response_data = response.json()
+    response.json()
 
 
 async def test_put__create_resource_if_doesn_t_exist(client: Any) -> None:
@@ -54,7 +54,7 @@ async def test_patch__update_multiple_fields(client: Any) -> None:
     assert "id" in response_data
     assert response_data["id"] == 1
     assert "in_stock" in response_data
-    assert response_data["in_stock"] == False
+    assert not response_data["in_stock"]
     assert "name" in response_data
     assert response_data["name"] == "Updated Name"
     assert "price" in response_data
@@ -169,7 +169,7 @@ async def test_patch__partial_update(client: Any) -> None:
     assert "id" in response_data
     assert response_data["id"] == 1
     assert "in_stock" in response_data
-    assert response_data["in_stock"] == True
+    assert response_data["in_stock"]
     assert "name" in response_data
     assert response_data["name"] == "Existing Item"
     assert "price" in response_data
@@ -181,7 +181,7 @@ async def test_delete__resource_not_found(client: Any) -> None:
     response = await client.delete("/items/999")
 
     assert response.status_code == 200
-    response_data = response.json()
+    response.json()
 
 
 async def test_put__idempotent_operation(client: Any) -> None:
@@ -207,7 +207,13 @@ async def test_put__complete_resource_replacement(client: Any) -> None:
     headers = {
         "Content-Type": "application/json",
     }
-    json_data = {"description": "Completely replaced", "id": 1, "in_stock": True, "name": "Updated Item", "price": 99.99}
+    json_data = {
+        "description": "Completely replaced",
+        "id": 1,
+        "in_stock": True,
+        "name": "Updated Item",
+        "price": 99.99,
+    }
     response = await client.put("/items/1", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -217,10 +223,8 @@ async def test_put__complete_resource_replacement(client: Any) -> None:
     assert "id" in response_data
     assert response_data["id"] == 1
     assert "in_stock" in response_data
-    assert response_data["in_stock"] == True
+    assert response_data["in_stock"]
     assert "name" in response_data
     assert response_data["name"] == "Updated Item"
     assert "price" in response_data
     assert response_data["price"] == 99.99
-
-
