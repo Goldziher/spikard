@@ -12,7 +12,7 @@
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -794,9 +794,11 @@ fn build_parameter_schema_with_sources(params: &Value) -> Result<String> {
                     param_obj.remove("required");
                     param_obj.remove("optional");
                 }
-                properties.insert(name.clone(), param_with_source);
+                // Normalize parameter name to match Python identifier
+                let python_name = to_python_identifier(name);
+                properties.insert(python_name.clone(), param_with_source);
                 // Path parameters are always required
-                required.push(name.clone());
+                required.push(python_name);
             }
         }
 
@@ -812,9 +814,11 @@ fn build_parameter_schema_with_sources(params: &Value) -> Result<String> {
                     param_obj.remove("required");
                     param_obj.remove("optional");
                 }
-                properties.insert(name.clone(), param_with_source);
+                // Normalize parameter name to match Python identifier
+                let python_name = to_python_identifier(name);
+                properties.insert(python_name.clone(), param_with_source);
                 if !is_optional {
-                    required.push(name.clone());
+                    required.push(python_name);
                 }
             }
         }
@@ -831,9 +835,11 @@ fn build_parameter_schema_with_sources(params: &Value) -> Result<String> {
                     param_obj.remove("required");
                     param_obj.remove("optional");
                 }
-                properties.insert(name.clone(), param_with_source);
+                // Normalize parameter name to match Python identifier
+                let python_name = to_python_identifier(name);
+                properties.insert(python_name.clone(), param_with_source);
                 if !is_optional {
-                    required.push(name.clone());
+                    required.push(python_name);
                 }
             }
         }
@@ -851,9 +857,11 @@ fn build_parameter_schema_with_sources(params: &Value) -> Result<String> {
                     param_obj.remove("required");
                     param_obj.remove("optional");
                 }
-                properties.insert(name.clone(), param_with_source);
+                // Normalize parameter name to match Python identifier
+                let python_name = to_python_identifier(name);
+                properties.insert(python_name.clone(), param_with_source);
                 if !is_optional && is_required {
-                    required.push(name.clone());
+                    required.push(python_name);
                 }
             }
         }
