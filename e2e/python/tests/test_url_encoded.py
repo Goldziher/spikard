@@ -14,13 +14,13 @@ async def test_simple_form_submission_success() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"username": "johndoe", "password": "secret"}
+    json_data = {"password": "secret", "username": "johndoe"}
     response = await client.post("/login/", headers=headers, json=json_data)
 
     assert response.status_code == 200
     response_data = response.json()
-    assert response_data["username"] == "johndoe"
     assert response_data["password"] == "secret"
+    assert response_data["username"] == "johndoe"
 
 
 async def test_15_special_characters_field_names() -> None:
@@ -198,13 +198,13 @@ async def test_numeric_field_type_conversion() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"age": "30", "username": "johndoe"}
+    json_data = {"username": "johndoe", "age": "30"}
     response = await client.post("/form/", headers=headers, json=json_data)
 
     assert response.status_code == 200
     response_data = response.json()
-    assert response_data["age"] == "30"
     assert response_data["username"] == "johndoe"
+    assert response_data["age"] == "30"
 
 
 async def test_special_characters_encoding() -> None:
@@ -218,13 +218,13 @@ async def test_special_characters_encoding() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"description": "Test & Development", "name": "John Doe"}
+    json_data = {"name": "John Doe", "description": "Test & Development"}
     response = await client.post("/form/", headers=headers, json=json_data)
 
     assert response.status_code == 200
     response_data = response.json()
-    assert response_data["description"] == "Test & Development"
     assert response_data["name"] == "John Doe"
+    assert response_data["description"] == "Test & Development"
 
 
 async def test_boolean_field_conversion() -> None:
@@ -278,15 +278,15 @@ async def test_oauth2_password_grant_flow() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"grant_type": "password", "scope": "", "username": "johndoe", "password": "secret"}
+    json_data = {"scope": "", "username": "johndoe", "password": "secret", "grant_type": "password"}
     response = await client.post("/token", headers=headers, json=json_data)
 
     assert response.status_code == 200
     response_data = response.json()
-    assert response_data["grant_type"] == "password"
     assert response_data["scope"] == ""
     assert response_data["username"] == "johndoe"
     assert response_data["password"] == "secret"
+    assert response_data["grant_type"] == "password"
 
 
 async def test_19_array_minitems_validation_failure() -> None:

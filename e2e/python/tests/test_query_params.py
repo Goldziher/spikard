@@ -774,18 +774,18 @@ async def test_multiple_query_parameters_with_different_types() -> None:
     client = TestClient(app)
 
     params = {
+        "active": "true",
         "name": "john",
         "age": "30",
-        "active": "true",
         "score": "95.5",
     }
     response = await client.get("/query/multi-type", query_params=params)
 
     assert response.status_code == 200
     response_data = response.json()
+    assert response_data["active"] == "true"
     assert response_data["name"] == "john"
     assert response_data["age"] == "30"
-    assert response_data["active"] == "true"
     assert response_data["score"] == "95.5"
 
 

@@ -390,9 +390,14 @@ fn generate_handler_function_for_fixture(
             }
         }
 
-        for (param_name, _, _) in &params {
+        for (param_name, param_type, _) in &params {
             code.push_str(&format!("    if {} is not None:\n", param_name));
-            code.push_str(&format!("        result[\"{}\"] = {}\n", param_name, param_name));
+            // Convert non-JSON-serializable types to strings
+            if param_type.contains("UUID") || param_type.contains("datetime") || param_type.contains("date") {
+                code.push_str(&format!("        result[\"{}\"] = str({})\n", param_name, param_name));
+            } else {
+                code.push_str(&format!("        result[\"{}\"] = {}\n", param_name, param_name));
+            }
         }
 
         code.push_str("    return result\n");
