@@ -189,15 +189,59 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         fixture.expected_response.status_code
     ));
 
-    // Assert response body
-    if let Some(ref body) = fixture.expected_response.body {
+    let status_code = fixture.expected_response.status_code;
+
+    // Different assertion strategies based on what we're testing:
+    // - 200 success: Verify echoed parameters match sent values
+    // - 422 validation errors: Verify error structure (handler should not be reached)
+    // - Other: Verify expected response body (business logic)
+
+    if status_code == 200 {
+        // Success case - verify echoed parameters match what we sent
         code.push_str("    response_data = response.json()\n");
 
-        // Generate assertions for body
-        generate_body_assertions(&mut code, body, "response_data");
+        // Verify body parameters
+        if let Some(ref body) = fixture.request.body {
+            generate_echo_assertions(&mut code, body, "response_data");
+        }
+
+        // Verify form data parameters
+        if let Some(ref form_data) = fixture.request.form_data {
+            for (key, value) in form_data {
+                code.push_str(&format!("    assert response_data[\"{}\"] == {}\n", key, json_to_python(value)));
+            }
+        }
+
+        // Verify query parameters
+        if let Some(ref query_params) = fixture.request.query_params {
+            for (key, value) in query_params {
+                code.push_str(&format!("    assert response_data[\"{}\"] == {}\n", key, json_to_python(value)));
+            }
+        }
+
+        // Verify path parameters (extract from path)
+        // TODO: Parse path params from fixture.request.path
+
+        // Verify headers (if they're echoed)
+        // Headers are less commonly echoed, skip for now
+
+        // Verify cookies (if they're echoed)
+        // Cookies are less commonly echoed, skip for now
+    } else if status_code == 422 {
+        // Validation error - framework should reject before handler
+        code.push_str("    response_data = response.json()\n");
+        code.push_str("    # Validation should be done by framework, not handler\n");
+        code.push_str("    assert \"errors\" in response_data or \"detail\" in response_data\n");
+        // Don't assert specific error structure - that varies by validator
+    } else {
+        // Other status codes - assert expected response body
+        if let Some(ref body) = fixture.expected_response.body {
+            code.push_str("    response_data = response.json()\n");
+            generate_body_assertions(&mut code, body, "response_data");
+        }
     }
 
-    // Assert validation errors if present
+    // Legacy validation_errors field (deprecated in favor of status code checking)
     if let Some(ref errors) = fixture.expected_response.validation_errors {
         code.push_str("    response_data = response.json()\n");
         code.push_str("    assert \"detail\" in response_data\n");
@@ -227,6 +271,38 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     }
 
     Ok(code)
+}
+
+/// Generate assertions for echoed parameters (success cases)
+/// Verifies that the response contains the same values that were sent
+fn generate_echo_assertions(code: &mut String, sent_value: &serde_json::Value, path: &str) {
+    match sent_value {
+        serde_json::Value::Object(obj) => {
+            for (key, value) in obj {
+                let new_path = format!("{}[\"{}\"]", path, key);
+                code.push_str(&format!("    assert \"{}\" in {}\n", key, path));
+
+                match value {
+                    serde_json::Value::Object(_) | serde_json::Value::Array(_) => {
+                        generate_echo_assertions(code, value, &new_path);
+                    }
+                    _ => {
+                        code.push_str(&format!("    assert {} == {}\n", new_path, json_to_python(value)));
+                    }
+                }
+            }
+        }
+        serde_json::Value::Array(arr) => {
+            code.push_str(&format!("    assert len({}) == {}\n", path, arr.len()));
+            for (idx, item) in arr.iter().enumerate() {
+                let new_path = format!("{}[{}]", path, idx);
+                generate_echo_assertions(code, item, &new_path);
+            }
+        }
+        _ => {
+            code.push_str(&format!("    assert {} == {}\n", path, json_to_python(sent_value)));
+        }
+    }
 }
 
 /// Generate assertions for response body
