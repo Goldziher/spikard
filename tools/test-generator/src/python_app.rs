@@ -177,6 +177,28 @@ fn generate_app_file(fixtures_by_category: &HashMap<String, Vec<Fixture>>) -> Re
 }
 
 /// Group fixtures by (route, method)
+/// Normalize route pattern by replacing all path parameters with a canonical name
+/// This ensures routes like /items/{id} and /items/{item_id} are treated as the same pattern
+fn normalize_route_pattern(route: &str) -> String {
+    let mut normalized = String::new();
+    let mut in_param = false;
+
+    for ch in route.chars() {
+        if ch == '{' {
+            in_param = true;
+            normalized.push_str("{id}");
+        } else if ch == '}' {
+            in_param = false;
+            // Skip the closing brace since we already added it in the canonical form
+        } else if !in_param {
+            normalized.push(ch);
+        }
+        // Skip characters inside {...} since we're replacing with {id}
+    }
+
+    normalized
+}
+
 fn group_fixtures_by_route(fixtures: &[Fixture]) -> HashMap<(String, String), Vec<&Fixture>> {
     let mut grouped: HashMap<(String, String), Vec<&Fixture>> = HashMap::new();
 
@@ -195,8 +217,11 @@ fn group_fixtures_by_route(fixtures: &[Fixture]) -> HashMap<(String, String), Ve
                 .to_string()
         };
 
+        // Normalize the route pattern to merge fixtures with different param names
+        let normalized_route = normalize_route_pattern(&route);
+
         let method = fixture.request.method.to_uppercase();
-        grouped.entry((route, method)).or_default().push(fixture);
+        grouped.entry((normalized_route, method)).or_default().push(fixture);
     }
 
     grouped
@@ -738,8 +763,11 @@ fn json_to_python(value: &Value) -> String {
 fn generate_handler_name(route: &str, method: &str) -> String {
     let method_part = method.to_lowercase();
 
+    // Strip query string if present (e.g., /items/?limit=10 -> /items/)
+    let route_without_query = route.split('?').next().unwrap_or(route);
+
     // Remove type annotations from path params like {count:int}
-    let route_cleaned = route
+    let route_cleaned = route_without_query
         .split('/')
         .map(|segment| {
             if segment.starts_with('{') && segment.contains(':') {
