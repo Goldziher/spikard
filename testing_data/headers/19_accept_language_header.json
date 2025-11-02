@@ -19,5 +19,17 @@
       "accept_language": "en-US,en;q=0.9"
     }
   },
-  "notes": "Accept-Language header with quality values"
+  "notes": "Accept-Language header with quality values",
+  "handler": {
+    "route": "/headers/accept-language",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "Accept-Language": {
+          "type": "string",
+          "annotation": "str"
+        }
+      }
+    }
+  }
 }

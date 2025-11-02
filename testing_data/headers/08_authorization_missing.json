@@ -15,5 +15,18 @@
     "body": {
       "detail": "Not authenticated"
     }
+  },
+  "handler": {
+    "route": "/users/me",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "Authorization": {
+          "type": "string",
+          "annotation": "str",
+          "required": true
+        }
+      }
+    }
   }
 }

@@ -8,7 +8,15 @@
   },
   "handler": {
     "route": "/cookies/delete",
-    "method": "POST"
+    "method": "POST",
+    "parameters": {
+      "cookies": {
+        "session": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    }
   },
   "request": {
     "method": "POST",

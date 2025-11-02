@@ -10,14 +10,32 @@
     "method": "GET",
     "path": "/items/",
     "headers": {
-      "x-token": ["foo", "bar"]
+      "x-token": [
+        "foo",
+        "bar"
+      ]
     }
   },
   "expected_response": {
     "status_code": 200,
     "body": {
-      "X-Token values": ["foo", "bar"]
+      "X-Token values": [
+        "foo",
+        "bar"
+      ]
     }
   },
-  "notes": "Multiple values with same header name"
+  "notes": "Multiple values with same header name",
+  "handler": {
+    "route": "/items/",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "x-token": {
+          "type": "string",
+          "annotation": "str"
+        }
+      }
+    }
+  }
 }

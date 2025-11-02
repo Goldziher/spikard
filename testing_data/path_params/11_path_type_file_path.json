@@ -6,6 +6,17 @@
     "test_file": "tests/test_tutorial/test_path_params/test_tutorial004.py",
     "test_function": "test_file_path"
   },
+  "handler": {
+    "route": "/files/{file_path:path}",
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "file_path": {
+          "type": "string"
+        }
+      }
+    }
+  },
   "request": {
     "method": "GET",
     "path": "/files/home/johndoe/myfile.txt"

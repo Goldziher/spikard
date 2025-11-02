@@ -20,5 +20,17 @@
       "password": "password"
     }
   },
-  "notes": "Basic auth: base64(username:password) = dXNlcm5hbWU6cGFzc3dvcmQ="
+  "notes": "Basic auth: base64(username:password) = dXNlcm5hbWU6cGFzc3dvcmQ=",
+  "handler": {
+    "route": "/headers/basic-auth",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "Authorization": {
+          "type": "string",
+          "annotation": "str"
+        }
+      }
+    }
+  }
 }

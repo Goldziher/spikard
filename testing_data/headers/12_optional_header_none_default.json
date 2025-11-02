@@ -16,5 +16,19 @@
       "strange_header": null
     }
   },
-  "notes": "Optional header returns None when not provided"
+  "notes": "Optional header returns None when not provided",
+  "handler": {
+    "route": "/items/",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "strange-header": {
+          "type": "string",
+          "annotation": "str",
+          "optional": true,
+          "default": null
+        }
+      }
+    }
+  }
 }

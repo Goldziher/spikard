@@ -19,5 +19,17 @@
       "tracking_id": "ABC12345"
     }
   },
-  "notes": "Valid pattern: 8 uppercase alphanumeric characters"
+  "notes": "Valid pattern: 8 uppercase alphanumeric characters",
+  "handler": {
+    "route": "/cookies/pattern",
+    "method": "GET",
+    "parameters": {
+      "cookies": {
+        "tracking_id": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    }
+  }
 }

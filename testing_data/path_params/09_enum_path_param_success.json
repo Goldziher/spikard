@@ -6,6 +6,18 @@
     "test_file": "tests/test_tutorial/test_path_params/test_tutorial005.py",
     "test_function": "test_get_enums_alexnet"
   },
+  "handler": {
+    "route": "/models/{model_name}",
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "model_name": {
+          "type": "string",
+          "enum": ["alexnet", "lenet", "resnet"]
+        }
+      }
+    }
+  },
   "request": {
     "method": "GET",
     "path": "/models/alexnet"
@@ -13,8 +25,7 @@
   "expected_response": {
     "status_code": 200,
     "body": {
-      "model_name": "alexnet",
-      "message": "Deep Learning FTW!"
+      "model_name": "alexnet"
     }
   },
   "notes": "Path template: /models/{model_name}, where model_name is an enum (alexnet, lenet, resnet)"

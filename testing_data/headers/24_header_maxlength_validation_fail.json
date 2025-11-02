@@ -36,5 +36,18 @@
       ]
     }
   },
-  "notes": "max_length=20 constraint on header value"
+  "notes": "max_length=20 constraint on header value",
+  "handler": {
+    "route": "/headers/max-length",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "X-Session-Id": {
+          "type": "string",
+          "annotation": "str",
+          "maxLength": 20
+        }
+      }
+    }
+  }
 }

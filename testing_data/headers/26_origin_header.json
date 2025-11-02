@@ -19,5 +19,17 @@
       "origin": "https://example.com"
     }
   },
-  "notes": "Origin header used in CORS requests"
+  "notes": "Origin header used in CORS requests",
+  "handler": {
+    "route": "/headers/origin",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "Origin": {
+          "type": "string",
+          "annotation": "str"
+        }
+      }
+    }
+  }
 }

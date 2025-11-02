@@ -19,5 +19,17 @@
       "accept": "application/json"
     }
   },
-  "notes": "Accept header for content negotiation"
+  "notes": "Accept header for content negotiation",
+  "handler": {
+    "route": "/headers/accept",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "Accept": {
+          "type": "string",
+          "annotation": "str"
+        }
+      }
+    }
+  }
 }

@@ -16,5 +16,17 @@
       "ads_id": null
     }
   },
-  "notes": "Optional cookie returns None when not provided"
+  "notes": "Optional cookie returns None when not provided",
+  "handler": {
+    "route": "/items/",
+    "method": "GET",
+    "parameters": {
+      "cookies": {
+        "ads_id": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    }
+  }
 }
