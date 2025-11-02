@@ -19,5 +19,17 @@
       "content_type": "application/json"
     }
   },
-  "notes": "Standard Content-Type header for JSON requests"
+  "notes": "Standard Content-Type header for JSON requests",
+  "handler": {
+    "route": "/headers/content-type",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "Content-Type": {
+          "type": "string",
+          "annotation": "str"
+        }
+      }
+    }
+  }
 }

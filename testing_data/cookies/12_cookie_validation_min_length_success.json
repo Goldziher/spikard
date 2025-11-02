@@ -19,5 +19,17 @@
       "token": "abc"
     }
   },
-  "notes": "min_length=3 constraint, value 'abc' is valid (boundary test)"
+  "notes": "min_length=3 constraint, value 'abc' is valid (boundary test)",
+  "handler": {
+    "route": "/cookies/min-length",
+    "method": "GET",
+    "parameters": {
+      "cookies": {
+        "token": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    }
+  }
 }

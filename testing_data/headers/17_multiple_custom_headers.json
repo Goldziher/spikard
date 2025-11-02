@@ -23,5 +23,25 @@
       "x_trace_id": "trace-abc"
     }
   },
-  "notes": "Multiple custom headers with underscore conversion"
+  "notes": "Multiple custom headers with underscore conversion",
+  "handler": {
+    "route": "/headers/multiple",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "X-Request-Id": {
+          "type": "string",
+          "annotation": "str"
+        },
+        "X-Client-Version": {
+          "type": "string",
+          "annotation": "str"
+        },
+        "X-Trace-Id": {
+          "type": "string",
+          "annotation": "str"
+        }
+      }
+    }
+  }
 }

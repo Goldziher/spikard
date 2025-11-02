@@ -19,5 +19,17 @@
       "x_token": "secret123"
     }
   },
-  "notes": "X-Token header automatically converted to x_token parameter (convert_underscores=True)"
+  "notes": "X-Token header automatically converted to x_token parameter (convert_underscores=True)",
+  "handler": {
+    "route": "/headers/underscore",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "X-Token": {
+          "type": "string",
+          "annotation": "str"
+        }
+      }
+    }
+  }
 }

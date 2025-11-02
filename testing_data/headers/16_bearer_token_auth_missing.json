@@ -17,5 +17,19 @@
       "detail": "Not authenticated"
     }
   },
-  "notes": "Missing Authorization header returns 401"
+  "notes": "Missing Authorization header returns 401",
+  "handler": {
+    "route": "/headers/bearer-auth",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "Authorization": {
+          "type": "string",
+          "annotation": "str",
+          "required": true,
+          "pattern": "^Bearer .+"
+        }
+      }
+    }
+  }
 }

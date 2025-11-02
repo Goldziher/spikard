@@ -16,5 +16,18 @@
       "msg": "Hello World"
     }
   },
-  "notes": "Optional header returns fallback when not provided"
+  "notes": "Optional header returns fallback when not provided",
+  "handler": {
+    "route": "/users/me",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "key": {
+          "type": "string",
+          "annotation": "str",
+          "optional": true
+        }
+      }
+    }
+  }
 }

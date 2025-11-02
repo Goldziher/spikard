@@ -23,5 +23,25 @@
       "googall_tracker": "ga789"
     }
   },
-  "notes": "Multiple cookies can be provided and accessed together"
+  "notes": "Multiple cookies can be provided and accessed together",
+  "handler": {
+    "route": "/items/",
+    "method": "GET",
+    "parameters": {
+      "cookies": {
+        "session_id": {
+          "type": "string",
+          "optional": true
+        },
+        "fatebook_tracker": {
+          "type": "string",
+          "optional": true
+        },
+        "googall_tracker": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    }
+  }
 }

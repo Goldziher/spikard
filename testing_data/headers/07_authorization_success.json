@@ -19,5 +19,17 @@
       "scheme": "Digest",
       "credentials": "foobar"
     }
+  },
+  "handler": {
+    "route": "/users/me",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "Authorization": {
+          "type": "string",
+          "annotation": "str"
+        }
+      }
+    }
   }
 }

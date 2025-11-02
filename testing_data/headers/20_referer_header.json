@@ -19,5 +19,17 @@
       "referer": "https://example.com/page"
     }
   },
-  "notes": "Referer header (note the spelling)"
+  "notes": "Referer header (note the spelling)",
+  "handler": {
+    "route": "/headers/referer",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "Referer": {
+          "type": "string",
+          "annotation": "str"
+        }
+      }
+    }
+  }
 }

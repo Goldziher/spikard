@@ -6,13 +6,27 @@
     "test_file": "tests/test_path.py",
     "test_function": "test_path_param_le_3"
   },
+  "handler": {
+    "route": "/path/param-le/{item_id}",
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "item_id": {
+          "type": "integer",
+          "maximum": 3
+        }
+      }
+    }
+  },
   "request": {
     "method": "GET",
     "path": "/path/param-le/3"
   },
   "expected_response": {
     "status_code": 200,
-    "body": 3
+    "body": {
+      "item_id": 3
+    }
   },
   "notes": "Path param with le=3 constraint, value 3 is valid (boundary test)"
 }
