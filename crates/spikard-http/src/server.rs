@@ -63,13 +63,10 @@ fn extract_cookies(headers: &axum::http::HeaderMap) -> HashMap<String, String> {
     let mut cookies = HashMap::new();
 
     // Look for Cookie header
-    #[allow(clippy::collapsible_if)]
-    if let Some(cookie_header) = headers.get(axum::http::header::COOKIE) {
-        if let Ok(cookie_str) = cookie_header.to_str() {
-            // Parse cookies using the cookie crate for RFC 6265 compliance and proper percent-decoding
-            for cookie in cookie::Cookie::split_parse(cookie_str).flatten() {
-                cookies.insert(cookie.name().to_string(), cookie.value().to_string());
-            }
+    if let Some(cookie_str) = headers.get(axum::http::header::COOKIE).and_then(|h| h.to_str().ok()) {
+        // Parse cookies using the cookie crate for RFC 6265 compliance and proper percent-decoding
+        for cookie in cookie::Cookie::split_parse(cookie_str).flatten() {
+            cookies.insert(cookie.name().to_string(), cookie.value().to_string());
         }
     }
 

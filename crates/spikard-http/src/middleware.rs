@@ -487,50 +487,45 @@ fn is_json_content_type(mime: &mime::Mime) -> bool {
 #[allow(clippy::result_large_err)]
 fn validate_content_type_headers(headers: &HeaderMap, _declared_body_size: usize) -> Result<(), Response> {
     // Check Content-Type header if present
-    #[allow(clippy::collapsible_if)]
-    if let Some(content_type_header) = headers.get(axum::http::header::CONTENT_TYPE) {
-        if let Ok(content_type_str) = content_type_header.to_str() {
-            // Parse Content-Type using the mime crate
-            let parsed_mime = match content_type_str.parse::<mime::Mime>() {
-                Ok(m) => m,
-                Err(_) => {
-                    // If parsing fails, it's an invalid Content-Type
-                    let error_body = json!({
-                        "error": format!("Invalid Content-Type header: {}", content_type_str)
-                    });
-                    return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
-                }
-            };
-
-            // Validation 1: multipart/form-data MUST have boundary parameter
-            if parsed_mime.type_() == mime::MULTIPART
-                && parsed_mime.subtype() == "form-data"
-                && parsed_mime.get_param(mime::BOUNDARY).is_none()
-            {
+    if let Some(content_type_str) = headers.get(axum::http::header::CONTENT_TYPE).and_then(|h| h.to_str().ok()) {
+        // Parse Content-Type using the mime crate
+        let parsed_mime = match content_type_str.parse::<mime::Mime>() {
+            Ok(m) => m,
+            Err(_) => {
+                // If parsing fails, it's an invalid Content-Type
                 let error_body = json!({
-                    "error": "multipart/form-data requires 'boundary' parameter"
+                    "error": format!("Invalid Content-Type header: {}", content_type_str)
                 });
                 return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
             }
+        };
 
-            // Validation 2: JSON content types (including +json variants) must use UTF-8 charset (or have no charset)
-            #[allow(clippy::collapsible_if)]
-            if is_json_content_type(&parsed_mime) {
-                if let Some(charset) = parsed_mime.get_param(mime::CHARSET) {
-                    // Only UTF-8 is allowed (the mime crate normalizes charset names)
-                    let charset_str = charset.as_str();
-                    if !charset_str.eq_ignore_ascii_case("utf-8") && !charset_str.eq_ignore_ascii_case("utf8") {
-                        let error_body = json!({
-                            "error": format!("Unsupported charset '{}' for JSON. Only UTF-8 is supported.", charset_str)
-                        });
-                        return Err((StatusCode::UNSUPPORTED_MEDIA_TYPE, axum::Json(error_body)).into_response());
-                    }
+        // Validation 1: multipart/form-data MUST have boundary parameter
+        if parsed_mime.type_() == mime::MULTIPART
+            && parsed_mime.subtype() == "form-data"
+            && parsed_mime.get_param(mime::BOUNDARY).is_none()
+        {
+            let error_body = json!({
+                "error": "multipart/form-data requires 'boundary' parameter"
+            });
+            return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+        }
+
+        // Validation 2: JSON content types (including +json variants) must use UTF-8 charset (or have no charset)
+        if is_json_content_type(&parsed_mime) {
+            if let Some(charset) = parsed_mime.get_param(mime::CHARSET).map(|c| c.as_str()) {
+                // Only UTF-8 is allowed (the mime crate normalizes charset names)
+                if !charset.eq_ignore_ascii_case("utf-8") && !charset.eq_ignore_ascii_case("utf8") {
+                    let error_body = json!({
+                        "error": format!("Unsupported charset '{}' for JSON. Only UTF-8 is supported.", charset)
+                    });
+                    return Err((StatusCode::UNSUPPORTED_MEDIA_TYPE, axum::Json(error_body)).into_response());
                 }
             }
-
-            // Validation 3: application/x-www-form-urlencoded is allowed without additional validation
-            // (standard form encoding, no special parameters required)
         }
+
+        // Validation 3: application/x-www-form-urlencoded is allowed without additional validation
+        // (standard form encoding, no special parameters required)
     }
 
     Ok(())
