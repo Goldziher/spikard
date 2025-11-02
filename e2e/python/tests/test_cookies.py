@@ -532,8 +532,8 @@ async def test_multiple_cookies_success() -> None:
 
     cookies = {
         "googall_tracker": "ga789",
-        "fatebook_tracker": "tracker456",
         "session_id": "session123",
+        "fatebook_tracker": "tracker456",
     }
     response = await client.get("/items/", cookies=cookies)
 
