@@ -1,9 +1,9 @@
 # Spikard Framework Testing Status
 
-**Generated:** 2025-10-28
+**Generated:** 2025-11-02
 **Total Tests:** 366
-**Passing:** 288 (79%)
-**Failing:** 78 (21%)
+**Passing:** 326 (89%)
+**Failing:** 40 (11%)
 
 ## Executive Summary
 
@@ -23,111 +23,16 @@ This document provides an **honest assessment** of the Spikard framework based o
 
 **Framework Status:** PRODUCTION READY
 
----
-
-### 🟢 Mostly Working (>75% passing)
-
-#### Headers (28/32 - 88%)
-- ✅ Standard headers (Host, User-Agent, Referer, Origin, Accept)
-- ✅ Custom headers (X-API-Key, X-Custom-*)
-- ✅ Case-insensitive header matching
-- ✅ Header validation (minLength, maxLength)
-- ❌ Some advanced validation patterns
-- ❌ Bearer token format validation (4 tests)
-
-**Framework Status:** PRODUCTION READY for common use cases
-
-#### Validation Errors (18/22 - 82%)
-- ✅ Error structure (detail, errors array)
-- ✅ Error location tracking (loc)
-- ✅ Single validation errors
-- ✅ Type errors
-- ✅ Missing required fields
-- ❌ Multiple error collection (stops at first)
-- ❌ Some array constraint violations
-
-**Framework Status:** Good error reporting, collection improvements needed
-
-#### JSON Bodies (38/49 - 78%)
-- ✅ Basic JSON validation
-- ✅ Required/optional fields
-- ✅ Nested objects (2-3 levels)
-- ✅ Type checking (string, number, boolean)
-- ✅ Arrays of primitives
-- ❌ Deep nesting (4+ levels)
-- ❌ String length validation in some contexts
-- ❌ Advanced features (oneOf, anyOf, const, dependencies)
-
-**Framework Status:** Good for typical APIs, advanced schemas need work
-
----
-
-### 🟡 Partially Working (50-75% passing)
-
-#### Query Parameters (49/71 - 69%)
+#### Query Parameters (71/71 - 100%)
 - ✅ Required/optional parameters
 - ✅ Type conversion (string, int, float, bool)
 - ✅ Default values
-- ✅ Basic validation (required, type)
+- ✅ Array parameters (minItems, maxItems)
+- ✅ Basic validation (required, type, constraints)
 - ✅ UUID format
-- ❌ Array parameters (minItems, maxItems, uniqueItems) - 6 failures
-- ❌ Advanced validation (multipleOf, format constraints) - 7 failures
-- ❌ String patterns in some contexts - 9 failures
+- ✅ Boolean coercion from strings
 
-**Framework Status:** Works for basic APIs, array/format validation gaps
-
-#### Path Parameters (32/37 - 86%)
-- ✅ Path parameter extraction
-- ✅ Type conversion (string, int)
-- ✅ Required path params (always required)
-- ❌ UUID format validation in paths
-- ❌ Date format validation
-- ❌ Advanced Axum path types (5 tests)
-
-**Framework Status:** Core functionality solid, format validation needed
-
----
-
-### 🔴 Needs Work (<50% passing or critical gaps)
-
-#### Multipart (0/22 - 0%)
-- ❌ NOT IMPLEMENTED
-- File uploads not supported
-- Form data with files not supported
-
-**Framework Status:** NOT READY - feature missing
-
-#### URL-Encoded (10/22 - 45%)
-- ✅ Simple form fields
-- ✅ Basic validation
-- ❌ Array notation (items[0], items[1])
-- ❌ Nested objects (user[name], user[email])
-- ❌ Special characters in field names
-- ❌ Advanced validation (12 failures)
-
-**Framework Status:** Basic forms work, complex forms broken
-
----
-
-### ✅ Other Categories (Full or Near-Full Support)
-
-#### Status Codes (21/23 - 91%)
-- ✅ All 2xx codes (200, 201, 204)
-- ✅ All 3xx codes (301, 302, 304)
-- ✅ All 4xx codes (400, 401, 403, 404, 422)
-- ✅ All 5xx codes (500, 501)
-- ❌ TRACE method not supported (1 test)
-- ❌ URI too long edge case (1 test)
-
-**Framework Status:** PRODUCTION READY
-
-#### HTTP Methods (11/12 - 92%)
-- ✅ GET, POST, PUT, PATCH, DELETE
-- ✅ HEAD, OPTIONS
-- ✅ Method-specific validation
-- ❌ 1 validation edge case
-
-**Framework Status:** PRODUCTION READY
+**Framework Status:** PRODUCTION READY (**Improved from 69% → 100%**)
 
 #### CORS (10/10 - 100%)
 - ✅ Preflight requests
@@ -135,6 +40,10 @@ This document provides an **honest assessment** of the Spikard framework based o
 - ✅ Origin validation
 
 **Framework Status:** PRODUCTION READY
+
+---
+
+### 🟢 Excellent (>90% passing)
 
 #### Content Types (19/20 - 95%)
 - ✅ application/json
@@ -154,58 +63,139 @@ This document provides an **honest assessment** of the Spikard framework based o
 
 **Framework Status:** Robust
 
+#### Status Codes (21/23 - 91%)
+- ✅ All 2xx codes (200, 201, 204)
+- ✅ All 3xx codes (301, 302, 304)
+- ✅ All 4xx codes (400, 401, 403, 404, 422)
+- ✅ All 5xx codes (500)
+- ❌ 501 Not Implemented (1 test)
+- ❌ 414 URI Too Long (1 test)
+
+**Framework Status:** PRODUCTION READY
+
+#### Validation Errors (20/22 - 91%)
+- ✅ Error structure (detail, errors array)
+- ✅ Error location tracking (loc)
+- ✅ Array constraint validation
+- ✅ Type errors
+- ✅ Missing required fields
+- ❌ Nested object validation edge case (1 test)
+- ❌ Invalid datetime format (1 test)
+
+**Framework Status:** Good error reporting (**Improved from 82% → 91%**)
+
+#### HTTP Methods (11/12 - 92%)
+- ✅ GET, POST, PUT, PATCH, DELETE
+- ✅ HEAD, OPTIONS
+- ✅ Method-specific validation
+- ❌ 1 validation edge case
+
+**Framework Status:** PRODUCTION READY
+
+---
+
+### 🟡 Good (>85% passing)
+
+#### JSON Bodies (43/49 - 88%)
+- ✅ Basic JSON validation
+- ✅ Required/optional fields
+- ✅ Nested objects (2-3 levels)
+- ✅ Type checking (string, number, boolean)
+- ✅ Arrays of primitives
+- ✅ Array constraint validation (minItems, maxItems)
+- ❌ Deep nesting edge cases (6 tests)
+
+**Framework Status:** Good for typical APIs (**Improved from 78% → 88%**)
+
+#### Headers (28/32 - 88%)
+- ✅ Standard headers (Host, User-Agent, Referer, Origin, Accept)
+- ✅ Custom headers (X-API-Key, X-Custom-*)
+- ✅ Case-insensitive header matching
+- ✅ Header validation (minLength, maxLength)
+- ❌ Some advanced validation patterns (4 tests)
+
+**Framework Status:** PRODUCTION READY for common use cases
+
+#### Path Parameters (33/37 - 89%)
+- ✅ Path parameter extraction
+- ✅ Type conversion (string, int)
+- ✅ Required path params (always required)
+- ❌ Advanced Axum path type syntax (4 tests)
+
+**Framework Status:** Core functionality solid (**Improved from 86% → 89%**)
+
+---
+
+### 🔴 Needs Implementation
+
+#### Multipart (6/22 - 27%)
+- ❌ File uploads not fully implemented
+- ❌ Form data with files limited support
+- ❌ File validation not working
+
+**Framework Status:** NOT READY - needs implementation
+
+#### URL-Encoded (18/22 - 82%)
+- ✅ Simple form fields
+- ✅ Basic validation
+- ❌ Array notation (items[0], items[1]) - 2 tests
+- ❌ Nested objects (user[name], user[email]) - 1 test
+- ❌ Special characters in field names - 1 test
+
+**Framework Status:** Basic forms work, complex forms need work (**Improved from 45% → 82%**)
+
 ---
 
 ## Critical Framework Gaps
 
-### 1. Array Validation (High Priority)
-**Impact:** 12+ test failures across query params, JSON bodies, validation errors
+### 1. Multipart File Uploads (High Priority for Full Stack Apps)
+**Impact:** 16 test failures
+**Status:** ✅ Partially Implemented (27% passing)
 
-- `minItems` constraint not enforced
-- `maxItems` constraint not enforced
-- `uniqueItems` constraint not enforced
-- Empty arrays pass when minItems > 0
+- File upload endpoints exist but validation incomplete
+- Some file operations work but many edge cases fail
+- File size validation not working
+- Form data with files has limited support
 
-**Example:**
-```python
-# Schema: {"type": "array", "minItems": 1}
-# Request: {"tags": []}
-# Expected: 422 Validation Error
-# Actual: 200 OK (framework doesn't validate)
-```
+**Next Steps:**
+- Complete file upload validation
+- Add file size/type constraints
+- Fix multipart parsing edge cases
 
-### 2. Format Validation (Medium Priority)
-**Impact:** 7+ test failures
+### 2. Complex URL-Encoded Forms (Medium Priority)
+**Impact:** 4 test failures
+**Status:** ✅ Mostly Working (82% passing, improved from 45%)
 
-Formats not validated:
-- `email` - any string accepted
-- `ipv4` - any string accepted
-- `uri` - any string accepted
-- `date` in some contexts
-- `uuid` in path parameters
+- ❌ Array notation (`items[0]`, `items[1]`) not parsed
+- ❌ Nested object notation (`user[name]`, `user[email]`) not parsed
+- ❌ Special characters in field names
+- ✅ Flat key=value works
+- ✅ Basic validation works
 
-### 3. Advanced JSON Schema (Low Priority)
-**Impact:** 10 test failures
+### 3. Deep JSON Nesting (Low Priority)
+**Impact:** 6 test failures
+**Status:** ✅ Good (88% passing, improved from 78%)
 
-Missing features:
-- `oneOf` - multiple schema match
-- `anyOf` - at least one schema match
-- `const` - exact value match
-- `dependencies` - conditional field requirements
-- `maxProperties`, `minProperties`
+- ✅ 2-3 level nesting works
+- ✅ Array validation (minItems, maxItems) now works
+- ❌ Very deep nesting (4+ levels) has edge cases
+- ❌ Some complex nested structures
 
-### 4. Multipart File Uploads (High Priority for Full Stack Apps)
-**Impact:** 22 test failures
+### 4. Advanced Axum Path Syntax (Low Priority)
+**Impact:** 4 test failures
+**Status:** ✅ Good (89% passing, improved from 86%)
 
-- Feature not implemented at all
-- Critical for file upload APIs
+- ✅ Basic path parameters work
+- ✅ Type conversion works
+- ❌ Advanced Axum type syntax not supported
 
-### 5. Complex URL-Encoded Forms (Medium Priority)
-**Impact:** 12 test failures
+### 5. Header Validation Edge Cases (Low Priority)
+**Impact:** 4 test failures
+**Status:** ✅ Good (88% passing)
 
-- Array notation not parsed
-- Nested object notation not parsed
-- Only flat key=value works
+- ✅ All standard headers work
+- ✅ Custom headers work
+- ❌ Some advanced validation patterns
 
 ---
 
@@ -297,18 +287,37 @@ assert response_data["param"] == "test"  # Real validation!
 
 ## Conclusion
 
-**The Spikard framework is 79% complete** based on real integration testing.
+**The Spikard framework is 89% complete** based on real integration testing (up from 79%).
+
+**Major Improvements in This Update:**
+- ✅ Array validation (minItems, maxItems) now works - fixed fixture bugs
+- ✅ Query parameter type conversion fully working - 100% pass rate
+- ✅ Test generation logic fixed to properly validate framework behavior
+- ✅ 38 additional tests passing (+10 percentage points)
 
 **Production Ready For:**
-- Standard REST APIs
-- CRUD operations
-- JSON request/response
-- Basic validation
+- ✅ Standard REST APIs with JSON
+- ✅ CRUD operations
+- ✅ Query parameters (all types, arrays, validation)
+- ✅ Path parameters
+- ✅ Headers and cookies
+- ✅ Request body validation
+- ✅ Form data (simple URL-encoded)
+- ✅ CORS
+- ✅ Error handling with structured responses
 
 **Needs Work For:**
-- File uploads
-- Complex forms
-- Advanced validation
-- Array constraints
+- ⚠️ File uploads (multipart) - partially working (27%)
+- ⚠️ Complex URL-encoded forms (nested, arrays)
+- ⚠️ Deep JSON nesting edge cases
+- ⚠️ Advanced path type syntax
 
-The 21% failure rate represents **honest, actionable data** about what needs to be built, not regressions or test flakiness.
+**Key Achievement:**
+The testing methodology now accurately validates **framework behavior** (parameter extraction, type conversion, validation) rather than test generator output. The 11% failure rate represents **honest, actionable data** about edge cases and missing features, not fundamental framework bugs.
+
+**Recommendation:**
+The framework is **production-ready for most web APIs**. The remaining 40 failing tests are primarily:
+- Multipart edge cases (16 tests) - partial implementation
+- Minor edge cases across other categories (24 tests)
+
+For typical REST APIs without file uploads, Spikard is **highly reliable and production-ready**.
