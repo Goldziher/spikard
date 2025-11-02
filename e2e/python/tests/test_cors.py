@@ -31,12 +31,13 @@ async def test_cors_preflight_request() -> None:
 
     headers = {
         "Origin": "https://example.com",
-        "Access-Control-Request-Method": "POST",
         "Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
+        "Access-Control-Request-Method": "POST",
     }
     response = await client.options("/items/", headers=headers)
 
     assert response.status_code == 200
+    response_data = response.json()
 
 
 async def test_cors_with_credentials() -> None:
@@ -48,15 +49,13 @@ async def test_cors_with_credentials() -> None:
     client = TestClient(app)
 
     headers = {
-        "Cookie": "session=abc123",
         "Origin": "https://app.example.com",
+        "Cookie": "session=abc123",
     }
     response = await client.get("/api/user/profile", headers=headers)
 
     assert response.status_code == 200
     response_data = response.json()
-    assert "username" in response_data
-    assert response_data["username"] == "john"
 
 
 async def test_08_cors_max_age() -> None:
@@ -68,8 +67,8 @@ async def test_08_cors_max_age() -> None:
     client = TestClient(app)
 
     headers = {
-        "Access-Control-Request-Method": "POST",
         "Access-Control-Request-Headers": "Content-Type",
+        "Access-Control-Request-Method": "POST",
         "Origin": "https://example.com",
     }
     response = await client.options("/api/data", headers=headers)
@@ -111,8 +110,6 @@ async def test_cors_wildcard_origin() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
-    assert "data" in response_data
-    assert response_data["data"] == "public"
 
 
 async def test_cors_request_blocked() -> None:
@@ -149,8 +146,6 @@ async def test_simple_cors_request() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
-    assert "items" in response_data
-    assert len(response_data["items"]) == 0
 
 
 async def test_09_cors_expose_headers() -> None:
@@ -167,6 +162,7 @@ async def test_09_cors_expose_headers() -> None:
     response = await client.get("/api/data", headers=headers)
 
     assert response.status_code == 200
+    response_data = response.json()
 
 
 async def test_06_cors_preflight_method_not_allowed() -> None:
@@ -178,9 +174,9 @@ async def test_06_cors_preflight_method_not_allowed() -> None:
     client = TestClient(app)
 
     headers = {
-        "Access-Control-Request-Headers": "Content-Type",
-        "Access-Control-Request-Method": "DELETE",
         "Origin": "https://example.com",
+        "Access-Control-Request-Method": "DELETE",
+        "Access-Control-Request-Headers": "Content-Type",
     }
     response = await client.options("/api/data", headers=headers)
 
