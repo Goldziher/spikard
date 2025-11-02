@@ -3,7 +3,7 @@
 //! Generates pytest test suites from fixtures for e2e testing.
 
 use anyhow::{Context, Result};
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -53,18 +53,11 @@ pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<(
 
 /// Generate conftest.py with shared fixtures
 fn generate_conftest() -> String {
-    r#""""Pytest configuration and fixtures for e2e tests."""
+    r#""""Pytest configuration for e2e tests.
 
-import pytest
-from spikard.testing import TestClient
-
-from app.main import app
-
-
-@pytest.fixture(scope="session")
-def client():
-    """Provide a test client."""
-    return TestClient(app)
+Each test creates its own isolated app and client from per-fixture app factories.
+This ensures complete test isolation and allows multiple tests for the same route.
+"""
 "#
     .to_string()
 }
@@ -80,7 +73,7 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
 
     // Generate test for each fixture
     for fixture in fixtures {
-        let test_function = generate_test_function(fixture)?;
+        let test_function = generate_test_function(category, fixture)?;
         code.push_str(&test_function);
         code.push_str("\n\n");
     }
@@ -89,12 +82,23 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
 }
 
 /// Generate a single test function
-fn generate_test_function(fixture: &Fixture) -> Result<String> {
+fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     let test_name = sanitize_test_name(&fixture.name);
     let mut code = String::new();
 
-    code.push_str(&format!("async def test_{}(client: Any) -> None:\n", test_name));
+    // No client parameter - create per-test client from app factory
+    code.push_str(&format!("async def test_{}() -> None:\n", test_name));
     code.push_str(&format!("    \"\"\"{}.\"\"\"\n", fixture.description));
+
+    // Import and create client from per-fixture app factory
+    // The app factory name matches the one generated in python_app.rs:
+    // sanitize_identifier(&format!("{}_{}", category, &fixture.name))
+    let fixture_id = sanitize_identifier(&format!("{}_{}", category, &fixture.name));
+    let app_factory_name = format!("create_app_{}", fixture_id);
+    code.push_str("    from spikard.testing import TestClient\n");
+    code.push_str(&format!("    from app.main import {}\n\n", app_factory_name));
+    code.push_str(&format!("    app = {}()\n", app_factory_name));
+    code.push_str("    client = TestClient(app)\n\n");
 
     // Build request
     let method = fixture.request.method.to_lowercase();
@@ -309,6 +313,13 @@ fn sanitize_test_name(name: &str) -> String {
             "_",
         )
         .replace("__", "_")
+        .trim_matches('_')
+        .to_string()
+}
+
+/// Sanitize a string to be a valid Python identifier (matches python_app.rs)
+fn sanitize_identifier(s: &str) -> String {
+    s.replace(|c: char| !c.is_alphanumeric() && c != '_', "_")
         .trim_matches('_')
         .to_string()
 }

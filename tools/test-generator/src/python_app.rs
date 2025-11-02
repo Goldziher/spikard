@@ -89,8 +89,8 @@ pub fn generate_python_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
         }
     }
 
-    // Generate main app file
-    let app_content = generate_app_file(&fixtures_by_category)?;
+    // Generate main app file with per-fixture app factories
+    let app_content = generate_app_file_per_fixture(&fixtures_by_category)?;
     fs::write(app_dir.join("main.py"), app_content).context("Failed to write main.py")?;
 
     // Generate __init__.py
@@ -101,152 +101,175 @@ pub fn generate_python_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
     Ok(())
 }
 
-/// Generate the main app file with all handlers
-fn generate_app_file(fixtures_by_category: &HashMap<String, Vec<Fixture>>) -> Result<String> {
+/// Generate app file with per-fixture app factory functions (matches Rust pattern)
+fn generate_app_file_per_fixture(fixtures_by_category: &HashMap<String, Vec<Fixture>>) -> Result<String> {
     let mut code = String::new();
 
     // Imports
-    code.push_str("\"\"\"Generated E2E test application.\"\"\"\n\n");
+    code.push_str("\"\"\"Generated E2E test application with per-fixture app factories.\"\"\"\n");
+    code.push_str("# ruff: noqa: ARG001\n"); // Suppress unused argument warnings - FFI interface requires these
+    code.push_str("# mypy: ignore-errors\n"); // Generated code - skip type checking
+    code.push('\n');
     code.push_str("from dataclasses import asdict, dataclass\n");
     code.push_str("from datetime import date, datetime\n");
     code.push_str("from enum import Enum\n");
     code.push_str("from typing import Any, NamedTuple, TypedDict\n");
     code.push_str("from uuid import UUID\n\n");
     code.push_str("import msgspec\n");
-    code.push_str("from pydantic import BaseModel, Field\n");
-    code.push_str("from spikard import Spikard, get, post, put, patch, delete, head, options, trace\n\n");
+    code.push_str("from pydantic import BaseModel\n\n");
+    code.push_str("from spikard import Spikard, delete, get, head, options, patch, post, put\n\n");
 
-    // Create app instance
-    code.push_str("app = Spikard()\n\n");
-
-    // Track handler names to make them unique
+    // Track handler names for uniqueness
     let mut handler_names = HashMap::new();
 
-    // Collect all fixtures across categories
-    // INCLUDE validation_errors for schema inference (to identify required fields)
-    let mut all_fixtures = Vec::new();
-    for (_category, fixtures) in fixtures_by_category.iter() {
-        // Include ALL fixtures - validation_errors are crucial for schema inference
-        // (they identify required fields via "missing" errors)
-        all_fixtures.extend(fixtures.iter().cloned());
-    }
+    // Collect all fixtures and generate per-fixture functions
+    let mut all_app_factories = Vec::new();
 
-    // Group all fixtures by route and method
-    let routes = group_fixtures_by_route(&all_fixtures);
+    for (category, fixtures) in fixtures_by_category.iter() {
+        for (index, fixture) in fixtures.iter().enumerate() {
+            // Generate unique identifier for this fixture
+            let fixture_id = sanitize_identifier(&format!("{}_{}", category, &fixture.name));
+            let handler_name = make_unique_name(&fixture_id, &mut handler_names);
 
-    // Sort routes to ensure more specific routes (without path params) come before generic ones
-    // This prevents /items/{id} from matching before /items/unicode
-    let mut sorted_routes: Vec<_> = routes.into_iter().collect();
-    sorted_routes.sort_by(|a, b| {
-        let (route_a, method_a) = &a.0;
-        let (route_b, method_b) = &b.0;
+            // Rotate through body types for comprehensive testing
+            let body_type = BodyType::for_index(index);
 
-        // First, sort by presence of path parameters (routes without params first)
-        let has_param_a = route_a.contains('{');
-        let has_param_b = route_b.contains('{');
+            // Generate handler and app factory for this fixture
+            let (handler_code, app_factory_code) =
+                generate_fixture_handler_and_app_python(fixture, &handler_name, body_type, &mut handler_names)?;
 
-        match (has_param_a, has_param_b) {
-            (false, true) => std::cmp::Ordering::Less, // a (no params) before b (has params)
-            (true, false) => std::cmp::Ordering::Greater, // b (no params) before a (has params)
-            _ => {
-                // If both have params or both don't, sort by path length (longer first for specificity)
-                // Then by route name, then by method
-                route_b
-                    .len()
-                    .cmp(&route_a.len())
-                    .then_with(|| route_a.cmp(route_b))
-                    .then_with(|| method_a.cmp(method_b))
-            }
-        }
-    });
-
-    // Generate handlers - rotate through all type systems for comprehensive testing
-    for (handler_index, ((route, method), route_fixtures)) in sorted_routes.into_iter().enumerate() {
-        let body_type = BodyType::for_index(handler_index);
-        let handler = generate_handler(&route, &method, &route_fixtures, &mut handler_names, body_type)?;
-        if !handler.is_empty() {
-            code.push_str(&handler);
+            code.push_str(&handler_code);
             code.push_str("\n\n");
+            code.push_str(&app_factory_code);
+            code.push_str("\n\n");
+
+            all_app_factories.push((
+                category.clone(),
+                fixture.name.clone(),
+                format!("create_app_{}", handler_name),
+            ));
         }
     }
 
-    code.push_str("\nif __name__ == \"__main__\":\n");
-    code.push_str("    app.run()\n");
+    // Add a comment listing all app factories
+    code.push_str("# App factory functions:\n");
+    for (category, fixture_name, factory_fn) in all_app_factories {
+        code.push_str(&format!("# - {}() for {} / {}\n", factory_fn, category, fixture_name));
+    }
 
     Ok(code)
 }
 
-/// Group fixtures by (route, method)
-/// Normalize route pattern by replacing all path parameters with a canonical name
-/// This ensures routes like /items/{id} and /items/{item_id} are treated as the same pattern
-fn normalize_route_pattern(route: &str) -> String {
-    let mut normalized = String::new();
-    let mut in_param = false;
+/// Generate handler and app factory for a single fixture (Python version)
+fn generate_fixture_handler_and_app_python(
+    fixture: &Fixture,
+    handler_name: &str,
+    body_type: BodyType,
+    handler_names: &mut HashMap<String, usize>,
+) -> Result<(String, String)> {
+    // Get route from handler or request
+    let route = if let Some(handler) = &fixture.handler {
+        handler.route.clone()
+    } else {
+        fixture.request.path.clone()
+    };
 
-    for ch in route.chars() {
-        if ch == '{' {
-            in_param = true;
-            normalized.push_str("{id}");
-        } else if ch == '}' {
-            in_param = false;
-            // Skip the closing brace since we already added it in the canonical form
-        } else if !in_param {
-            normalized.push(ch);
-        }
-        // Skip characters inside {...} since we're replacing with {id}
+    // Strip query string from route
+    let route_path = route.split('?').next().unwrap_or(&route);
+    let method = fixture.request.method.as_str();
+
+    // Generate models at module level and get the model name
+    let (models_code, model_name) =
+        generate_models_for_fixture_with_name(fixture, handler_name, body_type, handler_names)?;
+
+    // Generate handler function at module level (without decorator)
+    let handler_func = generate_handler_function_for_fixture(
+        fixture,
+        route_path,
+        method,
+        handler_name,
+        body_type,
+        model_name.as_deref(),
+    )?;
+
+    // Combine models and handler
+    let mut handler_code = String::new();
+    if !models_code.is_empty() {
+        handler_code.push_str(&models_code);
+        handler_code.push_str("\n\n");
     }
+    handler_code.push_str(&handler_func);
 
-    normalized
-}
+    // Generate app factory function that registers the handler
+    let app_factory_name = format!("create_app_{}", handler_name);
 
-fn group_fixtures_by_route(fixtures: &[Fixture]) -> HashMap<(String, String), Vec<&Fixture>> {
-    let mut grouped: HashMap<(String, String), Vec<&Fixture>> = HashMap::new();
-
-    for fixture in fixtures {
-        // Use handler.route if available, otherwise fall back to request.path (without query string)
-        let route = if let Some(ref handler) = fixture.handler {
-            handler.route.clone()
+    // Extract body_schema for registration
+    let body_schema_str = if let Some(handler) = &fixture.handler {
+        if let Some(schema) = &handler.body_schema {
+            let schema_json = serde_json::to_string(schema)?;
+            json_to_python_dict(&schema_json)
         } else {
-            // Extract just the path without query string
-            fixture
-                .request
-                .path
-                .split('?')
-                .next()
-                .unwrap_or(&fixture.request.path)
-                .to_string()
-        };
+            "None".to_string()
+        }
+    } else {
+        "None".to_string()
+    };
 
-        // Normalize the route pattern to merge fixtures with different param names
-        let normalized_route = normalize_route_pattern(&route);
+    let app_factory_code = format!(
+        r#"def {}() -> Spikard:
+    """App factory for fixture: {}"""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("{}", "{}", body_schema={})({})
+    return app"#,
+        app_factory_name,
+        fixture.name,
+        method.to_uppercase(),
+        route_path,
+        body_schema_str,
+        handler_name
+    );
 
-        let method = fixture.request.method.to_uppercase();
-        grouped.entry((normalized_route, method)).or_default().push(fixture);
-    }
-
-    grouped
+    Ok((handler_code, app_factory_code))
 }
 
-/// Generate a Python handler function
-fn generate_handler(
+/// Generate just the models for a fixture (module-level) and return the model name
+fn generate_models_for_fixture_with_name(
+    fixture: &Fixture,
+    handler_name: &str,
+    body_type: BodyType,
+    handler_names: &mut HashMap<String, usize>,
+) -> Result<(String, Option<String>)> {
+    // Extract body schema if present
+    let body_schema = if let Some(handler) = &fixture.handler {
+        handler.body_schema.as_ref()
+    } else {
+        None
+    };
+
+    if let Some(schema) = body_schema {
+        let model_name_base = format!("{}Body", to_pascal_case(handler_name));
+        let model_name = make_unique_name(&model_name_base, handler_names);
+        let model_code = extract_body_model(schema, &model_name, body_type)?;
+        Ok((model_code, Some(model_name)))
+    } else {
+        Ok((String::new(), None))
+    }
+}
+
+/// Generate handler function (without decorator, for manual registration)
+fn generate_handler_function_for_fixture(
+    fixture: &Fixture,
     route: &str,
     method: &str,
-    fixtures: &[&Fixture],
-    handler_names: &mut HashMap<String, usize>,
+    handler_name: &str,
     body_type: BodyType,
+    model_name: Option<&str>,
 ) -> Result<String> {
-    // All HTTP methods are now supported
-    // (no need to skip any methods)
+    // Extract handler info from fixture
+    let handler_opt = fixture.handler.as_ref();
 
-    // Generate unique handler name
-    let base_handler_name = generate_handler_name(route, method);
-    let handler_name = make_unique_name(&base_handler_name, handler_names);
-
-    // Try to get handler from first fixture, but handle case where there is no handler
-    let first = fixtures[0];
-    let handler_opt = first.handler.as_ref();
-
-    // Extract parameters from handler schema if available
+    // Extract parameters
     let params = if let Some(handler) = handler_opt {
         if let Some(ref param_schema) = handler.parameters {
             extract_parameters(param_schema)?
@@ -257,89 +280,44 @@ fn generate_handler(
         vec![]
     };
 
-    // Extract explicit body schema - NO inference
-    // Per RFC 9110/5789: No method syntactically REQUIRES a body
+    // Extract body schema
     let body_schema = if let Some(handler) = handler_opt {
-        if let Some(ref explicit_schema) = handler.body_schema {
-            eprintln!(
-                "[SCHEMA EXTRACT] Using explicit body_schema from fixture: {}",
-                first.name
-            );
-            Some(explicit_schema.clone())
-        } else {
-            eprintln!(
-                "[SCHEMA EXTRACT] No explicit handler.body_schema in fixture: {}",
-                first.name
-            );
-            None
-        }
+        handler.body_schema.as_ref()
     } else {
-        eprintln!("[SCHEMA EXTRACT] No handler section in fixture: {}", first.name);
         None
     };
 
-    let (body_model, model_name) = if let Some(ref schema) = body_schema {
-        let model_name_base = format!("{}Body", to_pascal_case(&handler_name));
-        let model_name = make_unique_name(&model_name_base, handler_names);
-        let model_code = extract_body_model(schema, &model_name, body_type)?;
-        (Some(model_code), Some(model_name))
-    } else {
-        (None, None)
-    };
+    // Determine response body
+    let response_body = determine_response_body(&[fixture]);
 
-    // Determine response based on fixtures
-    let response_body = determine_response_body(fixtures);
-
-    // Generate the handler
+    // Generate handler function
     let mut code = String::new();
 
-    // Add model definition if we have a body
-    if let Some(ref model_code) = body_model {
-        code.push_str(model_code);
-        code.push_str("\n\n");
-    }
-
-    // Add decorator
-    // Emit body_schema only when present (RFC 9110: no method requires a body)
-    if let Some(ref schema) = body_schema {
-        // Serialize the schema as JSON then convert to Python dict syntax
-        let schema_json = serde_json::to_string(schema).unwrap_or_else(|_| "{}".to_string());
-        let schema_python = json_to_python_dict(&schema_json);
-        code.push_str(&format!(
-            "@{}(\"{}\", body_schema={})\n",
-            method.to_lowercase(),
-            route,
-            schema_python
-        ));
-    } else {
-        // No body schema - decorator without body_schema parameter
-        code.push_str(&format!("@{}(\"{}\")\n", method.to_lowercase(), route));
-    }
+    // Determine if parameters will be used
+    let params_used = response_body.is_none();
+    let param_prefix = if params_used { "" } else { "_" };
 
     // Function signature
     code.push_str(&format!("def {}(\n", handler_name));
 
-    // Determine if parameters will be used (only echo handlers use them)
-    let params_used = response_body.is_none();
-    let param_prefix = if params_used { "" } else { "_" };
-
-    // Add body parameter if present - type annotation depends on BodyType
+    // Add body parameter if present
+    // IMPORTANT: Body must always be named "body" (not "_body") because
+    // Rust passes it as "body" in kwargs. The underscore prefix is only
+    // for path/query/cookie parameters that might be unused.
     if body_schema.is_some() {
         let body_param_type = match body_type {
             BodyType::PlainDict => "dict[str, Any]".to_string(),
-            _ => model_name.as_deref().unwrap_or("dict[str, Any]").to_string(),
+            _ => model_name.unwrap_or("dict[str, Any]").to_string(),
         };
-        code.push_str(&format!("    {}body: {},\n", param_prefix, body_param_type));
+        code.push_str(&format!("    body: {},\n", body_param_type));
     }
 
-    // Add other parameters - required first, then optional (Python syntax requirement)
-    // First pass: required parameters
+    // Add other parameters - required first, then optional
     for (param_name, param_type, is_required) in &params {
         if *is_required {
             code.push_str(&format!("    {}{}: {},\n", param_prefix, param_name, param_type));
         }
     }
-    // Second pass: optional parameters
     for (param_name, param_type, is_required) in &params {
         if !*is_required {
             code.push_str(&format!(
@@ -350,18 +328,19 @@ fn generate_handler(
     }
 
     code.push_str(") -> Any:\n");
-    code.push_str(&format!("    \"\"\"Handler for {} {}.\"\"\"\n", method, route));
+    code.push_str(&format!(
+        "    \"\"\"Handler for {} {}.\"\"\"\n",
+        method.to_uppercase(),
+        route
+    ));
 
-    // Function body - return expected response or echo parameters
+    // Function body
     if let Some(body_json) = response_body {
-        // Use the expected response from fixtures if available
         code.push_str(&format!("    return {}\n", body_json));
     } else {
-        // Echo back the parameters for validation testing
         code.push_str("    # Echo back parameters for testing\n");
         code.push_str("    result: dict[str, Any] = {}\n");
 
-        // Add body parameters to result - conversion depends on BodyType
         if body_schema.is_some() {
             code.push_str("    if body:\n");
             match body_type {
@@ -374,7 +353,7 @@ fn generate_handler(
                     code.push_str("        result.update(asdict(body))\n");
                 }
                 BodyType::NamedTuple => {
-                    // Use ._asdict()
+                    // Use ._asdict() method
                     code.push_str("        result.update(body._asdict())\n");
                 }
                 BodyType::MsgspecStruct => {
@@ -388,8 +367,7 @@ fn generate_handler(
             }
         }
 
-        // Add other parameters to result
-        for (param_name, _param_type, _is_required) in &params {
+        for (param_name, _, _) in &params {
             code.push_str(&format!("    if {} is not None:\n", param_name));
             code.push_str(&format!("        result[\"{}\"] = {}\n", param_name, param_name));
         }
@@ -398,6 +376,14 @@ fn generate_handler(
     }
 
     Ok(code)
+}
+
+/// Sanitize a string to be a valid Python identifier (lowercase snake_case)
+fn sanitize_identifier(s: &str) -> String {
+    s.to_lowercase()
+        .replace(|c: char| !c.is_alphanumeric() && c != '_', "_")
+        .trim_matches('_')
+        .to_string()
 }
 
 /// Generate CORS preflight handler
@@ -864,45 +850,6 @@ fn json_to_python(value: &Value) -> String {
                 .collect();
             format!("{{{}}}", items.join(", "))
         }
-    }
-}
-
-/// Generate handler name from route and method
-fn generate_handler_name(route: &str, method: &str) -> String {
-    let method_part = method.to_lowercase();
-
-    // Strip query string if present (e.g., /items/?limit=10 -> /items/)
-    let route_without_query = route.split('?').next().unwrap_or(route);
-
-    // Remove type annotations from path params like {count:int}
-    let route_cleaned = route_without_query
-        .split('/')
-        .map(|segment| {
-            if segment.starts_with('{') && segment.contains(':') {
-                // Extract just the param name: {count:int} -> count
-                segment.trim_start_matches('{').split(':').next().unwrap_or(segment)
-            } else {
-                segment
-            }
-        })
-        .collect::<Vec<_>>()
-        .join("/");
-
-    let mut route_part = route_cleaned
-        .replace('/', "_")
-        .replace(['{', '}', '-', ':', '.'], "")
-        .trim_matches('_')
-        .to_string();
-
-    // If route_part starts with a digit, prefix with underscore
-    if route_part.chars().next().is_some_and(|c| c.is_ascii_digit()) {
-        route_part = format!("_{}", route_part);
-    }
-
-    if route_part.is_empty() {
-        format!("{}_root", method_part)
-    } else {
-        format!("{}_{}", method_part, route_part)
     }
 }
 
