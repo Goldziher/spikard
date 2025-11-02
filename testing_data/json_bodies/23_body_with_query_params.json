@@ -42,6 +42,9 @@
     "body": {
       "name": "Item",
       "price": 42.0
+    },
+    "query_params": {
+      "limit": 10
     }
   },
   "expected_response": {
