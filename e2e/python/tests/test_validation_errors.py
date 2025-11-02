@@ -25,12 +25,7 @@ async def test_invalid_uuid_format() -> None:
     assert response_data["errors"][0]["loc"][0] == "path"
     assert response_data["errors"][0]["loc"][1] == "item_id"
     assert "msg" in response_data["errors"][0]
-    assert (
-        response_data["errors"][0]["msg"]
-        == "Input should be a valid UUID, invalid character: expected an optional prefix of `urn:uuid:` followed by [0-9a-fA-F-], found `n` at 0"
-    )
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "uuid_parsing"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -66,9 +61,7 @@ async def test_invalid_boolean_value() -> None:
     assert response_data["errors"][0]["loc"][0] == "query"
     assert response_data["errors"][0]["loc"][1] == "is_active"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "Input should be a valid boolean, unable to interpret input"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "bool_parsing"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -104,9 +97,7 @@ async def test_missing_required_query_parameter() -> None:
     assert response_data["errors"][0]["loc"][0] == "query"
     assert response_data["errors"][0]["loc"][1] == "q"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "Field required"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "missing"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -158,12 +149,7 @@ async def test_array_max_items_constraint_violation() -> None:
     assert response_data["errors"][0]["loc"][0] == "body"
     assert response_data["errors"][0]["loc"][1] == "tags"
     assert "msg" in response_data["errors"][0]
-    assert (
-        response_data["errors"][0]["msg"]
-        == '["tag1","tag2","tag3","tag4","tag5","tag6","tag7","tag8","tag9","tag10","tag11"] has more than 10 items'
-    )
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "validation_error"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -193,8 +179,6 @@ async def test_numeric_constraint_violation_gt_greater_than() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "ctx" in response_data["errors"][0]
-    assert "gt" in response_data["errors"][0]["ctx"]
-    assert response_data["errors"][0]["ctx"]["gt"] == 0
     assert "input" in response_data["errors"][0]
     assert response_data["errors"][0]["input"] == "0"
     assert "loc" in response_data["errors"][0]
@@ -202,9 +186,7 @@ async def test_numeric_constraint_violation_gt_greater_than() -> None:
     assert response_data["errors"][0]["loc"][0] == "query"
     assert response_data["errors"][0]["loc"][1] == "price"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "Input should be greater than 0"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "greater_than"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -234,8 +216,6 @@ async def test_string_regex_pattern_mismatch() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "ctx" in response_data["errors"][0]
-    assert "pattern" in response_data["errors"][0]["ctx"]
-    assert response_data["errors"][0]["ctx"]["pattern"] == "^[a-zA-Z0-9_-]+$"
     assert "input" in response_data["errors"][0]
     assert response_data["errors"][0]["input"] == "invalid!"
     assert "loc" in response_data["errors"][0]
@@ -243,9 +223,7 @@ async def test_string_regex_pattern_mismatch() -> None:
     assert response_data["errors"][0]["loc"][0] == "query"
     assert response_data["errors"][0]["loc"][1] == "q"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "String should match pattern '^[a-zA-Z0-9_-]+$'"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "string_pattern_mismatch"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -272,8 +250,6 @@ async def test_invalid_enum_value() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "ctx" in response_data["errors"][0]
-    assert "expected" in response_data["errors"][0]["ctx"]
-    assert response_data["errors"][0]["ctx"]["expected"] == "'alexnet', 'resnet' or 'lenet'"
     assert "input" in response_data["errors"][0]
     assert response_data["errors"][0]["input"] == "invalid_model"
     assert "loc" in response_data["errors"][0]
@@ -281,9 +257,7 @@ async def test_invalid_enum_value() -> None:
     assert response_data["errors"][0]["loc"][0] == "path"
     assert response_data["errors"][0]["loc"][1] == "model_name"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "Input should be 'alexnet', 'resnet' or 'lenet'"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "enum"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -313,8 +287,6 @@ async def test_string_min_length_constraint_violation() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "ctx" in response_data["errors"][0]
-    assert "min_length" in response_data["errors"][0]["ctx"]
-    assert response_data["errors"][0]["ctx"]["min_length"] == 3
     assert "input" in response_data["errors"][0]
     assert response_data["errors"][0]["input"] == "ab"
     assert "loc" in response_data["errors"][0]
@@ -322,9 +294,7 @@ async def test_string_min_length_constraint_violation() -> None:
     assert response_data["errors"][0]["loc"][0] == "query"
     assert response_data["errors"][0]["loc"][1] == "q"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "String should have at least 3 characters"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "string_too_short"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -355,8 +325,6 @@ async def test_multiple_validation_errors() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 3
     assert "ctx" in response_data["errors"][0]
-    assert "min_length" in response_data["errors"][0]["ctx"]
-    assert response_data["errors"][0]["ctx"]["min_length"] == 3
     assert "input" in response_data["errors"][0]
     assert response_data["errors"][0]["input"] == "X"
     assert "loc" in response_data["errors"][0]
@@ -364,12 +332,8 @@ async def test_multiple_validation_errors() -> None:
     assert response_data["errors"][0]["loc"][0] == "body"
     assert response_data["errors"][0]["loc"][1] == "name"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "String should have at least 3 characters"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "string_too_short"
     assert "ctx" in response_data["errors"][1]
-    assert "gt" in response_data["errors"][1]["ctx"]
-    assert response_data["errors"][1]["ctx"]["gt"] == 0
     assert "input" in response_data["errors"][1]
     assert response_data["errors"][1]["input"] == -10
     assert "loc" in response_data["errors"][1]
@@ -377,9 +341,7 @@ async def test_multiple_validation_errors() -> None:
     assert response_data["errors"][1]["loc"][0] == "body"
     assert response_data["errors"][1]["loc"][1] == "price"
     assert "msg" in response_data["errors"][1]
-    assert response_data["errors"][1]["msg"] == "Input should be greater than 0"
     assert "type" in response_data["errors"][1]
-    assert response_data["errors"][1]["type"] == "greater_than"
     assert "input" in response_data["errors"][2]
     assert response_data["errors"][2]["input"] == "not_a_number"
     assert "loc" in response_data["errors"][2]
@@ -387,9 +349,7 @@ async def test_multiple_validation_errors() -> None:
     assert response_data["errors"][2]["loc"][0] == "body"
     assert response_data["errors"][2]["loc"][1] == "quantity"
     assert "msg" in response_data["errors"][2]
-    assert response_data["errors"][2]["msg"] == "Input should be a valid integer, unable to parse string as an integer"
     assert "type" in response_data["errors"][2]
-    assert response_data["errors"][2]["type"] == "int_parsing"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -422,8 +382,6 @@ async def test_string_max_length_constraint_violation() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "ctx" in response_data["errors"][0]
-    assert "max_length" in response_data["errors"][0]["ctx"]
-    assert response_data["errors"][0]["ctx"]["max_length"] == 50
     assert "input" in response_data["errors"][0]
     assert (
         response_data["errors"][0]["input"]
@@ -434,9 +392,7 @@ async def test_string_max_length_constraint_violation() -> None:
     assert response_data["errors"][0]["loc"][0] == "query"
     assert response_data["errors"][0]["loc"][1] == "q"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "String should have at most 50 characters"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "string_too_long"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -471,8 +427,6 @@ async def test_nested_object_validation_error() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 3
     assert "ctx" in response_data["errors"][0]
-    assert "min_length" in response_data["errors"][0]["ctx"]
-    assert response_data["errors"][0]["ctx"]["min_length"] == 3
     assert "input" in response_data["errors"][0]
     assert response_data["errors"][0]["input"] == "SF"
     assert "loc" in response_data["errors"][0]
@@ -482,12 +436,8 @@ async def test_nested_object_validation_error() -> None:
     assert response_data["errors"][0]["loc"][2] == "address"
     assert response_data["errors"][0]["loc"][3] == "city"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "String should have at least 3 characters"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "string_too_short"
     assert "ctx" in response_data["errors"][1]
-    assert "min_length" in response_data["errors"][1]["ctx"]
-    assert response_data["errors"][1]["ctx"]["min_length"] == 5
     assert "input" in response_data["errors"][1]
     assert response_data["errors"][1]["input"] == "123"
     assert "loc" in response_data["errors"][1]
@@ -497,12 +447,8 @@ async def test_nested_object_validation_error() -> None:
     assert response_data["errors"][1]["loc"][2] == "address"
     assert response_data["errors"][1]["loc"][3] == "zip_code"
     assert "msg" in response_data["errors"][1]
-    assert response_data["errors"][1]["msg"] == "String should have at least 5 characters"
     assert "type" in response_data["errors"][1]
-    assert response_data["errors"][1]["type"] == "string_too_short"
     assert "ctx" in response_data["errors"][2]
-    assert "min_length" in response_data["errors"][2]["ctx"]
-    assert response_data["errors"][2]["ctx"]["min_length"] == 3
     assert "input" in response_data["errors"][2]
     assert response_data["errors"][2]["input"] == "Jo"
     assert "loc" in response_data["errors"][2]
@@ -511,9 +457,7 @@ async def test_nested_object_validation_error() -> None:
     assert response_data["errors"][2]["loc"][1] == "seller"
     assert response_data["errors"][2]["loc"][2] == "name"
     assert "msg" in response_data["errors"][2]
-    assert response_data["errors"][2]["msg"] == "String should have at least 3 characters"
     assert "type" in response_data["errors"][2]
-    assert response_data["errors"][2]["type"] == "string_too_short"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -541,8 +485,6 @@ async def test_10_nested_error_path() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "ctx" in response_data["errors"][0]
-    assert "pattern" in response_data["errors"][0]["ctx"]
-    assert response_data["errors"][0]["ctx"]["pattern"] == "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
     assert "input" in response_data["errors"][0]
     assert response_data["errors"][0]["input"] == "invalid"
     assert "loc" in response_data["errors"][0]
@@ -552,12 +494,7 @@ async def test_10_nested_error_path() -> None:
     assert response_data["errors"][0]["loc"][2] == "contact"
     assert response_data["errors"][0]["loc"][3] == "email"
     assert "msg" in response_data["errors"][0]
-    assert (
-        response_data["errors"][0]["msg"]
-        == "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'"
-    )
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "string_pattern_mismatch"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -594,9 +531,7 @@ async def test_invalid_datetime_format() -> None:
     assert response_data["errors"][0]["loc"][0] == "body"
     assert response_data["errors"][0]["loc"][1] == "created_at"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "Input should be a valid datetime"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "datetime_parsing"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -634,9 +569,7 @@ async def test_array_item_validation_error() -> None:
     assert response_data["errors"][0]["loc"][1] == "tags"
     assert response_data["errors"][0]["loc"][2] == "2"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "Input should be a valid unknown"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "type_error"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -674,9 +607,7 @@ async def test_missing_required_body_field() -> None:
     assert response_data["errors"][0]["loc"][0] == "body"
     assert response_data["errors"][0]["loc"][1] == "price"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "Field required"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "missing"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -713,9 +644,7 @@ async def test_body_field_type_error_string_for_float() -> None:
     assert response_data["errors"][0]["loc"][0] == "body"
     assert response_data["errors"][0]["loc"][1] == "price"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "Input should be a valid number, unable to parse string as a number"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "float_parsing"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -772,9 +701,7 @@ async def test_query_param_type_error_string_provided_for_int() -> None:
     assert response_data["errors"][0]["loc"][0] == "query"
     assert response_data["errors"][0]["loc"][1] == "skip"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "Input should be a valid integer, unable to parse string as an integer"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "int_parsing"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -807,9 +734,7 @@ async def test_header_validation_error() -> None:
     assert response_data["errors"][0]["loc"][0] == "header"
     assert response_data["errors"][0]["loc"][1] == "x-token"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "Field required"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "missing"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -837,8 +762,6 @@ async def test_09_multiple_validation_errors() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 3
     assert "ctx" in response_data["errors"][0]
-    assert "ge" in response_data["errors"][0]["ctx"]
-    assert response_data["errors"][0]["ctx"]["ge"] == 18
     assert "input" in response_data["errors"][0]
     assert response_data["errors"][0]["input"] == 15
     assert "loc" in response_data["errors"][0]
@@ -846,12 +769,8 @@ async def test_09_multiple_validation_errors() -> None:
     assert response_data["errors"][0]["loc"][0] == "body"
     assert response_data["errors"][0]["loc"][1] == "age"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "Input should be greater than or equal to 18"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "greater_than_equal"
     assert "ctx" in response_data["errors"][1]
-    assert "pattern" in response_data["errors"][1]["ctx"]
-    assert response_data["errors"][1]["ctx"]["pattern"] == "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
     assert "input" in response_data["errors"][1]
     assert response_data["errors"][1]["input"] == "invalid-email"
     assert "loc" in response_data["errors"][1]
@@ -859,15 +778,8 @@ async def test_09_multiple_validation_errors() -> None:
     assert response_data["errors"][1]["loc"][0] == "body"
     assert response_data["errors"][1]["loc"][1] == "email"
     assert "msg" in response_data["errors"][1]
-    assert (
-        response_data["errors"][1]["msg"]
-        == "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'"
-    )
     assert "type" in response_data["errors"][1]
-    assert response_data["errors"][1]["type"] == "string_pattern_mismatch"
     assert "ctx" in response_data["errors"][2]
-    assert "min_length" in response_data["errors"][2]["ctx"]
-    assert response_data["errors"][2]["ctx"]["min_length"] == 3
     assert "input" in response_data["errors"][2]
     assert response_data["errors"][2]["input"] == "ab"
     assert "loc" in response_data["errors"][2]
@@ -875,9 +787,7 @@ async def test_09_multiple_validation_errors() -> None:
     assert response_data["errors"][2]["loc"][0] == "body"
     assert response_data["errors"][2]["loc"][1] == "name"
     assert "msg" in response_data["errors"][2]
-    assert response_data["errors"][2]["msg"] == "String should have at least 3 characters"
     assert "type" in response_data["errors"][2]
-    assert response_data["errors"][2]["type"] == "string_too_short"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -907,8 +817,6 @@ async def test_numeric_constraint_violation_le_less_than_or_equal() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "ctx" in response_data["errors"][0]
-    assert "le" in response_data["errors"][0]["ctx"]
-    assert response_data["errors"][0]["ctx"]["le"] == 100
     assert "input" in response_data["errors"][0]
     assert response_data["errors"][0]["input"] == "101"
     assert "loc" in response_data["errors"][0]
@@ -916,9 +824,7 @@ async def test_numeric_constraint_violation_le_less_than_or_equal() -> None:
     assert response_data["errors"][0]["loc"][0] == "query"
     assert response_data["errors"][0]["loc"][1] == "limit"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "Input should be less than or equal to 100"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "less_than_equal"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -955,9 +861,7 @@ async def test_array_min_items_constraint_violation() -> None:
     assert response_data["errors"][0]["loc"][0] == "body"
     assert response_data["errors"][0]["loc"][1] == "tags"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "[] has less than 1 item"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "validation_error"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data

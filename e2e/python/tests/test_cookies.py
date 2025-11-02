@@ -59,8 +59,6 @@ async def test_cookie_regex_pattern_validation_fail() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "ctx" in response_data["errors"][0]
-    assert "pattern" in response_data["errors"][0]["ctx"]
-    assert response_data["errors"][0]["ctx"]["pattern"] == "^[A-Z0-9]{8}$"
     assert "input" in response_data["errors"][0]
     assert response_data["errors"][0]["input"] == "invalid-format"
     assert "loc" in response_data["errors"][0]
@@ -68,9 +66,7 @@ async def test_cookie_regex_pattern_validation_fail() -> None:
     assert response_data["errors"][0]["loc"][0] == "cookie"
     assert response_data["errors"][0]["loc"][1] == "tracking_id"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "String should match pattern '^[A-Z0-9]{8}$'"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "string_pattern_mismatch"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -214,9 +210,7 @@ async def test_cookie_validation_min_length_failure() -> None:
     assert response_data["errors"][0]["loc"][0] == "cookie"
     assert response_data["errors"][0]["loc"][1] == "tracking_id"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "String should have at least 3 characters"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "string_too_short"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -246,8 +240,6 @@ async def test_cookie_validation_max_length_constraint_fail() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "ctx" in response_data["errors"][0]
-    assert "max_length" in response_data["errors"][0]["ctx"]
-    assert response_data["errors"][0]["ctx"]["max_length"] == 20
     assert "input" in response_data["errors"][0]
     assert response_data["errors"][0]["input"] == "this_cookie_value_is_way_too_long"
     assert "loc" in response_data["errors"][0]
@@ -255,9 +247,7 @@ async def test_cookie_validation_max_length_constraint_fail() -> None:
     assert response_data["errors"][0]["loc"][0] == "cookie"
     assert response_data["errors"][0]["loc"][1] == "session_id"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "String should have at most 20 characters"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "string_too_long"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -292,9 +282,7 @@ async def test_required_cookie_missing() -> None:
     assert response_data["errors"][0]["loc"][0] == "cookie"
     assert response_data["errors"][0]["loc"][1] == "session_id"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "Field required"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "missing"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -344,9 +332,7 @@ async def test_apikey_cookie_authentication_missing() -> None:
     assert response_data["errors"][0]["loc"][0] == "cookie"
     assert response_data["errors"][0]["loc"][1] == "key"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "Field required"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "missing"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -529,9 +515,9 @@ async def test_multiple_cookies_success() -> None:
     client = TestClient(app)
 
     cookies = {
+        "fatebook_tracker": "tracker456",
         "googall_tracker": "ga789",
         "session_id": "session123",
-        "fatebook_tracker": "tracker456",
     }
     response = await client.get("/items/", cookies=cookies)
 

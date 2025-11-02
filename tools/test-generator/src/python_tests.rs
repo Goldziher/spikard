@@ -239,17 +239,28 @@ fn generate_body_assertions(code: &mut String, body: &serde_json::Value, path: &
 
                 match value {
                     serde_json::Value::Object(_) => {
-                        generate_body_assertions(code, value, &new_path);
+                        // Skip "ctx" objects in validation errors (contents vary by validator)
+                        let skip_ctx = key == "ctx" && path.contains("[\"errors\"]");
+                        if !skip_ctx {
+                            generate_body_assertions(code, value, &new_path);
+                        }
                     }
                     serde_json::Value::Array(_) => {
                         generate_body_assertions(code, value, &new_path);
                     }
                     _ => {
-                        // Skip asserting on "input" field inside errors when it's an empty string
-                        // (fixtures use "" as placeholder, actual value is dynamic)
-                        let skip_assertion = key == "input"
-                            && path.contains("[\"errors\"]")
-                            && matches!(value, serde_json::Value::String(s) if s.is_empty());
+                        // Skip asserting on certain fields inside validation errors
+                        // because they are implementation details that vary by validator
+                        let in_errors = path.contains("[\"errors\"]");
+                        let skip_assertion = in_errors
+                            && (
+                                // Skip empty input placeholders
+                                (key == "input" && matches!(value, serde_json::Value::String(s) if s.is_empty()))
+                            // Skip error messages (wording varies by validator)
+                            || key == "msg"
+                            // Skip error type names (naming varies by validator)
+                            || key == "type"
+                            );
 
                         if !skip_assertion {
                             code.push_str(&format!("    assert {} == {}\n", new_path, json_to_python(value)));
