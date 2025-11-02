@@ -1046,8 +1046,8 @@ async def test_query_parameter_with_special_characters_url_encoding() -> None:
     client = TestClient(app)
 
     params = {
-        "special": "&@A.ac",
         "email": "x@test.com",
+        "special": "&@A.ac",
     }
     response = await client.get("/test", query_params=params)
 
@@ -1184,8 +1184,8 @@ async def test_multiple_query_parameters_with_different_types() -> None:
     client = TestClient(app)
 
     params = {
-        "name": "john",
         "score": "95.5",
+        "name": "john",
         "age": "30",
         "active": "true",
     }

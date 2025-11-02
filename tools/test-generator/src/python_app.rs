@@ -12,7 +12,7 @@
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -107,7 +107,7 @@ fn generate_app_file_per_fixture(fixtures_by_category: &HashMap<String, Vec<Fixt
 
     // Imports
     code.push_str("\"\"\"Generated E2E test application with per-fixture app factories.\"\"\"\n");
-    code.push_str("# ruff: noqa: ARG001\n"); // Suppress unused argument warnings - FFI interface requires these
+    code.push_str("# ruff: noqa: ARG001, A002\n"); // Suppress unused argument and builtin shadowing warnings
     code.push_str("# mypy: ignore-errors\n"); // Generated code - skip type checking
     code.push('\n');
     code.push_str("from dataclasses import asdict, dataclass\n");
@@ -462,67 +462,13 @@ fn extract_parameters(schema: &Value) -> Result<Vec<(String, String, bool)>> {
 }
 
 /// Convert a name to a valid Python identifier
+///
+/// NOTE: We do NOT add underscore suffixes for Python builtins because:
+/// - FFI passes parameters by their exact schema name (e.g., "filter", "id", "type")
+/// - Python allows shadowing builtins in function parameters (only shadows within scope)
+/// - Adding suffixes would cause FFI mismatch (Rust passes "filter", Python expects "filter_")
 fn to_python_identifier(name: &str) -> String {
-    let cleaned = name.replace(['-', '.'], "_").to_lowercase();
-
-    // Avoid shadowing Python builtins by appending underscore
-    const PYTHON_BUILTINS: &[&str] = &[
-        "id",
-        "type",
-        "str",
-        "int",
-        "float",
-        "bool",
-        "list",
-        "dict",
-        "set",
-        "tuple",
-        "bytes",
-        "range",
-        "object",
-        "property",
-        "super",
-        "filter",
-        "map",
-        "zip",
-        "sorted",
-        "reversed",
-        "enumerate",
-        "len",
-        "min",
-        "max",
-        "sum",
-        "all",
-        "any",
-        "abs",
-        "round",
-        "pow",
-        "divmod",
-        "input",
-        "print",
-        "open",
-        "format",
-        "hash",
-        "help",
-        "next",
-        "iter",
-        "callable",
-        "compile",
-        "eval",
-        "exec",
-        "globals",
-        "locals",
-        "vars",
-        "dir",
-        "isinstance",
-        "issubclass",
-    ];
-
-    if PYTHON_BUILTINS.contains(&cleaned.as_str()) {
-        format!("{}_", cleaned)
-    } else {
-        cleaned
-    }
+    name.replace(['-', '.'], "_").to_lowercase()
 }
 
 /// Make a name unique by adding a suffix if needed

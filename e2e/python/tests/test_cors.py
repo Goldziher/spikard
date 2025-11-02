@@ -12,8 +12,8 @@ async def test_07_cors_preflight_header_not_allowed() -> None:
 
     headers = {
         "Access-Control-Request-Headers": "X-Custom-Header",
-        "Access-Control-Request-Method": "POST",
         "Origin": "https://example.com",
+        "Access-Control-Request-Method": "POST",
     }
     response = await client.options("/api/data", headers=headers)
 
@@ -30,9 +30,9 @@ async def test_cors_preflight_request() -> None:
     client = TestClient(app)
 
     headers = {
-        "Origin": "https://example.com",
-        "Access-Control-Request-Method": "POST",
         "Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
+        "Access-Control-Request-Method": "POST",
+        "Origin": "https://example.com",
     }
     response = await client.options("/items/", headers=headers)
 
