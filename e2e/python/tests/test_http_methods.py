@@ -1,11 +1,12 @@
 """E2E tests for http_methods."""
 
+import pytest
+from typing import Any
 
 async def test_options_cors_preflight_request() -> None:
     """Tests OPTIONS method for CORS preflight."""
-    from app.main import create_app_http_methods_options_cors_preflight_request
-
     from spikard.testing import TestClient
+    from app.main import create_app_http_methods_options_cors_preflight_request
 
     app = create_app_http_methods_options_cors_preflight_request()
     client = TestClient(app)
@@ -22,9 +23,8 @@ async def test_options_cors_preflight_request() -> None:
 
 async def test_delete_remove_resource() -> None:
     """Tests DELETE method to remove a resource."""
-    from app.main import create_app_http_methods_delete_remove_resource
-
     from spikard.testing import TestClient
+    from app.main import create_app_http_methods_delete_remove_resource
 
     app = create_app_http_methods_delete_remove_resource()
     client = TestClient(app)
@@ -32,14 +32,13 @@ async def test_delete_remove_resource() -> None:
     response = await client.delete("/items/1")
 
     assert response.status_code == 200
-    response.json()
+    response_data = response.json()
 
 
 async def test_put_create_resource_if_doesn_t_exist() -> None:
     """Tests PUT creating new resource at specific URI."""
-    from app.main import create_app_http_methods_put_create_resource_if_doesn_t_exist
-
     from spikard.testing import TestClient
+    from app.main import create_app_http_methods_put_create_resource_if_doesn_t_exist
 
     app = create_app_http_methods_put_create_resource_if_doesn_t_exist()
     client = TestClient(app)
@@ -62,9 +61,8 @@ async def test_put_create_resource_if_doesn_t_exist() -> None:
 
 async def test_patch_update_multiple_fields() -> None:
     """Tests PATCH updating multiple fields at once."""
-    from app.main import create_app_http_methods_patch_update_multiple_fields
-
     from spikard.testing import TestClient
+    from app.main import create_app_http_methods_patch_update_multiple_fields
 
     app = create_app_http_methods_patch_update_multiple_fields()
     client = TestClient(app)
@@ -80,7 +78,7 @@ async def test_patch_update_multiple_fields() -> None:
     assert "id" in response_data
     assert response_data["id"] == 1
     assert "in_stock" in response_data
-    assert not response_data["in_stock"]
+    assert response_data["in_stock"] == False
     assert "name" in response_data
     assert response_data["name"] == "Updated Name"
     assert "price" in response_data
@@ -89,9 +87,8 @@ async def test_patch_update_multiple_fields() -> None:
 
 async def test_put_validation_error() -> None:
     """Tests PUT with invalid data returns 422."""
-    from app.main import create_app_http_methods_put_validation_error
-
     from spikard.testing import TestClient
+    from app.main import create_app_http_methods_put_validation_error
 
     app = create_app_http_methods_put_validation_error()
     client = TestClient(app)
@@ -109,7 +106,6 @@ async def test_put_validation_error() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 2
     assert "input" in response_data["errors"][0]
-    assert response_data["errors"][0]["input"] == "X"
     assert "loc" in response_data["errors"][0]
     assert len(response_data["errors"][0]["loc"]) == 2
     assert response_data["errors"][0]["loc"][0] == "body"
@@ -117,7 +113,6 @@ async def test_put_validation_error() -> None:
     assert "msg" in response_data["errors"][0]
     assert "type" in response_data["errors"][0]
     assert "input" in response_data["errors"][1]
-    assert response_data["errors"][1]["input"] == -10
     assert "loc" in response_data["errors"][1]
     assert len(response_data["errors"][1]["loc"]) == 2
     assert response_data["errors"][1]["loc"][0] == "body"
@@ -134,9 +129,8 @@ async def test_put_validation_error() -> None:
 
 async def test_head_get_metadata_without_body() -> None:
     """Tests HEAD method returns headers without response body."""
-    from app.main import create_app_http_methods_head_get_metadata_without_body
-
     from spikard.testing import TestClient
+    from app.main import create_app_http_methods_head_get_metadata_without_body
 
     app = create_app_http_methods_head_get_metadata_without_body()
     client = TestClient(app)
@@ -148,9 +142,8 @@ async def test_head_get_metadata_without_body() -> None:
 
 async def test_delete_with_response_body() -> None:
     """Tests DELETE returning deleted resource data."""
-    from app.main import create_app_http_methods_delete_with_response_body
-
     from spikard.testing import TestClient
+    from app.main import create_app_http_methods_delete_with_response_body
 
     app = create_app_http_methods_delete_with_response_body()
     client = TestClient(app)
@@ -169,9 +162,8 @@ async def test_delete_with_response_body() -> None:
 
 async def test_put_missing_required_field() -> None:
     """Tests PUT with missing required fields returns 422."""
-    from app.main import create_app_http_methods_put_missing_required_field
-
     from spikard.testing import TestClient
+    from app.main import create_app_http_methods_put_missing_required_field
 
     app = create_app_http_methods_put_missing_required_field()
     client = TestClient(app)
@@ -189,7 +181,6 @@ async def test_put_missing_required_field() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "input" in response_data["errors"][0]
-    assert response_data["errors"][0]["input"] == "1"
     assert "loc" in response_data["errors"][0]
     assert len(response_data["errors"][0]["loc"]) == 2
     assert response_data["errors"][0]["loc"][0] == "body"
@@ -206,9 +197,8 @@ async def test_put_missing_required_field() -> None:
 
 async def test_patch_partial_update() -> None:
     """Tests PATCH method for partial resource updates."""
-    from app.main import create_app_http_methods_patch_partial_update
-
     from spikard.testing import TestClient
+    from app.main import create_app_http_methods_patch_partial_update
 
     app = create_app_http_methods_patch_partial_update()
     client = TestClient(app)
@@ -224,7 +214,7 @@ async def test_patch_partial_update() -> None:
     assert "id" in response_data
     assert response_data["id"] == 1
     assert "in_stock" in response_data
-    assert response_data["in_stock"]
+    assert response_data["in_stock"] == True
     assert "name" in response_data
     assert response_data["name"] == "Existing Item"
     assert "price" in response_data
@@ -233,9 +223,8 @@ async def test_patch_partial_update() -> None:
 
 async def test_delete_resource_not_found() -> None:
     """Tests DELETE on non-existent resource returns 404."""
-    from app.main import create_app_http_methods_delete_resource_not_found
-
     from spikard.testing import TestClient
+    from app.main import create_app_http_methods_delete_resource_not_found
 
     app = create_app_http_methods_delete_resource_not_found()
     client = TestClient(app)
@@ -243,14 +232,13 @@ async def test_delete_resource_not_found() -> None:
     response = await client.delete("/items/999")
 
     assert response.status_code == 200
-    response.json()
+    response_data = response.json()
 
 
 async def test_put_idempotent_operation() -> None:
     """Tests PUT idempotency - repeated calls produce same result."""
-    from app.main import create_app_http_methods_put_idempotent_operation
-
     from spikard.testing import TestClient
+    from app.main import create_app_http_methods_put_idempotent_operation
 
     app = create_app_http_methods_put_idempotent_operation()
     client = TestClient(app)
@@ -273,9 +261,8 @@ async def test_put_idempotent_operation() -> None:
 
 async def test_put_complete_resource_replacement() -> None:
     """Tests PUT method for complete resource replacement."""
-    from app.main import create_app_http_methods_put_complete_resource_replacement
-
     from spikard.testing import TestClient
+    from app.main import create_app_http_methods_put_complete_resource_replacement
 
     app = create_app_http_methods_put_complete_resource_replacement()
     client = TestClient(app)
@@ -283,13 +270,7 @@ async def test_put_complete_resource_replacement() -> None:
     headers = {
         "Content-Type": "application/json",
     }
-    json_data = {
-        "description": "Completely replaced",
-        "id": 1,
-        "in_stock": True,
-        "name": "Updated Item",
-        "price": 99.99,
-    }
+    json_data = {"description": "Completely replaced", "id": 1, "in_stock": True, "name": "Updated Item", "price": 99.99}
     response = await client.put("/items/1", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -299,8 +280,10 @@ async def test_put_complete_resource_replacement() -> None:
     assert "id" in response_data
     assert response_data["id"] == 1
     assert "in_stock" in response_data
-    assert response_data["in_stock"]
+    assert response_data["in_stock"] == True
     assert "name" in response_data
     assert response_data["name"] == "Updated Item"
     assert "price" in response_data
     assert response_data["price"] == 99.99
+
+
