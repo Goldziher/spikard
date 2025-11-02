@@ -12,7 +12,7 @@
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -299,8 +299,9 @@ fn generate_handler_function_for_fixture(
         None
     };
 
-    // Determine response body and status code
-    let response_info = determine_response_body(&[fixture]);
+    // Get expected response status code and body
+    let expected_status = fixture.expected_response.status_code;
+    let expected_body = fixture.expected_response.body.as_ref().map(json_to_python);
 
     // Generate handler function
     let mut code = String::new();
@@ -338,18 +339,21 @@ fn generate_handler_function_for_fixture(
         route
     ));
 
-    // Function body
-    if let Some((body_json, status_code)) = response_info {
-        if status_code == 200 {
-            // Default status code - return plain JSON
-            code.push_str(&format!("    return {}\n", body_json));
-        } else {
-            // Custom status code - wrap in Response()
+    // Function body - handle different response scenarios
+    if expected_status != 200 {
+        // Non-200 status code - use Response() wrapper
+        if let Some(body_json) = expected_body {
             code.push_str(&format!(
                 "    return Response(content={}, status_code={})\n",
-                body_json, status_code
+                body_json, expected_status
             ));
+        } else {
+            // No body, just status code (e.g., 204 No Content)
+            code.push_str(&format!("    return Response(status_code={})\n", expected_status));
         }
+    } else if let Some(body_json) = expected_body {
+        // 200 status with explicit body
+        code.push_str(&format!("    return {}\n", body_json));
     } else {
         code.push_str("    # Echo back parameters for testing\n");
         code.push_str("    result: dict[str, Any] = {}\n");
@@ -864,20 +868,6 @@ fn build_parameter_schema_with_sources(params: &Value) -> Result<String> {
 
     let schema_json = serde_json::to_string(&schema)?;
     Ok(json_to_python_dict(&schema_json))
-}
-
-/// Determine the response body from fixtures
-fn determine_response_body(fixtures: &[&Fixture]) -> Option<(String, u16)> {
-    // Use the first fixture with a response body, returning (body, status_code)
-    // Include ALL status codes, not just 2xx
-    for fixture in fixtures {
-        if let Some(ref body) = fixture.expected_response.body {
-            // Convert JSON to Python dict literal
-            return Some((json_to_python(body), fixture.expected_response.status_code));
-        }
-    }
-
-    None
 }
 
 /// Convert JSON value to Python dict literal
