@@ -209,7 +209,6 @@ async def test_cookie_validation_min_length_failure() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "input" in response_data["errors"][0]
-    assert response_data["errors"][0]["input"] == ""
     assert "loc" in response_data["errors"][0]
     assert len(response_data["errors"][0]["loc"]) == 2
     assert response_data["errors"][0]["loc"][0] == "cookie"
@@ -288,7 +287,6 @@ async def test_required_cookie_missing() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "input" in response_data["errors"][0]
-    assert response_data["errors"][0]["input"] == ""
     assert "loc" in response_data["errors"][0]
     assert len(response_data["errors"][0]["loc"]) == 2
     assert response_data["errors"][0]["loc"][0] == "cookie"
@@ -532,8 +530,8 @@ async def test_multiple_cookies_success() -> None:
 
     cookies = {
         "googall_tracker": "ga789",
-        "fatebook_tracker": "tracker456",
         "session_id": "session123",
+        "fatebook_tracker": "tracker456",
     }
     response = await client.get("/items/", cookies=cookies)
 

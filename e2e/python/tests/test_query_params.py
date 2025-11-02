@@ -1184,8 +1184,8 @@ async def test_multiple_query_parameters_with_different_types() -> None:
     client = TestClient(app)
 
     params = {
-        "name": "john",
         "age": "30",
+        "name": "john",
         "active": "true",
         "score": "95.5",
     }
