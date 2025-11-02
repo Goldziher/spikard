@@ -6,6 +6,18 @@
     "test_file": "tests/test_tutorial/test_query_params_str_validations/test_tutorial003.py",
     "test_function": "test_query_params_str_validations"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "q": {
+          "type": "string",
+          "minLength": 3
+        }
+      }
+    }
+  },
   "request": {
     "method": "GET",
     "path": "/items/?q=ab",

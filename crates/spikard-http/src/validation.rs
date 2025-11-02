@@ -43,9 +43,90 @@ impl SchemaValidator {
         &self.schema
     }
 
+    /// Pre-process data to convert file objects to strings for format: "binary" validation
+    ///
+    /// Files uploaded via multipart are converted to objects like:
+    /// {"filename": "...", "size": N, "content": "...", "content_type": "..."}
+    ///
+    /// But schemas define them as: {"type": "string", "format": "binary"}
+    ///
+    /// This method recursively processes the data and converts file objects to their content strings
+    /// so that validation passes, while preserving the original structure for handlers to use.
+    fn preprocess_binary_fields(&self, data: &Value) -> Value {
+        self.preprocess_value_with_schema(data, &self.schema)
+    }
+
+    #[allow(clippy::only_used_in_recursion)]
+    fn preprocess_value_with_schema(&self, data: &Value, schema: &Value) -> Value {
+        // Check if this schema defines a binary field (type: "string", format: "binary")
+        if let Some(schema_obj) = schema.as_object() {
+            let is_string_type = schema_obj.get("type").and_then(|t| t.as_str()) == Some("string");
+            let is_binary_format = schema_obj.get("format").and_then(|f| f.as_str()) == Some("binary");
+
+            #[allow(clippy::collapsible_if)]
+            if is_string_type && is_binary_format {
+                // This is a binary field - check if data is a file object
+                if let Some(data_obj) = data.as_object() {
+                    if data_obj.contains_key("filename")
+                        && data_obj.contains_key("content")
+                        && data_obj.contains_key("size")
+                        && data_obj.contains_key("content_type")
+                    {
+                        // This is a file object - extract content for validation
+                        return data_obj.get("content").unwrap_or(&Value::Null).clone();
+                    }
+                }
+                // Not a file object, return as-is
+                return data.clone();
+            }
+
+            // Handle arrays
+            #[allow(clippy::collapsible_if)]
+            if schema_obj.get("type").and_then(|t| t.as_str()) == Some("array") {
+                if let Some(items_schema) = schema_obj.get("items") {
+                    if let Some(data_array) = data.as_array() {
+                        let processed_array: Vec<Value> = data_array
+                            .iter()
+                            .map(|item| self.preprocess_value_with_schema(item, items_schema))
+                            .collect();
+                        return Value::Array(processed_array);
+                    }
+                }
+            }
+
+            // Handle objects
+            #[allow(clippy::collapsible_if)]
+            if schema_obj.get("type").and_then(|t| t.as_str()) == Some("object") {
+                if let Some(properties) = schema_obj.get("properties").and_then(|p| p.as_object()) {
+                    if let Some(data_obj) = data.as_object() {
+                        let mut processed_obj = serde_json::Map::new();
+                        for (key, value) in data_obj {
+                            if let Some(prop_schema) = properties.get(key) {
+                                processed_obj
+                                    .insert(key.clone(), self.preprocess_value_with_schema(value, prop_schema));
+                            } else {
+                                processed_obj.insert(key.clone(), value.clone());
+                            }
+                        }
+                        return Value::Object(processed_obj);
+                    }
+                }
+            }
+        }
+
+        // No schema match, return data as-is
+        data.clone()
+    }
+
     /// Validate JSON data against the schema
     pub fn validate(&self, data: &Value) -> Result<(), ValidationError> {
-        let validation_errors: Vec<_> = self.compiled.iter_errors(data).collect();
+        // Pre-process data to handle format: "binary" fields
+        // Files uploaded via multipart/form-data are converted to objects with
+        // {filename, size, content, content_type}, but schemas expect type: "string", format: "binary"
+        // We need to convert these file objects to strings for validation
+        let processed_data = self.preprocess_binary_fields(data);
+
+        let validation_errors: Vec<_> = self.compiled.iter_errors(&processed_data).collect();
 
         if validation_errors.is_empty() {
             return Ok(());

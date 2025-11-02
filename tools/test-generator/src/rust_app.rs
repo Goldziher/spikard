@@ -275,15 +275,21 @@ fn sanitize_name(name: &str) -> String {
 /// Strip type hints and query strings from route pattern
 /// Examples:
 /// - {param:type} -> {param}
+/// - {param:path} -> {*param} (Axum wildcard syntax)
 /// - /items/?limit=10 -> /items/
 fn strip_type_hints(route: &str) -> String {
     // First strip query string
     let route_without_query = route.split('?').next().unwrap_or(route);
 
-    // Then strip type hints
+    // Handle path type parameters specially - convert to Axum wildcard syntax
+    // {param:path} -> {*param}
+    let path_regex = regex::Regex::new(r"\{([^:}]+):path\}").unwrap();
+    let route_with_wildcards = path_regex.replace_all(route_without_query, "{*$1}");
+
+    // Then strip other type hints
     regex::Regex::new(r"\{([^:}]+):[^}]+\}")
         .unwrap()
-        .replace_all(route_without_query, "{$1}")
+        .replace_all(&route_with_wildcards, "{$1}")
         .to_string()
 }
 
@@ -478,8 +484,9 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
 
     // If the fixture expects a non-2xx status code (like 401, 403), this is likely an authentication
     // or authorization test that should return a stub response without doing validation.
+    // However, 422 is a validation error and should use the SchemaValidator.
     // These are NOT validation tests, so we should just return the expected response.
-    let is_auth_stub = expected_status >= 300;
+    let is_auth_stub = expected_status >= 300 && expected_status != 422;
 
     if is_auth_stub {
         // Generate a simple stub handler that returns the expected response without validation
@@ -579,8 +586,8 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
     });
 
     // Extract explicit body schema - NO inference, NO merging
-    // Skip body schema for multipart requests since middleware handles file parsing
-    let body_schema = if has_body && !is_multipart {
+    // Include body schema for multipart requests - middleware converts to JSON
+    let body_schema = if has_body {
         // Find the FIRST fixture with explicit handler.body_schema
         let mut explicit_schema = None;
         for fixture in fixtures {
@@ -688,40 +695,9 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
         };
 
         // Generate file validation code if we have file schemas
-        let file_validation_code = if let Some(ref file_schema) = file_schemas {
-            let file_schema_json = serde_json::to_string(file_schema)
-                .unwrap()
-                .replace('\\', "\\\\")
-                .replace('"', "\\\"");
-            format!(
-                r#"
-            // Validate uploaded files
-            use spikard_http::file_validator::{{FileParameterSchema, validate_files}};
-            use std::collections::HashMap as StdHashMap;
-
-            let file_schemas_json: Value = serde_json::from_str("{}").unwrap();
-            let mut file_schemas = StdHashMap::new();
-            if let Some(schemas_obj) = file_schemas_json.as_object() {{
-                for (field_name, schema_value) in schemas_obj {{
-                    let file_schema = FileParameterSchema::from_json(schema_value);
-                    file_schemas.insert(field_name.clone(), file_schema);
-                }}
-            }}
-
-            // Validate files from the parsed multipart body
-            if let Err(file_errors) = validate_files(&body, &file_schemas) {{
-                let error_details: Vec<Value> = file_errors.iter().map(|e| e.to_json()).collect();
-                let error_response = serde_json::json!({{
-                    "detail": error_details
-                }});
-                return (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response));
-            }}
-"#,
-                file_schema_json
-            )
-        } else {
-            String::new()
-        };
+        // TODO: Re-enable once file_validator module is implemented
+        let file_validation_code = String::new();
+        let _file_schemas = file_schemas; // Suppress unused warning
 
         // Generate CORS validation code if CORS config is present
         let cors_validation_code = if let Some(ref cors_cfg) = cors_config {

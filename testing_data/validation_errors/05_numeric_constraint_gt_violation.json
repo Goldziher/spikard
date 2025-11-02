@@ -36,5 +36,20 @@
       ]
     }
   },
-  "notes": "gt (greater than) constraint requires value > threshold, not >="
+  "notes": "gt (greater than) constraint requires value > threshold, not >=",
+  "handler": {
+    "route": "/items/",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "q": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  }
 }
