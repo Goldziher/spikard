@@ -13,6 +13,1452 @@ from pydantic import BaseModel
 from spikard import Response, Spikard
 
 
+def status_codes_408_request_timeout(
+    body: dict[str, Any],
+) -> Any:
+    """Handler for POST /slow-endpoint."""
+    return Response(content={"detail": "Request timeout"}, status_code=408)
+
+
+def create_app_status_codes_408_request_timeout() -> Spikard:
+    """App factory for fixture: 408 Request Timeout."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/slow-endpoint",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {"data": {"type": "string"}},
+            "required": ["data"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(status_codes_408_request_timeout)
+    return app
+
+
+def status_codes_404_not_found_resource_not_found(
+    code: str,
+) -> Any:
+    """Handler for GET /status-test/{code}."""
+    return Response(content={"detail": "Item not found"}, status_code=404)
+
+
+def create_app_status_codes_404_not_found_resource_not_found() -> Spikard:
+    """App factory for fixture: 404 Not Found - Resource not found."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/status-test/{code}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"code": {"source": "path", "type": "string"}},
+            "required": ["code"],
+            "type": "object",
+        },
+    )(status_codes_404_not_found_resource_not_found)
+    return app
+
+
+def status_codes_503_service_unavailable_server_overload() -> Any:
+    """Handler for GET /health."""
+    return Response(content={"detail": "Service temporarily unavailable"}, status_code=503)
+
+
+def create_app_status_codes_503_service_unavailable_server_overload() -> Spikard:
+    """App factory for fixture: 503 Service Unavailable - Server overload."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/health", body_schema=None, parameter_schema=None)(
+        status_codes_503_service_unavailable_server_overload
+    )
+    return app
+
+
+class StatusCodes422UnprocessableEntityValidationErrorBody(NamedTuple):
+    """Request body NamedTuple (immutable)."""
+
+    name: str
+    price: str
+
+
+def status_codes_422_unprocessable_entity_validation_error(
+    body: StatusCodes422UnprocessableEntityValidationErrorBody,
+) -> Any:
+    """Handler for POST /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(body._asdict())
+    return result
+
+
+def create_app_status_codes_422_unprocessable_entity_validation_error() -> Spikard:
+    """App factory for fixture: 422 Unprocessable Entity - Validation error."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/items/",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {"name": {"type": "string"}, "price": {"type": "string"}},
+            "required": ["price", "name"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(status_codes_422_unprocessable_entity_validation_error)
+    return app
+
+
+def status_codes_302_found_temporary_redirect() -> Any:
+    """Handler for GET /temp-redirect."""
+    return Response(status_code=302)
+
+
+def create_app_status_codes_302_found_temporary_redirect() -> Spikard:
+    """App factory for fixture: 302 Found - Temporary redirect."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/temp-redirect", body_schema=None, parameter_schema=None)(
+        status_codes_302_found_temporary_redirect
+    )
+    return app
+
+
+def status_codes_304_not_modified_cached_content_valid(
+    code: str,
+    if_none_match: str | None = None,
+) -> Any:
+    """Handler for GET /status-test/{code}."""
+    return Response(status_code=304)
+
+
+def create_app_status_codes_304_not_modified_cached_content_valid() -> Spikard:
+    """App factory for fixture: 304 Not Modified - Cached content valid."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/status-test/{code}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {
+                "code": {"source": "path", "type": "string"},
+                "if_none_match": {"source": "header", "type": "string"},
+            },
+            "required": ["code"],
+            "type": "object",
+        },
+    )(status_codes_304_not_modified_cached_content_valid)
+    return app
+
+
+def status_codes_400_bad_request_invalid_request(
+    body: dict[str, Any],
+) -> Any:
+    """Handler for POST /items/."""
+    return Response(content={"detail": "Invalid request format"}, status_code=400)
+
+
+def create_app_status_codes_400_bad_request_invalid_request() -> Spikard:
+    """App factory for fixture: 400 Bad Request - Invalid request."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("POST", "/items/", body_schema={"type": "string"}, parameter_schema=None)(
+        status_codes_400_bad_request_invalid_request
+    )
+    return app
+
+
+def status_codes_22_501_not_implemented() -> Any:
+    """Handler for TRACE /data."""
+    return Response(
+        content={"error": "Not Implemented", "message": "The TRACE method is not supported by this server"},
+        status_code=501,
+    )
+
+
+def create_app_status_codes_22_501_not_implemented() -> Spikard:
+    """App factory for fixture: 22_501_not_implemented."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("TRACE", "/data", body_schema=None, parameter_schema=None)(status_codes_22_501_not_implemented)
+    return app
+
+
+def status_codes_204_no_content_success_with_no_body(
+    code: str,
+) -> Any:
+    """Handler for DELETE /status-test/{code}."""
+    return Response(status_code=204)
+
+
+def create_app_status_codes_204_no_content_success_with_no_body() -> Spikard:
+    """App factory for fixture: 204 No Content - Success with no body."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "DELETE",
+        "/status-test/{code}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"code": {"source": "path", "type": "string"}},
+            "required": ["code"],
+            "type": "object",
+        },
+    )(status_codes_204_no_content_success_with_no_body)
+    return app
+
+
+def status_codes_301_moved_permanently_permanent_redirect() -> Any:
+    """Handler for GET /old-path."""
+    return Response(status_code=301)
+
+
+def create_app_status_codes_301_moved_permanently_permanent_redirect() -> Spikard:
+    """App factory for fixture: 301 Moved Permanently - Permanent redirect."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/old-path", body_schema=None, parameter_schema=None)(
+        status_codes_301_moved_permanently_permanent_redirect
+    )
+    return app
+
+
+class StatusCodes201CreatedResourceCreatedBody(msgspec.Struct):
+    """Request body msgspec.Struct (fast typed)."""
+
+    name: str
+
+
+def status_codes_201_created_resource_created(
+    body: StatusCodes201CreatedResourceCreatedBody,
+) -> Any:
+    """Handler for POST /items/."""
+    return Response(content={"id": 1, "name": "New Item"}, status_code=201)
+
+
+def create_app_status_codes_201_created_resource_created() -> Spikard:
+    """App factory for fixture: 201 Created - Resource created."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/items/",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {"name": {"type": "string"}},
+            "required": ["name"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(status_codes_201_created_resource_created)
+    return app
+
+
+class StatusCodes202AcceptedRequestAcceptedForProcessingBody(BaseModel):
+    """Request body Pydantic model."""
+
+    task: str
+
+
+def status_codes_202_accepted_request_accepted_for_processing(
+    body: StatusCodes202AcceptedRequestAcceptedForProcessingBody,
+) -> Any:
+    """Handler for POST /tasks/."""
+    return Response(content={"message": "Task accepted for processing", "task_id": "abc123"}, status_code=202)
+
+
+def create_app_status_codes_202_accepted_request_accepted_for_processing() -> Spikard:
+    """App factory for fixture: 202 Accepted - Request accepted for processing."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/tasks/",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {"task": {"type": "string"}},
+            "required": ["task"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(status_codes_202_accepted_request_accepted_for_processing)
+    return app
+
+
+def status_codes_307_temporary_redirect_method_preserved(
+    body: dict[str, Any],
+) -> Any:
+    """Handler for POST /redirect-post."""
+    return Response(content={}, status_code=307)
+
+
+def create_app_status_codes_307_temporary_redirect_method_preserved() -> Spikard:
+    """App factory for fixture: 307 Temporary Redirect - Method preserved."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/redirect-post",
+        body_schema={"additionalProperties": False, "properties": {}, "type": "object"},
+        parameter_schema=None,
+    )(status_codes_307_temporary_redirect_method_preserved)
+    return app
+
+
+def status_codes_500_internal_server_error_server_error() -> Any:
+    """Handler for GET /error."""
+    return Response(
+        content={
+            "detail": "Internal server error",
+            "status": 500,
+            "title": "Internal Server Error",
+            "type": "https://spikard.dev/errors/internal-server-error",
+        },
+        status_code=500,
+    )
+
+
+def create_app_status_codes_500_internal_server_error_server_error() -> Spikard:
+    """App factory for fixture: 500 Internal Server Error - Server error."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/error", body_schema=None, parameter_schema=None)(
+        status_codes_500_internal_server_error_server_error
+    )
+    return app
+
+
+def status_codes_20_414_uri_too_long() -> Any:
+    """Handler for GET /data."""
+    return Response(
+        content={"error": "URI Too Long", "message": "Request URI exceeds maximum allowed length of 2048 characters"},
+        status_code=414,
+    )
+
+
+def create_app_status_codes_20_414_uri_too_long() -> Spikard:
+    """App factory for fixture: 20_414_uri_too_long."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/data", body_schema=None, parameter_schema=None)(status_codes_20_414_uri_too_long)
+    return app
+
+
+def status_codes_401_unauthorized_missing_authentication() -> Any:
+    """Handler for GET /users/me."""
+    return Response(content={"detail": "Not authenticated"}, status_code=401)
+
+
+def create_app_status_codes_401_unauthorized_missing_authentication() -> Spikard:
+    """App factory for fixture: 401 Unauthorized - Missing authentication."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/users/me", body_schema=None, parameter_schema=None)(
+        status_codes_401_unauthorized_missing_authentication
+    )
+    return app
+
+
+def status_codes_23_503_service_unavailable() -> Any:
+    """Handler for GET /data."""
+    return Response(
+        content={
+            "error": "Service Unavailable",
+            "message": "The service is temporarily unavailable. Please try again later.",
+        },
+        status_code=503,
+    )
+
+
+def create_app_status_codes_23_503_service_unavailable() -> Spikard:
+    """App factory for fixture: 23_503_service_unavailable."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/data", body_schema=None, parameter_schema=None)(status_codes_23_503_service_unavailable)
+    return app
+
+
+class StatusCodes19413PayloadTooLargeBody(BaseModel):
+    """Request body Pydantic model."""
+
+    data: str | None = None
+
+
+def status_codes_19_413_payload_too_large(
+    body: StatusCodes19413PayloadTooLargeBody,
+) -> Any:
+    """Handler for POST /upload."""
+    return Response(
+        content={
+            "error": "Payload Too Large",
+            "message": "Request body size exceeds maximum allowed size of 1024 bytes",
+        },
+        status_code=413,
+    )
+
+
+def create_app_status_codes_19_413_payload_too_large() -> Spikard:
+    """App factory for fixture: 19_413_payload_too_large."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/upload",
+        body_schema={"properties": {"data": {"type": "string"}}, "type": "object"},
+        parameter_schema=None,
+    )(status_codes_19_413_payload_too_large)
+    return app
+
+
+def status_codes_403_forbidden_insufficient_permissions() -> Any:
+    """Handler for GET /admin/users."""
+    return Response(content={"detail": "Not enough permissions"}, status_code=403)
+
+
+def create_app_status_codes_403_forbidden_insufficient_permissions() -> Spikard:
+    """App factory for fixture: 403 Forbidden - Insufficient permissions."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/admin/users", body_schema=None, parameter_schema=None)(
+        status_codes_403_forbidden_insufficient_permissions
+    )
+    return app
+
+
+def status_codes_21_431_request_header_fields_too_large(
+    x_large_header: str | None = None,
+) -> Any:
+    """Handler for GET /data."""
+    return Response(
+        content={
+            "error": "Request Header Fields Too Large",
+            "message": "Request headers exceed maximum allowed size of 8192 bytes",
+        },
+        status_code=431,
+    )
+
+
+def create_app_status_codes_21_431_request_header_fields_too_large() -> Spikard:
+    """App factory for fixture: 21_431_request_header_fields_too_large."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/data",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"x_large_header": {"source": "header", "type": "string"}},
+            "required": [],
+            "type": "object",
+        },
+    )(status_codes_21_431_request_header_fields_too_large)
+    return app
+
+
+def status_codes_429_too_many_requests() -> Any:
+    """Handler for GET /api/resource."""
+    return Response(content={"detail": "Rate limit exceeded. Try again in 60 seconds."}, status_code=429)
+
+
+def create_app_status_codes_429_too_many_requests() -> Spikard:
+    """App factory for fixture: 429 Too Many Requests."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/api/resource", body_schema=None, parameter_schema=None)(
+        status_codes_429_too_many_requests
+    )
+    return app
+
+
+def status_codes_200_ok_success(
+    code: str,
+) -> Any:
+    """Handler for GET /status-test/{code}."""
+    return Response(content={"id": 1, "name": "Item 1"}, status_code=200)
+
+
+def create_app_status_codes_200_ok_success() -> Spikard:
+    """App factory for fixture: 200 OK - Success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/status-test/{code}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"code": {"source": "path", "type": "string"}},
+            "required": ["code"],
+            "type": "object",
+        },
+    )(status_codes_200_ok_success)
+    return app
+
+
+def status_codes_206_partial_content() -> Any:
+    """Handler for GET /files/document.pdf."""
+    return Response(content="binary_data_1024_bytes", status_code=206)
+
+
+def create_app_status_codes_206_partial_content() -> Spikard:
+    """App factory for fixture: 206 Partial Content."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/files/document.pdf", body_schema=None, parameter_schema=None)(
+        status_codes_206_partial_content
+    )
+    return app
+
+
+def path_params_boolean_path_parameter_true(
+    item_id: bool,
+) -> Any:
+    """Handler for GET /path/bool/{item_id}."""
+    return Response(content={"item_id": True}, status_code=200)
+
+
+def create_app_path_params_boolean_path_parameter_true() -> Spikard:
+    """App factory for fixture: Boolean path parameter - True."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/path/bool/{item_id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"item_id": {"source": "path", "type": "boolean"}},
+            "required": ["item_id"],
+            "type": "object",
+        },
+    )(path_params_boolean_path_parameter_true)
+    return app
+
+
+def path_params_29_decimal_path_param_success(
+    amount: str,
+) -> Any:
+    """Handler for GET /prices/{amount}."""
+    return Response(content={"amount": "19.99"}, status_code=200)
+
+
+def create_app_path_params_29_decimal_path_param_success() -> Spikard:
+    """App factory for fixture: 29_decimal_path_param_success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/prices/{amount}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"amount": {"format": "decimal", "source": "path", "type": "string"}},
+            "required": ["amount"],
+            "type": "object",
+        },
+    )(path_params_29_decimal_path_param_success)
+    return app
+
+
+def path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success(
+    item_id: int,
+) -> Any:
+    """Handler for GET /path/param-lt-gt/{item_id}."""
+    return Response(content={"item_id": 2}, status_code=200)
+
+
+def create_app_path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success() -> Spikard:
+    """App factory for fixture: Integer path parameter with combined lt and gt constraints - success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/path/param-lt-gt/{item_id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {
+                "item_id": {"exclusiveMaximum": 3, "exclusiveMinimum": 1, "source": "path", "type": "integer"}
+            },
+            "required": ["item_id"],
+            "type": "object",
+        },
+    )(path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success)
+    return app
+
+
+def path_params_33_string_pattern_path_success(
+    owner: str,
+    repo: str,
+) -> Any:
+    """Handler for GET /repos/{owner}/{repo}."""
+    return Response(content={"owner": "spikard-labs", "repo": "spikard-http"}, status_code=200)
+
+
+def create_app_path_params_33_string_pattern_path_success() -> Spikard:
+    """App factory for fixture: 33_string_pattern_path_success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/repos/{owner}/{repo}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {
+                "owner": {"pattern": "^[a-zA-Z0-9-]+$", "source": "path", "type": "string"},
+                "repo": {"pattern": "^[a-zA-Z0-9-_]+$", "source": "path", "type": "string"},
+            },
+            "required": ["owner", "repo"],
+            "type": "object",
+        },
+    )(path_params_33_string_pattern_path_success)
+    return app
+
+
+def path_params_31_string_minlength_path_failure(
+    username: str,
+) -> Any:
+    """Handler for GET /users/{username}."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if username is not None:
+        result["username"] = username
+    return result
+
+
+def create_app_path_params_31_string_minlength_path_failure() -> Spikard:
+    """App factory for fixture: 31_string_minlength_path_failure."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/users/{username}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"username": {"minLength": 3, "source": "path", "type": "string"}},
+            "required": ["username"],
+            "type": "object",
+        },
+    )(path_params_31_string_minlength_path_failure)
+    return app
+
+
+def path_params_35_negative_integer_path_param(
+    value: int,
+) -> Any:
+    """Handler for GET /offset/{value}."""
+    return Response(content={"value": -100}, status_code=200)
+
+
+def create_app_path_params_35_negative_integer_path_param() -> Spikard:
+    """App factory for fixture: 35_negative_integer_path_param."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/offset/{value}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"value": {"source": "path", "type": "integer"}},
+            "required": ["value"],
+            "type": "object",
+        },
+    )(path_params_35_negative_integer_path_param)
+    return app
+
+
+def path_params_enum_path_parameter_invalid_value(
+    model_name: str,
+) -> Any:
+    """Handler for GET /models/{model_name}."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if model_name is not None:
+        result["model_name"] = model_name
+    return result
+
+
+def create_app_path_params_enum_path_parameter_invalid_value() -> Spikard:
+    """App factory for fixture: Enum path parameter - invalid value."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/models/{model_name}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"model_name": {"enum": ["alexnet", "resnet", "lenet"], "source": "path", "type": "string"}},
+            "required": ["model_name"],
+            "type": "object",
+        },
+    )(path_params_enum_path_parameter_invalid_value)
+    return app
+
+
+def path_params_27_datetime_format_path_param_success(
+    timestamp: datetime,
+) -> Any:
+    """Handler for GET /bookings/{timestamp}."""
+    return Response(content={"timestamp": "2025-10-30T14:30:00Z"}, status_code=200)
+
+
+def create_app_path_params_27_datetime_format_path_param_success() -> Spikard:
+    """App factory for fixture: 27_datetime_format_path_param_success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/bookings/{timestamp}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"timestamp": {"format": "date-time", "source": "path", "type": "string"}},
+            "required": ["timestamp"],
+            "type": "object",
+        },
+    )(path_params_27_datetime_format_path_param_success)
+    return app
+
+
+def path_params_25_date_format_invalid_failure(
+    date: date,
+) -> Any:
+    """Handler for GET /events/{date}."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if date is not None:
+        result["date"] = str(date)
+    return result
+
+
+def create_app_path_params_25_date_format_invalid_failure() -> Spikard:
+    """App factory for fixture: 25_date_format_invalid_failure."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/events/{date}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"date": {"format": "date", "source": "path", "type": "string"}},
+            "required": ["date"],
+            "type": "object",
+        },
+    )(path_params_25_date_format_invalid_failure)
+    return app
+
+
+def path_params_integer_path_parameter_with_lt_constraint_success(
+    item_id: int,
+) -> Any:
+    """Handler for GET /path/param-lt/{item_id}."""
+    return Response(content={"item_id": 2}, status_code=200)
+
+
+def create_app_path_params_integer_path_parameter_with_lt_constraint_success() -> Spikard:
+    """App factory for fixture: Integer path parameter with lt constraint - success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/path/param-lt/{item_id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"item_id": {"exclusiveMaximum": 3, "source": "path", "type": "integer"}},
+            "required": ["item_id"],
+            "type": "object",
+        },
+    )(path_params_integer_path_parameter_with_lt_constraint_success)
+    return app
+
+
+def path_params_integer_path_parameter_with_gt_constraint_success(
+    item_id: int,
+) -> Any:
+    """Handler for GET /path/param-gt/{item_id}."""
+    return Response(content={"item_id": 42}, status_code=200)
+
+
+def create_app_path_params_integer_path_parameter_with_gt_constraint_success() -> Spikard:
+    """App factory for fixture: Integer path parameter with gt constraint - success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/path/param-gt/{item_id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"item_id": {"exclusiveMinimum": 3, "source": "path", "type": "integer"}},
+            "required": ["item_id"],
+            "type": "object",
+        },
+    )(path_params_integer_path_parameter_with_gt_constraint_success)
+    return app
+
+
+def path_params_28_duration_format_path_param_success(
+    duration: str,
+) -> Any:
+    """Handler for GET /delays/{duration}."""
+    return Response(content={"duration": "P1DT2H30M"}, status_code=200)
+
+
+def create_app_path_params_28_duration_format_path_param_success() -> Spikard:
+    """App factory for fixture: 28_duration_format_path_param_success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/delays/{duration}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"duration": {"format": "duration", "source": "path", "type": "string"}},
+            "required": ["duration"],
+            "type": "object",
+        },
+    )(path_params_28_duration_format_path_param_success)
+    return app
+
+
+def path_params_path_parameter_type_syntax_with_override(
+    count: int,
+) -> Any:
+    """Handler for GET /type-syntax/items-count/{count:int}."""
+    return Response(content={"count": "50"}, status_code=200)
+
+
+def create_app_path_params_path_parameter_type_syntax_with_override() -> Spikard:
+    """App factory for fixture: Path parameter type syntax with override."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/type-syntax/items-count/{count:int}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"count": {"maximum": 100, "minimum": 1, "source": "path", "type": "integer"}},
+            "required": ["count"],
+            "type": "object",
+        },
+    )(path_params_path_parameter_type_syntax_with_override)
+    return app
+
+
+def path_params_20_uuid_v3_path_param_success(
+    id: UUID,
+) -> Any:
+    """Handler for GET /items/{id}."""
+    return Response(content={"id": "e8b5a51d-11c8-3310-a6ab-367563f20686"}, status_code=200)
+
+
+def create_app_path_params_20_uuid_v3_path_param_success() -> Spikard:
+    """App factory for fixture: 20_uuid_v3_path_param_success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items/{id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"id": {"format": "uuid", "source": "path", "type": "string", "uuidVersion": "3"}},
+            "required": ["id"],
+            "type": "object",
+        },
+    )(path_params_20_uuid_v3_path_param_success)
+    return app
+
+
+def path_params_integer_path_parameter_invalid_string(
+    item_id: int,
+) -> Any:
+    """Handler for GET /path/int/{item_id}."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if item_id is not None:
+        result["item_id"] = item_id
+    return result
+
+
+def create_app_path_params_integer_path_parameter_invalid_string() -> Spikard:
+    """App factory for fixture: Integer path parameter - invalid string."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/path/int/{item_id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"item_id": {"source": "path", "type": "integer"}},
+            "required": ["item_id"],
+            "type": "object",
+        },
+    )(path_params_integer_path_parameter_invalid_string)
+    return app
+
+
+def path_params_30_string_minlength_path_success(
+    username: str,
+) -> Any:
+    """Handler for GET /users/{username}."""
+    return Response(content={"username": "alice"}, status_code=200)
+
+
+def create_app_path_params_30_string_minlength_path_success() -> Spikard:
+    """App factory for fixture: 30_string_minlength_path_success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/users/{username}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"username": {"minLength": 3, "source": "path", "type": "string"}},
+            "required": ["username"],
+            "type": "object",
+        },
+    )(path_params_30_string_minlength_path_success)
+    return app
+
+
+def path_params_integer_path_parameter_with_le_constraint_success(
+    item_id: int,
+) -> Any:
+    """Handler for GET /path/param-le/{item_id}."""
+    return Response(content={"item_id": 3}, status_code=200)
+
+
+def create_app_path_params_integer_path_parameter_with_le_constraint_success() -> Spikard:
+    """App factory for fixture: Integer path parameter with le constraint - success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/path/param-le/{item_id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"item_id": {"maximum": 3, "source": "path", "type": "integer"}},
+            "required": ["item_id"],
+            "type": "object",
+        },
+    )(path_params_integer_path_parameter_with_le_constraint_success)
+    return app
+
+
+def path_params_path_parameter_type_syntax_invalid_uuid(
+    id: str,
+) -> Any:
+    """Handler for GET /type-syntax/items/{id:uuid}."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if id is not None:
+        result["id"] = id
+    return result
+
+
+def create_app_path_params_path_parameter_type_syntax_invalid_uuid() -> Spikard:
+    """App factory for fixture: Path parameter type syntax - invalid UUID."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/type-syntax/items/{id:uuid}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"id": {"source": "path", "type": "string"}},
+            "required": ["id"],
+            "type": "object",
+        },
+    )(path_params_path_parameter_type_syntax_invalid_uuid)
+    return app
+
+
+def path_params_path_type_parameter_file_path(
+    file_path: str,
+) -> Any:
+    """Handler for GET /files/{file_path:path}."""
+    return Response(content={"file_path": "home/johndoe/myfile.txt"}, status_code=200)
+
+
+def create_app_path_params_path_type_parameter_file_path() -> Spikard:
+    """App factory for fixture: Path type parameter - file path."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/files/{file_path:path}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"file_path": {"source": "path", "type": "string"}},
+            "required": ["file_path"],
+            "type": "object",
+        },
+    )(path_params_path_type_parameter_file_path)
+    return app
+
+
+def path_params_path_parameter_with_type_syntax_uuid(
+    id: str,
+) -> Any:
+    """Handler for GET /type-syntax/items/{id:uuid}."""
+    return Response(content={"id": "550e8400-e29b-41d4-a716-446655440000"}, status_code=200)
+
+
+def create_app_path_params_path_parameter_with_type_syntax_uuid() -> Spikard:
+    """App factory for fixture: Path parameter with type syntax - UUID."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/type-syntax/items/{id:uuid}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"id": {"source": "path", "type": "string"}},
+            "required": ["id"],
+            "type": "object",
+        },
+    )(path_params_path_parameter_with_type_syntax_uuid)
+    return app
+
+
+def path_params_32_string_maxlength_path_failure(
+    username: str,
+) -> Any:
+    """Handler for GET /users/{username}."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if username is not None:
+        result["username"] = username
+    return result
+
+
+def create_app_path_params_32_string_maxlength_path_failure() -> Spikard:
+    """App factory for fixture: 32_string_maxlength_path_failure."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/users/{username}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"username": {"maxLength": 20, "source": "path", "type": "string"}},
+            "required": ["username"],
+            "type": "object",
+        },
+    )(path_params_32_string_maxlength_path_failure)
+    return app
+
+
+def path_params_integer_path_parameter_success(
+    item_id: int,
+) -> Any:
+    """Handler for GET /path/int/{item_id}."""
+    return Response(content={"item_id": 42}, status_code=200)
+
+
+def create_app_path_params_integer_path_parameter_success() -> Spikard:
+    """App factory for fixture: Integer path parameter - success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/path/int/{item_id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"item_id": {"source": "path", "type": "integer"}},
+            "required": ["item_id"],
+            "type": "object",
+        },
+    )(path_params_integer_path_parameter_success)
+    return app
+
+
+def path_params_34_string_pattern_path_failure(
+    owner: str,
+) -> Any:
+    """Handler for GET /repos/{owner}."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if owner is not None:
+        result["owner"] = owner
+    return result
+
+
+def create_app_path_params_34_string_pattern_path_failure() -> Spikard:
+    """App factory for fixture: 34_string_pattern_path_failure."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/repos/{owner}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"owner": {"pattern": "^[a-zA-Z0-9-]+$", "source": "path", "type": "string"}},
+            "required": ["owner"],
+            "type": "object",
+        },
+    )(path_params_34_string_pattern_path_failure)
+    return app
+
+
+def path_params_21_uuid_v5_path_param_success(
+    id: UUID,
+) -> Any:
+    """Handler for GET /items/{id}."""
+    return Response(content={"id": "630eb68f-e0fa-5ecc-887a-7c7a62614681"}, status_code=200)
+
+
+def create_app_path_params_21_uuid_v5_path_param_success() -> Spikard:
+    """App factory for fixture: 21_uuid_v5_path_param_success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items/{id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"id": {"format": "uuid", "source": "path", "type": "string", "uuidVersion": "5"}},
+            "required": ["id"],
+            "type": "object",
+        },
+    )(path_params_21_uuid_v5_path_param_success)
+    return app
+
+
+def path_params_string_path_parameter_with_max_length_failure(
+    item_id: str,
+) -> Any:
+    """Handler for GET /path/param-maxlength/{item_id}."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if item_id is not None:
+        result["item_id"] = item_id
+    return result
+
+
+def create_app_path_params_string_path_parameter_with_max_length_failure() -> Spikard:
+    """App factory for fixture: String path parameter with max_length - failure."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/path/param-maxlength/{item_id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"item_id": {"maxLength": 3, "source": "path", "type": "string"}},
+            "required": ["item_id"],
+            "type": "object",
+        },
+    )(path_params_string_path_parameter_with_max_length_failure)
+    return app
+
+
+def path_params_string_path_parameter_with_min_length_failure(
+    item_id: str,
+) -> Any:
+    """Handler for GET /path/param-minlength/{item_id}."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if item_id is not None:
+        result["item_id"] = item_id
+    return result
+
+
+def create_app_path_params_string_path_parameter_with_min_length_failure() -> Spikard:
+    """App factory for fixture: String path parameter with min_length - failure."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/path/param-minlength/{item_id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"item_id": {"minLength": 3, "source": "path", "type": "string"}},
+            "required": ["item_id"],
+            "type": "object",
+        },
+    )(path_params_string_path_parameter_with_min_length_failure)
+    return app
+
+
+def path_params_multiple_path_parameters_success(
+    order_id: UUID,
+    service_id: int,
+    user_id: str,
+    version: float,
+) -> Any:
+    """Handler for GET /{version}/{service_id}/{user_id}/{order_id}."""
+    return Response(
+        content={"order_id": "c892496f-b1fd-4b91-bdb8-b46f92df1716", "service_id": 1, "user_id": "abc", "version": 1.0},
+        status_code=200,
+    )
+
+
+def create_app_path_params_multiple_path_parameters_success() -> Spikard:
+    """App factory for fixture: Multiple path parameters - success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/{version}/{service_id}/{user_id}/{order_id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {
+                "order_id": {"format": "uuid", "source": "path", "type": "string"},
+                "service_id": {"source": "path", "type": "integer"},
+                "user_id": {"source": "path", "type": "string"},
+                "version": {"source": "path", "type": "number"},
+            },
+            "required": ["order_id", "service_id", "user_id", "version"],
+            "type": "object",
+        },
+    )(path_params_multiple_path_parameters_success)
+    return app
+
+
+def path_params_date_path_parameter_success(
+    date_param: date,
+) -> Any:
+    """Handler for GET /date/{date_param}."""
+    return Response(content={"date_param": "2023-07-15"}, status_code=200)
+
+
+def create_app_path_params_date_path_parameter_success() -> Spikard:
+    """App factory for fixture: Date path parameter - success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/date/{date_param}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"date_param": {"format": "date", "source": "path", "type": "string"}},
+            "required": ["date_param"],
+            "type": "object",
+        },
+    )(path_params_date_path_parameter_success)
+    return app
+
+
+def path_params_integer_path_parameter_with_gt_constraint_failure(
+    item_id: int,
+) -> Any:
+    """Handler for GET /path/param-gt/{item_id}."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if item_id is not None:
+        result["item_id"] = item_id
+    return result
+
+
+def create_app_path_params_integer_path_parameter_with_gt_constraint_failure() -> Spikard:
+    """App factory for fixture: Integer path parameter with gt constraint - failure."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/path/param-gt/{item_id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"item_id": {"exclusiveMinimum": 3, "source": "path", "type": "integer"}},
+            "required": ["item_id"],
+            "type": "object",
+        },
+    )(path_params_integer_path_parameter_with_gt_constraint_failure)
+    return app
+
+
+def path_params_24_date_format_path_param_success(
+    date: date,
+) -> Any:
+    """Handler for GET /events/{date}."""
+    return Response(content={"date": "2025-10-30"}, status_code=200)
+
+
+def create_app_path_params_24_date_format_path_param_success() -> Spikard:
+    """App factory for fixture: 24_date_format_path_param_success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/events/{date}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"date": {"format": "date", "source": "path", "type": "string"}},
+            "required": ["date"],
+            "type": "object",
+        },
+    )(path_params_24_date_format_path_param_success)
+    return app
+
+
+def path_params_float_path_parameter_success(
+    item_id: float,
+) -> Any:
+    """Handler for GET /path/float/{item_id}."""
+    return Response(content={"item_id": 42.5}, status_code=200)
+
+
+def create_app_path_params_float_path_parameter_success() -> Spikard:
+    """App factory for fixture: Float path parameter - success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/path/float/{item_id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"item_id": {"source": "path", "type": "number"}},
+            "required": ["item_id"],
+            "type": "object",
+        },
+    )(path_params_float_path_parameter_success)
+    return app
+
+
+def path_params_path_parameter_with_type_syntax_integer(
+    user_id: str,
+) -> Any:
+    """Handler for GET /type-syntax/users/{user_id:int}."""
+    return Response(content={"user_id": "42"}, status_code=200)
+
+
+def create_app_path_params_path_parameter_with_type_syntax_integer() -> Spikard:
+    """App factory for fixture: Path parameter with type syntax - integer."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/type-syntax/users/{user_id:int}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"user_id": {"source": "path", "type": "string"}},
+            "required": ["user_id"],
+            "type": "object",
+        },
+    )(path_params_path_parameter_with_type_syntax_integer)
+    return app
+
+
+def path_params_string_path_parameter_success(
+    item_id: str,
+) -> Any:
+    """Handler for GET /path/str/{item_id}."""
+    return Response(content={"item_id": "foobar"}, status_code=200)
+
+
+def create_app_path_params_string_path_parameter_success() -> Spikard:
+    """App factory for fixture: String path parameter - success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/path/str/{item_id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"item_id": {"source": "path", "type": "string"}},
+            "required": ["item_id"],
+            "type": "object",
+        },
+    )(path_params_string_path_parameter_success)
+    return app
+
+
+def path_params_uuid_path_parameter_success(
+    item_id: UUID,
+) -> Any:
+    """Handler for GET /items/{item_id}."""
+    return Response(content={"item_id": "ec38df32-ceda-4cfa-9b4a-1aeb94ad551a"}, status_code=200)
+
+
+def create_app_path_params_uuid_path_parameter_success() -> Spikard:
+    """App factory for fixture: UUID path parameter - success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items/{item_id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"item_id": {"format": "uuid", "source": "path", "type": "string"}},
+            "required": ["item_id"],
+            "type": "object",
+        },
+    )(path_params_uuid_path_parameter_success)
+    return app
+
+
+def path_params_integer_path_parameter_with_ge_constraint_success(
+    item_id: int,
+) -> Any:
+    """Handler for GET /path/param-ge/{item_id}."""
+    return Response(content={"item_id": 3}, status_code=200)
+
+
+def create_app_path_params_integer_path_parameter_with_ge_constraint_success() -> Spikard:
+    """App factory for fixture: Integer path parameter with ge constraint - success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/path/param-ge/{item_id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"item_id": {"minimum": 3, "source": "path", "type": "integer"}},
+            "required": ["item_id"],
+            "type": "object",
+        },
+    )(path_params_integer_path_parameter_with_ge_constraint_success)
+    return app
+
+
+def path_params_enum_path_parameter_success(
+    model_name: str,
+) -> Any:
+    """Handler for GET /models/{model_name}."""
+    return Response(content={"model_name": "alexnet"}, status_code=200)
+
+
+def create_app_path_params_enum_path_parameter_success() -> Spikard:
+    """App factory for fixture: Enum path parameter - success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/models/{model_name}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"model_name": {"enum": ["alexnet", "lenet", "resnet"], "source": "path", "type": "string"}},
+            "required": ["model_name"],
+            "type": "object",
+        },
+    )(path_params_enum_path_parameter_success)
+    return app
+
+
+def path_params_boolean_path_parameter_numeric_1(
+    item_id: bool,
+) -> Any:
+    """Handler for GET /path/bool/{item_id}."""
+    return Response(content={"item_id": True}, status_code=200)
+
+
+def create_app_path_params_boolean_path_parameter_numeric_1() -> Spikard:
+    """App factory for fixture: Boolean path parameter - numeric 1."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/path/bool/{item_id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"item_id": {"source": "path", "type": "boolean"}},
+            "required": ["item_id"],
+            "type": "object",
+        },
+    )(path_params_boolean_path_parameter_numeric_1)
+    return app
+
+
 def query_params_string_validation_with_regex_success(
     item_query: str,
 ) -> Any:
@@ -1905,6 +3351,1454 @@ def create_app_query_params_60_format_ipv4_success() -> Spikard:
     return app
 
 
+def url_encoded_simple_form_submission_success(
+    body: dict[str, Any],
+) -> Any:
+    """Handler for POST /login/."""
+    return Response(content={"username": "johndoe"}, status_code=200)
+
+
+def create_app_url_encoded_simple_form_submission_success() -> Spikard:
+    """App factory for fixture: Simple form submission - success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/login/",
+        body_schema={
+            "properties": {"password": {"type": "string"}, "username": {"type": "string"}},
+            "required": ["username", "password"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_simple_form_submission_success)
+    return app
+
+
+class UrlEncoded15SpecialCharactersFieldNamesBody(TypedDict):
+    """Request body type (TypedDict - runtime is dict)."""
+
+    contact_email: str | None
+    user_name: str | None
+
+
+def url_encoded_15_special_characters_field_names(
+    body: UrlEncoded15SpecialCharactersFieldNamesBody,
+) -> Any:
+    """Handler for POST /data."""
+    return Response(content={"contact.email": "john@example.com", "user-name": "JohnDoe"}, status_code=201)
+
+
+def create_app_url_encoded_15_special_characters_field_names() -> Spikard:
+    """App factory for fixture: 15_special_characters_field_names."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/data",
+        body_schema={
+            "properties": {"contact.email": {"format": "email", "type": "string"}, "user-name": {"type": "string"}},
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_15_special_characters_field_names)
+    return app
+
+
+@dataclass
+class UrlEncodedPatternValidationFailBody:
+    """Request body dataclass."""
+
+    username: str
+
+
+def url_encoded_pattern_validation_fail(
+    body: UrlEncodedPatternValidationFailBody,
+) -> Any:
+    """Handler for POST /form/validated."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(asdict(body))
+    return result
+
+
+def create_app_url_encoded_pattern_validation_fail() -> Spikard:
+    """App factory for fixture: Pattern validation - fail."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/form/validated",
+        body_schema={
+            "properties": {"username": {"pattern": "^[a-z0-9_]+$", "type": "string"}},
+            "required": ["username"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_pattern_validation_fail)
+    return app
+
+
+class UrlEncoded22AdditionalPropertiesStrictFailureBody(NamedTuple):
+    """Request body NamedTuple (immutable)."""
+
+    theme: str
+
+
+def url_encoded_22_additional_properties_strict_failure(
+    body: UrlEncoded22AdditionalPropertiesStrictFailureBody,
+) -> Any:
+    """Handler for POST /settings."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(body._asdict())
+    return result
+
+
+def create_app_url_encoded_22_additional_properties_strict_failure() -> Spikard:
+    """App factory for fixture: 22_additional_properties_strict_failure."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/settings",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {"theme": {"enum": ["light", "dark"], "type": "string"}},
+            "required": ["theme"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_22_additional_properties_strict_failure)
+    return app
+
+
+class UrlEncoded17PatternValidationFailureBody(msgspec.Struct):
+    """Request body msgspec.Struct (fast typed)."""
+
+    account_id: str
+
+
+def url_encoded_17_pattern_validation_failure(
+    body: UrlEncoded17PatternValidationFailureBody,
+) -> Any:
+    """Handler for POST /accounts."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(msgspec.to_builtins(body))
+    return result
+
+
+def create_app_url_encoded_17_pattern_validation_failure() -> Spikard:
+    """App factory for fixture: 17_pattern_validation_failure."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/accounts",
+        body_schema={
+            "properties": {"account_id": {"pattern": "^ACC-[0-9]{6}$", "type": "string"}},
+            "required": ["account_id"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_17_pattern_validation_failure)
+    return app
+
+
+class UrlEncoded20FormatEmailValidationFailureBody(BaseModel):
+    """Request body Pydantic model."""
+
+    email: str
+
+
+def url_encoded_20_format_email_validation_failure(
+    body: UrlEncoded20FormatEmailValidationFailureBody,
+) -> Any:
+    """Handler for POST /subscribe."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(body.model_dump())
+    return result
+
+
+def create_app_url_encoded_20_format_email_validation_failure() -> Spikard:
+    """App factory for fixture: 20_format_email_validation_failure."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/subscribe",
+        body_schema={
+            "properties": {"email": {"format": "email", "type": "string"}},
+            "required": ["email"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_20_format_email_validation_failure)
+    return app
+
+
+def url_encoded_multiple_values_for_same_field(
+    body: dict[str, Any],
+) -> Any:
+    """Handler for POST /form/tags."""
+    return Response(content={"tags": ["python", "fastapi", "web"]}, status_code=200)
+
+
+def create_app_url_encoded_multiple_values_for_same_field() -> Spikard:
+    """App factory for fixture: Multiple values for same field."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/form/tags",
+        body_schema={
+            "properties": {"tags": {"items": {"type": "string"}, "type": "array"}},
+            "required": ["tags"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_multiple_values_for_same_field)
+    return app
+
+
+class UrlEncodedRequiredFieldMissingValidationErrorBody(TypedDict):
+    """Request body type (TypedDict - runtime is dict)."""
+
+    password: str
+    username: str
+
+
+def url_encoded_required_field_missing_validation_error(
+    body: UrlEncodedRequiredFieldMissingValidationErrorBody,
+) -> Any:
+    """Handler for POST /login/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(body)
+    return result
+
+
+def create_app_url_encoded_required_field_missing_validation_error() -> Spikard:
+    """App factory for fixture: Required field missing - validation error."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/login/",
+        body_schema={
+            "properties": {"password": {"type": "string"}, "username": {"type": "string"}},
+            "required": ["username", "password"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_required_field_missing_validation_error)
+    return app
+
+
+@dataclass
+class UrlEncoded13ArrayFieldSuccessBody:
+    """Request body dataclass."""
+
+    tags: list[str]
+
+
+def url_encoded_13_array_field_success(
+    body: UrlEncoded13ArrayFieldSuccessBody,
+) -> Any:
+    """Handler for POST /register."""
+    return Response(content={"tags": ["python", "rust", "typescript"]}, status_code=201)
+
+
+def create_app_url_encoded_13_array_field_success() -> Spikard:
+    """App factory for fixture: 13_array_field_success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/register",
+        body_schema={
+            "properties": {"tags": {"items": {"type": "string"}, "minItems": 1, "type": "array"}},
+            "required": ["tags"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_13_array_field_success)
+    return app
+
+
+class UrlEncodedNumericFieldTypeConversionBody(NamedTuple):
+    """Request body NamedTuple (immutable)."""
+
+    username: str
+    age: int | None = None
+
+
+def url_encoded_numeric_field_type_conversion(
+    body: UrlEncodedNumericFieldTypeConversionBody,
+) -> Any:
+    """Handler for POST /form/."""
+    return Response(content={"age": 30, "username": "johndoe"}, status_code=200)
+
+
+def create_app_url_encoded_numeric_field_type_conversion() -> Spikard:
+    """App factory for fixture: Numeric field type conversion."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/form/",
+        body_schema={
+            "properties": {"age": {"type": "integer"}, "username": {"type": "string"}},
+            "required": ["username"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_numeric_field_type_conversion)
+    return app
+
+
+class UrlEncodedSpecialCharactersEncodingBody(msgspec.Struct):
+    """Request body msgspec.Struct (fast typed)."""
+
+    name: str
+    description: str | None = None
+
+
+def url_encoded_special_characters_encoding(
+    body: UrlEncodedSpecialCharactersEncodingBody,
+) -> Any:
+    """Handler for POST /form/."""
+    return Response(content={"description": "Test & Development", "name": "John Doe"}, status_code=200)
+
+
+def create_app_url_encoded_special_characters_encoding() -> Spikard:
+    """App factory for fixture: Special characters encoding."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/form/",
+        body_schema={
+            "properties": {"description": {"type": "string"}, "name": {"type": "string"}},
+            "required": ["name"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_special_characters_encoding)
+    return app
+
+
+class UrlEncodedBooleanFieldConversionBody(BaseModel):
+    """Request body Pydantic model."""
+
+    username: str
+    subscribe: bool | None = None
+
+
+def url_encoded_boolean_field_conversion(
+    body: UrlEncodedBooleanFieldConversionBody,
+) -> Any:
+    """Handler for POST /form/."""
+    return Response(content={"subscribe": True, "username": "johndoe"}, status_code=200)
+
+
+def create_app_url_encoded_boolean_field_conversion() -> Spikard:
+    """App factory for fixture: Boolean field conversion."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/form/",
+        body_schema={
+            "properties": {"subscribe": {"type": "boolean"}, "username": {"type": "string"}},
+            "required": ["username"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_boolean_field_conversion)
+    return app
+
+
+def url_encoded_empty_string_value(
+    body: dict[str, Any],
+) -> Any:
+    """Handler for POST /form/."""
+    return Response(content={"description": "", "username": "johndoe"}, status_code=200)
+
+
+def create_app_url_encoded_empty_string_value() -> Spikard:
+    """App factory for fixture: Empty string value."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/form/",
+        body_schema={
+            "properties": {"description": {"type": "string"}, "username": {"type": "string"}},
+            "required": ["username"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_empty_string_value)
+    return app
+
+
+class UrlEncodedOauth2PasswordGrantFlowBody(TypedDict):
+    """Request body type (TypedDict - runtime is dict)."""
+
+    grant_type: str
+    password: str
+    username: str
+    scope: str | None
+
+
+def url_encoded_oauth2_password_grant_flow(
+    body: UrlEncodedOauth2PasswordGrantFlowBody,
+) -> Any:
+    """Handler for POST /token."""
+    return Response(content={"access_token": "johndoe", "token_type": "bearer"}, status_code=200)
+
+
+def create_app_url_encoded_oauth2_password_grant_flow() -> Spikard:
+    """App factory for fixture: OAuth2 password grant flow."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/token",
+        body_schema={
+            "properties": {
+                "grant_type": {"type": "string"},
+                "password": {"type": "string"},
+                "scope": {"type": "string"},
+                "username": {"type": "string"},
+            },
+            "required": ["username", "password", "grant_type"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_oauth2_password_grant_flow)
+    return app
+
+
+@dataclass
+class UrlEncoded19ArrayMinitemsValidationFailureBody:
+    """Request body dataclass."""
+
+    tags: list[str]
+
+
+def url_encoded_19_array_minitems_validation_failure(
+    body: UrlEncoded19ArrayMinitemsValidationFailureBody,
+) -> Any:
+    """Handler for POST /tags."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(asdict(body))
+    return result
+
+
+def create_app_url_encoded_19_array_minitems_validation_failure() -> Spikard:
+    """App factory for fixture: 19_array_minitems_validation_failure."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/tags",
+        body_schema={
+            "properties": {"tags": {"items": {"type": "string"}, "minItems": 2, "type": "array"}},
+            "required": ["tags"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_19_array_minitems_validation_failure)
+    return app
+
+
+class UrlEncodedOptionalFieldMissingSuccessBody(NamedTuple):
+    """Request body NamedTuple (immutable)."""
+
+    password: str
+    username: str
+    email: str | None = None
+
+
+def url_encoded_optional_field_missing_success(
+    body: UrlEncodedOptionalFieldMissingSuccessBody,
+) -> Any:
+    """Handler for POST /register/."""
+    return Response(content={"email": None, "username": "johndoe"}, status_code=200)
+
+
+def create_app_url_encoded_optional_field_missing_success() -> Spikard:
+    """App factory for fixture: Optional field missing - success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/register/",
+        body_schema={
+            "properties": {
+                "email": {"format": "email", "type": ["string", "null"]},
+                "password": {"type": "string"},
+                "username": {"type": "string"},
+            },
+            "required": ["username", "password"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_optional_field_missing_success)
+    return app
+
+
+class UrlEncoded14NestedObjectBracketNotationBody(msgspec.Struct):
+    """Request body msgspec.Struct (fast typed)."""
+
+    user: dict[str, Any]
+
+
+def url_encoded_14_nested_object_bracket_notation(
+    body: UrlEncoded14NestedObjectBracketNotationBody,
+) -> Any:
+    """Handler for POST /profile."""
+    return Response(content={"user": {"age": 30, "email": "john@example.com", "name": "John Doe"}}, status_code=201)
+
+
+def create_app_url_encoded_14_nested_object_bracket_notation() -> Spikard:
+    """App factory for fixture: 14_nested_object_bracket_notation."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/profile",
+        body_schema={
+            "properties": {
+                "user": {
+                    "properties": {
+                        "age": {"minimum": 0, "type": "integer"},
+                        "email": {"format": "email", "type": "string"},
+                        "name": {"minLength": 1, "type": "string"},
+                    },
+                    "required": ["name", "email"],
+                    "type": "object",
+                }
+            },
+            "required": ["user"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_14_nested_object_bracket_notation)
+    return app
+
+
+class UrlEncodedStringMaxLengthValidationFailBody(BaseModel):
+    """Request body Pydantic model."""
+
+    username: str
+
+
+def url_encoded_string_max_length_validation_fail(
+    body: UrlEncodedStringMaxLengthValidationFailBody,
+) -> Any:
+    """Handler for POST /form/validated."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(body.model_dump())
+    return result
+
+
+def create_app_url_encoded_string_max_length_validation_fail() -> Spikard:
+    """App factory for fixture: String max_length validation - fail."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/form/validated",
+        body_schema={
+            "properties": {"username": {"maxLength": 20, "type": "string"}},
+            "required": ["username"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_string_max_length_validation_fail)
+    return app
+
+
+def url_encoded_18_integer_minimum_validation_failure(
+    body: dict[str, Any],
+) -> Any:
+    """Handler for POST /products."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(body)
+    return result
+
+
+def create_app_url_encoded_18_integer_minimum_validation_failure() -> Spikard:
+    """App factory for fixture: 18_integer_minimum_validation_failure."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/products",
+        body_schema={
+            "properties": {"quantity": {"minimum": 1, "type": "integer"}},
+            "required": ["quantity"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_18_integer_minimum_validation_failure)
+    return app
+
+
+class UrlEncoded21IntegerTypeCoercionFailureBody(TypedDict):
+    """Request body type (TypedDict - runtime is dict)."""
+
+    price: int
+
+
+def url_encoded_21_integer_type_coercion_failure(
+    body: UrlEncoded21IntegerTypeCoercionFailureBody,
+) -> Any:
+    """Handler for POST /products."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(body)
+    return result
+
+
+def create_app_url_encoded_21_integer_type_coercion_failure() -> Spikard:
+    """App factory for fixture: 21_integer_type_coercion_failure."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/products",
+        body_schema={"properties": {"price": {"type": "integer"}}, "required": ["price"], "type": "object"},
+        parameter_schema=None,
+    )(url_encoded_21_integer_type_coercion_failure)
+    return app
+
+
+@dataclass
+class UrlEncoded16MinlengthValidationFailureBody:
+    """Request body dataclass."""
+
+    username: str
+
+
+def url_encoded_16_minlength_validation_failure(
+    body: UrlEncoded16MinlengthValidationFailureBody,
+) -> Any:
+    """Handler for POST /users."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(asdict(body))
+    return result
+
+
+def create_app_url_encoded_16_minlength_validation_failure() -> Spikard:
+    """App factory for fixture: 16_minlength_validation_failure."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/users",
+        body_schema={
+            "properties": {"username": {"minLength": 3, "type": "string"}},
+            "required": ["username"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_16_minlength_validation_failure)
+    return app
+
+
+class UrlEncodedStringMinLengthValidationFailBody(NamedTuple):
+    """Request body NamedTuple (immutable)."""
+
+    username: str
+
+
+def url_encoded_string_min_length_validation_fail(
+    body: UrlEncodedStringMinLengthValidationFailBody,
+) -> Any:
+    """Handler for POST /form/validated."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(body._asdict())
+    return result
+
+
+def create_app_url_encoded_string_min_length_validation_fail() -> Spikard:
+    """App factory for fixture: String min_length validation - fail."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/form/validated",
+        body_schema={
+            "properties": {"username": {"minLength": 3, "type": "string"}},
+            "required": ["username"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(url_encoded_string_min_length_validation_fail)
+    return app
+
+
+def edge_cases_19_emoji_in_strings(
+    body: dict[str, Any],
+) -> Any:
+    """Handler for POST /messages."""
+    return Response(content={"text": "Hello 👋 World 🌍"}, status_code=201)
+
+
+def create_app_edge_cases_19_emoji_in_strings() -> Spikard:
+    """App factory for fixture: 19_emoji_in_strings."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/messages",
+        body_schema={
+            "properties": {"text": {"maxLength": 100, "minLength": 1, "type": "string"}},
+            "required": ["text"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(edge_cases_19_emoji_in_strings)
+    return app
+
+
+def edge_cases_12_percent_encoded_special_chars(
+    term: str,
+) -> Any:
+    """Handler for GET /search."""
+    return Response(content={"term": "hi there"}, status_code=200)
+
+
+def create_app_edge_cases_12_percent_encoded_special_chars() -> Spikard:
+    """App factory for fixture: 12_percent_encoded_special_chars."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/search",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"term": {"source": "query", "type": "string"}},
+            "required": ["term"],
+            "type": "object",
+        },
+    )(edge_cases_12_percent_encoded_special_chars)
+    return app
+
+
+@dataclass
+class EdgeCasesSpecialStringValuesAndEscapingBody:
+    """Request body dataclass."""
+
+    backslashes: str
+    empty_string: str
+    quotes: str
+    special_chars: str
+    tabs_newlines: str
+    unicode_escapes: str
+    whitespace: str
+
+
+def edge_cases_special_string_values_and_escaping(
+    body: EdgeCasesSpecialStringValuesAndEscapingBody,
+) -> Any:
+    """Handler for POST /strings/."""
+    return Response(
+        content={
+            "backslashes": "C:\\\\Users\\\\Path",
+            "empty_string": "",
+            "quotes": "He said \"hello\" and 'goodbye'",
+            "special_chars": "!@#$%^&*()_+-=[]{}|;':\",./<>?",
+            "tabs_newlines": "line1\n\tline2\r\nline3",
+            "unicode_escapes": "Hello",
+            "whitespace": "   ",
+        },
+        status_code=200,
+    )
+
+
+def create_app_edge_cases_special_string_values_and_escaping() -> Spikard:
+    """App factory for fixture: Special string values and escaping."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/strings/",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {
+                "backslashes": {"type": "string"},
+                "empty_string": {"type": "string"},
+                "quotes": {"type": "string"},
+                "special_chars": {"type": "string"},
+                "tabs_newlines": {"type": "string"},
+                "unicode_escapes": {"type": "string"},
+                "whitespace": {"type": "string"},
+            },
+            "required": [
+                "empty_string",
+                "whitespace",
+                "tabs_newlines",
+                "quotes",
+                "backslashes",
+                "unicode_escapes",
+                "special_chars",
+            ],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(edge_cases_special_string_values_and_escaping)
+    return app
+
+
+class EdgeCases15FloatPrecisionPreservationBody(NamedTuple):
+    """Request body NamedTuple (immutable)."""
+
+    value: float
+
+
+def edge_cases_15_float_precision_preservation(
+    body: EdgeCases15FloatPrecisionPreservationBody,
+) -> Any:
+    """Handler for POST /calculate."""
+    return Response(content={"value": 3.141592653589793}, status_code=201)
+
+
+def create_app_edge_cases_15_float_precision_preservation() -> Spikard:
+    """App factory for fixture: 15_float_precision_preservation."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/calculate",
+        body_schema={"properties": {"value": {"type": "number"}}, "required": ["value"], "type": "object"},
+        parameter_schema=None,
+    )(edge_cases_15_float_precision_preservation)
+    return app
+
+
+def edge_cases_13_empty_string_query_param_preserved(
+    filter: str,
+) -> Any:
+    """Handler for GET /items."""
+    return Response(content={"filter": ""}, status_code=200)
+
+
+def create_app_edge_cases_13_empty_string_query_param_preserved() -> Spikard:
+    """App factory for fixture: 13_empty_string_query_param_preserved."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"filter": {"source": "query", "type": "string"}},
+            "required": ["filter"],
+            "type": "object",
+        },
+    )(edge_cases_13_empty_string_query_param_preserved)
+    return app
+
+
+class EdgeCases24ArrayWithHolesBody(BaseModel):
+    """Request body Pydantic model."""
+
+    items: list[str]
+
+
+def edge_cases_24_array_with_holes(
+    body: EdgeCases24ArrayWithHolesBody,
+) -> Any:
+    """Handler for POST /items."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(body.model_dump())
+    return result
+
+
+def create_app_edge_cases_24_array_with_holes() -> Spikard:
+    """App factory for fixture: 24_array_with_holes."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/items",
+        body_schema={
+            "properties": {"items": {"items": {"type": "string"}, "type": "array"}},
+            "required": ["items"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(edge_cases_24_array_with_holes)
+    return app
+
+
+def edge_cases_21_scientific_notation_number(
+    body: dict[str, Any],
+) -> Any:
+    """Handler for POST /calculate."""
+    return Response(content={"value": 123000}, status_code=201)
+
+
+def create_app_edge_cases_21_scientific_notation_number() -> Spikard:
+    """App factory for fixture: 21_scientific_notation_number."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/calculate",
+        body_schema={
+            "properties": {"value": {"minimum": 0, "type": "number"}},
+            "required": ["value"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(edge_cases_21_scientific_notation_number)
+    return app
+
+
+class EdgeCasesFloatPrecisionAndRoundingBody(TypedDict):
+    """Request body type (TypedDict - runtime is dict)."""
+
+    expected_sum: float
+    precise_value: float
+    value1: float
+    value2: float
+    very_large: float
+    very_small: float
+
+
+def edge_cases_float_precision_and_rounding(
+    body: EdgeCasesFloatPrecisionAndRoundingBody,
+) -> Any:
+    """Handler for POST /calculations/."""
+    return Response(
+        content={
+            "precise_value": 3.141592653589793,
+            "sum": 0.30000000000000004,
+            "very_large": 1.7976931348623157e308,
+            "very_small": 1e-10,
+        },
+        status_code=200,
+    )
+
+
+def create_app_edge_cases_float_precision_and_rounding() -> Spikard:
+    """App factory for fixture: Float precision and rounding."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/calculations/",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {
+                "expected_sum": {"type": "number"},
+                "precise_value": {"type": "number"},
+                "value1": {"type": "number"},
+                "value2": {"type": "number"},
+                "very_large": {"type": "number"},
+                "very_small": {"type": "number"},
+            },
+            "required": ["value1", "value2", "expected_sum", "precise_value", "very_small", "very_large"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(edge_cases_float_precision_and_rounding)
+    return app
+
+
+@dataclass
+class EdgeCasesUnicodeAndEmojiHandlingBody:
+    """Request body dataclass."""
+
+    description: str
+    emoji_reactions: str
+    name: str
+    tags: list[str]
+
+
+def edge_cases_unicode_and_emoji_handling(
+    body: EdgeCasesUnicodeAndEmojiHandlingBody,
+) -> Any:
+    """Handler for POST /items/."""
+    return Response(
+        content={
+            "description": "Best café in München 🇩🇪",
+            "emoji_reactions": "👍❤️😂🎉",
+            "id": 1,
+            "name": "Coffee Shop ☕",
+            "tags": ["食べ物", "音楽", "💰"],
+        },
+        status_code=200,
+    )
+
+
+def create_app_edge_cases_unicode_and_emoji_handling() -> Spikard:
+    """App factory for fixture: Unicode and emoji handling."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/items/",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {
+                "description": {"type": "string"},
+                "emoji_reactions": {"type": "string"},
+                "name": {"type": "string"},
+                "tags": {"items": {"type": "string"}, "type": "array"},
+            },
+            "required": ["name", "description", "tags", "emoji_reactions"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(edge_cases_unicode_and_emoji_handling)
+    return app
+
+
+class EdgeCases17ExtremelyLongStringBody(NamedTuple):
+    """Request body NamedTuple (immutable)."""
+
+    content: str
+
+
+def edge_cases_17_extremely_long_string(
+    body: EdgeCases17ExtremelyLongStringBody,
+) -> Any:
+    """Handler for POST /text."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(body._asdict())
+    return result
+
+
+def create_app_edge_cases_17_extremely_long_string() -> Spikard:
+    """App factory for fixture: 17_extremely_long_string."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/text",
+        body_schema={
+            "properties": {"content": {"maxLength": 10000, "type": "string"}},
+            "required": ["content"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(edge_cases_17_extremely_long_string)
+    return app
+
+
+def edge_cases_11_utf8_query_parameter(
+    term: str,
+) -> Any:
+    """Handler for GET /search."""
+    return Response(content={"term": "café"}, status_code=200)
+
+
+def create_app_edge_cases_11_utf8_query_parameter() -> Spikard:
+    """App factory for fixture: 11_utf8_query_parameter."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/search",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"term": {"source": "query", "type": "string"}},
+            "required": ["term"],
+            "type": "object",
+        },
+    )(edge_cases_11_utf8_query_parameter)
+    return app
+
+
+class EdgeCases18UnicodeNormalizationBody(BaseModel):
+    """Request body Pydantic model."""
+
+    name: str
+
+
+def edge_cases_18_unicode_normalization(
+    body: EdgeCases18UnicodeNormalizationBody,
+) -> Any:
+    """Handler for POST /users."""
+    return Response(content={"name": "café"}, status_code=201)
+
+
+def create_app_edge_cases_18_unicode_normalization() -> Spikard:
+    """App factory for fixture: 18_unicode_normalization."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/users",
+        body_schema={
+            "properties": {"name": {"minLength": 1, "type": "string"}},
+            "required": ["name"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(edge_cases_18_unicode_normalization)
+    return app
+
+
+def edge_cases_20_null_byte_in_string(
+    body: dict[str, Any],
+) -> Any:
+    """Handler for POST /files."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(body)
+    return result
+
+
+def create_app_edge_cases_20_null_byte_in_string() -> Spikard:
+    """App factory for fixture: 20_null_byte_in_string."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/files",
+        body_schema={
+            "properties": {"filename": {"pattern": "^[^\\x00]+$", "type": "string"}},
+            "required": ["filename"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(edge_cases_20_null_byte_in_string)
+    return app
+
+
+class EdgeCases23DeeplyNestedJsonLimitBody(TypedDict):
+    """Request body type (TypedDict - runtime is dict)."""
+
+
+def edge_cases_23_deeply_nested_json_limit(
+    body: EdgeCases23DeeplyNestedJsonLimitBody,
+) -> Any:
+    """Handler for POST /data."""
+    return Response(content={"error": "Request body exceeds maximum nesting depth of 32"}, status_code=400)
+
+
+def create_app_edge_cases_23_deeply_nested_json_limit() -> Spikard:
+    """App factory for fixture: 23_deeply_nested_json_limit."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("POST", "/data", body_schema={"type": "object"}, parameter_schema=None)(
+        edge_cases_23_deeply_nested_json_limit
+    )
+    return app
+
+
+def edge_cases_14_large_integer_boundary(
+    id: int,
+) -> Any:
+    """Handler for GET /items."""
+    return Response(content={"id": 9007199254740991}, status_code=200)
+
+
+def create_app_edge_cases_14_large_integer_boundary() -> Spikard:
+    """App factory for fixture: 14_large_integer_boundary."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"id": {"source": "query", "type": "integer"}},
+            "required": ["id"],
+            "type": "object",
+        },
+    )(edge_cases_14_large_integer_boundary)
+    return app
+
+
+def edge_cases_22_leading_zeros_integer(
+    value: int,
+) -> Any:
+    """Handler for GET /data."""
+    return Response(content={"value": 123}, status_code=200)
+
+
+def create_app_edge_cases_22_leading_zeros_integer() -> Spikard:
+    """App factory for fixture: 22_leading_zeros_integer."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/data",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"value": {"annotation": "int", "source": "query", "type": "integer"}},
+            "required": ["value"],
+            "type": "object",
+        },
+    )(edge_cases_22_leading_zeros_integer)
+    return app
+
+
+class EdgeCasesLargeIntegerBoundaryValuesBody(msgspec.Struct):
+    """Request body msgspec.Struct (fast typed)."""
+
+    large_int: int
+    max_safe_int: int
+    negative_large: int
+
+
+def edge_cases_large_integer_boundary_values(
+    body: EdgeCasesLargeIntegerBoundaryValuesBody,
+) -> Any:
+    """Handler for POST /numbers/."""
+    return Response(
+        content={
+            "large_int": 9223372036854775807,
+            "max_safe_int": 9007199254740991,
+            "negative_large": -9223372036854775808,
+        },
+        status_code=200,
+    )
+
+
+def create_app_edge_cases_large_integer_boundary_values() -> Spikard:
+    """App factory for fixture: Large integer boundary values."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/numbers/",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {
+                "large_int": {"type": "integer"},
+                "max_safe_int": {"type": "integer"},
+                "negative_large": {"type": "integer"},
+            },
+            "required": ["max_safe_int", "large_int", "negative_large"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(edge_cases_large_integer_boundary_values)
+    return app
+
+
+class EdgeCasesDeeplyNestedStructure10LevelsBody(BaseModel):
+    """Request body Pydantic model."""
+
+    level1: dict[str, Any]
+
+
+def edge_cases_deeply_nested_structure_10_levels(
+    body: EdgeCasesDeeplyNestedStructure10LevelsBody,
+) -> Any:
+    """Handler for POST /nested/."""
+    return Response(
+        content={"max_depth": 10, "message": "Processed deeply nested structure", "value_found": "deep"},
+        status_code=200,
+    )
+
+
+def create_app_edge_cases_deeply_nested_structure_10_levels() -> Spikard:
+    """App factory for fixture: Deeply nested structure (10+ levels)."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/nested/",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {
+                "level1": {
+                    "additionalProperties": False,
+                    "properties": {
+                        "level2": {
+                            "additionalProperties": False,
+                            "properties": {
+                                "level3": {
+                                    "additionalProperties": False,
+                                    "properties": {
+                                        "level4": {
+                                            "additionalProperties": False,
+                                            "properties": {
+                                                "level5": {
+                                                    "additionalProperties": False,
+                                                    "properties": {
+                                                        "level6": {
+                                                            "additionalProperties": False,
+                                                            "properties": {
+                                                                "level7": {
+                                                                    "additionalProperties": False,
+                                                                    "properties": {
+                                                                        "level8": {
+                                                                            "additionalProperties": False,
+                                                                            "properties": {
+                                                                                "level9": {
+                                                                                    "additionalProperties": False,
+                                                                                    "properties": {
+                                                                                        "level10": {
+                                                                                            "additionalProperties": False,
+                                                                                            "properties": {
+                                                                                                "depth": {
+                                                                                                    "type": "integer"
+                                                                                                },
+                                                                                                "value": {
+                                                                                                    "type": "string"
+                                                                                                },
+                                                                                            },
+                                                                                            "required": [
+                                                                                                "value",
+                                                                                                "depth",
+                                                                                            ],
+                                                                                            "type": "object",
+                                                                                        }
+                                                                                    },
+                                                                                    "required": ["level10"],
+                                                                                    "type": "object",
+                                                                                }
+                                                                            },
+                                                                            "required": ["level9"],
+                                                                            "type": "object",
+                                                                        }
+                                                                    },
+                                                                    "required": ["level8"],
+                                                                    "type": "object",
+                                                                }
+                                                            },
+                                                            "required": ["level7"],
+                                                            "type": "object",
+                                                        }
+                                                    },
+                                                    "required": ["level6"],
+                                                    "type": "object",
+                                                }
+                                            },
+                                            "required": ["level5"],
+                                            "type": "object",
+                                        }
+                                    },
+                                    "required": ["level4"],
+                                    "type": "object",
+                                }
+                            },
+                            "required": ["level3"],
+                            "type": "object",
+                        }
+                    },
+                    "required": ["level2"],
+                    "type": "object",
+                }
+            },
+            "required": ["level1"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(edge_cases_deeply_nested_structure_10_levels)
+    return app
+
+
+def edge_cases_empty_and_null_value_handling(
+    body: dict[str, Any],
+) -> Any:
+    """Handler for POST /nulls/."""
+    return Response(
+        content={
+            "empty_array_length": 0,
+            "empty_object_keys": 0,
+            "empty_string_length": 0,
+            "explicit_null_is_null": True,
+            "false_is_false": True,
+            "zero_is_falsy": True,
+        },
+        status_code=200,
+    )
+
+
+def create_app_edge_cases_empty_and_null_value_handling() -> Spikard:
+    """App factory for fixture: Empty and null value handling."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/nulls/",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {
+                "empty_array": {"items": {}, "type": "array"},
+                "empty_object": {"additionalProperties": False, "properties": {}, "type": "object"},
+                "empty_string": {"type": "string"},
+                "explicit_null": {"type": "null"},
+                "false_boolean": {"type": "boolean"},
+                "zero_number": {"type": "integer"},
+            },
+            "required": [
+                "explicit_null",
+                "empty_string",
+                "empty_array",
+                "empty_object",
+                "zero_number",
+                "false_boolean",
+            ],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(edge_cases_empty_and_null_value_handling)
+    return app
+
+
+class EdgeCases16NegativeZeroHandlingBody(TypedDict):
+    """Request body type (TypedDict - runtime is dict)."""
+
+    offset: float
+
+
+def edge_cases_16_negative_zero_handling(
+    body: EdgeCases16NegativeZeroHandlingBody,
+) -> Any:
+    """Handler for POST /data."""
+    return Response(content={"offset": 0}, status_code=201)
+
+
+def create_app_edge_cases_16_negative_zero_handling() -> Spikard:
+    """App factory for fixture: 16_negative_zero_handling."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/data",
+        body_schema={"properties": {"offset": {"type": "number"}}, "required": ["offset"], "type": "object"},
+        parameter_schema=None,
+    )(edge_cases_16_negative_zero_handling)
+    return app
+
+
 def headers_header_regex_validation_success(
     x_request_id: str,
 ) -> Any:
@@ -2741,2218 +5635,6 @@ def create_app_headers_user_agent_header_custom_value() -> Spikard:
     return app
 
 
-def cookies_25_cookie_samesite_lax(
-    tracking: str,
-) -> Any:
-    """Handler for GET /data."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if tracking is not None:
-        result["tracking"] = tracking
-    return result
-
-
-def create_app_cookies_25_cookie_samesite_lax() -> Spikard:
-    """App factory for fixture: 25_cookie_samesite_lax."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/data",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"tracking": {"samesite": "Lax", "source": "cookie", "type": "string"}},
-            "required": ["tracking"],
-            "type": "object",
-        },
-    )(cookies_25_cookie_samesite_lax)
-    return app
-
-
-def cookies_optional_cookie_parameter_success(
-    ads_id: str | None = None,
-) -> Any:
-    """Handler for GET /items/."""
-    return Response(content={"ads_id": "abc123"}, status_code=200)
-
-
-def create_app_cookies_optional_cookie_parameter_success() -> Spikard:
-    """App factory for fixture: Optional cookie parameter - success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/items/",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"ads_id": {"source": "cookie", "type": "string"}},
-            "required": [],
-            "type": "object",
-        },
-    )(cookies_optional_cookie_parameter_success)
-    return app
-
-
-def cookies_cookie_regex_pattern_validation_fail(
-    tracking_id: str,
-) -> Any:
-    """Handler for GET /cookies/pattern."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if tracking_id is not None:
-        result["tracking_id"] = tracking_id
-    return result
-
-
-def create_app_cookies_cookie_regex_pattern_validation_fail() -> Spikard:
-    """App factory for fixture: Cookie regex pattern validation - fail."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/cookies/pattern",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"tracking_id": {"pattern": "^[A-Z0-9]{8}$", "source": "cookie", "type": "string"}},
-            "required": ["tracking_id"],
-            "type": "object",
-        },
-    )(cookies_cookie_regex_pattern_validation_fail)
-    return app
-
-
-class CookiesResponseSessionCookieNoMaxAgeBody(NamedTuple):
-    """Request body NamedTuple (immutable)."""
-
-    value: str
-
-
-def cookies_response_session_cookie_no_max_age(
-    body: CookiesResponseSessionCookieNoMaxAgeBody,
-) -> Any:
-    """Handler for POST /cookies/session."""
-    return Response(content={"message": "Session cookie set"}, status_code=200)
-
-
-def create_app_cookies_response_session_cookie_no_max_age() -> Spikard:
-    """App factory for fixture: Response - session cookie (no max_age)."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/cookies/session",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {"value": {"type": "string"}},
-            "required": ["value"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(cookies_response_session_cookie_no_max_age)
-    return app
-
-
-def cookies_27_cookie_httponly_flag(
-    session: str,
-) -> Any:
-    """Handler for GET /secure."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if session is not None:
-        result["session"] = session
-    return result
-
-
-def create_app_cookies_27_cookie_httponly_flag() -> Spikard:
-    """App factory for fixture: 27_cookie_httponly_flag."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/secure",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"session": {"httponly": True, "source": "cookie", "type": "string"}},
-            "required": ["session"],
-            "type": "object",
-        },
-    )(cookies_27_cookie_httponly_flag)
-    return app
-
-
-def cookies_response_cookie_with_attributes() -> Any:
-    """Handler for GET /cookie/set."""
-    return Response(content={"message": "Cookie set"}, status_code=200)
-
-
-def create_app_cookies_response_cookie_with_attributes() -> Spikard:
-    """App factory for fixture: Response cookie with attributes."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/cookie/set", body_schema=None, parameter_schema=None)(
-        cookies_response_cookie_with_attributes
-    )
-    return app
-
-
-def cookies_24_cookie_samesite_strict(
-    session_id: str,
-) -> Any:
-    """Handler for GET /secure."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if session_id is not None:
-        result["session_id"] = session_id
-    return result
-
-
-def create_app_cookies_24_cookie_samesite_strict() -> Spikard:
-    """App factory for fixture: 24_cookie_samesite_strict."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/secure",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"session_id": {"samesite": "Strict", "source": "cookie", "type": "string"}},
-            "required": ["session_id"],
-            "type": "object",
-        },
-    )(cookies_24_cookie_samesite_strict)
-    return app
-
-
-def cookies_apikey_cookie_authentication_success(
-    key: str | None = None,
-) -> Any:
-    """Handler for GET /users/me."""
-    return Response(content={"username": "secret"}, status_code=200)
-
-
-def create_app_cookies_apikey_cookie_authentication_success() -> Spikard:
-    """App factory for fixture: APIKey cookie authentication - success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/users/me",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"key": {"source": "cookie", "type": "string"}},
-            "required": [],
-            "type": "object",
-        },
-    )(cookies_apikey_cookie_authentication_success)
-    return app
-
-
-def cookies_cookie_validation_min_length_constraint_success(
-    token: str | None = None,
-) -> Any:
-    """Handler for GET /cookies/min-length."""
-    return Response(content={"token": "abc"}, status_code=200)
-
-
-def create_app_cookies_cookie_validation_min_length_constraint_success() -> Spikard:
-    """App factory for fixture: Cookie validation - min_length constraint success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/cookies/min-length",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"token": {"source": "cookie", "type": "string"}},
-            "required": [],
-            "type": "object",
-        },
-    )(cookies_cookie_validation_min_length_constraint_success)
-    return app
-
-
-def cookies_cookie_validation_min_length_failure(
-    tracking_id: str,
-) -> Any:
-    """Handler for GET /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if tracking_id is not None:
-        result["tracking_id"] = tracking_id
-    return result
-
-
-def create_app_cookies_cookie_validation_min_length_failure() -> Spikard:
-    """App factory for fixture: Cookie validation - min_length failure."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/items/",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"tracking_id": {"minLength": 3, "source": "cookie", "type": "string"}},
-            "required": ["tracking_id"],
-            "type": "object",
-        },
-    )(cookies_cookie_validation_min_length_failure)
-    return app
-
-
-def cookies_cookie_validation_max_length_constraint_fail(
-    session_id: str,
-) -> Any:
-    """Handler for GET /cookies/validated."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if session_id is not None:
-        result["session_id"] = session_id
-    return result
-
-
-def create_app_cookies_cookie_validation_max_length_constraint_fail() -> Spikard:
-    """App factory for fixture: Cookie validation - max_length constraint fail."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/cookies/validated",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"session_id": {"maxLength": 20, "source": "cookie", "type": "string"}},
-            "required": ["session_id"],
-            "type": "object",
-        },
-    )(cookies_cookie_validation_max_length_constraint_fail)
-    return app
-
-
-def cookies_required_cookie_missing(
-    session_id: str,
-    fatebook_tracker: str | None = None,
-) -> Any:
-    """Handler for GET /items/cookies."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if fatebook_tracker is not None:
-        result["fatebook_tracker"] = fatebook_tracker
-    if session_id is not None:
-        result["session_id"] = session_id
-    return result
-
-
-def create_app_cookies_required_cookie_missing() -> Spikard:
-    """App factory for fixture: Required cookie - missing."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/items/cookies",
-        body_schema=None,
-        parameter_schema={
-            "properties": {
-                "fatebook_tracker": {"source": "cookie", "type": "string"},
-                "session_id": {"source": "cookie", "type": "string"},
-            },
-            "required": ["session_id"],
-            "type": "object",
-        },
-    )(cookies_required_cookie_missing)
-    return app
-
-
-def cookies_optional_cookie_parameter_missing(
-    ads_id: str | None = None,
-) -> Any:
-    """Handler for GET /items/."""
-    return Response(content={"ads_id": None}, status_code=200)
-
-
-def create_app_cookies_optional_cookie_parameter_missing() -> Spikard:
-    """App factory for fixture: Optional cookie parameter - missing."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/items/",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"ads_id": {"source": "cookie", "type": "string"}},
-            "required": [],
-            "type": "object",
-        },
-    )(cookies_optional_cookie_parameter_missing)
-    return app
-
-
-def cookies_apikey_cookie_authentication_missing(
-    key: str,
-) -> Any:
-    """Handler for GET /users/me/auth."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if key is not None:
-        result["key"] = key
-    return result
-
-
-def create_app_cookies_apikey_cookie_authentication_missing() -> Spikard:
-    """App factory for fixture: APIKey cookie authentication - missing."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/users/me/auth",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"key": {"source": "cookie", "type": "string"}},
-            "required": ["key"],
-            "type": "object",
-        },
-    )(cookies_apikey_cookie_authentication_missing)
-    return app
-
-
-@dataclass
-class CookiesResponseMultipleCookiesBody:
-    """Request body dataclass."""
-
-    session: str
-    user: str
-
-
-def cookies_response_multiple_cookies(
-    body: CookiesResponseMultipleCookiesBody,
-) -> Any:
-    """Handler for POST /cookies/multiple."""
-    return Response(content={"message": "Multiple cookies set"}, status_code=200)
-
-
-def create_app_cookies_response_multiple_cookies() -> Spikard:
-    """App factory for fixture: Response - multiple cookies."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/cookies/multiple",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {"session": {"type": "string"}, "user": {"type": "string"}},
-            "required": ["user", "session"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(cookies_response_multiple_cookies)
-    return app
-
-
-class CookiesResponseCookieWithSamesiteLaxBody(NamedTuple):
-    """Request body NamedTuple (immutable)."""
-
-    value: str
-
-
-def cookies_response_cookie_with_samesite_lax(
-    body: CookiesResponseCookieWithSamesiteLaxBody,
-) -> Any:
-    """Handler for POST /cookies/samesite-lax."""
-    return Response(content={"message": "Cookie set with SameSite=Lax"}, status_code=200)
-
-
-def create_app_cookies_response_cookie_with_samesite_lax() -> Spikard:
-    """App factory for fixture: Response cookie with SameSite=Lax."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/cookies/samesite-lax",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {"value": {"type": "string"}},
-            "required": ["value"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(cookies_response_cookie_with_samesite_lax)
-    return app
-
-
-def cookies_response_delete_cookie(
-    session: str | None = None,
-) -> Any:
-    """Handler for POST /cookies/delete."""
-    return Response(content={"message": "Cookie deleted"}, status_code=200)
-
-
-def create_app_cookies_response_delete_cookie() -> Spikard:
-    """App factory for fixture: Response - delete cookie."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/cookies/delete",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"session": {"source": "cookie", "type": "string"}},
-            "required": [],
-            "type": "object",
-        },
-    )(cookies_response_delete_cookie)
-    return app
-
-
-class CookiesResponseCookieWithPathAttributeBody(BaseModel):
-    """Request body Pydantic model."""
-
-    value: str
-
-
-def cookies_response_cookie_with_path_attribute(
-    body: CookiesResponseCookieWithPathAttributeBody,
-) -> Any:
-    """Handler for POST /cookies/set-with-path."""
-    return Response(content={"message": "Cookie set with path"}, status_code=200)
-
-
-def create_app_cookies_response_cookie_with_path_attribute() -> Spikard:
-    """App factory for fixture: Response cookie with path attribute."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/cookies/set-with-path",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {"value": {"type": "string"}},
-            "required": ["value"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(cookies_response_cookie_with_path_attribute)
-    return app
-
-
-def cookies_optional_apikey_cookie_missing(
-    key: str | None = None,
-) -> Any:
-    """Handler for GET /users/me."""
-    return Response(content={"msg": "Create an account first"}, status_code=200)
-
-
-def create_app_cookies_optional_apikey_cookie_missing() -> Spikard:
-    """App factory for fixture: Optional APIKey cookie - missing."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/users/me",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"key": {"source": "cookie", "type": "string"}},
-            "required": [],
-            "type": "object",
-        },
-    )(cookies_optional_apikey_cookie_missing)
-    return app
-
-
-class CookiesResponseCookieWithSamesiteStrictBody(TypedDict):
-    """Request body type (TypedDict - runtime is dict)."""
-
-    value: str
-
-
-def cookies_response_cookie_with_samesite_strict(
-    body: CookiesResponseCookieWithSamesiteStrictBody,
-) -> Any:
-    """Handler for POST /cookies/samesite-strict."""
-    return Response(content={"message": "Cookie set with SameSite=Strict"}, status_code=200)
-
-
-def create_app_cookies_response_cookie_with_samesite_strict() -> Spikard:
-    """App factory for fixture: Response cookie with SameSite=Strict."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/cookies/samesite-strict",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {"value": {"type": "string"}},
-            "required": ["value"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(cookies_response_cookie_with_samesite_strict)
-    return app
-
-
-@dataclass
-class CookiesResponseCookieWithSamesiteNoneBody:
-    """Request body dataclass."""
-
-    value: str
-
-
-def cookies_response_cookie_with_samesite_none(
-    body: CookiesResponseCookieWithSamesiteNoneBody,
-) -> Any:
-    """Handler for POST /cookies/samesite-none."""
-    return Response(content={"message": "Cookie set with SameSite=None"}, status_code=200)
-
-
-def create_app_cookies_response_cookie_with_samesite_none() -> Spikard:
-    """App factory for fixture: Response cookie with SameSite=None."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/cookies/samesite-none",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {"value": {"type": "string"}},
-            "required": ["value"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(cookies_response_cookie_with_samesite_none)
-    return app
-
-
-def cookies_cookie_regex_pattern_validation_success(
-    tracking_id: str | None = None,
-) -> Any:
-    """Handler for GET /cookies/pattern."""
-    return Response(content={"tracking_id": "ABC12345"}, status_code=200)
-
-
-def create_app_cookies_cookie_regex_pattern_validation_success() -> Spikard:
-    """App factory for fixture: Cookie regex pattern validation - success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/cookies/pattern",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"tracking_id": {"source": "cookie", "type": "string"}},
-            "required": [],
-            "type": "object",
-        },
-    )(cookies_cookie_regex_pattern_validation_success)
-    return app
-
-
-def cookies_response_set_cookie_basic() -> Any:
-    """Handler for POST /cookie/."""
-    return Response(content={"message": "Come to the dark side, we have cookies"}, status_code=200)
-
-
-def create_app_cookies_response_set_cookie_basic() -> Spikard:
-    """App factory for fixture: Response set cookie - basic."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("POST", "/cookie/", body_schema=None, parameter_schema=None)(cookies_response_set_cookie_basic)
-    return app
-
-
-def cookies_multiple_cookies_success(
-    fatebook_tracker: str | None = None,
-    googall_tracker: str | None = None,
-    session_id: str | None = None,
-) -> Any:
-    """Handler for GET /items/."""
-    return Response(
-        content={"fatebook_tracker": "tracker456", "googall_tracker": "ga789", "session_id": "session123"},
-        status_code=200,
-    )
-
-
-def create_app_cookies_multiple_cookies_success() -> Spikard:
-    """App factory for fixture: Multiple cookies - success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/items/",
-        body_schema=None,
-        parameter_schema={
-            "properties": {
-                "fatebook_tracker": {"source": "cookie", "type": "string"},
-                "googall_tracker": {"source": "cookie", "type": "string"},
-                "session_id": {"source": "cookie", "type": "string"},
-            },
-            "required": [],
-            "type": "object",
-        },
-    )(cookies_multiple_cookies_success)
-    return app
-
-
-def cookies_26_cookie_secure_flag(
-    auth_token: str,
-) -> Any:
-    """Handler for GET /secure."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if auth_token is not None:
-        result["auth_token"] = auth_token
-    return result
-
-
-def create_app_cookies_26_cookie_secure_flag() -> Spikard:
-    """App factory for fixture: 26_cookie_secure_flag."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/secure",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"auth_token": {"secure": True, "source": "cookie", "type": "string"}},
-            "required": ["auth_token"],
-            "type": "object",
-        },
-    )(cookies_26_cookie_secure_flag)
-    return app
-
-
-class CookiesResponseCookieWithDomainAttributeBody(TypedDict):
-    """Request body type (TypedDict - runtime is dict)."""
-
-    value: str
-
-
-def cookies_response_cookie_with_domain_attribute(
-    body: CookiesResponseCookieWithDomainAttributeBody,
-) -> Any:
-    """Handler for POST /cookies/set-with-domain."""
-    return Response(content={"message": "Cookie set with domain"}, status_code=200)
-
-
-def create_app_cookies_response_cookie_with_domain_attribute() -> Spikard:
-    """App factory for fixture: Response cookie with domain attribute."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/cookies/set-with-domain",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {"value": {"type": "string"}},
-            "required": ["value"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(cookies_response_cookie_with_domain_attribute)
-    return app
-
-
-def content_types_415_unsupported_media_type(
-    body: dict[str, Any],
-) -> Any:
-    """Handler for POST /items/."""
-    return Response(content={"detail": "Unsupported media type"}, status_code=415)
-
-
-def create_app_content_types_415_unsupported_media_type() -> Spikard:
-    """App factory for fixture: 415 Unsupported Media Type."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("POST", "/items/", body_schema={"type": "string"}, parameter_schema=None)(
-        content_types_415_unsupported_media_type
-    )
-    return app
-
-
-def content_types_xml_response_application_xml() -> Any:
-    """Handler for GET /xml."""
-    return Response(content='<?xml version="1.0"?><item><name>Item</name><price>42.0</price></item>', status_code=200)
-
-
-def create_app_content_types_xml_response_application_xml() -> Spikard:
-    """App factory for fixture: XML response - application/xml."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/xml", body_schema=None, parameter_schema=None)(
-        content_types_xml_response_application_xml
-    )
-    return app
-
-
-@dataclass
-class ContentTypes14ContentTypeCaseInsensitiveBody:
-    """Request body dataclass."""
-
-    name: str
-
-
-def content_types_14_content_type_case_insensitive(
-    body: ContentTypes14ContentTypeCaseInsensitiveBody,
-) -> Any:
-    """Handler for POST /data."""
-    return Response(content={"name": "test"}, status_code=201)
-
-
-def create_app_content_types_14_content_type_case_insensitive() -> Spikard:
-    """App factory for fixture: 14_content_type_case_insensitive."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/data",
-        body_schema={"properties": {"name": {"type": "string"}}, "required": ["name"], "type": "object"},
-        parameter_schema=None,
-    )(content_types_14_content_type_case_insensitive)
-    return app
-
-
-def content_types_json_with_utf_8_charset() -> Any:
-    """Handler for GET /items/unicode."""
-    return Response(content={"emoji": "☕", "name": "Café"}, status_code=200)
-
-
-def create_app_content_types_json_with_utf_8_charset() -> Spikard:
-    """App factory for fixture: JSON with UTF-8 charset."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/items/unicode", body_schema=None, parameter_schema=None)(
-        content_types_json_with_utf_8_charset
-    )
-    return app
-
-
-class ContentTypes16TextPlainNotAcceptedBody(msgspec.Struct):
-    """Request body msgspec.Struct (fast typed)."""
-
-    data: str
-
-
-def content_types_16_text_plain_not_accepted(
-    body: ContentTypes16TextPlainNotAcceptedBody,
-) -> Any:
-    """Handler for POST /data."""
-    return Response(content={"error": "Unsupported Media Type. Expected application/json"}, status_code=415)
-
-
-def create_app_content_types_16_text_plain_not_accepted() -> Spikard:
-    """App factory for fixture: 16_text_plain_not_accepted."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/data",
-        body_schema={"properties": {"data": {"type": "string"}}, "required": ["data"], "type": "object"},
-        parameter_schema=None,
-    )(content_types_16_text_plain_not_accepted)
-    return app
-
-
-def content_types_pdf_response_application_pdf() -> Any:
-    """Handler for GET /download/document.pdf."""
-    return Response(content="pdf_binary_data", status_code=200)
-
-
-def create_app_content_types_pdf_response_application_pdf() -> Spikard:
-    """App factory for fixture: PDF response - application/pdf."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/download/document.pdf", body_schema=None, parameter_schema=None)(
-        content_types_pdf_response_application_pdf
-    )
-    return app
-
-
-def content_types_20_content_length_mismatch(
-    body: dict[str, Any],
-    content_length: str | None = None,
-) -> Any:
-    """Handler for POST /data."""
-    return Response(content={"error": "Content-Length header does not match actual body size"}, status_code=400)
-
-
-def create_app_content_types_20_content_length_mismatch() -> Spikard:
-    """App factory for fixture: 20_content_length_mismatch."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/data",
-        body_schema={"properties": {"value": {"type": "string"}}, "type": "object"},
-        parameter_schema={
-            "properties": {"content_length": {"source": "header", "type": "string"}},
-            "required": [],
-            "type": "object",
-        },
-    )(content_types_20_content_length_mismatch)
-    return app
-
-
-class ContentTypes17VendorJsonAcceptedBody(TypedDict):
-    """Request body type (TypedDict - runtime is dict)."""
-
-    data: str
-
-
-def content_types_17_vendor_json_accepted(
-    body: ContentTypes17VendorJsonAcceptedBody,
-) -> Any:
-    """Handler for POST /api/v1/resource."""
-    return Response(content={"data": "value"}, status_code=201)
-
-
-def create_app_content_types_17_vendor_json_accepted() -> Spikard:
-    """App factory for fixture: 17_vendor_json_accepted."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/api/v1/resource",
-        body_schema={"properties": {"data": {"type": "string"}}, "required": ["data"], "type": "object"},
-        parameter_schema=None,
-    )(content_types_17_vendor_json_accepted)
-    return app
-
-
-@dataclass
-class ContentTypes13JsonWithCharsetUtf16Body:
-    """Request body dataclass."""
-
-    value: str | None = None
-
-
-def content_types_13_json_with_charset_utf16(
-    body: ContentTypes13JsonWithCharsetUtf16Body,
-) -> Any:
-    """Handler for POST /data."""
-    return Response(
-        content={"error": "Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported."}, status_code=415
-    )
-
-
-def create_app_content_types_13_json_with_charset_utf16() -> Spikard:
-    """App factory for fixture: 13_json_with_charset_utf16."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/data",
-        body_schema={"properties": {"value": {"type": "string"}}, "type": "object"},
-        parameter_schema=None,
-    )(content_types_13_json_with_charset_utf16)
-    return app
-
-
-def content_types_json_response_application_json() -> Any:
-    """Handler for GET /items/json."""
-    return Response(content={"name": "Item", "price": 42.0}, status_code=200)
-
-
-def create_app_content_types_json_response_application_json() -> Spikard:
-    """App factory for fixture: JSON response - application/json."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/items/json", body_schema=None, parameter_schema=None)(
-        content_types_json_response_application_json
-    )
-    return app
-
-
-def content_types_15_multipart_boundary_required() -> Any:
-    """Handler for POST /upload."""
-    return Response(content={"error": "multipart/form-data requires 'boundary' parameter"}, status_code=400)
-
-
-def create_app_content_types_15_multipart_boundary_required() -> Spikard:
-    """App factory for fixture: 15_multipart_boundary_required."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST", "/upload", body_schema=None, parameter_schema={"properties": {}, "required": [], "type": "object"}
-    )(content_types_15_multipart_boundary_required)
-    return app
-
-
-def content_types_content_negotiation_accept_header(
-    id: str,
-) -> Any:
-    """Handler for GET /accept-test/{id}."""
-    return Response(content={"id": 1, "name": "Item"}, status_code=200)
-
-
-def create_app_content_types_content_negotiation_accept_header() -> Spikard:
-    """App factory for fixture: Content negotiation - Accept header."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/accept-test/{id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"id": {"source": "path", "type": "string"}},
-            "required": ["id"],
-            "type": "object",
-        },
-    )(content_types_content_negotiation_accept_header)
-    return app
-
-
-def content_types_html_response_text_html() -> Any:
-    """Handler for GET /html."""
-    return Response(content="<html><body><h1>Hello</h1></body></html>", status_code=200)
-
-
-def create_app_content_types_html_response_text_html() -> Spikard:
-    """App factory for fixture: HTML response - text/html."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/html", body_schema=None, parameter_schema=None)(content_types_html_response_text_html)
-    return app
-
-
-def content_types_jpeg_image_response_image_jpeg() -> Any:
-    """Handler for GET /images/photo.jpg."""
-    return Response(content="jpeg_binary_data", status_code=200)
-
-
-def create_app_content_types_jpeg_image_response_image_jpeg() -> Spikard:
-    """App factory for fixture: JPEG image response - image/jpeg."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/images/photo.jpg", body_schema=None, parameter_schema=None)(
-        content_types_jpeg_image_response_image_jpeg
-    )
-    return app
-
-
-@dataclass
-class ContentTypes19MissingContentTypeDefaultJsonBody:
-    """Request body dataclass."""
-
-    name: str
-
-
-def content_types_19_missing_content_type_default_json(
-    body: ContentTypes19MissingContentTypeDefaultJsonBody,
-) -> Any:
-    """Handler for POST /data."""
-    return Response(content={"name": "test"}, status_code=201)
-
-
-def create_app_content_types_19_missing_content_type_default_json() -> Spikard:
-    """App factory for fixture: 19_missing_content_type_default_json."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/data",
-        body_schema={"properties": {"name": {"type": "string"}}, "required": ["name"], "type": "object"},
-        parameter_schema=None,
-    )(content_types_19_missing_content_type_default_json)
-    return app
-
-
-def content_types_png_image_response_image_png() -> Any:
-    """Handler for GET /images/logo.png."""
-    return Response(content="png_binary_data", status_code=200)
-
-
-def create_app_content_types_png_image_response_image_png() -> Spikard:
-    """App factory for fixture: PNG image response - image/png."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/images/logo.png", body_schema=None, parameter_schema=None)(
-        content_types_png_image_response_image_png
-    )
-    return app
-
-
-def content_types_plain_text_response_text_plain() -> Any:
-    """Handler for GET /text."""
-    return Response(content="Hello, World!", status_code=200)
-
-
-def create_app_content_types_plain_text_response_text_plain() -> Spikard:
-    """App factory for fixture: Plain text response - text/plain."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/text", body_schema=None, parameter_schema=None)(
-        content_types_plain_text_response_text_plain
-    )
-    return app
-
-
-class ContentTypes18ContentTypeWithMultipleParamsBody(BaseModel):
-    """Request body Pydantic model."""
-
-    value: str | None = None
-
-
-def content_types_18_content_type_with_multiple_params(
-    body: ContentTypes18ContentTypeWithMultipleParamsBody,
-) -> Any:
-    """Handler for POST /data."""
-    return Response(content={"value": "test"}, status_code=201)
-
-
-def create_app_content_types_18_content_type_with_multiple_params() -> Spikard:
-    """App factory for fixture: 18_content_type_with_multiple_params."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/data",
-        body_schema={"properties": {"value": {"type": "string"}}, "type": "object"},
-        parameter_schema=None,
-    )(content_types_18_content_type_with_multiple_params)
-    return app
-
-
-def content_types_csv_response_text_csv() -> Any:
-    """Handler for GET /export/data.csv."""
-    return Response(content="id,name,price\n1,Item A,10.0\n2,Item B,20.0", status_code=200)
-
-
-def create_app_content_types_csv_response_text_csv() -> Spikard:
-    """App factory for fixture: CSV response - text/csv."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/export/data.csv", body_schema=None, parameter_schema=None)(
-        content_types_csv_response_text_csv
-    )
-    return app
-
-
-def content_types_binary_response_application_octet_stream() -> Any:
-    """Handler for GET /download/file.bin."""
-    return Response(content="binary_data_placeholder", status_code=200)
-
-
-def create_app_content_types_binary_response_application_octet_stream() -> Spikard:
-    """App factory for fixture: Binary response - application/octet-stream."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/download/file.bin", body_schema=None, parameter_schema=None)(
-        content_types_binary_response_application_octet_stream
-    )
-    return app
-
-
-def http_methods_options_cors_preflight_request() -> Any:
-    """Handler for OPTIONS /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    return result
-
-
-def create_app_http_methods_options_cors_preflight_request() -> Spikard:
-    """App factory for fixture: OPTIONS - CORS preflight request."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("OPTIONS", "/items/", body_schema=None, parameter_schema=None)(
-        http_methods_options_cors_preflight_request
-    )
-    return app
-
-
-def http_methods_delete_remove_resource(
-    id: str,
-) -> Any:
-    """Handler for DELETE /items/{id}."""
-    return Response(content={}, status_code=200)
-
-
-def create_app_http_methods_delete_remove_resource() -> Spikard:
-    """App factory for fixture: DELETE - Remove resource."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "DELETE",
-        "/items/{id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"id": {"source": "path", "type": "string"}},
-            "required": ["id"],
-            "type": "object",
-        },
-    )(http_methods_delete_remove_resource)
-    return app
-
-
-@dataclass
-class HttpMethodsPutCreateResourceIfDoesnTExistBody:
-    """Request body dataclass."""
-
-    id: int
-    name: str
-    price: float
-
-
-def http_methods_put_create_resource_if_doesn_t_exist(
-    body: HttpMethodsPutCreateResourceIfDoesnTExistBody,
-    id: str,
-) -> Any:
-    """Handler for PUT /items/{id}."""
-    return Response(content={"id": 999, "name": "New Item", "price": 49.99}, status_code=200)
-
-
-def create_app_http_methods_put_create_resource_if_doesn_t_exist() -> Spikard:
-    """App factory for fixture: PUT - Create resource if doesn't exist."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "PUT",
-        "/items/{id}",
-        body_schema={
-            "properties": {"id": {"type": "integer"}, "name": {"type": "string"}, "price": {"type": "number"}},
-            "required": ["id", "name", "price"],
-            "type": "object",
-        },
-        parameter_schema={
-            "properties": {"id": {"source": "path", "type": "string"}},
-            "required": ["id"],
-            "type": "object",
-        },
-    )(http_methods_put_create_resource_if_doesn_t_exist)
-    return app
-
-
-class HttpMethodsPatchUpdateMultipleFieldsBody(NamedTuple):
-    """Request body NamedTuple (immutable)."""
-
-    in_stock: bool
-    name: str
-    price: float
-
-
-def http_methods_patch_update_multiple_fields(
-    body: HttpMethodsPatchUpdateMultipleFieldsBody,
-    id: str,
-) -> Any:
-    """Handler for PATCH /items/{id}."""
-    return Response(content={"id": 1, "in_stock": False, "name": "Updated Name", "price": 89.99}, status_code=200)
-
-
-def create_app_http_methods_patch_update_multiple_fields() -> Spikard:
-    """App factory for fixture: PATCH - Update multiple fields."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "PATCH",
-        "/items/{id}",
-        body_schema={
-            "properties": {"in_stock": {"type": "boolean"}, "name": {"type": "string"}, "price": {"type": "number"}},
-            "required": ["in_stock", "name", "price"],
-            "type": "object",
-        },
-        parameter_schema={
-            "properties": {"id": {"source": "path", "type": "string"}},
-            "required": ["id"],
-            "type": "object",
-        },
-    )(http_methods_patch_update_multiple_fields)
-    return app
-
-
-class HttpMethodsPutValidationErrorBody(msgspec.Struct):
-    """Request body msgspec.Struct (fast typed)."""
-
-    id: int
-    name: str
-    price: float
-
-
-def http_methods_put_validation_error(
-    body: HttpMethodsPutValidationErrorBody,
-    id: str,
-) -> Any:
-    """Handler for PUT /items/{id}."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(msgspec.to_builtins(body))
-    if id is not None:
-        result["id"] = id
-    return result
-
-
-def create_app_http_methods_put_validation_error() -> Spikard:
-    """App factory for fixture: PUT - Validation error."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "PUT",
-        "/items/{id}",
-        body_schema={
-            "$schema": "https://json-schema.org/draft/2020-12/schema",
-            "properties": {
-                "id": {"type": "integer"},
-                "name": {"minLength": 3, "type": "string"},
-                "price": {"exclusiveMinimum": 0, "type": "number"},
-            },
-            "required": ["id", "name", "price"],
-            "type": "object",
-        },
-        parameter_schema={
-            "properties": {"id": {"source": "path", "type": "string"}},
-            "required": ["id"],
-            "type": "object",
-        },
-    )(http_methods_put_validation_error)
-    return app
-
-
-def http_methods_head_get_metadata_without_body(
-    id: str,
-) -> Any:
-    """Handler for HEAD /items/{id}."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if id is not None:
-        result["id"] = id
-    return result
-
-
-def create_app_http_methods_head_get_metadata_without_body() -> Spikard:
-    """App factory for fixture: HEAD - Get metadata without body."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "HEAD",
-        "/items/{id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"id": {"source": "path", "type": "string"}},
-            "required": ["id"],
-            "type": "object",
-        },
-    )(http_methods_head_get_metadata_without_body)
-    return app
-
-
-def http_methods_delete_with_response_body(
-    id: str,
-) -> Any:
-    """Handler for DELETE /items/{id}."""
-    return Response(content={"id": 1, "message": "Item deleted successfully", "name": "Deleted Item"}, status_code=200)
-
-
-def create_app_http_methods_delete_with_response_body() -> Spikard:
-    """App factory for fixture: DELETE - With response body."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "DELETE",
-        "/items/{id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"id": {"source": "path", "type": "string"}},
-            "required": ["id"],
-            "type": "object",
-        },
-    )(http_methods_delete_with_response_body)
-    return app
-
-
-class HttpMethodsPutMissingRequiredFieldBody(TypedDict):
-    """Request body type (TypedDict - runtime is dict)."""
-
-    price: str
-    id: int | None
-    name: str | None
-
-
-def http_methods_put_missing_required_field(
-    body: HttpMethodsPutMissingRequiredFieldBody,
-    id: str,
-) -> Any:
-    """Handler for PUT /items/{id}."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(body)
-    if id is not None:
-        result["id"] = id
-    return result
-
-
-def create_app_http_methods_put_missing_required_field() -> Spikard:
-    """App factory for fixture: PUT - Missing required field."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "PUT",
-        "/items/{id}",
-        body_schema={
-            "properties": {"id": {"type": "integer"}, "name": {"type": "string"}, "price": {"type": "string"}},
-            "required": ["price"],
-            "type": "object",
-        },
-        parameter_schema={
-            "properties": {"id": {"source": "path", "type": "string"}},
-            "required": ["id"],
-            "type": "object",
-        },
-    )(http_methods_put_missing_required_field)
-    return app
-
-
-@dataclass
-class HttpMethodsPatchPartialUpdateBody:
-    """Request body dataclass."""
-
-    price: float
-
-
-def http_methods_patch_partial_update(
-    body: HttpMethodsPatchPartialUpdateBody,
-    id: str,
-) -> Any:
-    """Handler for PATCH /items/{id}."""
-    return Response(content={"id": 1, "in_stock": True, "name": "Existing Item", "price": 79.99}, status_code=200)
-
-
-def create_app_http_methods_patch_partial_update() -> Spikard:
-    """App factory for fixture: PATCH - Partial update."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "PATCH",
-        "/items/{id}",
-        body_schema={"properties": {"price": {"type": "number"}}, "required": ["price"], "type": "object"},
-        parameter_schema={
-            "properties": {"id": {"source": "path", "type": "string"}},
-            "required": ["id"],
-            "type": "object",
-        },
-    )(http_methods_patch_partial_update)
-    return app
-
-
-def http_methods_delete_resource_not_found(
-    id: str,
-) -> Any:
-    """Handler for DELETE /items/{id}."""
-    return Response(content={}, status_code=200)
-
-
-def create_app_http_methods_delete_resource_not_found() -> Spikard:
-    """App factory for fixture: DELETE - Resource not found."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "DELETE",
-        "/items/{id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"id": {"source": "path", "type": "string"}},
-            "required": ["id"],
-            "type": "object",
-        },
-    )(http_methods_delete_resource_not_found)
-    return app
-
-
-class HttpMethodsPutIdempotentOperationBody(msgspec.Struct):
-    """Request body msgspec.Struct (fast typed)."""
-
-    id: int
-    name: str
-    price: float
-
-
-def http_methods_put_idempotent_operation(
-    body: HttpMethodsPutIdempotentOperationBody,
-    id: str,
-) -> Any:
-    """Handler for PUT /items/{id}."""
-    return Response(content={"id": 1, "name": "Fixed Name", "price": 50.0}, status_code=200)
-
-
-def create_app_http_methods_put_idempotent_operation() -> Spikard:
-    """App factory for fixture: PUT - Idempotent operation."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "PUT",
-        "/items/{id}",
-        body_schema={
-            "properties": {"id": {"type": "integer"}, "name": {"type": "string"}, "price": {"type": "number"}},
-            "required": ["id", "name", "price"],
-            "type": "object",
-        },
-        parameter_schema={
-            "properties": {"id": {"source": "path", "type": "string"}},
-            "required": ["id"],
-            "type": "object",
-        },
-    )(http_methods_put_idempotent_operation)
-    return app
-
-
-class HttpMethodsPutCompleteResourceReplacementBody(BaseModel):
-    """Request body Pydantic model."""
-
-    description: str
-    id: int
-    in_stock: bool
-    name: str
-    price: float
-
-
-def http_methods_put_complete_resource_replacement(
-    body: HttpMethodsPutCompleteResourceReplacementBody,
-    id: str,
-) -> Any:
-    """Handler for PUT /items/{id}."""
-    return Response(
-        content={
-            "description": "Completely replaced",
-            "id": 1,
-            "in_stock": True,
-            "name": "Updated Item",
-            "price": 99.99,
-        },
-        status_code=200,
-    )
-
-
-def create_app_http_methods_put_complete_resource_replacement() -> Spikard:
-    """App factory for fixture: PUT - Complete resource replacement."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "PUT",
-        "/items/{id}",
-        body_schema={
-            "properties": {
-                "description": {"type": "string"},
-                "id": {"type": "integer"},
-                "in_stock": {"type": "boolean"},
-                "name": {"type": "string"},
-                "price": {"type": "number"},
-            },
-            "required": ["description", "id", "in_stock", "name", "price"],
-            "type": "object",
-        },
-        parameter_schema={
-            "properties": {"id": {"source": "path", "type": "string"}},
-            "required": ["id"],
-            "type": "object",
-        },
-    )(http_methods_put_complete_resource_replacement)
-    return app
-
-
-def url_encoded_simple_form_submission_success(
-    body: dict[str, Any],
-) -> Any:
-    """Handler for POST /login/."""
-    return Response(content={"username": "johndoe"}, status_code=200)
-
-
-def create_app_url_encoded_simple_form_submission_success() -> Spikard:
-    """App factory for fixture: Simple form submission - success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/login/",
-        body_schema={
-            "properties": {"password": {"type": "string"}, "username": {"type": "string"}},
-            "required": ["username", "password"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_simple_form_submission_success)
-    return app
-
-
-class UrlEncoded15SpecialCharactersFieldNamesBody(TypedDict):
-    """Request body type (TypedDict - runtime is dict)."""
-
-    contact_email: str | None
-    user_name: str | None
-
-
-def url_encoded_15_special_characters_field_names(
-    body: UrlEncoded15SpecialCharactersFieldNamesBody,
-) -> Any:
-    """Handler for POST /data."""
-    return Response(content={"contact.email": "john@example.com", "user-name": "JohnDoe"}, status_code=201)
-
-
-def create_app_url_encoded_15_special_characters_field_names() -> Spikard:
-    """App factory for fixture: 15_special_characters_field_names."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/data",
-        body_schema={
-            "properties": {"contact.email": {"format": "email", "type": "string"}, "user-name": {"type": "string"}},
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_15_special_characters_field_names)
-    return app
-
-
-@dataclass
-class UrlEncodedPatternValidationFailBody:
-    """Request body dataclass."""
-
-    username: str
-
-
-def url_encoded_pattern_validation_fail(
-    body: UrlEncodedPatternValidationFailBody,
-) -> Any:
-    """Handler for POST /form/validated."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(asdict(body))
-    return result
-
-
-def create_app_url_encoded_pattern_validation_fail() -> Spikard:
-    """App factory for fixture: Pattern validation - fail."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/form/validated",
-        body_schema={
-            "properties": {"username": {"pattern": "^[a-z0-9_]+$", "type": "string"}},
-            "required": ["username"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_pattern_validation_fail)
-    return app
-
-
-class UrlEncoded22AdditionalPropertiesStrictFailureBody(NamedTuple):
-    """Request body NamedTuple (immutable)."""
-
-    theme: str
-
-
-def url_encoded_22_additional_properties_strict_failure(
-    body: UrlEncoded22AdditionalPropertiesStrictFailureBody,
-) -> Any:
-    """Handler for POST /settings."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(body._asdict())
-    return result
-
-
-def create_app_url_encoded_22_additional_properties_strict_failure() -> Spikard:
-    """App factory for fixture: 22_additional_properties_strict_failure."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/settings",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {"theme": {"enum": ["light", "dark"], "type": "string"}},
-            "required": ["theme"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_22_additional_properties_strict_failure)
-    return app
-
-
-class UrlEncoded17PatternValidationFailureBody(msgspec.Struct):
-    """Request body msgspec.Struct (fast typed)."""
-
-    account_id: str
-
-
-def url_encoded_17_pattern_validation_failure(
-    body: UrlEncoded17PatternValidationFailureBody,
-) -> Any:
-    """Handler for POST /accounts."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(msgspec.to_builtins(body))
-    return result
-
-
-def create_app_url_encoded_17_pattern_validation_failure() -> Spikard:
-    """App factory for fixture: 17_pattern_validation_failure."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/accounts",
-        body_schema={
-            "properties": {"account_id": {"pattern": "^ACC-[0-9]{6}$", "type": "string"}},
-            "required": ["account_id"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_17_pattern_validation_failure)
-    return app
-
-
-class UrlEncoded20FormatEmailValidationFailureBody(BaseModel):
-    """Request body Pydantic model."""
-
-    email: str
-
-
-def url_encoded_20_format_email_validation_failure(
-    body: UrlEncoded20FormatEmailValidationFailureBody,
-) -> Any:
-    """Handler for POST /subscribe."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(body.model_dump())
-    return result
-
-
-def create_app_url_encoded_20_format_email_validation_failure() -> Spikard:
-    """App factory for fixture: 20_format_email_validation_failure."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/subscribe",
-        body_schema={
-            "properties": {"email": {"format": "email", "type": "string"}},
-            "required": ["email"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_20_format_email_validation_failure)
-    return app
-
-
-def url_encoded_multiple_values_for_same_field(
-    body: dict[str, Any],
-) -> Any:
-    """Handler for POST /form/tags."""
-    return Response(content={"tags": ["python", "fastapi", "web"]}, status_code=200)
-
-
-def create_app_url_encoded_multiple_values_for_same_field() -> Spikard:
-    """App factory for fixture: Multiple values for same field."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/form/tags",
-        body_schema={
-            "properties": {"tags": {"items": {"type": "string"}, "type": "array"}},
-            "required": ["tags"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_multiple_values_for_same_field)
-    return app
-
-
-class UrlEncodedRequiredFieldMissingValidationErrorBody(TypedDict):
-    """Request body type (TypedDict - runtime is dict)."""
-
-    password: str
-    username: str
-
-
-def url_encoded_required_field_missing_validation_error(
-    body: UrlEncodedRequiredFieldMissingValidationErrorBody,
-) -> Any:
-    """Handler for POST /login/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(body)
-    return result
-
-
-def create_app_url_encoded_required_field_missing_validation_error() -> Spikard:
-    """App factory for fixture: Required field missing - validation error."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/login/",
-        body_schema={
-            "properties": {"password": {"type": "string"}, "username": {"type": "string"}},
-            "required": ["username", "password"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_required_field_missing_validation_error)
-    return app
-
-
-@dataclass
-class UrlEncoded13ArrayFieldSuccessBody:
-    """Request body dataclass."""
-
-    tags: list[str]
-
-
-def url_encoded_13_array_field_success(
-    body: UrlEncoded13ArrayFieldSuccessBody,
-) -> Any:
-    """Handler for POST /register."""
-    return Response(content={"tags": ["python", "rust", "typescript"]}, status_code=201)
-
-
-def create_app_url_encoded_13_array_field_success() -> Spikard:
-    """App factory for fixture: 13_array_field_success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/register",
-        body_schema={
-            "properties": {"tags": {"items": {"type": "string"}, "minItems": 1, "type": "array"}},
-            "required": ["tags"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_13_array_field_success)
-    return app
-
-
-class UrlEncodedNumericFieldTypeConversionBody(NamedTuple):
-    """Request body NamedTuple (immutable)."""
-
-    username: str
-    age: int | None = None
-
-
-def url_encoded_numeric_field_type_conversion(
-    body: UrlEncodedNumericFieldTypeConversionBody,
-) -> Any:
-    """Handler for POST /form/."""
-    return Response(content={"age": 30, "username": "johndoe"}, status_code=200)
-
-
-def create_app_url_encoded_numeric_field_type_conversion() -> Spikard:
-    """App factory for fixture: Numeric field type conversion."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/form/",
-        body_schema={
-            "properties": {"age": {"type": "integer"}, "username": {"type": "string"}},
-            "required": ["username"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_numeric_field_type_conversion)
-    return app
-
-
-class UrlEncodedSpecialCharactersEncodingBody(msgspec.Struct):
-    """Request body msgspec.Struct (fast typed)."""
-
-    name: str
-    description: str | None = None
-
-
-def url_encoded_special_characters_encoding(
-    body: UrlEncodedSpecialCharactersEncodingBody,
-) -> Any:
-    """Handler for POST /form/."""
-    return Response(content={"description": "Test & Development", "name": "John Doe"}, status_code=200)
-
-
-def create_app_url_encoded_special_characters_encoding() -> Spikard:
-    """App factory for fixture: Special characters encoding."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/form/",
-        body_schema={
-            "properties": {"description": {"type": "string"}, "name": {"type": "string"}},
-            "required": ["name"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_special_characters_encoding)
-    return app
-
-
-class UrlEncodedBooleanFieldConversionBody(BaseModel):
-    """Request body Pydantic model."""
-
-    username: str
-    subscribe: bool | None = None
-
-
-def url_encoded_boolean_field_conversion(
-    body: UrlEncodedBooleanFieldConversionBody,
-) -> Any:
-    """Handler for POST /form/."""
-    return Response(content={"subscribe": True, "username": "johndoe"}, status_code=200)
-
-
-def create_app_url_encoded_boolean_field_conversion() -> Spikard:
-    """App factory for fixture: Boolean field conversion."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/form/",
-        body_schema={
-            "properties": {"subscribe": {"type": "boolean"}, "username": {"type": "string"}},
-            "required": ["username"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_boolean_field_conversion)
-    return app
-
-
-def url_encoded_empty_string_value(
-    body: dict[str, Any],
-) -> Any:
-    """Handler for POST /form/."""
-    return Response(content={"description": "", "username": "johndoe"}, status_code=200)
-
-
-def create_app_url_encoded_empty_string_value() -> Spikard:
-    """App factory for fixture: Empty string value."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/form/",
-        body_schema={
-            "properties": {"description": {"type": "string"}, "username": {"type": "string"}},
-            "required": ["username"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_empty_string_value)
-    return app
-
-
-class UrlEncodedOauth2PasswordGrantFlowBody(TypedDict):
-    """Request body type (TypedDict - runtime is dict)."""
-
-    grant_type: str
-    password: str
-    username: str
-    scope: str | None
-
-
-def url_encoded_oauth2_password_grant_flow(
-    body: UrlEncodedOauth2PasswordGrantFlowBody,
-) -> Any:
-    """Handler for POST /token."""
-    return Response(content={"access_token": "johndoe", "token_type": "bearer"}, status_code=200)
-
-
-def create_app_url_encoded_oauth2_password_grant_flow() -> Spikard:
-    """App factory for fixture: OAuth2 password grant flow."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/token",
-        body_schema={
-            "properties": {
-                "grant_type": {"type": "string"},
-                "password": {"type": "string"},
-                "scope": {"type": "string"},
-                "username": {"type": "string"},
-            },
-            "required": ["username", "password", "grant_type"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_oauth2_password_grant_flow)
-    return app
-
-
-@dataclass
-class UrlEncoded19ArrayMinitemsValidationFailureBody:
-    """Request body dataclass."""
-
-    tags: list[str]
-
-
-def url_encoded_19_array_minitems_validation_failure(
-    body: UrlEncoded19ArrayMinitemsValidationFailureBody,
-) -> Any:
-    """Handler for POST /tags."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(asdict(body))
-    return result
-
-
-def create_app_url_encoded_19_array_minitems_validation_failure() -> Spikard:
-    """App factory for fixture: 19_array_minitems_validation_failure."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/tags",
-        body_schema={
-            "properties": {"tags": {"items": {"type": "string"}, "minItems": 2, "type": "array"}},
-            "required": ["tags"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_19_array_minitems_validation_failure)
-    return app
-
-
-class UrlEncodedOptionalFieldMissingSuccessBody(NamedTuple):
-    """Request body NamedTuple (immutable)."""
-
-    password: str
-    username: str
-    email: str | None = None
-
-
-def url_encoded_optional_field_missing_success(
-    body: UrlEncodedOptionalFieldMissingSuccessBody,
-) -> Any:
-    """Handler for POST /register/."""
-    return Response(content={"email": None, "username": "johndoe"}, status_code=200)
-
-
-def create_app_url_encoded_optional_field_missing_success() -> Spikard:
-    """App factory for fixture: Optional field missing - success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/register/",
-        body_schema={
-            "properties": {
-                "email": {"format": "email", "type": ["string", "null"]},
-                "password": {"type": "string"},
-                "username": {"type": "string"},
-            },
-            "required": ["username", "password"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_optional_field_missing_success)
-    return app
-
-
-class UrlEncoded14NestedObjectBracketNotationBody(msgspec.Struct):
-    """Request body msgspec.Struct (fast typed)."""
-
-    user: dict[str, Any]
-
-
-def url_encoded_14_nested_object_bracket_notation(
-    body: UrlEncoded14NestedObjectBracketNotationBody,
-) -> Any:
-    """Handler for POST /profile."""
-    return Response(content={"user": {"age": 30, "email": "john@example.com", "name": "John Doe"}}, status_code=201)
-
-
-def create_app_url_encoded_14_nested_object_bracket_notation() -> Spikard:
-    """App factory for fixture: 14_nested_object_bracket_notation."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/profile",
-        body_schema={
-            "properties": {
-                "user": {
-                    "properties": {
-                        "age": {"minimum": 0, "type": "integer"},
-                        "email": {"format": "email", "type": "string"},
-                        "name": {"minLength": 1, "type": "string"},
-                    },
-                    "required": ["name", "email"],
-                    "type": "object",
-                }
-            },
-            "required": ["user"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_14_nested_object_bracket_notation)
-    return app
-
-
-class UrlEncodedStringMaxLengthValidationFailBody(BaseModel):
-    """Request body Pydantic model."""
-
-    username: str
-
-
-def url_encoded_string_max_length_validation_fail(
-    body: UrlEncodedStringMaxLengthValidationFailBody,
-) -> Any:
-    """Handler for POST /form/validated."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(body.model_dump())
-    return result
-
-
-def create_app_url_encoded_string_max_length_validation_fail() -> Spikard:
-    """App factory for fixture: String max_length validation - fail."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/form/validated",
-        body_schema={
-            "properties": {"username": {"maxLength": 20, "type": "string"}},
-            "required": ["username"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_string_max_length_validation_fail)
-    return app
-
-
-def url_encoded_18_integer_minimum_validation_failure(
-    body: dict[str, Any],
-) -> Any:
-    """Handler for POST /products."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(body)
-    return result
-
-
-def create_app_url_encoded_18_integer_minimum_validation_failure() -> Spikard:
-    """App factory for fixture: 18_integer_minimum_validation_failure."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/products",
-        body_schema={
-            "properties": {"quantity": {"minimum": 1, "type": "integer"}},
-            "required": ["quantity"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_18_integer_minimum_validation_failure)
-    return app
-
-
-class UrlEncoded21IntegerTypeCoercionFailureBody(TypedDict):
-    """Request body type (TypedDict - runtime is dict)."""
-
-    price: int
-
-
-def url_encoded_21_integer_type_coercion_failure(
-    body: UrlEncoded21IntegerTypeCoercionFailureBody,
-) -> Any:
-    """Handler for POST /products."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(body)
-    return result
-
-
-def create_app_url_encoded_21_integer_type_coercion_failure() -> Spikard:
-    """App factory for fixture: 21_integer_type_coercion_failure."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/products",
-        body_schema={"properties": {"price": {"type": "integer"}}, "required": ["price"], "type": "object"},
-        parameter_schema=None,
-    )(url_encoded_21_integer_type_coercion_failure)
-    return app
-
-
-@dataclass
-class UrlEncoded16MinlengthValidationFailureBody:
-    """Request body dataclass."""
-
-    username: str
-
-
-def url_encoded_16_minlength_validation_failure(
-    body: UrlEncoded16MinlengthValidationFailureBody,
-) -> Any:
-    """Handler for POST /users."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(asdict(body))
-    return result
-
-
-def create_app_url_encoded_16_minlength_validation_failure() -> Spikard:
-    """App factory for fixture: 16_minlength_validation_failure."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/users",
-        body_schema={
-            "properties": {"username": {"minLength": 3, "type": "string"}},
-            "required": ["username"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_16_minlength_validation_failure)
-    return app
-
-
-class UrlEncodedStringMinLengthValidationFailBody(NamedTuple):
-    """Request body NamedTuple (immutable)."""
-
-    username: str
-
-
-def url_encoded_string_min_length_validation_fail(
-    body: UrlEncodedStringMinLengthValidationFailBody,
-) -> Any:
-    """Handler for POST /form/validated."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(body._asdict())
-    return result
-
-
-def create_app_url_encoded_string_min_length_validation_fail() -> Spikard:
-    """App factory for fixture: String min_length validation - fail."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/form/validated",
-        body_schema={
-            "properties": {"username": {"minLength": 3, "type": "string"}},
-            "required": ["username"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(url_encoded_string_min_length_validation_fail)
-    return app
-
-
 def multipart_multiple_values_for_same_field_name(
     body: dict[str, Any],
 ) -> Any:
@@ -5576,1179 +6258,174 @@ def create_app_multipart_image_file_upload() -> Spikard:
     return app
 
 
-def edge_cases_19_emoji_in_strings(
-    body: dict[str, Any],
-) -> Any:
-    """Handler for POST /messages."""
-    return Response(content={"text": "Hello 👋 World 🌍"}, status_code=201)
-
-
-def create_app_edge_cases_19_emoji_in_strings() -> Spikard:
-    """App factory for fixture: 19_emoji_in_strings."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/messages",
-        body_schema={
-            "properties": {"text": {"maxLength": 100, "minLength": 1, "type": "string"}},
-            "required": ["text"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(edge_cases_19_emoji_in_strings)
-    return app
-
-
-def edge_cases_12_percent_encoded_special_chars(
-    term: str,
-) -> Any:
-    """Handler for GET /search."""
-    return Response(content={"term": "hi there"}, status_code=200)
-
-
-def create_app_edge_cases_12_percent_encoded_special_chars() -> Spikard:
-    """App factory for fixture: 12_percent_encoded_special_chars."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/search",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"term": {"source": "query", "type": "string"}},
-            "required": ["term"],
-            "type": "object",
-        },
-    )(edge_cases_12_percent_encoded_special_chars)
-    return app
-
-
-@dataclass
-class EdgeCasesSpecialStringValuesAndEscapingBody:
-    """Request body dataclass."""
-
-    backslashes: str
-    empty_string: str
-    quotes: str
-    special_chars: str
-    tabs_newlines: str
-    unicode_escapes: str
-    whitespace: str
-
-
-def edge_cases_special_string_values_and_escaping(
-    body: EdgeCasesSpecialStringValuesAndEscapingBody,
-) -> Any:
-    """Handler for POST /strings/."""
-    return Response(
-        content={
-            "backslashes": "C:\\\\Users\\\\Path",
-            "empty_string": "",
-            "quotes": "He said \"hello\" and 'goodbye'",
-            "special_chars": "!@#$%^&*()_+-=[]{}|;':\",./<>?",
-            "tabs_newlines": "line1\n\tline2\r\nline3",
-            "unicode_escapes": "Hello",
-            "whitespace": "   ",
-        },
-        status_code=200,
-    )
-
-
-def create_app_edge_cases_special_string_values_and_escaping() -> Spikard:
-    """App factory for fixture: Special string values and escaping."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/strings/",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {
-                "backslashes": {"type": "string"},
-                "empty_string": {"type": "string"},
-                "quotes": {"type": "string"},
-                "special_chars": {"type": "string"},
-                "tabs_newlines": {"type": "string"},
-                "unicode_escapes": {"type": "string"},
-                "whitespace": {"type": "string"},
-            },
-            "required": [
-                "empty_string",
-                "whitespace",
-                "tabs_newlines",
-                "quotes",
-                "backslashes",
-                "unicode_escapes",
-                "special_chars",
-            ],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(edge_cases_special_string_values_and_escaping)
-    return app
-
-
-class EdgeCases15FloatPrecisionPreservationBody(NamedTuple):
-    """Request body NamedTuple (immutable)."""
-
-    value: float
-
-
-def edge_cases_15_float_precision_preservation(
-    body: EdgeCases15FloatPrecisionPreservationBody,
-) -> Any:
-    """Handler for POST /calculate."""
-    return Response(content={"value": 3.141592653589793}, status_code=201)
-
-
-def create_app_edge_cases_15_float_precision_preservation() -> Spikard:
-    """App factory for fixture: 15_float_precision_preservation."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/calculate",
-        body_schema={"properties": {"value": {"type": "number"}}, "required": ["value"], "type": "object"},
-        parameter_schema=None,
-    )(edge_cases_15_float_precision_preservation)
-    return app
-
-
-def edge_cases_13_empty_string_query_param_preserved(
-    filter: str,
-) -> Any:
-    """Handler for GET /items."""
-    return Response(content={"filter": ""}, status_code=200)
-
-
-def create_app_edge_cases_13_empty_string_query_param_preserved() -> Spikard:
-    """App factory for fixture: 13_empty_string_query_param_preserved."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/items",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"filter": {"source": "query", "type": "string"}},
-            "required": ["filter"],
-            "type": "object",
-        },
-    )(edge_cases_13_empty_string_query_param_preserved)
-    return app
-
-
-class EdgeCases24ArrayWithHolesBody(BaseModel):
-    """Request body Pydantic model."""
-
-    items: list[str]
-
-
-def edge_cases_24_array_with_holes(
-    body: EdgeCases24ArrayWithHolesBody,
-) -> Any:
-    """Handler for POST /items."""
+def http_methods_options_cors_preflight_request() -> Any:
+    """Handler for OPTIONS /items/."""
     # Echo back parameters for testing
     result: dict[str, Any] = {}
-    if body is not None:
-        result.update(body.model_dump())
     return result
 
 
-def create_app_edge_cases_24_array_with_holes() -> Spikard:
-    """App factory for fixture: 24_array_with_holes."""
+def create_app_http_methods_options_cors_preflight_request() -> Spikard:
+    """App factory for fixture: OPTIONS - CORS preflight request."""
     app = Spikard()
     # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/items",
-        body_schema={
-            "properties": {"items": {"items": {"type": "string"}, "type": "array"}},
-            "required": ["items"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(edge_cases_24_array_with_holes)
-    return app
-
-
-def edge_cases_21_scientific_notation_number(
-    body: dict[str, Any],
-) -> Any:
-    """Handler for POST /calculate."""
-    return Response(content={"value": 123000}, status_code=201)
-
-
-def create_app_edge_cases_21_scientific_notation_number() -> Spikard:
-    """App factory for fixture: 21_scientific_notation_number."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/calculate",
-        body_schema={
-            "properties": {"value": {"minimum": 0, "type": "number"}},
-            "required": ["value"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(edge_cases_21_scientific_notation_number)
-    return app
-
-
-class EdgeCasesFloatPrecisionAndRoundingBody(TypedDict):
-    """Request body type (TypedDict - runtime is dict)."""
-
-    expected_sum: float
-    precise_value: float
-    value1: float
-    value2: float
-    very_large: float
-    very_small: float
-
-
-def edge_cases_float_precision_and_rounding(
-    body: EdgeCasesFloatPrecisionAndRoundingBody,
-) -> Any:
-    """Handler for POST /calculations/."""
-    return Response(
-        content={
-            "precise_value": 3.141592653589793,
-            "sum": 0.30000000000000004,
-            "very_large": 1.7976931348623157e308,
-            "very_small": 1e-10,
-        },
-        status_code=200,
-    )
-
-
-def create_app_edge_cases_float_precision_and_rounding() -> Spikard:
-    """App factory for fixture: Float precision and rounding."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/calculations/",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {
-                "expected_sum": {"type": "number"},
-                "precise_value": {"type": "number"},
-                "value1": {"type": "number"},
-                "value2": {"type": "number"},
-                "very_large": {"type": "number"},
-                "very_small": {"type": "number"},
-            },
-            "required": ["value1", "value2", "expected_sum", "precise_value", "very_small", "very_large"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(edge_cases_float_precision_and_rounding)
-    return app
-
-
-@dataclass
-class EdgeCasesUnicodeAndEmojiHandlingBody:
-    """Request body dataclass."""
-
-    description: str
-    emoji_reactions: str
-    name: str
-    tags: list[str]
-
-
-def edge_cases_unicode_and_emoji_handling(
-    body: EdgeCasesUnicodeAndEmojiHandlingBody,
-) -> Any:
-    """Handler for POST /items/."""
-    return Response(
-        content={
-            "description": "Best café in München 🇩🇪",
-            "emoji_reactions": "👍❤️😂🎉",
-            "id": 1,
-            "name": "Coffee Shop ☕",
-            "tags": ["食べ物", "音楽", "💰"],
-        },
-        status_code=200,
-    )
-
-
-def create_app_edge_cases_unicode_and_emoji_handling() -> Spikard:
-    """App factory for fixture: Unicode and emoji handling."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/items/",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {
-                "description": {"type": "string"},
-                "emoji_reactions": {"type": "string"},
-                "name": {"type": "string"},
-                "tags": {"items": {"type": "string"}, "type": "array"},
-            },
-            "required": ["name", "description", "tags", "emoji_reactions"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(edge_cases_unicode_and_emoji_handling)
-    return app
-
-
-class EdgeCases17ExtremelyLongStringBody(NamedTuple):
-    """Request body NamedTuple (immutable)."""
-
-    content: str
-
-
-def edge_cases_17_extremely_long_string(
-    body: EdgeCases17ExtremelyLongStringBody,
-) -> Any:
-    """Handler for POST /text."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(body._asdict())
-    return result
-
-
-def create_app_edge_cases_17_extremely_long_string() -> Spikard:
-    """App factory for fixture: 17_extremely_long_string."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/text",
-        body_schema={
-            "properties": {"content": {"maxLength": 10000, "type": "string"}},
-            "required": ["content"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(edge_cases_17_extremely_long_string)
-    return app
-
-
-def edge_cases_11_utf8_query_parameter(
-    term: str,
-) -> Any:
-    """Handler for GET /search."""
-    return Response(content={"term": "café"}, status_code=200)
-
-
-def create_app_edge_cases_11_utf8_query_parameter() -> Spikard:
-    """App factory for fixture: 11_utf8_query_parameter."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/search",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"term": {"source": "query", "type": "string"}},
-            "required": ["term"],
-            "type": "object",
-        },
-    )(edge_cases_11_utf8_query_parameter)
-    return app
-
-
-class EdgeCases18UnicodeNormalizationBody(BaseModel):
-    """Request body Pydantic model."""
-
-    name: str
-
-
-def edge_cases_18_unicode_normalization(
-    body: EdgeCases18UnicodeNormalizationBody,
-) -> Any:
-    """Handler for POST /users."""
-    return Response(content={"name": "café"}, status_code=201)
-
-
-def create_app_edge_cases_18_unicode_normalization() -> Spikard:
-    """App factory for fixture: 18_unicode_normalization."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/users",
-        body_schema={
-            "properties": {"name": {"minLength": 1, "type": "string"}},
-            "required": ["name"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(edge_cases_18_unicode_normalization)
-    return app
-
-
-def edge_cases_20_null_byte_in_string(
-    body: dict[str, Any],
-) -> Any:
-    """Handler for POST /files."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(body)
-    return result
-
-
-def create_app_edge_cases_20_null_byte_in_string() -> Spikard:
-    """App factory for fixture: 20_null_byte_in_string."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/files",
-        body_schema={
-            "properties": {"filename": {"pattern": "^[^\\x00]+$", "type": "string"}},
-            "required": ["filename"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(edge_cases_20_null_byte_in_string)
-    return app
-
-
-class EdgeCases23DeeplyNestedJsonLimitBody(TypedDict):
-    """Request body type (TypedDict - runtime is dict)."""
-
-
-def edge_cases_23_deeply_nested_json_limit(
-    body: EdgeCases23DeeplyNestedJsonLimitBody,
-) -> Any:
-    """Handler for POST /data."""
-    return Response(content={"error": "Request body exceeds maximum nesting depth of 32"}, status_code=400)
-
-
-def create_app_edge_cases_23_deeply_nested_json_limit() -> Spikard:
-    """App factory for fixture: 23_deeply_nested_json_limit."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("POST", "/data", body_schema={"type": "object"}, parameter_schema=None)(
-        edge_cases_23_deeply_nested_json_limit
+    app.register_route("OPTIONS", "/items/", body_schema=None, parameter_schema=None)(
+        http_methods_options_cors_preflight_request
     )
     return app
 
 
-def edge_cases_14_large_integer_boundary(
-    id: int,
+def http_methods_delete_remove_resource(
+    id: str,
 ) -> Any:
-    """Handler for GET /items."""
-    return Response(content={"id": 9007199254740991}, status_code=200)
+    """Handler for DELETE /items/{id}."""
+    return Response(content={}, status_code=200)
 
 
-def create_app_edge_cases_14_large_integer_boundary() -> Spikard:
-    """App factory for fixture: 14_large_integer_boundary."""
+def create_app_http_methods_delete_remove_resource() -> Spikard:
+    """App factory for fixture: DELETE - Remove resource."""
     app = Spikard()
     # Register handler with this app instance
     app.register_route(
-        "GET",
-        "/items",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"id": {"source": "query", "type": "integer"}},
-            "required": ["id"],
-            "type": "object",
-        },
-    )(edge_cases_14_large_integer_boundary)
-    return app
-
-
-def edge_cases_22_leading_zeros_integer(
-    value: int,
-) -> Any:
-    """Handler for GET /data."""
-    return Response(content={"value": 123}, status_code=200)
-
-
-def create_app_edge_cases_22_leading_zeros_integer() -> Spikard:
-    """App factory for fixture: 22_leading_zeros_integer."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/data",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"value": {"annotation": "int", "source": "query", "type": "integer"}},
-            "required": ["value"],
-            "type": "object",
-        },
-    )(edge_cases_22_leading_zeros_integer)
-    return app
-
-
-class EdgeCasesLargeIntegerBoundaryValuesBody(msgspec.Struct):
-    """Request body msgspec.Struct (fast typed)."""
-
-    large_int: int
-    max_safe_int: int
-    negative_large: int
-
-
-def edge_cases_large_integer_boundary_values(
-    body: EdgeCasesLargeIntegerBoundaryValuesBody,
-) -> Any:
-    """Handler for POST /numbers/."""
-    return Response(
-        content={
-            "large_int": 9223372036854775807,
-            "max_safe_int": 9007199254740991,
-            "negative_large": -9223372036854775808,
-        },
-        status_code=200,
-    )
-
-
-def create_app_edge_cases_large_integer_boundary_values() -> Spikard:
-    """App factory for fixture: Large integer boundary values."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/numbers/",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {
-                "large_int": {"type": "integer"},
-                "max_safe_int": {"type": "integer"},
-                "negative_large": {"type": "integer"},
-            },
-            "required": ["max_safe_int", "large_int", "negative_large"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(edge_cases_large_integer_boundary_values)
-    return app
-
-
-class EdgeCasesDeeplyNestedStructure10LevelsBody(BaseModel):
-    """Request body Pydantic model."""
-
-    level1: dict[str, Any]
-
-
-def edge_cases_deeply_nested_structure_10_levels(
-    body: EdgeCasesDeeplyNestedStructure10LevelsBody,
-) -> Any:
-    """Handler for POST /nested/."""
-    return Response(
-        content={"max_depth": 10, "message": "Processed deeply nested structure", "value_found": "deep"},
-        status_code=200,
-    )
-
-
-def create_app_edge_cases_deeply_nested_structure_10_levels() -> Spikard:
-    """App factory for fixture: Deeply nested structure (10+ levels)."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/nested/",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {
-                "level1": {
-                    "additionalProperties": False,
-                    "properties": {
-                        "level2": {
-                            "additionalProperties": False,
-                            "properties": {
-                                "level3": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                        "level4": {
-                                            "additionalProperties": False,
-                                            "properties": {
-                                                "level5": {
-                                                    "additionalProperties": False,
-                                                    "properties": {
-                                                        "level6": {
-                                                            "additionalProperties": False,
-                                                            "properties": {
-                                                                "level7": {
-                                                                    "additionalProperties": False,
-                                                                    "properties": {
-                                                                        "level8": {
-                                                                            "additionalProperties": False,
-                                                                            "properties": {
-                                                                                "level9": {
-                                                                                    "additionalProperties": False,
-                                                                                    "properties": {
-                                                                                        "level10": {
-                                                                                            "additionalProperties": False,
-                                                                                            "properties": {
-                                                                                                "depth": {
-                                                                                                    "type": "integer"
-                                                                                                },
-                                                                                                "value": {
-                                                                                                    "type": "string"
-                                                                                                },
-                                                                                            },
-                                                                                            "required": [
-                                                                                                "value",
-                                                                                                "depth",
-                                                                                            ],
-                                                                                            "type": "object",
-                                                                                        }
-                                                                                    },
-                                                                                    "required": ["level10"],
-                                                                                    "type": "object",
-                                                                                }
-                                                                            },
-                                                                            "required": ["level9"],
-                                                                            "type": "object",
-                                                                        }
-                                                                    },
-                                                                    "required": ["level8"],
-                                                                    "type": "object",
-                                                                }
-                                                            },
-                                                            "required": ["level7"],
-                                                            "type": "object",
-                                                        }
-                                                    },
-                                                    "required": ["level6"],
-                                                    "type": "object",
-                                                }
-                                            },
-                                            "required": ["level5"],
-                                            "type": "object",
-                                        }
-                                    },
-                                    "required": ["level4"],
-                                    "type": "object",
-                                }
-                            },
-                            "required": ["level3"],
-                            "type": "object",
-                        }
-                    },
-                    "required": ["level2"],
-                    "type": "object",
-                }
-            },
-            "required": ["level1"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(edge_cases_deeply_nested_structure_10_levels)
-    return app
-
-
-def edge_cases_empty_and_null_value_handling(
-    body: dict[str, Any],
-) -> Any:
-    """Handler for POST /nulls/."""
-    return Response(
-        content={
-            "empty_array_length": 0,
-            "empty_object_keys": 0,
-            "empty_string_length": 0,
-            "explicit_null_is_null": True,
-            "false_is_false": True,
-            "zero_is_falsy": True,
-        },
-        status_code=200,
-    )
-
-
-def create_app_edge_cases_empty_and_null_value_handling() -> Spikard:
-    """App factory for fixture: Empty and null value handling."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/nulls/",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {
-                "empty_array": {"items": {}, "type": "array"},
-                "empty_object": {"additionalProperties": False, "properties": {}, "type": "object"},
-                "empty_string": {"type": "string"},
-                "explicit_null": {"type": "null"},
-                "false_boolean": {"type": "boolean"},
-                "zero_number": {"type": "integer"},
-            },
-            "required": [
-                "explicit_null",
-                "empty_string",
-                "empty_array",
-                "empty_object",
-                "zero_number",
-                "false_boolean",
-            ],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(edge_cases_empty_and_null_value_handling)
-    return app
-
-
-class EdgeCases16NegativeZeroHandlingBody(TypedDict):
-    """Request body type (TypedDict - runtime is dict)."""
-
-    offset: float
-
-
-def edge_cases_16_negative_zero_handling(
-    body: EdgeCases16NegativeZeroHandlingBody,
-) -> Any:
-    """Handler for POST /data."""
-    return Response(content={"offset": 0}, status_code=201)
-
-
-def create_app_edge_cases_16_negative_zero_handling() -> Spikard:
-    """App factory for fixture: 16_negative_zero_handling."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/data",
-        body_schema={"properties": {"offset": {"type": "number"}}, "required": ["offset"], "type": "object"},
-        parameter_schema=None,
-    )(edge_cases_16_negative_zero_handling)
-    return app
-
-
-def path_params_boolean_path_parameter_true(
-    item_id: bool,
-) -> Any:
-    """Handler for GET /path/bool/{item_id}."""
-    return Response(content={"item_id": True}, status_code=200)
-
-
-def create_app_path_params_boolean_path_parameter_true() -> Spikard:
-    """App factory for fixture: Boolean path parameter - True."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/path/bool/{item_id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"item_id": {"source": "path", "type": "boolean"}},
-            "required": ["item_id"],
-            "type": "object",
-        },
-    )(path_params_boolean_path_parameter_true)
-    return app
-
-
-def path_params_29_decimal_path_param_success(
-    amount: str,
-) -> Any:
-    """Handler for GET /prices/{amount}."""
-    return Response(content={"amount": "19.99"}, status_code=200)
-
-
-def create_app_path_params_29_decimal_path_param_success() -> Spikard:
-    """App factory for fixture: 29_decimal_path_param_success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/prices/{amount}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"amount": {"format": "decimal", "source": "path", "type": "string"}},
-            "required": ["amount"],
-            "type": "object",
-        },
-    )(path_params_29_decimal_path_param_success)
-    return app
-
-
-def path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success(
-    item_id: int,
-) -> Any:
-    """Handler for GET /path/param-lt-gt/{item_id}."""
-    return Response(content={"item_id": 2}, status_code=200)
-
-
-def create_app_path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success() -> Spikard:
-    """App factory for fixture: Integer path parameter with combined lt and gt constraints - success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/path/param-lt-gt/{item_id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {
-                "item_id": {"exclusiveMaximum": 3, "exclusiveMinimum": 1, "source": "path", "type": "integer"}
-            },
-            "required": ["item_id"],
-            "type": "object",
-        },
-    )(path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success)
-    return app
-
-
-def path_params_33_string_pattern_path_success(
-    owner: str,
-    repo: str,
-) -> Any:
-    """Handler for GET /repos/{owner}/{repo}."""
-    return Response(content={"owner": "spikard-labs", "repo": "spikard-http"}, status_code=200)
-
-
-def create_app_path_params_33_string_pattern_path_success() -> Spikard:
-    """App factory for fixture: 33_string_pattern_path_success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/repos/{owner}/{repo}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {
-                "owner": {"pattern": "^[a-zA-Z0-9-]+$", "source": "path", "type": "string"},
-                "repo": {"pattern": "^[a-zA-Z0-9-_]+$", "source": "path", "type": "string"},
-            },
-            "required": ["owner", "repo"],
-            "type": "object",
-        },
-    )(path_params_33_string_pattern_path_success)
-    return app
-
-
-def path_params_31_string_minlength_path_failure(
-    username: str,
-) -> Any:
-    """Handler for GET /users/{username}."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if username is not None:
-        result["username"] = username
-    return result
-
-
-def create_app_path_params_31_string_minlength_path_failure() -> Spikard:
-    """App factory for fixture: 31_string_minlength_path_failure."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/users/{username}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"username": {"minLength": 3, "source": "path", "type": "string"}},
-            "required": ["username"],
-            "type": "object",
-        },
-    )(path_params_31_string_minlength_path_failure)
-    return app
-
-
-def path_params_35_negative_integer_path_param(
-    value: int,
-) -> Any:
-    """Handler for GET /offset/{value}."""
-    return Response(content={"value": -100}, status_code=200)
-
-
-def create_app_path_params_35_negative_integer_path_param() -> Spikard:
-    """App factory for fixture: 35_negative_integer_path_param."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/offset/{value}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"value": {"source": "path", "type": "integer"}},
-            "required": ["value"],
-            "type": "object",
-        },
-    )(path_params_35_negative_integer_path_param)
-    return app
-
-
-def path_params_enum_path_parameter_invalid_value(
-    model_name: str,
-) -> Any:
-    """Handler for GET /models/{model_name}."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if model_name is not None:
-        result["model_name"] = model_name
-    return result
-
-
-def create_app_path_params_enum_path_parameter_invalid_value() -> Spikard:
-    """App factory for fixture: Enum path parameter - invalid value."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/models/{model_name}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"model_name": {"enum": ["alexnet", "resnet", "lenet"], "source": "path", "type": "string"}},
-            "required": ["model_name"],
-            "type": "object",
-        },
-    )(path_params_enum_path_parameter_invalid_value)
-    return app
-
-
-def path_params_27_datetime_format_path_param_success(
-    timestamp: datetime,
-) -> Any:
-    """Handler for GET /bookings/{timestamp}."""
-    return Response(content={"timestamp": "2025-10-30T14:30:00Z"}, status_code=200)
-
-
-def create_app_path_params_27_datetime_format_path_param_success() -> Spikard:
-    """App factory for fixture: 27_datetime_format_path_param_success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/bookings/{timestamp}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"timestamp": {"format": "date-time", "source": "path", "type": "string"}},
-            "required": ["timestamp"],
-            "type": "object",
-        },
-    )(path_params_27_datetime_format_path_param_success)
-    return app
-
-
-def path_params_25_date_format_invalid_failure(
-    date: date,
-) -> Any:
-    """Handler for GET /events/{date}."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if date is not None:
-        result["date"] = str(date)
-    return result
-
-
-def create_app_path_params_25_date_format_invalid_failure() -> Spikard:
-    """App factory for fixture: 25_date_format_invalid_failure."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/events/{date}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"date": {"format": "date", "source": "path", "type": "string"}},
-            "required": ["date"],
-            "type": "object",
-        },
-    )(path_params_25_date_format_invalid_failure)
-    return app
-
-
-def path_params_integer_path_parameter_with_lt_constraint_success(
-    item_id: int,
-) -> Any:
-    """Handler for GET /path/param-lt/{item_id}."""
-    return Response(content={"item_id": 2}, status_code=200)
-
-
-def create_app_path_params_integer_path_parameter_with_lt_constraint_success() -> Spikard:
-    """App factory for fixture: Integer path parameter with lt constraint - success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/path/param-lt/{item_id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"item_id": {"exclusiveMaximum": 3, "source": "path", "type": "integer"}},
-            "required": ["item_id"],
-            "type": "object",
-        },
-    )(path_params_integer_path_parameter_with_lt_constraint_success)
-    return app
-
-
-def path_params_integer_path_parameter_with_gt_constraint_success(
-    item_id: int,
-) -> Any:
-    """Handler for GET /path/param-gt/{item_id}."""
-    return Response(content={"item_id": 42}, status_code=200)
-
-
-def create_app_path_params_integer_path_parameter_with_gt_constraint_success() -> Spikard:
-    """App factory for fixture: Integer path parameter with gt constraint - success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/path/param-gt/{item_id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"item_id": {"exclusiveMinimum": 3, "source": "path", "type": "integer"}},
-            "required": ["item_id"],
-            "type": "object",
-        },
-    )(path_params_integer_path_parameter_with_gt_constraint_success)
-    return app
-
-
-def path_params_28_duration_format_path_param_success(
-    duration: str,
-) -> Any:
-    """Handler for GET /delays/{duration}."""
-    return Response(content={"duration": "P1DT2H30M"}, status_code=200)
-
-
-def create_app_path_params_28_duration_format_path_param_success() -> Spikard:
-    """App factory for fixture: 28_duration_format_path_param_success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/delays/{duration}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"duration": {"format": "duration", "source": "path", "type": "string"}},
-            "required": ["duration"],
-            "type": "object",
-        },
-    )(path_params_28_duration_format_path_param_success)
-    return app
-
-
-def path_params_path_parameter_type_syntax_with_override(
-    count: int,
-) -> Any:
-    """Handler for GET /type-syntax/items-count/{count:int}."""
-    return Response(content={"count": "50"}, status_code=200)
-
-
-def create_app_path_params_path_parameter_type_syntax_with_override() -> Spikard:
-    """App factory for fixture: Path parameter type syntax with override."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/type-syntax/items-count/{count:int}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"count": {"maximum": 100, "minimum": 1, "source": "path", "type": "integer"}},
-            "required": ["count"],
-            "type": "object",
-        },
-    )(path_params_path_parameter_type_syntax_with_override)
-    return app
-
-
-def path_params_20_uuid_v3_path_param_success(
-    id: UUID,
-) -> Any:
-    """Handler for GET /items/{id}."""
-    return Response(content={"id": "e8b5a51d-11c8-3310-a6ab-367563f20686"}, status_code=200)
-
-
-def create_app_path_params_20_uuid_v3_path_param_success() -> Spikard:
-    """App factory for fixture: 20_uuid_v3_path_param_success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
+        "DELETE",
         "/items/{id}",
         body_schema=None,
         parameter_schema={
-            "properties": {"id": {"format": "uuid", "source": "path", "type": "string", "uuidVersion": "3"}},
+            "properties": {"id": {"source": "path", "type": "string"}},
             "required": ["id"],
             "type": "object",
         },
-    )(path_params_20_uuid_v3_path_param_success)
+    )(http_methods_delete_remove_resource)
     return app
 
 
-def path_params_integer_path_parameter_invalid_string(
-    item_id: int,
+@dataclass
+class HttpMethodsPutCreateResourceIfDoesnTExistBody:
+    """Request body dataclass."""
+
+    id: int
+    name: str
+    price: float
+
+
+def http_methods_put_create_resource_if_doesn_t_exist(
+    body: HttpMethodsPutCreateResourceIfDoesnTExistBody,
+    id: str,
 ) -> Any:
-    """Handler for GET /path/int/{item_id}."""
+    """Handler for PUT /items/{id}."""
+    return Response(content={"id": 999, "name": "New Item", "price": 49.99}, status_code=200)
+
+
+def create_app_http_methods_put_create_resource_if_doesn_t_exist() -> Spikard:
+    """App factory for fixture: PUT - Create resource if doesn't exist."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "PUT",
+        "/items/{id}",
+        body_schema={
+            "properties": {"id": {"type": "integer"}, "name": {"type": "string"}, "price": {"type": "number"}},
+            "required": ["id", "name", "price"],
+            "type": "object",
+        },
+        parameter_schema={
+            "properties": {"id": {"source": "path", "type": "string"}},
+            "required": ["id"],
+            "type": "object",
+        },
+    )(http_methods_put_create_resource_if_doesn_t_exist)
+    return app
+
+
+class HttpMethodsPatchUpdateMultipleFieldsBody(NamedTuple):
+    """Request body NamedTuple (immutable)."""
+
+    in_stock: bool
+    name: str
+    price: float
+
+
+def http_methods_patch_update_multiple_fields(
+    body: HttpMethodsPatchUpdateMultipleFieldsBody,
+    id: str,
+) -> Any:
+    """Handler for PATCH /items/{id}."""
+    return Response(content={"id": 1, "in_stock": False, "name": "Updated Name", "price": 89.99}, status_code=200)
+
+
+def create_app_http_methods_patch_update_multiple_fields() -> Spikard:
+    """App factory for fixture: PATCH - Update multiple fields."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "PATCH",
+        "/items/{id}",
+        body_schema={
+            "properties": {"in_stock": {"type": "boolean"}, "name": {"type": "string"}, "price": {"type": "number"}},
+            "required": ["in_stock", "name", "price"],
+            "type": "object",
+        },
+        parameter_schema={
+            "properties": {"id": {"source": "path", "type": "string"}},
+            "required": ["id"],
+            "type": "object",
+        },
+    )(http_methods_patch_update_multiple_fields)
+    return app
+
+
+class HttpMethodsPutValidationErrorBody(msgspec.Struct):
+    """Request body msgspec.Struct (fast typed)."""
+
+    id: int
+    name: str
+    price: float
+
+
+def http_methods_put_validation_error(
+    body: HttpMethodsPutValidationErrorBody,
+    id: str,
+) -> Any:
+    """Handler for PUT /items/{id}."""
     # Echo back parameters for testing
     result: dict[str, Any] = {}
-    if item_id is not None:
-        result["item_id"] = item_id
+    if body is not None:
+        result.update(msgspec.to_builtins(body))
+    if id is not None:
+        result["id"] = id
     return result
 
 
-def create_app_path_params_integer_path_parameter_invalid_string() -> Spikard:
-    """App factory for fixture: Integer path parameter - invalid string."""
+def create_app_http_methods_put_validation_error() -> Spikard:
+    """App factory for fixture: PUT - Validation error."""
     app = Spikard()
     # Register handler with this app instance
     app.register_route(
-        "GET",
-        "/path/int/{item_id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"item_id": {"source": "path", "type": "integer"}},
-            "required": ["item_id"],
+        "PUT",
+        "/items/{id}",
+        body_schema={
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "properties": {
+                "id": {"type": "integer"},
+                "name": {"minLength": 3, "type": "string"},
+                "price": {"exclusiveMinimum": 0, "type": "number"},
+            },
+            "required": ["id", "name", "price"],
             "type": "object",
         },
-    )(path_params_integer_path_parameter_invalid_string)
+        parameter_schema={
+            "properties": {"id": {"source": "path", "type": "string"}},
+            "required": ["id"],
+            "type": "object",
+        },
+    )(http_methods_put_validation_error)
     return app
 
 
-def path_params_30_string_minlength_path_success(
-    username: str,
-) -> Any:
-    """Handler for GET /users/{username}."""
-    return Response(content={"username": "alice"}, status_code=200)
-
-
-def create_app_path_params_30_string_minlength_path_success() -> Spikard:
-    """App factory for fixture: 30_string_minlength_path_success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/users/{username}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"username": {"minLength": 3, "source": "path", "type": "string"}},
-            "required": ["username"],
-            "type": "object",
-        },
-    )(path_params_30_string_minlength_path_success)
-    return app
-
-
-def path_params_integer_path_parameter_with_le_constraint_success(
-    item_id: int,
-) -> Any:
-    """Handler for GET /path/param-le/{item_id}."""
-    return Response(content={"item_id": 3}, status_code=200)
-
-
-def create_app_path_params_integer_path_parameter_with_le_constraint_success() -> Spikard:
-    """App factory for fixture: Integer path parameter with le constraint - success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/path/param-le/{item_id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"item_id": {"maximum": 3, "source": "path", "type": "integer"}},
-            "required": ["item_id"],
-            "type": "object",
-        },
-    )(path_params_integer_path_parameter_with_le_constraint_success)
-    return app
-
-
-def path_params_path_parameter_type_syntax_invalid_uuid(
+def http_methods_head_get_metadata_without_body(
     id: str,
 ) -> Any:
-    """Handler for GET /type-syntax/items/{id:uuid}."""
+    """Handler for HEAD /items/{id}."""
     # Echo back parameters for testing
     result: dict[str, Any] = {}
     if id is not None:
@@ -6756,1767 +6433,234 @@ def path_params_path_parameter_type_syntax_invalid_uuid(
     return result
 
 
-def create_app_path_params_path_parameter_type_syntax_invalid_uuid() -> Spikard:
-    """App factory for fixture: Path parameter type syntax - invalid UUID."""
+def create_app_http_methods_head_get_metadata_without_body() -> Spikard:
+    """App factory for fixture: HEAD - Get metadata without body."""
     app = Spikard()
     # Register handler with this app instance
     app.register_route(
-        "GET",
-        "/type-syntax/items/{id:uuid}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"id": {"source": "path", "type": "string"}},
-            "required": ["id"],
-            "type": "object",
-        },
-    )(path_params_path_parameter_type_syntax_invalid_uuid)
-    return app
-
-
-def path_params_path_type_parameter_file_path(
-    file_path: str,
-) -> Any:
-    """Handler for GET /files/{file_path:path}."""
-    return Response(content={"file_path": "home/johndoe/myfile.txt"}, status_code=200)
-
-
-def create_app_path_params_path_type_parameter_file_path() -> Spikard:
-    """App factory for fixture: Path type parameter - file path."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/files/{file_path:path}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"file_path": {"source": "path", "type": "string"}},
-            "required": ["file_path"],
-            "type": "object",
-        },
-    )(path_params_path_type_parameter_file_path)
-    return app
-
-
-def path_params_path_parameter_with_type_syntax_uuid(
-    id: str,
-) -> Any:
-    """Handler for GET /type-syntax/items/{id:uuid}."""
-    return Response(content={"id": "550e8400-e29b-41d4-a716-446655440000"}, status_code=200)
-
-
-def create_app_path_params_path_parameter_with_type_syntax_uuid() -> Spikard:
-    """App factory for fixture: Path parameter with type syntax - UUID."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/type-syntax/items/{id:uuid}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"id": {"source": "path", "type": "string"}},
-            "required": ["id"],
-            "type": "object",
-        },
-    )(path_params_path_parameter_with_type_syntax_uuid)
-    return app
-
-
-def path_params_32_string_maxlength_path_failure(
-    username: str,
-) -> Any:
-    """Handler for GET /users/{username}."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if username is not None:
-        result["username"] = username
-    return result
-
-
-def create_app_path_params_32_string_maxlength_path_failure() -> Spikard:
-    """App factory for fixture: 32_string_maxlength_path_failure."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/users/{username}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"username": {"maxLength": 20, "source": "path", "type": "string"}},
-            "required": ["username"],
-            "type": "object",
-        },
-    )(path_params_32_string_maxlength_path_failure)
-    return app
-
-
-def path_params_integer_path_parameter_success(
-    item_id: int,
-) -> Any:
-    """Handler for GET /path/int/{item_id}."""
-    return Response(content={"item_id": 42}, status_code=200)
-
-
-def create_app_path_params_integer_path_parameter_success() -> Spikard:
-    """App factory for fixture: Integer path parameter - success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/path/int/{item_id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"item_id": {"source": "path", "type": "integer"}},
-            "required": ["item_id"],
-            "type": "object",
-        },
-    )(path_params_integer_path_parameter_success)
-    return app
-
-
-def path_params_34_string_pattern_path_failure(
-    owner: str,
-) -> Any:
-    """Handler for GET /repos/{owner}."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if owner is not None:
-        result["owner"] = owner
-    return result
-
-
-def create_app_path_params_34_string_pattern_path_failure() -> Spikard:
-    """App factory for fixture: 34_string_pattern_path_failure."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/repos/{owner}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"owner": {"pattern": "^[a-zA-Z0-9-]+$", "source": "path", "type": "string"}},
-            "required": ["owner"],
-            "type": "object",
-        },
-    )(path_params_34_string_pattern_path_failure)
-    return app
-
-
-def path_params_21_uuid_v5_path_param_success(
-    id: UUID,
-) -> Any:
-    """Handler for GET /items/{id}."""
-    return Response(content={"id": "630eb68f-e0fa-5ecc-887a-7c7a62614681"}, status_code=200)
-
-
-def create_app_path_params_21_uuid_v5_path_param_success() -> Spikard:
-    """App factory for fixture: 21_uuid_v5_path_param_success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
+        "HEAD",
         "/items/{id}",
         body_schema=None,
         parameter_schema={
-            "properties": {"id": {"format": "uuid", "source": "path", "type": "string", "uuidVersion": "5"}},
+            "properties": {"id": {"source": "path", "type": "string"}},
             "required": ["id"],
             "type": "object",
         },
-    )(path_params_21_uuid_v5_path_param_success)
+    )(http_methods_head_get_metadata_without_body)
     return app
 
 
-def path_params_string_path_parameter_with_max_length_failure(
-    item_id: str,
+def http_methods_delete_with_response_body(
+    id: str,
 ) -> Any:
-    """Handler for GET /path/param-maxlength/{item_id}."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if item_id is not None:
-        result["item_id"] = item_id
-    return result
+    """Handler for DELETE /items/{id}."""
+    return Response(content={"id": 1, "message": "Item deleted successfully", "name": "Deleted Item"}, status_code=200)
 
 
-def create_app_path_params_string_path_parameter_with_max_length_failure() -> Spikard:
-    """App factory for fixture: String path parameter with max_length - failure."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/path/param-maxlength/{item_id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"item_id": {"maxLength": 3, "source": "path", "type": "string"}},
-            "required": ["item_id"],
-            "type": "object",
-        },
-    )(path_params_string_path_parameter_with_max_length_failure)
-    return app
-
-
-def path_params_string_path_parameter_with_min_length_failure(
-    item_id: str,
-) -> Any:
-    """Handler for GET /path/param-minlength/{item_id}."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if item_id is not None:
-        result["item_id"] = item_id
-    return result
-
-
-def create_app_path_params_string_path_parameter_with_min_length_failure() -> Spikard:
-    """App factory for fixture: String path parameter with min_length - failure."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/path/param-minlength/{item_id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"item_id": {"minLength": 3, "source": "path", "type": "string"}},
-            "required": ["item_id"],
-            "type": "object",
-        },
-    )(path_params_string_path_parameter_with_min_length_failure)
-    return app
-
-
-def path_params_multiple_path_parameters_success(
-    order_id: UUID,
-    service_id: int,
-    user_id: str,
-    version: float,
-) -> Any:
-    """Handler for GET /{version}/{service_id}/{user_id}/{order_id}."""
-    return Response(
-        content={"order_id": "c892496f-b1fd-4b91-bdb8-b46f92df1716", "service_id": 1, "user_id": "abc", "version": 1.0},
-        status_code=200,
-    )
-
-
-def create_app_path_params_multiple_path_parameters_success() -> Spikard:
-    """App factory for fixture: Multiple path parameters - success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/{version}/{service_id}/{user_id}/{order_id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {
-                "order_id": {"format": "uuid", "source": "path", "type": "string"},
-                "service_id": {"source": "path", "type": "integer"},
-                "user_id": {"source": "path", "type": "string"},
-                "version": {"source": "path", "type": "number"},
-            },
-            "required": ["order_id", "service_id", "user_id", "version"],
-            "type": "object",
-        },
-    )(path_params_multiple_path_parameters_success)
-    return app
-
-
-def path_params_date_path_parameter_success(
-    date_param: date,
-) -> Any:
-    """Handler for GET /date/{date_param}."""
-    return Response(content={"date_param": "2023-07-15"}, status_code=200)
-
-
-def create_app_path_params_date_path_parameter_success() -> Spikard:
-    """App factory for fixture: Date path parameter - success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/date/{date_param}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"date_param": {"format": "date", "source": "path", "type": "string"}},
-            "required": ["date_param"],
-            "type": "object",
-        },
-    )(path_params_date_path_parameter_success)
-    return app
-
-
-def path_params_integer_path_parameter_with_gt_constraint_failure(
-    item_id: int,
-) -> Any:
-    """Handler for GET /path/param-gt/{item_id}."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if item_id is not None:
-        result["item_id"] = item_id
-    return result
-
-
-def create_app_path_params_integer_path_parameter_with_gt_constraint_failure() -> Spikard:
-    """App factory for fixture: Integer path parameter with gt constraint - failure."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/path/param-gt/{item_id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"item_id": {"exclusiveMinimum": 3, "source": "path", "type": "integer"}},
-            "required": ["item_id"],
-            "type": "object",
-        },
-    )(path_params_integer_path_parameter_with_gt_constraint_failure)
-    return app
-
-
-def path_params_24_date_format_path_param_success(
-    date: date,
-) -> Any:
-    """Handler for GET /events/{date}."""
-    return Response(content={"date": "2025-10-30"}, status_code=200)
-
-
-def create_app_path_params_24_date_format_path_param_success() -> Spikard:
-    """App factory for fixture: 24_date_format_path_param_success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/events/{date}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"date": {"format": "date", "source": "path", "type": "string"}},
-            "required": ["date"],
-            "type": "object",
-        },
-    )(path_params_24_date_format_path_param_success)
-    return app
-
-
-def path_params_float_path_parameter_success(
-    item_id: float,
-) -> Any:
-    """Handler for GET /path/float/{item_id}."""
-    return Response(content={"item_id": 42.5}, status_code=200)
-
-
-def create_app_path_params_float_path_parameter_success() -> Spikard:
-    """App factory for fixture: Float path parameter - success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/path/float/{item_id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"item_id": {"source": "path", "type": "number"}},
-            "required": ["item_id"],
-            "type": "object",
-        },
-    )(path_params_float_path_parameter_success)
-    return app
-
-
-def path_params_path_parameter_with_type_syntax_integer(
-    user_id: str,
-) -> Any:
-    """Handler for GET /type-syntax/users/{user_id:int}."""
-    return Response(content={"user_id": "42"}, status_code=200)
-
-
-def create_app_path_params_path_parameter_with_type_syntax_integer() -> Spikard:
-    """App factory for fixture: Path parameter with type syntax - integer."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/type-syntax/users/{user_id:int}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"user_id": {"source": "path", "type": "string"}},
-            "required": ["user_id"],
-            "type": "object",
-        },
-    )(path_params_path_parameter_with_type_syntax_integer)
-    return app
-
-
-def path_params_string_path_parameter_success(
-    item_id: str,
-) -> Any:
-    """Handler for GET /path/str/{item_id}."""
-    return Response(content={"item_id": "foobar"}, status_code=200)
-
-
-def create_app_path_params_string_path_parameter_success() -> Spikard:
-    """App factory for fixture: String path parameter - success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/path/str/{item_id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"item_id": {"source": "path", "type": "string"}},
-            "required": ["item_id"],
-            "type": "object",
-        },
-    )(path_params_string_path_parameter_success)
-    return app
-
-
-def path_params_uuid_path_parameter_success(
-    item_id: UUID,
-) -> Any:
-    """Handler for GET /items/{item_id}."""
-    return Response(content={"item_id": "ec38df32-ceda-4cfa-9b4a-1aeb94ad551a"}, status_code=200)
-
-
-def create_app_path_params_uuid_path_parameter_success() -> Spikard:
-    """App factory for fixture: UUID path parameter - success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/items/{item_id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"item_id": {"format": "uuid", "source": "path", "type": "string"}},
-            "required": ["item_id"],
-            "type": "object",
-        },
-    )(path_params_uuid_path_parameter_success)
-    return app
-
-
-def path_params_integer_path_parameter_with_ge_constraint_success(
-    item_id: int,
-) -> Any:
-    """Handler for GET /path/param-ge/{item_id}."""
-    return Response(content={"item_id": 3}, status_code=200)
-
-
-def create_app_path_params_integer_path_parameter_with_ge_constraint_success() -> Spikard:
-    """App factory for fixture: Integer path parameter with ge constraint - success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/path/param-ge/{item_id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"item_id": {"minimum": 3, "source": "path", "type": "integer"}},
-            "required": ["item_id"],
-            "type": "object",
-        },
-    )(path_params_integer_path_parameter_with_ge_constraint_success)
-    return app
-
-
-def path_params_enum_path_parameter_success(
-    model_name: str,
-) -> Any:
-    """Handler for GET /models/{model_name}."""
-    return Response(content={"model_name": "alexnet"}, status_code=200)
-
-
-def create_app_path_params_enum_path_parameter_success() -> Spikard:
-    """App factory for fixture: Enum path parameter - success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/models/{model_name}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"model_name": {"enum": ["alexnet", "lenet", "resnet"], "source": "path", "type": "string"}},
-            "required": ["model_name"],
-            "type": "object",
-        },
-    )(path_params_enum_path_parameter_success)
-    return app
-
-
-def path_params_boolean_path_parameter_numeric_1(
-    item_id: bool,
-) -> Any:
-    """Handler for GET /path/bool/{item_id}."""
-    return Response(content={"item_id": True}, status_code=200)
-
-
-def create_app_path_params_boolean_path_parameter_numeric_1() -> Spikard:
-    """App factory for fixture: Boolean path parameter - numeric 1."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/path/bool/{item_id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"item_id": {"source": "path", "type": "boolean"}},
-            "required": ["item_id"],
-            "type": "object",
-        },
-    )(path_params_boolean_path_parameter_numeric_1)
-    return app
-
-
-def status_codes_408_request_timeout(
-    body: dict[str, Any],
-) -> Any:
-    """Handler for POST /slow-endpoint."""
-    return Response(content={"detail": "Request timeout"}, status_code=408)
-
-
-def create_app_status_codes_408_request_timeout() -> Spikard:
-    """App factory for fixture: 408 Request Timeout."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/slow-endpoint",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {"data": {"type": "string"}},
-            "required": ["data"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(status_codes_408_request_timeout)
-    return app
-
-
-def status_codes_404_not_found_resource_not_found(
-    code: str,
-) -> Any:
-    """Handler for GET /status-test/{code}."""
-    return Response(content={"detail": "Item not found"}, status_code=404)
-
-
-def create_app_status_codes_404_not_found_resource_not_found() -> Spikard:
-    """App factory for fixture: 404 Not Found - Resource not found."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/status-test/{code}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"code": {"source": "path", "type": "string"}},
-            "required": ["code"],
-            "type": "object",
-        },
-    )(status_codes_404_not_found_resource_not_found)
-    return app
-
-
-def status_codes_503_service_unavailable_server_overload() -> Any:
-    """Handler for GET /health."""
-    return Response(content={"detail": "Service temporarily unavailable"}, status_code=503)
-
-
-def create_app_status_codes_503_service_unavailable_server_overload() -> Spikard:
-    """App factory for fixture: 503 Service Unavailable - Server overload."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/health", body_schema=None, parameter_schema=None)(
-        status_codes_503_service_unavailable_server_overload
-    )
-    return app
-
-
-class StatusCodes422UnprocessableEntityValidationErrorBody(NamedTuple):
-    """Request body NamedTuple (immutable)."""
-
-    name: str
-    price: str
-
-
-def status_codes_422_unprocessable_entity_validation_error(
-    body: StatusCodes422UnprocessableEntityValidationErrorBody,
-) -> Any:
-    """Handler for POST /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(body._asdict())
-    return result
-
-
-def create_app_status_codes_422_unprocessable_entity_validation_error() -> Spikard:
-    """App factory for fixture: 422 Unprocessable Entity - Validation error."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/items/",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {"name": {"type": "string"}, "price": {"type": "string"}},
-            "required": ["price", "name"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(status_codes_422_unprocessable_entity_validation_error)
-    return app
-
-
-def status_codes_302_found_temporary_redirect() -> Any:
-    """Handler for GET /temp-redirect."""
-    return Response(status_code=302)
-
-
-def create_app_status_codes_302_found_temporary_redirect() -> Spikard:
-    """App factory for fixture: 302 Found - Temporary redirect."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/temp-redirect", body_schema=None, parameter_schema=None)(
-        status_codes_302_found_temporary_redirect
-    )
-    return app
-
-
-def status_codes_304_not_modified_cached_content_valid(
-    code: str,
-    if_none_match: str | None = None,
-) -> Any:
-    """Handler for GET /status-test/{code}."""
-    return Response(status_code=304)
-
-
-def create_app_status_codes_304_not_modified_cached_content_valid() -> Spikard:
-    """App factory for fixture: 304 Not Modified - Cached content valid."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/status-test/{code}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {
-                "code": {"source": "path", "type": "string"},
-                "if_none_match": {"source": "header", "type": "string"},
-            },
-            "required": ["code"],
-            "type": "object",
-        },
-    )(status_codes_304_not_modified_cached_content_valid)
-    return app
-
-
-def status_codes_400_bad_request_invalid_request(
-    body: dict[str, Any],
-) -> Any:
-    """Handler for POST /items/."""
-    return Response(content={"detail": "Invalid request format"}, status_code=400)
-
-
-def create_app_status_codes_400_bad_request_invalid_request() -> Spikard:
-    """App factory for fixture: 400 Bad Request - Invalid request."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("POST", "/items/", body_schema={"type": "string"}, parameter_schema=None)(
-        status_codes_400_bad_request_invalid_request
-    )
-    return app
-
-
-def status_codes_22_501_not_implemented() -> Any:
-    """Handler for TRACE /data."""
-    return Response(
-        content={"error": "Not Implemented", "message": "The TRACE method is not supported by this server"},
-        status_code=501,
-    )
-
-
-def create_app_status_codes_22_501_not_implemented() -> Spikard:
-    """App factory for fixture: 22_501_not_implemented."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("TRACE", "/data", body_schema=None, parameter_schema=None)(status_codes_22_501_not_implemented)
-    return app
-
-
-def status_codes_204_no_content_success_with_no_body(
-    code: str,
-) -> Any:
-    """Handler for DELETE /status-test/{code}."""
-    return Response(status_code=204)
-
-
-def create_app_status_codes_204_no_content_success_with_no_body() -> Spikard:
-    """App factory for fixture: 204 No Content - Success with no body."""
+def create_app_http_methods_delete_with_response_body() -> Spikard:
+    """App factory for fixture: DELETE - With response body."""
     app = Spikard()
     # Register handler with this app instance
     app.register_route(
         "DELETE",
-        "/status-test/{code}",
+        "/items/{id}",
         body_schema=None,
         parameter_schema={
-            "properties": {"code": {"source": "path", "type": "string"}},
-            "required": ["code"],
+            "properties": {"id": {"source": "path", "type": "string"}},
+            "required": ["id"],
             "type": "object",
         },
-    )(status_codes_204_no_content_success_with_no_body)
+    )(http_methods_delete_with_response_body)
     return app
 
 
-def status_codes_301_moved_permanently_permanent_redirect() -> Any:
-    """Handler for GET /old-path."""
-    return Response(status_code=301)
-
-
-def create_app_status_codes_301_moved_permanently_permanent_redirect() -> Spikard:
-    """App factory for fixture: 301 Moved Permanently - Permanent redirect."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/old-path", body_schema=None, parameter_schema=None)(
-        status_codes_301_moved_permanently_permanent_redirect
-    )
-    return app
-
-
-class StatusCodes201CreatedResourceCreatedBody(msgspec.Struct):
-    """Request body msgspec.Struct (fast typed)."""
-
-    name: str
-
-
-def status_codes_201_created_resource_created(
-    body: StatusCodes201CreatedResourceCreatedBody,
-) -> Any:
-    """Handler for POST /items/."""
-    return Response(content={"id": 1, "name": "New Item"}, status_code=201)
-
-
-def create_app_status_codes_201_created_resource_created() -> Spikard:
-    """App factory for fixture: 201 Created - Resource created."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/items/",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {"name": {"type": "string"}},
-            "required": ["name"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(status_codes_201_created_resource_created)
-    return app
-
-
-class StatusCodes202AcceptedRequestAcceptedForProcessingBody(BaseModel):
-    """Request body Pydantic model."""
-
-    task: str
-
-
-def status_codes_202_accepted_request_accepted_for_processing(
-    body: StatusCodes202AcceptedRequestAcceptedForProcessingBody,
-) -> Any:
-    """Handler for POST /tasks/."""
-    return Response(content={"message": "Task accepted for processing", "task_id": "abc123"}, status_code=202)
-
-
-def create_app_status_codes_202_accepted_request_accepted_for_processing() -> Spikard:
-    """App factory for fixture: 202 Accepted - Request accepted for processing."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/tasks/",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {"task": {"type": "string"}},
-            "required": ["task"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(status_codes_202_accepted_request_accepted_for_processing)
-    return app
-
-
-def status_codes_307_temporary_redirect_method_preserved(
-    body: dict[str, Any],
-) -> Any:
-    """Handler for POST /redirect-post."""
-    return Response(content={}, status_code=307)
-
-
-def create_app_status_codes_307_temporary_redirect_method_preserved() -> Spikard:
-    """App factory for fixture: 307 Temporary Redirect - Method preserved."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/redirect-post",
-        body_schema={"additionalProperties": False, "properties": {}, "type": "object"},
-        parameter_schema=None,
-    )(status_codes_307_temporary_redirect_method_preserved)
-    return app
-
-
-def status_codes_500_internal_server_error_server_error() -> Any:
-    """Handler for GET /error."""
-    return Response(
-        content={
-            "detail": "Internal server error",
-            "status": 500,
-            "title": "Internal Server Error",
-            "type": "https://spikard.dev/errors/internal-server-error",
-        },
-        status_code=500,
-    )
-
-
-def create_app_status_codes_500_internal_server_error_server_error() -> Spikard:
-    """App factory for fixture: 500 Internal Server Error - Server error."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/error", body_schema=None, parameter_schema=None)(
-        status_codes_500_internal_server_error_server_error
-    )
-    return app
-
-
-def status_codes_20_414_uri_too_long() -> Any:
-    """Handler for GET /data."""
-    return Response(
-        content={"error": "URI Too Long", "message": "Request URI exceeds maximum allowed length of 2048 characters"},
-        status_code=414,
-    )
-
-
-def create_app_status_codes_20_414_uri_too_long() -> Spikard:
-    """App factory for fixture: 20_414_uri_too_long."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/data", body_schema=None, parameter_schema=None)(status_codes_20_414_uri_too_long)
-    return app
-
-
-def status_codes_401_unauthorized_missing_authentication() -> Any:
-    """Handler for GET /users/me."""
-    return Response(content={"detail": "Not authenticated"}, status_code=401)
-
-
-def create_app_status_codes_401_unauthorized_missing_authentication() -> Spikard:
-    """App factory for fixture: 401 Unauthorized - Missing authentication."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/users/me", body_schema=None, parameter_schema=None)(
-        status_codes_401_unauthorized_missing_authentication
-    )
-    return app
-
-
-def status_codes_23_503_service_unavailable() -> Any:
-    """Handler for GET /data."""
-    return Response(
-        content={
-            "error": "Service Unavailable",
-            "message": "The service is temporarily unavailable. Please try again later.",
-        },
-        status_code=503,
-    )
-
-
-def create_app_status_codes_23_503_service_unavailable() -> Spikard:
-    """App factory for fixture: 23_503_service_unavailable."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/data", body_schema=None, parameter_schema=None)(status_codes_23_503_service_unavailable)
-    return app
-
-
-class StatusCodes19413PayloadTooLargeBody(BaseModel):
-    """Request body Pydantic model."""
-
-    data: str | None = None
-
-
-def status_codes_19_413_payload_too_large(
-    body: StatusCodes19413PayloadTooLargeBody,
-) -> Any:
-    """Handler for POST /upload."""
-    return Response(
-        content={
-            "error": "Payload Too Large",
-            "message": "Request body size exceeds maximum allowed size of 1024 bytes",
-        },
-        status_code=413,
-    )
-
-
-def create_app_status_codes_19_413_payload_too_large() -> Spikard:
-    """App factory for fixture: 19_413_payload_too_large."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/upload",
-        body_schema={"properties": {"data": {"type": "string"}}, "type": "object"},
-        parameter_schema=None,
-    )(status_codes_19_413_payload_too_large)
-    return app
-
-
-def status_codes_403_forbidden_insufficient_permissions() -> Any:
-    """Handler for GET /admin/users."""
-    return Response(content={"detail": "Not enough permissions"}, status_code=403)
-
-
-def create_app_status_codes_403_forbidden_insufficient_permissions() -> Spikard:
-    """App factory for fixture: 403 Forbidden - Insufficient permissions."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/admin/users", body_schema=None, parameter_schema=None)(
-        status_codes_403_forbidden_insufficient_permissions
-    )
-    return app
-
-
-def status_codes_21_431_request_header_fields_too_large(
-    x_large_header: str | None = None,
-) -> Any:
-    """Handler for GET /data."""
-    return Response(
-        content={
-            "error": "Request Header Fields Too Large",
-            "message": "Request headers exceed maximum allowed size of 8192 bytes",
-        },
-        status_code=431,
-    )
-
-
-def create_app_status_codes_21_431_request_header_fields_too_large() -> Spikard:
-    """App factory for fixture: 21_431_request_header_fields_too_large."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/data",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"x_large_header": {"source": "header", "type": "string"}},
-            "required": [],
-            "type": "object",
-        },
-    )(status_codes_21_431_request_header_fields_too_large)
-    return app
-
-
-def status_codes_429_too_many_requests() -> Any:
-    """Handler for GET /api/resource."""
-    return Response(content={"detail": "Rate limit exceeded. Try again in 60 seconds."}, status_code=429)
-
-
-def create_app_status_codes_429_too_many_requests() -> Spikard:
-    """App factory for fixture: 429 Too Many Requests."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/api/resource", body_schema=None, parameter_schema=None)(
-        status_codes_429_too_many_requests
-    )
-    return app
-
-
-def status_codes_200_ok_success(
-    code: str,
-) -> Any:
-    """Handler for GET /status-test/{code}."""
-    return Response(content={"id": 1, "name": "Item 1"}, status_code=200)
-
-
-def create_app_status_codes_200_ok_success() -> Spikard:
-    """App factory for fixture: 200 OK - Success."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/status-test/{code}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"code": {"source": "path", "type": "string"}},
-            "required": ["code"],
-            "type": "object",
-        },
-    )(status_codes_200_ok_success)
-    return app
-
-
-def status_codes_206_partial_content() -> Any:
-    """Handler for GET /files/document.pdf."""
-    return Response(content="binary_data_1024_bytes", status_code=206)
-
-
-def create_app_status_codes_206_partial_content() -> Spikard:
-    """App factory for fixture: 206 Partial Content."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("GET", "/files/document.pdf", body_schema=None, parameter_schema=None)(
-        status_codes_206_partial_content
-    )
-    return app
-
-
-def validation_errors_invalid_uuid_format(
-    item_id: UUID,
-) -> Any:
-    """Handler for GET /items/{item_id}."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if item_id is not None:
-        result["item_id"] = str(item_id)
-    return result
-
-
-def create_app_validation_errors_invalid_uuid_format() -> Spikard:
-    """App factory for fixture: Invalid UUID format."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/items/{item_id}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"item_id": {"format": "uuid", "source": "path", "type": "string"}},
-            "required": ["item_id"],
-            "type": "object",
-        },
-    )(validation_errors_invalid_uuid_format)
-    return app
-
-
-def validation_errors_invalid_boolean_value(
-    is_active: bool,
-    q: str,
-) -> Any:
-    """Handler for GET /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if is_active is not None:
-        result["is_active"] = is_active
-    if q is not None:
-        result["q"] = q
-    return result
-
-
-def create_app_validation_errors_invalid_boolean_value() -> Spikard:
-    """App factory for fixture: Invalid boolean value."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/items/",
-        body_schema=None,
-        parameter_schema={
-            "properties": {
-                "is_active": {"source": "query", "type": "boolean"},
-                "q": {"source": "query", "type": "string"},
-            },
-            "required": ["is_active", "q"],
-            "type": "object",
-        },
-    )(validation_errors_invalid_boolean_value)
-    return app
-
-
-def validation_errors_missing_required_query_parameter(
-    q: str,
-) -> Any:
-    """Handler for GET /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if q is not None:
-        result["q"] = q
-    return result
-
-
-def create_app_validation_errors_missing_required_query_parameter() -> Spikard:
-    """App factory for fixture: Missing required query parameter."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/items/",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"q": {"source": "query", "type": "string"}},
-            "required": ["q"],
-            "type": "object",
-        },
-    )(validation_errors_missing_required_query_parameter)
-    return app
-
-
-class ValidationErrorsArrayMaxItemsConstraintViolationBody(NamedTuple):
-    """Request body NamedTuple (immutable)."""
-
-    name: str
-    price: float
-    tags: list[str]
-
-
-def validation_errors_array_max_items_constraint_violation(
-    body: ValidationErrorsArrayMaxItemsConstraintViolationBody,
-) -> Any:
-    """Handler for POST /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(body._asdict())
-    return result
-
-
-def create_app_validation_errors_array_max_items_constraint_violation() -> Spikard:
-    """App factory for fixture: Array max_items constraint violation."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/items/",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {
-                "name": {"type": "string"},
-                "price": {"type": "number"},
-                "tags": {"items": {"type": "string"}, "maxItems": 10, "type": "array"},
-            },
-            "required": ["name", "price", "tags"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(validation_errors_array_max_items_constraint_violation)
-    return app
-
-
-def validation_errors_numeric_constraint_violation_gt_greater_than(
-    price: float,
-    q: str,
-) -> Any:
-    """Handler for GET /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if price is not None:
-        result["price"] = price
-    if q is not None:
-        result["q"] = q
-    return result
-
-
-def create_app_validation_errors_numeric_constraint_violation_gt_greater_than() -> Spikard:
-    """App factory for fixture: Numeric constraint violation - gt (greater than)."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/items/",
-        body_schema=None,
-        parameter_schema={
-            "properties": {
-                "price": {"exclusiveMinimum": 0, "source": "query", "type": "number"},
-                "q": {"source": "query", "type": "string"},
-            },
-            "required": ["price", "q"],
-            "type": "object",
-        },
-    )(validation_errors_numeric_constraint_violation_gt_greater_than)
-    return app
-
-
-def validation_errors_string_regex_pattern_mismatch(
-    q: str,
-) -> Any:
-    """Handler for GET /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if q is not None:
-        result["q"] = q
-    return result
-
-
-def create_app_validation_errors_string_regex_pattern_mismatch() -> Spikard:
-    """App factory for fixture: String regex pattern mismatch."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/items/",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"q": {"pattern": "^[a-zA-Z0-9_-]+$", "source": "query", "type": "string"}},
-            "required": ["q"],
-            "type": "object",
-        },
-    )(validation_errors_string_regex_pattern_mismatch)
-    return app
-
-
-def validation_errors_invalid_enum_value(
-    model_name: str,
-) -> Any:
-    """Handler for GET /models/{model_name}."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if model_name is not None:
-        result["model_name"] = model_name
-    return result
-
-
-def create_app_validation_errors_invalid_enum_value() -> Spikard:
-    """App factory for fixture: Invalid enum value."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/models/{model_name}",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"model_name": {"enum": ["alexnet", "resnet", "lenet"], "source": "path", "type": "string"}},
-            "required": ["model_name"],
-            "type": "object",
-        },
-    )(validation_errors_invalid_enum_value)
-    return app
-
-
-def validation_errors_string_min_length_constraint_violation(
-    q: str,
-) -> Any:
-    """Handler for GET /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if q is not None:
-        result["q"] = q
-    return result
-
-
-def create_app_validation_errors_string_min_length_constraint_violation() -> Spikard:
-    """App factory for fixture: String min_length constraint violation."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/items/",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"q": {"minLength": 3, "source": "query", "type": "string"}},
-            "required": ["q"],
-            "type": "object",
-        },
-    )(validation_errors_string_min_length_constraint_violation)
-    return app
-
-
-@dataclass
-class ValidationErrorsMultipleValidationErrorsBody:
-    """Request body dataclass."""
-
-    name: str
-    price: int
-    quantity: int
-
-
-def validation_errors_multiple_validation_errors(
-    body: ValidationErrorsMultipleValidationErrorsBody,
-) -> Any:
-    """Handler for POST /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(asdict(body))
-    return result
-
-
-def create_app_validation_errors_multiple_validation_errors() -> Spikard:
-    """App factory for fixture: Multiple validation errors."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/items/",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {"name": {"type": "string"}, "price": {"type": "integer"}, "quantity": {"type": "integer"}},
-            "required": ["name", "price", "quantity"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(validation_errors_multiple_validation_errors)
-    return app
-
-
-def validation_errors_string_max_length_constraint_violation(
-    q: str,
-) -> Any:
-    """Handler for GET /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if q is not None:
-        result["q"] = q
-    return result
-
-
-def create_app_validation_errors_string_max_length_constraint_violation() -> Spikard:
-    """App factory for fixture: String max_length constraint violation."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/items/",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"q": {"maxLength": 50, "source": "query", "type": "string"}},
-            "required": ["q"],
-            "type": "object",
-        },
-    )(validation_errors_string_max_length_constraint_violation)
-    return app
-
-
-class ValidationErrorsNestedObjectValidationErrorBody(msgspec.Struct):
-    """Request body msgspec.Struct (fast typed)."""
-
-    name: str
-    price: float
-    seller: dict[str, Any]
-
-
-def validation_errors_nested_object_validation_error(
-    body: ValidationErrorsNestedObjectValidationErrorBody,
-) -> Any:
-    """Handler for POST /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(msgspec.to_builtins(body))
-    return result
-
-
-def create_app_validation_errors_nested_object_validation_error() -> Spikard:
-    """App factory for fixture: Nested object validation error."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/items/",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {
-                "name": {"type": "string"},
-                "price": {"type": "number"},
-                "seller": {
-                    "additionalProperties": False,
-                    "properties": {
-                        "address": {
-                            "additionalProperties": False,
-                            "properties": {"city": {"type": "string"}, "zip_code": {"type": "string"}},
-                            "required": ["city", "zip_code"],
-                            "type": "object",
-                        },
-                        "name": {"type": "string"},
-                    },
-                    "required": ["name", "address"],
-                    "type": "object",
-                },
-            },
-            "required": ["name", "price", "seller"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(validation_errors_nested_object_validation_error)
-    return app
-
-
-class ValidationErrors10NestedErrorPathBody(BaseModel):
-    """Request body Pydantic model."""
-
-    profile: dict[str, Any]
-
-
-def validation_errors_10_nested_error_path(
-    body: ValidationErrors10NestedErrorPathBody,
-) -> Any:
-    """Handler for POST /profiles."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(body.model_dump())
-    return result
-
-
-def create_app_validation_errors_10_nested_error_path() -> Spikard:
-    """App factory for fixture: 10_nested_error_path."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/profiles",
-        body_schema={
-            "properties": {
-                "profile": {
-                    "properties": {
-                        "contact": {
-                            "properties": {"email": {"format": "email", "type": "string"}},
-                            "required": ["email"],
-                            "type": "object",
-                        }
-                    },
-                    "required": ["contact"],
-                    "type": "object",
-                }
-            },
-            "required": ["profile"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(validation_errors_10_nested_error_path)
-    return app
-
-
-def validation_errors_invalid_datetime_format(
-    body: dict[str, Any],
-) -> Any:
-    """Handler for POST /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(body)
-    return result
-
-
-def create_app_validation_errors_invalid_datetime_format() -> Spikard:
-    """App factory for fixture: Invalid datetime format."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/items/",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {"created_at": {"type": "string"}, "name": {"type": "string"}, "price": {"type": "number"}},
-            "required": ["name", "price", "created_at"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(validation_errors_invalid_datetime_format)
-    return app
-
-
-class ValidationErrorsArrayItemValidationErrorBody(TypedDict):
+class HttpMethodsPutMissingRequiredFieldBody(TypedDict):
     """Request body type (TypedDict - runtime is dict)."""
 
-    name: str
-    price: float
-    tags: list[str]
-
-
-def validation_errors_array_item_validation_error(
-    body: ValidationErrorsArrayItemValidationErrorBody,
-) -> Any:
-    """Handler for POST /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(body)
-    return result
-
-
-def create_app_validation_errors_array_item_validation_error() -> Spikard:
-    """App factory for fixture: Array item validation error."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/items/",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {
-                "name": {"type": "string"},
-                "price": {"type": "number"},
-                "tags": {"items": {"type": "string"}, "type": "array"},
-            },
-            "required": ["name", "price", "tags"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(validation_errors_array_item_validation_error)
-    return app
-
-
-@dataclass
-class ValidationErrorsMissingRequiredBodyFieldBody:
-    """Request body dataclass."""
-
-    name: str
     price: str
+    id: int | None
+    name: str | None
 
 
-def validation_errors_missing_required_body_field(
-    body: ValidationErrorsMissingRequiredBodyFieldBody,
+def http_methods_put_missing_required_field(
+    body: HttpMethodsPutMissingRequiredFieldBody,
+    id: str,
 ) -> Any:
-    """Handler for POST /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(asdict(body))
-    return result
-
-
-def create_app_validation_errors_missing_required_body_field() -> Spikard:
-    """App factory for fixture: Missing required body field."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/items/",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {"name": {"type": "string"}, "price": {"type": "string"}},
-            "required": ["name", "price"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(validation_errors_missing_required_body_field)
-    return app
-
-
-class ValidationErrorsBodyFieldTypeErrorStringForFloatBody(NamedTuple):
-    """Request body NamedTuple (immutable)."""
-
-    name: str
-    price: float
-
-
-def validation_errors_body_field_type_error_string_for_float(
-    body: ValidationErrorsBodyFieldTypeErrorStringForFloatBody,
-) -> Any:
-    """Handler for POST /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(body._asdict())
-    return result
-
-
-def create_app_validation_errors_body_field_type_error_string_for_float() -> Spikard:
-    """App factory for fixture: Body field type error - string for float."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "POST",
-        "/items/",
-        body_schema={
-            "additionalProperties": False,
-            "properties": {"name": {"type": "string"}, "price": {"type": "number"}},
-            "required": ["name", "price"],
-            "type": "object",
-        },
-        parameter_schema=None,
-    )(validation_errors_body_field_type_error_string_for_float)
-    return app
-
-
-class ValidationErrorsMalformedJsonBodyBody(msgspec.Struct):
-    """Request body msgspec.Struct (fast typed)."""
-
-
-def validation_errors_malformed_json_body(
-    body: ValidationErrorsMalformedJsonBodyBody,
-) -> Any:
-    """Handler for POST /items/."""
-    return Response(content={"detail": "Invalid request format"}, status_code=400)
-
-
-def create_app_validation_errors_malformed_json_body() -> Spikard:
-    """App factory for fixture: Malformed JSON body."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route("POST", "/items/", body_schema={"type": "string"}, parameter_schema=None)(
-        validation_errors_malformed_json_body
-    )
-    return app
-
-
-def validation_errors_query_param_type_error_string_provided_for_int(
-    q: str,
-    skip: int,
-) -> Any:
-    """Handler for GET /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if q is not None:
-        result["q"] = q
-    if skip is not None:
-        result["skip"] = skip
-    return result
-
-
-def create_app_validation_errors_query_param_type_error_string_provided_for_int() -> Spikard:
-    """App factory for fixture: Query param type error - string provided for int."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/items/",
-        body_schema=None,
-        parameter_schema={
-            "properties": {"q": {"source": "query", "type": "string"}, "skip": {"source": "query", "type": "integer"}},
-            "required": ["q", "skip"],
-            "type": "object",
-        },
-    )(validation_errors_query_param_type_error_string_provided_for_int)
-    return app
-
-
-def validation_errors_header_validation_error(
-    q: str,
-    x_token: str,
-) -> Any:
-    """Handler for GET /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if q is not None:
-        result["q"] = q
-    if x_token is not None:
-        result["x_token"] = x_token
-    return result
-
-
-def create_app_validation_errors_header_validation_error() -> Spikard:
-    """App factory for fixture: Header validation error."""
-    app = Spikard()
-    # Register handler with this app instance
-    app.register_route(
-        "GET",
-        "/items/",
-        body_schema=None,
-        parameter_schema={
-            "properties": {
-                "q": {"source": "query", "type": "string"},
-                "x_token": {"source": "header", "type": "string"},
-            },
-            "required": ["q", "x_token"],
-            "type": "object",
-        },
-    )(validation_errors_header_validation_error)
-    return app
-
-
-class ValidationErrors09MultipleValidationErrorsBody(TypedDict):
-    """Request body type (TypedDict - runtime is dict)."""
-
-    age: int
-    email: str
-    name: str
-
-
-def validation_errors_09_multiple_validation_errors(
-    body: ValidationErrors09MultipleValidationErrorsBody,
-) -> Any:
-    """Handler for POST /users."""
+    """Handler for PUT /items/{id}."""
     # Echo back parameters for testing
     result: dict[str, Any] = {}
     if body is not None:
         result.update(body)
+    if id is not None:
+        result["id"] = id
     return result
 
 
-def create_app_validation_errors_09_multiple_validation_errors() -> Spikard:
-    """App factory for fixture: 09_multiple_validation_errors."""
+def create_app_http_methods_put_missing_required_field() -> Spikard:
+    """App factory for fixture: PUT - Missing required field."""
     app = Spikard()
     # Register handler with this app instance
     app.register_route(
-        "POST",
-        "/users",
+        "PUT",
+        "/items/{id}",
         body_schema={
-            "properties": {
-                "age": {"minimum": 18, "type": "integer"},
-                "email": {"format": "email", "type": "string"},
-                "name": {"minLength": 3, "type": "string"},
-            },
-            "required": ["name", "email", "age"],
+            "properties": {"id": {"type": "integer"}, "name": {"type": "string"}, "price": {"type": "string"}},
+            "required": ["price"],
             "type": "object",
         },
-        parameter_schema=None,
-    )(validation_errors_09_multiple_validation_errors)
+        parameter_schema={
+            "properties": {"id": {"source": "path", "type": "string"}},
+            "required": ["id"],
+            "type": "object",
+        },
+    )(http_methods_put_missing_required_field)
     return app
 
 
-def validation_errors_numeric_constraint_violation_le_less_than_or_equal(
-    limit: int,
-    q: str,
+@dataclass
+class HttpMethodsPatchPartialUpdateBody:
+    """Request body dataclass."""
+
+    price: float
+
+
+def http_methods_patch_partial_update(
+    body: HttpMethodsPatchPartialUpdateBody,
+    id: str,
 ) -> Any:
-    """Handler for GET /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if limit is not None:
-        result["limit"] = limit
-    if q is not None:
-        result["q"] = q
-    return result
+    """Handler for PATCH /items/{id}."""
+    return Response(content={"id": 1, "in_stock": True, "name": "Existing Item", "price": 79.99}, status_code=200)
 
 
-def create_app_validation_errors_numeric_constraint_violation_le_less_than_or_equal() -> Spikard:
-    """App factory for fixture: Numeric constraint violation - le (less than or equal)."""
+def create_app_http_methods_patch_partial_update() -> Spikard:
+    """App factory for fixture: PATCH - Partial update."""
     app = Spikard()
     # Register handler with this app instance
     app.register_route(
-        "GET",
-        "/items/",
+        "PATCH",
+        "/items/{id}",
+        body_schema={"properties": {"price": {"type": "number"}}, "required": ["price"], "type": "object"},
+        parameter_schema={
+            "properties": {"id": {"source": "path", "type": "string"}},
+            "required": ["id"],
+            "type": "object",
+        },
+    )(http_methods_patch_partial_update)
+    return app
+
+
+def http_methods_delete_resource_not_found(
+    id: str,
+) -> Any:
+    """Handler for DELETE /items/{id}."""
+    return Response(content={}, status_code=200)
+
+
+def create_app_http_methods_delete_resource_not_found() -> Spikard:
+    """App factory for fixture: DELETE - Resource not found."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "DELETE",
+        "/items/{id}",
         body_schema=None,
         parameter_schema={
-            "properties": {
-                "limit": {"maximum": 100, "source": "query", "type": "integer"},
-                "q": {"source": "query", "type": "string"},
-            },
-            "required": ["limit", "q"],
+            "properties": {"id": {"source": "path", "type": "string"}},
+            "required": ["id"],
             "type": "object",
         },
-    )(validation_errors_numeric_constraint_violation_le_less_than_or_equal)
+    )(http_methods_delete_resource_not_found)
     return app
 
 
-class ValidationErrorsArrayMinItemsConstraintViolationBody(NamedTuple):
-    """Request body NamedTuple (immutable)."""
+class HttpMethodsPutIdempotentOperationBody(msgspec.Struct):
+    """Request body msgspec.Struct (fast typed)."""
 
+    id: int
     name: str
     price: float
-    tags: list[str]
 
 
-def validation_errors_array_min_items_constraint_violation(
-    body: ValidationErrorsArrayMinItemsConstraintViolationBody,
+def http_methods_put_idempotent_operation(
+    body: HttpMethodsPutIdempotentOperationBody,
+    id: str,
 ) -> Any:
-    """Handler for POST /items/."""
-    # Echo back parameters for testing
-    result: dict[str, Any] = {}
-    if body is not None:
-        result.update(body._asdict())
-    return result
+    """Handler for PUT /items/{id}."""
+    return Response(content={"id": 1, "name": "Fixed Name", "price": 50.0}, status_code=200)
 
 
-def create_app_validation_errors_array_min_items_constraint_violation() -> Spikard:
-    """App factory for fixture: Array min_items constraint violation."""
+def create_app_http_methods_put_idempotent_operation() -> Spikard:
+    """App factory for fixture: PUT - Idempotent operation."""
     app = Spikard()
     # Register handler with this app instance
     app.register_route(
-        "POST",
-        "/items/",
+        "PUT",
+        "/items/{id}",
         body_schema={
-            "additionalProperties": False,
-            "properties": {
-                "name": {"type": "string"},
-                "price": {"type": "number"},
-                "tags": {"items": {}, "minItems": 1, "type": "array"},
-            },
-            "required": ["name", "price", "tags"],
+            "properties": {"id": {"type": "integer"}, "name": {"type": "string"}, "price": {"type": "number"}},
+            "required": ["id", "name", "price"],
             "type": "object",
         },
-        parameter_schema=None,
-    )(validation_errors_array_min_items_constraint_violation)
+        parameter_schema={
+            "properties": {"id": {"source": "path", "type": "string"}},
+            "required": ["id"],
+            "type": "object",
+        },
+    )(http_methods_put_idempotent_operation)
+    return app
+
+
+class HttpMethodsPutCompleteResourceReplacementBody(BaseModel):
+    """Request body Pydantic model."""
+
+    description: str
+    id: int
+    in_stock: bool
+    name: str
+    price: float
+
+
+def http_methods_put_complete_resource_replacement(
+    body: HttpMethodsPutCompleteResourceReplacementBody,
+    id: str,
+) -> Any:
+    """Handler for PUT /items/{id}."""
+    return Response(
+        content={
+            "description": "Completely replaced",
+            "id": 1,
+            "in_stock": True,
+            "name": "Updated Item",
+            "price": 99.99,
+        },
+        status_code=200,
+    )
+
+
+def create_app_http_methods_put_complete_resource_replacement() -> Spikard:
+    """App factory for fixture: PUT - Complete resource replacement."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "PUT",
+        "/items/{id}",
+        body_schema={
+            "properties": {
+                "description": {"type": "string"},
+                "id": {"type": "integer"},
+                "in_stock": {"type": "boolean"},
+                "name": {"type": "string"},
+                "price": {"type": "number"},
+            },
+            "required": ["description", "id", "in_stock", "name", "price"],
+            "type": "object",
+        },
+        parameter_schema={
+            "properties": {"id": {"source": "path", "type": "string"}},
+            "required": ["id"],
+            "type": "object",
+        },
+    )(http_methods_put_complete_resource_replacement)
     return app
 
 
@@ -10481,7 +8625,1923 @@ def create_app_json_bodies_array_of_objects_success() -> Spikard:
     return app
 
 
+def validation_errors_invalid_uuid_format(
+    item_id: UUID,
+) -> Any:
+    """Handler for GET /items/{item_id}."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if item_id is not None:
+        result["item_id"] = str(item_id)
+    return result
+
+
+def create_app_validation_errors_invalid_uuid_format() -> Spikard:
+    """App factory for fixture: Invalid UUID format."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items/{item_id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"item_id": {"format": "uuid", "source": "path", "type": "string"}},
+            "required": ["item_id"],
+            "type": "object",
+        },
+    )(validation_errors_invalid_uuid_format)
+    return app
+
+
+def validation_errors_invalid_boolean_value(
+    is_active: bool,
+    q: str,
+) -> Any:
+    """Handler for GET /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if is_active is not None:
+        result["is_active"] = is_active
+    if q is not None:
+        result["q"] = q
+    return result
+
+
+def create_app_validation_errors_invalid_boolean_value() -> Spikard:
+    """App factory for fixture: Invalid boolean value."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items/",
+        body_schema=None,
+        parameter_schema={
+            "properties": {
+                "is_active": {"source": "query", "type": "boolean"},
+                "q": {"source": "query", "type": "string"},
+            },
+            "required": ["is_active", "q"],
+            "type": "object",
+        },
+    )(validation_errors_invalid_boolean_value)
+    return app
+
+
+def validation_errors_missing_required_query_parameter(
+    q: str,
+) -> Any:
+    """Handler for GET /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if q is not None:
+        result["q"] = q
+    return result
+
+
+def create_app_validation_errors_missing_required_query_parameter() -> Spikard:
+    """App factory for fixture: Missing required query parameter."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items/",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"q": {"source": "query", "type": "string"}},
+            "required": ["q"],
+            "type": "object",
+        },
+    )(validation_errors_missing_required_query_parameter)
+    return app
+
+
+class ValidationErrorsArrayMaxItemsConstraintViolationBody(NamedTuple):
+    """Request body NamedTuple (immutable)."""
+
+    name: str
+    price: float
+    tags: list[str]
+
+
+def validation_errors_array_max_items_constraint_violation(
+    body: ValidationErrorsArrayMaxItemsConstraintViolationBody,
+) -> Any:
+    """Handler for POST /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(body._asdict())
+    return result
+
+
+def create_app_validation_errors_array_max_items_constraint_violation() -> Spikard:
+    """App factory for fixture: Array max_items constraint violation."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/items/",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {
+                "name": {"type": "string"},
+                "price": {"type": "number"},
+                "tags": {"items": {"type": "string"}, "maxItems": 10, "type": "array"},
+            },
+            "required": ["name", "price", "tags"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(validation_errors_array_max_items_constraint_violation)
+    return app
+
+
+def validation_errors_numeric_constraint_violation_gt_greater_than(
+    price: float,
+    q: str,
+) -> Any:
+    """Handler for GET /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if price is not None:
+        result["price"] = price
+    if q is not None:
+        result["q"] = q
+    return result
+
+
+def create_app_validation_errors_numeric_constraint_violation_gt_greater_than() -> Spikard:
+    """App factory for fixture: Numeric constraint violation - gt (greater than)."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items/",
+        body_schema=None,
+        parameter_schema={
+            "properties": {
+                "price": {"exclusiveMinimum": 0, "source": "query", "type": "number"},
+                "q": {"source": "query", "type": "string"},
+            },
+            "required": ["price", "q"],
+            "type": "object",
+        },
+    )(validation_errors_numeric_constraint_violation_gt_greater_than)
+    return app
+
+
+def validation_errors_string_regex_pattern_mismatch(
+    q: str,
+) -> Any:
+    """Handler for GET /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if q is not None:
+        result["q"] = q
+    return result
+
+
+def create_app_validation_errors_string_regex_pattern_mismatch() -> Spikard:
+    """App factory for fixture: String regex pattern mismatch."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items/",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"q": {"pattern": "^[a-zA-Z0-9_-]+$", "source": "query", "type": "string"}},
+            "required": ["q"],
+            "type": "object",
+        },
+    )(validation_errors_string_regex_pattern_mismatch)
+    return app
+
+
+def validation_errors_invalid_enum_value(
+    model_name: str,
+) -> Any:
+    """Handler for GET /models/{model_name}."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if model_name is not None:
+        result["model_name"] = model_name
+    return result
+
+
+def create_app_validation_errors_invalid_enum_value() -> Spikard:
+    """App factory for fixture: Invalid enum value."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/models/{model_name}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"model_name": {"enum": ["alexnet", "resnet", "lenet"], "source": "path", "type": "string"}},
+            "required": ["model_name"],
+            "type": "object",
+        },
+    )(validation_errors_invalid_enum_value)
+    return app
+
+
+def validation_errors_string_min_length_constraint_violation(
+    q: str,
+) -> Any:
+    """Handler for GET /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if q is not None:
+        result["q"] = q
+    return result
+
+
+def create_app_validation_errors_string_min_length_constraint_violation() -> Spikard:
+    """App factory for fixture: String min_length constraint violation."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items/",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"q": {"minLength": 3, "source": "query", "type": "string"}},
+            "required": ["q"],
+            "type": "object",
+        },
+    )(validation_errors_string_min_length_constraint_violation)
+    return app
+
+
+@dataclass
+class ValidationErrorsMultipleValidationErrorsBody:
+    """Request body dataclass."""
+
+    name: str
+    price: int
+    quantity: int
+
+
+def validation_errors_multiple_validation_errors(
+    body: ValidationErrorsMultipleValidationErrorsBody,
+) -> Any:
+    """Handler for POST /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(asdict(body))
+    return result
+
+
+def create_app_validation_errors_multiple_validation_errors() -> Spikard:
+    """App factory for fixture: Multiple validation errors."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/items/",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {"name": {"type": "string"}, "price": {"type": "integer"}, "quantity": {"type": "integer"}},
+            "required": ["name", "price", "quantity"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(validation_errors_multiple_validation_errors)
+    return app
+
+
+def validation_errors_string_max_length_constraint_violation(
+    q: str,
+) -> Any:
+    """Handler for GET /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if q is not None:
+        result["q"] = q
+    return result
+
+
+def create_app_validation_errors_string_max_length_constraint_violation() -> Spikard:
+    """App factory for fixture: String max_length constraint violation."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items/",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"q": {"maxLength": 50, "source": "query", "type": "string"}},
+            "required": ["q"],
+            "type": "object",
+        },
+    )(validation_errors_string_max_length_constraint_violation)
+    return app
+
+
+class ValidationErrorsNestedObjectValidationErrorBody(msgspec.Struct):
+    """Request body msgspec.Struct (fast typed)."""
+
+    name: str
+    price: float
+    seller: dict[str, Any]
+
+
+def validation_errors_nested_object_validation_error(
+    body: ValidationErrorsNestedObjectValidationErrorBody,
+) -> Any:
+    """Handler for POST /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(msgspec.to_builtins(body))
+    return result
+
+
+def create_app_validation_errors_nested_object_validation_error() -> Spikard:
+    """App factory for fixture: Nested object validation error."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/items/",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {
+                "name": {"type": "string"},
+                "price": {"type": "number"},
+                "seller": {
+                    "additionalProperties": False,
+                    "properties": {
+                        "address": {
+                            "additionalProperties": False,
+                            "properties": {"city": {"type": "string"}, "zip_code": {"type": "string"}},
+                            "required": ["city", "zip_code"],
+                            "type": "object",
+                        },
+                        "name": {"type": "string"},
+                    },
+                    "required": ["name", "address"],
+                    "type": "object",
+                },
+            },
+            "required": ["name", "price", "seller"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(validation_errors_nested_object_validation_error)
+    return app
+
+
+class ValidationErrors10NestedErrorPathBody(BaseModel):
+    """Request body Pydantic model."""
+
+    profile: dict[str, Any]
+
+
+def validation_errors_10_nested_error_path(
+    body: ValidationErrors10NestedErrorPathBody,
+) -> Any:
+    """Handler for POST /profiles."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(body.model_dump())
+    return result
+
+
+def create_app_validation_errors_10_nested_error_path() -> Spikard:
+    """App factory for fixture: 10_nested_error_path."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/profiles",
+        body_schema={
+            "properties": {
+                "profile": {
+                    "properties": {
+                        "contact": {
+                            "properties": {"email": {"format": "email", "type": "string"}},
+                            "required": ["email"],
+                            "type": "object",
+                        }
+                    },
+                    "required": ["contact"],
+                    "type": "object",
+                }
+            },
+            "required": ["profile"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(validation_errors_10_nested_error_path)
+    return app
+
+
+def validation_errors_invalid_datetime_format(
+    body: dict[str, Any],
+) -> Any:
+    """Handler for POST /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(body)
+    return result
+
+
+def create_app_validation_errors_invalid_datetime_format() -> Spikard:
+    """App factory for fixture: Invalid datetime format."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/items/",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {"created_at": {"type": "string"}, "name": {"type": "string"}, "price": {"type": "number"}},
+            "required": ["name", "price", "created_at"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(validation_errors_invalid_datetime_format)
+    return app
+
+
+class ValidationErrorsArrayItemValidationErrorBody(TypedDict):
+    """Request body type (TypedDict - runtime is dict)."""
+
+    name: str
+    price: float
+    tags: list[str]
+
+
+def validation_errors_array_item_validation_error(
+    body: ValidationErrorsArrayItemValidationErrorBody,
+) -> Any:
+    """Handler for POST /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(body)
+    return result
+
+
+def create_app_validation_errors_array_item_validation_error() -> Spikard:
+    """App factory for fixture: Array item validation error."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/items/",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {
+                "name": {"type": "string"},
+                "price": {"type": "number"},
+                "tags": {"items": {"type": "string"}, "type": "array"},
+            },
+            "required": ["name", "price", "tags"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(validation_errors_array_item_validation_error)
+    return app
+
+
+@dataclass
+class ValidationErrorsMissingRequiredBodyFieldBody:
+    """Request body dataclass."""
+
+    name: str
+    price: str
+
+
+def validation_errors_missing_required_body_field(
+    body: ValidationErrorsMissingRequiredBodyFieldBody,
+) -> Any:
+    """Handler for POST /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(asdict(body))
+    return result
+
+
+def create_app_validation_errors_missing_required_body_field() -> Spikard:
+    """App factory for fixture: Missing required body field."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/items/",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {"name": {"type": "string"}, "price": {"type": "string"}},
+            "required": ["name", "price"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(validation_errors_missing_required_body_field)
+    return app
+
+
+class ValidationErrorsBodyFieldTypeErrorStringForFloatBody(NamedTuple):
+    """Request body NamedTuple (immutable)."""
+
+    name: str
+    price: float
+
+
+def validation_errors_body_field_type_error_string_for_float(
+    body: ValidationErrorsBodyFieldTypeErrorStringForFloatBody,
+) -> Any:
+    """Handler for POST /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(body._asdict())
+    return result
+
+
+def create_app_validation_errors_body_field_type_error_string_for_float() -> Spikard:
+    """App factory for fixture: Body field type error - string for float."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/items/",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {"name": {"type": "string"}, "price": {"type": "number"}},
+            "required": ["name", "price"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(validation_errors_body_field_type_error_string_for_float)
+    return app
+
+
+class ValidationErrorsMalformedJsonBodyBody(msgspec.Struct):
+    """Request body msgspec.Struct (fast typed)."""
+
+
+def validation_errors_malformed_json_body(
+    body: ValidationErrorsMalformedJsonBodyBody,
+) -> Any:
+    """Handler for POST /items/."""
+    return Response(content={"detail": "Invalid request format"}, status_code=400)
+
+
+def create_app_validation_errors_malformed_json_body() -> Spikard:
+    """App factory for fixture: Malformed JSON body."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("POST", "/items/", body_schema={"type": "string"}, parameter_schema=None)(
+        validation_errors_malformed_json_body
+    )
+    return app
+
+
+def validation_errors_query_param_type_error_string_provided_for_int(
+    q: str,
+    skip: int,
+) -> Any:
+    """Handler for GET /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if q is not None:
+        result["q"] = q
+    if skip is not None:
+        result["skip"] = skip
+    return result
+
+
+def create_app_validation_errors_query_param_type_error_string_provided_for_int() -> Spikard:
+    """App factory for fixture: Query param type error - string provided for int."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items/",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"q": {"source": "query", "type": "string"}, "skip": {"source": "query", "type": "integer"}},
+            "required": ["q", "skip"],
+            "type": "object",
+        },
+    )(validation_errors_query_param_type_error_string_provided_for_int)
+    return app
+
+
+def validation_errors_header_validation_error(
+    q: str,
+    x_token: str,
+) -> Any:
+    """Handler for GET /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if q is not None:
+        result["q"] = q
+    if x_token is not None:
+        result["x_token"] = x_token
+    return result
+
+
+def create_app_validation_errors_header_validation_error() -> Spikard:
+    """App factory for fixture: Header validation error."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items/",
+        body_schema=None,
+        parameter_schema={
+            "properties": {
+                "q": {"source": "query", "type": "string"},
+                "x_token": {"source": "header", "type": "string"},
+            },
+            "required": ["q", "x_token"],
+            "type": "object",
+        },
+    )(validation_errors_header_validation_error)
+    return app
+
+
+class ValidationErrors09MultipleValidationErrorsBody(TypedDict):
+    """Request body type (TypedDict - runtime is dict)."""
+
+    age: int
+    email: str
+    name: str
+
+
+def validation_errors_09_multiple_validation_errors(
+    body: ValidationErrors09MultipleValidationErrorsBody,
+) -> Any:
+    """Handler for POST /users."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(body)
+    return result
+
+
+def create_app_validation_errors_09_multiple_validation_errors() -> Spikard:
+    """App factory for fixture: 09_multiple_validation_errors."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/users",
+        body_schema={
+            "properties": {
+                "age": {"minimum": 18, "type": "integer"},
+                "email": {"format": "email", "type": "string"},
+                "name": {"minLength": 3, "type": "string"},
+            },
+            "required": ["name", "email", "age"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(validation_errors_09_multiple_validation_errors)
+    return app
+
+
+def validation_errors_numeric_constraint_violation_le_less_than_or_equal(
+    limit: int,
+    q: str,
+) -> Any:
+    """Handler for GET /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if limit is not None:
+        result["limit"] = limit
+    if q is not None:
+        result["q"] = q
+    return result
+
+
+def create_app_validation_errors_numeric_constraint_violation_le_less_than_or_equal() -> Spikard:
+    """App factory for fixture: Numeric constraint violation - le (less than or equal)."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items/",
+        body_schema=None,
+        parameter_schema={
+            "properties": {
+                "limit": {"maximum": 100, "source": "query", "type": "integer"},
+                "q": {"source": "query", "type": "string"},
+            },
+            "required": ["limit", "q"],
+            "type": "object",
+        },
+    )(validation_errors_numeric_constraint_violation_le_less_than_or_equal)
+    return app
+
+
+class ValidationErrorsArrayMinItemsConstraintViolationBody(NamedTuple):
+    """Request body NamedTuple (immutable)."""
+
+    name: str
+    price: float
+    tags: list[str]
+
+
+def validation_errors_array_min_items_constraint_violation(
+    body: ValidationErrorsArrayMinItemsConstraintViolationBody,
+) -> Any:
+    """Handler for POST /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if body is not None:
+        result.update(body._asdict())
+    return result
+
+
+def create_app_validation_errors_array_min_items_constraint_violation() -> Spikard:
+    """App factory for fixture: Array min_items constraint violation."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/items/",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {
+                "name": {"type": "string"},
+                "price": {"type": "number"},
+                "tags": {"items": {}, "minItems": 1, "type": "array"},
+            },
+            "required": ["name", "price", "tags"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(validation_errors_array_min_items_constraint_violation)
+    return app
+
+
+def content_types_415_unsupported_media_type(
+    body: dict[str, Any],
+) -> Any:
+    """Handler for POST /items/."""
+    return Response(content={"detail": "Unsupported media type"}, status_code=415)
+
+
+def create_app_content_types_415_unsupported_media_type() -> Spikard:
+    """App factory for fixture: 415 Unsupported Media Type."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("POST", "/items/", body_schema={"type": "string"}, parameter_schema=None)(
+        content_types_415_unsupported_media_type
+    )
+    return app
+
+
+def content_types_xml_response_application_xml() -> Any:
+    """Handler for GET /xml."""
+    return Response(content='<?xml version="1.0"?><item><name>Item</name><price>42.0</price></item>', status_code=200)
+
+
+def create_app_content_types_xml_response_application_xml() -> Spikard:
+    """App factory for fixture: XML response - application/xml."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/xml", body_schema=None, parameter_schema=None)(
+        content_types_xml_response_application_xml
+    )
+    return app
+
+
+@dataclass
+class ContentTypes14ContentTypeCaseInsensitiveBody:
+    """Request body dataclass."""
+
+    name: str
+
+
+def content_types_14_content_type_case_insensitive(
+    body: ContentTypes14ContentTypeCaseInsensitiveBody,
+) -> Any:
+    """Handler for POST /data."""
+    return Response(content={"name": "test"}, status_code=201)
+
+
+def create_app_content_types_14_content_type_case_insensitive() -> Spikard:
+    """App factory for fixture: 14_content_type_case_insensitive."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/data",
+        body_schema={"properties": {"name": {"type": "string"}}, "required": ["name"], "type": "object"},
+        parameter_schema=None,
+    )(content_types_14_content_type_case_insensitive)
+    return app
+
+
+def content_types_json_with_utf_8_charset() -> Any:
+    """Handler for GET /items/unicode."""
+    return Response(content={"emoji": "☕", "name": "Café"}, status_code=200)
+
+
+def create_app_content_types_json_with_utf_8_charset() -> Spikard:
+    """App factory for fixture: JSON with UTF-8 charset."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/items/unicode", body_schema=None, parameter_schema=None)(
+        content_types_json_with_utf_8_charset
+    )
+    return app
+
+
+class ContentTypes16TextPlainNotAcceptedBody(msgspec.Struct):
+    """Request body msgspec.Struct (fast typed)."""
+
+    data: str
+
+
+def content_types_16_text_plain_not_accepted(
+    body: ContentTypes16TextPlainNotAcceptedBody,
+) -> Any:
+    """Handler for POST /data."""
+    return Response(content={"error": "Unsupported Media Type. Expected application/json"}, status_code=415)
+
+
+def create_app_content_types_16_text_plain_not_accepted() -> Spikard:
+    """App factory for fixture: 16_text_plain_not_accepted."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/data",
+        body_schema={"properties": {"data": {"type": "string"}}, "required": ["data"], "type": "object"},
+        parameter_schema=None,
+    )(content_types_16_text_plain_not_accepted)
+    return app
+
+
+def content_types_pdf_response_application_pdf() -> Any:
+    """Handler for GET /download/document.pdf."""
+    return Response(content="pdf_binary_data", status_code=200)
+
+
+def create_app_content_types_pdf_response_application_pdf() -> Spikard:
+    """App factory for fixture: PDF response - application/pdf."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/download/document.pdf", body_schema=None, parameter_schema=None)(
+        content_types_pdf_response_application_pdf
+    )
+    return app
+
+
+def content_types_20_content_length_mismatch(
+    body: dict[str, Any],
+    content_length: str | None = None,
+) -> Any:
+    """Handler for POST /data."""
+    return Response(content={"error": "Content-Length header does not match actual body size"}, status_code=400)
+
+
+def create_app_content_types_20_content_length_mismatch() -> Spikard:
+    """App factory for fixture: 20_content_length_mismatch."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/data",
+        body_schema={"properties": {"value": {"type": "string"}}, "type": "object"},
+        parameter_schema={
+            "properties": {"content_length": {"source": "header", "type": "string"}},
+            "required": [],
+            "type": "object",
+        },
+    )(content_types_20_content_length_mismatch)
+    return app
+
+
+class ContentTypes17VendorJsonAcceptedBody(TypedDict):
+    """Request body type (TypedDict - runtime is dict)."""
+
+    data: str
+
+
+def content_types_17_vendor_json_accepted(
+    body: ContentTypes17VendorJsonAcceptedBody,
+) -> Any:
+    """Handler for POST /api/v1/resource."""
+    return Response(content={"data": "value"}, status_code=201)
+
+
+def create_app_content_types_17_vendor_json_accepted() -> Spikard:
+    """App factory for fixture: 17_vendor_json_accepted."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/api/v1/resource",
+        body_schema={"properties": {"data": {"type": "string"}}, "required": ["data"], "type": "object"},
+        parameter_schema=None,
+    )(content_types_17_vendor_json_accepted)
+    return app
+
+
+@dataclass
+class ContentTypes13JsonWithCharsetUtf16Body:
+    """Request body dataclass."""
+
+    value: str | None = None
+
+
+def content_types_13_json_with_charset_utf16(
+    body: ContentTypes13JsonWithCharsetUtf16Body,
+) -> Any:
+    """Handler for POST /data."""
+    return Response(
+        content={"error": "Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported."}, status_code=415
+    )
+
+
+def create_app_content_types_13_json_with_charset_utf16() -> Spikard:
+    """App factory for fixture: 13_json_with_charset_utf16."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/data",
+        body_schema={"properties": {"value": {"type": "string"}}, "type": "object"},
+        parameter_schema=None,
+    )(content_types_13_json_with_charset_utf16)
+    return app
+
+
+def content_types_json_response_application_json() -> Any:
+    """Handler for GET /items/json."""
+    return Response(content={"name": "Item", "price": 42.0}, status_code=200)
+
+
+def create_app_content_types_json_response_application_json() -> Spikard:
+    """App factory for fixture: JSON response - application/json."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/items/json", body_schema=None, parameter_schema=None)(
+        content_types_json_response_application_json
+    )
+    return app
+
+
+def content_types_15_multipart_boundary_required() -> Any:
+    """Handler for POST /upload."""
+    return Response(content={"error": "multipart/form-data requires 'boundary' parameter"}, status_code=400)
+
+
+def create_app_content_types_15_multipart_boundary_required() -> Spikard:
+    """App factory for fixture: 15_multipart_boundary_required."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST", "/upload", body_schema=None, parameter_schema={"properties": {}, "required": [], "type": "object"}
+    )(content_types_15_multipart_boundary_required)
+    return app
+
+
+def content_types_content_negotiation_accept_header(
+    id: str,
+) -> Any:
+    """Handler for GET /accept-test/{id}."""
+    return Response(content={"id": 1, "name": "Item"}, status_code=200)
+
+
+def create_app_content_types_content_negotiation_accept_header() -> Spikard:
+    """App factory for fixture: Content negotiation - Accept header."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/accept-test/{id}",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"id": {"source": "path", "type": "string"}},
+            "required": ["id"],
+            "type": "object",
+        },
+    )(content_types_content_negotiation_accept_header)
+    return app
+
+
+def content_types_html_response_text_html() -> Any:
+    """Handler for GET /html."""
+    return Response(content="<html><body><h1>Hello</h1></body></html>", status_code=200)
+
+
+def create_app_content_types_html_response_text_html() -> Spikard:
+    """App factory for fixture: HTML response - text/html."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/html", body_schema=None, parameter_schema=None)(content_types_html_response_text_html)
+    return app
+
+
+def content_types_jpeg_image_response_image_jpeg() -> Any:
+    """Handler for GET /images/photo.jpg."""
+    return Response(content="jpeg_binary_data", status_code=200)
+
+
+def create_app_content_types_jpeg_image_response_image_jpeg() -> Spikard:
+    """App factory for fixture: JPEG image response - image/jpeg."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/images/photo.jpg", body_schema=None, parameter_schema=None)(
+        content_types_jpeg_image_response_image_jpeg
+    )
+    return app
+
+
+@dataclass
+class ContentTypes19MissingContentTypeDefaultJsonBody:
+    """Request body dataclass."""
+
+    name: str
+
+
+def content_types_19_missing_content_type_default_json(
+    body: ContentTypes19MissingContentTypeDefaultJsonBody,
+) -> Any:
+    """Handler for POST /data."""
+    return Response(content={"name": "test"}, status_code=201)
+
+
+def create_app_content_types_19_missing_content_type_default_json() -> Spikard:
+    """App factory for fixture: 19_missing_content_type_default_json."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/data",
+        body_schema={"properties": {"name": {"type": "string"}}, "required": ["name"], "type": "object"},
+        parameter_schema=None,
+    )(content_types_19_missing_content_type_default_json)
+    return app
+
+
+def content_types_png_image_response_image_png() -> Any:
+    """Handler for GET /images/logo.png."""
+    return Response(content="png_binary_data", status_code=200)
+
+
+def create_app_content_types_png_image_response_image_png() -> Spikard:
+    """App factory for fixture: PNG image response - image/png."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/images/logo.png", body_schema=None, parameter_schema=None)(
+        content_types_png_image_response_image_png
+    )
+    return app
+
+
+def content_types_plain_text_response_text_plain() -> Any:
+    """Handler for GET /text."""
+    return Response(content="Hello, World!", status_code=200)
+
+
+def create_app_content_types_plain_text_response_text_plain() -> Spikard:
+    """App factory for fixture: Plain text response - text/plain."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/text", body_schema=None, parameter_schema=None)(
+        content_types_plain_text_response_text_plain
+    )
+    return app
+
+
+class ContentTypes18ContentTypeWithMultipleParamsBody(BaseModel):
+    """Request body Pydantic model."""
+
+    value: str | None = None
+
+
+def content_types_18_content_type_with_multiple_params(
+    body: ContentTypes18ContentTypeWithMultipleParamsBody,
+) -> Any:
+    """Handler for POST /data."""
+    return Response(content={"value": "test"}, status_code=201)
+
+
+def create_app_content_types_18_content_type_with_multiple_params() -> Spikard:
+    """App factory for fixture: 18_content_type_with_multiple_params."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/data",
+        body_schema={"properties": {"value": {"type": "string"}}, "type": "object"},
+        parameter_schema=None,
+    )(content_types_18_content_type_with_multiple_params)
+    return app
+
+
+def content_types_csv_response_text_csv() -> Any:
+    """Handler for GET /export/data.csv."""
+    return Response(content="id,name,price\n1,Item A,10.0\n2,Item B,20.0", status_code=200)
+
+
+def create_app_content_types_csv_response_text_csv() -> Spikard:
+    """App factory for fixture: CSV response - text/csv."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/export/data.csv", body_schema=None, parameter_schema=None)(
+        content_types_csv_response_text_csv
+    )
+    return app
+
+
+def content_types_binary_response_application_octet_stream() -> Any:
+    """Handler for GET /download/file.bin."""
+    return Response(content="binary_data_placeholder", status_code=200)
+
+
+def create_app_content_types_binary_response_application_octet_stream() -> Spikard:
+    """App factory for fixture: Binary response - application/octet-stream."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/download/file.bin", body_schema=None, parameter_schema=None)(
+        content_types_binary_response_application_octet_stream
+    )
+    return app
+
+
+def cookies_25_cookie_samesite_lax(
+    tracking: str,
+) -> Any:
+    """Handler for GET /data."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if tracking is not None:
+        result["tracking"] = tracking
+    return result
+
+
+def create_app_cookies_25_cookie_samesite_lax() -> Spikard:
+    """App factory for fixture: 25_cookie_samesite_lax."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/data",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"tracking": {"samesite": "Lax", "source": "cookie", "type": "string"}},
+            "required": ["tracking"],
+            "type": "object",
+        },
+    )(cookies_25_cookie_samesite_lax)
+    return app
+
+
+def cookies_optional_cookie_parameter_success(
+    ads_id: str | None = None,
+) -> Any:
+    """Handler for GET /items/."""
+    return Response(content={"ads_id": "abc123"}, status_code=200)
+
+
+def create_app_cookies_optional_cookie_parameter_success() -> Spikard:
+    """App factory for fixture: Optional cookie parameter - success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items/",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"ads_id": {"source": "cookie", "type": "string"}},
+            "required": [],
+            "type": "object",
+        },
+    )(cookies_optional_cookie_parameter_success)
+    return app
+
+
+def cookies_cookie_regex_pattern_validation_fail(
+    tracking_id: str,
+) -> Any:
+    """Handler for GET /cookies/pattern."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if tracking_id is not None:
+        result["tracking_id"] = tracking_id
+    return result
+
+
+def create_app_cookies_cookie_regex_pattern_validation_fail() -> Spikard:
+    """App factory for fixture: Cookie regex pattern validation - fail."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/cookies/pattern",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"tracking_id": {"pattern": "^[A-Z0-9]{8}$", "source": "cookie", "type": "string"}},
+            "required": ["tracking_id"],
+            "type": "object",
+        },
+    )(cookies_cookie_regex_pattern_validation_fail)
+    return app
+
+
+class CookiesResponseSessionCookieNoMaxAgeBody(NamedTuple):
+    """Request body NamedTuple (immutable)."""
+
+    value: str
+
+
+def cookies_response_session_cookie_no_max_age(
+    body: CookiesResponseSessionCookieNoMaxAgeBody,
+) -> Any:
+    """Handler for POST /cookies/session."""
+    return Response(content={"message": "Session cookie set"}, status_code=200)
+
+
+def create_app_cookies_response_session_cookie_no_max_age() -> Spikard:
+    """App factory for fixture: Response - session cookie (no max_age)."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/cookies/session",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {"value": {"type": "string"}},
+            "required": ["value"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(cookies_response_session_cookie_no_max_age)
+    return app
+
+
+def cookies_27_cookie_httponly_flag(
+    session: str,
+) -> Any:
+    """Handler for GET /secure."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if session is not None:
+        result["session"] = session
+    return result
+
+
+def create_app_cookies_27_cookie_httponly_flag() -> Spikard:
+    """App factory for fixture: 27_cookie_httponly_flag."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/secure",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"session": {"httponly": True, "source": "cookie", "type": "string"}},
+            "required": ["session"],
+            "type": "object",
+        },
+    )(cookies_27_cookie_httponly_flag)
+    return app
+
+
+def cookies_response_cookie_with_attributes() -> Any:
+    """Handler for GET /cookie/set."""
+    return Response(content={"message": "Cookie set"}, status_code=200)
+
+
+def create_app_cookies_response_cookie_with_attributes() -> Spikard:
+    """App factory for fixture: Response cookie with attributes."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("GET", "/cookie/set", body_schema=None, parameter_schema=None)(
+        cookies_response_cookie_with_attributes
+    )
+    return app
+
+
+def cookies_24_cookie_samesite_strict(
+    session_id: str,
+) -> Any:
+    """Handler for GET /secure."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if session_id is not None:
+        result["session_id"] = session_id
+    return result
+
+
+def create_app_cookies_24_cookie_samesite_strict() -> Spikard:
+    """App factory for fixture: 24_cookie_samesite_strict."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/secure",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"session_id": {"samesite": "Strict", "source": "cookie", "type": "string"}},
+            "required": ["session_id"],
+            "type": "object",
+        },
+    )(cookies_24_cookie_samesite_strict)
+    return app
+
+
+def cookies_apikey_cookie_authentication_success(
+    key: str | None = None,
+) -> Any:
+    """Handler for GET /users/me."""
+    return Response(content={"username": "secret"}, status_code=200)
+
+
+def create_app_cookies_apikey_cookie_authentication_success() -> Spikard:
+    """App factory for fixture: APIKey cookie authentication - success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/users/me",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"key": {"source": "cookie", "type": "string"}},
+            "required": [],
+            "type": "object",
+        },
+    )(cookies_apikey_cookie_authentication_success)
+    return app
+
+
+def cookies_cookie_validation_min_length_constraint_success(
+    token: str | None = None,
+) -> Any:
+    """Handler for GET /cookies/min-length."""
+    return Response(content={"token": "abc"}, status_code=200)
+
+
+def create_app_cookies_cookie_validation_min_length_constraint_success() -> Spikard:
+    """App factory for fixture: Cookie validation - min_length constraint success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/cookies/min-length",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"token": {"source": "cookie", "type": "string"}},
+            "required": [],
+            "type": "object",
+        },
+    )(cookies_cookie_validation_min_length_constraint_success)
+    return app
+
+
+def cookies_cookie_validation_min_length_failure(
+    tracking_id: str,
+) -> Any:
+    """Handler for GET /items/."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if tracking_id is not None:
+        result["tracking_id"] = tracking_id
+    return result
+
+
+def create_app_cookies_cookie_validation_min_length_failure() -> Spikard:
+    """App factory for fixture: Cookie validation - min_length failure."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items/",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"tracking_id": {"minLength": 3, "source": "cookie", "type": "string"}},
+            "required": ["tracking_id"],
+            "type": "object",
+        },
+    )(cookies_cookie_validation_min_length_failure)
+    return app
+
+
+def cookies_cookie_validation_max_length_constraint_fail(
+    session_id: str,
+) -> Any:
+    """Handler for GET /cookies/validated."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if session_id is not None:
+        result["session_id"] = session_id
+    return result
+
+
+def create_app_cookies_cookie_validation_max_length_constraint_fail() -> Spikard:
+    """App factory for fixture: Cookie validation - max_length constraint fail."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/cookies/validated",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"session_id": {"maxLength": 20, "source": "cookie", "type": "string"}},
+            "required": ["session_id"],
+            "type": "object",
+        },
+    )(cookies_cookie_validation_max_length_constraint_fail)
+    return app
+
+
+def cookies_required_cookie_missing(
+    session_id: str,
+    fatebook_tracker: str | None = None,
+) -> Any:
+    """Handler for GET /items/cookies."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if fatebook_tracker is not None:
+        result["fatebook_tracker"] = fatebook_tracker
+    if session_id is not None:
+        result["session_id"] = session_id
+    return result
+
+
+def create_app_cookies_required_cookie_missing() -> Spikard:
+    """App factory for fixture: Required cookie - missing."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items/cookies",
+        body_schema=None,
+        parameter_schema={
+            "properties": {
+                "fatebook_tracker": {"source": "cookie", "type": "string"},
+                "session_id": {"source": "cookie", "type": "string"},
+            },
+            "required": ["session_id"],
+            "type": "object",
+        },
+    )(cookies_required_cookie_missing)
+    return app
+
+
+def cookies_optional_cookie_parameter_missing(
+    ads_id: str | None = None,
+) -> Any:
+    """Handler for GET /items/."""
+    return Response(content={"ads_id": None}, status_code=200)
+
+
+def create_app_cookies_optional_cookie_parameter_missing() -> Spikard:
+    """App factory for fixture: Optional cookie parameter - missing."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items/",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"ads_id": {"source": "cookie", "type": "string"}},
+            "required": [],
+            "type": "object",
+        },
+    )(cookies_optional_cookie_parameter_missing)
+    return app
+
+
+def cookies_apikey_cookie_authentication_missing(
+    key: str,
+) -> Any:
+    """Handler for GET /users/me/auth."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if key is not None:
+        result["key"] = key
+    return result
+
+
+def create_app_cookies_apikey_cookie_authentication_missing() -> Spikard:
+    """App factory for fixture: APIKey cookie authentication - missing."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/users/me/auth",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"key": {"source": "cookie", "type": "string"}},
+            "required": ["key"],
+            "type": "object",
+        },
+    )(cookies_apikey_cookie_authentication_missing)
+    return app
+
+
+@dataclass
+class CookiesResponseMultipleCookiesBody:
+    """Request body dataclass."""
+
+    session: str
+    user: str
+
+
+def cookies_response_multiple_cookies(
+    body: CookiesResponseMultipleCookiesBody,
+) -> Any:
+    """Handler for POST /cookies/multiple."""
+    return Response(content={"message": "Multiple cookies set"}, status_code=200)
+
+
+def create_app_cookies_response_multiple_cookies() -> Spikard:
+    """App factory for fixture: Response - multiple cookies."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/cookies/multiple",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {"session": {"type": "string"}, "user": {"type": "string"}},
+            "required": ["user", "session"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(cookies_response_multiple_cookies)
+    return app
+
+
+class CookiesResponseCookieWithSamesiteLaxBody(NamedTuple):
+    """Request body NamedTuple (immutable)."""
+
+    value: str
+
+
+def cookies_response_cookie_with_samesite_lax(
+    body: CookiesResponseCookieWithSamesiteLaxBody,
+) -> Any:
+    """Handler for POST /cookies/samesite-lax."""
+    return Response(content={"message": "Cookie set with SameSite=Lax"}, status_code=200)
+
+
+def create_app_cookies_response_cookie_with_samesite_lax() -> Spikard:
+    """App factory for fixture: Response cookie with SameSite=Lax."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/cookies/samesite-lax",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {"value": {"type": "string"}},
+            "required": ["value"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(cookies_response_cookie_with_samesite_lax)
+    return app
+
+
+def cookies_response_delete_cookie(
+    session: str | None = None,
+) -> Any:
+    """Handler for POST /cookies/delete."""
+    return Response(content={"message": "Cookie deleted"}, status_code=200)
+
+
+def create_app_cookies_response_delete_cookie() -> Spikard:
+    """App factory for fixture: Response - delete cookie."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/cookies/delete",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"session": {"source": "cookie", "type": "string"}},
+            "required": [],
+            "type": "object",
+        },
+    )(cookies_response_delete_cookie)
+    return app
+
+
+class CookiesResponseCookieWithPathAttributeBody(BaseModel):
+    """Request body Pydantic model."""
+
+    value: str
+
+
+def cookies_response_cookie_with_path_attribute(
+    body: CookiesResponseCookieWithPathAttributeBody,
+) -> Any:
+    """Handler for POST /cookies/set-with-path."""
+    return Response(content={"message": "Cookie set with path"}, status_code=200)
+
+
+def create_app_cookies_response_cookie_with_path_attribute() -> Spikard:
+    """App factory for fixture: Response cookie with path attribute."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/cookies/set-with-path",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {"value": {"type": "string"}},
+            "required": ["value"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(cookies_response_cookie_with_path_attribute)
+    return app
+
+
+def cookies_optional_apikey_cookie_missing(
+    key: str | None = None,
+) -> Any:
+    """Handler for GET /users/me."""
+    return Response(content={"msg": "Create an account first"}, status_code=200)
+
+
+def create_app_cookies_optional_apikey_cookie_missing() -> Spikard:
+    """App factory for fixture: Optional APIKey cookie - missing."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/users/me",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"key": {"source": "cookie", "type": "string"}},
+            "required": [],
+            "type": "object",
+        },
+    )(cookies_optional_apikey_cookie_missing)
+    return app
+
+
+class CookiesResponseCookieWithSamesiteStrictBody(TypedDict):
+    """Request body type (TypedDict - runtime is dict)."""
+
+    value: str
+
+
+def cookies_response_cookie_with_samesite_strict(
+    body: CookiesResponseCookieWithSamesiteStrictBody,
+) -> Any:
+    """Handler for POST /cookies/samesite-strict."""
+    return Response(content={"message": "Cookie set with SameSite=Strict"}, status_code=200)
+
+
+def create_app_cookies_response_cookie_with_samesite_strict() -> Spikard:
+    """App factory for fixture: Response cookie with SameSite=Strict."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/cookies/samesite-strict",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {"value": {"type": "string"}},
+            "required": ["value"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(cookies_response_cookie_with_samesite_strict)
+    return app
+
+
+@dataclass
+class CookiesResponseCookieWithSamesiteNoneBody:
+    """Request body dataclass."""
+
+    value: str
+
+
+def cookies_response_cookie_with_samesite_none(
+    body: CookiesResponseCookieWithSamesiteNoneBody,
+) -> Any:
+    """Handler for POST /cookies/samesite-none."""
+    return Response(content={"message": "Cookie set with SameSite=None"}, status_code=200)
+
+
+def create_app_cookies_response_cookie_with_samesite_none() -> Spikard:
+    """App factory for fixture: Response cookie with SameSite=None."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/cookies/samesite-none",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {"value": {"type": "string"}},
+            "required": ["value"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(cookies_response_cookie_with_samesite_none)
+    return app
+
+
+def cookies_cookie_regex_pattern_validation_success(
+    tracking_id: str | None = None,
+) -> Any:
+    """Handler for GET /cookies/pattern."""
+    return Response(content={"tracking_id": "ABC12345"}, status_code=200)
+
+
+def create_app_cookies_cookie_regex_pattern_validation_success() -> Spikard:
+    """App factory for fixture: Cookie regex pattern validation - success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/cookies/pattern",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"tracking_id": {"source": "cookie", "type": "string"}},
+            "required": [],
+            "type": "object",
+        },
+    )(cookies_cookie_regex_pattern_validation_success)
+    return app
+
+
+def cookies_response_set_cookie_basic() -> Any:
+    """Handler for POST /cookie/."""
+    return Response(content={"message": "Come to the dark side, we have cookies"}, status_code=200)
+
+
+def create_app_cookies_response_set_cookie_basic() -> Spikard:
+    """App factory for fixture: Response set cookie - basic."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route("POST", "/cookie/", body_schema=None, parameter_schema=None)(cookies_response_set_cookie_basic)
+    return app
+
+
+def cookies_multiple_cookies_success(
+    fatebook_tracker: str | None = None,
+    googall_tracker: str | None = None,
+    session_id: str | None = None,
+) -> Any:
+    """Handler for GET /items/."""
+    return Response(
+        content={"fatebook_tracker": "tracker456", "googall_tracker": "ga789", "session_id": "session123"},
+        status_code=200,
+    )
+
+
+def create_app_cookies_multiple_cookies_success() -> Spikard:
+    """App factory for fixture: Multiple cookies - success."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/items/",
+        body_schema=None,
+        parameter_schema={
+            "properties": {
+                "fatebook_tracker": {"source": "cookie", "type": "string"},
+                "googall_tracker": {"source": "cookie", "type": "string"},
+                "session_id": {"source": "cookie", "type": "string"},
+            },
+            "required": [],
+            "type": "object",
+        },
+    )(cookies_multiple_cookies_success)
+    return app
+
+
+def cookies_26_cookie_secure_flag(
+    auth_token: str,
+) -> Any:
+    """Handler for GET /secure."""
+    # Echo back parameters for testing
+    result: dict[str, Any] = {}
+    if auth_token is not None:
+        result["auth_token"] = auth_token
+    return result
+
+
+def create_app_cookies_26_cookie_secure_flag() -> Spikard:
+    """App factory for fixture: 26_cookie_secure_flag."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "GET",
+        "/secure",
+        body_schema=None,
+        parameter_schema={
+            "properties": {"auth_token": {"secure": True, "source": "cookie", "type": "string"}},
+            "required": ["auth_token"],
+            "type": "object",
+        },
+    )(cookies_26_cookie_secure_flag)
+    return app
+
+
+class CookiesResponseCookieWithDomainAttributeBody(TypedDict):
+    """Request body type (TypedDict - runtime is dict)."""
+
+    value: str
+
+
+def cookies_response_cookie_with_domain_attribute(
+    body: CookiesResponseCookieWithDomainAttributeBody,
+) -> Any:
+    """Handler for POST /cookies/set-with-domain."""
+    return Response(content={"message": "Cookie set with domain"}, status_code=200)
+
+
+def create_app_cookies_response_cookie_with_domain_attribute() -> Spikard:
+    """App factory for fixture: Response cookie with domain attribute."""
+    app = Spikard()
+    # Register handler with this app instance
+    app.register_route(
+        "POST",
+        "/cookies/set-with-domain",
+        body_schema={
+            "additionalProperties": False,
+            "properties": {"value": {"type": "string"}},
+            "required": ["value"],
+            "type": "object",
+        },
+        parameter_schema=None,
+    )(cookies_response_cookie_with_domain_attribute)
+    return app
+
+
 # App factory functions:
+# - create_app_status_codes_408_request_timeout() for status_codes / 408 Request Timeout
+# - create_app_status_codes_404_not_found_resource_not_found() for status_codes / 404 Not Found - Resource not found
+# - create_app_status_codes_503_service_unavailable_server_overload() for status_codes / 503 Service Unavailable - Server overload
+# - create_app_status_codes_422_unprocessable_entity_validation_error() for status_codes / 422 Unprocessable Entity - Validation error
+# - create_app_status_codes_302_found_temporary_redirect() for status_codes / 302 Found - Temporary redirect
+# - create_app_status_codes_304_not_modified_cached_content_valid() for status_codes / 304 Not Modified - Cached content valid
+# - create_app_status_codes_400_bad_request_invalid_request() for status_codes / 400 Bad Request - Invalid request
+# - create_app_status_codes_22_501_not_implemented() for status_codes / 22_501_not_implemented
+# - create_app_status_codes_204_no_content_success_with_no_body() for status_codes / 204 No Content - Success with no body
+# - create_app_status_codes_301_moved_permanently_permanent_redirect() for status_codes / 301 Moved Permanently - Permanent redirect
+# - create_app_status_codes_201_created_resource_created() for status_codes / 201 Created - Resource created
+# - create_app_status_codes_202_accepted_request_accepted_for_processing() for status_codes / 202 Accepted - Request accepted for processing
+# - create_app_status_codes_307_temporary_redirect_method_preserved() for status_codes / 307 Temporary Redirect - Method preserved
+# - create_app_status_codes_500_internal_server_error_server_error() for status_codes / 500 Internal Server Error - Server error
+# - create_app_status_codes_20_414_uri_too_long() for status_codes / 20_414_uri_too_long
+# - create_app_status_codes_401_unauthorized_missing_authentication() for status_codes / 401 Unauthorized - Missing authentication
+# - create_app_status_codes_23_503_service_unavailable() for status_codes / 23_503_service_unavailable
+# - create_app_status_codes_19_413_payload_too_large() for status_codes / 19_413_payload_too_large
+# - create_app_status_codes_403_forbidden_insufficient_permissions() for status_codes / 403 Forbidden - Insufficient permissions
+# - create_app_status_codes_21_431_request_header_fields_too_large() for status_codes / 21_431_request_header_fields_too_large
+# - create_app_status_codes_429_too_many_requests() for status_codes / 429 Too Many Requests
+# - create_app_status_codes_200_ok_success() for status_codes / 200 OK - Success
+# - create_app_status_codes_206_partial_content() for status_codes / 206 Partial Content
+# - create_app_path_params_boolean_path_parameter_true() for path_params / Boolean path parameter - True
+# - create_app_path_params_29_decimal_path_param_success() for path_params / 29_decimal_path_param_success
+# - create_app_path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success() for path_params / Integer path parameter with combined lt and gt constraints - success
+# - create_app_path_params_33_string_pattern_path_success() for path_params / 33_string_pattern_path_success
+# - create_app_path_params_31_string_minlength_path_failure() for path_params / 31_string_minlength_path_failure
+# - create_app_path_params_35_negative_integer_path_param() for path_params / 35_negative_integer_path_param
+# - create_app_path_params_enum_path_parameter_invalid_value() for path_params / Enum path parameter - invalid value
+# - create_app_path_params_27_datetime_format_path_param_success() for path_params / 27_datetime_format_path_param_success
+# - create_app_path_params_25_date_format_invalid_failure() for path_params / 25_date_format_invalid_failure
+# - create_app_path_params_integer_path_parameter_with_lt_constraint_success() for path_params / Integer path parameter with lt constraint - success
+# - create_app_path_params_integer_path_parameter_with_gt_constraint_success() for path_params / Integer path parameter with gt constraint - success
+# - create_app_path_params_28_duration_format_path_param_success() for path_params / 28_duration_format_path_param_success
+# - create_app_path_params_path_parameter_type_syntax_with_override() for path_params / Path parameter type syntax with override
+# - create_app_path_params_20_uuid_v3_path_param_success() for path_params / 20_uuid_v3_path_param_success
+# - create_app_path_params_integer_path_parameter_invalid_string() for path_params / Integer path parameter - invalid string
+# - create_app_path_params_30_string_minlength_path_success() for path_params / 30_string_minlength_path_success
+# - create_app_path_params_integer_path_parameter_with_le_constraint_success() for path_params / Integer path parameter with le constraint - success
+# - create_app_path_params_path_parameter_type_syntax_invalid_uuid() for path_params / Path parameter type syntax - invalid UUID
+# - create_app_path_params_path_type_parameter_file_path() for path_params / Path type parameter - file path
+# - create_app_path_params_path_parameter_with_type_syntax_uuid() for path_params / Path parameter with type syntax - UUID
+# - create_app_path_params_32_string_maxlength_path_failure() for path_params / 32_string_maxlength_path_failure
+# - create_app_path_params_integer_path_parameter_success() for path_params / Integer path parameter - success
+# - create_app_path_params_34_string_pattern_path_failure() for path_params / 34_string_pattern_path_failure
+# - create_app_path_params_21_uuid_v5_path_param_success() for path_params / 21_uuid_v5_path_param_success
+# - create_app_path_params_string_path_parameter_with_max_length_failure() for path_params / String path parameter with max_length - failure
+# - create_app_path_params_string_path_parameter_with_min_length_failure() for path_params / String path parameter with min_length - failure
+# - create_app_path_params_multiple_path_parameters_success() for path_params / Multiple path parameters - success
+# - create_app_path_params_date_path_parameter_success() for path_params / Date path parameter - success
+# - create_app_path_params_integer_path_parameter_with_gt_constraint_failure() for path_params / Integer path parameter with gt constraint - failure
+# - create_app_path_params_24_date_format_path_param_success() for path_params / 24_date_format_path_param_success
+# - create_app_path_params_float_path_parameter_success() for path_params / Float path parameter - success
+# - create_app_path_params_path_parameter_with_type_syntax_integer() for path_params / Path parameter with type syntax - integer
+# - create_app_path_params_string_path_parameter_success() for path_params / String path parameter - success
+# - create_app_path_params_uuid_path_parameter_success() for path_params / UUID path parameter - success
+# - create_app_path_params_integer_path_parameter_with_ge_constraint_success() for path_params / Integer path parameter with ge constraint - success
+# - create_app_path_params_enum_path_parameter_success() for path_params / Enum path parameter - success
+# - create_app_path_params_boolean_path_parameter_numeric_1() for path_params / Boolean path parameter - numeric 1
 # - create_app_query_params_string_validation_with_regex_success() for query_params / String validation with regex - success
 # - create_app_query_params_49_integer_gt_constraint_success() for query_params / 49_integer_gt_constraint_success
 # - create_app_query_params_enum_query_parameter_invalid_value() for query_params / Enum query parameter - invalid value
@@ -10553,6 +10613,48 @@ def create_app_json_bodies_array_of_objects_success() -> Spikard:
 # - create_app_query_params_54_array_minitems_constraint_success() for query_params / 54_array_minitems_constraint_success
 # - create_app_query_params_55_array_minitems_constraint_failure() for query_params / 55_array_minitems_constraint_failure
 # - create_app_query_params_60_format_ipv4_success() for query_params / 60_format_ipv4_success
+# - create_app_url_encoded_simple_form_submission_success() for url_encoded / Simple form submission - success
+# - create_app_url_encoded_15_special_characters_field_names() for url_encoded / 15_special_characters_field_names
+# - create_app_url_encoded_pattern_validation_fail() for url_encoded / Pattern validation - fail
+# - create_app_url_encoded_22_additional_properties_strict_failure() for url_encoded / 22_additional_properties_strict_failure
+# - create_app_url_encoded_17_pattern_validation_failure() for url_encoded / 17_pattern_validation_failure
+# - create_app_url_encoded_20_format_email_validation_failure() for url_encoded / 20_format_email_validation_failure
+# - create_app_url_encoded_multiple_values_for_same_field() for url_encoded / Multiple values for same field
+# - create_app_url_encoded_required_field_missing_validation_error() for url_encoded / Required field missing - validation error
+# - create_app_url_encoded_13_array_field_success() for url_encoded / 13_array_field_success
+# - create_app_url_encoded_numeric_field_type_conversion() for url_encoded / Numeric field type conversion
+# - create_app_url_encoded_special_characters_encoding() for url_encoded / Special characters encoding
+# - create_app_url_encoded_boolean_field_conversion() for url_encoded / Boolean field conversion
+# - create_app_url_encoded_empty_string_value() for url_encoded / Empty string value
+# - create_app_url_encoded_oauth2_password_grant_flow() for url_encoded / OAuth2 password grant flow
+# - create_app_url_encoded_19_array_minitems_validation_failure() for url_encoded / 19_array_minitems_validation_failure
+# - create_app_url_encoded_optional_field_missing_success() for url_encoded / Optional field missing - success
+# - create_app_url_encoded_14_nested_object_bracket_notation() for url_encoded / 14_nested_object_bracket_notation
+# - create_app_url_encoded_string_max_length_validation_fail() for url_encoded / String max_length validation - fail
+# - create_app_url_encoded_18_integer_minimum_validation_failure() for url_encoded / 18_integer_minimum_validation_failure
+# - create_app_url_encoded_21_integer_type_coercion_failure() for url_encoded / 21_integer_type_coercion_failure
+# - create_app_url_encoded_16_minlength_validation_failure() for url_encoded / 16_minlength_validation_failure
+# - create_app_url_encoded_string_min_length_validation_fail() for url_encoded / String min_length validation - fail
+# - create_app_edge_cases_19_emoji_in_strings() for edge_cases / 19_emoji_in_strings
+# - create_app_edge_cases_12_percent_encoded_special_chars() for edge_cases / 12_percent_encoded_special_chars
+# - create_app_edge_cases_special_string_values_and_escaping() for edge_cases / Special string values and escaping
+# - create_app_edge_cases_15_float_precision_preservation() for edge_cases / 15_float_precision_preservation
+# - create_app_edge_cases_13_empty_string_query_param_preserved() for edge_cases / 13_empty_string_query_param_preserved
+# - create_app_edge_cases_24_array_with_holes() for edge_cases / 24_array_with_holes
+# - create_app_edge_cases_21_scientific_notation_number() for edge_cases / 21_scientific_notation_number
+# - create_app_edge_cases_float_precision_and_rounding() for edge_cases / Float precision and rounding
+# - create_app_edge_cases_unicode_and_emoji_handling() for edge_cases / Unicode and emoji handling
+# - create_app_edge_cases_17_extremely_long_string() for edge_cases / 17_extremely_long_string
+# - create_app_edge_cases_11_utf8_query_parameter() for edge_cases / 11_utf8_query_parameter
+# - create_app_edge_cases_18_unicode_normalization() for edge_cases / 18_unicode_normalization
+# - create_app_edge_cases_20_null_byte_in_string() for edge_cases / 20_null_byte_in_string
+# - create_app_edge_cases_23_deeply_nested_json_limit() for edge_cases / 23_deeply_nested_json_limit
+# - create_app_edge_cases_14_large_integer_boundary() for edge_cases / 14_large_integer_boundary
+# - create_app_edge_cases_22_leading_zeros_integer() for edge_cases / 22_leading_zeros_integer
+# - create_app_edge_cases_large_integer_boundary_values() for edge_cases / Large integer boundary values
+# - create_app_edge_cases_deeply_nested_structure_10_levels() for edge_cases / Deeply nested structure (10+ levels)
+# - create_app_edge_cases_empty_and_null_value_handling() for edge_cases / Empty and null value handling
+# - create_app_edge_cases_16_negative_zero_handling() for edge_cases / 16_negative_zero_handling
 # - create_app_headers_header_regex_validation_success() for headers / Header regex validation - success
 # - create_app_headers_33_api_key_header_valid() for headers / 33_api_key_header_valid
 # - create_app_headers_content_type_header_application_json() for headers / Content-Type header - application/json
@@ -10585,86 +10687,6 @@ def create_app_json_bodies_array_of_objects_success() -> Spikard:
 # - create_app_headers_header_with_underscore_conversion_explicit() for headers / Header with underscore conversion - explicit
 # - create_app_headers_header_case_insensitivity_access() for headers / Header case insensitivity - access
 # - create_app_headers_user_agent_header_custom_value() for headers / User-Agent header - custom value
-# - create_app_cookies_25_cookie_samesite_lax() for cookies / 25_cookie_samesite_lax
-# - create_app_cookies_optional_cookie_parameter_success() for cookies / Optional cookie parameter - success
-# - create_app_cookies_cookie_regex_pattern_validation_fail() for cookies / Cookie regex pattern validation - fail
-# - create_app_cookies_response_session_cookie_no_max_age() for cookies / Response - session cookie (no max_age)
-# - create_app_cookies_27_cookie_httponly_flag() for cookies / 27_cookie_httponly_flag
-# - create_app_cookies_response_cookie_with_attributes() for cookies / Response cookie with attributes
-# - create_app_cookies_24_cookie_samesite_strict() for cookies / 24_cookie_samesite_strict
-# - create_app_cookies_apikey_cookie_authentication_success() for cookies / APIKey cookie authentication - success
-# - create_app_cookies_cookie_validation_min_length_constraint_success() for cookies / Cookie validation - min_length constraint success
-# - create_app_cookies_cookie_validation_min_length_failure() for cookies / Cookie validation - min_length failure
-# - create_app_cookies_cookie_validation_max_length_constraint_fail() for cookies / Cookie validation - max_length constraint fail
-# - create_app_cookies_required_cookie_missing() for cookies / Required cookie - missing
-# - create_app_cookies_optional_cookie_parameter_missing() for cookies / Optional cookie parameter - missing
-# - create_app_cookies_apikey_cookie_authentication_missing() for cookies / APIKey cookie authentication - missing
-# - create_app_cookies_response_multiple_cookies() for cookies / Response - multiple cookies
-# - create_app_cookies_response_cookie_with_samesite_lax() for cookies / Response cookie with SameSite=Lax
-# - create_app_cookies_response_delete_cookie() for cookies / Response - delete cookie
-# - create_app_cookies_response_cookie_with_path_attribute() for cookies / Response cookie with path attribute
-# - create_app_cookies_optional_apikey_cookie_missing() for cookies / Optional APIKey cookie - missing
-# - create_app_cookies_response_cookie_with_samesite_strict() for cookies / Response cookie with SameSite=Strict
-# - create_app_cookies_response_cookie_with_samesite_none() for cookies / Response cookie with SameSite=None
-# - create_app_cookies_cookie_regex_pattern_validation_success() for cookies / Cookie regex pattern validation - success
-# - create_app_cookies_response_set_cookie_basic() for cookies / Response set cookie - basic
-# - create_app_cookies_multiple_cookies_success() for cookies / Multiple cookies - success
-# - create_app_cookies_26_cookie_secure_flag() for cookies / 26_cookie_secure_flag
-# - create_app_cookies_response_cookie_with_domain_attribute() for cookies / Response cookie with domain attribute
-# - create_app_content_types_415_unsupported_media_type() for content_types / 415 Unsupported Media Type
-# - create_app_content_types_xml_response_application_xml() for content_types / XML response - application/xml
-# - create_app_content_types_14_content_type_case_insensitive() for content_types / 14_content_type_case_insensitive
-# - create_app_content_types_json_with_utf_8_charset() for content_types / JSON with UTF-8 charset
-# - create_app_content_types_16_text_plain_not_accepted() for content_types / 16_text_plain_not_accepted
-# - create_app_content_types_pdf_response_application_pdf() for content_types / PDF response - application/pdf
-# - create_app_content_types_20_content_length_mismatch() for content_types / 20_content_length_mismatch
-# - create_app_content_types_17_vendor_json_accepted() for content_types / 17_vendor_json_accepted
-# - create_app_content_types_13_json_with_charset_utf16() for content_types / 13_json_with_charset_utf16
-# - create_app_content_types_json_response_application_json() for content_types / JSON response - application/json
-# - create_app_content_types_15_multipart_boundary_required() for content_types / 15_multipart_boundary_required
-# - create_app_content_types_content_negotiation_accept_header() for content_types / Content negotiation - Accept header
-# - create_app_content_types_html_response_text_html() for content_types / HTML response - text/html
-# - create_app_content_types_jpeg_image_response_image_jpeg() for content_types / JPEG image response - image/jpeg
-# - create_app_content_types_19_missing_content_type_default_json() for content_types / 19_missing_content_type_default_json
-# - create_app_content_types_png_image_response_image_png() for content_types / PNG image response - image/png
-# - create_app_content_types_plain_text_response_text_plain() for content_types / Plain text response - text/plain
-# - create_app_content_types_18_content_type_with_multiple_params() for content_types / 18_content_type_with_multiple_params
-# - create_app_content_types_csv_response_text_csv() for content_types / CSV response - text/csv
-# - create_app_content_types_binary_response_application_octet_stream() for content_types / Binary response - application/octet-stream
-# - create_app_http_methods_options_cors_preflight_request() for http_methods / OPTIONS - CORS preflight request
-# - create_app_http_methods_delete_remove_resource() for http_methods / DELETE - Remove resource
-# - create_app_http_methods_put_create_resource_if_doesn_t_exist() for http_methods / PUT - Create resource if doesn't exist
-# - create_app_http_methods_patch_update_multiple_fields() for http_methods / PATCH - Update multiple fields
-# - create_app_http_methods_put_validation_error() for http_methods / PUT - Validation error
-# - create_app_http_methods_head_get_metadata_without_body() for http_methods / HEAD - Get metadata without body
-# - create_app_http_methods_delete_with_response_body() for http_methods / DELETE - With response body
-# - create_app_http_methods_put_missing_required_field() for http_methods / PUT - Missing required field
-# - create_app_http_methods_patch_partial_update() for http_methods / PATCH - Partial update
-# - create_app_http_methods_delete_resource_not_found() for http_methods / DELETE - Resource not found
-# - create_app_http_methods_put_idempotent_operation() for http_methods / PUT - Idempotent operation
-# - create_app_http_methods_put_complete_resource_replacement() for http_methods / PUT - Complete resource replacement
-# - create_app_url_encoded_simple_form_submission_success() for url_encoded / Simple form submission - success
-# - create_app_url_encoded_15_special_characters_field_names() for url_encoded / 15_special_characters_field_names
-# - create_app_url_encoded_pattern_validation_fail() for url_encoded / Pattern validation - fail
-# - create_app_url_encoded_22_additional_properties_strict_failure() for url_encoded / 22_additional_properties_strict_failure
-# - create_app_url_encoded_17_pattern_validation_failure() for url_encoded / 17_pattern_validation_failure
-# - create_app_url_encoded_20_format_email_validation_failure() for url_encoded / 20_format_email_validation_failure
-# - create_app_url_encoded_multiple_values_for_same_field() for url_encoded / Multiple values for same field
-# - create_app_url_encoded_required_field_missing_validation_error() for url_encoded / Required field missing - validation error
-# - create_app_url_encoded_13_array_field_success() for url_encoded / 13_array_field_success
-# - create_app_url_encoded_numeric_field_type_conversion() for url_encoded / Numeric field type conversion
-# - create_app_url_encoded_special_characters_encoding() for url_encoded / Special characters encoding
-# - create_app_url_encoded_boolean_field_conversion() for url_encoded / Boolean field conversion
-# - create_app_url_encoded_empty_string_value() for url_encoded / Empty string value
-# - create_app_url_encoded_oauth2_password_grant_flow() for url_encoded / OAuth2 password grant flow
-# - create_app_url_encoded_19_array_minitems_validation_failure() for url_encoded / 19_array_minitems_validation_failure
-# - create_app_url_encoded_optional_field_missing_success() for url_encoded / Optional field missing - success
-# - create_app_url_encoded_14_nested_object_bracket_notation() for url_encoded / 14_nested_object_bracket_notation
-# - create_app_url_encoded_string_max_length_validation_fail() for url_encoded / String max_length validation - fail
-# - create_app_url_encoded_18_integer_minimum_validation_failure() for url_encoded / 18_integer_minimum_validation_failure
-# - create_app_url_encoded_21_integer_type_coercion_failure() for url_encoded / 21_integer_type_coercion_failure
-# - create_app_url_encoded_16_minlength_validation_failure() for url_encoded / 16_minlength_validation_failure
-# - create_app_url_encoded_string_min_length_validation_fail() for url_encoded / String min_length validation - fail
 # - create_app_multipart_multiple_values_for_same_field_name() for multipart / Multiple values for same field name
 # - create_app_multipart_19_file_mime_spoofing_png_as_jpeg() for multipart / 19_file_mime_spoofing_png_as_jpeg
 # - create_app_multipart_20_file_mime_spoofing_jpeg_as_png() for multipart / 20_file_mime_spoofing_jpeg_as_png
@@ -10687,108 +10709,18 @@ def create_app_json_bodies_array_of_objects_success() -> Spikard:
 # - create_app_multipart_file_upload_with_custom_headers() for multipart / File upload with custom headers
 # - create_app_multipart_required_file_upload_missing() for multipart / Required file upload - missing
 # - create_app_multipart_image_file_upload() for multipart / Image file upload
-# - create_app_edge_cases_19_emoji_in_strings() for edge_cases / 19_emoji_in_strings
-# - create_app_edge_cases_12_percent_encoded_special_chars() for edge_cases / 12_percent_encoded_special_chars
-# - create_app_edge_cases_special_string_values_and_escaping() for edge_cases / Special string values and escaping
-# - create_app_edge_cases_15_float_precision_preservation() for edge_cases / 15_float_precision_preservation
-# - create_app_edge_cases_13_empty_string_query_param_preserved() for edge_cases / 13_empty_string_query_param_preserved
-# - create_app_edge_cases_24_array_with_holes() for edge_cases / 24_array_with_holes
-# - create_app_edge_cases_21_scientific_notation_number() for edge_cases / 21_scientific_notation_number
-# - create_app_edge_cases_float_precision_and_rounding() for edge_cases / Float precision and rounding
-# - create_app_edge_cases_unicode_and_emoji_handling() for edge_cases / Unicode and emoji handling
-# - create_app_edge_cases_17_extremely_long_string() for edge_cases / 17_extremely_long_string
-# - create_app_edge_cases_11_utf8_query_parameter() for edge_cases / 11_utf8_query_parameter
-# - create_app_edge_cases_18_unicode_normalization() for edge_cases / 18_unicode_normalization
-# - create_app_edge_cases_20_null_byte_in_string() for edge_cases / 20_null_byte_in_string
-# - create_app_edge_cases_23_deeply_nested_json_limit() for edge_cases / 23_deeply_nested_json_limit
-# - create_app_edge_cases_14_large_integer_boundary() for edge_cases / 14_large_integer_boundary
-# - create_app_edge_cases_22_leading_zeros_integer() for edge_cases / 22_leading_zeros_integer
-# - create_app_edge_cases_large_integer_boundary_values() for edge_cases / Large integer boundary values
-# - create_app_edge_cases_deeply_nested_structure_10_levels() for edge_cases / Deeply nested structure (10+ levels)
-# - create_app_edge_cases_empty_and_null_value_handling() for edge_cases / Empty and null value handling
-# - create_app_edge_cases_16_negative_zero_handling() for edge_cases / 16_negative_zero_handling
-# - create_app_path_params_boolean_path_parameter_true() for path_params / Boolean path parameter - True
-# - create_app_path_params_29_decimal_path_param_success() for path_params / 29_decimal_path_param_success
-# - create_app_path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success() for path_params / Integer path parameter with combined lt and gt constraints - success
-# - create_app_path_params_33_string_pattern_path_success() for path_params / 33_string_pattern_path_success
-# - create_app_path_params_31_string_minlength_path_failure() for path_params / 31_string_minlength_path_failure
-# - create_app_path_params_35_negative_integer_path_param() for path_params / 35_negative_integer_path_param
-# - create_app_path_params_enum_path_parameter_invalid_value() for path_params / Enum path parameter - invalid value
-# - create_app_path_params_27_datetime_format_path_param_success() for path_params / 27_datetime_format_path_param_success
-# - create_app_path_params_25_date_format_invalid_failure() for path_params / 25_date_format_invalid_failure
-# - create_app_path_params_integer_path_parameter_with_lt_constraint_success() for path_params / Integer path parameter with lt constraint - success
-# - create_app_path_params_integer_path_parameter_with_gt_constraint_success() for path_params / Integer path parameter with gt constraint - success
-# - create_app_path_params_28_duration_format_path_param_success() for path_params / 28_duration_format_path_param_success
-# - create_app_path_params_path_parameter_type_syntax_with_override() for path_params / Path parameter type syntax with override
-# - create_app_path_params_20_uuid_v3_path_param_success() for path_params / 20_uuid_v3_path_param_success
-# - create_app_path_params_integer_path_parameter_invalid_string() for path_params / Integer path parameter - invalid string
-# - create_app_path_params_30_string_minlength_path_success() for path_params / 30_string_minlength_path_success
-# - create_app_path_params_integer_path_parameter_with_le_constraint_success() for path_params / Integer path parameter with le constraint - success
-# - create_app_path_params_path_parameter_type_syntax_invalid_uuid() for path_params / Path parameter type syntax - invalid UUID
-# - create_app_path_params_path_type_parameter_file_path() for path_params / Path type parameter - file path
-# - create_app_path_params_path_parameter_with_type_syntax_uuid() for path_params / Path parameter with type syntax - UUID
-# - create_app_path_params_32_string_maxlength_path_failure() for path_params / 32_string_maxlength_path_failure
-# - create_app_path_params_integer_path_parameter_success() for path_params / Integer path parameter - success
-# - create_app_path_params_34_string_pattern_path_failure() for path_params / 34_string_pattern_path_failure
-# - create_app_path_params_21_uuid_v5_path_param_success() for path_params / 21_uuid_v5_path_param_success
-# - create_app_path_params_string_path_parameter_with_max_length_failure() for path_params / String path parameter with max_length - failure
-# - create_app_path_params_string_path_parameter_with_min_length_failure() for path_params / String path parameter with min_length - failure
-# - create_app_path_params_multiple_path_parameters_success() for path_params / Multiple path parameters - success
-# - create_app_path_params_date_path_parameter_success() for path_params / Date path parameter - success
-# - create_app_path_params_integer_path_parameter_with_gt_constraint_failure() for path_params / Integer path parameter with gt constraint - failure
-# - create_app_path_params_24_date_format_path_param_success() for path_params / 24_date_format_path_param_success
-# - create_app_path_params_float_path_parameter_success() for path_params / Float path parameter - success
-# - create_app_path_params_path_parameter_with_type_syntax_integer() for path_params / Path parameter with type syntax - integer
-# - create_app_path_params_string_path_parameter_success() for path_params / String path parameter - success
-# - create_app_path_params_uuid_path_parameter_success() for path_params / UUID path parameter - success
-# - create_app_path_params_integer_path_parameter_with_ge_constraint_success() for path_params / Integer path parameter with ge constraint - success
-# - create_app_path_params_enum_path_parameter_success() for path_params / Enum path parameter - success
-# - create_app_path_params_boolean_path_parameter_numeric_1() for path_params / Boolean path parameter - numeric 1
-# - create_app_status_codes_408_request_timeout() for status_codes / 408 Request Timeout
-# - create_app_status_codes_404_not_found_resource_not_found() for status_codes / 404 Not Found - Resource not found
-# - create_app_status_codes_503_service_unavailable_server_overload() for status_codes / 503 Service Unavailable - Server overload
-# - create_app_status_codes_422_unprocessable_entity_validation_error() for status_codes / 422 Unprocessable Entity - Validation error
-# - create_app_status_codes_302_found_temporary_redirect() for status_codes / 302 Found - Temporary redirect
-# - create_app_status_codes_304_not_modified_cached_content_valid() for status_codes / 304 Not Modified - Cached content valid
-# - create_app_status_codes_400_bad_request_invalid_request() for status_codes / 400 Bad Request - Invalid request
-# - create_app_status_codes_22_501_not_implemented() for status_codes / 22_501_not_implemented
-# - create_app_status_codes_204_no_content_success_with_no_body() for status_codes / 204 No Content - Success with no body
-# - create_app_status_codes_301_moved_permanently_permanent_redirect() for status_codes / 301 Moved Permanently - Permanent redirect
-# - create_app_status_codes_201_created_resource_created() for status_codes / 201 Created - Resource created
-# - create_app_status_codes_202_accepted_request_accepted_for_processing() for status_codes / 202 Accepted - Request accepted for processing
-# - create_app_status_codes_307_temporary_redirect_method_preserved() for status_codes / 307 Temporary Redirect - Method preserved
-# - create_app_status_codes_500_internal_server_error_server_error() for status_codes / 500 Internal Server Error - Server error
-# - create_app_status_codes_20_414_uri_too_long() for status_codes / 20_414_uri_too_long
-# - create_app_status_codes_401_unauthorized_missing_authentication() for status_codes / 401 Unauthorized - Missing authentication
-# - create_app_status_codes_23_503_service_unavailable() for status_codes / 23_503_service_unavailable
-# - create_app_status_codes_19_413_payload_too_large() for status_codes / 19_413_payload_too_large
-# - create_app_status_codes_403_forbidden_insufficient_permissions() for status_codes / 403 Forbidden - Insufficient permissions
-# - create_app_status_codes_21_431_request_header_fields_too_large() for status_codes / 21_431_request_header_fields_too_large
-# - create_app_status_codes_429_too_many_requests() for status_codes / 429 Too Many Requests
-# - create_app_status_codes_200_ok_success() for status_codes / 200 OK - Success
-# - create_app_status_codes_206_partial_content() for status_codes / 206 Partial Content
-# - create_app_validation_errors_invalid_uuid_format() for validation_errors / Invalid UUID format
-# - create_app_validation_errors_invalid_boolean_value() for validation_errors / Invalid boolean value
-# - create_app_validation_errors_missing_required_query_parameter() for validation_errors / Missing required query parameter
-# - create_app_validation_errors_array_max_items_constraint_violation() for validation_errors / Array max_items constraint violation
-# - create_app_validation_errors_numeric_constraint_violation_gt_greater_than() for validation_errors / Numeric constraint violation - gt (greater than)
-# - create_app_validation_errors_string_regex_pattern_mismatch() for validation_errors / String regex pattern mismatch
-# - create_app_validation_errors_invalid_enum_value() for validation_errors / Invalid enum value
-# - create_app_validation_errors_string_min_length_constraint_violation() for validation_errors / String min_length constraint violation
-# - create_app_validation_errors_multiple_validation_errors() for validation_errors / Multiple validation errors
-# - create_app_validation_errors_string_max_length_constraint_violation() for validation_errors / String max_length constraint violation
-# - create_app_validation_errors_nested_object_validation_error() for validation_errors / Nested object validation error
-# - create_app_validation_errors_10_nested_error_path() for validation_errors / 10_nested_error_path
-# - create_app_validation_errors_invalid_datetime_format() for validation_errors / Invalid datetime format
-# - create_app_validation_errors_array_item_validation_error() for validation_errors / Array item validation error
-# - create_app_validation_errors_missing_required_body_field() for validation_errors / Missing required body field
-# - create_app_validation_errors_body_field_type_error_string_for_float() for validation_errors / Body field type error - string for float
-# - create_app_validation_errors_malformed_json_body() for validation_errors / Malformed JSON body
-# - create_app_validation_errors_query_param_type_error_string_provided_for_int() for validation_errors / Query param type error - string provided for int
-# - create_app_validation_errors_header_validation_error() for validation_errors / Header validation error
-# - create_app_validation_errors_09_multiple_validation_errors() for validation_errors / 09_multiple_validation_errors
-# - create_app_validation_errors_numeric_constraint_violation_le_less_than_or_equal() for validation_errors / Numeric constraint violation - le (less than or equal)
-# - create_app_validation_errors_array_min_items_constraint_violation() for validation_errors / Array min_items constraint violation
+# - create_app_http_methods_options_cors_preflight_request() for http_methods / OPTIONS - CORS preflight request
+# - create_app_http_methods_delete_remove_resource() for http_methods / DELETE - Remove resource
+# - create_app_http_methods_put_create_resource_if_doesn_t_exist() for http_methods / PUT - Create resource if doesn't exist
+# - create_app_http_methods_patch_update_multiple_fields() for http_methods / PATCH - Update multiple fields
+# - create_app_http_methods_put_validation_error() for http_methods / PUT - Validation error
+# - create_app_http_methods_head_get_metadata_without_body() for http_methods / HEAD - Get metadata without body
+# - create_app_http_methods_delete_with_response_body() for http_methods / DELETE - With response body
+# - create_app_http_methods_put_missing_required_field() for http_methods / PUT - Missing required field
+# - create_app_http_methods_patch_partial_update() for http_methods / PATCH - Partial update
+# - create_app_http_methods_delete_resource_not_found() for http_methods / DELETE - Resource not found
+# - create_app_http_methods_put_idempotent_operation() for http_methods / PUT - Idempotent operation
+# - create_app_http_methods_put_complete_resource_replacement() for http_methods / PUT - Complete resource replacement
 # - create_app_cors_07_cors_preflight_header_not_allowed() for cors / 07_cors_preflight_header_not_allowed
 # - create_app_cors_cors_preflight_request() for cors / CORS preflight request
 # - create_app_cors_cors_with_credentials() for cors / CORS with credentials
@@ -10848,3 +10780,71 @@ def create_app_json_bodies_array_of_objects_success() -> Spikard:
 # - create_app_json_bodies_null_value_for_optional_field() for json_bodies / Null value for optional field
 # - create_app_json_bodies_31_nullable_property_null_value() for json_bodies / 31_nullable_property_null_value
 # - create_app_json_bodies_array_of_objects_success() for json_bodies / Array of objects - success
+# - create_app_validation_errors_invalid_uuid_format() for validation_errors / Invalid UUID format
+# - create_app_validation_errors_invalid_boolean_value() for validation_errors / Invalid boolean value
+# - create_app_validation_errors_missing_required_query_parameter() for validation_errors / Missing required query parameter
+# - create_app_validation_errors_array_max_items_constraint_violation() for validation_errors / Array max_items constraint violation
+# - create_app_validation_errors_numeric_constraint_violation_gt_greater_than() for validation_errors / Numeric constraint violation - gt (greater than)
+# - create_app_validation_errors_string_regex_pattern_mismatch() for validation_errors / String regex pattern mismatch
+# - create_app_validation_errors_invalid_enum_value() for validation_errors / Invalid enum value
+# - create_app_validation_errors_string_min_length_constraint_violation() for validation_errors / String min_length constraint violation
+# - create_app_validation_errors_multiple_validation_errors() for validation_errors / Multiple validation errors
+# - create_app_validation_errors_string_max_length_constraint_violation() for validation_errors / String max_length constraint violation
+# - create_app_validation_errors_nested_object_validation_error() for validation_errors / Nested object validation error
+# - create_app_validation_errors_10_nested_error_path() for validation_errors / 10_nested_error_path
+# - create_app_validation_errors_invalid_datetime_format() for validation_errors / Invalid datetime format
+# - create_app_validation_errors_array_item_validation_error() for validation_errors / Array item validation error
+# - create_app_validation_errors_missing_required_body_field() for validation_errors / Missing required body field
+# - create_app_validation_errors_body_field_type_error_string_for_float() for validation_errors / Body field type error - string for float
+# - create_app_validation_errors_malformed_json_body() for validation_errors / Malformed JSON body
+# - create_app_validation_errors_query_param_type_error_string_provided_for_int() for validation_errors / Query param type error - string provided for int
+# - create_app_validation_errors_header_validation_error() for validation_errors / Header validation error
+# - create_app_validation_errors_09_multiple_validation_errors() for validation_errors / 09_multiple_validation_errors
+# - create_app_validation_errors_numeric_constraint_violation_le_less_than_or_equal() for validation_errors / Numeric constraint violation - le (less than or equal)
+# - create_app_validation_errors_array_min_items_constraint_violation() for validation_errors / Array min_items constraint violation
+# - create_app_content_types_415_unsupported_media_type() for content_types / 415 Unsupported Media Type
+# - create_app_content_types_xml_response_application_xml() for content_types / XML response - application/xml
+# - create_app_content_types_14_content_type_case_insensitive() for content_types / 14_content_type_case_insensitive
+# - create_app_content_types_json_with_utf_8_charset() for content_types / JSON with UTF-8 charset
+# - create_app_content_types_16_text_plain_not_accepted() for content_types / 16_text_plain_not_accepted
+# - create_app_content_types_pdf_response_application_pdf() for content_types / PDF response - application/pdf
+# - create_app_content_types_20_content_length_mismatch() for content_types / 20_content_length_mismatch
+# - create_app_content_types_17_vendor_json_accepted() for content_types / 17_vendor_json_accepted
+# - create_app_content_types_13_json_with_charset_utf16() for content_types / 13_json_with_charset_utf16
+# - create_app_content_types_json_response_application_json() for content_types / JSON response - application/json
+# - create_app_content_types_15_multipart_boundary_required() for content_types / 15_multipart_boundary_required
+# - create_app_content_types_content_negotiation_accept_header() for content_types / Content negotiation - Accept header
+# - create_app_content_types_html_response_text_html() for content_types / HTML response - text/html
+# - create_app_content_types_jpeg_image_response_image_jpeg() for content_types / JPEG image response - image/jpeg
+# - create_app_content_types_19_missing_content_type_default_json() for content_types / 19_missing_content_type_default_json
+# - create_app_content_types_png_image_response_image_png() for content_types / PNG image response - image/png
+# - create_app_content_types_plain_text_response_text_plain() for content_types / Plain text response - text/plain
+# - create_app_content_types_18_content_type_with_multiple_params() for content_types / 18_content_type_with_multiple_params
+# - create_app_content_types_csv_response_text_csv() for content_types / CSV response - text/csv
+# - create_app_content_types_binary_response_application_octet_stream() for content_types / Binary response - application/octet-stream
+# - create_app_cookies_25_cookie_samesite_lax() for cookies / 25_cookie_samesite_lax
+# - create_app_cookies_optional_cookie_parameter_success() for cookies / Optional cookie parameter - success
+# - create_app_cookies_cookie_regex_pattern_validation_fail() for cookies / Cookie regex pattern validation - fail
+# - create_app_cookies_response_session_cookie_no_max_age() for cookies / Response - session cookie (no max_age)
+# - create_app_cookies_27_cookie_httponly_flag() for cookies / 27_cookie_httponly_flag
+# - create_app_cookies_response_cookie_with_attributes() for cookies / Response cookie with attributes
+# - create_app_cookies_24_cookie_samesite_strict() for cookies / 24_cookie_samesite_strict
+# - create_app_cookies_apikey_cookie_authentication_success() for cookies / APIKey cookie authentication - success
+# - create_app_cookies_cookie_validation_min_length_constraint_success() for cookies / Cookie validation - min_length constraint success
+# - create_app_cookies_cookie_validation_min_length_failure() for cookies / Cookie validation - min_length failure
+# - create_app_cookies_cookie_validation_max_length_constraint_fail() for cookies / Cookie validation - max_length constraint fail
+# - create_app_cookies_required_cookie_missing() for cookies / Required cookie - missing
+# - create_app_cookies_optional_cookie_parameter_missing() for cookies / Optional cookie parameter - missing
+# - create_app_cookies_apikey_cookie_authentication_missing() for cookies / APIKey cookie authentication - missing
+# - create_app_cookies_response_multiple_cookies() for cookies / Response - multiple cookies
+# - create_app_cookies_response_cookie_with_samesite_lax() for cookies / Response cookie with SameSite=Lax
+# - create_app_cookies_response_delete_cookie() for cookies / Response - delete cookie
+# - create_app_cookies_response_cookie_with_path_attribute() for cookies / Response cookie with path attribute
+# - create_app_cookies_optional_apikey_cookie_missing() for cookies / Optional APIKey cookie - missing
+# - create_app_cookies_response_cookie_with_samesite_strict() for cookies / Response cookie with SameSite=Strict
+# - create_app_cookies_response_cookie_with_samesite_none() for cookies / Response cookie with SameSite=None
+# - create_app_cookies_cookie_regex_pattern_validation_success() for cookies / Cookie regex pattern validation - success
+# - create_app_cookies_response_set_cookie_basic() for cookies / Response set cookie - basic
+# - create_app_cookies_multiple_cookies_success() for cookies / Multiple cookies - success
+# - create_app_cookies_26_cookie_secure_flag() for cookies / 26_cookie_secure_flag
+# - create_app_cookies_response_cookie_with_domain_attribute() for cookies / Response cookie with domain attribute
