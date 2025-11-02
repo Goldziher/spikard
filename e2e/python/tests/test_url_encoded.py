@@ -13,7 +13,7 @@ async def test_simple_form_submission_success() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"username": "johndoe", "password": "secret"}
+    json_data = {"password": "secret", "username": "johndoe"}
     response = await client.post("/login/", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -310,7 +310,7 @@ async def test_numeric_field_type_conversion() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"age": "30", "username": "johndoe"}
+    json_data = {"username": "johndoe", "age": "30"}
     response = await client.post("/form/", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -333,7 +333,7 @@ async def test_special_characters_encoding() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"name": "John Doe", "description": "Test & Development"}
+    json_data = {"description": "Test & Development", "name": "John Doe"}
     response = await client.post("/form/", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -356,7 +356,7 @@ async def test_boolean_field_conversion() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"subscribe": "true", "username": "johndoe"}
+    json_data = {"username": "johndoe", "subscribe": "true"}
     response = await client.post("/form/", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -379,7 +379,7 @@ async def test_empty_string_value() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"username": "johndoe", "description": ""}
+    json_data = {"description": "", "username": "johndoe"}
     response = await client.post("/form/", headers=headers, json=json_data)
 
     assert response.status_code == 200
