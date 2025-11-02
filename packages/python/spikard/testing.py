@@ -113,6 +113,7 @@ class TestClient:
         path: str,
         query_params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
     ) -> TestResponse:
         """Make a GET request.
 
@@ -120,11 +121,12 @@ class TestClient:
             path: The path to request (e.g., "/users/123")
             query_params: Optional query parameters
             headers: Optional request headers
+            cookies: Optional cookies as a dict
 
         Returns:
             TestResponse: The response from the server
         """
-        rust_response = await self._client.get(path, query_params, headers)
+        rust_response = await self._client.get(path, query_params, headers, cookies)
         return TestResponse(rust_response)
 
     async def post(
@@ -133,6 +135,7 @@ class TestClient:
         json: Any | None = None,
         query_params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
     ) -> TestResponse:
         """Make a POST request.
 
@@ -141,10 +144,17 @@ class TestClient:
             json: Optional JSON body
             query_params: Optional query parameters
             headers: Optional request headers
+            cookies: Optional cookies as a dict
 
         Returns:
             TestResponse: The response from the server
         """
+        # Convert cookies to Cookie header if provided
+        if cookies:
+            if headers is None:
+                headers = {}
+            cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
+            headers["cookie"] = cookie_header
         rust_response = await self._client.post(path, json, query_params, headers)
         return TestResponse(rust_response)
 
@@ -154,6 +164,7 @@ class TestClient:
         json: Any | None = None,
         query_params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
     ) -> TestResponse:
         """Make a PUT request.
 
@@ -162,10 +173,17 @@ class TestClient:
             json: Optional JSON body
             query_params: Optional query parameters
             headers: Optional request headers
+            cookies: Optional cookies as a dict
 
         Returns:
             TestResponse: The response from the server
         """
+        # Convert cookies to Cookie header if provided
+        if cookies:
+            if headers is None:
+                headers = {}
+            cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
+            headers["cookie"] = cookie_header
         rust_response = await self._client.put(path, json, query_params, headers)
         return TestResponse(rust_response)
 
@@ -175,6 +193,7 @@ class TestClient:
         json: Any | None = None,
         query_params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
     ) -> TestResponse:
         """Make a PATCH request.
 
@@ -183,10 +202,17 @@ class TestClient:
             json: Optional JSON body
             query_params: Optional query parameters
             headers: Optional request headers
+            cookies: Optional cookies as a dict
 
         Returns:
             TestResponse: The response from the server
         """
+        # Convert cookies to Cookie header if provided
+        if cookies:
+            if headers is None:
+                headers = {}
+            cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
+            headers["cookie"] = cookie_header
         rust_response = await self._client.patch(path, json, query_params, headers)
         return TestResponse(rust_response)
 
@@ -195,6 +221,7 @@ class TestClient:
         path: str,
         query_params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
     ) -> TestResponse:
         """Make a DELETE request.
 
@@ -202,10 +229,17 @@ class TestClient:
             path: The path to request
             query_params: Optional query parameters
             headers: Optional request headers
+            cookies: Optional cookies as a dict
 
         Returns:
             TestResponse: The response from the server
         """
+        # Convert cookies to Cookie header if provided
+        if cookies:
+            if headers is None:
+                headers = {}
+            cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
+            headers["cookie"] = cookie_header
         rust_response = await self._client.delete(path, query_params, headers)
         return TestResponse(rust_response)
 
@@ -214,8 +248,15 @@ class TestClient:
         path: str,
         query_params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
     ) -> TestResponse:
         """Make an OPTIONS request."""
+        # Convert cookies to Cookie header if provided
+        if cookies:
+            if headers is None:
+                headers = {}
+            cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
+            headers["cookie"] = cookie_header
         rust_response = await self._client.options(path, query_params, headers)
         return TestResponse(rust_response)
 
@@ -224,7 +265,14 @@ class TestClient:
         path: str,
         query_params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
     ) -> TestResponse:
         """Make a HEAD request."""
+        # Convert cookies to Cookie header if provided
+        if cookies:
+            if headers is None:
+                headers = {}
+            cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
+            headers["cookie"] = cookie_header
         rust_response = await self._client.head(path, query_params, headers)
         return TestResponse(rust_response)
