@@ -16,66 +16,6 @@ use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-/// Validate Content-Type header and related requirements
-fn validate_content_type(
-    headers: &axum::http::HeaderMap,
-    body_size: usize,
-) -> Result<(), (axum::http::StatusCode, String)> {
-    // Check Content-Type header if present
-    #[allow(clippy::collapsible_if)]
-    if let Some(content_type_header) = headers.get(axum::http::header::CONTENT_TYPE) {
-        if let Ok(content_type_str) = content_type_header.to_str() {
-            // Parse Content-Type to extract media type and parameters
-            let parts: Vec<&str> = content_type_str.split(';').map(|s| s.trim()).collect();
-            let media_type = parts[0].to_lowercase();
-
-            // Validation 1: multipart/form-data MUST have boundary parameter
-            if media_type == "multipart/form-data" {
-                let has_boundary = parts.iter().skip(1).any(|part| part.starts_with("boundary="));
-                if !has_boundary {
-                    let error_body = serde_json::json!({
-                        "error": "multipart/form-data requires 'boundary' parameter"
-                    });
-                    return Err((axum::http::StatusCode::BAD_REQUEST, error_body.to_string()));
-                }
-            }
-
-            // Validation 2: JSON content type charset must be UTF-8 (or absent)
-            if media_type == "application/json" {
-                for part in parts.iter().skip(1) {
-                    if part.starts_with("charset=") {
-                        let charset = part.trim_start_matches("charset=").trim();
-                        // Only UTF-8 is allowed (case-insensitive)
-                        if !charset.eq_ignore_ascii_case("utf-8") && !charset.eq_ignore_ascii_case("utf8") {
-                            let error_body = serde_json::json!({
-                                "error": format!("Unsupported charset '{}' for JSON. Only UTF-8 is supported.", charset)
-                            });
-                            return Err((axum::http::StatusCode::UNSUPPORTED_MEDIA_TYPE, error_body.to_string()));
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Validation 3: Content-Length must match actual body size
-    #[allow(clippy::collapsible_if)]
-    if let Some(content_length_header) = headers.get(axum::http::header::CONTENT_LENGTH) {
-        if let Ok(content_length_str) = content_length_header.to_str() {
-            if let Ok(declared_length) = content_length_str.parse::<usize>() {
-                if declared_length != body_size {
-                    let error_body = serde_json::json!({
-                        "error": "Content-Length header does not match actual body size"
-                    });
-                    return Err((axum::http::StatusCode::BAD_REQUEST, error_body.to_string()));
-                }
-            }
-        }
-    }
-
-    Ok(())
-}
-
 /// Extract and parse query parameters from request URI
 fn extract_query_params(uri: &axum::http::Uri) -> Value {
     let query_string = uri.query().unwrap_or("");
@@ -134,6 +74,59 @@ fn extract_cookies(headers: &axum::http::HeaderMap) -> HashMap<String, String> {
     }
 
     cookies
+}
+
+/// Create RequestData from request parts (for requests without body)
+fn create_request_data_without_body(
+    uri: &axum::http::Uri,
+    headers: &axum::http::HeaderMap,
+    path_params: HashMap<String, String>,
+) -> RequestData {
+    RequestData {
+        path_params,
+        query_params: extract_query_params(uri),
+        raw_query_params: extract_raw_query_params(uri),
+        headers: extract_headers(headers),
+        cookies: extract_cookies(headers),
+        body: None,
+    }
+}
+
+/// Create RequestData from request parts (for requests with body)
+async fn create_request_data_with_body(
+    parts: &axum::http::request::Parts,
+    path_params: HashMap<String, String>,
+    body: Body,
+) -> Result<RequestData, (axum::http::StatusCode, String)> {
+    let body_bytes = body
+        .collect()
+        .await
+        .map_err(|e| {
+            (
+                axum::http::StatusCode::BAD_REQUEST,
+                format!("Failed to read body: {}", e),
+            )
+        })?
+        .to_bytes();
+
+    // Note: Content-Type and Content-Length validation is handled by middleware
+
+    let body_value = if !body_bytes.is_empty() {
+        serde_json::from_slice::<Value>(&body_bytes)
+            .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?
+            .into()
+    } else {
+        None
+    };
+
+    Ok(RequestData {
+        path_params,
+        query_params: extract_query_params(&parts.uri),
+        raw_query_params: extract_raw_query_params(&parts.uri),
+        headers: extract_headers(&parts.headers),
+        cookies: extract_cookies(&parts.headers),
+        body: body_value,
+    })
 }
 
 /// HTTP Server
@@ -201,68 +194,47 @@ impl Server {
                 // Create Axum route based on HTTP method
                 // Extract all request data in Rust before calling Python
                 let method_router: MethodRouter = match route.method.as_str() {
+                    // Methods without body: GET, DELETE, HEAD, OPTIONS, TRACE
                     "GET" => axum::routing::get(
                         move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                            let _ = std::fs::write("/tmp/axum_route_called.log", "GET route handler called\n");
-                            let query_params = extract_query_params(req.uri());
-                            let raw_query_params = extract_raw_query_params(req.uri());
-                            let headers = extract_headers(req.headers());
-                            let cookies = extract_cookies(req.headers());
-                            let _ = std::fs::write(
-                                "/tmp/axum_query_params.log",
-                                format!("query_params: {:?}\n", query_params),
-                            );
-                            let request_data = RequestData {
-                                path_params: path_params.0,
-                                query_params,
-                                raw_query_params,
-                                headers,
-                                cookies,
-                                body: None, // GET requests don't have a body
-                            };
+                            let request_data =
+                                create_request_data_without_body(req.uri(), req.headers(), path_params.0);
                             handler.call(req, request_data).await
                         },
                     ),
+                    "DELETE" => axum::routing::delete(
+                        move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                            let request_data =
+                                create_request_data_without_body(req.uri(), req.headers(), path_params.0);
+                            handler.call(req, request_data).await
+                        },
+                    ),
+                    "HEAD" => axum::routing::head(
+                        move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                            let request_data =
+                                create_request_data_without_body(req.uri(), req.headers(), path_params.0);
+                            handler.call(req, request_data).await
+                        },
+                    ),
+                    "OPTIONS" => axum::routing::options(
+                        move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                            let request_data =
+                                create_request_data_without_body(req.uri(), req.headers(), path_params.0);
+                            handler.call(req, request_data).await
+                        },
+                    ),
+                    "TRACE" => axum::routing::trace(
+                        move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                            let request_data =
+                                create_request_data_without_body(req.uri(), req.headers(), path_params.0);
+                            handler.call(req, request_data).await
+                        },
+                    ),
+                    // Methods with body: POST, PUT, PATCH
                     "POST" => axum::routing::post(
                         move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                            // Extract body for POST requests
                             let (parts, body) = req.into_parts();
-                            let body_bytes = body
-                                .collect()
-                                .await
-                                .map_err(|e| {
-                                    (
-                                        axum::http::StatusCode::BAD_REQUEST,
-                                        format!("Failed to read body: {}", e),
-                                    )
-                                })?
-                                .to_bytes();
-
-                            // Validate Content-Type and Content-Length before processing
-                            validate_content_type(&parts.headers, body_bytes.len())?;
-
-                            let query_params = extract_query_params(&parts.uri);
-                            let raw_query_params = extract_raw_query_params(&parts.uri);
-                            let headers = extract_headers(&parts.headers);
-                            let cookies = extract_cookies(&parts.headers);
-
-                            let body_value = if !body_bytes.is_empty() {
-                                serde_json::from_slice::<Value>(&body_bytes)
-                                    .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?
-                                    .into()
-                            } else {
-                                None
-                            };
-
-                            let request_data = RequestData {
-                                path_params: path_params.0,
-                                query_params,
-                                raw_query_params,
-                                headers,
-                                cookies,
-                                body: body_value,
-                            };
-
+                            let request_data = create_request_data_with_body(&parts, path_params.0, body).await?;
                             let req = axum::extract::Request::from_parts(parts, Body::empty());
                             handler.call(req, request_data).await
                         },
@@ -270,42 +242,7 @@ impl Server {
                     "PUT" => axum::routing::put(
                         move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                             let (parts, body) = req.into_parts();
-                            let body_bytes = body
-                                .collect()
-                                .await
-                                .map_err(|e| {
-                                    (
-                                        axum::http::StatusCode::BAD_REQUEST,
-                                        format!("Failed to read body: {}", e),
-                                    )
-                                })?
-                                .to_bytes();
-
-                            // Validate Content-Type and Content-Length before processing
-                            validate_content_type(&parts.headers, body_bytes.len())?;
-
-                            let query_params = extract_query_params(&parts.uri);
-                            let raw_query_params = extract_raw_query_params(&parts.uri);
-                            let headers = extract_headers(&parts.headers);
-                            let cookies = extract_cookies(&parts.headers);
-
-                            let body_value = if !body_bytes.is_empty() {
-                                serde_json::from_slice::<Value>(&body_bytes)
-                                    .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?
-                                    .into()
-                            } else {
-                                None
-                            };
-
-                            let request_data = RequestData {
-                                path_params: path_params.0,
-                                query_params,
-                                raw_query_params,
-                                headers,
-                                cookies,
-                                body: body_value,
-                            };
-
+                            let request_data = create_request_data_with_body(&parts, path_params.0, body).await?;
                             let req = axum::extract::Request::from_parts(parts, Body::empty());
                             handler.call(req, request_data).await
                         },
@@ -313,111 +250,8 @@ impl Server {
                     "PATCH" => axum::routing::patch(
                         move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                             let (parts, body) = req.into_parts();
-                            let body_bytes = body
-                                .collect()
-                                .await
-                                .map_err(|e| {
-                                    (
-                                        axum::http::StatusCode::BAD_REQUEST,
-                                        format!("Failed to read body: {}", e),
-                                    )
-                                })?
-                                .to_bytes();
-
-                            // Validate Content-Type and Content-Length before processing
-                            validate_content_type(&parts.headers, body_bytes.len())?;
-
-                            let query_params = extract_query_params(&parts.uri);
-                            let raw_query_params = extract_raw_query_params(&parts.uri);
-                            let headers = extract_headers(&parts.headers);
-                            let cookies = extract_cookies(&parts.headers);
-
-                            let body_value = if !body_bytes.is_empty() {
-                                serde_json::from_slice::<Value>(&body_bytes)
-                                    .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?
-                                    .into()
-                            } else {
-                                None
-                            };
-
-                            let request_data = RequestData {
-                                path_params: path_params.0,
-                                query_params,
-                                raw_query_params,
-                                headers,
-                                cookies,
-                                body: body_value,
-                            };
-
+                            let request_data = create_request_data_with_body(&parts, path_params.0, body).await?;
                             let req = axum::extract::Request::from_parts(parts, Body::empty());
-                            handler.call(req, request_data).await
-                        },
-                    ),
-                    "DELETE" => axum::routing::delete(
-                        move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                            let query_params = extract_query_params(req.uri());
-                            let raw_query_params = extract_raw_query_params(req.uri());
-                            let headers = extract_headers(req.headers());
-                            let cookies = extract_cookies(req.headers());
-                            let request_data = RequestData {
-                                path_params: path_params.0,
-                                query_params,
-                                raw_query_params,
-                                headers,
-                                cookies,
-                                body: None,
-                            };
-                            handler.call(req, request_data).await
-                        },
-                    ),
-                    "HEAD" => axum::routing::head(
-                        move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                            let query_params = extract_query_params(req.uri());
-                            let raw_query_params = extract_raw_query_params(req.uri());
-                            let headers = extract_headers(req.headers());
-                            let cookies = extract_cookies(req.headers());
-                            let request_data = RequestData {
-                                path_params: path_params.0,
-                                query_params,
-                                raw_query_params,
-                                headers,
-                                cookies,
-                                body: None,
-                            };
-                            handler.call(req, request_data).await
-                        },
-                    ),
-                    "OPTIONS" => axum::routing::options(
-                        move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                            let query_params = extract_query_params(req.uri());
-                            let raw_query_params = extract_raw_query_params(req.uri());
-                            let headers = extract_headers(req.headers());
-                            let cookies = extract_cookies(req.headers());
-                            let request_data = RequestData {
-                                path_params: path_params.0,
-                                query_params,
-                                raw_query_params,
-                                headers,
-                                cookies,
-                                body: None,
-                            };
-                            handler.call(req, request_data).await
-                        },
-                    ),
-                    "TRACE" => axum::routing::trace(
-                        move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                            let query_params = extract_query_params(req.uri());
-                            let raw_query_params = extract_raw_query_params(req.uri());
-                            let headers = extract_headers(req.headers());
-                            let cookies = extract_cookies(req.headers());
-                            let request_data = RequestData {
-                                path_params: path_params.0,
-                                query_params,
-                                raw_query_params,
-                                headers,
-                                cookies,
-                                body: None,
-                            };
                             handler.call(req, request_data).await
                         },
                     ),
