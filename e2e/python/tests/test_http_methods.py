@@ -3,11 +3,11 @@
 
 async def test_options__cors_preflight_request() -> None:
     """Tests OPTIONS method for CORS preflight."""
-    from app.main import create_app_http_methods_OPTIONS___CORS_preflight_request
+    from app.main import create_app_http_methods_options___cors_preflight_request
 
     from spikard.testing import TestClient
 
-    app = create_app_http_methods_OPTIONS___CORS_preflight_request()
+    app = create_app_http_methods_options___cors_preflight_request()
     client = TestClient(app)
 
     headers = {
@@ -22,11 +22,11 @@ async def test_options__cors_preflight_request() -> None:
 
 async def test_delete__remove_resource() -> None:
     """Tests DELETE method to remove a resource."""
-    from app.main import create_app_http_methods_DELETE___Remove_resource
+    from app.main import create_app_http_methods_delete___remove_resource
 
     from spikard.testing import TestClient
 
-    app = create_app_http_methods_DELETE___Remove_resource()
+    app = create_app_http_methods_delete___remove_resource()
     client = TestClient(app)
 
     response = await client.delete("/items/1")
@@ -37,11 +37,11 @@ async def test_delete__remove_resource() -> None:
 
 async def test_put__create_resource_if_doesn_t_exist() -> None:
     """Tests PUT creating new resource at specific URI."""
-    from app.main import create_app_http_methods_PUT___Create_resource_if_doesn_t_exist
+    from app.main import create_app_http_methods_put___create_resource_if_doesn_t_exist
 
     from spikard.testing import TestClient
 
-    app = create_app_http_methods_PUT___Create_resource_if_doesn_t_exist()
+    app = create_app_http_methods_put___create_resource_if_doesn_t_exist()
     client = TestClient(app)
 
     headers = {
@@ -62,11 +62,11 @@ async def test_put__create_resource_if_doesn_t_exist() -> None:
 
 async def test_patch__update_multiple_fields() -> None:
     """Tests PATCH updating multiple fields at once."""
-    from app.main import create_app_http_methods_PATCH___Update_multiple_fields
+    from app.main import create_app_http_methods_patch___update_multiple_fields
 
     from spikard.testing import TestClient
 
-    app = create_app_http_methods_PATCH___Update_multiple_fields()
+    app = create_app_http_methods_patch___update_multiple_fields()
     client = TestClient(app)
 
     headers = {
@@ -89,11 +89,11 @@ async def test_patch__update_multiple_fields() -> None:
 
 async def test_put__validation_error() -> None:
     """Tests PUT with invalid data returns 422."""
-    from app.main import create_app_http_methods_PUT___Validation_error
+    from app.main import create_app_http_methods_put___validation_error
 
     from spikard.testing import TestClient
 
-    app = create_app_http_methods_PUT___Validation_error()
+    app = create_app_http_methods_put___validation_error()
     client = TestClient(app)
 
     headers = {
@@ -138,11 +138,11 @@ async def test_put__validation_error() -> None:
 
 async def test_head__get_metadata_without_body() -> None:
     """Tests HEAD method returns headers without response body."""
-    from app.main import create_app_http_methods_HEAD___Get_metadata_without_body
+    from app.main import create_app_http_methods_head___get_metadata_without_body
 
     from spikard.testing import TestClient
 
-    app = create_app_http_methods_HEAD___Get_metadata_without_body()
+    app = create_app_http_methods_head___get_metadata_without_body()
     client = TestClient(app)
 
     response = await client.head("/items/1")
@@ -152,11 +152,11 @@ async def test_head__get_metadata_without_body() -> None:
 
 async def test_delete__with_response_body() -> None:
     """Tests DELETE returning deleted resource data."""
-    from app.main import create_app_http_methods_DELETE___With_response_body
+    from app.main import create_app_http_methods_delete___with_response_body
 
     from spikard.testing import TestClient
 
-    app = create_app_http_methods_DELETE___With_response_body()
+    app = create_app_http_methods_delete___with_response_body()
     client = TestClient(app)
 
     response = await client.delete("/items/1")
@@ -173,11 +173,11 @@ async def test_delete__with_response_body() -> None:
 
 async def test_put__missing_required_field() -> None:
     """Tests PUT with missing required fields returns 422."""
-    from app.main import create_app_http_methods_PUT___Missing_required_field
+    from app.main import create_app_http_methods_put___missing_required_field
 
     from spikard.testing import TestClient
 
-    app = create_app_http_methods_PUT___Missing_required_field()
+    app = create_app_http_methods_put___missing_required_field()
     client = TestClient(app)
 
     headers = {
@@ -212,11 +212,11 @@ async def test_put__missing_required_field() -> None:
 
 async def test_patch__partial_update() -> None:
     """Tests PATCH method for partial resource updates."""
-    from app.main import create_app_http_methods_PATCH___Partial_update
+    from app.main import create_app_http_methods_patch___partial_update
 
     from spikard.testing import TestClient
 
-    app = create_app_http_methods_PATCH___Partial_update()
+    app = create_app_http_methods_patch___partial_update()
     client = TestClient(app)
 
     headers = {
@@ -239,11 +239,11 @@ async def test_patch__partial_update() -> None:
 
 async def test_delete__resource_not_found() -> None:
     """Tests DELETE on non-existent resource returns 404."""
-    from app.main import create_app_http_methods_DELETE___Resource_not_found
+    from app.main import create_app_http_methods_delete___resource_not_found
 
     from spikard.testing import TestClient
 
-    app = create_app_http_methods_DELETE___Resource_not_found()
+    app = create_app_http_methods_delete___resource_not_found()
     client = TestClient(app)
 
     response = await client.delete("/items/999")
@@ -254,11 +254,11 @@ async def test_delete__resource_not_found() -> None:
 
 async def test_put__idempotent_operation() -> None:
     """Tests PUT idempotency - repeated calls produce same result."""
-    from app.main import create_app_http_methods_PUT___Idempotent_operation
+    from app.main import create_app_http_methods_put___idempotent_operation
 
     from spikard.testing import TestClient
 
-    app = create_app_http_methods_PUT___Idempotent_operation()
+    app = create_app_http_methods_put___idempotent_operation()
     client = TestClient(app)
 
     headers = {
@@ -279,11 +279,11 @@ async def test_put__idempotent_operation() -> None:
 
 async def test_put__complete_resource_replacement() -> None:
     """Tests PUT method for complete resource replacement."""
-    from app.main import create_app_http_methods_PUT___Complete_resource_replacement
+    from app.main import create_app_http_methods_put___complete_resource_replacement
 
     from spikard.testing import TestClient
 
-    app = create_app_http_methods_PUT___Complete_resource_replacement()
+    app = create_app_http_methods_put___complete_resource_replacement()
     client = TestClient(app)
 
     headers = {

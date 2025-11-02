@@ -11,9 +11,9 @@ async def test_07_cors_preflight_header_not_allowed() -> None:
     client = TestClient(app)
 
     headers = {
+        "Access-Control-Request-Method": "POST",
         "Access-Control-Request-Headers": "X-Custom-Header",
         "Origin": "https://example.com",
-        "Access-Control-Request-Method": "POST",
     }
     response = await client.options("/api/data", headers=headers)
 
@@ -22,17 +22,17 @@ async def test_07_cors_preflight_header_not_allowed() -> None:
 
 async def test_cors_preflight_request() -> None:
     """Tests OPTIONS preflight request for CORS."""
-    from app.main import create_app_cors_CORS_preflight_request
+    from app.main import create_app_cors_cors_preflight_request
 
     from spikard.testing import TestClient
 
-    app = create_app_cors_CORS_preflight_request()
+    app = create_app_cors_cors_preflight_request()
     client = TestClient(app)
 
     headers = {
-        "Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
         "Origin": "https://example.com",
         "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
     }
     response = await client.options("/items/", headers=headers)
 
@@ -41,16 +41,16 @@ async def test_cors_preflight_request() -> None:
 
 async def test_cors_with_credentials() -> None:
     """Tests CORS request with credentials (cookies, auth headers)."""
-    from app.main import create_app_cors_CORS_with_credentials
+    from app.main import create_app_cors_cors_with_credentials
 
     from spikard.testing import TestClient
 
-    app = create_app_cors_CORS_with_credentials()
+    app = create_app_cors_cors_with_credentials()
     client = TestClient(app)
 
     headers = {
-        "Cookie": "session=abc123",
         "Origin": "https://app.example.com",
+        "Cookie": "session=abc123",
     }
     response = await client.get("/api/user/profile", headers=headers)
 
@@ -70,9 +70,9 @@ async def test_08_cors_max_age() -> None:
     client = TestClient(app)
 
     headers = {
+        "Access-Control-Request-Method": "POST",
         "Access-Control-Request-Headers": "Content-Type",
         "Origin": "https://example.com",
-        "Access-Control-Request-Method": "POST",
     }
     response = await client.options("/api/data", headers=headers)
 
@@ -101,11 +101,11 @@ async def test_10_cors_origin_null() -> None:
 
 async def test_cors_wildcard_origin() -> None:
     """Tests CORS with wildcard allowing all origins."""
-    from app.main import create_app_cors_CORS_wildcard_origin
+    from app.main import create_app_cors_cors_wildcard_origin
 
     from spikard.testing import TestClient
 
-    app = create_app_cors_CORS_wildcard_origin()
+    app = create_app_cors_cors_wildcard_origin()
     client = TestClient(app)
 
     headers = {
@@ -121,11 +121,11 @@ async def test_cors_wildcard_origin() -> None:
 
 async def test_cors_request_blocked() -> None:
     """Tests CORS request from disallowed origin."""
-    from app.main import create_app_cors_CORS_request_blocked
+    from app.main import create_app_cors_cors_request_blocked
 
     from spikard.testing import TestClient
 
-    app = create_app_cors_CORS_request_blocked()
+    app = create_app_cors_cors_request_blocked()
     client = TestClient(app)
 
     headers = {
@@ -141,11 +141,11 @@ async def test_cors_request_blocked() -> None:
 
 async def test_simple_cors_request() -> None:
     """Tests simple CORS request with Origin header."""
-    from app.main import create_app_cors_Simple_CORS_request
+    from app.main import create_app_cors_simple_cors_request
 
     from spikard.testing import TestClient
 
-    app = create_app_cors_Simple_CORS_request()
+    app = create_app_cors_simple_cors_request()
     client = TestClient(app)
 
     headers = {
