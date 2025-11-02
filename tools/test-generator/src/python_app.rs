@@ -365,7 +365,7 @@ fn generate_handler_function_for_fixture(
         code.push_str("    result: dict[str, Any] = {}\n");
 
         if body_schema.is_some() {
-            code.push_str("    if body:\n");
+            code.push_str("    if body is not None:\n");
             match body_type {
                 BodyType::PlainDict | BodyType::TypedDict => {
                     // Already a dict at runtime
