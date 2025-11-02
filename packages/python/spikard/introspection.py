@@ -70,25 +70,31 @@ def extract_parameter_schema(func: Callable[..., Any], path: str | None = None) 
         # Skip the first parameter if it's a structured body type
         # (it's handled by request_schema from extract_schemas)
         # Also skip if parameter name is "body" (even for dict[str, Any])
-        if idx == 0 and (first_param_is_body or param_name == "body"):
+        if idx == 0 and (first_param_is_body or param_name in {"body", "_body"}):
             continue
+
+        # Normalize parameter name: strip leading/trailing underscores used to avoid
+        # Python linting issues (unused params, builtin shadowing)
+        # _id_ → id, _param → param, param_ → param
+        normalized_name = param_name.strip("_")
 
         # Convert FieldDefinition to JSON Schema
         param_schema = field_definition_to_json_schema(field_def)
 
         # Determine parameter source (if not already set from Field constraints)
         if "source" not in param_schema:
-            if param_name in path_param_names:
+            if normalized_name in path_param_names:
                 param_schema["source"] = "path"
             else:
                 # Default to query params
                 param_schema["source"] = "query"
 
-        schema["properties"][param_name] = param_schema
+        # Use normalized name in schema (matches HTTP parameter name)
+        schema["properties"][normalized_name] = param_schema
 
         # Check if required
         if field_def.is_required:
-            schema["required"].append(param_name)
+            schema["required"].append(normalized_name)
 
     # If no properties, return None
     if not schema["properties"]:
