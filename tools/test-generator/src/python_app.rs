@@ -762,13 +762,12 @@ fn json_type_to_python(schema: &Value) -> Result<String> {
 
 /// Determine the response body from fixtures
 fn determine_response_body(fixtures: &[&Fixture]) -> Option<(String, u16)> {
-    // Use the first successful response, returning (body, status_code)
+    // Use the first fixture with a response body, returning (body, status_code)
+    // Include ALL status codes, not just 2xx
     for fixture in fixtures {
-        if fixture.expected_response.status_code >= 200 && fixture.expected_response.status_code < 300 {
-            if let Some(ref body) = fixture.expected_response.body {
-                // Convert JSON to Python dict literal
-                return Some((json_to_python(body), fixture.expected_response.status_code));
-            }
+        if let Some(ref body) = fixture.expected_response.body {
+            // Convert JSON to Python dict literal
+            return Some((json_to_python(body), fixture.expected_response.status_code));
         }
     }
 

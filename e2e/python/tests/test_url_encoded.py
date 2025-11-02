@@ -13,7 +13,7 @@ async def test_simple_form_submission_success() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"password": "secret", "username": "johndoe"}
+    json_data = {"username": "johndoe", "password": "secret"}
     response = await client.post("/login/", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -333,7 +333,7 @@ async def test_special_characters_encoding() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"description": "Test & Development", "name": "John Doe"}
+    json_data = {"name": "John Doe", "description": "Test & Development"}
     response = await client.post("/form/", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -402,7 +402,7 @@ async def test_oauth2_password_grant_flow() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"username": "johndoe", "scope": "", "grant_type": "password", "password": "secret"}
+    json_data = {"username": "johndoe", "password": "secret", "grant_type": "password", "scope": ""}
     response = await client.post("/token", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -467,7 +467,7 @@ async def test_optional_field_missing_success() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"username": "johndoe", "password": "secret"}
+    json_data = {"password": "secret", "username": "johndoe"}
     response = await client.post("/register/", headers=headers, json=json_data)
 
     assert response.status_code == 200
