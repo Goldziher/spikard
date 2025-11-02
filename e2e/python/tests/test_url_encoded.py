@@ -1,19 +1,19 @@
 """E2E tests for url_encoded."""
 
 
-async def test_simple_form_submission__success() -> None:
+async def test_simple_form_submission_success() -> None:
     """Tests basic URL-encoded form with username and password."""
-    from app.main import create_app_url_encoded_simple_form_submission___success
+    from app.main import create_app_url_encoded_simple_form_submission_success
 
     from spikard.testing import TestClient
 
-    app = create_app_url_encoded_simple_form_submission___success()
+    app = create_app_url_encoded_simple_form_submission_success()
     client = TestClient(app)
 
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"password": "secret", "username": "johndoe"}
+    json_data = {"username": "johndoe", "password": "secret"}
     response = await client.post("/login/", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -45,13 +45,13 @@ async def test_15_special_characters_field_names() -> None:
     assert response_data["user-name"] == "JohnDoe"
 
 
-async def test_pattern_validation__fail() -> None:
+async def test_pattern_validation_fail() -> None:
     """Tests form field with regex pattern constraint failure."""
-    from app.main import create_app_url_encoded_pattern_validation___fail
+    from app.main import create_app_url_encoded_pattern_validation_fail
 
     from spikard.testing import TestClient
 
-    app = create_app_url_encoded_pattern_validation___fail()
+    app = create_app_url_encoded_pattern_validation_fail()
     client = TestClient(app)
 
     headers = {
@@ -235,13 +235,13 @@ async def test_multiple_values_for_same_field() -> None:
     assert response_data["tags"][2] == "web"
 
 
-async def test_required_field_missing__validation_error() -> None:
+async def test_required_field_missing_validation_error() -> None:
     """Tests validation error when required form field is missing."""
-    from app.main import create_app_url_encoded_required_field_missing___validation_error
+    from app.main import create_app_url_encoded_required_field_missing_validation_error
 
     from spikard.testing import TestClient
 
-    app = create_app_url_encoded_required_field_missing___validation_error()
+    app = create_app_url_encoded_required_field_missing_validation_error()
     client = TestClient(app)
 
     headers = {
@@ -333,7 +333,7 @@ async def test_special_characters_encoding() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"description": "Test & Development", "name": "John Doe"}
+    json_data = {"name": "John Doe", "description": "Test & Development"}
     response = await client.post("/form/", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -356,7 +356,7 @@ async def test_boolean_field_conversion() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"username": "johndoe", "subscribe": "true"}
+    json_data = {"subscribe": "true", "username": "johndoe"}
     response = await client.post("/form/", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -379,7 +379,7 @@ async def test_empty_string_value() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"description": "", "username": "johndoe"}
+    json_data = {"username": "johndoe", "description": ""}
     response = await client.post("/form/", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -402,7 +402,7 @@ async def test_oauth2_password_grant_flow() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"password": "secret", "grant_type": "password", "username": "johndoe", "scope": ""}
+    json_data = {"username": "johndoe", "password": "secret", "grant_type": "password", "scope": ""}
     response = await client.post("/token", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -455,19 +455,19 @@ async def test_19_array_minitems_validation_failure() -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_optional_field_missing__success() -> None:
+async def test_optional_field_missing_success() -> None:
     """Tests form with optional field omitted."""
-    from app.main import create_app_url_encoded_optional_field_missing___success
+    from app.main import create_app_url_encoded_optional_field_missing_success
 
     from spikard.testing import TestClient
 
-    app = create_app_url_encoded_optional_field_missing___success()
+    app = create_app_url_encoded_optional_field_missing_success()
     client = TestClient(app)
 
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"password": "secret", "username": "johndoe"}
+    json_data = {"username": "johndoe", "password": "secret"}
     response = await client.post("/register/", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -504,13 +504,13 @@ async def test_14_nested_object_bracket_notation() -> None:
     assert response_data["user"]["name"] == "John Doe"
 
 
-async def test_string_max_length_validation__fail() -> None:
+async def test_string_max_length_validation_fail() -> None:
     """Tests form field with max_length constraint failure."""
-    from app.main import create_app_url_encoded_string_max_length_validation___fail
+    from app.main import create_app_url_encoded_string_max_length_validation_fail
 
     from spikard.testing import TestClient
 
-    app = create_app_url_encoded_string_max_length_validation___fail()
+    app = create_app_url_encoded_string_max_length_validation_fail()
     client = TestClient(app)
 
     headers = {
@@ -672,13 +672,13 @@ async def test_16_minlength_validation_failure() -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_string_min_length_validation__fail() -> None:
+async def test_string_min_length_validation_fail() -> None:
     """Tests form field with min_length constraint failure."""
-    from app.main import create_app_url_encoded_string_min_length_validation___fail
+    from app.main import create_app_url_encoded_string_min_length_validation_fail
 
     from spikard.testing import TestClient
 
-    app = create_app_url_encoded_string_min_length_validation___fail()
+    app = create_app_url_encoded_string_min_length_validation_fail()
     client = TestClient(app)
 
     headers = {

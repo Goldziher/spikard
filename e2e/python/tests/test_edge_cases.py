@@ -555,11 +555,11 @@ async def test_large_integer_boundary_values() -> None:
 
 async def test_deeply_nested_structure_10_levels() -> None:
     """Tests handling of deeply nested JSON objects."""
-    from app.main import create_app_edge_cases_deeply_nested_structure__10__levels
+    from app.main import create_app_edge_cases_deeply_nested_structure_10_levels
 
     from spikard.testing import TestClient
 
-    app = create_app_edge_cases_deeply_nested_structure__10__levels()
+    app = create_app_edge_cases_deeply_nested_structure_10_levels()
     client = TestClient(app)
 
     headers = {
