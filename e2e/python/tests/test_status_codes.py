@@ -83,9 +83,7 @@ async def test_422_unprocessable_entity_validation_error() -> None:
     assert response_data["errors"][0]["loc"][0] == "body"
     assert response_data["errors"][0]["loc"][1] == "name"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "Field required"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "missing"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data

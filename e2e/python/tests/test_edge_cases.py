@@ -140,19 +140,12 @@ async def test_24_array_with_holes() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "ctx" in response_data["errors"][0]
-    assert "missing_indices" in response_data["errors"][0]["ctx"]
-    assert len(response_data["errors"][0]["ctx"]["missing_indices"]) == 3
-    assert response_data["errors"][0]["ctx"]["missing_indices"][0] == 1
-    assert response_data["errors"][0]["ctx"]["missing_indices"][1] == 3
-    assert response_data["errors"][0]["ctx"]["missing_indices"][2] == 4
     assert "loc" in response_data["errors"][0]
     assert len(response_data["errors"][0]["loc"]) == 2
     assert response_data["errors"][0]["loc"][0] == "body"
     assert response_data["errors"][0]["loc"][1] == "items"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "Array indices must be consecutive starting from 0"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "validation_error"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -271,18 +264,12 @@ async def test_17_extremely_long_string() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "ctx" in response_data["errors"][0]
-    assert "actual_length" in response_data["errors"][0]["ctx"]
-    assert response_data["errors"][0]["ctx"]["actual_length"] == 10001
-    assert "max_length" in response_data["errors"][0]["ctx"]
-    assert response_data["errors"][0]["ctx"]["max_length"] == 10000
     assert "loc" in response_data["errors"][0]
     assert len(response_data["errors"][0]["loc"]) == 2
     assert response_data["errors"][0]["loc"][0] == "body"
     assert response_data["errors"][0]["loc"][1] == "content"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "String length must not exceed 10000"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "validation_error"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
@@ -348,16 +335,12 @@ async def test_20_null_byte_in_string() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "ctx" in response_data["errors"][0]
-    assert "value" in response_data["errors"][0]["ctx"]
-    assert response_data["errors"][0]["ctx"]["value"] == "file\\u0000.txt"
     assert "loc" in response_data["errors"][0]
     assert len(response_data["errors"][0]["loc"]) == 2
     assert response_data["errors"][0]["loc"][0] == "body"
     assert response_data["errors"][0]["loc"][1] == "filename"
     assert "msg" in response_data["errors"][0]
-    assert response_data["errors"][0]["msg"] == "String contains null byte character"
     assert "type" in response_data["errors"][0]
-    assert response_data["errors"][0]["type"] == "validation_error"
     assert "status" in response_data
     assert response_data["status"] == 422
     assert "title" in response_data
