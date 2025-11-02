@@ -1,30 +1,49 @@
 """E2E tests for http_methods."""
 
-from typing import Any
 
-
-async def test_options__cors_preflight_request(client: Any) -> None:
+async def test_options__cors_preflight_request() -> None:
     """Tests OPTIONS method for CORS preflight."""
+    from app.main import create_app_http_methods_OPTIONS___CORS_preflight_request
+
+    from spikard.testing import TestClient
+
+    app = create_app_http_methods_OPTIONS___CORS_preflight_request()
+    client = TestClient(app)
+
     headers = {
-        "Origin": "https://example.com",
-        "Access-Control-Request-Headers": "Content-Type",
         "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "Content-Type",
+        "Origin": "https://example.com",
     }
     response = await client.options("/items/", headers=headers)
 
     assert response.status_code == 200
 
 
-async def test_delete__remove_resource(client: Any) -> None:
+async def test_delete__remove_resource() -> None:
     """Tests DELETE method to remove a resource."""
+    from app.main import create_app_http_methods_DELETE___Remove_resource
+
+    from spikard.testing import TestClient
+
+    app = create_app_http_methods_DELETE___Remove_resource()
+    client = TestClient(app)
+
     response = await client.delete("/items/1")
 
     assert response.status_code == 200
     response.json()
 
 
-async def test_put__create_resource_if_doesn_t_exist(client: Any) -> None:
+async def test_put__create_resource_if_doesn_t_exist() -> None:
     """Tests PUT creating new resource at specific URI."""
+    from app.main import create_app_http_methods_PUT___Create_resource_if_doesn_t_exist
+
+    from spikard.testing import TestClient
+
+    app = create_app_http_methods_PUT___Create_resource_if_doesn_t_exist()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -41,8 +60,15 @@ async def test_put__create_resource_if_doesn_t_exist(client: Any) -> None:
     assert response_data["price"] == 49.99
 
 
-async def test_patch__update_multiple_fields(client: Any) -> None:
+async def test_patch__update_multiple_fields() -> None:
     """Tests PATCH updating multiple fields at once."""
+    from app.main import create_app_http_methods_PATCH___Update_multiple_fields
+
+    from spikard.testing import TestClient
+
+    app = create_app_http_methods_PATCH___Update_multiple_fields()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -61,8 +87,15 @@ async def test_patch__update_multiple_fields(client: Any) -> None:
     assert response_data["price"] == 89.99
 
 
-async def test_put__validation_error(client: Any) -> None:
+async def test_put__validation_error() -> None:
     """Tests PUT with invalid data returns 422."""
+    from app.main import create_app_http_methods_PUT___Validation_error
+
+    from spikard.testing import TestClient
+
+    app = create_app_http_methods_PUT___Validation_error()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -103,15 +136,29 @@ async def test_put__validation_error(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_head__get_metadata_without_body(client: Any) -> None:
+async def test_head__get_metadata_without_body() -> None:
     """Tests HEAD method returns headers without response body."""
+    from app.main import create_app_http_methods_HEAD___Get_metadata_without_body
+
+    from spikard.testing import TestClient
+
+    app = create_app_http_methods_HEAD___Get_metadata_without_body()
+    client = TestClient(app)
+
     response = await client.head("/items/1")
 
     assert response.status_code == 200
 
 
-async def test_delete__with_response_body(client: Any) -> None:
+async def test_delete__with_response_body() -> None:
     """Tests DELETE returning deleted resource data."""
+    from app.main import create_app_http_methods_DELETE___With_response_body
+
+    from spikard.testing import TestClient
+
+    app = create_app_http_methods_DELETE___With_response_body()
+    client = TestClient(app)
+
     response = await client.delete("/items/1")
 
     assert response.status_code == 200
@@ -124,8 +171,15 @@ async def test_delete__with_response_body(client: Any) -> None:
     assert response_data["name"] == "Deleted Item"
 
 
-async def test_put__missing_required_field(client: Any) -> None:
+async def test_put__missing_required_field() -> None:
     """Tests PUT with missing required fields returns 422."""
+    from app.main import create_app_http_methods_PUT___Missing_required_field
+
+    from spikard.testing import TestClient
+
+    app = create_app_http_methods_PUT___Missing_required_field()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -156,8 +210,15 @@ async def test_put__missing_required_field(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_patch__partial_update(client: Any) -> None:
+async def test_patch__partial_update() -> None:
     """Tests PATCH method for partial resource updates."""
+    from app.main import create_app_http_methods_PATCH___Partial_update
+
+    from spikard.testing import TestClient
+
+    app = create_app_http_methods_PATCH___Partial_update()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -176,16 +237,30 @@ async def test_patch__partial_update(client: Any) -> None:
     assert response_data["price"] == 79.99
 
 
-async def test_delete__resource_not_found(client: Any) -> None:
+async def test_delete__resource_not_found() -> None:
     """Tests DELETE on non-existent resource returns 404."""
+    from app.main import create_app_http_methods_DELETE___Resource_not_found
+
+    from spikard.testing import TestClient
+
+    app = create_app_http_methods_DELETE___Resource_not_found()
+    client = TestClient(app)
+
     response = await client.delete("/items/999")
 
     assert response.status_code == 200
     response.json()
 
 
-async def test_put__idempotent_operation(client: Any) -> None:
+async def test_put__idempotent_operation() -> None:
     """Tests PUT idempotency - repeated calls produce same result."""
+    from app.main import create_app_http_methods_PUT___Idempotent_operation
+
+    from spikard.testing import TestClient
+
+    app = create_app_http_methods_PUT___Idempotent_operation()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -202,8 +277,15 @@ async def test_put__idempotent_operation(client: Any) -> None:
     assert response_data["price"] == 50.0
 
 
-async def test_put__complete_resource_replacement(client: Any) -> None:
+async def test_put__complete_resource_replacement() -> None:
     """Tests PUT method for complete resource replacement."""
+    from app.main import create_app_http_methods_PUT___Complete_resource_replacement
+
+    from spikard.testing import TestClient
+
+    app = create_app_http_methods_PUT___Complete_resource_replacement()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }

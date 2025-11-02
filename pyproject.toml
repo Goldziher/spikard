@@ -146,7 +146,7 @@ exclude_lines = [
 
 [tool.mypy]
 mypy_path = "packages/python"
-exclude = [ "examples", "testing_data" ]
+exclude = [ "examples", "testing_data", "e2e" ]
 python_version = "3.10"
 implicit_reexport = false
 show_error_codes = true

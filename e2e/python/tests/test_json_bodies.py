@@ -1,10 +1,15 @@
 """E2E tests for json_bodies."""
 
-import pytest
-from typing import Any
 
-async def test_uuid_field__invalid_format(client: Any) -> None:
+async def test_uuid_field__invalid_format() -> None:
     """Tests UUID field with invalid UUID format."""
+    from app.main import create_app_json_bodies_UUID_field___invalid_format
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_UUID_field___invalid_format()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -35,8 +40,15 @@ async def test_uuid_field__invalid_format(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_44_const_validation_failure(client: Any) -> None:
+async def test_44_const_validation_failure() -> None:
     """Field with const constraint not matching exact value should fail."""
+    from app.main import create_app_json_bodies_44_const_validation_failure
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_44_const_validation_failure()
+    client = TestClient(app)
+
     json_data = {"data": "test", "version": "2.0"}
     response = await client.post("/api/v1/data", json=json_data)
 
@@ -67,8 +79,15 @@ async def test_44_const_validation_failure(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_boolean_field__success(client: Any) -> None:
+async def test_boolean_field__success() -> None:
     """Tests JSON object with boolean field."""
+    from app.main import create_app_json_bodies_Boolean_field___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Boolean_field___success()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -78,15 +97,22 @@ async def test_boolean_field__success(client: Any) -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "in_stock" in response_data
-    assert response_data["in_stock"] == True
+    assert response_data["in_stock"]
     assert "name" in response_data
     assert response_data["name"] == "Item"
     assert "price" in response_data
     assert response_data["price"] == 42.0
 
 
-async def test_numeric_le_validation__success(client: Any) -> None:
+async def test_numeric_le_validation__success() -> None:
     """Tests numeric field with le (less than or equal) constraint at boundary."""
+    from app.main import create_app_json_bodies_Numeric_le_validation___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Numeric_le_validation___success()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -101,12 +127,26 @@ async def test_numeric_le_validation__success(client: Any) -> None:
     assert response_data["price"] == 100.0
 
 
-async def test_deeply_nested_objects(client: Any) -> None:
+async def test_deeply_nested_objects() -> None:
     """Tests deeply nested JSON structure (3+ levels)."""
+    from app.main import create_app_json_bodies_Deeply_nested_objects
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Deeply_nested_objects()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
-    json_data = {"name": "Product", "price": 100.0, "seller": {"address": {"city": "Springfield", "country": {"code": "US", "name": "USA"}, "street": "123 Main St"}, "name": "John Doe"}}
+    json_data = {
+        "name": "Product",
+        "price": 100.0,
+        "seller": {
+            "address": {"city": "Springfield", "country": {"code": "US", "name": "USA"}, "street": "123 Main St"},
+            "name": "John Doe",
+        },
+    }
     response = await client.post("/items/nested", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -130,8 +170,15 @@ async def test_deeply_nested_objects(client: Any) -> None:
     assert response_data["seller"]["name"] == "John Doe"
 
 
-async def test_optional_fields__omitted(client: Any) -> None:
+async def test_optional_fields__omitted() -> None:
     """Tests object with optional fields omitted."""
+    from app.main import create_app_json_bodies_Optional_fields___omitted
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Optional_fields___omitted()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -141,17 +188,24 @@ async def test_optional_fields__omitted(client: Any) -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "description" in response_data
-    assert response_data["description"] == None
+    assert response_data["description"] is None
     assert "name" in response_data
     assert response_data["name"] == "Foo"
     assert "price" in response_data
     assert response_data["price"] == 35.4
     assert "tax" in response_data
-    assert response_data["tax"] == None
+    assert response_data["tax"] is None
 
 
-async def test_uuid_field__success(client: Any) -> None:
+async def test_uuid_field__success() -> None:
     """Tests UUID field with valid UUID format."""
+    from app.main import create_app_json_bodies_UUID_field___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_UUID_field___success()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -166,8 +220,15 @@ async def test_uuid_field__success(client: Any) -> None:
     assert response_data["name"] == "Item"
 
 
-async def test_date_field__success(client: Any) -> None:
+async def test_date_field__success() -> None:
     """Tests date field with ISO date format."""
+    from app.main import create_app_json_bodies_Date_field___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Date_field___success()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -182,8 +243,15 @@ async def test_date_field__success(client: Any) -> None:
     assert response_data["name"] == "Conference"
 
 
-async def test_47_maxproperties_validation_failure(client: Any) -> None:
+async def test_47_maxproperties_validation_failure() -> None:
     """Object with more properties than maxProperties should fail."""
+    from app.main import create_app_json_bodies_47_maxproperties_validation_failure
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_47_maxproperties_validation_failure()
+    client = TestClient(app)
+
     json_data = {"debug": False, "host": "localhost", "port": 8080, "ssl": True}
     response = await client.post("/config", json=json_data)
 
@@ -213,8 +281,15 @@ async def test_47_maxproperties_validation_failure(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_46_minproperties_validation_failure(client: Any) -> None:
+async def test_46_minproperties_validation_failure() -> None:
     """Object with fewer properties than minProperties should fail."""
+    from app.main import create_app_json_bodies_46_minproperties_validation_failure
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_46_minproperties_validation_failure()
+    client = TestClient(app)
+
     json_data = {"host": "localhost"}
     response = await client.post("/config", json=json_data)
 
@@ -244,8 +319,15 @@ async def test_46_minproperties_validation_failure(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_string_min_length_validation__fail(client: Any) -> None:
+async def test_string_min_length_validation__fail() -> None:
     """Tests string field with min_length constraint failure."""
+    from app.main import create_app_json_bodies_String_min_length_validation___fail
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_String_min_length_validation___fail()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -279,8 +361,15 @@ async def test_string_min_length_validation__fail(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_field_type_validation__invalid_type(client: Any) -> None:
+async def test_field_type_validation__invalid_type() -> None:
     """Tests type validation error when field has wrong type."""
+    from app.main import create_app_json_bodies_Field_type_validation___invalid_type
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Field_type_validation___invalid_type()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -311,8 +400,15 @@ async def test_field_type_validation__invalid_type(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_36_oneof_schema_multiple_match_failure(client: Any) -> None:
+async def test_36_oneof_schema_multiple_match_failure() -> None:
     """oneOf schema composition - fails when multiple schemas match."""
+    from app.main import create_app_json_bodies_36_oneof_schema_multiple_match_failure
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_36_oneof_schema_multiple_match_failure()
+    client = TestClient(app)
+
     json_data = {"credit_card": "1234567812345678", "paypal_email": "user@example.com"}
     response = await client.post("/payment", json=json_data)
 
@@ -340,12 +436,23 @@ async def test_36_oneof_schema_multiple_match_failure(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_nested_object__success(client: Any) -> None:
+async def test_nested_object__success() -> None:
     """Tests nested JSON objects."""
+    from app.main import create_app_json_bodies_Nested_object___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Nested_object___success()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
-    json_data = {"image": {"name": "Product Image", "url": "https://example.com/image.jpg"}, "name": "Foo", "price": 42.0}
+    json_data = {
+        "image": {"name": "Product Image", "url": "https://example.com/image.jpg"},
+        "name": "Foo",
+        "price": 42.0,
+    }
     response = await client.post("/items/nested", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -361,16 +468,30 @@ async def test_nested_object__success(client: Any) -> None:
     assert response_data["price"] == 42.0
 
 
-async def test_41_not_schema_success(client: Any) -> None:
+async def test_41_not_schema_success() -> None:
     """not schema - value must not match the schema."""
+    from app.main import create_app_json_bodies_41_not_schema_success
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_41_not_schema_success()
+    client = TestClient(app)
+
     json_data = {"username": "john_doe"}
     response = await client.post("/users", json=json_data)
 
     assert response.status_code == 201
 
 
-async def test_string_max_length_validation__fail(client: Any) -> None:
+async def test_string_max_length_validation__fail() -> None:
     """Tests string field with max_length constraint failure."""
+    from app.main import create_app_json_bodies_String_max_length_validation___fail
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_String_max_length_validation___fail()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -404,24 +525,45 @@ async def test_string_max_length_validation__fail(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_50_deep_nesting_4_levels(client: Any) -> None:
+async def test_50_deep_nesting_4_levels() -> None:
     """Deeply nested object with 4+ levels should validate correctly."""
+    from app.main import create_app_json_bodies_50_deep_nesting_4_levels
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_50_deep_nesting_4_levels()
+    client = TestClient(app)
+
     json_data = {"user": {"profile": {"contact": {"address": {"street": "123 Main St"}}}}}
     response = await client.post("/data", json=json_data)
 
     assert response.status_code == 201
 
 
-async def test_48_dependencies_validation_success(client: Any) -> None:
+async def test_48_dependencies_validation_success() -> None:
     """Dependencies constraint - when A present, B is required and provided."""
+    from app.main import create_app_json_bodies_48_dependencies_validation_success
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_48_dependencies_validation_success()
+    client = TestClient(app)
+
     json_data = {"billing_address": "123 Main St", "credit_card": "1234567812345678", "name": "John Doe"}
     response = await client.post("/billing", json=json_data)
 
     assert response.status_code == 201
 
 
-async def test_patch_partial_update(client: Any) -> None:
+async def test_patch_partial_update() -> None:
     """Tests PATCH request with partial object update."""
+    from app.main import create_app_json_bodies_PATCH_partial_update
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_PATCH_partial_update()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -438,8 +580,15 @@ async def test_patch_partial_update(client: Any) -> None:
     assert response_data["price"] == 45.0
 
 
-async def test_30_nested_object_missing_field(client: Any) -> None:
+async def test_30_nested_object_missing_field() -> None:
     """Nested object missing required field should fail validation."""
+    from app.main import create_app_json_bodies_30_nested_object_missing_field
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_30_nested_object_missing_field()
+    client = TestClient(app)
+
     json_data = {"profile": {"name": "John Doe"}}
     response = await client.post("/users", json=json_data)
 
@@ -451,7 +600,7 @@ async def test_30_nested_object_missing_field(client: Any) -> None:
     assert len(response_data["errors"]) == 1
     assert "ctx" in response_data["errors"][0]
     assert "required" in response_data["errors"][0]["ctx"]
-    assert response_data["errors"][0]["ctx"]["required"] == True
+    assert response_data["errors"][0]["ctx"]["required"]
     assert "loc" in response_data["errors"][0]
     assert len(response_data["errors"][0]["loc"]) == 3
     assert response_data["errors"][0]["loc"][0] == "body"
@@ -469,8 +618,15 @@ async def test_30_nested_object_missing_field(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_datetime_field__success(client: Any) -> None:
+async def test_datetime_field__success() -> None:
     """Tests datetime field with ISO datetime format."""
+    from app.main import create_app_json_bodies_Datetime_field___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Datetime_field___success()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -485,8 +641,15 @@ async def test_datetime_field__success(client: Any) -> None:
     assert response_data["name"] == "Meeting"
 
 
-async def test_string_pattern_validation__success(client: Any) -> None:
+async def test_string_pattern_validation__success() -> None:
     """Tests string field with regex pattern constraint success."""
+    from app.main import create_app_json_bodies_String_pattern_validation___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_String_pattern_validation___success()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -501,8 +664,15 @@ async def test_string_pattern_validation__success(client: Any) -> None:
     assert response_data["sku"] == "ABC1234"
 
 
-async def test_extra_fields_ignored_no_additionalproperties(client: Any) -> None:
+async def test_extra_fields_ignored_no_additionalproperties() -> None:
     """Tests that extra fields not in model are ignored."""
+    from app.main import create_app_json_bodies_Extra_fields_ignored__no_additionalProperties
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Extra_fields_ignored__no_additionalProperties()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -517,8 +687,15 @@ async def test_extra_fields_ignored_no_additionalproperties(client: Any) -> None
     assert response_data["price"] == 42.0
 
 
-async def test_40_anyof_schema_failure(client: Any) -> None:
+async def test_40_anyof_schema_failure() -> None:
     """anyOf schema composition - fails when no schemas match."""
+    from app.main import create_app_json_bodies_40_anyof_schema_failure
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_40_anyof_schema_failure()
+    client = TestClient(app)
+
     json_data = {"name": "John Doe"}
     response = await client.post("/contact", json=json_data)
 
@@ -546,16 +723,30 @@ async def test_40_anyof_schema_failure(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_39_anyof_schema_multiple_match_success(client: Any) -> None:
+async def test_39_anyof_schema_multiple_match_success() -> None:
     """anyOf schema composition - succeeds when multiple schemas match."""
+    from app.main import create_app_json_bodies_39_anyof_schema_multiple_match_success
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_39_anyof_schema_multiple_match_success()
+    client = TestClient(app)
+
     json_data = {"email": "john@example.com", "name": "John Doe", "phone": "+1-555-0100"}
     response = await client.post("/contact", json=json_data)
 
     assert response.status_code == 201
 
 
-async def test_array_of_primitive_values(client: Any) -> None:
+async def test_array_of_primitive_values() -> None:
     """Tests array field containing primitive values (strings, numbers)."""
+    from app.main import create_app_json_bodies_Array_of_primitive_values
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Array_of_primitive_values()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -579,8 +770,15 @@ async def test_array_of_primitive_values(client: Any) -> None:
     assert response_data["tags"][2] == "new"
 
 
-async def test_numeric_ge_validation__fail(client: Any) -> None:
+async def test_numeric_ge_validation__fail() -> None:
     """Tests numeric field with ge (greater than or equal) constraint failure."""
+    from app.main import create_app_json_bodies_Numeric_ge_validation___fail
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Numeric_ge_validation___fail()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -614,8 +812,15 @@ async def test_numeric_ge_validation__fail(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_37_oneof_schema_no_match_failure(client: Any) -> None:
+async def test_37_oneof_schema_no_match_failure() -> None:
     """oneOf schema composition - fails when no schemas match."""
+    from app.main import create_app_json_bodies_37_oneof_schema_no_match_failure
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_37_oneof_schema_no_match_failure()
+    client = TestClient(app)
+
     json_data = {"bitcoin_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"}
     response = await client.post("/payment", json=json_data)
 
@@ -643,8 +848,15 @@ async def test_37_oneof_schema_no_match_failure(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_empty_array_validation__fail(client: Any) -> None:
+async def test_empty_array_validation__fail() -> None:
     """Tests array field with min_items constraint failure."""
+    from app.main import create_app_json_bodies_Empty_array_validation___fail
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Empty_array_validation___fail()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -678,16 +890,30 @@ async def test_empty_array_validation__fail(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_38_anyof_schema_success(client: Any) -> None:
+async def test_38_anyof_schema_success() -> None:
     """anyOf schema composition - at least one schema must match."""
+    from app.main import create_app_json_bodies_38_anyof_schema_success
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_38_anyof_schema_success()
+    client = TestClient(app)
+
     json_data = {"email": "john@example.com", "name": "John Doe"}
     response = await client.post("/contact", json=json_data)
 
     assert response.status_code == 201
 
 
-async def test_empty_json_object(client: Any) -> None:
+async def test_empty_json_object() -> None:
     """Tests empty JSON object when all fields are optional."""
+    from app.main import create_app_json_bodies_Empty_JSON_object
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Empty_JSON_object()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -697,17 +923,24 @@ async def test_empty_json_object(client: Any) -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "description" in response_data
-    assert response_data["description"] == None
+    assert response_data["description"] is None
     assert "name" in response_data
-    assert response_data["name"] == None
+    assert response_data["name"] is None
     assert "price" in response_data
-    assert response_data["price"] == None
+    assert response_data["price"] is None
     assert "tax" in response_data
-    assert response_data["tax"] == None
+    assert response_data["tax"] is None
 
 
-async def test_string_pattern_validation__fail(client: Any) -> None:
+async def test_string_pattern_validation__fail() -> None:
     """Tests string field with regex pattern constraint failure."""
+    from app.main import create_app_json_bodies_String_pattern_validation___fail
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_String_pattern_validation___fail()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -741,8 +974,15 @@ async def test_string_pattern_validation__fail(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_49_dependencies_validation_failure(client: Any) -> None:
+async def test_49_dependencies_validation_failure() -> None:
     """Dependencies constraint - when A present, B is required but missing."""
+    from app.main import create_app_json_bodies_49_dependencies_validation_failure
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_49_dependencies_validation_failure()
+    client = TestClient(app)
+
     json_data = {"credit_card": "1234567812345678", "name": "John Doe"}
     response = await client.post("/billing", json=json_data)
 
@@ -773,8 +1013,15 @@ async def test_49_dependencies_validation_failure(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_simple_json_object__success(client: Any) -> None:
+async def test_simple_json_object__success() -> None:
     """Tests simple JSON object with all required fields."""
+    from app.main import create_app_json_bodies_Simple_JSON_object___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Simple_JSON_object___success()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -793,8 +1040,15 @@ async def test_simple_json_object__success(client: Any) -> None:
     assert response_data["tax"] == 3.2
 
 
-async def test_required_field_missing__validation_error(client: Any) -> None:
+async def test_required_field_missing__validation_error() -> None:
     """Tests validation error when required field is missing."""
+    from app.main import create_app_json_bodies_Required_field_missing___validation_error
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Required_field_missing___validation_error()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -825,16 +1079,30 @@ async def test_required_field_missing__validation_error(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_35_oneof_schema_success(client: Any) -> None:
+async def test_35_oneof_schema_success() -> None:
     """oneOf schema composition - exactly one schema must match."""
+    from app.main import create_app_json_bodies_35_oneof_schema_success
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_35_oneof_schema_success()
+    client = TestClient(app)
+
     json_data = {"credit_card": "1234567812345678"}
     response = await client.post("/payment", json=json_data)
 
     assert response.status_code == 201
 
 
-async def test_enum_field__invalid_value(client: Any) -> None:
+async def test_enum_field__invalid_value() -> None:
     """Tests enum field with value not in enum."""
+    from app.main import create_app_json_bodies_Enum_field___invalid_value
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Enum_field___invalid_value()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -868,8 +1136,15 @@ async def test_enum_field__invalid_value(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_enum_field__success(client: Any) -> None:
+async def test_enum_field__success() -> None:
     """Tests enum field with valid enum value."""
+    from app.main import create_app_json_bodies_Enum_field___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Enum_field___success()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -884,24 +1159,45 @@ async def test_enum_field__success(client: Any) -> None:
     assert response_data["name"] == "Item"
 
 
-async def test_33_allof_schema_composition(client: Any) -> None:
+async def test_33_allof_schema_composition() -> None:
     """JSON Schema allOf composition should validate all schemas."""
+    from app.main import create_app_json_bodies_33_allof_schema_composition
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_33_allof_schema_composition()
+    client = TestClient(app)
+
     json_data = {"name": "Product", "price": 29.99}
     response = await client.post("/items", json=json_data)
 
     assert response.status_code == 201
 
 
-async def test_45_minproperties_validation_success(client: Any) -> None:
+async def test_45_minproperties_validation_success() -> None:
     """Object with properties meeting minProperties constraint should succeed."""
+    from app.main import create_app_json_bodies_45_minproperties_validation_success
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_45_minproperties_validation_success()
+    client = TestClient(app)
+
     json_data = {"host": "localhost", "port": 8080}
     response = await client.post("/config", json=json_data)
 
     assert response.status_code == 201
 
 
-async def test_body_with_query_parameters(client: Any) -> None:
+async def test_body_with_query_parameters() -> None:
     """Tests JSON body combined with query parameters."""
+    from app.main import create_app_json_bodies_Body_with_query_parameters
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Body_with_query_parameters()
+    client = TestClient(app)
+
     params = {
         "limit": 10,
     }
@@ -922,8 +1218,15 @@ async def test_body_with_query_parameters(client: Any) -> None:
     assert response_data["limit"] == 10
 
 
-async def test_42_not_schema_failure(client: Any) -> None:
+async def test_42_not_schema_failure() -> None:
     """not schema - fails when value matches the prohibited schema."""
+    from app.main import create_app_json_bodies_42_not_schema_failure
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_42_not_schema_failure()
+    client = TestClient(app)
+
     json_data = {"username": "admin"}
     response = await client.post("/users", json=json_data)
 
@@ -952,32 +1255,60 @@ async def test_42_not_schema_failure(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_43_const_validation_success(client: Any) -> None:
+async def test_43_const_validation_success() -> None:
     """Field with const constraint matching exact value should succeed."""
+    from app.main import create_app_json_bodies_43_const_validation_success
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_43_const_validation_success()
+    client = TestClient(app)
+
     json_data = {"data": "test", "version": "1.0"}
     response = await client.post("/api/v1/data", json=json_data)
 
     assert response.status_code == 201
 
 
-async def test_32_schema_ref_definitions(client: Any) -> None:
+async def test_32_schema_ref_definitions() -> None:
     """JSON Schema $ref with definitions should validate correctly."""
+    from app.main import create_app_json_bodies_32_schema_ref_definitions
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_32_schema_ref_definitions()
+    client = TestClient(app)
+
     json_data = {"product": {"name": "Widget", "price": 9.99}}
     response = await client.post("/products", json=json_data)
 
     assert response.status_code == 201
 
 
-async def test_29_nested_object_validation_success(client: Any) -> None:
+async def test_29_nested_object_validation_success() -> None:
     """Nested object in JSON body should validate correctly."""
+    from app.main import create_app_json_bodies_29_nested_object_validation_success
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_29_nested_object_validation_success()
+    client = TestClient(app)
+
     json_data = {"profile": {"email": "john@example.com", "name": "John Doe"}}
     response = await client.post("/users", json=json_data)
 
     assert response.status_code == 201
 
 
-async def test_34_additional_properties_false(client: Any) -> None:
+async def test_34_additional_properties_false() -> None:
     """Schema with additionalProperties false should reject extra fields."""
+    from app.main import create_app_json_bodies_34_additional_properties_false
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_34_additional_properties_false()
+    client = TestClient(app)
+
     json_data = {"email": "john@example.com", "extra_field": "should fail", "name": "John"}
     response = await client.post("/users", json=json_data)
 
@@ -989,7 +1320,7 @@ async def test_34_additional_properties_false(client: Any) -> None:
     assert len(response_data["errors"]) == 1
     assert "ctx" in response_data["errors"][0]
     assert "additional_properties" in response_data["errors"][0]["ctx"]
-    assert response_data["errors"][0]["ctx"]["additional_properties"] == False
+    assert not response_data["errors"][0]["ctx"]["additional_properties"]
     assert "unexpected_field" in response_data["errors"][0]["ctx"]
     assert response_data["errors"][0]["ctx"]["unexpected_field"] == "extra_field"
     assert "loc" in response_data["errors"][0]
@@ -1008,8 +1339,15 @@ async def test_34_additional_properties_false(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_null_value_for_optional_field(client: Any) -> None:
+async def test_null_value_for_optional_field() -> None:
     """Tests explicitly setting optional field to null."""
+    from app.main import create_app_json_bodies_Null_value_for_optional_field
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Null_value_for_optional_field()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -1019,29 +1357,50 @@ async def test_null_value_for_optional_field(client: Any) -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "description" in response_data
-    assert response_data["description"] == None
+    assert response_data["description"] is None
     assert "name" in response_data
     assert response_data["name"] == "Item"
     assert "price" in response_data
     assert response_data["price"] == 42.0
     assert "tax" in response_data
-    assert response_data["tax"] == None
+    assert response_data["tax"] is None
 
 
-async def test_31_nullable_property_null_value(client: Any) -> None:
+async def test_31_nullable_property_null_value() -> None:
     """Nullable property with null value should be accepted."""
+    from app.main import create_app_json_bodies_31_nullable_property_null_value
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_31_nullable_property_null_value()
+    client = TestClient(app)
+
     json_data = {"description": None, "name": "Test User"}
     response = await client.post("/users", json=json_data)
 
     assert response.status_code == 201
 
 
-async def test_array_of_objects__success(client: Any) -> None:
+async def test_array_of_objects__success() -> None:
     """Tests array field containing objects."""
+    from app.main import create_app_json_bodies_Array_of_objects___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_json_bodies_Array_of_objects___success()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
-    json_data = {"images": [{"name": "Front", "url": "https://example.com/img1.jpg"}, {"name": "Back", "url": "https://example.com/img2.jpg"}], "name": "Product Bundle", "tags": ["electronics", "gadget"]}
+    json_data = {
+        "images": [
+            {"name": "Front", "url": "https://example.com/img1.jpg"},
+            {"name": "Back", "url": "https://example.com/img2.jpg"},
+        ],
+        "name": "Product Bundle",
+        "tags": ["electronics", "gadget"],
+    }
     response = await client.post("/items/list", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -1062,5 +1421,3 @@ async def test_array_of_objects__success(client: Any) -> None:
     assert len(response_data["tags"]) == 2
     assert response_data["tags"][0] == "electronics"
     assert response_data["tags"][1] == "gadget"
-
-
