@@ -1,7 +1,7 @@
 """E2E tests for cors."""
 
-import pytest
 from typing import Any
+
 
 async def test_07_cors_preflight_header_not_allowed(client: Any) -> None:
     """CORS preflight request with non-allowed header should be rejected."""
@@ -18,9 +18,9 @@ async def test_07_cors_preflight_header_not_allowed(client: Any) -> None:
 async def test_cors_preflight_request(client: Any) -> None:
     """Tests OPTIONS preflight request for CORS."""
     headers = {
-        "Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
-        "Origin": "https://example.com",
         "Access-Control-Request-Method": "POST",
+        "Origin": "https://example.com",
+        "Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
     }
     response = await client.options("/items/", headers=headers)
 
@@ -44,8 +44,8 @@ async def test_cors_with_credentials(client: Any) -> None:
 async def test_08_cors_max_age(client: Any) -> None:
     """CORS preflight response should include Access-Control-Max-Age."""
     headers = {
-        "Access-Control-Request-Headers": "Content-Type",
         "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "Content-Type",
         "Origin": "https://example.com",
     }
     response = await client.options("/api/data", headers=headers)
@@ -118,12 +118,10 @@ async def test_09_cors_expose_headers(client: Any) -> None:
 async def test_06_cors_preflight_method_not_allowed(client: Any) -> None:
     """CORS preflight request for non-allowed method should be rejected."""
     headers = {
+        "Origin": "https://example.com",
         "Access-Control-Request-Method": "DELETE",
         "Access-Control-Request-Headers": "Content-Type",
-        "Origin": "https://example.com",
     }
     response = await client.options("/api/data", headers=headers)
 
     assert response.status_code == 403
-
-

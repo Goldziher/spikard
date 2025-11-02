@@ -1,7 +1,7 @@
 """E2E tests for headers."""
 
-import pytest
 from typing import Any
+
 
 async def test_header_regex_validation__success(client: Any) -> None:
     """Tests header with regex pattern validation success."""
@@ -173,7 +173,7 @@ async def test_optional_header_with_none_default__missing(client: Any) -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "strange_header" in response_data
-    assert response_data["strange_header"] == None
+    assert response_data["strange_header"] is None
 
 
 async def test_header_regex_validation__fail(client: Any) -> None:
@@ -403,9 +403,9 @@ async def test_x_api_key_optional_header__missing(client: Any) -> None:
 async def test_multiple_custom_headers(client: Any) -> None:
     """Tests multiple custom headers in single request."""
     headers = {
-        "X-Request-Id": "req-12345",
         "X-Client-Version": "1.2.3",
         "X-Trace-Id": "trace-abc",
+        "X-Request-Id": "req-12345",
     }
     response = await client.get("/headers/multiple", headers=headers)
 
@@ -534,5 +534,3 @@ async def test_user_agent_header__custom_value(client: Any) -> None:
     response_data = response.json()
     assert "User-Agent" in response_data
     assert response_data["User-Agent"] == "Mozilla/5.0 Custom Browser"
-
-
