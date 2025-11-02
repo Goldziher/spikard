@@ -7,7 +7,6 @@ use serde_json::Value;
 
 pub mod cors;
 pub mod debug;
-pub mod file_validator;
 pub mod handler;
 pub mod middleware;
 pub mod parameters;
@@ -18,7 +17,6 @@ pub mod router;
 pub mod server;
 pub mod validation;
 
-pub use file_validator::{FileParameterSchema, FileValidationError, validate_files};
 pub use handler::PythonHandler;
 pub use parameters::ParameterValidator;
 pub use problem::{CONTENT_TYPE_PROBLEM_JSON, ProblemDetails};

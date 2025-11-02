@@ -22,24 +22,10 @@
     "body": "{\"name\": \"Item\", \"price\": }"
   },
   "expected_response": {
-    "status_code": 422,
+    "status_code": 400,
     "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "type_error",
-          "loc": [
-            "body",
-            "body"
-          ],
-          "msg": "Input should be a valid unknown",
-          "input": "{\"name\": \"Item\", \"price\": }"
-        }
-      ]
+      "detail": "Invalid request format"
     }
   },
-  "notes": "Malformed JSON results in json_invalid error before field validation"
+  "notes": "Malformed JSON is a syntax error (400 Bad Request), not a validation error (422)"
 }

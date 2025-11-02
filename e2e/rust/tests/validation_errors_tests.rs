@@ -4500,7 +4500,7 @@ mod validation_errors {
     async fn test_validation_errors_malformed_json_body() {
         // Fixture: Malformed JSON body
         // Description: Tests validation error when request body contains malformed JSON
-        // Expected status: 422
+        // Expected status: 400
 
         use axum::body::Body;
         use axum::http::{Request, StatusCode};
@@ -4770,8 +4770,8 @@ mod validation_errors {
         // Assert status code
         assert_eq!(
             response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
+            StatusCode::from_u16(400).unwrap(),
+            "Expected status 400, got {:?}",
             response.status()
         );
     }

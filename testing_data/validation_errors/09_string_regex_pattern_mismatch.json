@@ -6,6 +6,18 @@
     "test_file": "tests/test_tutorial/test_query_params_str_validations/test_tutorial006.py",
     "test_function": "test_query_params_str_regex"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "q": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        }
+      }
+    }
+  },
   "request": {
     "method": "GET",
     "path": "/items/?q=invalid!",

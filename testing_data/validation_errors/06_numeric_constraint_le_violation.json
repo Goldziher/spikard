@@ -6,6 +6,21 @@
     "test_file": "tests/test_tutorial/test_query_params_str_validations/test_tutorial011.py",
     "test_function": "test_query_params_le"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "q": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "integer",
+          "maximum": 100
+        }
+      }
+    }
+  },
   "request": {
     "method": "GET",
     "path": "/items/?q=test&limit=101",

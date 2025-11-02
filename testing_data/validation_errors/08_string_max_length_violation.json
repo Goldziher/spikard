@@ -6,6 +6,18 @@
     "test_file": "tests/test_tutorial/test_query_params_str_validations/test_tutorial001.py",
     "test_function": "test_query_params_str_validations"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "q": {
+          "type": "string",
+          "maxLength": 50
+        }
+      }
+    }
+  },
   "request": {
     "method": "GET",
     "path": "/items/?q=this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter",

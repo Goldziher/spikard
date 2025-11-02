@@ -6,6 +6,23 @@
     "test_file": "tests/test_tutorial/test_header_params/test_tutorial001.py",
     "test_function": "test_header_missing"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "q": {
+          "type": "string"
+        }
+      },
+      "headers": {
+        "x-token": {
+          "type": "string",
+          "required": true
+        }
+      }
+    }
+  },
   "request": {
     "method": "GET",
     "path": "/items/?q=test"
