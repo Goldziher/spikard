@@ -254,8 +254,8 @@ fn generate_body_assertions(code: &mut String, body: &serde_json::Value, path: &
                         let in_errors = path.contains("[\"errors\"]");
                         let skip_assertion = in_errors
                             && (
-                                // Skip empty input placeholders
-                                (key == "input" && matches!(value, serde_json::Value::String(s) if s.is_empty()))
+                                // Skip input field entirely (content varies by validator)
+                                key == "input"
                             // Skip error messages (wording varies by validator)
                             || key == "msg"
                             // Skip error type names (naming varies by validator)

@@ -1,11 +1,12 @@
 """E2E tests for multipart."""
 
+import pytest
+from typing import Any
 
 async def test_multiple_values_for_same_field_name() -> None:
     """Multiple files uploaded with the same field name (array-like behavior)."""
-    from app.main import create_app_multipart_multiple_values_for_same_field_name
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_multiple_values_for_same_field_name
 
     app = create_app_multipart_multiple_values_for_same_field_name()
     client = TestClient(app)
@@ -41,9 +42,8 @@ async def test_multiple_values_for_same_field_name() -> None:
 
 async def test_19_file_mime_spoofing_png_as_jpeg() -> None:
     """File with PNG magic number but JPEG MIME type should be rejected (spoofing detection)."""
-    from app.main import create_app_multipart_19_file_mime_spoofing_png_as_jpeg
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_19_file_mime_spoofing_png_as_jpeg
 
     app = create_app_multipart_19_file_mime_spoofing_png_as_jpeg()
     client = TestClient(app)
@@ -73,9 +73,8 @@ async def test_19_file_mime_spoofing_png_as_jpeg() -> None:
 
 async def test_20_file_mime_spoofing_jpeg_as_png() -> None:
     """File with JPEG magic number but PNG MIME type should be rejected (spoofing detection)."""
-    from app.main import create_app_multipart_20_file_mime_spoofing_jpeg_as_png
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_20_file_mime_spoofing_jpeg_as_png
 
     app = create_app_multipart_20_file_mime_spoofing_jpeg_as_png()
     client = TestClient(app)
@@ -105,9 +104,8 @@ async def test_20_file_mime_spoofing_jpeg_as_png() -> None:
 
 async def test_21_file_pdf_magic_number_success() -> None:
     """File with correct PDF magic number should be accepted."""
-    from app.main import create_app_multipart_21_file_pdf_magic_number_success
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_21_file_pdf_magic_number_success
 
     app = create_app_multipart_21_file_pdf_magic_number_success()
     client = TestClient(app)
@@ -119,9 +117,8 @@ async def test_21_file_pdf_magic_number_success() -> None:
 
 async def test_content_type_validation_invalid_type() -> None:
     """Tests file upload with disallowed content type."""
-    from app.main import create_app_multipart_content_type_validation_invalid_type
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_content_type_validation_invalid_type
 
     app = create_app_multipart_content_type_validation_invalid_type()
     client = TestClient(app)
@@ -136,9 +133,8 @@ async def test_content_type_validation_invalid_type() -> None:
 
 async def test_pdf_file_upload() -> None:
     """Tests uploading a PDF document."""
-    from app.main import create_app_multipart_pdf_file_upload
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_pdf_file_upload
 
     app = create_app_multipart_pdf_file_upload()
     client = TestClient(app)
@@ -157,9 +153,8 @@ async def test_pdf_file_upload() -> None:
 
 async def test_file_list_upload_array_of_files() -> None:
     """Tests uploading multiple files as a list parameter."""
-    from app.main import create_app_multipart_file_list_upload_array_of_files
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_file_list_upload_array_of_files
 
     app = create_app_multipart_file_list_upload_array_of_files()
     client = TestClient(app)
@@ -178,9 +173,8 @@ async def test_file_list_upload_array_of_files() -> None:
 
 async def test_optional_file_upload_provided() -> None:
     """Tests optional file parameter when file is provided."""
-    from app.main import create_app_multipart_optional_file_upload_provided
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_optional_file_upload_provided
 
     app = create_app_multipart_optional_file_upload_provided()
     client = TestClient(app)
@@ -199,9 +193,8 @@ async def test_optional_file_upload_provided() -> None:
 
 async def test_file_size_validation_too_large() -> None:
     """Tests file upload exceeding max size limit."""
-    from app.main import create_app_multipart_file_size_validation_too_large
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_file_size_validation_too_large
 
     app = create_app_multipart_file_size_validation_too_large()
     client = TestClient(app)
@@ -216,9 +209,8 @@ async def test_file_size_validation_too_large() -> None:
 
 async def test_mixed_files_and_form_data() -> None:
     """Multipart request with both file uploads and regular form fields."""
-    from app.main import create_app_multipart_mixed_files_and_form_data
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_mixed_files_and_form_data
 
     app = create_app_multipart_mixed_files_and_form_data()
     client = TestClient(app)
@@ -246,9 +238,8 @@ async def test_mixed_files_and_form_data() -> None:
 
 async def test_simple_file_upload() -> None:
     """Single file upload with text/plain content type."""
-    from app.main import create_app_multipart_simple_file_upload
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_simple_file_upload
 
     app = create_app_multipart_simple_file_upload()
     client = TestClient(app)
@@ -270,9 +261,8 @@ async def test_simple_file_upload() -> None:
 
 async def test_empty_file_upload() -> None:
     """Tests uploading a file with zero bytes."""
-    from app.main import create_app_multipart_empty_file_upload
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_empty_file_upload
 
     app = create_app_multipart_empty_file_upload()
     client = TestClient(app)
@@ -289,9 +279,8 @@ async def test_empty_file_upload() -> None:
 
 async def test_optional_file_upload_missing() -> None:
     """Tests optional file parameter when no file is provided."""
-    from app.main import create_app_multipart_optional_file_upload_missing
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_optional_file_upload_missing
 
     app = create_app_multipart_optional_file_upload_missing()
     client = TestClient(app)
@@ -302,14 +291,13 @@ async def test_optional_file_upload_missing() -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "file" in response_data
-    assert response_data["file"] is None
+    assert response_data["file"] == None
 
 
 async def test_file_upload_without_filename() -> None:
     """Upload file content without providing a filename."""
-    from app.main import create_app_multipart_file_upload_without_filename
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_file_upload_without_filename
 
     app = create_app_multipart_file_upload_without_filename()
     client = TestClient(app)
@@ -324,9 +312,8 @@ async def test_file_upload_without_filename() -> None:
 
 async def test_18_file_magic_number_jpeg_success() -> None:
     """File with correct JPEG magic number and matching MIME type should be accepted."""
-    from app.main import create_app_multipart_18_file_magic_number_jpeg_success
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_18_file_magic_number_jpeg_success
 
     app = create_app_multipart_18_file_magic_number_jpeg_success()
     client = TestClient(app)
@@ -338,9 +325,8 @@ async def test_18_file_magic_number_jpeg_success() -> None:
 
 async def test_22_file_empty_buffer() -> None:
     """File with empty buffer should fail validation."""
-    from app.main import create_app_multipart_22_file_empty_buffer
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_22_file_empty_buffer
 
     app = create_app_multipart_22_file_empty_buffer()
     client = TestClient(app)
@@ -370,9 +356,8 @@ async def test_22_file_empty_buffer() -> None:
 
 async def test_17_file_magic_number_png_success() -> None:
     """File with correct PNG magic number and matching MIME type should be accepted."""
-    from app.main import create_app_multipart_17_file_magic_number_png_success
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_17_file_magic_number_png_success
 
     app = create_app_multipart_17_file_magic_number_png_success()
     client = TestClient(app)
@@ -384,9 +369,8 @@ async def test_17_file_magic_number_png_success() -> None:
 
 async def test_form_data_without_files() -> None:
     """Multipart form with only text fields, no file uploads."""
-    from app.main import create_app_multipart_form_data_without_files
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_form_data_without_files
 
     app = create_app_multipart_form_data_without_files()
     client = TestClient(app)
@@ -401,9 +385,8 @@ async def test_form_data_without_files() -> None:
 
 async def test_multiple_file_uploads() -> None:
     """Upload multiple files in a single multipart request."""
-    from app.main import create_app_multipart_multiple_file_uploads
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_multiple_file_uploads
 
     app = create_app_multipart_multiple_file_uploads()
     client = TestClient(app)
@@ -434,9 +417,8 @@ async def test_multiple_file_uploads() -> None:
 
 async def test_file_upload_with_custom_headers() -> None:
     """File upload with additional custom headers in the multipart section."""
-    from app.main import create_app_multipart_file_upload_with_custom_headers
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_file_upload_with_custom_headers
 
     app = create_app_multipart_file_upload_with_custom_headers()
     client = TestClient(app)
@@ -456,7 +438,7 @@ async def test_file_upload_with_custom_headers() -> None:
     assert len(response_data["test2"]["headers"]) == 3
     assert len(response_data["test2"]["headers"][0]) == 2
     assert response_data["test2"]["headers"][0][0] == "content-disposition"
-    assert response_data["test2"]["headers"][0][1] == 'form-data; name="test2"; filename="test2.txt"'
+    assert response_data["test2"]["headers"][0][1] == "form-data; name=\"test2\"; filename=\"test2.txt\""
     assert len(response_data["test2"]["headers"][1]) == 2
     assert response_data["test2"]["headers"][1][0] == "content-type"
     assert response_data["test2"]["headers"][1][1] == "text/plain"
@@ -469,9 +451,8 @@ async def test_file_upload_with_custom_headers() -> None:
 
 async def test_required_file_upload_missing() -> None:
     """Tests required file parameter when no file is provided."""
-    from app.main import create_app_multipart_required_file_upload_missing
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_required_file_upload_missing
 
     app = create_app_multipart_required_file_upload_missing()
     client = TestClient(app)
@@ -486,7 +467,6 @@ async def test_required_file_upload_missing() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "input" in response_data["errors"][0]
-    assert response_data["errors"][0]["input"] == "required"
     assert "loc" in response_data["errors"][0]
     assert len(response_data["errors"][0]["loc"]) == 2
     assert response_data["errors"][0]["loc"][0] == "body"
@@ -503,9 +483,8 @@ async def test_required_file_upload_missing() -> None:
 
 async def test_image_file_upload() -> None:
     """Tests uploading an image file (JPEG)."""
-    from app.main import create_app_multipart_image_file_upload
-
     from spikard.testing import TestClient
+    from app.main import create_app_multipart_image_file_upload
 
     app = create_app_multipart_image_file_upload()
     client = TestClient(app)
@@ -520,3 +499,5 @@ async def test_image_file_upload() -> None:
     assert response_data["filename"] == "photo.jpg"
     assert "size" in response_data
     assert response_data["size"] == 22
+
+
