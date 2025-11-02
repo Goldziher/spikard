@@ -3,7 +3,7 @@
 //! Generates pytest test suites from fixtures for e2e testing.
 
 use anyhow::{Context, Result};
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -245,7 +245,15 @@ fn generate_body_assertions(code: &mut String, body: &serde_json::Value, path: &
                         generate_body_assertions(code, value, &new_path);
                     }
                     _ => {
-                        code.push_str(&format!("    assert {} == {}\n", new_path, json_to_python(value)));
+                        // Skip asserting on "input" field inside errors when it's an empty string
+                        // (fixtures use "" as placeholder, actual value is dynamic)
+                        let skip_assertion = key == "input"
+                            && path.contains("[\"errors\"]")
+                            && matches!(value, serde_json::Value::String(s) if s.is_empty());
+
+                        if !skip_assertion {
+                            code.push_str(&format!("    assert {} == {}\n", new_path, json_to_python(value)));
+                        }
                     }
                 }
             }

@@ -78,7 +78,6 @@ async def test_422_unprocessable_entity_validation_error() -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "input" in response_data["errors"][0]
-    assert response_data["errors"][0]["input"] == ""
     assert "loc" in response_data["errors"][0]
     assert len(response_data["errors"][0]["loc"]) == 2
     assert response_data["errors"][0]["loc"][0] == "body"
