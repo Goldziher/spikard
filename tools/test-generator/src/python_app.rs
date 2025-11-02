@@ -12,7 +12,7 @@
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
+use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -293,17 +293,12 @@ fn generate_handler_function_for_fixture(
     // Generate handler function
     let mut code = String::new();
 
-    // Determine if parameters will be used
-    let params_used = response_info.is_none();
-    let param_prefix = if params_used { "" } else { "_" };
-
     // Function signature
     code.push_str(&format!("def {}(\n", handler_name));
 
     // Add body parameter if present
-    // IMPORTANT: Body must always be named "body" (not "_body") because
-    // Rust passes it as "body" in kwargs. The underscore prefix is only
-    // for path/query/cookie parameters that might be unused.
+    // IMPORTANT: All parameters must use their original names (no underscore prefix)
+    // because Rust FFI passes them by name in kwargs.
     if body_schema.is_some() {
         let body_param_type = match body_type {
             BodyType::PlainDict => "dict[str, Any]".to_string(),
@@ -315,15 +310,12 @@ fn generate_handler_function_for_fixture(
     // Add other parameters - required first, then optional
     for (param_name, param_type, is_required) in &params {
         if *is_required {
-            code.push_str(&format!("    {}{}: {},\n", param_prefix, param_name, param_type));
+            code.push_str(&format!("    {}: {},\n", param_name, param_type));
         }
     }
     for (param_name, param_type, is_required) in &params {
         if !*is_required {
-            code.push_str(&format!(
-                "    {}{}: {} | None = None,\n",
-                param_prefix, param_name, param_type
-            ));
+            code.push_str(&format!("    {}: {} | None = None,\n", param_name, param_type));
         }
     }
 

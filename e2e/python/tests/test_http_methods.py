@@ -11,9 +11,9 @@ async def test_options_cors_preflight_request() -> None:
     client = TestClient(app)
 
     headers = {
-        "Origin": "https://example.com",
         "Access-Control-Request-Method": "POST",
         "Access-Control-Request-Headers": "Content-Type",
+        "Origin": "https://example.com",
     }
     response = await client.options("/items/", headers=headers)
 
