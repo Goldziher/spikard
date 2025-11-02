@@ -1,14 +1,19 @@
 """E2E tests for content_types."""
 
-import pytest
-from typing import Any
 
-async def test_415_unsupported_media_type(client: Any) -> None:
+async def test_415_unsupported_media_type() -> None:
     """Tests rejection of unsupported content type."""
+    from app.main import create_app_content_types_415_Unsupported_Media_Type
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_415_Unsupported_Media_Type()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/xml",
     }
-    json_data = "<?xml version=\"1.0\"?><item><name>Item</name></item>"
+    json_data = '<?xml version="1.0"?><item><name>Item</name></item>'
     response = await client.post("/items/", headers=headers, json=json_data)
 
     assert response.status_code == 415
@@ -17,17 +22,31 @@ async def test_415_unsupported_media_type(client: Any) -> None:
     assert response_data["detail"] == "Unsupported media type"
 
 
-async def test_xml_response__application_xml(client: Any) -> None:
+async def test_xml_response__application_xml() -> None:
     """Tests XML response."""
+    from app.main import create_app_content_types_XML_response___application_xml
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_XML_response___application_xml()
+    client = TestClient(app)
+
     response = await client.get("/xml")
 
     assert response.status_code == 200
     response_data = response.json()
-    assert response_data == "<?xml version=\"1.0\"?><item><name>Item</name><price>42.0</price></item>"
+    assert response_data == '<?xml version="1.0"?><item><name>Item</name><price>42.0</price></item>'
 
 
-async def test_14_content_type_case_insensitive(client: Any) -> None:
+async def test_14_content_type_case_insensitive() -> None:
     """Content-Type header should be case-insensitive."""
+    from app.main import create_app_content_types_14_content_type_case_insensitive
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_14_content_type_case_insensitive()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "APPLICATION/JSON",
     }
@@ -40,8 +59,15 @@ async def test_14_content_type_case_insensitive(client: Any) -> None:
     assert response_data["name"] == "test"
 
 
-async def test_json_with_utf_8_charset(client: Any) -> None:
+async def test_json_with_utf_8_charset() -> None:
     """Tests JSON response with explicit UTF-8 charset."""
+    from app.main import create_app_content_types_JSON_with_UTF_8_charset
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_JSON_with_UTF_8_charset()
+    client = TestClient(app)
+
     response = await client.get("/items/unicode")
 
     assert response.status_code == 200
@@ -52,12 +78,19 @@ async def test_json_with_utf_8_charset(client: Any) -> None:
     assert response_data["name"] == "Café"
 
 
-async def test_16_text_plain_not_accepted(client: Any) -> None:
+async def test_16_text_plain_not_accepted() -> None:
     """text/plain content-type should be rejected when JSON is expected."""
+    from app.main import create_app_content_types_16_text_plain_not_accepted
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_16_text_plain_not_accepted()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "text/plain",
     }
-    json_data = "{\"data\": \"value\"}"
+    json_data = '{"data": "value"}'
     response = await client.post("/data", headers=headers, json=json_data)
 
     assert response.status_code == 415
@@ -66,8 +99,15 @@ async def test_16_text_plain_not_accepted(client: Any) -> None:
     assert response_data["error"] == "Unsupported Media Type. Expected application/json"
 
 
-async def test_pdf_response__application_pdf(client: Any) -> None:
+async def test_pdf_response__application_pdf() -> None:
     """Tests PDF file response."""
+    from app.main import create_app_content_types_PDF_response___application_pdf
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_PDF_response___application_pdf()
+    client = TestClient(app)
+
     response = await client.get("/download/document.pdf")
 
     assert response.status_code == 200
@@ -75,8 +115,15 @@ async def test_pdf_response__application_pdf(client: Any) -> None:
     assert response_data == "pdf_binary_data"
 
 
-async def test_20_content_length_mismatch(client: Any) -> None:
+async def test_20_content_length_mismatch() -> None:
     """Content-Length header mismatch with actual body size should fail."""
+    from app.main import create_app_content_types_20_content_length_mismatch
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_20_content_length_mismatch()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
         "Content-Length": "100",
@@ -90,8 +137,15 @@ async def test_20_content_length_mismatch(client: Any) -> None:
     assert response_data["error"] == "Content-Length header does not match actual body size"
 
 
-async def test_17_vendor_json_accepted(client: Any) -> None:
+async def test_17_vendor_json_accepted() -> None:
     """Vendor-specific JSON content-type should be accepted."""
+    from app.main import create_app_content_types_17_vendor_json_accepted
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_17_vendor_json_accepted()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/vnd.api+json",
     }
@@ -104,8 +158,15 @@ async def test_17_vendor_json_accepted(client: Any) -> None:
     assert response_data["data"] == "value"
 
 
-async def test_13_json_with_charset_utf16(client: Any) -> None:
+async def test_13_json_with_charset_utf16() -> None:
     """JSON with UTF-16 charset should be rejected (UTF-8 only)."""
+    from app.main import create_app_content_types_13_json_with_charset_utf16
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_13_json_with_charset_utf16()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json; charset=utf-16",
     }
@@ -118,8 +179,15 @@ async def test_13_json_with_charset_utf16(client: Any) -> None:
     assert response_data["error"] == "Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported."
 
 
-async def test_json_response__application_json(client: Any) -> None:
+async def test_json_response__application_json() -> None:
     """Tests JSON response with correct Content-Type header."""
+    from app.main import create_app_content_types_JSON_response___application_json
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_JSON_response___application_json()
+    client = TestClient(app)
+
     response = await client.get("/items/json")
 
     assert response.status_code == 200
@@ -130,8 +198,15 @@ async def test_json_response__application_json(client: Any) -> None:
     assert response_data["price"] == 42.0
 
 
-async def test_15_multipart_boundary_required(client: Any) -> None:
+async def test_15_multipart_boundary_required() -> None:
     """Multipart content-type without boundary parameter should fail."""
+    from app.main import create_app_content_types_15_multipart_boundary_required
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_15_multipart_boundary_required()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "multipart/form-data",
     }
@@ -143,8 +218,15 @@ async def test_15_multipart_boundary_required(client: Any) -> None:
     assert response_data["error"] == "multipart/form-data requires 'boundary' parameter"
 
 
-async def test_content_negotiation__accept_header(client: Any) -> None:
+async def test_content_negotiation__accept_header() -> None:
     """Tests content negotiation based on Accept header."""
+    from app.main import create_app_content_types_Content_negotiation___Accept_header
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_Content_negotiation___Accept_header()
+    client = TestClient(app)
+
     headers = {
         "Accept": "application/json",
     }
@@ -158,8 +240,15 @@ async def test_content_negotiation__accept_header(client: Any) -> None:
     assert response_data["name"] == "Item"
 
 
-async def test_html_response__text_html(client: Any) -> None:
+async def test_html_response__text_html() -> None:
     """Tests HTML response."""
+    from app.main import create_app_content_types_HTML_response___text_html
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_HTML_response___text_html()
+    client = TestClient(app)
+
     response = await client.get("/html")
 
     assert response.status_code == 200
@@ -167,8 +256,15 @@ async def test_html_response__text_html(client: Any) -> None:
     assert response_data == "<html><body><h1>Hello</h1></body></html>"
 
 
-async def test_jpeg_image_response__image_jpeg(client: Any) -> None:
+async def test_jpeg_image_response__image_jpeg() -> None:
     """Tests JPEG image response."""
+    from app.main import create_app_content_types_JPEG_image_response___image_jpeg
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_JPEG_image_response___image_jpeg()
+    client = TestClient(app)
+
     response = await client.get("/images/photo.jpg")
 
     assert response.status_code == 200
@@ -176,8 +272,15 @@ async def test_jpeg_image_response__image_jpeg(client: Any) -> None:
     assert response_data == "jpeg_binary_data"
 
 
-async def test_19_missing_content_type_default_json(client: Any) -> None:
+async def test_19_missing_content_type_default_json() -> None:
     """Missing Content-Type header should default to JSON when body is present."""
+    from app.main import create_app_content_types_19_missing_content_type_default_json
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_19_missing_content_type_default_json()
+    client = TestClient(app)
+
     json_data = {"name": "test"}
     response = await client.post("/data", json=json_data)
 
@@ -187,8 +290,15 @@ async def test_19_missing_content_type_default_json(client: Any) -> None:
     assert response_data["name"] == "test"
 
 
-async def test_png_image_response__image_png(client: Any) -> None:
+async def test_png_image_response__image_png() -> None:
     """Tests PNG image response."""
+    from app.main import create_app_content_types_PNG_image_response___image_png
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_PNG_image_response___image_png()
+    client = TestClient(app)
+
     response = await client.get("/images/logo.png")
 
     assert response.status_code == 200
@@ -196,8 +306,15 @@ async def test_png_image_response__image_png(client: Any) -> None:
     assert response_data == "png_binary_data"
 
 
-async def test_plain_text_response__text_plain(client: Any) -> None:
+async def test_plain_text_response__text_plain() -> None:
     """Tests plain text response."""
+    from app.main import create_app_content_types_Plain_text_response___text_plain
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_Plain_text_response___text_plain()
+    client = TestClient(app)
+
     response = await client.get("/text")
 
     assert response.status_code == 200
@@ -205,8 +322,15 @@ async def test_plain_text_response__text_plain(client: Any) -> None:
     assert response_data == "Hello, World!"
 
 
-async def test_18_content_type_with_multiple_params(client: Any) -> None:
+async def test_18_content_type_with_multiple_params() -> None:
     """Content-Type with multiple parameters should be parsed correctly."""
+    from app.main import create_app_content_types_18_content_type_with_multiple_params
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_18_content_type_with_multiple_params()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json; charset=utf-8; boundary=something",
     }
@@ -219,8 +343,15 @@ async def test_18_content_type_with_multiple_params(client: Any) -> None:
     assert response_data["value"] == "test"
 
 
-async def test_csv_response__text_csv(client: Any) -> None:
+async def test_csv_response__text_csv() -> None:
     """Tests CSV file response."""
+    from app.main import create_app_content_types_CSV_response___text_csv
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_CSV_response___text_csv()
+    client = TestClient(app)
+
     response = await client.get("/export/data.csv")
 
     assert response.status_code == 200
@@ -228,12 +359,17 @@ async def test_csv_response__text_csv(client: Any) -> None:
     assert response_data == "id,name,price\n1,Item A,10.0\n2,Item B,20.0"
 
 
-async def test_binary_response__application_octet_stream(client: Any) -> None:
+async def test_binary_response__application_octet_stream() -> None:
     """Tests binary data response."""
+    from app.main import create_app_content_types_Binary_response___application_octet_stream
+
+    from spikard.testing import TestClient
+
+    app = create_app_content_types_Binary_response___application_octet_stream()
+    client = TestClient(app)
+
     response = await client.get("/download/file.bin")
 
     assert response.status_code == 200
     response_data = response.json()
     assert response_data == "binary_data_placeholder"
-
-

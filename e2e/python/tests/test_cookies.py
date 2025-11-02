@@ -1,10 +1,15 @@
 """E2E tests for cookies."""
 
-from typing import Any
 
-
-async def test_25_cookie_samesite_lax(client: Any) -> None:
+async def test_25_cookie_samesite_lax() -> None:
     """Cookie with SameSite=Lax attribute should be validated."""
+    from app.main import create_app_cookies_25_cookie_samesite_lax
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_25_cookie_samesite_lax()
+    client = TestClient(app)
+
     cookies = {
         "tracking": "track123",
     }
@@ -13,8 +18,15 @@ async def test_25_cookie_samesite_lax(client: Any) -> None:
     assert response.status_code == 200
 
 
-async def test_optional_cookie_parameter__success(client: Any) -> None:
+async def test_optional_cookie_parameter__success() -> None:
     """Tests optional cookie parameter with value provided."""
+    from app.main import create_app_cookies_Optional_cookie_parameter___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Optional_cookie_parameter___success()
+    client = TestClient(app)
+
     cookies = {
         "ads_id": "abc123",
     }
@@ -26,8 +38,15 @@ async def test_optional_cookie_parameter__success(client: Any) -> None:
     assert response_data["ads_id"] == "abc123"
 
 
-async def test_cookie_regex_pattern_validation__fail(client: Any) -> None:
+async def test_cookie_regex_pattern_validation__fail() -> None:
     """Tests cookie with regex pattern validation failure."""
+    from app.main import create_app_cookies_Cookie_regex_pattern_validation___fail
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Cookie_regex_pattern_validation___fail()
+    client = TestClient(app)
+
     cookies = {
         "tracking_id": "invalid-format",
     }
@@ -60,8 +79,15 @@ async def test_cookie_regex_pattern_validation__fail(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_response__session_cookie_no_max_age(client: Any) -> None:
+async def test_response__session_cookie_no_max_age() -> None:
     """Tests setting session cookie without max_age (expires with browser)."""
+    from app.main import create_app_cookies_Response___session_cookie__no_max_age
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Response___session_cookie__no_max_age()
+    client = TestClient(app)
+
     json_data = {"value": "session_abc123"}
     response = await client.post("/cookies/session", json=json_data)
 
@@ -71,8 +97,15 @@ async def test_response__session_cookie_no_max_age(client: Any) -> None:
     assert response_data["message"] == "Session cookie set"
 
 
-async def test_27_cookie_httponly_flag(client: Any) -> None:
+async def test_27_cookie_httponly_flag() -> None:
     """Cookie with HttpOnly flag should prevent JavaScript access."""
+    from app.main import create_app_cookies_27_cookie_httponly_flag
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_27_cookie_httponly_flag()
+    client = TestClient(app)
+
     cookies = {
         "session": "session_abc123",
     }
@@ -81,8 +114,15 @@ async def test_27_cookie_httponly_flag(client: Any) -> None:
     assert response.status_code == 200
 
 
-async def test_response_cookie_with_attributes(client: Any) -> None:
+async def test_response_cookie_with_attributes() -> None:
     """Tests setting a cookie with max_age, secure, httponly, and samesite attributes."""
+    from app.main import create_app_cookies_Response_cookie_with_attributes
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Response_cookie_with_attributes()
+    client = TestClient(app)
+
     response = await client.get("/cookie/set")
 
     assert response.status_code == 200
@@ -91,8 +131,15 @@ async def test_response_cookie_with_attributes(client: Any) -> None:
     assert response_data["message"] == "Cookie set"
 
 
-async def test_24_cookie_samesite_strict(client: Any) -> None:
+async def test_24_cookie_samesite_strict() -> None:
     """Cookie with SameSite=Strict attribute should be validated."""
+    from app.main import create_app_cookies_24_cookie_samesite_strict
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_24_cookie_samesite_strict()
+    client = TestClient(app)
+
     cookies = {
         "session_id": "abc123xyz789",
     }
@@ -101,8 +148,15 @@ async def test_24_cookie_samesite_strict(client: Any) -> None:
     assert response.status_code == 200
 
 
-async def test_apikey_cookie_authentication__success(client: Any) -> None:
+async def test_apikey_cookie_authentication__success() -> None:
     """Tests APIKeyCookie authentication with valid cookie."""
+    from app.main import create_app_cookies_APIKey_cookie_authentication___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_APIKey_cookie_authentication___success()
+    client = TestClient(app)
+
     cookies = {
         "key": "secret",
     }
@@ -114,8 +168,15 @@ async def test_apikey_cookie_authentication__success(client: Any) -> None:
     assert response_data["username"] == "secret"
 
 
-async def test_cookie_validation__min_length_constraint_success(client: Any) -> None:
+async def test_cookie_validation__min_length_constraint_success() -> None:
     """Tests cookie validation with min_length constraint at boundary."""
+    from app.main import create_app_cookies_Cookie_validation___min_length_constraint_success
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Cookie_validation___min_length_constraint_success()
+    client = TestClient(app)
+
     cookies = {
         "token": "abc",
     }
@@ -127,8 +188,15 @@ async def test_cookie_validation__min_length_constraint_success(client: Any) -> 
     assert response_data["token"] == "abc"
 
 
-async def test_cookie_validation__min_length_failure(client: Any) -> None:
+async def test_cookie_validation__min_length_failure() -> None:
     """Tests cookie parameter with min_length constraint returns 422 when too short."""
+    from app.main import create_app_cookies_Cookie_validation___min_length_failure
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Cookie_validation___min_length_failure()
+    client = TestClient(app)
+
     cookies = {
         "tracking_id": "ab",
     }
@@ -158,8 +226,15 @@ async def test_cookie_validation__min_length_failure(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_cookie_validation__max_length_constraint_fail(client: Any) -> None:
+async def test_cookie_validation__max_length_constraint_fail() -> None:
     """Tests cookie validation with max_length constraint failure."""
+    from app.main import create_app_cookies_Cookie_validation___max_length_constraint_fail
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Cookie_validation___max_length_constraint_fail()
+    client = TestClient(app)
+
     cookies = {
         "session_id": "this_cookie_value_is_way_too_long",
     }
@@ -192,8 +267,15 @@ async def test_cookie_validation__max_length_constraint_fail(client: Any) -> Non
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_required_cookie__missing(client: Any) -> None:
+async def test_required_cookie__missing() -> None:
     """Tests validation error when required cookie is missing."""
+    from app.main import create_app_cookies_Required_cookie___missing
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Required_cookie___missing()
+    client = TestClient(app)
+
     cookies = {
         "fatebook_tracker": "tracker456",
     }
@@ -223,8 +305,15 @@ async def test_required_cookie__missing(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_optional_cookie_parameter__missing(client: Any) -> None:
+async def test_optional_cookie_parameter__missing() -> None:
     """Tests optional cookie parameter returns None when not provided."""
+    from app.main import create_app_cookies_Optional_cookie_parameter___missing
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Optional_cookie_parameter___missing()
+    client = TestClient(app)
+
     response = await client.get("/items/")
 
     assert response.status_code == 200
@@ -233,8 +322,15 @@ async def test_optional_cookie_parameter__missing(client: Any) -> None:
     assert response_data["ads_id"] is None
 
 
-async def test_apikey_cookie_authentication__missing(client: Any) -> None:
+async def test_apikey_cookie_authentication__missing() -> None:
     """Tests APIKeyCookie authentication returns 403 when cookie missing."""
+    from app.main import create_app_cookies_APIKey_cookie_authentication___missing
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_APIKey_cookie_authentication___missing()
+    client = TestClient(app)
+
     response = await client.get("/users/me/auth")
 
     assert response.status_code == 422
@@ -261,8 +357,15 @@ async def test_apikey_cookie_authentication__missing(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_response__multiple_cookies(client: Any) -> None:
+async def test_response__multiple_cookies() -> None:
     """Tests setting multiple cookies in single response."""
+    from app.main import create_app_cookies_Response___multiple_cookies
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Response___multiple_cookies()
+    client = TestClient(app)
+
     json_data = {"session": "session123", "user": "john"}
     response = await client.post("/cookies/multiple", json=json_data)
 
@@ -272,8 +375,15 @@ async def test_response__multiple_cookies(client: Any) -> None:
     assert response_data["message"] == "Multiple cookies set"
 
 
-async def test_response_cookie_with_samesite_lax(client: Any) -> None:
+async def test_response_cookie_with_samesite_lax() -> None:
     """Tests setting cookie with SameSite lax attribute."""
+    from app.main import create_app_cookies_Response_cookie_with_SameSite_Lax
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Response_cookie_with_SameSite_Lax()
+    client = TestClient(app)
+
     json_data = {"value": "lax_cookie"}
     response = await client.post("/cookies/samesite-lax", json=json_data)
 
@@ -283,8 +393,15 @@ async def test_response_cookie_with_samesite_lax(client: Any) -> None:
     assert response_data["message"] == "Cookie set with SameSite=Lax"
 
 
-async def test_response__delete_cookie(client: Any) -> None:
+async def test_response__delete_cookie() -> None:
     """Tests deleting a cookie by setting max_age to 0."""
+    from app.main import create_app_cookies_Response___delete_cookie
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Response___delete_cookie()
+    client = TestClient(app)
+
     cookies = {
         "session": "old_session_123",
     }
@@ -296,8 +413,15 @@ async def test_response__delete_cookie(client: Any) -> None:
     assert response_data["message"] == "Cookie deleted"
 
 
-async def test_response_cookie_with_path_attribute(client: Any) -> None:
+async def test_response_cookie_with_path_attribute() -> None:
     """Tests setting cookie with specific path."""
+    from app.main import create_app_cookies_Response_cookie_with_path_attribute
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Response_cookie_with_path_attribute()
+    client = TestClient(app)
+
     json_data = {"value": "path_test"}
     response = await client.post("/cookies/set-with-path", json=json_data)
 
@@ -307,8 +431,15 @@ async def test_response_cookie_with_path_attribute(client: Any) -> None:
     assert response_data["message"] == "Cookie set with path"
 
 
-async def test_optional_apikey_cookie__missing(client: Any) -> None:
+async def test_optional_apikey_cookie__missing() -> None:
     """Tests optional APIKeyCookie (auto_error=False) returns None without 403."""
+    from app.main import create_app_cookies_Optional_APIKey_cookie___missing
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Optional_APIKey_cookie___missing()
+    client = TestClient(app)
+
     response = await client.get("/users/me")
 
     assert response.status_code == 200
@@ -317,8 +448,15 @@ async def test_optional_apikey_cookie__missing(client: Any) -> None:
     assert response_data["msg"] == "Create an account first"
 
 
-async def test_response_cookie_with_samesite_strict(client: Any) -> None:
+async def test_response_cookie_with_samesite_strict() -> None:
     """Tests setting cookie with SameSite strict attribute."""
+    from app.main import create_app_cookies_Response_cookie_with_SameSite_Strict
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Response_cookie_with_SameSite_Strict()
+    client = TestClient(app)
+
     json_data = {"value": "strict_cookie"}
     response = await client.post("/cookies/samesite-strict", json=json_data)
 
@@ -328,8 +466,15 @@ async def test_response_cookie_with_samesite_strict(client: Any) -> None:
     assert response_data["message"] == "Cookie set with SameSite=Strict"
 
 
-async def test_response_cookie_with_samesite_none(client: Any) -> None:
+async def test_response_cookie_with_samesite_none() -> None:
     """Tests setting cookie with SameSite none (requires Secure)."""
+    from app.main import create_app_cookies_Response_cookie_with_SameSite_None
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Response_cookie_with_SameSite_None()
+    client = TestClient(app)
+
     json_data = {"value": "none_cookie"}
     response = await client.post("/cookies/samesite-none", json=json_data)
 
@@ -339,8 +484,15 @@ async def test_response_cookie_with_samesite_none(client: Any) -> None:
     assert response_data["message"] == "Cookie set with SameSite=None"
 
 
-async def test_cookie_regex_pattern_validation__success(client: Any) -> None:
+async def test_cookie_regex_pattern_validation__success() -> None:
     """Tests cookie with regex pattern validation success."""
+    from app.main import create_app_cookies_Cookie_regex_pattern_validation___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Cookie_regex_pattern_validation___success()
+    client = TestClient(app)
+
     cookies = {
         "tracking_id": "ABC12345",
     }
@@ -352,8 +504,15 @@ async def test_cookie_regex_pattern_validation__success(client: Any) -> None:
     assert response_data["tracking_id"] == "ABC12345"
 
 
-async def test_response_set_cookie__basic(client: Any) -> None:
+async def test_response_set_cookie__basic() -> None:
     """Tests setting a cookie in the response."""
+    from app.main import create_app_cookies_Response_set_cookie___basic
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Response_set_cookie___basic()
+    client = TestClient(app)
+
     response = await client.post("/cookie/")
 
     assert response.status_code == 200
@@ -362,8 +521,15 @@ async def test_response_set_cookie__basic(client: Any) -> None:
     assert response_data["message"] == "Come to the dark side, we have cookies"
 
 
-async def test_multiple_cookies__success(client: Any) -> None:
+async def test_multiple_cookies__success() -> None:
     """Tests multiple cookie parameters in a single request."""
+    from app.main import create_app_cookies_Multiple_cookies___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Multiple_cookies___success()
+    client = TestClient(app)
+
     cookies = {
         "session_id": "session123",
         "fatebook_tracker": "tracker456",
@@ -381,8 +547,15 @@ async def test_multiple_cookies__success(client: Any) -> None:
     assert response_data["session_id"] == "session123"
 
 
-async def test_26_cookie_secure_flag(client: Any) -> None:
+async def test_26_cookie_secure_flag() -> None:
     """Cookie with Secure flag should be validated for HTTPS."""
+    from app.main import create_app_cookies_26_cookie_secure_flag
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_26_cookie_secure_flag()
+    client = TestClient(app)
+
     cookies = {
         "auth_token": "secure_token_xyz",
     }
@@ -391,8 +564,15 @@ async def test_26_cookie_secure_flag(client: Any) -> None:
     assert response.status_code == 200
 
 
-async def test_response_cookie_with_domain_attribute(client: Any) -> None:
+async def test_response_cookie_with_domain_attribute() -> None:
     """Tests setting cookie with specific domain."""
+    from app.main import create_app_cookies_Response_cookie_with_domain_attribute
+
+    from spikard.testing import TestClient
+
+    app = create_app_cookies_Response_cookie_with_domain_attribute()
+    client = TestClient(app)
+
     json_data = {"value": "domain_test"}
     response = await client.post("/cookies/set-with-domain", json=json_data)
 

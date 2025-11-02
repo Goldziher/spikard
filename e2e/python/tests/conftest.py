@@ -1,12 +1,5 @@
-"""Pytest configuration and fixtures for e2e tests."""
+"""Pytest configuration for e2e tests.
 
-import pytest
-from spikard.testing import TestClient
-
-from app.main import app
-
-
-@pytest.fixture(scope="session")
-def client():
-    """Provide a test client."""
-    return TestClient(app)
+Each test creates its own isolated app and client from per-fixture app factories.
+This ensures complete test isolation and allows multiple tests for the same route.
+"""

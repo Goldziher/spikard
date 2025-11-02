@@ -1,10 +1,15 @@
 """E2E tests for headers."""
 
-from typing import Any
 
-
-async def test_header_regex_validation__success(client: Any) -> None:
+async def test_header_regex_validation__success() -> None:
     """Tests header with regex pattern validation success."""
+    from app.main import create_app_headers_Header_regex_validation___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Header_regex_validation___success()
+    client = TestClient(app)
+
     headers = {
         "X-Request-Id": "12345",
     }
@@ -16,8 +21,15 @@ async def test_header_regex_validation__success(client: Any) -> None:
     assert response_data["x_request_id"] == "12345"
 
 
-async def test_33_api_key_header_valid(client: Any) -> None:
+async def test_33_api_key_header_valid() -> None:
     """X-API-Key header with valid format should be accepted."""
+    from app.main import create_app_headers_33_api_key_header_valid
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_33_api_key_header_valid()
+    client = TestClient(app)
+
     headers = {
         "X-API-Key": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
     }
@@ -26,8 +38,15 @@ async def test_33_api_key_header_valid(client: Any) -> None:
     assert response.status_code == 200
 
 
-async def test_content_type_header__application_json(client: Any) -> None:
+async def test_content_type_header__application_json() -> None:
     """Tests Content-Type header with JSON media type."""
+    from app.main import create_app_headers_Content_Type_header___application_json
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Content_Type_header___application_json()
+    client = TestClient(app)
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -39,8 +58,15 @@ async def test_content_type_header__application_json(client: Any) -> None:
     assert response_data["content_type"] == "application/json"
 
 
-async def test_accept_language_header(client: Any) -> None:
+async def test_accept_language_header() -> None:
     """Tests Accept-Language header for locale/i18n."""
+    from app.main import create_app_headers_Accept_Language_header
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Accept_Language_header()
+    client = TestClient(app)
+
     headers = {
         "Accept-Language": "en-US,en;q=0.9",
     }
@@ -52,8 +78,15 @@ async def test_accept_language_header(client: Any) -> None:
     assert response_data["accept_language"] == "en-US,en;q=0.9"
 
 
-async def test_x_api_key_required_header__success(client: Any) -> None:
+async def test_x_api_key_required_header__success() -> None:
     """Tests required X-API-Key header with valid value."""
+    from app.main import create_app_headers_X_API_Key_required_header___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_X_API_Key_required_header___success()
+    client = TestClient(app)
+
     headers = {
         "key": "secret",
     }
@@ -65,8 +98,15 @@ async def test_x_api_key_required_header__success(client: Any) -> None:
     assert response_data["username"] == "secret"
 
 
-async def test_header_validation__max_length_constraint_fail(client: Any) -> None:
+async def test_header_validation__max_length_constraint_fail() -> None:
     """Tests header validation with max_length constraint failure."""
+    from app.main import create_app_headers_Header_validation___max_length_constraint_fail
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Header_validation___max_length_constraint_fail()
+    client = TestClient(app)
+
     headers = {
         "X-Session-Id": "this_is_way_too_long_for_validation",
     }
@@ -99,8 +139,15 @@ async def test_header_validation__max_length_constraint_fail(client: Any) -> Non
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_x_api_key_required_header__missing(client: Any) -> None:
+async def test_x_api_key_required_header__missing() -> None:
     """Tests required X-API-Key header when not provided, returns 403."""
+    from app.main import create_app_headers_X_API_Key_required_header___missing
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_X_API_Key_required_header___missing()
+    client = TestClient(app)
+
     response = await client.get("/users/me")
 
     assert response.status_code == 403
@@ -109,8 +156,15 @@ async def test_x_api_key_required_header__missing(client: Any) -> None:
     assert response_data["detail"] == "Not authenticated"
 
 
-async def test_origin_header(client: Any) -> None:
+async def test_origin_header() -> None:
     """Tests Origin header for CORS."""
+    from app.main import create_app_headers_Origin_header
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Origin_header()
+    client = TestClient(app)
+
     headers = {
         "Origin": "https://example.com",
     }
@@ -122,8 +176,15 @@ async def test_origin_header(client: Any) -> None:
     assert response_data["origin"] == "https://example.com"
 
 
-async def test_user_agent_header__default_value(client: Any) -> None:
+async def test_user_agent_header__default_value() -> None:
     """Tests optional User-Agent header when not provided, uses testclient default."""
+    from app.main import create_app_headers_User_Agent_header___default_value
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_User_Agent_header___default_value()
+    client = TestClient(app)
+
     response = await client.get("/items/")
 
     assert response.status_code == 200
@@ -132,8 +193,15 @@ async def test_user_agent_header__default_value(client: Any) -> None:
     assert response_data["User-Agent"] == "testclient"
 
 
-async def test_32_bearer_token_missing_prefix(client: Any) -> None:
+async def test_32_bearer_token_missing_prefix() -> None:
     """Authorization header without Bearer prefix should fail validation."""
+    from app.main import create_app_headers_32_bearer_token_missing_prefix
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_32_bearer_token_missing_prefix()
+    client = TestClient(app)
+
     headers = {
         "Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
     }
@@ -166,8 +234,15 @@ async def test_32_bearer_token_missing_prefix(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_optional_header_with_none_default__missing(client: Any) -> None:
+async def test_optional_header_with_none_default__missing() -> None:
     """Tests optional header parameter with None default when not provided."""
+    from app.main import create_app_headers_Optional_header_with_None_default___missing
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Optional_header_with_None_default___missing()
+    client = TestClient(app)
+
     response = await client.get("/items/")
 
     assert response.status_code == 200
@@ -176,8 +251,15 @@ async def test_optional_header_with_none_default__missing(client: Any) -> None:
     assert response_data["strange_header"] is None
 
 
-async def test_header_regex_validation__fail(client: Any) -> None:
+async def test_header_regex_validation__fail() -> None:
     """Tests header with regex pattern validation failure."""
+    from app.main import create_app_headers_Header_regex_validation___fail
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Header_regex_validation___fail()
+    client = TestClient(app)
+
     headers = {
         "X-Request-Id": "invalid-format",
     }
@@ -210,8 +292,15 @@ async def test_header_regex_validation__fail(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_31_bearer_token_format_invalid(client: Any) -> None:
+async def test_31_bearer_token_format_invalid() -> None:
     """Authorization header with invalid Bearer token format should fail validation."""
+    from app.main import create_app_headers_31_bearer_token_format_invalid
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_31_bearer_token_format_invalid()
+    client = TestClient(app)
+
     headers = {
         "Authorization": "Bearer invalid token with spaces",
     }
@@ -244,8 +333,15 @@ async def test_31_bearer_token_format_invalid(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_x_api_key_optional_header__success(client: Any) -> None:
+async def test_x_api_key_optional_header__success() -> None:
     """Tests optional X-API-Key header with valid value."""
+    from app.main import create_app_headers_X_API_Key_optional_header___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_X_API_Key_optional_header___success()
+    client = TestClient(app)
+
     headers = {
         "key": "secret",
     }
@@ -257,8 +353,15 @@ async def test_x_api_key_optional_header__success(client: Any) -> None:
     assert response_data["msg"] == "Hello secret"
 
 
-async def test_authorization_header__success(client: Any) -> None:
+async def test_authorization_header__success() -> None:
     """Tests Authorization header with valid Digest scheme."""
+    from app.main import create_app_headers_Authorization_header___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Authorization_header___success()
+    client = TestClient(app)
+
     headers = {
         "Authorization": "Digest foobar",
     }
@@ -272,8 +375,15 @@ async def test_authorization_header__success(client: Any) -> None:
     assert response_data["scheme"] == "Digest"
 
 
-async def test_30_bearer_token_format_valid(client: Any) -> None:
+async def test_30_bearer_token_format_valid() -> None:
     """Authorization header with valid Bearer token format should be accepted."""
+    from app.main import create_app_headers_30_bearer_token_format_valid
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_30_bearer_token_format_valid()
+    client = TestClient(app)
+
     headers = {
         "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
     }
@@ -282,8 +392,15 @@ async def test_30_bearer_token_format_valid(client: Any) -> None:
     assert response.status_code == 200
 
 
-async def test_authorization_header__missing(client: Any) -> None:
+async def test_authorization_header__missing() -> None:
     """Tests missing Authorization header returns 403."""
+    from app.main import create_app_headers_Authorization_header___missing
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Authorization_header___missing()
+    client = TestClient(app)
+
     response = await client.get("/users/me")
 
     assert response.status_code == 403
@@ -292,8 +409,15 @@ async def test_authorization_header__missing(client: Any) -> None:
     assert response_data["detail"] == "Not authenticated"
 
 
-async def test_accept_header__json(client: Any) -> None:
+async def test_accept_header__json() -> None:
     """Tests Accept header for content negotiation."""
+    from app.main import create_app_headers_Accept_header___JSON
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Accept_header___JSON()
+    client = TestClient(app)
+
     headers = {
         "Accept": "application/json",
     }
@@ -305,8 +429,15 @@ async def test_accept_header__json(client: Any) -> None:
     assert response_data["accept"] == "application/json"
 
 
-async def test_accept_encoding_header(client: Any) -> None:
+async def test_accept_encoding_header() -> None:
     """Tests Accept-Encoding header for compression negotiation."""
+    from app.main import create_app_headers_Accept_Encoding_header
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Accept_Encoding_header()
+    client = TestClient(app)
+
     headers = {
         "Accept-Encoding": "gzip, deflate, br",
     }
@@ -318,8 +449,15 @@ async def test_accept_encoding_header(client: Any) -> None:
     assert response_data["accept_encoding"] == "gzip, deflate, br"
 
 
-async def test_authorization_header__wrong_scheme(client: Any) -> None:
+async def test_authorization_header__wrong_scheme() -> None:
     """Tests Authorization header with incorrect scheme returns 403."""
+    from app.main import create_app_headers_Authorization_header___wrong_scheme
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Authorization_header___wrong_scheme()
+    client = TestClient(app)
+
     headers = {
         "Authorization": "Other invalidauthorization",
     }
@@ -331,8 +469,15 @@ async def test_authorization_header__wrong_scheme(client: Any) -> None:
     assert response_data["detail"] == "Invalid authentication credentials"
 
 
-async def test_header_validation__min_length_constraint(client: Any) -> None:
+async def test_header_validation__min_length_constraint() -> None:
     """Tests header validation with min_length constraint."""
+    from app.main import create_app_headers_Header_validation___min_length_constraint
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Header_validation___min_length_constraint()
+    client = TestClient(app)
+
     headers = {
         "X-Token": "ab",
     }
@@ -365,8 +510,15 @@ async def test_header_validation__min_length_constraint(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_basic_authentication__success(client: Any) -> None:
+async def test_basic_authentication__success() -> None:
     """Tests Authorization header with Basic auth scheme."""
+    from app.main import create_app_headers_Basic_authentication___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Basic_authentication___success()
+    client = TestClient(app)
+
     headers = {
         "Authorization": "Basic dXNlcm5hbWU6cGFzc3dvcmQ=",
     }
@@ -380,8 +532,15 @@ async def test_basic_authentication__success(client: Any) -> None:
     assert response_data["username"] == "username"
 
 
-async def test_bearer_token_authentication__missing(client: Any) -> None:
+async def test_bearer_token_authentication__missing() -> None:
     """Tests missing Bearer token returns 401 Unauthorized."""
+    from app.main import create_app_headers_Bearer_token_authentication___missing
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Bearer_token_authentication___missing()
+    client = TestClient(app)
+
     response = await client.get("/headers/bearer-auth")
 
     assert response.status_code == 401
@@ -390,8 +549,15 @@ async def test_bearer_token_authentication__missing(client: Any) -> None:
     assert response_data["detail"] == "Not authenticated"
 
 
-async def test_x_api_key_optional_header__missing(client: Any) -> None:
+async def test_x_api_key_optional_header__missing() -> None:
     """Tests optional X-API-Key header when not provided, returns fallback message."""
+    from app.main import create_app_headers_X_API_Key_optional_header___missing
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_X_API_Key_optional_header___missing()
+    client = TestClient(app)
+
     response = await client.get("/users/me")
 
     assert response.status_code == 200
@@ -400,12 +566,19 @@ async def test_x_api_key_optional_header__missing(client: Any) -> None:
     assert response_data["msg"] == "Hello World"
 
 
-async def test_multiple_custom_headers(client: Any) -> None:
+async def test_multiple_custom_headers() -> None:
     """Tests multiple custom headers in single request."""
+    from app.main import create_app_headers_Multiple_custom_headers
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Multiple_custom_headers()
+    client = TestClient(app)
+
     headers = {
-        "X-Client-Version": "1.2.3",
         "X-Trace-Id": "trace-abc",
         "X-Request-Id": "req-12345",
+        "X-Client-Version": "1.2.3",
     }
     response = await client.get("/headers/multiple", headers=headers)
 
@@ -419,8 +592,15 @@ async def test_multiple_custom_headers(client: Any) -> None:
     assert response_data["x_trace_id"] == "trace-abc"
 
 
-async def test_34_api_key_header_invalid(client: Any) -> None:
+async def test_34_api_key_header_invalid() -> None:
     """X-API-Key header with invalid format should fail validation."""
+    from app.main import create_app_headers_34_api_key_header_invalid
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_34_api_key_header_invalid()
+    client = TestClient(app)
+
     headers = {
         "X-API-Key": "invalid-key",
     }
@@ -453,8 +633,15 @@ async def test_34_api_key_header_invalid(client: Any) -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_bearer_token_authentication__success(client: Any) -> None:
+async def test_bearer_token_authentication__success() -> None:
     """Tests Authorization header with Bearer token scheme."""
+    from app.main import create_app_headers_Bearer_token_authentication___success
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Bearer_token_authentication___success()
+    client = TestClient(app)
+
     headers = {
         "Authorization": "Bearer valid_token_123",
     }
@@ -466,8 +653,15 @@ async def test_bearer_token_authentication__success(client: Any) -> None:
     assert response_data["token"] == "valid_token_123"
 
 
-async def test_host_header(client: Any) -> None:
+async def test_host_header() -> None:
     """Tests Host header (standard HTTP header)."""
+    from app.main import create_app_headers_Host_header
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Host_header()
+    client = TestClient(app)
+
     headers = {
         "Host": "example.com:8080",
     }
@@ -479,8 +673,15 @@ async def test_host_header(client: Any) -> None:
     assert response_data["host"] == "example.com:8080"
 
 
-async def test_referer_header(client: Any) -> None:
+async def test_referer_header() -> None:
     """Tests Referer header (standard misspelling)."""
+    from app.main import create_app_headers_Referer_header
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Referer_header()
+    client = TestClient(app)
+
     headers = {
         "Referer": "https://example.com/page",
     }
@@ -492,8 +693,15 @@ async def test_referer_header(client: Any) -> None:
     assert response_data["referer"] == "https://example.com/page"
 
 
-async def test_header_with_underscore_conversion__explicit(client: Any) -> None:
+async def test_header_with_underscore_conversion__explicit() -> None:
     """Tests X-Token header converted to x_token parameter."""
+    from app.main import create_app_headers_Header_with_underscore_conversion___explicit
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Header_with_underscore_conversion___explicit()
+    client = TestClient(app)
+
     headers = {
         "X-Token": "secret123",
     }
@@ -505,8 +713,15 @@ async def test_header_with_underscore_conversion__explicit(client: Any) -> None:
     assert response_data["x_token"] == "secret123"
 
 
-async def test_header_case_insensitivity__access(client: Any) -> None:
+async def test_header_case_insensitivity__access() -> None:
     """Tests case-insensitive header access (Content-Type vs content-type)."""
+    from app.main import create_app_headers_Header_case_insensitivity___access
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_Header_case_insensitivity___access()
+    client = TestClient(app)
+
     headers = {
         "content-type": "application/json",
     }
@@ -523,8 +738,15 @@ async def test_header_case_insensitivity__access(client: Any) -> None:
     assert response_data["content_type_upper"] == "application/json"
 
 
-async def test_user_agent_header__custom_value(client: Any) -> None:
+async def test_user_agent_header__custom_value() -> None:
     """Tests User-Agent header with custom value."""
+    from app.main import create_app_headers_User_Agent_header___custom_value
+
+    from spikard.testing import TestClient
+
+    app = create_app_headers_User_Agent_header___custom_value()
+    client = TestClient(app)
+
     headers = {
         "User-Agent": "Mozilla/5.0 Custom Browser",
     }
