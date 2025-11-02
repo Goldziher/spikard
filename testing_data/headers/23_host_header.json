@@ -19,5 +19,17 @@
       "host": "example.com:8080"
     }
   },
-  "notes": "Host header with port number"
+  "notes": "Host header with port number",
+  "handler": {
+    "route": "/headers/host",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "Host": {
+          "type": "string",
+          "annotation": "str"
+        }
+      }
+    }
+  }
 }

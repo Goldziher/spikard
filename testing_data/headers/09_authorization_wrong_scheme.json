@@ -19,5 +19,19 @@
       "detail": "Invalid authentication credentials"
     }
   },
-  "notes": "Expected scheme is Digest, not Other"
+  "notes": "Expected scheme is Digest, not Other",
+  "handler": {
+    "route": "/users/me",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "Authorization": {
+          "type": "string",
+          "annotation": "str",
+          "required": true,
+          "pattern": "^Digest .+"
+        }
+      }
+    }
+  }
 }

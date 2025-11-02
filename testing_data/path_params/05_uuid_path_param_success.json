@@ -6,6 +6,18 @@
     "test_file": "tests/test_tutorial/test_extra_data_types/test_tutorial001.py",
     "test_function": "test_extra_types"
   },
+  "handler": {
+    "route": "/items/{item_id}",
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "item_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    }
+  },
   "request": {
     "method": "GET",
     "path": "/items/ec38df32-ceda-4cfa-9b4a-1aeb94ad551a"

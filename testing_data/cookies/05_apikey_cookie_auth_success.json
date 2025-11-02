@@ -19,5 +19,17 @@
       "username": "secret"
     }
   },
-  "notes": "Valid API key cookie allows authentication"
+  "notes": "Valid API key cookie allows authentication",
+  "handler": {
+    "route": "/users/me",
+    "method": "GET",
+    "parameters": {
+      "cookies": {
+        "key": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    }
+  }
 }

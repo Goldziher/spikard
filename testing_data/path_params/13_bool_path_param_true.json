@@ -6,13 +6,26 @@
     "test_file": "tests/test_path.py",
     "test_function": "test_path_bool_True"
   },
+  "handler": {
+    "route": "/path/bool/{item_id}",
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "item_id": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
   "request": {
     "method": "GET",
     "path": "/path/bool/True"
   },
   "expected_response": {
     "status_code": 200,
-    "body": true
+    "body": {
+      "item_id": true
+    }
   },
   "notes": "Boolean conversion: 'True' -> true"
 }

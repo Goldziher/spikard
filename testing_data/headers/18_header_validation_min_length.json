@@ -36,5 +36,18 @@
       ]
     }
   },
-  "notes": "min_length=3 constraint on header value"
+  "notes": "min_length=3 constraint on header value",
+  "handler": {
+    "route": "/headers/validated",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "X-Token": {
+          "type": "string",
+          "annotation": "str",
+          "minLength": 3
+        }
+      }
+    }
+  }
 }

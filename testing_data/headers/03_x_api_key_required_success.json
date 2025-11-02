@@ -18,5 +18,18 @@
     "body": {
       "username": "secret"
     }
+  },
+  "handler": {
+    "route": "/users/me",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "key": {
+          "type": "string",
+          "annotation": "str",
+          "required": true
+        }
+      }
+    }
   }
 }

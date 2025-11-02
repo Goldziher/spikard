@@ -16,5 +16,19 @@
       "User-Agent": "testclient"
     }
   },
-  "notes": "When User-Agent not provided, defaults to test client value"
+  "notes": "When User-Agent not provided, defaults to test client value",
+  "handler": {
+    "route": "/items/",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "User-Agent": {
+          "type": "string",
+          "annotation": "str",
+          "optional": true,
+          "default": "testclient"
+        }
+      }
+    }
+  }
 }

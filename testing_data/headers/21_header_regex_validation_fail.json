@@ -36,5 +36,18 @@
       ]
     }
   },
-  "notes": "Header must match regex pattern ^[0-9]{3,}$ (3+ digits)"
+  "notes": "Header must match regex pattern ^[0-9]{3,}$ (3+ digits)",
+  "handler": {
+    "route": "/headers/pattern",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "X-Request-Id": {
+          "type": "string",
+          "annotation": "str",
+          "pattern": "^[0-9]{3,}$"
+        }
+      }
+    }
+  }
 }

@@ -18,5 +18,17 @@
     "body": {
       "User-Agent": "Mozilla/5.0 Custom Browser"
     }
+  },
+  "handler": {
+    "route": "/items/",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "User-Agent": {
+          "type": "string",
+          "annotation": "str"
+        }
+      }
+    }
   }
 }

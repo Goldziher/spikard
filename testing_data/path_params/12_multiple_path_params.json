@@ -6,6 +6,27 @@
     "test_file": "tests/unit/test_kwargs/test_path_params.py",
     "test_function": "test_path_params"
   },
+  "handler": {
+    "route": "/{version}/{service_id}/{user_id}/{order_id}",
+    "method": "GET",
+    "parameters": {
+      "path": {
+        "version": {
+          "type": "number"
+        },
+        "service_id": {
+          "type": "integer"
+        },
+        "user_id": {
+          "type": "string"
+        },
+        "order_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    }
+  },
   "request": {
     "method": "GET",
     "path": "/1.0/1/abc/c892496f-b1fd-4b91-bdb8-b46f92df1716"

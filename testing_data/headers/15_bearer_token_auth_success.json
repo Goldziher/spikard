@@ -19,5 +19,17 @@
       "token": "valid_token_123"
     }
   },
-  "notes": "Bearer token extracted from Authorization header"
+  "notes": "Bearer token extracted from Authorization header",
+  "handler": {
+    "route": "/headers/bearer-auth",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "Authorization": {
+          "type": "string",
+          "annotation": "str"
+        }
+      }
+    }
+  }
 }
