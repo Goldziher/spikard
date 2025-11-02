@@ -6,6 +6,20 @@
     "test_file": "tests/test_tutorial/test_query_params/test_tutorial003.py",
     "test_function": "test_query_params_bool_invalid"
   },
+  "handler": {
+    "route": "/items/",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "q": {
+          "type": "string"
+        },
+        "is_active": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
   "request": {
     "method": "GET",
     "path": "/items/?q=test&is_active=maybe",

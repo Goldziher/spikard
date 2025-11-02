@@ -33,5 +33,17 @@
       ]
     }
   },
-  "notes": "Required query parameter without default must be provided"
+  "notes": "Required query parameter without default must be provided",
+  "handler": {
+    "route": "/items/",
+    "method": "GET",
+    "parameters": {
+      "query": {
+        "q": {
+          "type": "string",
+          "required": true
+        }
+      }
+    }
+  }
 }

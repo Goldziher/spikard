@@ -144,8 +144,7 @@ pub async fn validate_content_type_middleware(request: Request, next: Next) -> R
 
                     (new_parts, Body::from(json_bytes))
                 } else {
-                    // For other content types (JSON, etc.), pass through as-is
-                    // Read the body to validate Content-Length
+                    // For other content types (JSON, etc.), read body and validate
                     let body_bytes = match to_bytes(body, usize::MAX).await {
                         Ok(bytes) => bytes,
                         Err(_) => {
@@ -158,6 +157,22 @@ pub async fn validate_content_type_middleware(request: Request, next: Next) -> R
 
                     // Validate Content-Length matches actual body size
                     validate_content_length(headers, body_bytes.len())?;
+
+                    // If content type is JSON, validate that it's well-formed
+                    // Return 422 for malformed JSON (not 400)
+                    let is_json = parsed_mime.as_ref().map(is_json_content_type).unwrap_or(false);
+
+                    if is_json
+                        && !body_bytes.is_empty()
+                        && serde_json::from_slice::<serde_json::Value>(&body_bytes).is_err()
+                    {
+                        // Malformed JSON - return 400 Bad Request
+                        // This is a syntax error, not a validation error (which would be 422)
+                        let error_body = json!({
+                            "detail": "Invalid request format"
+                        });
+                        return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                    }
 
                     (parts, Body::from(body_bytes))
                 }
@@ -381,6 +396,7 @@ const MULTIPART_STREAMING_THRESHOLD: usize = 1024 * 1024; // 1MB
 /// - Mixed files and data → combined in single JSON object
 /// - Large files → streamed chunk-by-chunk (async)
 /// - Small files → buffered in memory
+/// - Multiple values with same field name → aggregated into arrays
 ///
 /// Streaming strategy:
 /// - Files > 1MB: Use field.chunk().await for async streaming
@@ -388,13 +404,16 @@ const MULTIPART_STREAMING_THRESHOLD: usize = 1024 * 1024; // 1MB
 async fn parse_multipart_to_json(
     mut multipart: Multipart,
 ) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>> {
-    let mut result = serde_json::Map::new();
+    use rustc_hash::FxHashMap;
+
+    // Track values by field name to aggregate duplicates into arrays
+    let mut field_values: FxHashMap<String, Vec<serde_json::Value>> = FxHashMap::default();
 
     while let Some(field) = multipart.next_field().await? {
         let name = field.name().ok_or("Field missing name")?.to_string();
 
         // Check if this is a file field (has filename) or regular form field
-        if let Some(filename) = field.file_name() {
+        let field_value = if let Some(filename) = field.file_name() {
             let filename = filename.to_string();
             let content_type = field
                 .content_type()
@@ -419,21 +438,47 @@ async fn parse_multipart_to_json(
                 format!("<binary data, {} bytes>", size)
             };
 
-            result.insert(
-                name,
-                json!({
-                    "filename": filename,
-                    "size": size,
-                    "content": content,
-                    "content_type": content_type
-                }),
-            );
+            json!({
+                "filename": filename,
+                "size": size,
+                "content": content,
+                "content_type": content_type
+            })
         } else {
             // Regular form field
             let value = field.text().await?;
-            result.insert(name, json!(value));
-        }
+
+            // Try to parse arrays/objects sent as JSON strings, but keep scalars as strings
+            // This handles cases like tags: ["python", "rust"] while preserving active: "true" as string
+            if (value.starts_with('[') && value.ends_with(']')) || (value.starts_with('{') && value.ends_with('}')) {
+                // Try to parse as JSON array or object
+                if let Ok(parsed_json) = serde_json::from_str::<serde_json::Value>(&value) {
+                    parsed_json
+                } else {
+                    // Invalid JSON - keep as string
+                    json!(value)
+                }
+            } else {
+                // Scalar value - keep as string (including "true", "25", etc.)
+                json!(value)
+            }
+        };
+
+        // Aggregate values by field name
+        field_values.entry(name).or_default().push(field_value);
     }
+
+    // Convert to final JSON, collapsing single-item arrays
+    let result: serde_json::Map<String, serde_json::Value> = field_values
+        .into_iter()
+        .map(|(key, values)| {
+            if values.len() == 1 {
+                (key, values.into_iter().next().unwrap())
+            } else {
+                (key, serde_json::Value::Array(values))
+            }
+        })
+        .collect();
 
     Ok(json!(result))
 }
