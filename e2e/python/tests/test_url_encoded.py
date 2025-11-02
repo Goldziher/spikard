@@ -238,13 +238,13 @@ async def test_boolean_field_conversion() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"username": "johndoe", "subscribe": "true"}
+    json_data = {"subscribe": "true", "username": "johndoe"}
     response = await client.post("/form/", headers=headers, json=json_data)
 
     assert response.status_code == 200
     response_data = response.json()
-    assert response_data["username"] == "johndoe"
     assert response_data["subscribe"] == "true"
+    assert response_data["username"] == "johndoe"
 
 
 async def test_empty_string_value() -> None:
@@ -258,13 +258,13 @@ async def test_empty_string_value() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"username": "johndoe", "description": ""}
+    json_data = {"description": "", "username": "johndoe"}
     response = await client.post("/form/", headers=headers, json=json_data)
 
     assert response.status_code == 200
     response_data = response.json()
-    assert response_data["username"] == "johndoe"
     assert response_data["description"] == ""
+    assert response_data["username"] == "johndoe"
 
 
 async def test_oauth2_password_grant_flow() -> None:
@@ -278,14 +278,14 @@ async def test_oauth2_password_grant_flow() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"scope": "", "username": "johndoe", "password": "secret", "grant_type": "password"}
+    json_data = {"username": "johndoe", "password": "secret", "scope": "", "grant_type": "password"}
     response = await client.post("/token", headers=headers, json=json_data)
 
     assert response.status_code == 200
     response_data = response.json()
-    assert response_data["scope"] == ""
     assert response_data["username"] == "johndoe"
     assert response_data["password"] == "secret"
+    assert response_data["scope"] == ""
     assert response_data["grant_type"] == "password"
 
 
