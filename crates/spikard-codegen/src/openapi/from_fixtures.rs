@@ -62,6 +62,32 @@ pub struct FixtureRequest {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub form_data: Option<HashMap<String, Value>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub files: Option<Vec<FixtureFile>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub content_type: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FixtureFile {
+    pub field_name: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filename: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub content: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub content_type: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub content_encoding: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub magic_bytes: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

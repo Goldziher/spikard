@@ -171,6 +171,55 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         request_kwargs.push("json=json_data");
     }
 
+    // Add files (for multipart form data)
+    if let Some(ref files) = fixture.request.files {
+        if !files.is_empty() {
+            // Group files by field_name to handle multiple files with same name
+            use std::collections::HashMap;
+            let mut files_by_name: HashMap<&str, Vec<String>> = HashMap::new();
+
+            for file in files {
+                let field_name = file.field_name.as_str();
+                let filename = file.filename.as_deref().unwrap_or("file.txt");
+
+                // Handle content - either direct content or magic_bytes
+                let file_content = if let Some(ref content) = file.content {
+                    // Text or binary content
+                    let escaped = content
+                        .replace("\\", "\\\\")
+                        .replace("\"", "\\\"")
+                        .replace("\n", "\\n")
+                        .replace("\r", "\\r")
+                        .replace("\t", "\\t");
+                    format!("b\"{}\"", escaped)
+                } else if let Some(ref magic_bytes) = file.magic_bytes {
+                    // Hex-encoded binary data
+                    format!("bytes.fromhex(\"{}\")", magic_bytes)
+                } else {
+                    // Empty file
+                    "b\"\"".to_string()
+                };
+
+                let file_tuple = format!("(\"{}\", {})", filename, file_content);
+                files_by_name.entry(field_name).or_default().push(file_tuple);
+            }
+
+            // Generate files dict
+            code.push_str("    files = {\n");
+            for (field_name, file_tuples) in files_by_name.iter() {
+                if file_tuples.len() == 1 {
+                    // Single file for this field name
+                    code.push_str(&format!("        \"{}\": {},\n", field_name, file_tuples[0]));
+                } else {
+                    // Multiple files for this field name - use list
+                    code.push_str(&format!("        \"{}\": [{}],\n", field_name, file_tuples.join(", ")));
+                }
+            }
+            code.push_str("    }\n");
+            request_kwargs.push("files=files");
+        }
+    }
+
     // Make request
     let kwargs_str = if request_kwargs.is_empty() {
         String::new()
