@@ -172,13 +172,13 @@ async def test_array_max_items_constraint_violation() -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_numeric_constraint_violation__gt_greater_than() -> None:
+async def test_numeric_constraint_violation_gt_greater_than() -> None:
     """Tests validation error when value violates gt constraint."""
-    from app.main import create_app_validation_errors_numeric_constraint_violation___gt__greater_than
+    from app.main import create_app_validation_errors_numeric_constraint_violation_gt_greater_than
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_numeric_constraint_violation___gt__greater_than()
+    app = create_app_validation_errors_numeric_constraint_violation_gt_greater_than()
     client = TestClient(app)
 
     headers = {
@@ -685,13 +685,13 @@ async def test_missing_required_body_field() -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_body_field_type_error__string_for_float() -> None:
+async def test_body_field_type_error_string_for_float() -> None:
     """Tests validation error when body field has wrong type."""
-    from app.main import create_app_validation_errors_body_field_type_error___string_for_float
+    from app.main import create_app_validation_errors_body_field_type_error_string_for_float
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_body_field_type_error___string_for_float()
+    app = create_app_validation_errors_body_field_type_error_string_for_float()
     client = TestClient(app)
 
     headers = {
@@ -745,13 +745,13 @@ async def test_malformed_json_body() -> None:
     assert response_data["detail"] == "Invalid request format"
 
 
-async def test_query_param_type_error__string_provided_for_int() -> None:
+async def test_query_param_type_error_string_provided_for_int() -> None:
     """Tests validation error when string is provided for integer query param."""
-    from app.main import create_app_validation_errors_query_param_type_error___string_provided_for_int
+    from app.main import create_app_validation_errors_query_param_type_error_string_provided_for_int
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_query_param_type_error___string_provided_for_int()
+    app = create_app_validation_errors_query_param_type_error_string_provided_for_int()
     client = TestClient(app)
 
     headers = {
@@ -886,13 +886,13 @@ async def test_09_multiple_validation_errors() -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_numeric_constraint_violation__le_less_than_or_equal() -> None:
+async def test_numeric_constraint_violation_le_less_than_or_equal() -> None:
     """Tests validation error when value violates le constraint."""
-    from app.main import create_app_validation_errors_numeric_constraint_violation___le__less_than_or_equal
+    from app.main import create_app_validation_errors_numeric_constraint_violation_le_less_than_or_equal
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_numeric_constraint_violation___le__less_than_or_equal()
+    app = create_app_validation_errors_numeric_constraint_violation_le_less_than_or_equal()
     client = TestClient(app)
 
     headers = {

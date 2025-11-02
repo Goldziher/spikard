@@ -139,13 +139,13 @@ async def test_21_file_pdf_magic_number_success() -> None:
     assert response.status_code == 201
 
 
-async def test_content_type_validation__invalid_type() -> None:
+async def test_content_type_validation_invalid_type() -> None:
     """Tests file upload with disallowed content type."""
-    from app.main import create_app_multipart_content_type_validation___invalid_type
+    from app.main import create_app_multipart_content_type_validation_invalid_type
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_content_type_validation___invalid_type()
+    app = create_app_multipart_content_type_validation_invalid_type()
     client = TestClient(app)
 
     response = await client.post("/files/images-only")
@@ -179,11 +179,11 @@ async def test_pdf_file_upload() -> None:
 
 async def test_file_list_upload_array_of_files() -> None:
     """Tests uploading multiple files as a list parameter."""
-    from app.main import create_app_multipart_file_list_upload__array_of_files
+    from app.main import create_app_multipart_file_list_upload_array_of_files
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_file_list_upload__array_of_files()
+    app = create_app_multipart_file_list_upload_array_of_files()
     client = TestClient(app)
 
     response = await client.post("/files/list")
@@ -198,13 +198,13 @@ async def test_file_list_upload_array_of_files() -> None:
     assert response_data["total_size"] == 35
 
 
-async def test_optional_file_upload__provided() -> None:
+async def test_optional_file_upload_provided() -> None:
     """Tests optional file parameter when file is provided."""
-    from app.main import create_app_multipart_optional_file_upload___provided
+    from app.main import create_app_multipart_optional_file_upload_provided
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_optional_file_upload___provided()
+    app = create_app_multipart_optional_file_upload_provided()
     client = TestClient(app)
 
     response = await client.post("/files/optional")
@@ -219,13 +219,13 @@ async def test_optional_file_upload__provided() -> None:
     assert response_data["size"] == 21
 
 
-async def test_file_size_validation__too_large() -> None:
+async def test_file_size_validation_too_large() -> None:
     """Tests file upload exceeding max size limit."""
-    from app.main import create_app_multipart_file_size_validation___too_large
+    from app.main import create_app_multipart_file_size_validation_too_large
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_file_size_validation___too_large()
+    app = create_app_multipart_file_size_validation_too_large()
     client = TestClient(app)
 
     response = await client.post("/files/validated")
@@ -309,13 +309,13 @@ async def test_empty_file_upload() -> None:
     assert response_data["size"] == 0
 
 
-async def test_optional_file_upload__missing() -> None:
+async def test_optional_file_upload_missing() -> None:
     """Tests optional file parameter when no file is provided."""
-    from app.main import create_app_multipart_optional_file_upload___missing
+    from app.main import create_app_multipart_optional_file_upload_missing
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_optional_file_upload___missing()
+    app = create_app_multipart_optional_file_upload_missing()
     client = TestClient(app)
 
     json_data = {}
@@ -493,13 +493,13 @@ async def test_file_upload_with_custom_headers() -> None:
     assert response_data["test2"]["size"] == 15
 
 
-async def test_required_file_upload__missing() -> None:
+async def test_required_file_upload_missing() -> None:
     """Tests required file parameter when no file is provided."""
-    from app.main import create_app_multipart_required_file_upload___missing
+    from app.main import create_app_multipart_required_file_upload_missing
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_required_file_upload___missing()
+    app = create_app_multipart_required_file_upload_missing()
     client = TestClient(app)
 
     json_data = {}

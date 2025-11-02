@@ -12,7 +12,7 @@
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -117,7 +117,7 @@ fn generate_app_file_per_fixture(fixtures_by_category: &HashMap<String, Vec<Fixt
     code.push_str("from uuid import UUID\n\n");
     code.push_str("import msgspec\n");
     code.push_str("from pydantic import BaseModel\n\n");
-    code.push_str("from spikard import Spikard, delete, get, head, options, patch, post, put\n\n");
+    code.push_str("from spikard import Response, Spikard, delete, get, head, options, patch, post, put\n\n");
 
     // Track handler names for uniqueness
     let mut handler_names = HashMap::new();
@@ -287,14 +287,14 @@ fn generate_handler_function_for_fixture(
         None
     };
 
-    // Determine response body
-    let response_body = determine_response_body(&[fixture]);
+    // Determine response body and status code
+    let response_info = determine_response_body(&[fixture]);
 
     // Generate handler function
     let mut code = String::new();
 
     // Determine if parameters will be used
-    let params_used = response_body.is_none();
+    let params_used = response_info.is_none();
     let param_prefix = if params_used { "" } else { "_" };
 
     // Function signature
@@ -335,8 +335,17 @@ fn generate_handler_function_for_fixture(
     ));
 
     // Function body
-    if let Some(body_json) = response_body {
-        code.push_str(&format!("    return {}\n", body_json));
+    if let Some((body_json, status_code)) = response_info {
+        if status_code == 200 {
+            // Default status code - return plain JSON
+            code.push_str(&format!("    return {}\n", body_json));
+        } else {
+            // Custom status code - wrap in Response()
+            code.push_str(&format!(
+                "    return Response(content={}, status_code={})\n",
+                body_json, status_code
+            ));
+        }
     } else {
         code.push_str("    # Echo back parameters for testing\n");
         code.push_str("    result: dict[str, Any] = {}\n");
@@ -380,10 +389,16 @@ fn generate_handler_function_for_fixture(
 
 /// Sanitize a string to be a valid Python identifier (lowercase snake_case)
 fn sanitize_identifier(s: &str) -> String {
-    s.to_lowercase()
-        .replace(|c: char| !c.is_alphanumeric() && c != '_', "_")
-        .trim_matches('_')
-        .to_string()
+    let mut result = s
+        .to_lowercase()
+        .replace(|c: char| !c.is_alphanumeric() && c != '_', "_");
+
+    // Collapse multiple consecutive underscores to single underscore
+    while result.contains("__") {
+        result = result.replace("__", "_");
+    }
+
+    result.trim_matches('_').to_string()
 }
 
 /// Generate CORS preflight handler
@@ -808,13 +823,13 @@ fn json_type_to_python(schema: &Value) -> Result<String> {
 }
 
 /// Determine the response body from fixtures
-fn determine_response_body(fixtures: &[&Fixture]) -> Option<String> {
-    // Use the first successful response
+fn determine_response_body(fixtures: &[&Fixture]) -> Option<(String, u16)> {
+    // Use the first successful response, returning (body, status_code)
     for fixture in fixtures {
         if fixture.expected_response.status_code >= 200 && fixture.expected_response.status_code < 300 {
             if let Some(ref body) = fixture.expected_response.body {
                 // Convert JSON to Python dict literal
-                return Some(json_to_python(body));
+                return Some((json_to_python(body), fixture.expected_response.status_code));
             }
         }
     }

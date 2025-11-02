@@ -1,13 +1,13 @@
 """E2E tests for query_params."""
 
 
-async def test_string_validation_with_regex__success() -> None:
+async def test_string_validation_with_regex_success() -> None:
     """Tests string parameter with regex pattern validation - matching pattern."""
-    from app.main import create_app_query_params_string_validation_with_regex___success
+    from app.main import create_app_query_params_string_validation_with_regex_success
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_string_validation_with_regex___success()
+    app = create_app_query_params_string_validation_with_regex_success()
     client = TestClient(app)
 
     params = {
@@ -41,13 +41,13 @@ async def test_49_integer_gt_constraint_success() -> None:
     assert response_data["limit"] == 5
 
 
-async def test_enum_query_parameter__invalid_value() -> None:
+async def test_enum_query_parameter_invalid_value() -> None:
     """Tests enum query parameter with value not in enum."""
-    from app.main import create_app_query_params_enum_query_parameter___invalid_value
+    from app.main import create_app_query_params_enum_query_parameter_invalid_value
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_enum_query_parameter___invalid_value()
+    app = create_app_query_params_enum_query_parameter_invalid_value()
     client = TestClient(app)
 
     params = {
@@ -126,13 +126,13 @@ async def test_47_pattern_validation_email_success() -> None:
     assert response_data["email"] == "user@example.com"
 
 
-async def test_required_integer_query_parameter__success() -> None:
+async def test_required_integer_query_parameter_success() -> None:
     """Tests a required integer query parameter with valid value."""
-    from app.main import create_app_query_params_required_integer_query_parameter___success
+    from app.main import create_app_query_params_required_integer_query_parameter_success
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_required_integer_query_parameter___success()
+    app = create_app_query_params_required_integer_query_parameter_success()
     client = TestClient(app)
 
     params = {
@@ -145,13 +145,13 @@ async def test_required_integer_query_parameter__success() -> None:
     assert response_data == "foo bar 42"
 
 
-async def test_required_string_query_parameter__missing() -> None:
+async def test_required_string_query_parameter_missing() -> None:
     """Tests a required string query parameter without providing value, should return 422."""
-    from app.main import create_app_query_params_required_string_query_parameter___missing
+    from app.main import create_app_query_params_required_string_query_parameter_missing
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_required_string_query_parameter___missing()
+    app = create_app_query_params_required_string_query_parameter_missing()
     client = TestClient(app)
 
     response = await client.get("/query")
@@ -220,13 +220,13 @@ async def test_52_integer_le_constraint_boundary() -> None:
     assert response_data["limit"] == 100
 
 
-async def test_list_with_default_empty_array__no_values_provided() -> None:
+async def test_list_with_default_empty_array_no_values_provided() -> None:
     """Tests list parameter with default=[] when no values provided, should return empty list."""
-    from app.main import create_app_query_params_list_with_default_empty_array___no_values_provided
+    from app.main import create_app_query_params_list_with_default_empty_array_no_values_provided
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_list_with_default_empty_array___no_values_provided()
+    app = create_app_query_params_list_with_default_empty_array_no_values_provided()
     client = TestClient(app)
 
     response = await client.get("/query/list-default")
@@ -236,13 +236,13 @@ async def test_list_with_default_empty_array__no_values_provided() -> None:
     assert len(response_data) == 0
 
 
-async def test_date_query_parameter__success() -> None:
+async def test_date_query_parameter_success() -> None:
     """Tests date query parameter with valid ISO date format."""
-    from app.main import create_app_query_params_date_query_parameter___success
+    from app.main import create_app_query_params_date_query_parameter_success
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_date_query_parameter___success()
+    app = create_app_query_params_date_query_parameter_success()
     client = TestClient(app)
 
     params = {
@@ -256,13 +256,13 @@ async def test_date_query_parameter__success() -> None:
     assert response_data["event_date"] == "2024-01-15"
 
 
-async def test_string_query_param_with_max_length_constraint__fail() -> None:
+async def test_string_query_param_with_max_length_constraint_fail() -> None:
     """Tests string query parameter with max_length validation failure."""
-    from app.main import create_app_query_params_string_query_param_with_max_length_constraint___fail
+    from app.main import create_app_query_params_string_query_param_with_max_length_constraint_fail
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_string_query_param_with_max_length_constraint___fail()
+    app = create_app_query_params_string_query_param_with_max_length_constraint_fail()
     client = TestClient(app)
 
     params = {
@@ -338,13 +338,13 @@ async def test_45_string_minlength_validation_failure() -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_integer_with_default_value__override() -> None:
+async def test_integer_with_default_value_override() -> None:
     """Tests integer parameter with default value when overridden with custom value."""
-    from app.main import create_app_query_params_integer_with_default_value___override
+    from app.main import create_app_query_params_integer_with_default_value_override
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_integer_with_default_value___override()
+    app = create_app_query_params_integer_with_default_value_override()
     client = TestClient(app)
 
     params = {
@@ -418,13 +418,13 @@ async def test_58_format_email_success() -> None:
     assert response_data["email"] == "user@example.com"
 
 
-async def test_integer_query_param_with_ge_constraint__boundary() -> None:
+async def test_integer_query_param_with_ge_constraint_boundary() -> None:
     """Tests integer query parameter with ge validation at boundary value."""
-    from app.main import create_app_query_params_integer_query_param_with_ge_constraint___boundary
+    from app.main import create_app_query_params_integer_query_param_with_ge_constraint_boundary
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_integer_query_param_with_ge_constraint___boundary()
+    app = create_app_query_params_integer_query_param_with_ge_constraint_boundary()
     client = TestClient(app)
 
     params = {
@@ -438,13 +438,13 @@ async def test_integer_query_param_with_ge_constraint__boundary() -> None:
     assert response_data["value"] == 10
 
 
-async def test_integer_query_param_with_gt_constraint__valid() -> None:
+async def test_integer_query_param_with_gt_constraint_valid() -> None:
     """Tests integer query parameter with gt validation, value above limit."""
-    from app.main import create_app_query_params_integer_query_param_with_gt_constraint___valid
+    from app.main import create_app_query_params_integer_query_param_with_gt_constraint_valid
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_integer_query_param_with_gt_constraint___valid()
+    app = create_app_query_params_integer_query_param_with_gt_constraint_valid()
     client = TestClient(app)
 
     params = {
@@ -458,13 +458,13 @@ async def test_integer_query_param_with_gt_constraint__valid() -> None:
     assert response_data["value"] == 1
 
 
-async def test_required_integer_query_parameter__invalid_type() -> None:
+async def test_required_integer_query_parameter_invalid_type() -> None:
     """Tests integer query parameter with non-numeric string, should return 422."""
-    from app.main import create_app_query_params_required_integer_query_parameter___invalid_type
+    from app.main import create_app_query_params_required_integer_query_parameter_invalid_type
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_required_integer_query_parameter___invalid_type()
+    app = create_app_query_params_required_integer_query_parameter_invalid_type()
     client = TestClient(app)
 
     params = {
@@ -496,13 +496,13 @@ async def test_required_integer_query_parameter__invalid_type() -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_required_integer_query_parameter__float_value() -> None:
+async def test_required_integer_query_parameter_float_value() -> None:
     """Tests integer query parameter with float string value, should return 422."""
-    from app.main import create_app_query_params_required_integer_query_parameter___float_value
+    from app.main import create_app_query_params_required_integer_query_parameter_float_value
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_required_integer_query_parameter___float_value()
+    app = create_app_query_params_required_integer_query_parameter_float_value()
     client = TestClient(app)
 
     params = {
@@ -635,13 +635,13 @@ async def test_63_format_uri_success() -> None:
     assert response_data["url"] == "https://example.com/path?query=value"
 
 
-async def test_boolean_query_parameter__numeric_1() -> None:
+async def test_boolean_query_parameter_numeric_1() -> None:
     """Tests boolean query parameter with '1' converts to true."""
-    from app.main import create_app_query_params_boolean_query_parameter___numeric_1
+    from app.main import create_app_query_params_boolean_query_parameter_numeric_1
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_boolean_query_parameter___numeric_1()
+    app = create_app_query_params_boolean_query_parameter_numeric_1()
     client = TestClient(app)
 
     params = {
@@ -655,13 +655,13 @@ async def test_boolean_query_parameter__numeric_1() -> None:
     assert response_data["flag"]
 
 
-async def test_string_query_param_with_min_length_constraint__fail() -> None:
+async def test_string_query_param_with_min_length_constraint_fail() -> None:
     """Tests string query parameter with min_length validation failure."""
-    from app.main import create_app_query_params_string_query_param_with_min_length_constraint___fail
+    from app.main import create_app_query_params_string_query_param_with_min_length_constraint_fail
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_string_query_param_with_min_length_constraint___fail()
+    app = create_app_query_params_string_query_param_with_min_length_constraint_fail()
     client = TestClient(app)
 
     params = {
@@ -696,13 +696,13 @@ async def test_string_query_param_with_min_length_constraint__fail() -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_optional_string_query_parameter__provided() -> None:
+async def test_optional_string_query_parameter_provided() -> None:
     """Tests optional string parameter with value provided."""
-    from app.main import create_app_query_params_optional_string_query_parameter___provided
+    from app.main import create_app_query_params_optional_string_query_parameter_provided
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_optional_string_query_parameter___provided()
+    app = create_app_query_params_optional_string_query_parameter_provided()
     client = TestClient(app)
 
     params = {
@@ -715,13 +715,13 @@ async def test_optional_string_query_parameter__provided() -> None:
     assert response_data == "foo bar baz"
 
 
-async def test_list_of_integers__multiple_values() -> None:
+async def test_list_of_integers_multiple_values() -> None:
     """Tests list query parameter with multiple integer values using same key."""
-    from app.main import create_app_query_params_list_of_integers___multiple_values
+    from app.main import create_app_query_params_list_of_integers_multiple_values
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_list_of_integers___multiple_values()
+    app = create_app_query_params_list_of_integers_multiple_values()
     client = TestClient(app)
 
     params = {
@@ -736,13 +736,13 @@ async def test_list_of_integers__multiple_values() -> None:
     assert response_data[1] == 2
 
 
-async def test_integer_query_param_with_lt_constraint__valid() -> None:
+async def test_integer_query_param_with_lt_constraint_valid() -> None:
     """Tests integer query parameter with lt validation, value below limit."""
-    from app.main import create_app_query_params_integer_query_param_with_lt_constraint___valid
+    from app.main import create_app_query_params_integer_query_param_with_lt_constraint_valid
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_integer_query_param_with_lt_constraint___valid()
+    app = create_app_query_params_integer_query_param_with_lt_constraint_valid()
     client = TestClient(app)
 
     params = {
@@ -858,13 +858,13 @@ async def test_56_array_maxitems_constraint_failure() -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_string_query_param_with_regex_pattern__fail() -> None:
+async def test_string_query_param_with_regex_pattern_fail() -> None:
     """Tests string query parameter with regex pattern validation failure."""
-    from app.main import create_app_query_params_string_query_param_with_regex_pattern___fail
+    from app.main import create_app_query_params_string_query_param_with_regex_pattern_fail
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_string_query_param_with_regex_pattern___fail()
+    app = create_app_query_params_string_query_param_with_regex_pattern_fail()
     client = TestClient(app)
 
     params = {
@@ -1001,13 +1001,13 @@ async def test_48_pattern_validation_email_failure() -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_required_integer_query_parameter__missing() -> None:
+async def test_required_integer_query_parameter_missing() -> None:
     """Tests a required integer query parameter without providing value, should return 422."""
-    from app.main import create_app_query_params_required_integer_query_parameter___missing
+    from app.main import create_app_query_params_required_integer_query_parameter_missing
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_required_integer_query_parameter___missing()
+    app = create_app_query_params_required_integer_query_parameter_missing()
     client = TestClient(app)
 
     response = await client.get("/query/int")
@@ -1036,13 +1036,13 @@ async def test_required_integer_query_parameter__missing() -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_query_parameter_with_special_characters__url_encoding() -> None:
+async def test_query_parameter_with_special_characters_url_encoding() -> None:
     """Tests query parameters with special characters that need URL encoding."""
-    from app.main import create_app_query_params_query_parameter_with_special_characters___url_encoding
+    from app.main import create_app_query_params_query_parameter_with_special_characters_url_encoding
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_query_parameter_with_special_characters___url_encoding()
+    app = create_app_query_params_query_parameter_with_special_characters_url_encoding()
     client = TestClient(app)
 
     params = {
@@ -1059,13 +1059,13 @@ async def test_query_parameter_with_special_characters__url_encoding() -> None:
     assert response_data["special"] == "&@A.ac"
 
 
-async def test_list_query_parameter__required_but_missing() -> None:
+async def test_list_query_parameter_required_but_missing() -> None:
     """Tests required list parameter without any values, should return 422."""
-    from app.main import create_app_query_params_list_query_parameter___required_but_missing
+    from app.main import create_app_query_params_list_query_parameter_required_but_missing
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_list_query_parameter___required_but_missing()
+    app = create_app_query_params_list_query_parameter_required_but_missing()
     client = TestClient(app)
 
     response = await client.get("/query/list")
@@ -1094,13 +1094,13 @@ async def test_list_query_parameter__required_but_missing() -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_required_string_query_parameter__success() -> None:
+async def test_required_string_query_parameter_success() -> None:
     """Tests a required string query parameter with valid value."""
-    from app.main import create_app_query_params_required_string_query_parameter___success
+    from app.main import create_app_query_params_required_string_query_parameter_success
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_required_string_query_parameter___success()
+    app = create_app_query_params_required_string_query_parameter_success()
     client = TestClient(app)
 
     params = {
@@ -1184,10 +1184,10 @@ async def test_multiple_query_parameters_with_different_types() -> None:
     client = TestClient(app)
 
     params = {
-        "age": "30",
-        "score": "95.5",
         "active": "true",
+        "age": "30",
         "name": "john",
+        "score": "95.5",
     }
     response = await client.get("/query/multi-type", query_params=params)
 
@@ -1249,13 +1249,13 @@ async def test_70_array_separator_pipe() -> None:
     assert response_data["tags"][2] == "typescript"
 
 
-async def test_integer_with_default_value__not_provided() -> None:
+async def test_integer_with_default_value_not_provided() -> None:
     """Tests integer parameter with default value when not provided."""
-    from app.main import create_app_query_params_integer_with_default_value___not_provided
+    from app.main import create_app_query_params_integer_with_default_value_not_provided
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_integer_with_default_value___not_provided()
+    app = create_app_query_params_integer_with_default_value_not_provided()
     client = TestClient(app)
 
     response = await client.get("/query/int/default")
@@ -1265,13 +1265,13 @@ async def test_integer_with_default_value__not_provided() -> None:
     assert response_data == "foo bar 10"
 
 
-async def test_boolean_query_parameter__true() -> None:
+async def test_boolean_query_parameter_true() -> None:
     """Tests boolean query parameter with 'true' string value."""
-    from app.main import create_app_query_params_boolean_query_parameter___true
+    from app.main import create_app_query_params_boolean_query_parameter_true
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_boolean_query_parameter___true()
+    app = create_app_query_params_boolean_query_parameter_true()
     client = TestClient(app)
 
     params = {
@@ -1285,13 +1285,13 @@ async def test_boolean_query_parameter__true() -> None:
     assert response_data["flag"]
 
 
-async def test_integer_query_param_with_le_constraint__boundary() -> None:
+async def test_integer_query_param_with_le_constraint_boundary() -> None:
     """Tests integer query parameter with le validation at boundary value."""
-    from app.main import create_app_query_params_integer_query_param_with_le_constraint___boundary
+    from app.main import create_app_query_params_integer_query_param_with_le_constraint_boundary
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_integer_query_param_with_le_constraint___boundary()
+    app = create_app_query_params_integer_query_param_with_le_constraint_boundary()
     client = TestClient(app)
 
     params = {
@@ -1305,13 +1305,13 @@ async def test_integer_query_param_with_le_constraint__boundary() -> None:
     assert response_data["value"] == 100
 
 
-async def test_float_query_param_with_ge_constraint__success() -> None:
+async def test_float_query_param_with_ge_constraint_success() -> None:
     """Tests float query parameter with ge validation at boundary."""
-    from app.main import create_app_query_params_float_query_param_with_ge_constraint___success
+    from app.main import create_app_query_params_float_query_param_with_ge_constraint_success
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_float_query_param_with_ge_constraint___success()
+    app = create_app_query_params_float_query_param_with_ge_constraint_success()
     client = TestClient(app)
 
     params = {
@@ -1345,13 +1345,13 @@ async def test_51_integer_ge_constraint_boundary() -> None:
     assert response_data["offset"] == 0
 
 
-async def test_optional_integer_query_parameter__missing() -> None:
+async def test_optional_integer_query_parameter_missing() -> None:
     """Tests optional integer parameter without value, should not error."""
-    from app.main import create_app_query_params_optional_integer_query_parameter___missing
+    from app.main import create_app_query_params_optional_integer_query_parameter_missing
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_optional_integer_query_parameter___missing()
+    app = create_app_query_params_optional_integer_query_parameter_missing()
     client = TestClient(app)
 
     response = await client.get("/query/int/optional")
@@ -1427,13 +1427,13 @@ async def test_72_array_separator_space() -> None:
     assert response_data["keywords"][2] == "framework"
 
 
-async def test_string_validation_with_regex__failure() -> None:
+async def test_string_validation_with_regex_failure() -> None:
     """Tests string parameter with regex pattern validation - non-matching pattern returns 422."""
-    from app.main import create_app_query_params_string_validation_with_regex___failure
+    from app.main import create_app_query_params_string_validation_with_regex_failure
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_string_validation_with_regex___failure()
+    app = create_app_query_params_string_validation_with_regex_failure()
     client = TestClient(app)
 
     params = {
@@ -1508,13 +1508,13 @@ async def test_query_parameter_with_url_encoded_space() -> None:
     assert response_data["name"] == "hello world"
 
 
-async def test_list_of_strings__multiple_values() -> None:
+async def test_list_of_strings_multiple_values() -> None:
     """Tests list of string query parameters with multiple values."""
-    from app.main import create_app_query_params_list_of_strings___multiple_values
+    from app.main import create_app_query_params_list_of_strings_multiple_values
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_list_of_strings___multiple_values()
+    app = create_app_query_params_list_of_strings_multiple_values()
     client = TestClient(app)
 
     params = {
@@ -1567,13 +1567,13 @@ async def test_62_format_ipv6_success() -> None:
     assert response_data["ip"] == "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
 
 
-async def test_array_query_parameter__single_value() -> None:
+async def test_array_query_parameter_single_value() -> None:
     """Tests array query parameter with single value."""
-    from app.main import create_app_query_params_array_query_parameter___single_value
+    from app.main import create_app_query_params_array_query_parameter_single_value
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_array_query_parameter___single_value()
+    app = create_app_query_params_array_query_parameter_single_value()
     client = TestClient(app)
 
     params = {
@@ -1587,13 +1587,13 @@ async def test_array_query_parameter__single_value() -> None:
     assert response_data[0] == "apple"
 
 
-async def test_optional_string_query_parameter__missing() -> None:
+async def test_optional_string_query_parameter_missing() -> None:
     """Tests optional string parameter without value, should return None/null."""
-    from app.main import create_app_query_params_optional_string_query_parameter___missing
+    from app.main import create_app_query_params_optional_string_query_parameter_missing
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_optional_string_query_parameter___missing()
+    app = create_app_query_params_optional_string_query_parameter_missing()
     client = TestClient(app)
 
     response = await client.get("/query/optional")
@@ -1603,13 +1603,13 @@ async def test_optional_string_query_parameter__missing() -> None:
     assert response_data == "foo bar None"
 
 
-async def test_datetime_query_parameter__success() -> None:
+async def test_datetime_query_parameter_success() -> None:
     """Tests datetime query parameter with valid ISO datetime format."""
-    from app.main import create_app_query_params_datetime_query_parameter___success
+    from app.main import create_app_query_params_datetime_query_parameter_success
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_datetime_query_parameter___success()
+    app = create_app_query_params_datetime_query_parameter_success()
     client = TestClient(app)
 
     params = {
@@ -1623,13 +1623,13 @@ async def test_datetime_query_parameter__success() -> None:
     assert response_data["timestamp"] == "2024-01-15T10:30:00Z"
 
 
-async def test_uuid_query_parameter__invalid_format() -> None:
+async def test_uuid_query_parameter_invalid_format() -> None:
     """Tests UUID query parameter with invalid UUID format."""
-    from app.main import create_app_query_params_uuid_query_parameter___invalid_format
+    from app.main import create_app_query_params_uuid_query_parameter_invalid_format
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_uuid_query_parameter___invalid_format()
+    app = create_app_query_params_uuid_query_parameter_invalid_format()
     client = TestClient(app)
 
     params = {
@@ -1661,13 +1661,13 @@ async def test_uuid_query_parameter__invalid_format() -> None:
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
 
 
-async def test_array_query_parameter__empty_array() -> None:
+async def test_array_query_parameter_empty_array() -> None:
     """Tests array query parameter when no values are provided."""
-    from app.main import create_app_query_params_array_query_parameter___empty_array
+    from app.main import create_app_query_params_array_query_parameter_empty_array
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_array_query_parameter___empty_array()
+    app = create_app_query_params_array_query_parameter_empty_array()
     client = TestClient(app)
 
     response = await client.get("/query/list-default")
@@ -1677,13 +1677,13 @@ async def test_array_query_parameter__empty_array() -> None:
     assert len(response_data) == 0
 
 
-async def test_enum_query_parameter__success() -> None:
+async def test_enum_query_parameter_success() -> None:
     """Tests enum query parameter with valid enum value."""
-    from app.main import create_app_query_params_enum_query_parameter___success
+    from app.main import create_app_query_params_enum_query_parameter_success
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_enum_query_parameter___success()
+    app = create_app_query_params_enum_query_parameter_success()
     client = TestClient(app)
 
     params = {
@@ -1697,13 +1697,13 @@ async def test_enum_query_parameter__success() -> None:
     assert response_data["model"] == "alexnet"
 
 
-async def test_uuid_query_parameter__success() -> None:
+async def test_uuid_query_parameter_success() -> None:
     """Tests UUID query parameter with valid UUID format."""
-    from app.main import create_app_query_params_uuid_query_parameter___success
+    from app.main import create_app_query_params_uuid_query_parameter_success
 
     from spikard.testing import TestClient
 
-    app = create_app_query_params_uuid_query_parameter___success()
+    app = create_app_query_params_uuid_query_parameter_success()
     client = TestClient(app)
 
     params = {

@@ -3,7 +3,7 @@
 //! Generates pytest test suites from fixtures for e2e testing.
 
 use anyhow::{Context, Result};
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -305,22 +305,31 @@ fn json_to_python(value: &serde_json::Value) -> String {
 
 /// Sanitize fixture name for test function
 fn sanitize_test_name(name: &str) -> String {
-    name.to_lowercase()
-        .replace(
-            [
-                ' ', '-', '/', '.', '(', ')', '=', ',', ':', '+', '<', '>', '[', ']', '\'', '"',
-            ],
-            "_",
-        )
-        .replace("__", "_")
-        .trim_matches('_')
-        .to_string()
+    let mut result = name.to_lowercase().replace(
+        [
+            ' ', '-', '/', '.', '(', ')', '=', ',', ':', '+', '<', '>', '[', ']', '\'', '"',
+        ],
+        "_",
+    );
+
+    // Collapse multiple consecutive underscores to single underscore
+    while result.contains("__") {
+        result = result.replace("__", "_");
+    }
+
+    result.trim_matches('_').to_string()
 }
 
 /// Sanitize a string to be a valid Python identifier (lowercase snake_case, matches python_app.rs)
 fn sanitize_identifier(s: &str) -> String {
-    s.to_lowercase()
-        .replace(|c: char| !c.is_alphanumeric() && c != '_', "_")
-        .trim_matches('_')
-        .to_string()
+    let mut result = s
+        .to_lowercase()
+        .replace(|c: char| !c.is_alphanumeric() && c != '_', "_");
+
+    // Collapse multiple consecutive underscores to single underscore
+    while result.contains("__") {
+        result = result.replace("__", "_");
+    }
+
+    result.trim_matches('_').to_string()
 }
