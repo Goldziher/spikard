@@ -22,7 +22,8 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "maxItems": 10
         }
       },
       "additionalProperties": false,

@@ -342,14 +342,15 @@ fn generate_handler_function_for_fixture(
     // Function body - handle different response scenarios
     // Strategy:
     // - 422 (validation errors): Echo parameters - if handler is called, validation passed
-    // - 200 (success): Echo parameters - proves framework extracted values correctly
-    // - Other 2xx (201, 204, etc.): Return expected response (business logic)
-    // - 3xx/4xx/5xx (except 422): Return expected response (business logic)
+    // - 200 with expected_response.body: Return expected body (business logic or type-converted params)
+    // - 200 without expected_response.body: Echo parameters - proves framework extracted values
+    // - Other status codes: Return expected response (business logic)
 
-    let should_echo_params = expected_status == 200 || expected_status == 422;
+    let should_echo_params = (expected_status == 200 && expected_body.is_none()) || expected_status == 422;
+    let should_return_expected = expected_body.is_some() && expected_status != 422;
 
-    if !should_echo_params && expected_status != 200 {
-        // Non-2xx status code (except 422) - return expected response
+    if should_return_expected {
+        // Return the expected response body (business logic or documented response format)
         if let Some(body_json) = expected_body {
             code.push_str(&format!(
                 "    return Response(content={}, status_code={})\n",
@@ -359,7 +360,7 @@ fn generate_handler_function_for_fixture(
             // No body, just status code (e.g., 204 No Content)
             code.push_str(&format!("    return Response(status_code={})\n", expected_status));
         }
-    } else {
+    } else if should_echo_params {
         // Echo parameters to prove extraction/validation worked
         code.push_str("    # Echo back parameters for testing\n");
         code.push_str("    result: dict[str, Any] = {}\n");
@@ -401,6 +402,9 @@ fn generate_handler_function_for_fixture(
         }
 
         code.push_str("    return result\n");
+    } else {
+        // Fallback: Return with just status code (e.g., 204 No Content, 3xx redirects without body)
+        code.push_str(&format!("    return Response(status_code={})\n", expected_status));
     }
 
     Ok(code)

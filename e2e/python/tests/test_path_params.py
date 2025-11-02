@@ -1,12 +1,11 @@
 """E2E tests for path_params."""
 
-import pytest
-from typing import Any
 
 async def test_boolean_path_parameter_true() -> None:
     """Tests boolean path parameter with 'True' string value."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_boolean_path_parameter_true
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_boolean_path_parameter_true()
     client = TestClient(app)
@@ -15,12 +14,15 @@ async def test_boolean_path_parameter_true() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "item_id" in response_data
+    assert response_data["item_id"]
 
 
 async def test_29_decimal_path_param_success() -> None:
     """Path parameter with decimal/money value should be accepted."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_29_decimal_path_param_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_29_decimal_path_param_success()
     client = TestClient(app)
@@ -29,12 +31,15 @@ async def test_29_decimal_path_param_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "amount" in response_data
+    assert response_data["amount"] == "19.99"
 
 
 async def test_integer_path_parameter_with_combined_lt_and_gt_constraints_success() -> None:
     """Tests integer path parameter with both lt and gt validation (range check)."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success()
     client = TestClient(app)
@@ -43,12 +48,15 @@ async def test_integer_path_parameter_with_combined_lt_and_gt_constraints_succes
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "item_id" in response_data
+    assert response_data["item_id"] == 2
 
 
 async def test_33_string_pattern_path_success() -> None:
     """Path parameter matching regex pattern should succeed."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_33_string_pattern_path_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_33_string_pattern_path_success()
     client = TestClient(app)
@@ -57,12 +65,17 @@ async def test_33_string_pattern_path_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "owner" in response_data
+    assert response_data["owner"] == "spikard-labs"
+    assert "repo" in response_data
+    assert response_data["repo"] == "spikard-http"
 
 
 async def test_31_string_minlength_path_failure() -> None:
     """Path parameter with string below minLength constraint should fail."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_31_string_minlength_path_failure
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_31_string_minlength_path_failure()
     client = TestClient(app)
@@ -77,8 +90,9 @@ async def test_31_string_minlength_path_failure() -> None:
 
 async def test_35_negative_integer_path_param() -> None:
     """Path parameter with negative integer should be parsed correctly."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_35_negative_integer_path_param
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_35_negative_integer_path_param()
     client = TestClient(app)
@@ -87,12 +101,15 @@ async def test_35_negative_integer_path_param() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "value" in response_data
+    assert response_data["value"] == -100
 
 
 async def test_enum_path_parameter_invalid_value() -> None:
     """Tests enum path parameter with invalid enum value returns 422."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_enum_path_parameter_invalid_value
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_enum_path_parameter_invalid_value()
     client = TestClient(app)
@@ -107,8 +124,9 @@ async def test_enum_path_parameter_invalid_value() -> None:
 
 async def test_27_datetime_format_path_param_success() -> None:
     """Path parameter with valid ISO 8601 datetime should be accepted."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_27_datetime_format_path_param_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_27_datetime_format_path_param_success()
     client = TestClient(app)
@@ -117,12 +135,15 @@ async def test_27_datetime_format_path_param_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "timestamp" in response_data
+    assert response_data["timestamp"] == "2025-10-30T14:30:00Z"
 
 
 async def test_25_date_format_invalid_failure() -> None:
     """Path parameter with invalid date format should fail validation."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_25_date_format_invalid_failure
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_25_date_format_invalid_failure()
     client = TestClient(app)
@@ -137,8 +158,9 @@ async def test_25_date_format_invalid_failure() -> None:
 
 async def test_integer_path_parameter_with_lt_constraint_success() -> None:
     """Tests integer path parameter with lt (less than) validation."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_integer_path_parameter_with_lt_constraint_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_integer_path_parameter_with_lt_constraint_success()
     client = TestClient(app)
@@ -147,12 +169,15 @@ async def test_integer_path_parameter_with_lt_constraint_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "item_id" in response_data
+    assert response_data["item_id"] == 2
 
 
 async def test_integer_path_parameter_with_gt_constraint_success() -> None:
     """Tests integer path parameter with gt (greater than) validation succeeds."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_integer_path_parameter_with_gt_constraint_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_integer_path_parameter_with_gt_constraint_success()
     client = TestClient(app)
@@ -161,12 +186,15 @@ async def test_integer_path_parameter_with_gt_constraint_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "item_id" in response_data
+    assert response_data["item_id"] == 42
 
 
 async def test_28_duration_format_path_param_success() -> None:
     """Path parameter with valid ISO 8601 duration should be accepted."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_28_duration_format_path_param_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_28_duration_format_path_param_success()
     client = TestClient(app)
@@ -175,12 +203,15 @@ async def test_28_duration_format_path_param_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "duration" in response_data
+    assert response_data["duration"] == "P1DT2H30M"
 
 
 async def test_path_parameter_type_syntax_with_override() -> None:
     """Tests that explicit parameter schema overrides auto-generated type syntax schema."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_path_parameter_type_syntax_with_override
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_path_parameter_type_syntax_with_override()
     client = TestClient(app)
@@ -189,12 +220,15 @@ async def test_path_parameter_type_syntax_with_override() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "count" in response_data
+    assert response_data["count"] == "50"
 
 
 async def test_20_uuid_v3_path_param_success() -> None:
     """Path parameter with valid UUID v3 should be accepted."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_20_uuid_v3_path_param_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_20_uuid_v3_path_param_success()
     client = TestClient(app)
@@ -203,12 +237,15 @@ async def test_20_uuid_v3_path_param_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "id" in response_data
+    assert response_data["id"] == "e8b5a51d-11c8-3310-a6ab-367563f20686"
 
 
 async def test_integer_path_parameter_invalid_string() -> None:
     """Tests integer path parameter with non-numeric string returns 422."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_integer_path_parameter_invalid_string
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_integer_path_parameter_invalid_string()
     client = TestClient(app)
@@ -223,8 +260,9 @@ async def test_integer_path_parameter_invalid_string() -> None:
 
 async def test_30_string_minlength_path_success() -> None:
     """Path parameter with string meeting minLength constraint should succeed."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_30_string_minlength_path_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_30_string_minlength_path_success()
     client = TestClient(app)
@@ -233,12 +271,15 @@ async def test_30_string_minlength_path_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "username" in response_data
+    assert response_data["username"] == "alice"
 
 
 async def test_integer_path_parameter_with_le_constraint_success() -> None:
     """Tests integer path parameter with le (less than or equal) validation at boundary."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_integer_path_parameter_with_le_constraint_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_integer_path_parameter_with_le_constraint_success()
     client = TestClient(app)
@@ -247,12 +288,15 @@ async def test_integer_path_parameter_with_le_constraint_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "item_id" in response_data
+    assert response_data["item_id"] == 3
 
 
 async def test_path_parameter_type_syntax_invalid_uuid() -> None:
     """Tests that :uuid type syntax properly validates and rejects invalid UUIDs."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_path_parameter_type_syntax_invalid_uuid
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_path_parameter_type_syntax_invalid_uuid()
     client = TestClient(app)
@@ -267,8 +311,9 @@ async def test_path_parameter_type_syntax_invalid_uuid() -> None:
 
 async def test_path_type_parameter_file_path() -> None:
     """Tests path type parameter that captures remaining path segments."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_path_type_parameter_file_path
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_path_type_parameter_file_path()
     client = TestClient(app)
@@ -277,12 +322,15 @@ async def test_path_type_parameter_file_path() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "file_path" in response_data
+    assert response_data["file_path"] == "home/johndoe/myfile.txt"
 
 
 async def test_path_parameter_with_type_syntax_uuid() -> None:
     """Tests path parameter with :uuid type syntax auto-generates correct schema."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_path_parameter_with_type_syntax_uuid
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_path_parameter_with_type_syntax_uuid()
     client = TestClient(app)
@@ -291,12 +339,15 @@ async def test_path_parameter_with_type_syntax_uuid() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "id" in response_data
+    assert response_data["id"] == "550e8400-e29b-41d4-a716-446655440000"
 
 
 async def test_32_string_maxlength_path_failure() -> None:
     """Path parameter with string exceeding maxLength constraint should fail."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_32_string_maxlength_path_failure
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_32_string_maxlength_path_failure()
     client = TestClient(app)
@@ -311,8 +362,9 @@ async def test_32_string_maxlength_path_failure() -> None:
 
 async def test_integer_path_parameter_success() -> None:
     """Tests integer path parameter with valid value."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_integer_path_parameter_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_integer_path_parameter_success()
     client = TestClient(app)
@@ -321,12 +373,15 @@ async def test_integer_path_parameter_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "item_id" in response_data
+    assert response_data["item_id"] == 42
 
 
 async def test_34_string_pattern_path_failure() -> None:
     """Path parameter not matching regex pattern should fail."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_34_string_pattern_path_failure
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_34_string_pattern_path_failure()
     client = TestClient(app)
@@ -341,8 +396,9 @@ async def test_34_string_pattern_path_failure() -> None:
 
 async def test_21_uuid_v5_path_param_success() -> None:
     """Path parameter with valid UUID v5 should be accepted."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_21_uuid_v5_path_param_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_21_uuid_v5_path_param_success()
     client = TestClient(app)
@@ -351,12 +407,15 @@ async def test_21_uuid_v5_path_param_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "id" in response_data
+    assert response_data["id"] == "630eb68f-e0fa-5ecc-887a-7c7a62614681"
 
 
 async def test_string_path_parameter_with_max_length_failure() -> None:
     """Tests string path parameter with max_length validation fails when too long."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_string_path_parameter_with_max_length_failure
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_string_path_parameter_with_max_length_failure()
     client = TestClient(app)
@@ -371,8 +430,9 @@ async def test_string_path_parameter_with_max_length_failure() -> None:
 
 async def test_string_path_parameter_with_min_length_failure() -> None:
     """Tests string path parameter with min_length validation fails."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_string_path_parameter_with_min_length_failure
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_string_path_parameter_with_min_length_failure()
     client = TestClient(app)
@@ -387,8 +447,9 @@ async def test_string_path_parameter_with_min_length_failure() -> None:
 
 async def test_multiple_path_parameters_success() -> None:
     """Tests multiple path parameters in single route."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_multiple_path_parameters_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_multiple_path_parameters_success()
     client = TestClient(app)
@@ -397,12 +458,21 @@ async def test_multiple_path_parameters_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "order_id" in response_data
+    assert response_data["order_id"] == "c892496f-b1fd-4b91-bdb8-b46f92df1716"
+    assert "service_id" in response_data
+    assert response_data["service_id"] == 1
+    assert "user_id" in response_data
+    assert response_data["user_id"] == "abc"
+    assert "version" in response_data
+    assert response_data["version"] == 1.0
 
 
 async def test_date_path_parameter_success() -> None:
     """Tests date path parameter with ISO format date."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_date_path_parameter_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_date_path_parameter_success()
     client = TestClient(app)
@@ -411,12 +481,15 @@ async def test_date_path_parameter_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "date_param" in response_data
+    assert response_data["date_param"] == "2023-07-15"
 
 
 async def test_integer_path_parameter_with_gt_constraint_failure() -> None:
     """Tests integer path parameter with gt validation fails when value too small."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_integer_path_parameter_with_gt_constraint_failure
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_integer_path_parameter_with_gt_constraint_failure()
     client = TestClient(app)
@@ -431,8 +504,9 @@ async def test_integer_path_parameter_with_gt_constraint_failure() -> None:
 
 async def test_24_date_format_path_param_success() -> None:
     """Path parameter with valid ISO date format should be accepted."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_24_date_format_path_param_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_24_date_format_path_param_success()
     client = TestClient(app)
@@ -441,12 +515,15 @@ async def test_24_date_format_path_param_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "date" in response_data
+    assert response_data["date"] == "2025-10-30"
 
 
 async def test_float_path_parameter_success() -> None:
     """Tests float path parameter with valid value."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_float_path_parameter_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_float_path_parameter_success()
     client = TestClient(app)
@@ -455,12 +532,15 @@ async def test_float_path_parameter_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "item_id" in response_data
+    assert response_data["item_id"] == 42.5
 
 
 async def test_path_parameter_with_type_syntax_integer() -> None:
     """Tests path parameter with :int type syntax auto-generates correct schema."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_path_parameter_with_type_syntax_integer
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_path_parameter_with_type_syntax_integer()
     client = TestClient(app)
@@ -469,12 +549,15 @@ async def test_path_parameter_with_type_syntax_integer() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "user_id" in response_data
+    assert response_data["user_id"] == "42"
 
 
 async def test_string_path_parameter_success() -> None:
     """Tests string path parameter with valid value."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_string_path_parameter_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_string_path_parameter_success()
     client = TestClient(app)
@@ -483,12 +566,15 @@ async def test_string_path_parameter_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "item_id" in response_data
+    assert response_data["item_id"] == "foobar"
 
 
 async def test_uuid_path_parameter_success() -> None:
     """Tests UUID path parameter with valid UUID format."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_uuid_path_parameter_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_uuid_path_parameter_success()
     client = TestClient(app)
@@ -497,12 +583,15 @@ async def test_uuid_path_parameter_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "item_id" in response_data
+    assert response_data["item_id"] == "ec38df32-ceda-4cfa-9b4a-1aeb94ad551a"
 
 
 async def test_integer_path_parameter_with_ge_constraint_success() -> None:
     """Tests integer path parameter with ge (greater than or equal) validation at boundary."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_integer_path_parameter_with_ge_constraint_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_integer_path_parameter_with_ge_constraint_success()
     client = TestClient(app)
@@ -511,12 +600,15 @@ async def test_integer_path_parameter_with_ge_constraint_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "item_id" in response_data
+    assert response_data["item_id"] == 3
 
 
 async def test_enum_path_parameter_success() -> None:
     """Tests enum path parameter with valid enum value."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_enum_path_parameter_success
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_enum_path_parameter_success()
     client = TestClient(app)
@@ -525,12 +617,15 @@ async def test_enum_path_parameter_success() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+    assert "model_name" in response_data
+    assert response_data["model_name"] == "alexnet"
 
 
 async def test_boolean_path_parameter_numeric_1() -> None:
     """Tests boolean path parameter with '1' converts to true."""
-    from spikard.testing import TestClient
     from app.main import create_app_path_params_boolean_path_parameter_numeric_1
+
+    from spikard.testing import TestClient
 
     app = create_app_path_params_boolean_path_parameter_numeric_1()
     client = TestClient(app)
@@ -539,5 +634,5 @@ async def test_boolean_path_parameter_numeric_1() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
-
-
+    assert "item_id" in response_data
+    assert response_data["item_id"]

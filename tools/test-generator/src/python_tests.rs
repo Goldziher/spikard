@@ -3,7 +3,7 @@
 //! Generates pytest test suites from fixtures for e2e testing.
 
 use anyhow::{Context, Result};
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -197,36 +197,43 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     // - Other: Verify expected response body (business logic)
 
     if status_code == 200 {
-        // Success case - verify echoed parameters match what we sent
+        // Success case - verify response matches expected
         code.push_str("    response_data = response.json()\n");
 
-        // Verify body parameters
-        if let Some(ref body) = fixture.request.body {
-            generate_echo_assertions(&mut code, body, "response_data");
-        }
+        // If fixture has expected response body, assert against that (handles type conversion)
+        if let Some(ref expected_body) = fixture.expected_response.body {
+            generate_body_assertions(&mut code, expected_body, "response_data");
+        } else {
+            // Fallback: verify echoed parameters match what we sent
+            // (This path is for fixtures without expected_response.body)
 
-        // Verify form data parameters
-        if let Some(ref form_data) = fixture.request.form_data {
-            for (key, value) in form_data {
-                code.push_str(&format!("    assert response_data[\"{}\"] == {}\n", key, json_to_python(value)));
+            // Verify body parameters
+            if let Some(ref body) = fixture.request.body {
+                generate_echo_assertions(&mut code, body, "response_data");
+            }
+
+            // Verify form data parameters
+            if let Some(ref form_data) = fixture.request.form_data {
+                for (key, value) in form_data {
+                    code.push_str(&format!(
+                        "    assert response_data[\"{}\"] == {}\n",
+                        key,
+                        json_to_python(value)
+                    ));
+                }
+            }
+
+            // Verify query parameters
+            if let Some(ref query_params) = fixture.request.query_params {
+                for (key, value) in query_params {
+                    code.push_str(&format!(
+                        "    assert response_data[\"{}\"] == {}\n",
+                        key,
+                        json_to_python(value)
+                    ));
+                }
             }
         }
-
-        // Verify query parameters
-        if let Some(ref query_params) = fixture.request.query_params {
-            for (key, value) in query_params {
-                code.push_str(&format!("    assert response_data[\"{}\"] == {}\n", key, json_to_python(value)));
-            }
-        }
-
-        // Verify path parameters (extract from path)
-        // TODO: Parse path params from fixture.request.path
-
-        // Verify headers (if they're echoed)
-        // Headers are less commonly echoed, skip for now
-
-        // Verify cookies (if they're echoed)
-        // Cookies are less commonly echoed, skip for now
     } else if status_code == 422 {
         // Validation error - framework should reject before handler
         code.push_str("    response_data = response.json()\n");

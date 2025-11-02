@@ -17,7 +17,8 @@
         },
         "tags": {
           "type": "array",
-          "items": {}
+          "items": {},
+          "minItems": 1
         }
       },
       "additionalProperties": false,
