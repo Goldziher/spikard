@@ -683,15 +683,15 @@ async def test_query_parameter_with_special_characters_url_encoding() -> None:
     client = TestClient(app)
 
     params = {
-        "email": "x@test.com",
         "special": "&@A.ac",
+        "email": "x@test.com",
     }
     response = await client.get("/test", query_params=params)
 
     assert response.status_code == 200
     response_data = response.json()
-    assert response_data["email"] == "x@test.com"
     assert response_data["special"] == "&@A.ac"
+    assert response_data["email"] == "x@test.com"
 
 
 async def test_list_query_parameter_required_but_missing() -> None:
@@ -774,19 +774,19 @@ async def test_multiple_query_parameters_with_different_types() -> None:
     client = TestClient(app)
 
     params = {
+        "score": "95.5",
+        "age": "30",
         "active": "true",
         "name": "john",
-        "age": "30",
-        "score": "95.5",
     }
     response = await client.get("/query/multi-type", query_params=params)
 
     assert response.status_code == 200
     response_data = response.json()
+    assert response_data["score"] == "95.5"
+    assert response_data["age"] == "30"
     assert response_data["active"] == "true"
     assert response_data["name"] == "john"
-    assert response_data["age"] == "30"
-    assert response_data["score"] == "95.5"
 
 
 async def test_71_array_separator_semicolon() -> None:

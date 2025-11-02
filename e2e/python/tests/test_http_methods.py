@@ -13,8 +13,8 @@ async def test_options_cors_preflight_request() -> None:
 
     headers = {
         "Access-Control-Request-Method": "POST",
-        "Access-Control-Request-Headers": "Content-Type",
         "Origin": "https://example.com",
+        "Access-Control-Request-Headers": "Content-Type",
     }
     response = await client.options("/items/", headers=headers)
 
