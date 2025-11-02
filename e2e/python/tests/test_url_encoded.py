@@ -1,7 +1,7 @@
 """E2E tests for url_encoded."""
 
-import pytest
 from typing import Any
+
 
 async def test_simple_form_submission__success(client: Any) -> None:
     """Tests basic URL-encoded form with username and password."""
@@ -242,7 +242,7 @@ async def test_numeric_field_type_conversion(client: Any) -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"username": "johndoe", "age": "30"}
+    json_data = {"age": "30", "username": "johndoe"}
     response = await client.post("/form/", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -274,13 +274,13 @@ async def test_boolean_field_conversion(client: Any) -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"subscribe": "true", "username": "johndoe"}
+    json_data = {"username": "johndoe", "subscribe": "true"}
     response = await client.post("/form/", headers=headers, json=json_data)
 
     assert response.status_code == 200
     response_data = response.json()
     assert "subscribe" in response_data
-    assert response_data["subscribe"] == True
+    assert response_data["subscribe"]
     assert "username" in response_data
     assert response_data["username"] == "johndoe"
 
@@ -306,7 +306,7 @@ async def test_oauth2_password_grant_flow(client: Any) -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"scope": "", "grant_type": "password", "password": "secret", "username": "johndoe"}
+    json_data = {"username": "johndoe", "grant_type": "password", "password": "secret", "scope": ""}
     response = await client.post("/token", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -363,7 +363,7 @@ async def test_optional_field_missing__success(client: Any) -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "email" in response_data
-    assert response_data["email"] == None
+    assert response_data["email"] is None
     assert "username" in response_data
     assert response_data["username"] == "johndoe"
 
@@ -560,5 +560,3 @@ async def test_string_min_length_validation__fail(client: Any) -> None:
     assert response_data["title"] == "Request Validation Failed"
     assert "type" in response_data
     assert response_data["type"] == "https://spikard.dev/errors/validation-error"
-
-

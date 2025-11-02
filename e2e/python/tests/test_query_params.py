@@ -1,7 +1,7 @@
 """E2E tests for query_params."""
 
-import pytest
 from typing import Any
+
 
 async def test_string_validation_with_regex__success(client: Any) -> None:
     """Tests string parameter with regex pattern validation - matching pattern."""
@@ -116,7 +116,7 @@ async def test_required_string_query_parameter__missing(client: Any) -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "input" in response_data["errors"][0]
-    assert response_data["errors"][0]["input"] == None
+    assert response_data["errors"][0]["input"] is None
     assert "loc" in response_data["errors"][0]
     assert len(response_data["errors"][0]["loc"]) == 2
     assert response_data["errors"][0]["loc"][0] == "query"
@@ -143,7 +143,7 @@ async def test_57_boolean_empty_string_coercion(client: Any) -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "active" in response_data
-    assert response_data["active"] == False
+    assert not response_data["active"]
 
 
 async def test_52_integer_le_constraint_boundary(client: Any) -> None:
@@ -479,7 +479,7 @@ async def test_boolean_query_parameter__numeric_1(client: Any) -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "flag" in response_data
-    assert response_data["flag"] == True
+    assert response_data["flag"]
 
 
 async def test_string_query_param_with_min_length_constraint__fail(client: Any) -> None:
@@ -762,7 +762,7 @@ async def test_required_integer_query_parameter__missing(client: Any) -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "input" in response_data["errors"][0]
-    assert response_data["errors"][0]["input"] == None
+    assert response_data["errors"][0]["input"] is None
     assert "loc" in response_data["errors"][0]
     assert len(response_data["errors"][0]["loc"]) == 2
     assert response_data["errors"][0]["loc"][0] == "query"
@@ -782,8 +782,8 @@ async def test_required_integer_query_parameter__missing(client: Any) -> None:
 async def test_query_parameter_with_special_characters__url_encoding(client: Any) -> None:
     """Tests query parameters with special characters that need URL encoding."""
     params = {
-        "email": "x@test.com",
         "special": "&@A.ac",
+        "email": "x@test.com",
     }
     response = await client.get("/test", query_params=params)
 
@@ -806,7 +806,7 @@ async def test_list_query_parameter__required_but_missing(client: Any) -> None:
     assert "errors" in response_data
     assert len(response_data["errors"]) == 1
     assert "input" in response_data["errors"][0]
-    assert response_data["errors"][0]["input"] == None
+    assert response_data["errors"][0]["input"] is None
     assert "loc" in response_data["errors"][0]
     assert len(response_data["errors"][0]["loc"]) == 2
     assert response_data["errors"][0]["loc"][0] == "query"
@@ -885,17 +885,17 @@ async def test_53_integer_le_constraint_failure(client: Any) -> None:
 async def test_multiple_query_parameters_with_different_types(client: Any) -> None:
     """Tests multiple query parameters of different types in single request."""
     params = {
-        "active": "true",
         "score": "95.5",
-        "age": "30",
+        "active": "true",
         "name": "john",
+        "age": "30",
     }
     response = await client.get("/query/multi-type", query_params=params)
 
     assert response.status_code == 200
     response_data = response.json()
     assert "active" in response_data
-    assert response_data["active"] == True
+    assert response_data["active"]
     assert "age" in response_data
     assert response_data["age"] == 30
     assert "name" in response_data
@@ -955,7 +955,7 @@ async def test_boolean_query_parameter__true(client: Any) -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "flag" in response_data
-    assert response_data["flag"] == True
+    assert response_data["flag"]
 
 
 async def test_integer_query_param_with_le_constraint__boundary(client: Any) -> None:
@@ -1025,7 +1025,7 @@ async def test_69_array_uniqueitems_failure(client: Any) -> None:
     assert "duplicate_value" in response_data["errors"][0]["ctx"]
     assert response_data["errors"][0]["ctx"]["duplicate_value"] == 2
     assert "unique_items" in response_data["errors"][0]["ctx"]
-    assert response_data["errors"][0]["ctx"]["unique_items"] == True
+    assert response_data["errors"][0]["ctx"]["unique_items"]
     assert "loc" in response_data["errors"][0]
     assert len(response_data["errors"][0]["loc"]) == 2
     assert response_data["errors"][0]["loc"][0] == "query"
@@ -1386,5 +1386,3 @@ async def test_60_format_ipv4_success(client: Any) -> None:
     response_data = response.json()
     assert "ip" in response_data
     assert response_data["ip"] == "192.168.1.1"
-
-

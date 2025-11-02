@@ -12,7 +12,7 @@
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -279,7 +279,7 @@ fn generate_handler(
     };
 
     let (body_model, model_name) = if let Some(ref schema) = body_schema {
-        let model_name_base = format!("{}Body", capitalize(&handler_name));
+        let model_name_base = format!("{}Body", to_pascal_case(&handler_name));
         let model_name = make_unique_name(&model_name_base, handler_names);
         let model_code = extract_body_model(schema, &model_name, body_type)?;
         (Some(model_code), Some(model_name))
@@ -319,26 +319,33 @@ fn generate_handler(
     // Function signature
     code.push_str(&format!("def {}(\n", handler_name));
 
+    // Determine if parameters will be used (only echo handlers use them)
+    let params_used = response_body.is_none();
+    let param_prefix = if params_used { "" } else { "_" };
+
     // Add body parameter if present - type annotation depends on BodyType
     if body_schema.is_some() {
         let body_param_type = match body_type {
             BodyType::PlainDict => "dict[str, Any]".to_string(),
             _ => model_name.as_deref().unwrap_or("dict[str, Any]").to_string(),
         };
-        code.push_str(&format!("    body: {},\n", body_param_type));
+        code.push_str(&format!("    {}body: {},\n", param_prefix, body_param_type));
     }
 
     // Add other parameters - required first, then optional (Python syntax requirement)
     // First pass: required parameters
     for (param_name, param_type, is_required) in &params {
         if *is_required {
-            code.push_str(&format!("    {}: {},\n", param_name, param_type));
+            code.push_str(&format!("    {}{}: {},\n", param_prefix, param_name, param_type));
         }
     }
     // Second pass: optional parameters
     for (param_name, param_type, is_required) in &params {
         if !*is_required {
-            code.push_str(&format!("    {}: {} | None = None,\n", param_name, param_type));
+            code.push_str(&format!(
+                "    {}{}: {} | None = None,\n",
+                param_prefix, param_name, param_type
+            ));
         }
     }
 
@@ -352,7 +359,7 @@ fn generate_handler(
     } else {
         // Echo back the parameters for validation testing
         code.push_str("    # Echo back parameters for testing\n");
-        code.push_str("    result = {}\n");
+        code.push_str("    result: dict[str, Any] = {}\n");
 
         // Add body parameters to result - conversion depends on BodyType
         if body_schema.is_some() {
@@ -463,7 +470,66 @@ fn extract_parameters(schema: &Value) -> Result<Vec<(String, String, bool)>> {
 
 /// Convert a name to a valid Python identifier
 fn to_python_identifier(name: &str) -> String {
-    name.replace(['-', '.'], "_").to_lowercase()
+    let cleaned = name.replace(['-', '.'], "_").to_lowercase();
+
+    // Avoid shadowing Python builtins by appending underscore
+    const PYTHON_BUILTINS: &[&str] = &[
+        "id",
+        "type",
+        "str",
+        "int",
+        "float",
+        "bool",
+        "list",
+        "dict",
+        "set",
+        "tuple",
+        "bytes",
+        "range",
+        "object",
+        "property",
+        "super",
+        "filter",
+        "map",
+        "zip",
+        "sorted",
+        "reversed",
+        "enumerate",
+        "len",
+        "min",
+        "max",
+        "sum",
+        "all",
+        "any",
+        "abs",
+        "round",
+        "pow",
+        "divmod",
+        "input",
+        "print",
+        "open",
+        "format",
+        "hash",
+        "help",
+        "next",
+        "iter",
+        "callable",
+        "compile",
+        "eval",
+        "exec",
+        "globals",
+        "locals",
+        "vars",
+        "dir",
+        "isinstance",
+        "issubclass",
+    ];
+
+    if PYTHON_BUILTINS.contains(&cleaned.as_str()) {
+        format!("{}_", cleaned)
+    } else {
+        cleaned
+    }
 }
 
 /// Make a name unique by adding a suffix if needed
@@ -507,16 +573,30 @@ fn generate_typed_dict(schema: &Value, model_name: &str) -> Result<String> {
                 .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
                 .unwrap_or_default();
 
-            for (prop_name, prop_schema) in properties {
-                let prop_type = json_type_to_python(prop_schema)?;
-                let is_required = required_fields.contains(prop_name);
-                let python_prop_name = to_python_identifier(prop_name);
+            // Separate required and optional fields for consistent ordering
+            let mut required_props: Vec<(&String, &Value)> = Vec::new();
+            let mut optional_props: Vec<(&String, &Value)> = Vec::new();
 
-                if is_required {
-                    code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+            for (prop_name, prop_schema) in properties {
+                if required_fields.contains(prop_name) {
+                    required_props.push((prop_name, prop_schema));
                 } else {
-                    code.push_str(&format!("    {}: {} | None\n", python_prop_name, prop_type));
+                    optional_props.push((prop_name, prop_schema));
                 }
+            }
+
+            // Output required fields first
+            for (prop_name, prop_schema) in required_props {
+                let prop_type = json_type_to_python(prop_schema)?;
+                let python_prop_name = to_python_identifier(prop_name);
+                code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+            }
+
+            // Then output optional fields
+            for (prop_name, prop_schema) in optional_props {
+                let prop_type = json_type_to_python(prop_schema)?;
+                let python_prop_name = to_python_identifier(prop_name);
+                code.push_str(&format!("    {}: {} | None\n", python_prop_name, prop_type));
             }
         }
     }
@@ -631,16 +711,30 @@ fn generate_msgspec_struct(schema: &Value, model_name: &str) -> Result<String> {
                 .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
                 .unwrap_or_default();
 
-            for (prop_name, prop_schema) in properties {
-                let prop_type = json_type_to_python(prop_schema)?;
-                let is_required = required_fields.contains(prop_name);
-                let python_prop_name = to_python_identifier(prop_name);
+            // Separate required and optional fields for consistent ordering
+            let mut required_props: Vec<(&String, &Value)> = Vec::new();
+            let mut optional_props: Vec<(&String, &Value)> = Vec::new();
 
-                if is_required {
-                    code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+            for (prop_name, prop_schema) in properties {
+                if required_fields.contains(prop_name) {
+                    required_props.push((prop_name, prop_schema));
                 } else {
-                    code.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
+                    optional_props.push((prop_name, prop_schema));
                 }
+            }
+
+            // Output required fields first
+            for (prop_name, prop_schema) in required_props {
+                let prop_type = json_type_to_python(prop_schema)?;
+                let python_prop_name = to_python_identifier(prop_name);
+                code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+            }
+
+            // Then output optional fields
+            for (prop_name, prop_schema) in optional_props {
+                let prop_type = json_type_to_python(prop_schema)?;
+                let python_prop_name = to_python_identifier(prop_name);
+                code.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
             }
         }
     }
@@ -662,16 +756,30 @@ fn generate_pydantic_model(schema: &Value, model_name: &str) -> Result<String> {
                 .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
                 .unwrap_or_default();
 
-            for (prop_name, prop_schema) in properties {
-                let prop_type = json_type_to_python(prop_schema)?;
-                let is_required = required_fields.contains(prop_name);
-                let python_prop_name = to_python_identifier(prop_name);
+            // Separate required and optional fields for consistent ordering
+            let mut required_props: Vec<(&String, &Value)> = Vec::new();
+            let mut optional_props: Vec<(&String, &Value)> = Vec::new();
 
-                if is_required {
-                    code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+            for (prop_name, prop_schema) in properties {
+                if required_fields.contains(prop_name) {
+                    required_props.push((prop_name, prop_schema));
                 } else {
-                    code.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
+                    optional_props.push((prop_name, prop_schema));
                 }
+            }
+
+            // Output required fields first
+            for (prop_name, prop_schema) in required_props {
+                let prop_type = json_type_to_python(prop_schema)?;
+                let python_prop_name = to_python_identifier(prop_name);
+                code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+            }
+
+            // Then output optional fields
+            for (prop_name, prop_schema) in optional_props {
+                let prop_type = json_type_to_python(prop_schema)?;
+                let python_prop_name = to_python_identifier(prop_name);
+                code.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
             }
         }
     }
@@ -805,4 +913,13 @@ fn capitalize(s: &str) -> String {
         None => String::new(),
         Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
     }
+}
+
+/// Convert snake_case or kebab-case to PascalCase
+/// E.g., "post_cookies_samesite_strict" -> "PostCookiesSamesiteStrict"
+fn to_pascal_case(s: &str) -> String {
+    s.split(&['_', '-'][..])
+        .filter(|part| !part.is_empty())
+        .map(capitalize)
+        .collect()
 }
