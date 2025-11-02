@@ -3,11 +3,11 @@
 
 async def test_multiple_values_for_same_field_name() -> None:
     """Multiple files uploaded with the same field name (array-like behavior)."""
-    from app.main import create_app_multipart_Multiple_values_for_same_field_name
+    from app.main import create_app_multipart_multiple_values_for_same_field_name
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_Multiple_values_for_same_field_name()
+    app = create_app_multipart_multiple_values_for_same_field_name()
     client = TestClient(app)
 
     response = await client.post("/")
@@ -141,11 +141,11 @@ async def test_21_file_pdf_magic_number_success() -> None:
 
 async def test_content_type_validation__invalid_type() -> None:
     """Tests file upload with disallowed content type."""
-    from app.main import create_app_multipart_Content_Type_validation___invalid_type
+    from app.main import create_app_multipart_content_type_validation___invalid_type
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_Content_Type_validation___invalid_type()
+    app = create_app_multipart_content_type_validation___invalid_type()
     client = TestClient(app)
 
     response = await client.post("/files/images-only")
@@ -158,11 +158,11 @@ async def test_content_type_validation__invalid_type() -> None:
 
 async def test_pdf_file_upload() -> None:
     """Tests uploading a PDF document."""
-    from app.main import create_app_multipart_PDF_file_upload
+    from app.main import create_app_multipart_pdf_file_upload
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_PDF_file_upload()
+    app = create_app_multipart_pdf_file_upload()
     client = TestClient(app)
 
     response = await client.post("/files/document")
@@ -179,11 +179,11 @@ async def test_pdf_file_upload() -> None:
 
 async def test_file_list_upload_array_of_files() -> None:
     """Tests uploading multiple files as a list parameter."""
-    from app.main import create_app_multipart_File_list_upload__array_of_files
+    from app.main import create_app_multipart_file_list_upload__array_of_files
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_File_list_upload__array_of_files()
+    app = create_app_multipart_file_list_upload__array_of_files()
     client = TestClient(app)
 
     response = await client.post("/files/list")
@@ -200,11 +200,11 @@ async def test_file_list_upload_array_of_files() -> None:
 
 async def test_optional_file_upload__provided() -> None:
     """Tests optional file parameter when file is provided."""
-    from app.main import create_app_multipart_Optional_file_upload___provided
+    from app.main import create_app_multipart_optional_file_upload___provided
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_Optional_file_upload___provided()
+    app = create_app_multipart_optional_file_upload___provided()
     client = TestClient(app)
 
     response = await client.post("/files/optional")
@@ -221,11 +221,11 @@ async def test_optional_file_upload__provided() -> None:
 
 async def test_file_size_validation__too_large() -> None:
     """Tests file upload exceeding max size limit."""
-    from app.main import create_app_multipart_File_size_validation___too_large
+    from app.main import create_app_multipart_file_size_validation___too_large
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_File_size_validation___too_large()
+    app = create_app_multipart_file_size_validation___too_large()
     client = TestClient(app)
 
     response = await client.post("/files/validated")
@@ -238,11 +238,11 @@ async def test_file_size_validation__too_large() -> None:
 
 async def test_mixed_files_and_form_data() -> None:
     """Multipart request with both file uploads and regular form fields."""
-    from app.main import create_app_multipart_Mixed_files_and_form_data
+    from app.main import create_app_multipart_mixed_files_and_form_data
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_Mixed_files_and_form_data()
+    app = create_app_multipart_mixed_files_and_form_data()
     client = TestClient(app)
 
     response = await client.post("/")
@@ -268,11 +268,11 @@ async def test_mixed_files_and_form_data() -> None:
 
 async def test_simple_file_upload() -> None:
     """Single file upload with text/plain content type."""
-    from app.main import create_app_multipart_Simple_file_upload
+    from app.main import create_app_multipart_simple_file_upload
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_Simple_file_upload()
+    app = create_app_multipart_simple_file_upload()
     client = TestClient(app)
 
     response = await client.post("/")
@@ -292,11 +292,11 @@ async def test_simple_file_upload() -> None:
 
 async def test_empty_file_upload() -> None:
     """Tests uploading a file with zero bytes."""
-    from app.main import create_app_multipart_Empty_file_upload
+    from app.main import create_app_multipart_empty_file_upload
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_Empty_file_upload()
+    app = create_app_multipart_empty_file_upload()
     client = TestClient(app)
 
     response = await client.post("/files/upload")
@@ -311,11 +311,11 @@ async def test_empty_file_upload() -> None:
 
 async def test_optional_file_upload__missing() -> None:
     """Tests optional file parameter when no file is provided."""
-    from app.main import create_app_multipart_Optional_file_upload___missing
+    from app.main import create_app_multipart_optional_file_upload___missing
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_Optional_file_upload___missing()
+    app = create_app_multipart_optional_file_upload___missing()
     client = TestClient(app)
 
     json_data = {}
@@ -329,11 +329,11 @@ async def test_optional_file_upload__missing() -> None:
 
 async def test_file_upload_without_filename() -> None:
     """Upload file content without providing a filename."""
-    from app.main import create_app_multipart_File_upload_without_filename
+    from app.main import create_app_multipart_file_upload_without_filename
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_File_upload_without_filename()
+    app = create_app_multipart_file_upload_without_filename()
     client = TestClient(app)
 
     response = await client.post("/")
@@ -410,11 +410,11 @@ async def test_17_file_magic_number_png_success() -> None:
 
 async def test_form_data_without_files() -> None:
     """Multipart form with only text fields, no file uploads."""
-    from app.main import create_app_multipart_Form_data_without_files
+    from app.main import create_app_multipart_form_data_without_files
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_Form_data_without_files()
+    app = create_app_multipart_form_data_without_files()
     client = TestClient(app)
 
     response = await client.post("/")
@@ -427,11 +427,11 @@ async def test_form_data_without_files() -> None:
 
 async def test_multiple_file_uploads() -> None:
     """Upload multiple files in a single multipart request."""
-    from app.main import create_app_multipart_Multiple_file_uploads
+    from app.main import create_app_multipart_multiple_file_uploads
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_Multiple_file_uploads()
+    app = create_app_multipart_multiple_file_uploads()
     client = TestClient(app)
 
     response = await client.post("/")
@@ -460,11 +460,11 @@ async def test_multiple_file_uploads() -> None:
 
 async def test_file_upload_with_custom_headers() -> None:
     """File upload with additional custom headers in the multipart section."""
-    from app.main import create_app_multipart_File_upload_with_custom_headers
+    from app.main import create_app_multipart_file_upload_with_custom_headers
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_File_upload_with_custom_headers()
+    app = create_app_multipart_file_upload_with_custom_headers()
     client = TestClient(app)
 
     response = await client.post("/")
@@ -495,11 +495,11 @@ async def test_file_upload_with_custom_headers() -> None:
 
 async def test_required_file_upload__missing() -> None:
     """Tests required file parameter when no file is provided."""
-    from app.main import create_app_multipart_Required_file_upload___missing
+    from app.main import create_app_multipart_required_file_upload___missing
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_Required_file_upload___missing()
+    app = create_app_multipart_required_file_upload___missing()
     client = TestClient(app)
 
     json_data = {}
@@ -531,11 +531,11 @@ async def test_required_file_upload__missing() -> None:
 
 async def test_image_file_upload() -> None:
     """Tests uploading an image file (JPEG)."""
-    from app.main import create_app_multipart_Image_file_upload
+    from app.main import create_app_multipart_image_file_upload
 
     from spikard.testing import TestClient
 
-    app = create_app_multipart_Image_file_upload()
+    app = create_app_multipart_image_file_upload()
     client = TestClient(app)
 
     response = await client.post("/files/image")

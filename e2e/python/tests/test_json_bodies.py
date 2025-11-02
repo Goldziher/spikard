@@ -3,11 +3,11 @@
 
 async def test_uuid_field__invalid_format() -> None:
     """Tests UUID field with invalid UUID format."""
-    from app.main import create_app_json_bodies_UUID_field___invalid_format
+    from app.main import create_app_json_bodies_uuid_field___invalid_format
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_UUID_field___invalid_format()
+    app = create_app_json_bodies_uuid_field___invalid_format()
     client = TestClient(app)
 
     headers = {
@@ -81,11 +81,11 @@ async def test_44_const_validation_failure() -> None:
 
 async def test_boolean_field__success() -> None:
     """Tests JSON object with boolean field."""
-    from app.main import create_app_json_bodies_Boolean_field___success
+    from app.main import create_app_json_bodies_boolean_field___success
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Boolean_field___success()
+    app = create_app_json_bodies_boolean_field___success()
     client = TestClient(app)
 
     headers = {
@@ -106,11 +106,11 @@ async def test_boolean_field__success() -> None:
 
 async def test_numeric_le_validation__success() -> None:
     """Tests numeric field with le (less than or equal) constraint at boundary."""
-    from app.main import create_app_json_bodies_Numeric_le_validation___success
+    from app.main import create_app_json_bodies_numeric_le_validation___success
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Numeric_le_validation___success()
+    app = create_app_json_bodies_numeric_le_validation___success()
     client = TestClient(app)
 
     headers = {
@@ -129,11 +129,11 @@ async def test_numeric_le_validation__success() -> None:
 
 async def test_deeply_nested_objects() -> None:
     """Tests deeply nested JSON structure (3+ levels)."""
-    from app.main import create_app_json_bodies_Deeply_nested_objects
+    from app.main import create_app_json_bodies_deeply_nested_objects
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Deeply_nested_objects()
+    app = create_app_json_bodies_deeply_nested_objects()
     client = TestClient(app)
 
     headers = {
@@ -172,11 +172,11 @@ async def test_deeply_nested_objects() -> None:
 
 async def test_optional_fields__omitted() -> None:
     """Tests object with optional fields omitted."""
-    from app.main import create_app_json_bodies_Optional_fields___omitted
+    from app.main import create_app_json_bodies_optional_fields___omitted
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Optional_fields___omitted()
+    app = create_app_json_bodies_optional_fields___omitted()
     client = TestClient(app)
 
     headers = {
@@ -199,11 +199,11 @@ async def test_optional_fields__omitted() -> None:
 
 async def test_uuid_field__success() -> None:
     """Tests UUID field with valid UUID format."""
-    from app.main import create_app_json_bodies_UUID_field___success
+    from app.main import create_app_json_bodies_uuid_field___success
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_UUID_field___success()
+    app = create_app_json_bodies_uuid_field___success()
     client = TestClient(app)
 
     headers = {
@@ -222,11 +222,11 @@ async def test_uuid_field__success() -> None:
 
 async def test_date_field__success() -> None:
     """Tests date field with ISO date format."""
-    from app.main import create_app_json_bodies_Date_field___success
+    from app.main import create_app_json_bodies_date_field___success
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Date_field___success()
+    app = create_app_json_bodies_date_field___success()
     client = TestClient(app)
 
     headers = {
@@ -321,11 +321,11 @@ async def test_46_minproperties_validation_failure() -> None:
 
 async def test_string_min_length_validation__fail() -> None:
     """Tests string field with min_length constraint failure."""
-    from app.main import create_app_json_bodies_String_min_length_validation___fail
+    from app.main import create_app_json_bodies_string_min_length_validation___fail
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_String_min_length_validation___fail()
+    app = create_app_json_bodies_string_min_length_validation___fail()
     client = TestClient(app)
 
     headers = {
@@ -363,11 +363,11 @@ async def test_string_min_length_validation__fail() -> None:
 
 async def test_field_type_validation__invalid_type() -> None:
     """Tests type validation error when field has wrong type."""
-    from app.main import create_app_json_bodies_Field_type_validation___invalid_type
+    from app.main import create_app_json_bodies_field_type_validation___invalid_type
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Field_type_validation___invalid_type()
+    app = create_app_json_bodies_field_type_validation___invalid_type()
     client = TestClient(app)
 
     headers = {
@@ -438,11 +438,11 @@ async def test_36_oneof_schema_multiple_match_failure() -> None:
 
 async def test_nested_object__success() -> None:
     """Tests nested JSON objects."""
-    from app.main import create_app_json_bodies_Nested_object___success
+    from app.main import create_app_json_bodies_nested_object___success
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Nested_object___success()
+    app = create_app_json_bodies_nested_object___success()
     client = TestClient(app)
 
     headers = {
@@ -485,11 +485,11 @@ async def test_41_not_schema_success() -> None:
 
 async def test_string_max_length_validation__fail() -> None:
     """Tests string field with max_length constraint failure."""
-    from app.main import create_app_json_bodies_String_max_length_validation___fail
+    from app.main import create_app_json_bodies_string_max_length_validation___fail
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_String_max_length_validation___fail()
+    app = create_app_json_bodies_string_max_length_validation___fail()
     client = TestClient(app)
 
     headers = {
@@ -557,11 +557,11 @@ async def test_48_dependencies_validation_success() -> None:
 
 async def test_patch_partial_update() -> None:
     """Tests PATCH request with partial object update."""
-    from app.main import create_app_json_bodies_PATCH_partial_update
+    from app.main import create_app_json_bodies_patch_partial_update
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_PATCH_partial_update()
+    app = create_app_json_bodies_patch_partial_update()
     client = TestClient(app)
 
     headers = {
@@ -620,11 +620,11 @@ async def test_30_nested_object_missing_field() -> None:
 
 async def test_datetime_field__success() -> None:
     """Tests datetime field with ISO datetime format."""
-    from app.main import create_app_json_bodies_Datetime_field___success
+    from app.main import create_app_json_bodies_datetime_field___success
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Datetime_field___success()
+    app = create_app_json_bodies_datetime_field___success()
     client = TestClient(app)
 
     headers = {
@@ -643,11 +643,11 @@ async def test_datetime_field__success() -> None:
 
 async def test_string_pattern_validation__success() -> None:
     """Tests string field with regex pattern constraint success."""
-    from app.main import create_app_json_bodies_String_pattern_validation___success
+    from app.main import create_app_json_bodies_string_pattern_validation___success
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_String_pattern_validation___success()
+    app = create_app_json_bodies_string_pattern_validation___success()
     client = TestClient(app)
 
     headers = {
@@ -666,11 +666,11 @@ async def test_string_pattern_validation__success() -> None:
 
 async def test_extra_fields_ignored_no_additionalproperties() -> None:
     """Tests that extra fields not in model are ignored."""
-    from app.main import create_app_json_bodies_Extra_fields_ignored__no_additionalProperties
+    from app.main import create_app_json_bodies_extra_fields_ignored__no_additionalproperties
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Extra_fields_ignored__no_additionalProperties()
+    app = create_app_json_bodies_extra_fields_ignored__no_additionalproperties()
     client = TestClient(app)
 
     headers = {
@@ -740,11 +740,11 @@ async def test_39_anyof_schema_multiple_match_success() -> None:
 
 async def test_array_of_primitive_values() -> None:
     """Tests array field containing primitive values (strings, numbers)."""
-    from app.main import create_app_json_bodies_Array_of_primitive_values
+    from app.main import create_app_json_bodies_array_of_primitive_values
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Array_of_primitive_values()
+    app = create_app_json_bodies_array_of_primitive_values()
     client = TestClient(app)
 
     headers = {
@@ -772,11 +772,11 @@ async def test_array_of_primitive_values() -> None:
 
 async def test_numeric_ge_validation__fail() -> None:
     """Tests numeric field with ge (greater than or equal) constraint failure."""
-    from app.main import create_app_json_bodies_Numeric_ge_validation___fail
+    from app.main import create_app_json_bodies_numeric_ge_validation___fail
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Numeric_ge_validation___fail()
+    app = create_app_json_bodies_numeric_ge_validation___fail()
     client = TestClient(app)
 
     headers = {
@@ -850,11 +850,11 @@ async def test_37_oneof_schema_no_match_failure() -> None:
 
 async def test_empty_array_validation__fail() -> None:
     """Tests array field with min_items constraint failure."""
-    from app.main import create_app_json_bodies_Empty_array_validation___fail
+    from app.main import create_app_json_bodies_empty_array_validation___fail
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Empty_array_validation___fail()
+    app = create_app_json_bodies_empty_array_validation___fail()
     client = TestClient(app)
 
     headers = {
@@ -907,11 +907,11 @@ async def test_38_anyof_schema_success() -> None:
 
 async def test_empty_json_object() -> None:
     """Tests empty JSON object when all fields are optional."""
-    from app.main import create_app_json_bodies_Empty_JSON_object
+    from app.main import create_app_json_bodies_empty_json_object
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Empty_JSON_object()
+    app = create_app_json_bodies_empty_json_object()
     client = TestClient(app)
 
     headers = {
@@ -934,11 +934,11 @@ async def test_empty_json_object() -> None:
 
 async def test_string_pattern_validation__fail() -> None:
     """Tests string field with regex pattern constraint failure."""
-    from app.main import create_app_json_bodies_String_pattern_validation___fail
+    from app.main import create_app_json_bodies_string_pattern_validation___fail
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_String_pattern_validation___fail()
+    app = create_app_json_bodies_string_pattern_validation___fail()
     client = TestClient(app)
 
     headers = {
@@ -1015,11 +1015,11 @@ async def test_49_dependencies_validation_failure() -> None:
 
 async def test_simple_json_object__success() -> None:
     """Tests simple JSON object with all required fields."""
-    from app.main import create_app_json_bodies_Simple_JSON_object___success
+    from app.main import create_app_json_bodies_simple_json_object___success
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Simple_JSON_object___success()
+    app = create_app_json_bodies_simple_json_object___success()
     client = TestClient(app)
 
     headers = {
@@ -1042,11 +1042,11 @@ async def test_simple_json_object__success() -> None:
 
 async def test_required_field_missing__validation_error() -> None:
     """Tests validation error when required field is missing."""
-    from app.main import create_app_json_bodies_Required_field_missing___validation_error
+    from app.main import create_app_json_bodies_required_field_missing___validation_error
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Required_field_missing___validation_error()
+    app = create_app_json_bodies_required_field_missing___validation_error()
     client = TestClient(app)
 
     headers = {
@@ -1096,11 +1096,11 @@ async def test_35_oneof_schema_success() -> None:
 
 async def test_enum_field__invalid_value() -> None:
     """Tests enum field with value not in enum."""
-    from app.main import create_app_json_bodies_Enum_field___invalid_value
+    from app.main import create_app_json_bodies_enum_field___invalid_value
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Enum_field___invalid_value()
+    app = create_app_json_bodies_enum_field___invalid_value()
     client = TestClient(app)
 
     headers = {
@@ -1138,11 +1138,11 @@ async def test_enum_field__invalid_value() -> None:
 
 async def test_enum_field__success() -> None:
     """Tests enum field with valid enum value."""
-    from app.main import create_app_json_bodies_Enum_field___success
+    from app.main import create_app_json_bodies_enum_field___success
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Enum_field___success()
+    app = create_app_json_bodies_enum_field___success()
     client = TestClient(app)
 
     headers = {
@@ -1191,11 +1191,11 @@ async def test_45_minproperties_validation_success() -> None:
 
 async def test_body_with_query_parameters() -> None:
     """Tests JSON body combined with query parameters."""
-    from app.main import create_app_json_bodies_Body_with_query_parameters
+    from app.main import create_app_json_bodies_body_with_query_parameters
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Body_with_query_parameters()
+    app = create_app_json_bodies_body_with_query_parameters()
     client = TestClient(app)
 
     params = {
@@ -1341,11 +1341,11 @@ async def test_34_additional_properties_false() -> None:
 
 async def test_null_value_for_optional_field() -> None:
     """Tests explicitly setting optional field to null."""
-    from app.main import create_app_json_bodies_Null_value_for_optional_field
+    from app.main import create_app_json_bodies_null_value_for_optional_field
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Null_value_for_optional_field()
+    app = create_app_json_bodies_null_value_for_optional_field()
     client = TestClient(app)
 
     headers = {
@@ -1383,11 +1383,11 @@ async def test_31_nullable_property_null_value() -> None:
 
 async def test_array_of_objects__success() -> None:
     """Tests array field containing objects."""
-    from app.main import create_app_json_bodies_Array_of_objects___success
+    from app.main import create_app_json_bodies_array_of_objects___success
 
     from spikard.testing import TestClient
 
-    app = create_app_json_bodies_Array_of_objects___success()
+    app = create_app_json_bodies_array_of_objects___success()
     client = TestClient(app)
 
     headers = {

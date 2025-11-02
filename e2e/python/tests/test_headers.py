@@ -3,11 +3,11 @@
 
 async def test_header_regex_validation__success() -> None:
     """Tests header with regex pattern validation success."""
-    from app.main import create_app_headers_Header_regex_validation___success
+    from app.main import create_app_headers_header_regex_validation___success
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Header_regex_validation___success()
+    app = create_app_headers_header_regex_validation___success()
     client = TestClient(app)
 
     headers = {
@@ -40,11 +40,11 @@ async def test_33_api_key_header_valid() -> None:
 
 async def test_content_type_header__application_json() -> None:
     """Tests Content-Type header with JSON media type."""
-    from app.main import create_app_headers_Content_Type_header___application_json
+    from app.main import create_app_headers_content_type_header___application_json
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Content_Type_header___application_json()
+    app = create_app_headers_content_type_header___application_json()
     client = TestClient(app)
 
     headers = {
@@ -60,11 +60,11 @@ async def test_content_type_header__application_json() -> None:
 
 async def test_accept_language_header() -> None:
     """Tests Accept-Language header for locale/i18n."""
-    from app.main import create_app_headers_Accept_Language_header
+    from app.main import create_app_headers_accept_language_header
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Accept_Language_header()
+    app = create_app_headers_accept_language_header()
     client = TestClient(app)
 
     headers = {
@@ -80,11 +80,11 @@ async def test_accept_language_header() -> None:
 
 async def test_x_api_key_required_header__success() -> None:
     """Tests required X-API-Key header with valid value."""
-    from app.main import create_app_headers_X_API_Key_required_header___success
+    from app.main import create_app_headers_x_api_key_required_header___success
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_X_API_Key_required_header___success()
+    app = create_app_headers_x_api_key_required_header___success()
     client = TestClient(app)
 
     headers = {
@@ -100,11 +100,11 @@ async def test_x_api_key_required_header__success() -> None:
 
 async def test_header_validation__max_length_constraint_fail() -> None:
     """Tests header validation with max_length constraint failure."""
-    from app.main import create_app_headers_Header_validation___max_length_constraint_fail
+    from app.main import create_app_headers_header_validation___max_length_constraint_fail
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Header_validation___max_length_constraint_fail()
+    app = create_app_headers_header_validation___max_length_constraint_fail()
     client = TestClient(app)
 
     headers = {
@@ -141,11 +141,11 @@ async def test_header_validation__max_length_constraint_fail() -> None:
 
 async def test_x_api_key_required_header__missing() -> None:
     """Tests required X-API-Key header when not provided, returns 403."""
-    from app.main import create_app_headers_X_API_Key_required_header___missing
+    from app.main import create_app_headers_x_api_key_required_header___missing
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_X_API_Key_required_header___missing()
+    app = create_app_headers_x_api_key_required_header___missing()
     client = TestClient(app)
 
     response = await client.get("/users/me")
@@ -158,11 +158,11 @@ async def test_x_api_key_required_header__missing() -> None:
 
 async def test_origin_header() -> None:
     """Tests Origin header for CORS."""
-    from app.main import create_app_headers_Origin_header
+    from app.main import create_app_headers_origin_header
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Origin_header()
+    app = create_app_headers_origin_header()
     client = TestClient(app)
 
     headers = {
@@ -178,11 +178,11 @@ async def test_origin_header() -> None:
 
 async def test_user_agent_header__default_value() -> None:
     """Tests optional User-Agent header when not provided, uses testclient default."""
-    from app.main import create_app_headers_User_Agent_header___default_value
+    from app.main import create_app_headers_user_agent_header___default_value
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_User_Agent_header___default_value()
+    app = create_app_headers_user_agent_header___default_value()
     client = TestClient(app)
 
     response = await client.get("/items/")
@@ -236,11 +236,11 @@ async def test_32_bearer_token_missing_prefix() -> None:
 
 async def test_optional_header_with_none_default__missing() -> None:
     """Tests optional header parameter with None default when not provided."""
-    from app.main import create_app_headers_Optional_header_with_None_default___missing
+    from app.main import create_app_headers_optional_header_with_none_default___missing
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Optional_header_with_None_default___missing()
+    app = create_app_headers_optional_header_with_none_default___missing()
     client = TestClient(app)
 
     response = await client.get("/items/")
@@ -253,11 +253,11 @@ async def test_optional_header_with_none_default__missing() -> None:
 
 async def test_header_regex_validation__fail() -> None:
     """Tests header with regex pattern validation failure."""
-    from app.main import create_app_headers_Header_regex_validation___fail
+    from app.main import create_app_headers_header_regex_validation___fail
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Header_regex_validation___fail()
+    app = create_app_headers_header_regex_validation___fail()
     client = TestClient(app)
 
     headers = {
@@ -335,11 +335,11 @@ async def test_31_bearer_token_format_invalid() -> None:
 
 async def test_x_api_key_optional_header__success() -> None:
     """Tests optional X-API-Key header with valid value."""
-    from app.main import create_app_headers_X_API_Key_optional_header___success
+    from app.main import create_app_headers_x_api_key_optional_header___success
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_X_API_Key_optional_header___success()
+    app = create_app_headers_x_api_key_optional_header___success()
     client = TestClient(app)
 
     headers = {
@@ -355,11 +355,11 @@ async def test_x_api_key_optional_header__success() -> None:
 
 async def test_authorization_header__success() -> None:
     """Tests Authorization header with valid Digest scheme."""
-    from app.main import create_app_headers_Authorization_header___success
+    from app.main import create_app_headers_authorization_header___success
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Authorization_header___success()
+    app = create_app_headers_authorization_header___success()
     client = TestClient(app)
 
     headers = {
@@ -394,11 +394,11 @@ async def test_30_bearer_token_format_valid() -> None:
 
 async def test_authorization_header__missing() -> None:
     """Tests missing Authorization header returns 403."""
-    from app.main import create_app_headers_Authorization_header___missing
+    from app.main import create_app_headers_authorization_header___missing
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Authorization_header___missing()
+    app = create_app_headers_authorization_header___missing()
     client = TestClient(app)
 
     response = await client.get("/users/me")
@@ -411,11 +411,11 @@ async def test_authorization_header__missing() -> None:
 
 async def test_accept_header__json() -> None:
     """Tests Accept header for content negotiation."""
-    from app.main import create_app_headers_Accept_header___JSON
+    from app.main import create_app_headers_accept_header___json
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Accept_header___JSON()
+    app = create_app_headers_accept_header___json()
     client = TestClient(app)
 
     headers = {
@@ -431,11 +431,11 @@ async def test_accept_header__json() -> None:
 
 async def test_accept_encoding_header() -> None:
     """Tests Accept-Encoding header for compression negotiation."""
-    from app.main import create_app_headers_Accept_Encoding_header
+    from app.main import create_app_headers_accept_encoding_header
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Accept_Encoding_header()
+    app = create_app_headers_accept_encoding_header()
     client = TestClient(app)
 
     headers = {
@@ -451,11 +451,11 @@ async def test_accept_encoding_header() -> None:
 
 async def test_authorization_header__wrong_scheme() -> None:
     """Tests Authorization header with incorrect scheme returns 403."""
-    from app.main import create_app_headers_Authorization_header___wrong_scheme
+    from app.main import create_app_headers_authorization_header___wrong_scheme
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Authorization_header___wrong_scheme()
+    app = create_app_headers_authorization_header___wrong_scheme()
     client = TestClient(app)
 
     headers = {
@@ -471,11 +471,11 @@ async def test_authorization_header__wrong_scheme() -> None:
 
 async def test_header_validation__min_length_constraint() -> None:
     """Tests header validation with min_length constraint."""
-    from app.main import create_app_headers_Header_validation___min_length_constraint
+    from app.main import create_app_headers_header_validation___min_length_constraint
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Header_validation___min_length_constraint()
+    app = create_app_headers_header_validation___min_length_constraint()
     client = TestClient(app)
 
     headers = {
@@ -512,11 +512,11 @@ async def test_header_validation__min_length_constraint() -> None:
 
 async def test_basic_authentication__success() -> None:
     """Tests Authorization header with Basic auth scheme."""
-    from app.main import create_app_headers_Basic_authentication___success
+    from app.main import create_app_headers_basic_authentication___success
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Basic_authentication___success()
+    app = create_app_headers_basic_authentication___success()
     client = TestClient(app)
 
     headers = {
@@ -534,11 +534,11 @@ async def test_basic_authentication__success() -> None:
 
 async def test_bearer_token_authentication__missing() -> None:
     """Tests missing Bearer token returns 401 Unauthorized."""
-    from app.main import create_app_headers_Bearer_token_authentication___missing
+    from app.main import create_app_headers_bearer_token_authentication___missing
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Bearer_token_authentication___missing()
+    app = create_app_headers_bearer_token_authentication___missing()
     client = TestClient(app)
 
     response = await client.get("/headers/bearer-auth")
@@ -551,11 +551,11 @@ async def test_bearer_token_authentication__missing() -> None:
 
 async def test_x_api_key_optional_header__missing() -> None:
     """Tests optional X-API-Key header when not provided, returns fallback message."""
-    from app.main import create_app_headers_X_API_Key_optional_header___missing
+    from app.main import create_app_headers_x_api_key_optional_header___missing
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_X_API_Key_optional_header___missing()
+    app = create_app_headers_x_api_key_optional_header___missing()
     client = TestClient(app)
 
     response = await client.get("/users/me")
@@ -568,17 +568,17 @@ async def test_x_api_key_optional_header__missing() -> None:
 
 async def test_multiple_custom_headers() -> None:
     """Tests multiple custom headers in single request."""
-    from app.main import create_app_headers_Multiple_custom_headers
+    from app.main import create_app_headers_multiple_custom_headers
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Multiple_custom_headers()
+    app = create_app_headers_multiple_custom_headers()
     client = TestClient(app)
 
     headers = {
+        "X-Client-Version": "1.2.3",
         "X-Trace-Id": "trace-abc",
         "X-Request-Id": "req-12345",
-        "X-Client-Version": "1.2.3",
     }
     response = await client.get("/headers/multiple", headers=headers)
 
@@ -635,11 +635,11 @@ async def test_34_api_key_header_invalid() -> None:
 
 async def test_bearer_token_authentication__success() -> None:
     """Tests Authorization header with Bearer token scheme."""
-    from app.main import create_app_headers_Bearer_token_authentication___success
+    from app.main import create_app_headers_bearer_token_authentication___success
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Bearer_token_authentication___success()
+    app = create_app_headers_bearer_token_authentication___success()
     client = TestClient(app)
 
     headers = {
@@ -655,11 +655,11 @@ async def test_bearer_token_authentication__success() -> None:
 
 async def test_host_header() -> None:
     """Tests Host header (standard HTTP header)."""
-    from app.main import create_app_headers_Host_header
+    from app.main import create_app_headers_host_header
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Host_header()
+    app = create_app_headers_host_header()
     client = TestClient(app)
 
     headers = {
@@ -675,11 +675,11 @@ async def test_host_header() -> None:
 
 async def test_referer_header() -> None:
     """Tests Referer header (standard misspelling)."""
-    from app.main import create_app_headers_Referer_header
+    from app.main import create_app_headers_referer_header
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Referer_header()
+    app = create_app_headers_referer_header()
     client = TestClient(app)
 
     headers = {
@@ -695,11 +695,11 @@ async def test_referer_header() -> None:
 
 async def test_header_with_underscore_conversion__explicit() -> None:
     """Tests X-Token header converted to x_token parameter."""
-    from app.main import create_app_headers_Header_with_underscore_conversion___explicit
+    from app.main import create_app_headers_header_with_underscore_conversion___explicit
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Header_with_underscore_conversion___explicit()
+    app = create_app_headers_header_with_underscore_conversion___explicit()
     client = TestClient(app)
 
     headers = {
@@ -715,11 +715,11 @@ async def test_header_with_underscore_conversion__explicit() -> None:
 
 async def test_header_case_insensitivity__access() -> None:
     """Tests case-insensitive header access (Content-Type vs content-type)."""
-    from app.main import create_app_headers_Header_case_insensitivity___access
+    from app.main import create_app_headers_header_case_insensitivity___access
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_Header_case_insensitivity___access()
+    app = create_app_headers_header_case_insensitivity___access()
     client = TestClient(app)
 
     headers = {
@@ -740,11 +740,11 @@ async def test_header_case_insensitivity__access() -> None:
 
 async def test_user_agent_header__custom_value() -> None:
     """Tests User-Agent header with custom value."""
-    from app.main import create_app_headers_User_Agent_header___custom_value
+    from app.main import create_app_headers_user_agent_header___custom_value
 
     from spikard.testing import TestClient
 
-    app = create_app_headers_User_Agent_header___custom_value()
+    app = create_app_headers_user_agent_header___custom_value()
     client = TestClient(app)
 
     headers = {

@@ -3,7 +3,7 @@
 //! Generates pytest test suites from fixtures for e2e testing.
 
 use anyhow::{Context, Result};
-use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
+use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -317,9 +317,10 @@ fn sanitize_test_name(name: &str) -> String {
         .to_string()
 }
 
-/// Sanitize a string to be a valid Python identifier (matches python_app.rs)
+/// Sanitize a string to be a valid Python identifier (lowercase snake_case, matches python_app.rs)
 fn sanitize_identifier(s: &str) -> String {
-    s.replace(|c: char| !c.is_alphanumeric() && c != '_', "_")
+    s.to_lowercase()
+        .replace(|c: char| !c.is_alphanumeric() && c != '_', "_")
         .trim_matches('_')
         .to_string()
 }
