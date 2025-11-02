@@ -215,18 +215,30 @@ fn generate_fixture_handler_and_app_python(
         "None".to_string()
     };
 
+    // Extract parameter_schema for registration
+    let parameter_schema_str = if let Some(handler) = &fixture.handler {
+        if let Some(params) = &handler.parameters {
+            build_parameter_schema_with_sources(params)?
+        } else {
+            "None".to_string()
+        }
+    } else {
+        "None".to_string()
+    };
+
     let app_factory_code = format!(
         r#"def {}() -> Spikard:
     """App factory for fixture: {}"""
     app = Spikard()
     # Register handler with this app instance
-    app.register_route("{}", "{}", body_schema={})({})
+    app.register_route("{}", "{}", body_schema={}, parameter_schema={})({})
     return app"#,
         app_factory_name,
         fixture.name,
         method.to_uppercase(),
         route_path,
         body_schema_str,
+        parameter_schema_str,
         handler_name
     );
 
@@ -758,6 +770,100 @@ fn json_type_to_python(schema: &Value) -> Result<String> {
     };
 
     Ok(type_str.to_string())
+}
+
+/// Build parameter schema with source fields for each parameter
+fn build_parameter_schema_with_sources(params: &Value) -> Result<String> {
+    use serde_json::json;
+
+    let mut properties = serde_json::Map::new();
+    let mut required = Vec::new();
+
+    if let Some(obj) = params.as_object() {
+        // Process path parameters
+        if let Some(path_params) = obj.get("path").and_then(|v| v.as_object()) {
+            for (name, param_schema) in path_params {
+                let mut param_with_source = param_schema.clone();
+                if let Some(param_obj) = param_with_source.as_object_mut() {
+                    param_obj.insert("source".to_string(), json!("path"));
+                    // Remove 'required' and 'optional' fields - these belong in top-level schema
+                    param_obj.remove("required");
+                    param_obj.remove("optional");
+                }
+                properties.insert(name.clone(), param_with_source);
+                // Path parameters are always required
+                required.push(name.clone());
+            }
+        }
+
+        // Process query parameters
+        if let Some(query_params) = obj.get("query").and_then(|v| v.as_object()) {
+            for (name, param_schema) in query_params {
+                // Check if required (default true unless optional: true)
+                let is_optional = param_schema.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
+                let mut param_with_source = param_schema.clone();
+                if let Some(param_obj) = param_with_source.as_object_mut() {
+                    param_obj.insert("source".to_string(), json!("query"));
+                    // Remove 'required' and 'optional' fields - these belong in top-level schema
+                    param_obj.remove("required");
+                    param_obj.remove("optional");
+                }
+                properties.insert(name.clone(), param_with_source);
+                if !is_optional {
+                    required.push(name.clone());
+                }
+            }
+        }
+
+        // Process header parameters
+        if let Some(headers) = obj.get("headers").and_then(|v| v.as_object()) {
+            for (name, param_schema) in headers {
+                // Check if required
+                let is_optional = param_schema.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
+                let mut param_with_source = param_schema.clone();
+                if let Some(param_obj) = param_with_source.as_object_mut() {
+                    param_obj.insert("source".to_string(), json!("header"));
+                    // Remove 'required' and 'optional' fields - these belong in top-level schema
+                    param_obj.remove("required");
+                    param_obj.remove("optional");
+                }
+                properties.insert(name.clone(), param_with_source);
+                if !is_optional {
+                    required.push(name.clone());
+                }
+            }
+        }
+
+        // Process cookie parameters
+        if let Some(cookies) = obj.get("cookies").and_then(|v| v.as_object()) {
+            for (name, param_schema) in cookies {
+                // Check if required
+                let is_optional = param_schema.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
+                let is_required = param_schema.get("required").and_then(|v| v.as_bool()).unwrap_or(true);
+                let mut param_with_source = param_schema.clone();
+                if let Some(param_obj) = param_with_source.as_object_mut() {
+                    param_obj.insert("source".to_string(), json!("cookie"));
+                    // Remove 'required' and 'optional' fields - these belong in top-level schema
+                    param_obj.remove("required");
+                    param_obj.remove("optional");
+                }
+                properties.insert(name.clone(), param_with_source);
+                if !is_optional && is_required {
+                    required.push(name.clone());
+                }
+            }
+        }
+    }
+
+    // Build the full schema
+    let schema = json!({
+        "type": "object",
+        "properties": properties,
+        "required": required,
+    });
+
+    let schema_json = serde_json::to_string(&schema)?;
+    Ok(json_to_python_dict(&schema_json))
 }
 
 /// Determine the response body from fixtures
