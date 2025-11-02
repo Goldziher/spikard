@@ -3,11 +3,11 @@
 
 async def test_invalid_uuid_format() -> None:
     """Tests validation error when UUID format is invalid."""
-    from app.main import create_app_validation_errors_Invalid_UUID_format
+    from app.main import create_app_validation_errors_invalid_uuid_format
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_Invalid_UUID_format()
+    app = create_app_validation_errors_invalid_uuid_format()
     client = TestClient(app)
 
     response = await client.get("/items/not-a-uuid")
@@ -41,11 +41,11 @@ async def test_invalid_uuid_format() -> None:
 
 async def test_invalid_boolean_value() -> None:
     """Tests validation error when boolean value is invalid."""
-    from app.main import create_app_validation_errors_Invalid_boolean_value
+    from app.main import create_app_validation_errors_invalid_boolean_value
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_Invalid_boolean_value()
+    app = create_app_validation_errors_invalid_boolean_value()
     client = TestClient(app)
 
     headers = {
@@ -79,11 +79,11 @@ async def test_invalid_boolean_value() -> None:
 
 async def test_missing_required_query_parameter() -> None:
     """Tests validation error when required query param is missing."""
-    from app.main import create_app_validation_errors_Missing_required_query_parameter
+    from app.main import create_app_validation_errors_missing_required_query_parameter
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_Missing_required_query_parameter()
+    app = create_app_validation_errors_missing_required_query_parameter()
     client = TestClient(app)
 
     headers = {
@@ -117,11 +117,11 @@ async def test_missing_required_query_parameter() -> None:
 
 async def test_array_max_items_constraint_violation() -> None:
     """Tests validation error when array has more items than max_items."""
-    from app.main import create_app_validation_errors_Array_max_items_constraint_violation
+    from app.main import create_app_validation_errors_array_max_items_constraint_violation
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_Array_max_items_constraint_violation()
+    app = create_app_validation_errors_array_max_items_constraint_violation()
     client = TestClient(app)
 
     headers = {
@@ -174,11 +174,11 @@ async def test_array_max_items_constraint_violation() -> None:
 
 async def test_numeric_constraint_violation__gt_greater_than() -> None:
     """Tests validation error when value violates gt constraint."""
-    from app.main import create_app_validation_errors_Numeric_constraint_violation___gt__greater_than
+    from app.main import create_app_validation_errors_numeric_constraint_violation___gt__greater_than
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_Numeric_constraint_violation___gt__greater_than()
+    app = create_app_validation_errors_numeric_constraint_violation___gt__greater_than()
     client = TestClient(app)
 
     headers = {
@@ -215,11 +215,11 @@ async def test_numeric_constraint_violation__gt_greater_than() -> None:
 
 async def test_string_regex_pattern_mismatch() -> None:
     """Tests validation error when string doesn't match regex pattern."""
-    from app.main import create_app_validation_errors_String_regex_pattern_mismatch
+    from app.main import create_app_validation_errors_string_regex_pattern_mismatch
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_String_regex_pattern_mismatch()
+    app = create_app_validation_errors_string_regex_pattern_mismatch()
     client = TestClient(app)
 
     headers = {
@@ -256,11 +256,11 @@ async def test_string_regex_pattern_mismatch() -> None:
 
 async def test_invalid_enum_value() -> None:
     """Tests validation error when value is not in allowed enum values."""
-    from app.main import create_app_validation_errors_Invalid_enum_value
+    from app.main import create_app_validation_errors_invalid_enum_value
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_Invalid_enum_value()
+    app = create_app_validation_errors_invalid_enum_value()
     client = TestClient(app)
 
     response = await client.get("/models/invalid_model")
@@ -294,11 +294,11 @@ async def test_invalid_enum_value() -> None:
 
 async def test_string_min_length_constraint_violation() -> None:
     """Tests validation error when string is shorter than min_length."""
-    from app.main import create_app_validation_errors_String_min_length_constraint_violation
+    from app.main import create_app_validation_errors_string_min_length_constraint_violation
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_String_min_length_constraint_violation()
+    app = create_app_validation_errors_string_min_length_constraint_violation()
     client = TestClient(app)
 
     headers = {
@@ -335,11 +335,11 @@ async def test_string_min_length_constraint_violation() -> None:
 
 async def test_multiple_validation_errors() -> None:
     """Tests multiple validation errors returned in single response."""
-    from app.main import create_app_validation_errors_Multiple_validation_errors
+    from app.main import create_app_validation_errors_multiple_validation_errors
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_Multiple_validation_errors()
+    app = create_app_validation_errors_multiple_validation_errors()
     client = TestClient(app)
 
     headers = {
@@ -400,11 +400,11 @@ async def test_multiple_validation_errors() -> None:
 
 async def test_string_max_length_constraint_violation() -> None:
     """Tests validation error when string exceeds max_length."""
-    from app.main import create_app_validation_errors_String_max_length_constraint_violation
+    from app.main import create_app_validation_errors_string_max_length_constraint_violation
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_String_max_length_constraint_violation()
+    app = create_app_validation_errors_string_max_length_constraint_violation()
     client = TestClient(app)
 
     headers = {
@@ -447,11 +447,11 @@ async def test_string_max_length_constraint_violation() -> None:
 
 async def test_nested_object_validation_error() -> None:
     """Tests validation error in nested object field."""
-    from app.main import create_app_validation_errors_Nested_object_validation_error
+    from app.main import create_app_validation_errors_nested_object_validation_error
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_Nested_object_validation_error()
+    app = create_app_validation_errors_nested_object_validation_error()
     client = TestClient(app)
 
     headers = {
@@ -568,11 +568,11 @@ async def test_10_nested_error_path() -> None:
 
 async def test_invalid_datetime_format() -> None:
     """Tests validation error when datetime format is invalid."""
-    from app.main import create_app_validation_errors_Invalid_datetime_format
+    from app.main import create_app_validation_errors_invalid_datetime_format
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_Invalid_datetime_format()
+    app = create_app_validation_errors_invalid_datetime_format()
     client = TestClient(app)
 
     headers = {
@@ -607,11 +607,11 @@ async def test_invalid_datetime_format() -> None:
 
 async def test_array_item_validation_error() -> None:
     """Tests validation error for invalid item within array."""
-    from app.main import create_app_validation_errors_Array_item_validation_error
+    from app.main import create_app_validation_errors_array_item_validation_error
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_Array_item_validation_error()
+    app = create_app_validation_errors_array_item_validation_error()
     client = TestClient(app)
 
     headers = {
@@ -647,11 +647,11 @@ async def test_array_item_validation_error() -> None:
 
 async def test_missing_required_body_field() -> None:
     """Tests validation error when required body field is missing."""
-    from app.main import create_app_validation_errors_Missing_required_body_field
+    from app.main import create_app_validation_errors_missing_required_body_field
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_Missing_required_body_field()
+    app = create_app_validation_errors_missing_required_body_field()
     client = TestClient(app)
 
     headers = {
@@ -687,11 +687,11 @@ async def test_missing_required_body_field() -> None:
 
 async def test_body_field_type_error__string_for_float() -> None:
     """Tests validation error when body field has wrong type."""
-    from app.main import create_app_validation_errors_Body_field_type_error___string_for_float
+    from app.main import create_app_validation_errors_body_field_type_error___string_for_float
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_Body_field_type_error___string_for_float()
+    app = create_app_validation_errors_body_field_type_error___string_for_float()
     client = TestClient(app)
 
     headers = {
@@ -726,11 +726,11 @@ async def test_body_field_type_error__string_for_float() -> None:
 
 async def test_malformed_json_body() -> None:
     """Tests validation error when request body contains malformed JSON."""
-    from app.main import create_app_validation_errors_Malformed_JSON_body
+    from app.main import create_app_validation_errors_malformed_json_body
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_Malformed_JSON_body()
+    app = create_app_validation_errors_malformed_json_body()
     client = TestClient(app)
 
     headers = {
@@ -747,11 +747,11 @@ async def test_malformed_json_body() -> None:
 
 async def test_query_param_type_error__string_provided_for_int() -> None:
     """Tests validation error when string is provided for integer query param."""
-    from app.main import create_app_validation_errors_Query_param_type_error___string_provided_for_int
+    from app.main import create_app_validation_errors_query_param_type_error___string_provided_for_int
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_Query_param_type_error___string_provided_for_int()
+    app = create_app_validation_errors_query_param_type_error___string_provided_for_int()
     client = TestClient(app)
 
     headers = {
@@ -785,11 +785,11 @@ async def test_query_param_type_error__string_provided_for_int() -> None:
 
 async def test_header_validation_error() -> None:
     """Tests validation error when required header is missing."""
-    from app.main import create_app_validation_errors_Header_validation_error
+    from app.main import create_app_validation_errors_header_validation_error
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_Header_validation_error()
+    app = create_app_validation_errors_header_validation_error()
     client = TestClient(app)
 
     response = await client.get("/items/?q=test")
@@ -888,11 +888,11 @@ async def test_09_multiple_validation_errors() -> None:
 
 async def test_numeric_constraint_violation__le_less_than_or_equal() -> None:
     """Tests validation error when value violates le constraint."""
-    from app.main import create_app_validation_errors_Numeric_constraint_violation___le__less_than_or_equal
+    from app.main import create_app_validation_errors_numeric_constraint_violation___le__less_than_or_equal
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_Numeric_constraint_violation___le__less_than_or_equal()
+    app = create_app_validation_errors_numeric_constraint_violation___le__less_than_or_equal()
     client = TestClient(app)
 
     headers = {
@@ -929,11 +929,11 @@ async def test_numeric_constraint_violation__le_less_than_or_equal() -> None:
 
 async def test_array_min_items_constraint_violation() -> None:
     """Tests validation error when array has fewer items than min_items."""
-    from app.main import create_app_validation_errors_Array_min_items_constraint_violation
+    from app.main import create_app_validation_errors_array_min_items_constraint_violation
 
     from spikard.testing import TestClient
 
-    app = create_app_validation_errors_Array_min_items_constraint_violation()
+    app = create_app_validation_errors_array_min_items_constraint_violation()
     client = TestClient(app)
 
     headers = {

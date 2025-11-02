@@ -41,11 +41,11 @@ async def test_12_percent_encoded_special_chars() -> None:
 
 async def test_special_string_values_and_escaping() -> None:
     """Tests handling of special characters, null bytes, and escape sequences."""
-    from app.main import create_app_edge_cases_Special_string_values_and_escaping
+    from app.main import create_app_edge_cases_special_string_values_and_escaping
 
     from spikard.testing import TestClient
 
-    app = create_app_edge_cases_Special_string_values_and_escaping()
+    app = create_app_edge_cases_special_string_values_and_escaping()
     client = TestClient(app)
 
     headers = {
@@ -181,11 +181,11 @@ async def test_21_scientific_notation_number() -> None:
 
 async def test_float_precision_and_rounding() -> None:
     """Tests floating point precision and rounding behavior."""
-    from app.main import create_app_edge_cases_Float_precision_and_rounding
+    from app.main import create_app_edge_cases_float_precision_and_rounding
 
     from spikard.testing import TestClient
 
-    app = create_app_edge_cases_Float_precision_and_rounding()
+    app = create_app_edge_cases_float_precision_and_rounding()
     client = TestClient(app)
 
     headers = {
@@ -215,11 +215,11 @@ async def test_float_precision_and_rounding() -> None:
 
 async def test_unicode_and_emoji_handling() -> None:
     """Tests proper handling of Unicode characters and emojis."""
-    from app.main import create_app_edge_cases_Unicode_and_emoji_handling
+    from app.main import create_app_edge_cases_unicode_and_emoji_handling
 
     from spikard.testing import TestClient
 
-    app = create_app_edge_cases_Unicode_and_emoji_handling()
+    app = create_app_edge_cases_unicode_and_emoji_handling()
     client = TestClient(app)
 
     headers = {
@@ -526,11 +526,11 @@ async def test_22_leading_zeros_integer() -> None:
 
 async def test_large_integer_boundary_values() -> None:
     """Tests handling of very large integer values near system limits."""
-    from app.main import create_app_edge_cases_Large_integer_boundary_values
+    from app.main import create_app_edge_cases_large_integer_boundary_values
 
     from spikard.testing import TestClient
 
-    app = create_app_edge_cases_Large_integer_boundary_values()
+    app = create_app_edge_cases_large_integer_boundary_values()
     client = TestClient(app)
 
     headers = {
@@ -555,11 +555,11 @@ async def test_large_integer_boundary_values() -> None:
 
 async def test_deeply_nested_structure_10_levels() -> None:
     """Tests handling of deeply nested JSON objects."""
-    from app.main import create_app_edge_cases_Deeply_nested_structure__10__levels
+    from app.main import create_app_edge_cases_deeply_nested_structure__10__levels
 
     from spikard.testing import TestClient
 
-    app = create_app_edge_cases_Deeply_nested_structure__10__levels()
+    app = create_app_edge_cases_deeply_nested_structure__10__levels()
     client = TestClient(app)
 
     headers = {
@@ -592,11 +592,11 @@ async def test_deeply_nested_structure_10_levels() -> None:
 
 async def test_empty_and_null_value_handling() -> None:
     """Tests distinction between null, empty, and missing values."""
-    from app.main import create_app_edge_cases_Empty_and_null_value_handling
+    from app.main import create_app_edge_cases_empty_and_null_value_handling
 
     from spikard.testing import TestClient
 
-    app = create_app_edge_cases_Empty_and_null_value_handling()
+    app = create_app_edge_cases_empty_and_null_value_handling()
     client = TestClient(app)
 
     headers = {

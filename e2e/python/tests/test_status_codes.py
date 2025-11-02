@@ -3,11 +3,11 @@
 
 async def test_408_request_timeout() -> None:
     """Tests 408 status code when request takes too long."""
-    from app.main import create_app_status_codes_408_Request_Timeout
+    from app.main import create_app_status_codes_408_request_timeout
 
     from spikard.testing import TestClient
 
-    app = create_app_status_codes_408_Request_Timeout()
+    app = create_app_status_codes_408_request_timeout()
     client = TestClient(app)
 
     headers = {
@@ -24,11 +24,11 @@ async def test_408_request_timeout() -> None:
 
 async def test_404_not_found__resource_not_found() -> None:
     """Tests 404 Not Found for non-existent resource."""
-    from app.main import create_app_status_codes_404_Not_Found___Resource_not_found
+    from app.main import create_app_status_codes_404_not_found___resource_not_found
 
     from spikard.testing import TestClient
 
-    app = create_app_status_codes_404_Not_Found___Resource_not_found()
+    app = create_app_status_codes_404_not_found___resource_not_found()
     client = TestClient(app)
 
     response = await client.get("/status-test/404")
@@ -41,11 +41,11 @@ async def test_404_not_found__resource_not_found() -> None:
 
 async def test_503_service_unavailable__server_overload() -> None:
     """Tests 503 Service Unavailable during maintenance or overload."""
-    from app.main import create_app_status_codes_503_Service_Unavailable___Server_overload
+    from app.main import create_app_status_codes_503_service_unavailable___server_overload
 
     from spikard.testing import TestClient
 
-    app = create_app_status_codes_503_Service_Unavailable___Server_overload()
+    app = create_app_status_codes_503_service_unavailable___server_overload()
     client = TestClient(app)
 
     response = await client.get("/health")
@@ -58,11 +58,11 @@ async def test_503_service_unavailable__server_overload() -> None:
 
 async def test_422_unprocessable_entity__validation_error() -> None:
     """Tests 422 for validation errors (Pydantic)."""
-    from app.main import create_app_status_codes_422_Unprocessable_Entity___Validation_error
+    from app.main import create_app_status_codes_422_unprocessable_entity___validation_error
 
     from spikard.testing import TestClient
 
-    app = create_app_status_codes_422_Unprocessable_Entity___Validation_error()
+    app = create_app_status_codes_422_unprocessable_entity___validation_error()
     client = TestClient(app)
 
     headers = {
@@ -97,11 +97,11 @@ async def test_422_unprocessable_entity__validation_error() -> None:
 
 async def test_302_found__temporary_redirect() -> None:
     """Tests 302 temporary redirect response."""
-    from app.main import create_app_status_codes_302_Found___Temporary_redirect
+    from app.main import create_app_status_codes_302_found___temporary_redirect
 
     from spikard.testing import TestClient
 
-    app = create_app_status_codes_302_Found___Temporary_redirect()
+    app = create_app_status_codes_302_found___temporary_redirect()
     client = TestClient(app)
 
     response = await client.get("/temp-redirect")
@@ -111,11 +111,11 @@ async def test_302_found__temporary_redirect() -> None:
 
 async def test_304_not_modified__cached_content_valid() -> None:
     """Tests 304 Not Modified for cached resources."""
-    from app.main import create_app_status_codes_304_Not_Modified___Cached_content_valid
+    from app.main import create_app_status_codes_304_not_modified___cached_content_valid
 
     from spikard.testing import TestClient
 
-    app = create_app_status_codes_304_Not_Modified___Cached_content_valid()
+    app = create_app_status_codes_304_not_modified___cached_content_valid()
     client = TestClient(app)
 
     headers = {
@@ -128,11 +128,11 @@ async def test_304_not_modified__cached_content_valid() -> None:
 
 async def test_400_bad_request__invalid_request() -> None:
     """Tests 400 Bad Request for malformed request."""
-    from app.main import create_app_status_codes_400_Bad_Request___Invalid_request
+    from app.main import create_app_status_codes_400_bad_request___invalid_request
 
     from spikard.testing import TestClient
 
-    app = create_app_status_codes_400_Bad_Request___Invalid_request()
+    app = create_app_status_codes_400_bad_request___invalid_request()
     client = TestClient(app)
 
     headers = {
@@ -168,11 +168,11 @@ async def test_22_501_not_implemented() -> None:
 
 async def test_204_no_content__success_with_no_body() -> None:
     """Tests 204 No Content response for successful DELETE."""
-    from app.main import create_app_status_codes_204_No_Content___Success_with_no_body
+    from app.main import create_app_status_codes_204_no_content___success_with_no_body
 
     from spikard.testing import TestClient
 
-    app = create_app_status_codes_204_No_Content___Success_with_no_body()
+    app = create_app_status_codes_204_no_content___success_with_no_body()
     client = TestClient(app)
 
     response = await client.delete("/status-test/204")
@@ -182,11 +182,11 @@ async def test_204_no_content__success_with_no_body() -> None:
 
 async def test_301_moved_permanently__permanent_redirect() -> None:
     """Tests 301 permanent redirect response."""
-    from app.main import create_app_status_codes_301_Moved_Permanently___Permanent_redirect
+    from app.main import create_app_status_codes_301_moved_permanently___permanent_redirect
 
     from spikard.testing import TestClient
 
-    app = create_app_status_codes_301_Moved_Permanently___Permanent_redirect()
+    app = create_app_status_codes_301_moved_permanently___permanent_redirect()
     client = TestClient(app)
 
     response = await client.get("/old-path")
@@ -196,11 +196,11 @@ async def test_301_moved_permanently__permanent_redirect() -> None:
 
 async def test_201_created__resource_created() -> None:
     """Tests 201 Created response for successful POST request."""
-    from app.main import create_app_status_codes_201_Created___Resource_created
+    from app.main import create_app_status_codes_201_created___resource_created
 
     from spikard.testing import TestClient
 
-    app = create_app_status_codes_201_Created___Resource_created()
+    app = create_app_status_codes_201_created___resource_created()
     client = TestClient(app)
 
     headers = {
@@ -219,11 +219,11 @@ async def test_201_created__resource_created() -> None:
 
 async def test_202_accepted__request_accepted_for_processing() -> None:
     """Tests 202 Accepted for async processing."""
-    from app.main import create_app_status_codes_202_Accepted___Request_accepted_for_processing
+    from app.main import create_app_status_codes_202_accepted___request_accepted_for_processing
 
     from spikard.testing import TestClient
 
-    app = create_app_status_codes_202_Accepted___Request_accepted_for_processing()
+    app = create_app_status_codes_202_accepted___request_accepted_for_processing()
     client = TestClient(app)
 
     headers = {
@@ -242,11 +242,11 @@ async def test_202_accepted__request_accepted_for_processing() -> None:
 
 async def test_307_temporary_redirect__method_preserved() -> None:
     """Tests 307 temporary redirect with method preservation."""
-    from app.main import create_app_status_codes_307_Temporary_Redirect___Method_preserved
+    from app.main import create_app_status_codes_307_temporary_redirect___method_preserved
 
     from spikard.testing import TestClient
 
-    app = create_app_status_codes_307_Temporary_Redirect___Method_preserved()
+    app = create_app_status_codes_307_temporary_redirect___method_preserved()
     client = TestClient(app)
 
     headers = {
@@ -261,11 +261,11 @@ async def test_307_temporary_redirect__method_preserved() -> None:
 
 async def test_500_internal_server_error__server_error() -> None:
     """Tests 500 Internal Server Error for unhandled exceptions."""
-    from app.main import create_app_status_codes_500_Internal_Server_Error___Server_error
+    from app.main import create_app_status_codes_500_internal_server_error___server_error
 
     from spikard.testing import TestClient
 
-    app = create_app_status_codes_500_Internal_Server_Error___Server_error()
+    app = create_app_status_codes_500_internal_server_error___server_error()
     client = TestClient(app)
 
     response = await client.get("/error")
@@ -303,11 +303,11 @@ async def test_20_414_uri_too_long() -> None:
 
 async def test_401_unauthorized__missing_authentication() -> None:
     """Tests 401 Unauthorized when authentication is missing."""
-    from app.main import create_app_status_codes_401_Unauthorized___Missing_authentication
+    from app.main import create_app_status_codes_401_unauthorized___missing_authentication
 
     from spikard.testing import TestClient
 
-    app = create_app_status_codes_401_Unauthorized___Missing_authentication()
+    app = create_app_status_codes_401_unauthorized___missing_authentication()
     client = TestClient(app)
 
     response = await client.get("/users/me")
@@ -359,11 +359,11 @@ async def test_19_413_payload_too_large() -> None:
 
 async def test_403_forbidden__insufficient_permissions() -> None:
     """Tests 403 Forbidden when user lacks permissions."""
-    from app.main import create_app_status_codes_403_Forbidden___Insufficient_permissions
+    from app.main import create_app_status_codes_403_forbidden___insufficient_permissions
 
     from spikard.testing import TestClient
 
-    app = create_app_status_codes_403_Forbidden___Insufficient_permissions()
+    app = create_app_status_codes_403_forbidden___insufficient_permissions()
     client = TestClient(app)
 
     headers = {
@@ -401,11 +401,11 @@ async def test_21_431_request_header_fields_too_large() -> None:
 
 async def test_429_too_many_requests() -> None:
     """Tests 429 status code for rate limiting."""
-    from app.main import create_app_status_codes_429_Too_Many_Requests
+    from app.main import create_app_status_codes_429_too_many_requests
 
     from spikard.testing import TestClient
 
-    app = create_app_status_codes_429_Too_Many_Requests()
+    app = create_app_status_codes_429_too_many_requests()
     client = TestClient(app)
 
     response = await client.get("/api/resource")
@@ -418,11 +418,11 @@ async def test_429_too_many_requests() -> None:
 
 async def test_200_ok__success() -> None:
     """Tests standard 200 OK response for successful GET request."""
-    from app.main import create_app_status_codes_200_OK___Success
+    from app.main import create_app_status_codes_200_ok___success
 
     from spikard.testing import TestClient
 
-    app = create_app_status_codes_200_OK___Success()
+    app = create_app_status_codes_200_ok___success()
     client = TestClient(app)
 
     response = await client.get("/status-test/200")
@@ -437,11 +437,11 @@ async def test_200_ok__success() -> None:
 
 async def test_206_partial_content() -> None:
     """Tests 206 status code for range requests."""
-    from app.main import create_app_status_codes_206_Partial_Content
+    from app.main import create_app_status_codes_206_partial_content
 
     from spikard.testing import TestClient
 
-    app = create_app_status_codes_206_Partial_Content()
+    app = create_app_status_codes_206_partial_content()
     client = TestClient(app)
 
     headers = {
