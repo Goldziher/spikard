@@ -304,6 +304,27 @@ fn parse_urlencoded_simple(data: &[u8]) -> serde_json::Value {
         .collect::<serde_json::Value>()
 }
 
+/// Try to parse a string as an integer
+fn try_parse_integer(s: &str) -> Option<serde_json::Value> {
+    s.parse::<i64>().ok().map(|i| serde_json::Value::Number(i.into()))
+}
+
+/// Try to parse a string as a float
+fn try_parse_float(s: &str) -> Option<serde_json::Value> {
+    s.parse::<f64>().ok().and_then(|f| {
+        serde_json::Number::from_f64(f).map(serde_json::Value::Number)
+    })
+}
+
+/// Try to parse a string as a boolean (true/false, case-insensitive)
+fn try_parse_boolean(s: &str) -> Option<serde_json::Value> {
+    match s.to_lowercase().as_str() {
+        "true" => Some(serde_json::Value::Bool(true)),
+        "false" => Some(serde_json::Value::Bool(false)),
+        _ => None,
+    }
+}
+
 /// Convert a string value to appropriate JSON type while preserving empty strings
 fn convert_string_to_json_value(s: &str) -> serde_json::Value {
     // Preserve empty strings (don't convert to false like query_parser does)
@@ -311,32 +332,18 @@ fn convert_string_to_json_value(s: &str) -> serde_json::Value {
         return serde_json::Value::String(String::new());
     }
 
-    // Try to parse as number
-    if let Ok(i) = s.parse::<i64>() {
-        return serde_json::Value::Number(i.into());
-    }
-    #[allow(clippy::collapsible_if)]
-    if let Ok(f) = s.parse::<f64>() {
-        if let Some(n) = serde_json::Number::from_f64(f) {
-            return serde_json::Value::Number(n);
-        }
-    }
-
-    // Try to parse as boolean
-    let lower = s.to_lowercase();
-    if lower == "true" {
-        return serde_json::Value::Bool(true);
-    } else if lower == "false" {
-        return serde_json::Value::Bool(false);
-    }
-
-    // Parse null
-    if s == "null" {
-        return serde_json::Value::Null;
-    }
-
-    // Return as string
-    serde_json::Value::String(s.to_string())
+    // Try to parse as number, boolean, or null
+    try_parse_integer(s)
+        .or_else(|| try_parse_float(s))
+        .or_else(|| try_parse_boolean(s))
+        .or_else(|| {
+            if s == "null" {
+                Some(serde_json::Value::Null)
+            } else {
+                None
+            }
+        })
+        .unwrap_or_else(|| serde_json::Value::String(s.to_string()))
 }
 
 /// Recursively convert string values to appropriate types (numbers, booleans)
@@ -349,25 +356,12 @@ fn convert_types_recursive(value: &mut serde_json::Value) {
                 return;
             }
 
-            // Try to parse as number
-            if let Ok(i) = s.parse::<i64>() {
-                *value = serde_json::Value::Number(i.into());
-                return;
-            }
-            #[allow(clippy::collapsible_if)]
-            if let Ok(f) = s.parse::<f64>() {
-                if let Some(n) = serde_json::Number::from_f64(f) {
-                    *value = serde_json::Value::Number(n);
-                    return;
-                }
-            }
-
-            // Try to parse as boolean
-            let lower = s.to_lowercase();
-            if lower == "true" {
-                *value = serde_json::Value::Bool(true);
-            } else if lower == "false" {
-                *value = serde_json::Value::Bool(false);
+            // Try to parse and replace if successful
+            if let Some(parsed) = try_parse_integer(s)
+                .or_else(|| try_parse_float(s))
+                .or_else(|| try_parse_boolean(s))
+            {
+                *value = parsed;
             }
         }
         serde_json::Value::Array(arr) => {
