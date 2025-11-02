@@ -152,6 +152,34 @@ impl ParameterValidator {
                 param_def.expected_type
             );
 
+            // For query parameters with array type, use the already-parsed JSON
+            // which properly handles multiple values (q=foo&q=bar → ["foo", "bar"])
+            if param_def.source == ParameterSource::Query && param_def.expected_type.as_deref() == Some("array") {
+                let query_value = query_params.get(&param_def.name);
+
+                if param_def.required && query_value.is_none() {
+                    errors.push(ValidationErrorDetail {
+                        error_type: "missing".to_string(),
+                        loc: vec!["query".to_string(), param_def.name.clone()],
+                        msg: "Field required".to_string(),
+                        input: Value::Null,
+                        ctx: None,
+                    });
+                    continue;
+                }
+
+                if let Some(value) = query_value {
+                    // If we got a single value but expected an array, wrap it
+                    let array_value = if value.is_array() {
+                        value.clone()
+                    } else {
+                        Value::Array(vec![value.clone()])
+                    };
+                    params_map.insert(param_def.name.clone(), array_value);
+                }
+                continue;
+            }
+
             // Get raw value based on source - using raw strings for pre-validation
             // This implements the "pre-validation" approach which is ~2x faster than
             // dual-track parsing (see benchmarks/validation_approaches.py)
@@ -167,7 +195,8 @@ impl ParameterValidator {
                 ParameterSource::Header => {
                     // Headers come as strings
                     // Convert underscore to hyphen for header lookup (x_token -> x-token)
-                    let header_name = param_def.name.replace('_', "-");
+                    // Header names are case-insensitive per RFC 7230, normalize to lowercase
+                    let header_name = param_def.name.replace('_', "-").to_lowercase();
                     headers.get(&header_name)
                 }
                 ParameterSource::Cookie => {
@@ -424,7 +453,11 @@ impl ParameterValidator {
                 .map(|f| json!(f))
                 .map_err(|e| format!("Invalid number: {}", e)),
             Some("boolean") => {
-                // Handle case-insensitive true/false and 1/0
+                // Handle case-insensitive true/false, 1/0, and empty string
+                // Empty string coerces to false (NestJS ParseBoolPipe behavior)
+                if value.is_empty() {
+                    return Ok(json!(false));
+                }
                 let value_lower = value.to_lowercase();
                 if value_lower == "true" || value == "1" {
                     Ok(json!(true))
