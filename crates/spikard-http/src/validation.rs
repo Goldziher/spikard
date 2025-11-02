@@ -182,16 +182,6 @@ impl SchemaValidator {
                     err.instance.clone().into_owned()
                 };
 
-                // Debug logging to see what we're working with
-                eprintln!(
-                    "[VALIDATION DEBUG] schema_path_str: {}, error_msg: {}",
-                    schema_path_str, error_msg
-                );
-                eprintln!("[VALIDATION DEBUG] Checking conditions NOW:");
-                eprintln!("  - minLength? {}", schema_path_str.contains("minLength"));
-                eprintln!("  - maxLength? {}", schema_path_str.contains("maxLength"));
-                eprintln!("  - /type? {}", schema_path_str.contains("/type"));
-
                 // Build JSON Pointer path for nested properties
                 // e.g., "seller/name" -> "/properties/seller/properties/name"
                 let schema_prop_path = if param_name.contains('/') {
@@ -350,8 +340,6 @@ impl SchemaValidator {
                             "allowed values".to_string()
                         };
                         let ctx = serde_json::json!({"expected": expected_str});
-                        eprintln!("[VALIDATION DEBUG] Enum validation - creating ctx: {:?}", ctx);
-
                         ("enum".to_string(), msg, Some(ctx))
                     } else {
                         (
@@ -443,25 +431,16 @@ impl SchemaValidator {
                     // Handle required field errors
                     ("missing".to_string(), "Field required".to_string(), None)
                 } else {
-                    eprintln!("[VALIDATION DEBUG] Fell through to default case!");
                     ("validation_error".to_string(), err.to_string(), None)
                 };
 
-                eprintln!(
-                    "[VALIDATION DEBUG] Final: error_type={}, msg={}, ctx={:?}",
-                    error_type, msg, ctx
-                );
-
-                let detail = ValidationErrorDetail {
+                ValidationErrorDetail {
                     error_type,
                     loc: loc_parts,
                     msg,
                     input: input_value,
                     ctx,
-                };
-
-                eprintln!("[VALIDATION DEBUG] Created ValidationErrorDetail: {:?}", detail);
-                detail
+                }
             })
             .collect();
 
