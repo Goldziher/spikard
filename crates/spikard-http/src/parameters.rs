@@ -565,9 +565,16 @@ mod tests {
         let query_params = json!({
             "device_ids": [1, 2]
         });
+        let raw_query_params = HashMap::new();
         let path_params = HashMap::new();
 
-        let result = validator.validate_and_extract(&query_params, &path_params, &HashMap::new(), &HashMap::new());
+        let result = validator.validate_and_extract(
+            &query_params,
+            &raw_query_params,
+            &path_params,
+            &HashMap::new(),
+            &HashMap::new(),
+        );
         assert!(
             result.is_ok(),
             "Array query param validation failed: {:?}",
@@ -597,8 +604,15 @@ mod tests {
         let mut path_params = HashMap::new();
         path_params.insert("item_id".to_string(), "foobar".to_string());
         let query_params = json!({});
+        let raw_query_params = HashMap::new();
 
-        let result = validator.validate_and_extract(&query_params, &path_params, &HashMap::new(), &HashMap::new());
+        let result = validator.validate_and_extract(
+            &query_params,
+            &raw_query_params,
+            &path_params,
+            &HashMap::new(),
+            &HashMap::new(),
+        );
         assert!(result.is_ok(), "Validation should succeed: {:?}", result);
 
         let params = result.unwrap();
@@ -625,8 +639,15 @@ mod tests {
         let mut path_params = HashMap::new();
         path_params.insert("value".to_string(), "True".to_string());
         let query_params = json!({});
+        let raw_query_params = HashMap::new();
 
-        let result = validator.validate_and_extract(&query_params, &path_params, &HashMap::new(), &HashMap::new());
+        let result = validator.validate_and_extract(
+            &query_params,
+            &raw_query_params,
+            &path_params,
+            &HashMap::new(),
+            &HashMap::new(),
+        );
         if result.is_err() {
             eprintln!("Error for 'True': {:?}", result);
         }
@@ -637,7 +658,13 @@ mod tests {
         // Test "1" → true
         path_params.insert("value".to_string(), "1".to_string());
         let query_params_1 = json!({});
-        let result = validator.validate_and_extract(&query_params_1, &path_params, &HashMap::new(), &HashMap::new());
+        let result = validator.validate_and_extract(
+            &query_params_1,
+            &raw_query_params,
+            &path_params,
+            &HashMap::new(),
+            &HashMap::new(),
+        );
         assert!(result.is_ok(), "Validation should succeed for '1': {:?}", result);
         let params = result.unwrap();
         assert_eq!(params, json!({"value": true}));
@@ -645,8 +672,13 @@ mod tests {
         // Test "false" → false
         path_params.insert("value".to_string(), "false".to_string());
         let query_params_false = json!({});
-        let result =
-            validator.validate_and_extract(&query_params_false, &path_params, &HashMap::new(), &HashMap::new());
+        let result = validator.validate_and_extract(
+            &query_params_false,
+            &raw_query_params,
+            &path_params,
+            &HashMap::new(),
+            &HashMap::new(),
+        );
         assert!(result.is_ok(), "Validation should succeed for 'false': {:?}", result);
         let params = result.unwrap();
         assert_eq!(params, json!({"value": false}));
@@ -654,7 +686,13 @@ mod tests {
         // Test "TRUE" (all caps) → true
         path_params.insert("value".to_string(), "TRUE".to_string());
         let query_params_true = json!({});
-        let result = validator.validate_and_extract(&query_params_true, &path_params, &HashMap::new(), &HashMap::new());
+        let result = validator.validate_and_extract(
+            &query_params_true,
+            &raw_query_params,
+            &path_params,
+            &HashMap::new(),
+            &HashMap::new(),
+        );
         assert!(result.is_ok(), "Validation should succeed for 'TRUE': {:?}", result);
         let params = result.unwrap();
         assert_eq!(params, json!({"value": true}));
@@ -676,24 +714,43 @@ mod tests {
 
         let validator = ParameterValidator::new(schema).expect("Failed to create validator");
         let path_params = HashMap::new();
+        let raw_query_params = HashMap::new();
 
         // Test integer 1 → true (as it comes from query parser with parse_numbers=true)
         let query_params = json!({"flag": 1});
-        let result = validator.validate_and_extract(&query_params, &path_params, &HashMap::new(), &HashMap::new());
+        let result = validator.validate_and_extract(
+            &query_params,
+            &raw_query_params,
+            &path_params,
+            &HashMap::new(),
+            &HashMap::new(),
+        );
         assert!(result.is_ok(), "Validation should succeed for integer 1: {:?}", result);
         let params = result.unwrap();
         assert_eq!(params, json!({"flag": true}));
 
         // Test integer 0 → false
         let query_params = json!({"flag": 0});
-        let result = validator.validate_and_extract(&query_params, &path_params, &HashMap::new(), &HashMap::new());
+        let result = validator.validate_and_extract(
+            &query_params,
+            &raw_query_params,
+            &path_params,
+            &HashMap::new(),
+            &HashMap::new(),
+        );
         assert!(result.is_ok(), "Validation should succeed for integer 0: {:?}", result);
         let params = result.unwrap();
         assert_eq!(params, json!({"flag": false}));
 
         // Test boolean true → true (should still work)
         let query_params = json!({"flag": true});
-        let result = validator.validate_and_extract(&query_params, &path_params, &HashMap::new(), &HashMap::new());
+        let result = validator.validate_and_extract(
+            &query_params,
+            &raw_query_params,
+            &path_params,
+            &HashMap::new(),
+            &HashMap::new(),
+        );
         assert!(
             result.is_ok(),
             "Validation should succeed for boolean true: {:?}",
@@ -704,7 +761,13 @@ mod tests {
 
         // Test boolean false → false (should still work)
         let query_params = json!({"flag": false});
-        let result = validator.validate_and_extract(&query_params, &path_params, &HashMap::new(), &HashMap::new());
+        let result = validator.validate_and_extract(
+            &query_params,
+            &raw_query_params,
+            &path_params,
+            &HashMap::new(),
+            &HashMap::new(),
+        );
         assert!(
             result.is_ok(),
             "Validation should succeed for boolean false: {:?}",

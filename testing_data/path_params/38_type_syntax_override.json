@@ -1,6 +1,6 @@
 {
   "name": "Path parameter type syntax with override",
-  "description": "Tests that explicit parameter schema overrides auto-generated type syntax schema",
+  "description": "Tests that explicit parameter schema merges with auto-generated type syntax schema",
   "category": "path_params",
   "source": {
     "framework": "spikard",
@@ -30,5 +30,5 @@
       "count": "50"
     }
   },
-  "notes": "Type syntax :int generates base schema, explicit parameters add constraints via override"
+  "notes": "Type syntax :int auto-generates base type, explicit parameters add constraints. Both are merged in Spikard core."
 }
