@@ -208,7 +208,7 @@ async def test_28_duration_format_path_param_success() -> None:
 
 
 async def test_path_parameter_type_syntax_with_override() -> None:
-    """Tests that explicit parameter schema overrides auto-generated type syntax schema."""
+    """Tests that explicit parameter schema merges with auto-generated type syntax schema."""
     from app.main import create_app_path_params_path_parameter_type_syntax_with_override
 
     from spikard.testing import TestClient
@@ -293,7 +293,7 @@ async def test_integer_path_parameter_with_le_constraint_success() -> None:
 
 
 async def test_path_parameter_type_syntax_invalid_uuid() -> None:
-    """Tests that :uuid type syntax properly validates and rejects invalid UUIDs."""
+    """Tests that :uuid type syntax auto-generates validation that rejects invalid UUIDs."""
     from app.main import create_app_path_params_path_parameter_type_syntax_invalid_uuid
 
     from spikard.testing import TestClient
@@ -327,7 +327,7 @@ async def test_path_type_parameter_file_path() -> None:
 
 
 async def test_path_parameter_with_type_syntax_uuid() -> None:
-    """Tests path parameter with :uuid type syntax auto-generates correct schema."""
+    """Tests path parameter with :uuid type syntax auto-generates UUID validation."""
     from app.main import create_app_path_params_path_parameter_with_type_syntax_uuid
 
     from spikard.testing import TestClient
@@ -537,7 +537,7 @@ async def test_float_path_parameter_success() -> None:
 
 
 async def test_path_parameter_with_type_syntax_integer() -> None:
-    """Tests path parameter with :int type syntax auto-generates correct schema."""
+    """Tests path parameter with :int type syntax auto-generates integer type."""
     from app.main import create_app_path_params_path_parameter_with_type_syntax_integer
 
     from spikard.testing import TestClient

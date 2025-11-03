@@ -199,31 +199,67 @@ impl TestClient {
             } else if let Some(json_val) = json_value {
                 if is_form_encoded {
                     // For form-encoded requests, manually set Content-Type header and body bytes
-                    if let serde_json::Value::Object(map) = &json_val {
-                        let form_data: Vec<String> = map
-                            .iter()
-                            .map(|(k, v)| {
-                                let value_str = match v {
-                                    serde_json::Value::String(s) => s.clone(),
-                                    serde_json::Value::Number(n) => n.to_string(),
-                                    serde_json::Value::Bool(b) => b.to_string(),
-                                    serde_json::Value::Null => String::new(),
-                                    _ => serde_json::to_string(v).unwrap_or_default(),
-                                };
-                                format!("{}={}", urlencoding::encode(k), urlencoding::encode(&value_str))
-                            })
-                            .collect();
-                        let form_body = form_data.join("&");
+                    let form_body = match &json_val {
+                        serde_json::Value::String(s) => {
+                            // If json is a string, use it directly as the form body
+                            s.clone()
+                        }
+                        serde_json::Value::Object(map) => {
+                            // If json is an object, encode it as form data
+                            let mut form_data: Vec<String> = Vec::new();
+                            for (k, v) in map.iter() {
+                                match v {
+                                    serde_json::Value::Array(arr) => {
+                                        // For arrays, repeat the key for each value
+                                        for item in arr {
+                                            let item_str = match item {
+                                                serde_json::Value::String(s) => s.clone(),
+                                                serde_json::Value::Number(n) => n.to_string(),
+                                                serde_json::Value::Bool(b) => b.to_string(),
+                                                serde_json::Value::Null => String::new(),
+                                                _ => serde_json::to_string(item).unwrap_or_default(),
+                                            };
+                                            form_data.push(format!(
+                                                "{}={}",
+                                                urlencoding::encode(k),
+                                                urlencoding::encode(&item_str)
+                                            ));
+                                        }
+                                    }
+                                    _ => {
+                                        // For scalar values, add single key=value pair
+                                        let value_str = match v {
+                                            serde_json::Value::String(s) => s.clone(),
+                                            serde_json::Value::Number(n) => n.to_string(),
+                                            serde_json::Value::Bool(b) => b.to_string(),
+                                            serde_json::Value::Null => String::new(),
+                                            _ => serde_json::to_string(v).unwrap_or_default(),
+                                        };
+                                        form_data.push(format!(
+                                            "{}={}",
+                                            urlencoding::encode(k),
+                                            urlencoding::encode(&value_str)
+                                        ));
+                                    }
+                                }
+                            }
+                            form_data.join("&")
+                        }
+                        _ => {
+                            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                                "Form-encoded body must be a dict or string",
+                            ));
+                        }
+                    };
 
-                        // Set Content-Type header
-                        request = request.add_header(
-                            HeaderName::from_static("content-type"),
-                            HeaderValue::from_static("application/x-www-form-urlencoded"),
-                        );
+                    // Set Content-Type header
+                    request = request.add_header(
+                        HeaderName::from_static("content-type"),
+                        HeaderValue::from_static("application/x-www-form-urlencoded"),
+                    );
 
-                        // Set body as bytes (doesn't set Content-Type)
-                        request = request.bytes(bytes::Bytes::from(form_body));
-                    }
+                    // Set body as bytes (doesn't set Content-Type)
+                    request = request.bytes(bytes::Bytes::from(form_body));
                 } else {
                     request = request.json(&json_val);
                 }
@@ -433,6 +469,42 @@ impl TestClient {
         let fut = async move {
             let full_path = build_full_path(&path, &query_params_vec);
             let mut request = server.method(Method::HEAD, &full_path);
+
+            for (key, value) in headers_vec {
+                let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
+                })?;
+                let header_value = HeaderValue::from_str(&value).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
+                })?;
+                request = request.add_header(header_name, header_value);
+            }
+
+            let response = request.await;
+            TestResponse::from_axum_response(response).await
+        };
+
+        pyo3_async_runtimes::tokio::future_into_py(py, fut)
+    }
+
+    /// Make a TRACE request
+    #[pyo3(signature = (path, query_params=None, headers=None))]
+    fn trace<'py>(
+        &self,
+        py: Python<'py>,
+        path: &str,
+        query_params: Option<&Bound<'py, PyDict>>,
+        headers: Option<&Bound<'py, PyDict>>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let path = path.to_string();
+        let query_params_vec = extract_dict_to_vec(query_params)?;
+        let headers_vec = extract_dict_to_vec(headers)?;
+
+        let server = Arc::clone(&self.server);
+
+        let fut = async move {
+            let full_path = build_full_path(&path, &query_params_vec);
+            let mut request = server.method(Method::TRACE, &full_path);
 
             for (key, value) in headers_vec {
                 let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {

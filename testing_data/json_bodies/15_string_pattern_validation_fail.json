@@ -16,7 +16,8 @@
           "type": "string"
         },
         "sku": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[A-Z]{3}[0-9]{4}$"
         }
       },
       "additionalProperties": false,

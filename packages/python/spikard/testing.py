@@ -133,7 +133,7 @@ class TestClient:
         self,
         path: str,
         json: Any | None = None,
-        data: dict[str, Any] | None = None,
+        data: dict[str, Any] | str | None = None,
         files: dict[str, Any] | None = None,
         query_params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
@@ -144,7 +144,8 @@ class TestClient:
         Args:
             path: The path to request
             json: Optional JSON body
-            data: Optional form data for multipart/form-data (text fields)
+            data: Optional form data - can be dict for multipart/form-data (text fields)
+                  or string for application/x-www-form-urlencoded
             files: Optional files for multipart/form-data upload
                    Format: {"field": ("filename", bytes)}
                    or {"field": [("file1", bytes), ("file2", bytes)]}
@@ -281,4 +282,21 @@ class TestClient:
             cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
             headers["cookie"] = cookie_header
         rust_response = await self._client.head(path, query_params, headers)
+        return TestResponse(rust_response)
+
+    async def trace(
+        self,
+        path: str,
+        query_params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+    ) -> TestResponse:
+        """Make a TRACE request."""
+        # Convert cookies to Cookie header if provided
+        if cookies:
+            if headers is None:
+                headers = {}
+            cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
+            headers["cookie"] = cookie_header
+        rust_response = await self._client.trace(path, query_params, headers)
         return TestResponse(rust_response)

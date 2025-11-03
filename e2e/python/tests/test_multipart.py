@@ -10,10 +10,11 @@ async def test_multiple_values_for_same_field_name() -> None:
     app = create_app_multipart_multiple_values_for_same_field_name()
     client = TestClient(app)
 
+    data = {"tags": ["python", "rust", "web"]}
     files = {
-        "files": [("file1.txt", b"first file"), ("file2.txt", b"second file")],
+        "files": [("file1.txt", b"first file", "text/plain"), ("file2.txt", b"second file", "text/plain")],
     }
-    response = await client.post("/", files=files)
+    response = await client.post("/", data=data, files=files)
 
     assert response.status_code == 200
     response_data = response.json()
@@ -52,7 +53,7 @@ async def test_19_file_mime_spoofing_png_as_jpeg() -> None:
     client = TestClient(app)
 
     files = {
-        "image": ("fake.jpg", bytes.fromhex("89504e470d0a1a0a")),
+        "image": ("fake.jpg", bytes.fromhex("89504e470d0a1a0a"), "image/jpeg"),
     }
     response = await client.post("/upload", files=files)
 
@@ -72,7 +73,7 @@ async def test_20_file_mime_spoofing_jpeg_as_png() -> None:
     client = TestClient(app)
 
     files = {
-        "image": ("fake.png", bytes.fromhex("ffd8ffe0")),
+        "image": ("fake.png", bytes.fromhex("ffd8ffe0"), "image/png"),
     }
     response = await client.post("/upload", files=files)
 
@@ -92,7 +93,7 @@ async def test_21_file_pdf_magic_number_success() -> None:
     client = TestClient(app)
 
     files = {
-        "document": ("test.pdf", bytes.fromhex("25504446")),
+        "document": ("test.pdf", bytes.fromhex("25504446"), "application/pdf"),
     }
     response = await client.post("/upload", files=files)
 
@@ -109,7 +110,7 @@ async def test_content_type_validation_invalid_type() -> None:
     client = TestClient(app)
 
     files = {
-        "file": ("script.sh", b"#!/bin/bash\necho hello"),
+        "file": ("script.sh", b"#!/bin/bash\necho hello", "application/x-sh"),
     }
     response = await client.post("/files/images-only", files=files)
 
@@ -117,6 +118,13 @@ async def test_content_type_validation_invalid_type() -> None:
     response_data = response.json()
     # Validation should be done by framework, not handler
     assert "errors" in response_data or "detail" in response_data
+    response_data = response.json()
+    assert "errors" in response_data
+    assert len(response_data["errors"]) == 1
+    error_0 = response_data["errors"][0]
+    assert error_0["type"] == "validation_error"
+    assert error_0["loc"] == ["files", "file"]
+    assert error_0["msg"] == "Invalid content type 'application/x-sh'. Allowed types: image/jpeg, image/png, image/gif"
 
 
 async def test_pdf_file_upload() -> None:
@@ -129,7 +137,7 @@ async def test_pdf_file_upload() -> None:
     client = TestClient(app)
 
     files = {
-        "document": ("report.pdf", b"fake_pdf_content"),
+        "document": ("report.pdf", b"fake_pdf_content", "application/pdf"),
     }
     response = await client.post("/files/document", files=files)
 
@@ -153,7 +161,7 @@ async def test_file_list_upload_array_of_files() -> None:
     client = TestClient(app)
 
     files = {
-        "files": [("file1.txt", b"content of file 1"), ("file2.txt", b"content of file 2")],
+        "files": [("file1.txt", b"content of file 1", "text/plain"), ("file2.txt", b"content of file 2", "text/plain")],
     }
     response = await client.post("/files/list", files=files)
 
@@ -177,7 +185,7 @@ async def test_optional_file_upload_provided() -> None:
     client = TestClient(app)
 
     files = {
-        "file": ("optional.txt", b"optional file content"),
+        "file": ("optional.txt", b"optional file content", "text/plain"),
     }
     response = await client.post("/files/optional", files=files)
 
@@ -201,7 +209,7 @@ async def test_file_size_validation_too_large() -> None:
     client = TestClient(app)
 
     files = {
-        "file": ("large.txt", b"x"),
+        "file": ("large.txt", b"x", "text/plain"),
     }
     response = await client.post("/files/validated", files=files)
 
@@ -220,10 +228,11 @@ async def test_mixed_files_and_form_data() -> None:
     app = create_app_multipart_mixed_files_and_form_data()
     client = TestClient(app)
 
+    data = {"active": "true", "username": "testuser", "age": "25"}
     files = {
-        "file": ("upload.txt", b"file data here"),
+        "file": ("upload.txt", b"file data here", "text/plain"),
     }
-    response = await client.post("/", files=files)
+    response = await client.post("/", data=data, files=files)
 
     assert response.status_code == 200
     response_data = response.json()
@@ -254,7 +263,7 @@ async def test_simple_file_upload() -> None:
     client = TestClient(app)
 
     files = {
-        "test": ("test.txt", b"<file content>"),
+        "test": ("test.txt", b"<file content>", "text/plain"),
     }
     response = await client.post("/", files=files)
 
@@ -281,7 +290,7 @@ async def test_empty_file_upload() -> None:
     client = TestClient(app)
 
     files = {
-        "file": ("empty.txt", b""),
+        "file": ("empty.txt", b"", "text/plain"),
     }
     response = await client.post("/files/upload", files=files)
 
@@ -341,7 +350,7 @@ async def test_18_file_magic_number_jpeg_success() -> None:
     client = TestClient(app)
 
     files = {
-        "image": ("test.jpg", bytes.fromhex("ffd8ffe0")),
+        "image": ("test.jpg", bytes.fromhex("ffd8ffe0"), "image/jpeg"),
     }
     response = await client.post("/upload", files=files)
 
@@ -358,7 +367,7 @@ async def test_22_file_empty_buffer() -> None:
     client = TestClient(app)
 
     files = {
-        "file": ("empty.txt", bytes.fromhex("")),
+        "file": ("empty.txt", bytes.fromhex(""), "text/plain"),
     }
     response = await client.post("/upload", files=files)
 
@@ -378,7 +387,7 @@ async def test_17_file_magic_number_png_success() -> None:
     client = TestClient(app)
 
     files = {
-        "image": ("test.png", bytes.fromhex("89504e470d0a1a0a")),
+        "image": ("test.png", bytes.fromhex("89504e470d0a1a0a"), "image/png"),
     }
     response = await client.post("/upload", files=files)
 
@@ -394,7 +403,8 @@ async def test_form_data_without_files() -> None:
     app = create_app_multipart_form_data_without_files()
     client = TestClient(app)
 
-    response = await client.post("/")
+    data = {"some": "data"}
+    response = await client.post("/", data=data)
 
     assert response.status_code == 200
     response_data = response.json()
@@ -412,8 +422,8 @@ async def test_multiple_file_uploads() -> None:
     client = TestClient(app)
 
     files = {
-        "test2": ("test2.txt", b"<file2 content>"),
-        "test1": ("test1.txt", b"<file1 content>"),
+        "test1": ("test1.txt", b"<file1 content>", "text/plain"),
+        "test2": ("test2.txt", b"<file2 content>", "text/plain"),
     }
     response = await client.post("/", files=files)
 
@@ -449,7 +459,7 @@ async def test_file_upload_with_custom_headers() -> None:
     client = TestClient(app)
 
     files = {
-        "test2": ("test2.txt", b"<file2 content>"),
+        "test2": ("test2.txt", b"<file2 content>", "text/plain"),
     }
     response = await client.post("/", files=files)
 
@@ -505,7 +515,7 @@ async def test_image_file_upload() -> None:
     client = TestClient(app)
 
     files = {
-        "image": ("photo.jpg", b"fake_jpeg_content_here"),
+        "image": ("photo.jpg", b"fake_jpeg_content_here", "image/jpeg"),
     }
     response = await client.post("/files/image", files=files)
 

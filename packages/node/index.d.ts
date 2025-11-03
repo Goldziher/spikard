@@ -7,9 +7,9 @@ export declare class TestClient {
    *
    * # Arguments
    * * `routes_json` - JSON array of route metadata objects
-   * * `handlers_map` - JSON object mapping handler names to handler info
+   * * `handlers_map` - JavaScript object mapping handler names to handler functions
    */
-  static new(routesJson: string, handlersMap: any): TestClient
+  static new(routesJson: string, handlersMap: object): TestClient
   /** Make a GET request */
   get(path: string, headers?: any | undefined | null): Promise<TestResponse>
   /** Make a POST request */
@@ -20,6 +20,10 @@ export declare class TestClient {
   delete(path: string, headers?: any | undefined | null): Promise<TestResponse>
   /** Make a PATCH request */
   patch(path: string, headers?: any | undefined | null, json?: any | undefined | null): Promise<TestResponse>
+  /** Make a HEAD request */
+  head(path: string, headers?: any | undefined | null): Promise<TestResponse>
+  /** Make an OPTIONS request */
+  options(path: string, headers?: any | undefined | null): Promise<TestResponse>
 }
 
 /** HTTP Response wrapper */

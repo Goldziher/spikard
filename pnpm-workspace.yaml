@@ -2,3 +2,4 @@ packages:
   - "crates/spikard-node"
   - "crates/spikard-wasm"
   - "packages/node"
+  - "e2e/node"

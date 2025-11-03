@@ -16,7 +16,8 @@
           "type": "string"
         },
         "item_id": {
-          "type": "string"
+          "type": "string",
+          "format": "uuid"
         }
       },
       "additionalProperties": false,

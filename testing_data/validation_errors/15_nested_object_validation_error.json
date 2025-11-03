@@ -28,7 +28,8 @@
               "type": "object",
               "properties": {
                 "city": {
-                  "type": "string"
+                  "type": "string",
+                  "minLength": 3
                 },
                 "zip_code": {
                   "type": "string"

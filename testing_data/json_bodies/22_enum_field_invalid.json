@@ -16,7 +16,8 @@
           "type": "string"
         },
         "category": {
-          "type": "string"
+          "type": "string",
+          "enum": ["electronics", "clothing", "books"]
         }
       },
       "additionalProperties": false,

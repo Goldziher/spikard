@@ -4,7 +4,7 @@
 	"description": "High-performance HTTP framework for Node.js/TypeScript. Type-safe routing, validation, and testing powered by Rust core.",
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",
-	"types": "dist/index.d.ts",
+	"types": "index.d.ts",
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
