@@ -13,6 +13,6 @@
     "test": "wasm-pack test --node"
   },
   "devDependencies": {
-    "wasm-pack": "^0.13.0"
+    "wasm-pack": "^0.13.1"
   }
 }

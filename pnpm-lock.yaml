@@ -9,7 +9,7 @@ importers:
   .:
     devDependencies:
       '@biomejs/biome':
-        specifier: ^2.3.2
+        specifier: ^2.3.3
         version: 2.3.3
       oxlint:
         specifier: ^1.25.0
@@ -21,7 +21,7 @@ importers:
   crates/spikard-node:
     devDependencies:
       '@napi-rs/cli':
-        specifier: ^3.2.0
+        specifier: ^3.4.1
         version: 3.4.1(@emnapi/runtime@1.7.0)(@types/node@24.10.0)
       vitest:
         specifier: ^4.0.6
@@ -30,7 +30,7 @@ importers:
   crates/spikard-wasm:
     devDependencies:
       wasm-pack:
-        specifier: ^0.13.0
+        specifier: ^0.13.1
         version: 0.13.1
 
   e2e/node:
@@ -39,7 +39,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/node
       '@types/node':
-        specifier: ^24.9.2
+        specifier: ^24.10.0
         version: 24.10.0
       '@vitest/coverage-v8':
         specifier: ^4.0.6
@@ -54,13 +54,13 @@ importers:
   packages/node:
     devDependencies:
       '@biomejs/biome':
-        specifier: ^2.3.2
+        specifier: ^2.3.3
         version: 2.3.3
       '@napi-rs/cli':
-        specifier: ^3.2.0
+        specifier: ^3.4.1
         version: 3.4.1(@emnapi/runtime@1.7.0)(@types/node@24.10.0)
       '@types/node':
-        specifier: ^24.9.2
+        specifier: ^24.10.0
         version: 24.10.0
       '@vitest/coverage-v8':
         specifier: ^4.0.6

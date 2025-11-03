@@ -2,8 +2,8 @@
  * Testing utilities for Spikard applications
  */
 
-// Native module is built into this package directory
-import { TestClient as NativeTestClient } from "..";
+// Native module is built into this package directory; import the napi loader directly
+import { TestClient as NativeTestClient } from "../index.js";
 import type { SpikardApp } from "./index";
 
 /**
@@ -55,10 +55,13 @@ export class TestClient {
 	 * @param app - Spikard application with routes and handlers
 	 */
 	constructor(app: SpikardApp) {
+		if (!app || !Array.isArray(app.routes)) {
+			throw new Error("Invalid Spikard app: missing routes array");
+		}
 		const routesJson = JSON.stringify(app.routes);
 		const handlersMap = app.handlers || {};
 
-		this.nativeClient = NativeTestClient.new(routesJson, handlersMap);
+		this.nativeClient = new NativeTestClient(routesJson, handlersMap);
 	}
 
 	/**

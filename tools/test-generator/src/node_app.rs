@@ -281,24 +281,21 @@ fn generate_handler_function(fixture: &Fixture, route: &str, method: &str, handl
         method.to_uppercase(),
         route
     ));
-    code.push_str(&format!("async function {}(", to_camel_case(handler_name)));
+    code.push_str(&format!(
+        "async function {}(requestJson: string): Promise<string> {{\n",
+        to_camel_case(handler_name)
+    ));
+    code.push_str("\tconst request = JSON.parse(requestJson);\n");
+    code.push_str("\tconst body = request.body ?? null;\n");
+    code.push_str("\tconst params = request.params ?? {};\n");
+    code.push_str("\tconst queryParams = request.query ?? {};\n");
+    code.push_str("\tconst headerParams = request.headers ?? {};\n");
+    code.push_str("\tconst cookieParams = request.cookies ?? {};\n");
+    code.push_str("\tconst response: any = {};\n");
+    code.push_str(&format!("\tresponse.status = {};\n", expected_status));
 
-    // Build parameter list
-    let mut param_list = Vec::new();
-
-    if has_body {
-        param_list.push("body: any".to_string());
-    }
-
-    for (param_name, param_type, _is_required) in &params {
-        param_list.push(format!("{}: {}", param_name, param_type));
-    }
-
-    if param_list.is_empty() {
-        code.push_str("): Promise<any> {\n");
-    } else {
-        code.push_str(&param_list.join(", "));
-        code.push_str("): Promise<any> {\n");
+    for (param_name, _param_type, _is_required) in &params {
+        code.push_str(&format!("\tconst {} = params[\"{}\"]; \n", param_name, param_name));
     }
 
     // Function body - handle different response scenarios
@@ -306,21 +303,22 @@ fn generate_handler_function(fixture: &Fixture, route: &str, method: &str, handl
     let should_return_expected = expected_body.is_some() && expected_status != 422;
 
     if should_return_expected {
-        // Return the expected response body
         if let Some(body_json) = expected_body {
             let json_str = serde_json::to_string(body_json)?;
-            code.push_str(&format!("\treturn {};\n", json_str));
+            code.push_str(&format!("\tconst responseBody = {};\n", json_str));
+            code.push_str("\tresponse.body = responseBody;\n");
         } else {
-            code.push_str(&format!("\treturn {{ status: {} }};\n", expected_status));
+            code.push_str("\tresponse.body = null;\n");
         }
     } else if should_echo_params {
-        // Echo parameters to prove extraction/validation worked
-        code.push_str("\t// Echo back parameters for testing\n");
         code.push_str("\tconst result: Record<string, any> = {};\n");
-
         if has_body {
             code.push_str("\tif (body !== null && body !== undefined) {\n");
-            code.push_str("\t\tObject.assign(result, body);\n");
+            code.push_str("\t\tif (typeof body === \"object\") {\n");
+            code.push_str("\t\t\tObject.assign(result, body);\n");
+            code.push_str("\t\t} else {\n");
+            code.push_str("\t\t\tresult[\"body\"] = body;\n");
+            code.push_str("\t\t}\n");
             code.push_str("\t}\n");
         }
 
@@ -329,7 +327,6 @@ fn generate_handler_function(fixture: &Fixture, route: &str, method: &str, handl
                 "\tif ({} !== null && {} !== undefined) {{\n",
                 param_name, param_name
             ));
-            // Convert non-JSON-serializable types to strings
             if param_type.contains("Date") {
                 code.push_str(&format!(
                     "\t\tresult[\"{}\"] = {}.toISOString();\n",
@@ -341,11 +338,12 @@ fn generate_handler_function(fixture: &Fixture, route: &str, method: &str, handl
             code.push_str("\t}\n");
         }
 
-        code.push_str("\treturn result;\n");
+        code.push_str("\tresponse.body = result;\n");
     } else {
-        code.push_str(&format!("\treturn {{ status: {} }};\n", expected_status));
+        code.push_str("\tresponse.body = null;\n");
     }
 
+    code.push_str("\treturn JSON.stringify(response);\n");
     code.push('}');
 
     Ok(code)
