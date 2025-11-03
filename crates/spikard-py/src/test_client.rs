@@ -139,12 +139,14 @@ impl TestClient {
     ///
     /// Returns:
     ///     TestResponse: The response from the server
-    #[pyo3(signature = (path, json=None, files=None, query_params=None, headers=None))]
+    #[allow(clippy::too_many_arguments)]
+    #[pyo3(signature = (path, json=None, data=None, files=None, query_params=None, headers=None))]
     fn post<'py>(
         &self,
         py: Python<'py>,
         path: &str,
         json: Option<&Bound<'py, PyAny>>,
+        data: Option<&Bound<'py, PyDict>>,
         files: Option<&Bound<'py, PyDict>>,
         query_params: Option<&Bound<'py, PyDict>>,
         headers: Option<&Bound<'py, PyDict>>,
@@ -158,6 +160,9 @@ impl TestClient {
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
 
+        // Extract form data for multipart
+        let form_data = extract_dict_to_vec(data)?;
+
         // Extract files data for multipart
         let files_data = extract_files(files)?;
 
@@ -167,8 +172,8 @@ impl TestClient {
             let full_path = build_full_path(&path, &query_params_vec);
             let mut request = server.post(&full_path);
 
-            // Check if this is a multipart request (files provided)
-            let is_multipart = !files_data.is_empty();
+            // Check if this is a multipart request (files or form data provided)
+            let is_multipart = !files_data.is_empty() || !form_data.is_empty();
 
             // Check if this is a URL-encoded form request
             let is_form_encoded = headers_vec.iter().any(|(k, v)| {
@@ -179,7 +184,7 @@ impl TestClient {
             if is_multipart {
                 // Build multipart/form-data body
                 let boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
-                let multipart_body = build_multipart_body(&files_data, boundary);
+                let multipart_body = build_multipart_body(&form_data, &files_data, boundary);
 
                 // Set Content-Type with boundary
                 request = request.add_header(
@@ -692,9 +697,32 @@ fn extract_single_file(field_name: &str, tuple: &Bound<'_, PyAny>) -> PyResult<F
 }
 
 /// Build multipart/form-data body
-fn build_multipart_body(files: &[FileData], boundary: &str) -> Vec<u8> {
+fn build_multipart_body(form_data: &[(String, String)], files: &[FileData], boundary: &str) -> Vec<u8> {
     let mut body = Vec::new();
 
+    // Add form fields first
+    for (field_name, field_value) in form_data {
+        // Boundary line
+        body.extend_from_slice(b"--");
+        body.extend_from_slice(boundary.as_bytes());
+        body.extend_from_slice(b"\r\n");
+
+        // Content-Disposition header (no filename for regular fields)
+        body.extend_from_slice(b"Content-Disposition: form-data; name=\"");
+        body.extend_from_slice(field_name.as_bytes());
+        body.extend_from_slice(b"\"\r\n");
+
+        // Empty line before content
+        body.extend_from_slice(b"\r\n");
+
+        // Field value
+        body.extend_from_slice(field_value.as_bytes());
+
+        // CRLF after content
+        body.extend_from_slice(b"\r\n");
+    }
+
+    // Add files
     for file in files {
         // Boundary line
         body.extend_from_slice(b"--");
