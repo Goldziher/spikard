@@ -1,3 +1,4 @@
 packages:
   - "crates/spikard-node"
   - "crates/spikard-wasm"
+  - "packages/node"
