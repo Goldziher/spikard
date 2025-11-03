@@ -2,7 +2,7 @@
 
 use crate::response::TestResponse;
 use axum::body::Body;
-use axum::http::{header, Method, Request};
+use axum::http::{Method, Request, header};
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use serde_json::Value;
@@ -44,7 +44,8 @@ impl TestClient {
 
         // Create runtime
         let runtime = Arc::new(
-            tokio::runtime::Runtime::new().map_err(|e| Error::from_reason(format!("Failed to create runtime: {}", e)))?,
+            tokio::runtime::Runtime::new()
+                .map_err(|e| Error::from_reason(format!("Failed to create runtime: {}", e)))?,
         );
 
         Ok(Self {
@@ -98,6 +99,18 @@ impl TestClient {
         self.request(Method::PATCH, path, headers, json).await
     }
 
+    /// Make a HEAD request
+    #[napi]
+    pub async fn head(&self, path: String, headers: Option<serde_json::Value>) -> napi::Result<TestResponse> {
+        self.request(Method::HEAD, path, headers, None).await
+    }
+
+    /// Make an OPTIONS request
+    #[napi]
+    pub async fn options(&self, path: String, headers: Option<serde_json::Value>) -> napi::Result<TestResponse> {
+        self.request(Method::OPTIONS, path, headers, None).await
+    }
+
     /// Generic request method
     async fn request(
         &self,
@@ -127,13 +140,16 @@ impl TestClient {
         // Build body
         let body = if let Some(data) = json {
             req_builder = req_builder.header(header::CONTENT_TYPE, "application/json");
-            let json_bytes = serde_json::to_vec(&data).map_err(|e| Error::from_reason(format!("Failed to serialize JSON: {}", e)))?;
+            let json_bytes = serde_json::to_vec(&data)
+                .map_err(|e| Error::from_reason(format!("Failed to serialize JSON: {}", e)))?;
             Body::from(json_bytes)
         } else {
             Body::empty()
         };
 
-        let request = req_builder.body(body).map_err(|e| Error::from_reason(format!("Failed to build request: {}", e)))?;
+        let request = req_builder
+            .body(body)
+            .map_err(|e| Error::from_reason(format!("Failed to build request: {}", e)))?;
 
         // Execute request
         let response = runtime

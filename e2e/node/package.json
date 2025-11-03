@@ -1,0 +1,17 @@
+{
+	"name": "spikard-e2e-node",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"test": "vitest run",
+		"test:watch": "vitest"
+	},
+	"devDependencies": {
+		"@spikard/node": "workspace:*",
+		"@types/node": "^24.9.2",
+		"@vitest/coverage-v8": "^4.0.6",
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.6"
+	}
+}

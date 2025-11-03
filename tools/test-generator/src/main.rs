@@ -3,6 +3,8 @@
 //! Internal tool for generating test infrastructure from fixtures.
 //! Generates test applications and test suites for Rust, Python, and TypeScript.
 
+mod node_app;
+mod node_tests;
 mod python_app;
 mod python_tests;
 mod rust_app;
@@ -44,7 +46,7 @@ enum Commands {
     /// Generate test suite for a language
     Tests {
         /// Target language
-        #[arg(long, value_parser = ["rust", "python", "typescript"])]
+        #[arg(long, value_parser = ["rust", "python", "typescript", "node"])]
         lang: String,
 
         /// Fixtures directory
@@ -117,6 +119,12 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
             // - e2e/typescript/tests/query_params.test.ts
             // - e2e/typescript/tests/path_params.test.ts
             // - etc.
+        }
+        "node" => {
+            // Generate test app first
+            node_app::generate_node_app(&fixtures, &output)?;
+            // Then generate tests
+            node_tests::generate_node_tests(&fixtures, &output)?;
         }
         _ => unreachable!("Invalid language"),
     }
