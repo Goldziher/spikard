@@ -14,6 +14,7 @@ tasks:
       - task: build:py
       - prek install
       - prek install --hook-type commit-msg
+      - pnpm install
 
   update:
     desc: "Update Python and Rust dependencies"
@@ -57,6 +58,33 @@ tasks:
     cmds:
       - cargo fmt --all --check
 
+  node:install:
+    desc: "Install Node.js dependencies with pnpm"
+    cmds:
+      - pnpm install
+
+  node:lint:
+    desc: "Lint TypeScript code with biome and oxlint"
+    cmds:
+      - pnpm biome check packages/node/src crates/spikard-node/src e2e/node --log-level=warn
+      - pnpm oxlint packages/node/src crates/spikard-node/src e2e/node
+
+  node:format:
+    desc: "Format TypeScript code with biome"
+    cmds:
+      - pnpm biome format --write packages/node/src crates/spikard-node/src e2e/node
+
+  node:format:check:
+    desc: "Check TypeScript formatting without modifying files"
+    cmds:
+      - pnpm biome format packages/node/src crates/spikard-node/src e2e/node
+
+  node:test:
+    desc: "Run vitest unit tests in packages/node"
+    dir: packages/node
+    cmds:
+      - pnpm test
+
   build:rust:
     desc: "Build Rust workspace in release mode"
     cmds:
@@ -74,16 +102,18 @@ tasks:
       - task: test:python
 
   lint:
-    desc: "Lint Python code with ruff/prek and Rust code with clippy/fmt"
+    desc: "Lint Python code with ruff/prek, Rust code with clippy/fmt, and TypeScript with biome/oxlint"
     cmds:
       - task: clippy:rust
       - prek run --all-files
+      - task: node:lint
 
   fmt:
-    desc: "Format Python and Rust code"
+    desc: "Format Python, Rust, and TypeScript code"
     cmds:
       - task: fmt:rust
       - prek run ruff-format --all-files
+      - task: node:format
 
   check:
     desc: "Fast check of Python and Rust code"
@@ -172,12 +202,19 @@ tasks:
       - rm -rf e2e/typescript
       - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang typescript --output e2e/typescript
 
+  generate:tests:node:
+    desc: "Generate Node.js e2e test suite from fixtures (vitest)"
+    cmds:
+      - rm -rf e2e/node
+      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang node --output e2e/node
+
   generate:tests:
     desc: "Generate all e2e test suites from fixtures"
     cmds:
       - task: generate:tests:rust
       - task: generate:tests:python
       - task: generate:tests:typescript
+      - task: generate:tests:node
 
   clean:generated:
     desc: "Remove all generated e2e test infrastructure"
@@ -202,12 +239,21 @@ tasks:
     cmds:
       - pnpm test
 
+  test:e2e:node:
+    desc: "Run Node.js e2e tests (fixture-driven integration tests with vitest)"
+    dir: e2e/node
+    deps:
+      - build:node
+    cmds:
+      - pnpm test
+
   test:e2e:
     desc: "Run all e2e fixture-driven integration tests"
     cmds:
       - task: test:e2e:rust
       - task: test:e2e:python
       - task: test:e2e:typescript
+      - task: test:e2e:node
 
   build:js:
     desc: "Build all JavaScript/TypeScript packages (node, wasm)"

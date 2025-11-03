@@ -1,9 +1,22 @@
 {
-  "name": "spikard-workspace",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "build:node": "pnpm --filter @spikard/node build",
-    "build:wasm": "pnpm --filter @spikard/wasm build"
-  }
+	"name": "spikard-workspace",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Spikard HTTP framework - Multi-language workspace",
+	"scripts": {
+		"build": "task build",
+		"test": "task test",
+		"lint": "task lint",
+		"format": "task format"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.3.2",
+		"oxlint": "^1.25.0",
+		"typescript": "^5.9.3"
+	},
+	"engines": {
+		"node": ">=18",
+		"pnpm": ">=8"
+	},
+	"packageManager": "pnpm@10.20.0"
 }
