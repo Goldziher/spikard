@@ -16,11 +16,7 @@ pub struct TestResponse {
 impl TestResponse {
     /// Create a new response
     pub(crate) fn new(status: u16, headers: serde_json::Map<String, Value>, body: Vec<u8>) -> Self {
-        Self {
-            status,
-            headers,
-            body,
-        }
+        Self { status, headers, body }
     }
 
     /// Get the HTTP status code

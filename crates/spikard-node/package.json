@@ -11,8 +11,8 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^2.18.0",
-    "vitest": "^2.0.0"
+    "@napi-rs/cli": "^3.2.0",
+    "vitest": "^4.0.6"
   },
   "napi": {
     "name": "spikard-node",
