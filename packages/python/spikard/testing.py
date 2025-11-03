@@ -133,6 +133,7 @@ class TestClient:
         self,
         path: str,
         json: Any | None = None,
+        data: dict[str, Any] | None = None,
         files: dict[str, Any] | None = None,
         query_params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
@@ -143,6 +144,7 @@ class TestClient:
         Args:
             path: The path to request
             json: Optional JSON body
+            data: Optional form data for multipart/form-data (text fields)
             files: Optional files for multipart/form-data upload
                    Format: {"field": ("filename", bytes)}
                    or {"field": [("file1", bytes), ("file2", bytes)]}
@@ -159,7 +161,7 @@ class TestClient:
                 headers = {}
             cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
             headers["cookie"] = cookie_header
-        rust_response = await self._client.post(path, json, files, query_params, headers)
+        rust_response = await self._client.post(path, json, data, files, query_params, headers)
         return TestResponse(rust_response)
 
     async def put(
