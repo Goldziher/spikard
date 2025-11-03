@@ -133,16 +133,19 @@ impl TestClient {
     /// Args:
     ///     path: The path to request
     ///     json: Optional JSON body as a dict
+    ///     files: Optional files for multipart/form-data upload
+    ///     query_params: Optional query parameters
     ///     headers: Optional headers as a dict
     ///
     /// Returns:
     ///     TestResponse: The response from the server
-    #[pyo3(signature = (path, json=None, query_params=None, headers=None))]
+    #[pyo3(signature = (path, json=None, files=None, query_params=None, headers=None))]
     fn post<'py>(
         &self,
         py: Python<'py>,
         path: &str,
         json: Option<&Bound<'py, PyAny>>,
+        files: Option<&Bound<'py, PyDict>>,
         query_params: Option<&Bound<'py, PyDict>>,
         headers: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
@@ -155,19 +158,40 @@ impl TestClient {
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
 
+        // Extract files data for multipart
+        let files_data = extract_files(files)?;
+
         let server = Arc::clone(&self.server);
 
         let fut = async move {
             let full_path = build_full_path(&path, &query_params_vec);
             let mut request = server.post(&full_path);
 
-            // Check if this is a URL-encoded form request BEFORE encoding body
+            // Check if this is a multipart request (files provided)
+            let is_multipart = !files_data.is_empty();
+
+            // Check if this is a URL-encoded form request
             let is_form_encoded = headers_vec.iter().any(|(k, v)| {
                 k.eq_ignore_ascii_case("content-type") && v.contains("application/x-www-form-urlencoded")
             });
 
             // Add headers and body
-            if let Some(json_val) = json_value {
+            if is_multipart {
+                // Build multipart/form-data body
+                let boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
+                let multipart_body = build_multipart_body(&files_data, boundary);
+
+                // Set Content-Type with boundary
+                request = request.add_header(
+                    HeaderName::from_static("content-type"),
+                    HeaderValue::from_str(&format!("multipart/form-data; boundary={}", boundary)).map_err(|e| {
+                        PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header: {}", e))
+                    })?,
+                );
+
+                // Set body
+                request = request.bytes(bytes::Bytes::from(multipart_body));
+            } else if let Some(json_val) = json_value {
                 if is_form_encoded {
                     // For form-encoded requests, manually set Content-Type header and body bytes
                     if let serde_json::Value::Object(map) = &json_val {
@@ -596,4 +620,115 @@ fn json_value_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to serialize JSON: {}", e)))?;
     let result = json_module.call_method1("loads", (json_str,))?;
     Ok(result)
+}
+
+/// File data for multipart upload
+#[derive(Debug, Clone)]
+struct FileData {
+    field_name: String,
+    filename: String,
+    content: Vec<u8>,
+    content_type: Option<String>,
+}
+
+/// Extract files from Python dict
+/// Expects: {"field": ("filename", bytes), "field2": [("file1", bytes), ("file2", bytes)]}
+fn extract_files(files_dict: Option<&Bound<'_, PyDict>>) -> PyResult<Vec<FileData>> {
+    let Some(files) = files_dict else {
+        return Ok(Vec::new());
+    };
+
+    let mut result = Vec::new();
+
+    for (key, value) in files.iter() {
+        let field_name: String = key.extract()?;
+
+        // Check if value is a list (multiple files for same field)
+        if let Ok(list) = value.cast::<pyo3::types::PyList>() {
+            for item in list.iter() {
+                let file_data = extract_single_file(&field_name, &item)?;
+                result.push(file_data);
+            }
+        } else {
+            // Single file tuple
+            let file_data = extract_single_file(&field_name, &value)?;
+            result.push(file_data);
+        }
+    }
+
+    Ok(result)
+}
+
+/// Extract a single file from Python tuple (filename, bytes)
+fn extract_single_file(field_name: &str, tuple: &Bound<'_, PyAny>) -> PyResult<FileData> {
+    use pyo3::types::PyTuple;
+
+    let tuple = tuple
+        .cast::<PyTuple>()
+        .map_err(|_| PyErr::new::<pyo3::exceptions::PyTypeError, _>("File must be a tuple (filename, bytes)"))?;
+
+    if tuple.len() < 2 {
+        return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+            "File tuple must have at least 2 elements: (filename, bytes)",
+        ));
+    }
+
+    let filename: String = tuple.get_item(0)?.extract()?;
+    let content: Vec<u8> = tuple.get_item(1)?.extract()?;
+
+    // Optional content_type (3rd element if provided)
+    let content_type = if tuple.len() >= 3 {
+        tuple.get_item(2).ok().and_then(|v| v.extract().ok())
+    } else {
+        None
+    };
+
+    Ok(FileData {
+        field_name: field_name.to_string(),
+        filename,
+        content,
+        content_type,
+    })
+}
+
+/// Build multipart/form-data body
+fn build_multipart_body(files: &[FileData], boundary: &str) -> Vec<u8> {
+    let mut body = Vec::new();
+
+    for file in files {
+        // Boundary line
+        body.extend_from_slice(b"--");
+        body.extend_from_slice(boundary.as_bytes());
+        body.extend_from_slice(b"\r\n");
+
+        // Content-Disposition header
+        body.extend_from_slice(b"Content-Disposition: form-data; name=\"");
+        body.extend_from_slice(file.field_name.as_bytes());
+        body.extend_from_slice(b"\"; filename=\"");
+        body.extend_from_slice(file.filename.as_bytes());
+        body.extend_from_slice(b"\"\r\n");
+
+        // Content-Type header (if specified)
+        if let Some(ref content_type) = file.content_type {
+            body.extend_from_slice(b"Content-Type: ");
+            body.extend_from_slice(content_type.as_bytes());
+            body.extend_from_slice(b"\r\n");
+        }
+
+        // Empty line before content
+        body.extend_from_slice(b"\r\n");
+
+        // File content
+        body.extend_from_slice(&file.content);
+
+        // CRLF after content
+        body.extend_from_slice(b"\r\n");
+    }
+
+    // Final boundary
+    body.extend_from_slice(b"--");
+    body.extend_from_slice(boundary.as_bytes());
+    body.extend_from_slice(b"--\r\n");
+
+    body
 }
