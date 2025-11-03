@@ -4,7 +4,7 @@
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -244,7 +244,7 @@ fn generate_fixture_handler_and_app_node(fixture: &Fixture, handler_name: &str) 
         parameter_schema_str,
         file_params_str,
         handler_name,
-        handler_name
+        to_camel_case(handler_name) // Fix: use camelCase for function reference
     );
 
     Ok((handler_func, app_factory_code))

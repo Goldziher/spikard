@@ -97,8 +97,8 @@ describe("content_types", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Content-Length": "100",
 			"Content-Type": "application/json",
+			"Content-Length": "100",
 		};
 		const json = {"value":"short"};
 		const response = await client.post("/data", {headers, json});
