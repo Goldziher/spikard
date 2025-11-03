@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.2.6/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.3.2/schema.json",
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
@@ -27,7 +27,7 @@
 	},
 	"overrides": [
 		{
-			"includes": ["**/tests/**", "**/*.spec.ts", "**/*.test.ts"],
+			"includes": ["**/tests/**", "**/*.spec.ts", "**/*.test.ts", "e2e/**/*.ts"],
 			"linter": {
 				"rules": {
 					"suspicious": {
@@ -54,11 +54,31 @@
 			}
 		},
 		{
-			"includes": ["crates/spikard-node/index.js"],
+			"includes": ["crates/spikard-node/index.js", "packages/node/index.js"],
 			"linter": {
 				"rules": {
 					"suspicious": {
 						"noGlobalAssign": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["**/scripts/**/*.ts", "tools/**/*.ts"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noExplicitAny": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["packages/node/src/**/*.ts"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noExplicitAny": "off"
 					}
 				}
 			}

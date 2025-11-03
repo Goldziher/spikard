@@ -5,7 +5,7 @@
 // Native module is built into this package directory
 // @ts-expect-error - Native module will be available after build
 import { TestClient as NativeTestClient } from "../spikard.node";
-import type { SpikardApp, RouteMetadata } from "./index";
+import type { SpikardApp } from "./index";
 
 /**
  * HTTP response from test client
@@ -80,15 +80,8 @@ export class TestClient {
 	 * @param options - Request options
 	 * @returns Response promise
 	 */
-	async post(
-		path: string,
-		options?: { headers?: Record<string, string>; json?: any }
-	): Promise<TestResponse> {
-		return this.nativeClient.post(
-			path,
-			options?.headers || null,
-			options?.json || null
-		);
+	async post(path: string, options?: { headers?: Record<string, string>; json?: any }): Promise<TestResponse> {
+		return this.nativeClient.post(path, options?.headers || null, options?.json || null);
 	}
 
 	/**
@@ -98,15 +91,8 @@ export class TestClient {
 	 * @param options - Request options
 	 * @returns Response promise
 	 */
-	async put(
-		path: string,
-		options?: { headers?: Record<string, string>; json?: any }
-	): Promise<TestResponse> {
-		return this.nativeClient.put(
-			path,
-			options?.headers || null,
-			options?.json || null
-		);
+	async put(path: string, options?: { headers?: Record<string, string>; json?: any }): Promise<TestResponse> {
+		return this.nativeClient.put(path, options?.headers || null, options?.json || null);
 	}
 
 	/**
@@ -127,14 +113,7 @@ export class TestClient {
 	 * @param options - Request options
 	 * @returns Response promise
 	 */
-	async patch(
-		path: string,
-		options?: { headers?: Record<string, string>; json?: any }
-	): Promise<TestResponse> {
-		return this.nativeClient.patch(
-			path,
-			options?.headers || null,
-			options?.json || null
-		);
+	async patch(path: string, options?: { headers?: Record<string, string>; json?: any }): Promise<TestResponse> {
+		return this.nativeClient.patch(path, options?.headers || null, options?.json || null);
 	}
 }
