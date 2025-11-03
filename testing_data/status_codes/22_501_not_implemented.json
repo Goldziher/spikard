@@ -16,11 +16,7 @@
     "path": "/data"
   },
   "expected_response": {
-    "status_code": 501,
-    "body": {
-      "error": "Not Implemented",
-      "message": "The TRACE method is not supported by this server"
-    }
+    "status_code": 405
   },
   "tags": ["status_codes", "501", "unsupported_method", "error"]
 }

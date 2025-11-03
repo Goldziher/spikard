@@ -16,4 +16,5 @@ class Route:
     request_schema: dict[str, Any] | None
     response_schema: dict[str, Any] | None
     parameter_schema: dict[str, Any] | None = None
+    file_params: dict[str, Any] | None = None
     is_async: bool = False

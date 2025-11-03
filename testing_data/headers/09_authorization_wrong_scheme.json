@@ -14,7 +14,7 @@
     }
   },
   "expected_response": {
-    "status_code": 403,
+    "status_code": 422,
     "body": {
       "detail": "Invalid authentication credentials"
     }

@@ -133,10 +133,13 @@ async def test_24_array_with_holes() -> None:
     json_data = "items[0]=first&items[2]=third&items[5]=sixth"
     response = await client.post("/items", headers=headers, json=json_data)
 
-    assert response.status_code == 422
+    assert response.status_code == 200
     response_data = response.json()
-    # Validation should be done by framework, not handler
-    assert "errors" in response_data or "detail" in response_data
+    assert "items" in response_data
+    assert len(response_data["items"]) == 3
+    assert response_data["items"][0] == "first"
+    assert response_data["items"][1] == "third"
+    assert response_data["items"][2] == "sixth"
 
 
 async def test_21_scientific_notation_number() -> None:

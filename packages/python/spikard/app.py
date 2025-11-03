@@ -41,6 +41,7 @@ class Spikard:
         *,
         body_schema: dict[str, Any] | None = None,
         parameter_schema: dict[str, Any] | None = None,
+        file_params: dict[str, Any] | None = None,
     ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Internal method to register a route.
 
@@ -49,6 +50,7 @@ class Spikard:
             path: URL path pattern
             body_schema: Optional explicit body schema (takes precedence over type hint extraction)
             parameter_schema: Optional explicit parameter schema (takes precedence over type hint extraction)
+            file_params: Optional file parameter schema for multipart file validation
 
         Returns:
             Decorator function
@@ -106,6 +108,7 @@ class Spikard:
                 request_schema=request_schema,
                 response_schema=response_schema,
                 parameter_schema=extracted_parameter_schema,
+                file_params=file_params,
                 is_async=inspect.iscoroutinefunction(func),
             )
 

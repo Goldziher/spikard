@@ -11,9 +11,9 @@ async def test_options_cors_preflight_request() -> None:
     client = TestClient(app)
 
     headers = {
-        "Access-Control-Request-Method": "POST",
-        "Origin": "https://example.com",
         "Access-Control-Request-Headers": "Content-Type",
+        "Origin": "https://example.com",
+        "Access-Control-Request-Method": "POST",
     }
     response = await client.options("/items/", headers=headers)
 
@@ -121,7 +121,6 @@ async def test_head_get_metadata_without_body() -> None:
     response = await client.head("/items/1")
 
     assert response.status_code == 200
-    response.json()
 
 
 async def test_delete_with_response_body() -> None:

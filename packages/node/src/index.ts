@@ -4,8 +4,7 @@
  * Type-safe routing, validation, and testing powered by Rust core.
  */
 
-// @ts-expect-error - Native module will be available after build
-export { process } from "../spikard.node";
+export { process } from "..";
 export { TestClient, type TestResponse } from "./testing";
 
 /**
