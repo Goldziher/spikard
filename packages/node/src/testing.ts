@@ -116,4 +116,26 @@ export class TestClient {
 	async patch(path: string, options?: { headers?: Record<string, string>; json?: any }): Promise<TestResponse> {
 		return this.nativeClient.patch(path, options?.headers || null, options?.json || null);
 	}
+
+	/**
+	 * Make a HEAD request
+	 *
+	 * @param path - Request path
+	 * @param headers - Optional request headers
+	 * @returns Response promise
+	 */
+	async head(path: string, headers?: Record<string, string>): Promise<TestResponse> {
+		return this.nativeClient.head(path, headers || null);
+	}
+
+	/**
+	 * Make an OPTIONS request
+	 *
+	 * @param path - Request path
+	 * @param options - Request options
+	 * @returns Response promise
+	 */
+	async options(path: string, options?: { headers?: Record<string, string> }): Promise<TestResponse> {
+		return this.nativeClient.options(path, options?.headers || null);
+	}
 }

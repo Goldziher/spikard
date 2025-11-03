@@ -3,7 +3,7 @@
 //! Generates pytest test suites from fixtures for e2e testing.
 
 use anyhow::{Context, Result};
-use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
+use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -206,7 +206,13 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                     "b\"\"".to_string()
                 };
 
-                let file_tuple = format!("(\"{}\", {})", filename, file_content);
+                // Include content_type if specified (TestClient supports 3-tuple format)
+                let file_tuple = if let Some(ref content_type) = file.content_type {
+                    format!("(\"{}\", {}, \"{}\")", filename, file_content, content_type)
+                } else {
+                    format!("(\"{}\", {})", filename, file_content)
+                };
+
                 files_by_name.entry(field_name).or_default().push(file_tuple);
             }
 
@@ -245,6 +251,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     ));
 
     let status_code = fixture.expected_response.status_code;
+    let method = fixture.request.method.to_uppercase();
 
     // Different assertion strategies based on what we're testing:
     // - 200 success: Verify echoed parameters match sent values
@@ -253,12 +260,17 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
 
     if status_code == 200 {
         // Success case - verify response matches expected
-        code.push_str("    response_data = response.json()\n");
+        // Skip parsing JSON for HEAD requests without expected body (HEAD has no response body)
+        let should_parse_json = method != "HEAD" || fixture.expected_response.body.is_some();
+
+        if should_parse_json {
+            code.push_str("    response_data = response.json()\n");
+        }
 
         // If fixture has expected response body, assert against that (handles type conversion)
         if let Some(ref expected_body) = fixture.expected_response.body {
             generate_body_assertions(&mut code, expected_body, "response_data");
-        } else {
+        } else if should_parse_json {
             // Fallback: verify echoed parameters match what we sent
             // (This path is for fixtures without expected_response.body)
 
@@ -306,14 +318,15 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     // Legacy validation_errors field (deprecated in favor of status code checking)
     if let Some(ref errors) = fixture.expected_response.validation_errors {
         code.push_str("    response_data = response.json()\n");
-        code.push_str("    assert \"detail\" in response_data\n");
+        // RFC 9457 format uses "errors" array, not "detail"
+        code.push_str("    assert \"errors\" in response_data\n");
         code.push_str(&format!(
-            "    assert len(response_data[\"detail\"]) == {}\n",
+            "    assert len(response_data[\"errors\"]) == {}\n",
             errors.len()
         ));
 
         for (idx, error) in errors.iter().enumerate() {
-            code.push_str(&format!("    error_{} = response_data[\"detail\"][{}]\n", idx, idx));
+            code.push_str(&format!("    error_{} = response_data[\"errors\"][{}]\n", idx, idx));
             code.push_str(&format!(
                 "    assert error_{}[\"type\"] == \"{}\"\n",
                 idx, error.error_type
