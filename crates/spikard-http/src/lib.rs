@@ -15,6 +15,7 @@ pub mod query_parser;
 pub mod response;
 pub mod router;
 pub mod server;
+pub mod type_hints;
 pub mod validation;
 
 pub use handler::PythonHandler;
@@ -92,6 +93,8 @@ pub struct RouteMetadata {
     pub request_schema: Option<Value>,
     pub response_schema: Option<Value>,
     pub parameter_schema: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub file_params: Option<Value>, // File parameter schema for validation
     pub is_async: bool,
     pub cors: Option<CorsConfig>,
 }

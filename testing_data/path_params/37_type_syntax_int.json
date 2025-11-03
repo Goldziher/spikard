@@ -1,6 +1,6 @@
 {
   "name": "Path parameter with type syntax - integer",
-  "description": "Tests path parameter with :int type syntax auto-generates correct schema",
+  "description": "Tests path parameter with :int type syntax auto-generates integer type",
   "category": "path_params",
   "source": {
     "framework": "spikard",
@@ -9,14 +9,7 @@
   },
   "handler": {
     "route": "/type-syntax/users/{user_id:int}",
-    "method": "GET",
-    "parameters": {
-      "path": {
-        "user_id": {
-          "type": "string"
-        }
-      }
-    }
+    "method": "GET"
   },
   "request": {
     "method": "GET",
@@ -28,5 +21,5 @@
       "user_id": "42"
     }
   },
-  "notes": "Type syntax :int auto-generates {\"type\": \"integer\"} schema"
+  "notes": "Type syntax :int automatically generates {\"type\": \"integer\"} schema in Spikard core"
 }

@@ -3,6 +3,7 @@
 use crate::parameters::ParameterValidator;
 use crate::validation::SchemaValidator;
 use crate::{Method, RouteMetadata};
+use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -18,11 +19,16 @@ pub struct Route {
     pub request_validator: Option<SchemaValidator>,
     pub response_validator: Option<SchemaValidator>,
     pub parameter_validator: Option<ParameterValidator>,
+    pub file_params: Option<Value>, // File parameter schema for validation
     pub is_async: bool,
 }
 
 impl Route {
     /// Create a route from metadata
+    ///
+    /// Auto-generates parameter schema from type hints in the path if no explicit schema provided.
+    /// Type hints like `/items/{id:uuid}` generate appropriate JSON Schema validation.
+    /// Explicit parameter_schema overrides auto-generated schemas.
     pub fn from_metadata(metadata: RouteMetadata) -> Result<Self, String> {
         let method = metadata.method.parse()?;
 
@@ -30,7 +36,30 @@ impl Route {
 
         let response_validator = metadata.response_schema.map(SchemaValidator::new).transpose()?;
 
-        let parameter_validator = metadata.parameter_schema.map(ParameterValidator::new).transpose()?;
+        // Auto-generate parameter schema from type hints if not explicitly provided
+        let final_parameter_schema = match (
+            crate::type_hints::auto_generate_parameter_schema(&metadata.path),
+            metadata.parameter_schema,
+        ) {
+            (Some(auto_schema), Some(explicit_schema)) => {
+                // Both exist - merge them (explicit overrides auto)
+                Some(crate::type_hints::merge_parameter_schemas(auto_schema, explicit_schema))
+            }
+            (Some(auto_schema), None) => {
+                // Only auto-generated
+                Some(auto_schema)
+            }
+            (None, Some(explicit_schema)) => {
+                // Only explicit
+                Some(explicit_schema)
+            }
+            (None, None) => {
+                // No schema at all
+                None
+            }
+        };
+
+        let parameter_validator = final_parameter_schema.map(ParameterValidator::new).transpose()?;
 
         Ok(Self {
             method,
@@ -39,6 +68,7 @@ impl Route {
             request_validator,
             response_validator,
             parameter_validator,
+            file_params: metadata.file_params,
             is_async: metadata.is_async,
         })
     }
@@ -99,6 +129,7 @@ mod tests {
             request_schema: None,
             response_schema: None,
             parameter_schema: None,
+            file_params: None,
             is_async: true,
             cors: None,
         };
@@ -126,6 +157,7 @@ mod tests {
             })),
             response_schema: None,
             parameter_schema: None,
+            file_params: None,
             is_async: true,
             cors: None,
         };

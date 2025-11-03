@@ -12,7 +12,7 @@
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -226,19 +226,31 @@ fn generate_fixture_handler_and_app_python(
         "None".to_string()
     };
 
+    // Extract file_params for registration
+    let file_params_str = if let Some(handler) = &fixture.handler {
+        if let Some(params) = &handler.parameters {
+            extract_file_params(params).unwrap_or_else(|| "None".to_string())
+        } else {
+            "None".to_string()
+        }
+    } else {
+        "None".to_string()
+    };
+
     let app_factory_code = format!(
         r#"def {}() -> Spikard:
     """App factory for fixture: {}"""
     app = Spikard()
     # Register handler with this app instance
-    app.register_route("{}", "{}", body_schema={}, parameter_schema={})({})
+    app.register_route("{}", "{}", body_schema={}, parameter_schema={}, file_params={})({})
     return app"#,
         app_factory_name,
         fixture.name,
         method.to_uppercase(),
-        route_path,
+        route_path, // Pass route with type hints - Spikard will parse them
         body_schema_str,
         parameter_schema_str,
+        file_params_str,
         handler_name
     );
 
@@ -791,6 +803,17 @@ fn json_type_to_python(schema: &Value) -> Result<String> {
     Ok(type_str.to_string())
 }
 
+/// Extract file parameters from handler.parameters.files
+fn extract_file_params(params: &Value) -> Option<String> {
+    if let Some(obj) = params.as_object() {
+        if let Some(files) = obj.get("files") {
+            let files_json = serde_json::to_string(files).ok()?;
+            return Some(json_to_python_dict(&files_json));
+        }
+    }
+    None
+}
+
 /// Build parameter schema with source fields for each parameter
 fn build_parameter_schema_with_sources(params: &Value) -> Result<String> {
     use serde_json::json;
@@ -799,6 +822,9 @@ fn build_parameter_schema_with_sources(params: &Value) -> Result<String> {
     let mut required = Vec::new();
 
     if let Some(obj) = params.as_object() {
+        // Skip file parameters - they're handled separately by file validation
+        // Only process path, query, header, and cookie parameters
+
         // Process path parameters
         if let Some(path_params) = obj.get("path").and_then(|v| v.as_object()) {
             for (name, param_schema) in path_params {

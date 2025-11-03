@@ -212,6 +212,7 @@ pub const CONTENT_TYPE_PROBLEM_JSON: &str = "application/problem+json; charset=u
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::validation::{ValidationError, ValidationErrorDetail};
     use serde_json::json;
 
     #[test]
