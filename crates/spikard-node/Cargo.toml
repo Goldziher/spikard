@@ -26,6 +26,10 @@ tower = "0.5"
 bytes = "1.10"
 url = "2.5"
 http-body-util = "0.1"
+cookie = "0.18"
+serde_qs = "0.15"
+rustc-hash = "2.1"
+urlencoding = "2.1"
 
 [target.'cfg(all(any(windows, unix), target_arch = "x86_64", not(target_env = "musl")))'.dependencies]
 mimalloc-rust = "0.2"

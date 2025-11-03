@@ -20,8 +20,8 @@ tasks:
     desc: "Update Python and Rust dependencies"
     cmds:
       - uv run uv-bump
-      - cargo upgrade --workspace --incompatible
-      - cargo update --workspace
+      - cargo upgrade --incompatible
+      - cargo update
       - uv sync --all-extras --all-groups --upgrade
       - task: build:py
       - prek autoupdate
