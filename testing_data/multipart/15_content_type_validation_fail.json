@@ -9,6 +9,14 @@
   "handler": {
     "route": "/files/images-only",
     "method": "POST",
+    "parameters": {
+      "files": {
+        "file": {
+          "required": true,
+          "content_type": ["image/jpeg", "image/png", "image/gif"]
+        }
+      }
+    },
     "body_schema": {
       "type": "object",
       "properties": {
@@ -34,9 +42,13 @@
   },
   "expected_response": {
     "status_code": 422,
-    "body": {
-      "detail": "Only image files are allowed (image/jpeg, image/png, image/gif)"
-    }
+    "validation_errors": [
+      {
+        "type": "validation_error",
+        "loc": ["files", "file"],
+        "msg": "Invalid content type 'application/x-sh'. Allowed types: image/jpeg, image/png, image/gif"
+      }
+    ]
   },
   "notes": "Content-Type validation rejects non-image files"
 }

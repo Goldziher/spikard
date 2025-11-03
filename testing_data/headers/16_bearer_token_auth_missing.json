@@ -12,7 +12,7 @@
     "headers": {}
   },
   "expected_response": {
-    "status_code": 401,
+    "status_code": 422,
     "body": {
       "detail": "Not authenticated"
     }

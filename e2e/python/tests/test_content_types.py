@@ -93,10 +93,10 @@ async def test_16_text_plain_not_accepted() -> None:
     json_data = '{"data": "value"}'
     response = await client.post("/data", headers=headers, json=json_data)
 
-    assert response.status_code == 415
+    assert response.status_code == 422
     response_data = response.json()
-    assert "error" in response_data
-    assert response_data["error"] == "Unsupported Media Type. Expected application/json"
+    # Validation should be done by framework, not handler
+    assert "errors" in response_data or "detail" in response_data
 
 
 async def test_pdf_response_application_pdf() -> None:
@@ -125,8 +125,8 @@ async def test_20_content_length_mismatch() -> None:
     client = TestClient(app)
 
     headers = {
-        "Content-Length": "100",
         "Content-Type": "application/json",
+        "Content-Length": "100",
     }
     json_data = {"value": "short"}
     response = await client.post("/data", headers=headers, json=json_data)

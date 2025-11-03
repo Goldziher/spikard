@@ -3,8 +3,7 @@
  */
 
 // Native module is built into this package directory
-// @ts-expect-error - Native module will be available after build
-import { TestClient as NativeTestClient } from "../spikard.node";
+import { TestClient as NativeTestClient } from "..";
 import type { SpikardApp } from "./index";
 
 /**
