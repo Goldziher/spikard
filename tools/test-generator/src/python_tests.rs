@@ -3,7 +3,7 @@
 //! Generates pytest test suites from fixtures for e2e testing.
 
 use anyhow::{Context, Result};
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -169,6 +169,12 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     if let Some(ref form_data) = fixture.request.form_data {
         code.push_str(&format!("    json_data = {}\n", hashmap_to_python(form_data)));
         request_kwargs.push("json=json_data");
+    }
+
+    // Add form data (for multipart form data without files)
+    if let Some(ref data) = fixture.request.data {
+        code.push_str(&format!("    data = {}\n", hashmap_to_python(data)));
+        request_kwargs.push("data=data");
     }
 
     // Add files (for multipart form data)
