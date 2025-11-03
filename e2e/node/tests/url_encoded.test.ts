@@ -16,8 +16,8 @@ describe("url_encoded", () => {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
 		const json = {
-			"password": "secret",
 			"username": "johndoe",
+			"password": "secret",
 		};
 		const response = await client.post("/login/", {headers, json});
 
@@ -198,8 +198,8 @@ describe("url_encoded", () => {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
 		const json = {
-			"description": "Test & Development",
 			"name": "John Doe",
+			"description": "Test & Development",
 		};
 		const response = await client.post("/form/", {headers, json});
 
