@@ -219,8 +219,8 @@ describe("url_encoded", () => {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
 		const json = {
-			"subscribe": "true",
 			"username": "johndoe",
+			"subscribe": "true",
 		};
 		const response = await client.post("/form/", {headers, json});
 
@@ -240,8 +240,8 @@ describe("url_encoded", () => {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
 		const json = {
-			"username": "johndoe",
 			"description": "",
+			"username": "johndoe",
 		};
 		const response = await client.post("/form/", {headers, json});
 
@@ -261,9 +261,9 @@ describe("url_encoded", () => {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
 		const json = {
-			"scope": "",
 			"password": "secret",
 			"grant_type": "password",
+			"scope": "",
 			"username": "johndoe",
 		};
 		const response = await client.post("/token", {headers, json});
@@ -300,8 +300,8 @@ describe("url_encoded", () => {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
 		const json = {
-			"username": "johndoe",
 			"password": "secret",
+			"username": "johndoe",
 		};
 		const response = await client.post("/register/", {headers, json});
 

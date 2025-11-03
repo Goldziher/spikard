@@ -9,7 +9,7 @@ export declare class TestClient {
    * * `routes_json` - JSON array of route metadata objects
    * * `handlers_map` - JavaScript object mapping handler names to handler functions
    */
-  static new(routesJson: string, handlersMap: object): TestClient
+  constructor(routesJson: string, handlersMap: object)
   /** Make a GET request */
   get(path: string, headers?: any | undefined | null): Promise<TestResponse>
   /** Make a POST request */
