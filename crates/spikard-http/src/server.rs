@@ -356,9 +356,11 @@ impl Server {
 
             // Register the combined router for this path
             if let Some(router) = combined_router {
-                // FastAPI and Axum both use {param} syntax for path parameters
-                // No conversion needed - just register the route as-is
-                app = app.route(&path, router);
+                // Strip type hints from path for Axum compatibility
+                // /items/{id:uuid} -> /items/{id}
+                // /files/{path:path} -> /files/{*path}
+                let axum_path = crate::type_hints::strip_type_hints(&path);
+                app = app.route(&axum_path, router);
             }
         }
 

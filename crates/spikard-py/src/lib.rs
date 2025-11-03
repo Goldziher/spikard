@@ -83,6 +83,16 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
         })?)
     };
 
+    let file_params = route.getattr("file_params")?;
+    let file_params_value = if file_params.is_none() {
+        None
+    } else {
+        let json_str: String = py.import("json")?.call_method1("dumps", (file_params,))?.extract()?;
+        Some(serde_json::from_str(&json_str).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to parse file params: {}", e))
+        })?)
+    };
+
     Ok(RouteMetadata {
         method,
         path,
@@ -90,6 +100,7 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
         request_schema: request_schema_value,
         response_schema: response_schema_value,
         parameter_schema: parameter_schema_value,
+        file_params: file_params_value,
         is_async,
         cors: None,
     })
@@ -125,49 +136,33 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
     );
 
     // Convert to Route + Py<PyAny> pairs
+    // Use Route::from_metadata() to enable type hint parsing and auto-generation
     let routes: Vec<_> = routes_with_handlers
         .into_iter()
-        .map(|r| {
-            let has_parameter_validator = r.metadata.parameter_schema.is_some();
+        .filter_map(|r| {
+            let has_explicit_parameter_schema = r.metadata.parameter_schema.is_some();
             eprintln!(
-                "[UNCONDITIONAL DEBUG] Route: {} {} has_parameter_schema={}",
-                r.metadata.method, r.metadata.path, has_parameter_validator
+                "[UNCONDITIONAL DEBUG] Route: {} {} has_explicit_parameter_schema={}",
+                r.metadata.method, r.metadata.path, has_explicit_parameter_schema
             );
 
-            let parameter_validator = r.metadata.parameter_schema.and_then(|schema| {
-                eprintln!(
-                    "[UNCONDITIONAL DEBUG] Creating ParameterValidator for {} {}",
-                    r.metadata.method, r.metadata.path
-                );
-                eprintln!("[UNCONDITIONAL DEBUG] Schema: {:?}", schema);
-                match spikard_http::ParameterValidator::new(schema.clone()) {
-                    Ok(v) => {
-                        eprintln!("[UNCONDITIONAL DEBUG] ParameterValidator created successfully");
-                        Some(v)
-                    }
-                    Err(e) => {
-                        eprintln!("[UNCONDITIONAL DEBUG] Failed to create ParameterValidator: {}", e);
-                        None
-                    }
+            // Use Route::from_metadata() which handles type hint parsing and auto-generation
+            match spikard_http::Route::from_metadata(r.metadata) {
+                Ok(route) => {
+                    let has_parameter_validator = route.parameter_validator.is_some();
+                    eprintln!(
+                        "[UNCONDITIONAL DEBUG] Route after from_metadata: {} {} has_parameter_validator={}",
+                        route.method.as_str(),
+                        route.path,
+                        has_parameter_validator
+                    );
+                    Some((route, r.handler))
                 }
-            });
-
-            let route = spikard_http::Route {
-                method: r.metadata.method.parse().unwrap_or(spikard_http::Method::Get),
-                path: r.metadata.path,
-                handler_name: r.metadata.handler_name,
-                request_validator: r
-                    .metadata
-                    .request_schema
-                    .and_then(|schema| spikard_http::SchemaValidator::new(schema).ok()),
-                response_validator: r
-                    .metadata
-                    .response_schema
-                    .and_then(|schema| spikard_http::SchemaValidator::new(schema).ok()),
-                parameter_validator,
-                is_async: r.metadata.is_async,
-            };
-            (route, r.handler)
+                Err(e) => {
+                    eprintln!("[UNCONDITIONAL DEBUG] Failed to create route: {}", e);
+                    None
+                }
+            }
         })
         .collect();
 

@@ -1,6 +1,6 @@
 {
   "name": "Path parameter type syntax - invalid UUID",
-  "description": "Tests that :uuid type syntax properly validates and rejects invalid UUIDs",
+  "description": "Tests that :uuid type syntax auto-generates validation that rejects invalid UUIDs",
   "category": "path_params",
   "source": {
     "framework": "spikard",
@@ -9,14 +9,7 @@
   },
   "handler": {
     "route": "/type-syntax/items/{id:uuid}",
-    "method": "GET",
-    "parameters": {
-      "path": {
-        "id": {
-          "type": "string"
-        }
-      }
-    }
+    "method": "GET"
   },
   "request": {
     "method": "GET",
@@ -42,5 +35,5 @@
       ]
     }
   },
-  "notes": "Type syntax :uuid auto-generates UUID validation that rejects invalid values"
+  "notes": "Type syntax :uuid automatically generates UUID validation in Spikard core that rejects invalid values"
 }
