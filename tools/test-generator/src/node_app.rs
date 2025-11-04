@@ -2,12 +2,15 @@
 //!
 //! Generates a Spikard Node.js/TypeScript application from fixtures for e2e testing.
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, ensure};
 use serde_json::Value;
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
+use std::process::Command;
+
+const MAX_SAFE_INTEGER: i128 = 9007199254740991; // 2^53 - 1
 
 /// Generate Node.js test application from fixtures
 pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
@@ -54,6 +57,8 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     println!("  ✓ Generated package.json");
     println!("  ✓ Generated tsconfig.json");
     println!("  ✓ Generated vitest.config.ts");
+
+    format_generated_ts(output_dir)?;
     Ok(())
 }
 
@@ -101,6 +106,20 @@ fn generate_tsconfig() -> String {
     .to_string()
 }
 
+fn format_generated_ts(dir: &Path) -> Result<()> {
+    let status = Command::new("pnpm")
+        .current_dir(dir)
+        .args(["biome", "check", "--write", "."])
+        .status()
+        .context("Failed to run `pnpm biome check --write .` in e2e/node app")?;
+    ensure!(
+        status.success(),
+        "`pnpm biome check --write .` exited with non-zero status"
+    );
+
+    Ok(())
+}
+
 /// Generate vitest.config.ts for test configuration
 fn generate_vitest_config() -> String {
     r#"import { defineConfig } from "vitest/config";
@@ -126,7 +145,7 @@ fn generate_app_file_per_fixture(fixtures_by_category: &HashMap<String, Vec<Fixt
     code.push_str(" */\n\n");
 
     // Imports
-    code.push_str("import type { SpikardApp, RouteMetadata } from \"@spikard/node\";\n\n");
+    code.push_str("import type { RouteMetadata, SpikardApp } from \"@spikard/node\";\n\n");
 
     // Track handler names for uniqueness
     let mut handler_names = HashMap::new();
@@ -272,6 +291,7 @@ fn generate_handler_function(fixture: &Fixture, route: &str, method: &str, handl
     // Get expected response status code and body
     let expected_status = fixture.expected_response.status_code;
     let expected_body = fixture.expected_response.body.as_ref();
+    let expected_body_is_empty = expected_body.is_some_and(is_value_effectively_empty);
 
     // Generate handler function
     let mut code = String::new();
@@ -286,25 +306,26 @@ fn generate_handler_function(fixture: &Fixture, route: &str, method: &str, handl
         to_camel_case(handler_name)
     ));
     code.push_str("\tconst request = JSON.parse(requestJson);\n");
-    code.push_str("\tconst body = request.body ?? null;\n");
-    code.push_str("\tconst params = request.params ?? {};\n");
-    code.push_str("\tconst queryParams = request.query ?? {};\n");
-    code.push_str("\tconst headerParams = request.headers ?? {};\n");
-    code.push_str("\tconst cookieParams = request.cookies ?? {};\n");
+
+    let uses_body = has_body && ((expected_status == 200 && expected_body.is_none()) || expected_status == 422);
+    let body_var = if uses_body { "body" } else { "_body" };
+    code.push_str(&format!("\tconst {} = request.body ?? null;\n", body_var));
+
+    let uses_params =
+        !params.is_empty() && ((expected_status == 200 && expected_body.is_none()) || expected_status == 422);
+    let params_var = if uses_params { "params" } else { "_params" };
+    code.push_str(&format!("\tconst {} = request.params ?? {{}};\n", params_var));
     code.push_str("\tconst response: any = {};\n");
     code.push_str(&format!("\tresponse.status = {};\n", expected_status));
 
-    for (param_name, _param_type, _is_required) in &params {
-        code.push_str(&format!("\tconst {} = params[\"{}\"]; \n", param_name, param_name));
-    }
-
     // Function body - handle different response scenarios
     let should_echo_params = (expected_status == 200 && expected_body.is_none()) || expected_status == 422;
-    let should_return_expected = expected_body.is_some() && expected_status != 422;
+    let should_return_expected = expected_body.is_some() && !expected_body_is_empty && expected_status != 422;
 
     if should_return_expected {
         if let Some(body_json) = expected_body {
-            let json_str = serde_json::to_string(body_json)?;
+            let converted = convert_large_numbers_to_strings(body_json);
+            let json_str = serde_json::to_string(&converted)?;
             code.push_str(&format!("\tconst responseBody = {};\n", json_str));
             code.push_str("\tresponse.body = responseBody;\n");
         } else {
@@ -312,28 +333,40 @@ fn generate_handler_function(fixture: &Fixture, route: &str, method: &str, handl
         }
     } else if should_echo_params {
         code.push_str("\tconst result: Record<string, any> = {};\n");
+        for binding in &params {
+            let param_access = format_property_access(params_var, &binding.key);
+            code.push_str(&format!("\tconst {} = {};\n", binding.var_name, param_access));
+        }
         if has_body {
-            code.push_str("\tif (body !== null && body !== undefined) {\n");
-            code.push_str("\t\tif (typeof body === \"object\") {\n");
-            code.push_str("\t\t\tObject.assign(result, body);\n");
+            code.push_str(&format!(
+                "\tif ({} !== null && {} !== undefined) {{\n",
+                body_var, body_var
+            ));
+            code.push_str(&format!("\t\tif (typeof {} === \"object\") {{\n", body_var));
+            code.push_str(&format!("\t\t\tObject.assign(result, {});\n", body_var));
             code.push_str("\t\t} else {\n");
-            code.push_str("\t\t\tresult[\"body\"] = body;\n");
+            code.push_str(&format!(
+                "\t\t\t{} = {};\n",
+                format_property_access("result", "body"),
+                body_var
+            ));
             code.push_str("\t\t}\n");
             code.push_str("\t}\n");
         }
 
-        for (param_name, param_type, _) in &params {
+        for binding in &params {
             code.push_str(&format!(
                 "\tif ({} !== null && {} !== undefined) {{\n",
-                param_name, param_name
+                binding.var_name, binding.var_name
             ));
-            if param_type.contains("Date") {
+            let result_access = format_property_access("result", &binding.key);
+            if binding.ty.contains("Date") {
                 code.push_str(&format!(
-                    "\t\tresult[\"{}\"] = {}.toISOString();\n",
-                    param_name, param_name
+                    "\t\t{} = {}.toISOString();\n",
+                    result_access, binding.var_name
                 ));
             } else {
-                code.push_str(&format!("\t\tresult[\"{}\"] = {};\n", param_name, param_name));
+                code.push_str(&format!("\t\t{} = {};\n", result_access, binding.var_name));
             }
             code.push_str("\t}\n");
         }
@@ -350,7 +383,13 @@ fn generate_handler_function(fixture: &Fixture, route: &str, method: &str, handl
 }
 
 /// Extract parameters from parameter schema (TypeScript types)
-fn extract_parameters_ts(schema: &Value) -> Result<Vec<(String, String, bool)>> {
+struct ParameterBinding {
+    var_name: String,
+    key: String,
+    ty: String,
+}
+
+fn extract_parameters_ts(schema: &Value) -> Result<Vec<ParameterBinding>> {
     let mut params = Vec::new();
 
     if let Some(obj) = schema.as_object() {
@@ -358,7 +397,11 @@ fn extract_parameters_ts(schema: &Value) -> Result<Vec<(String, String, bool)>> 
         if let Some(path_params) = obj.get("path").and_then(|v| v.as_object()) {
             for (name, param_schema) in path_params {
                 let param_type = json_type_to_typescript(param_schema)?;
-                params.push((to_camel_case(name), param_type, true));
+                params.push(ParameterBinding {
+                    var_name: to_camel_case(name),
+                    key: name.clone(),
+                    ty: param_type,
+                });
             }
         }
 
@@ -366,9 +409,11 @@ fn extract_parameters_ts(schema: &Value) -> Result<Vec<(String, String, bool)>> 
         if let Some(query_params) = obj.get("query").and_then(|v| v.as_object()) {
             for (name, param_schema) in query_params {
                 let param_type = json_type_to_typescript(param_schema)?;
-                let is_optional = param_schema.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
-                let is_required = !is_optional;
-                params.push((to_camel_case(name), param_type, is_required));
+                params.push(ParameterBinding {
+                    var_name: to_camel_case(name),
+                    key: name.clone(),
+                    ty: param_type,
+                });
             }
         }
 
@@ -376,9 +421,11 @@ fn extract_parameters_ts(schema: &Value) -> Result<Vec<(String, String, bool)>> 
         if let Some(headers) = obj.get("headers").and_then(|v| v.as_object()) {
             for (name, param_schema) in headers {
                 let param_type = json_type_to_typescript(param_schema)?;
-                let is_optional = param_schema.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
-                let is_required = !is_optional;
-                params.push((to_camel_case(name), param_type, is_required));
+                params.push(ParameterBinding {
+                    var_name: to_camel_case(name),
+                    key: name.clone(),
+                    ty: param_type,
+                });
             }
         }
 
@@ -386,9 +433,11 @@ fn extract_parameters_ts(schema: &Value) -> Result<Vec<(String, String, bool)>> 
         if let Some(cookies) = obj.get("cookies").and_then(|v| v.as_object()) {
             for (name, param_schema) in cookies {
                 let param_type = json_type_to_typescript(param_schema)?;
-                let is_optional = param_schema.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
-                let is_required = !is_optional;
-                params.push((to_camel_case(name), param_type, is_required));
+                params.push(ParameterBinding {
+                    var_name: to_camel_case(name),
+                    key: name.clone(),
+                    ty: param_type,
+                });
             }
         }
     }
@@ -431,8 +480,73 @@ fn json_type_to_typescript(schema: &Value) -> Result<String> {
 
 /// Build parameter schema JSON string
 fn build_parameter_schema_json(params: &Value) -> Result<String> {
-    // Just serialize the parameters directly
-    serde_json::to_string(params).context("Failed to serialize parameter schema")
+    use serde_json::{Map, Value};
+
+    let mut properties = Map::new();
+    let mut required: Vec<Value> = Vec::new();
+
+    if let Some(obj) = params.as_object() {
+        for (section_key, source) in [
+            ("path", "path"),
+            ("query", "query"),
+            ("headers", "header"),
+            ("cookies", "cookie"),
+        ] {
+            if let Some(section) = obj.get(section_key).and_then(|v| v.as_object()) {
+                for (name, schema_value) in section {
+                    let mut schema_obj = match schema_value {
+                        Value::Object(map) => map.clone(),
+                        Value::String(s) => {
+                            let mut map = Map::new();
+                            map.insert("type".to_string(), Value::String(s.clone()));
+                            map
+                        }
+                        Value::Bool(_) | Value::Number(_) | Value::Array(_) | Value::Null => {
+                            let mut map = Map::new();
+                            map.insert("type".to_string(), schema_value.clone());
+                            map
+                        }
+                    };
+
+                    schema_obj
+                        .entry("type".to_string())
+                        .or_insert_with(|| Value::String("string".to_string()));
+                    schema_obj.insert("source".to_string(), Value::String(source.to_string()));
+
+                    let is_optional = schema_obj.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
+                    let is_required_flag = schema_obj
+                        .get("required")
+                        .and_then(|v| v.as_bool())
+                        .unwrap_or(!is_optional);
+
+                    schema_obj.remove("optional");
+                    schema_obj.remove("required");
+
+                    properties.insert(name.clone(), Value::Object(schema_obj));
+
+                    let should_require = if source == "path" {
+                        true
+                    } else {
+                        is_required_flag && !is_optional
+                    };
+
+                    if should_require {
+                        required.push(Value::String(name.clone()));
+                    }
+                }
+            }
+        }
+    }
+
+    let mut schema = Map::new();
+    schema.insert("type".to_string(), Value::String("object".to_string()));
+    schema.insert("properties".to_string(), Value::Object(properties));
+
+    if !required.is_empty() {
+        schema.insert("required".to_string(), Value::Array(required));
+    }
+
+    serde_json::to_string(&Value::Object(schema)).context("Failed to serialize parameter schema")
 }
 
 /// Extract file parameters JSON string
@@ -443,6 +557,64 @@ fn extract_file_params_json(params: &Value) -> Option<String> {
         }
     }
     None
+}
+
+fn is_valid_identifier(name: &str) -> bool {
+    let mut chars = name.chars();
+    match chars.next() {
+        Some(c) if c == '_' || c == '$' || c.is_ascii_alphabetic() => {}
+        _ => return false,
+    }
+    for ch in chars {
+        if ch == '_' || ch == '$' || ch.is_ascii_alphanumeric() {
+            continue;
+        }
+        return false;
+    }
+    true
+}
+
+fn format_property_access(base: &str, key: &str) -> String {
+    if is_valid_identifier(key) {
+        format!("{}.{}", base, key)
+    } else {
+        format!("{}[\"{}\"]", base, key)
+    }
+}
+
+fn is_large_integer(number: &serde_json::Number) -> bool {
+    if let Some(i) = number.as_i64() {
+        i128::from(i).abs() > MAX_SAFE_INTEGER
+    } else if let Some(u) = number.as_u64() {
+        (u as i128) > MAX_SAFE_INTEGER
+    } else {
+        false
+    }
+}
+
+fn is_value_effectively_empty(value: &Value) -> bool {
+    match value {
+        Value::Null => true,
+        Value::Bool(_) | Value::Number(_) => false,
+        Value::String(s) => s.is_empty(),
+        Value::Array(arr) => arr.is_empty(),
+        Value::Object(obj) => obj.is_empty(),
+    }
+}
+
+fn convert_large_numbers_to_strings(value: &serde_json::Value) -> serde_json::Value {
+    match value {
+        serde_json::Value::Number(n) if is_large_integer(n) => serde_json::Value::String(n.to_string()),
+        serde_json::Value::Array(arr) => {
+            serde_json::Value::Array(arr.iter().map(convert_large_numbers_to_strings).collect())
+        }
+        serde_json::Value::Object(obj) => serde_json::Value::Object(
+            obj.iter()
+                .map(|(k, v)| (k.clone(), convert_large_numbers_to_strings(v)))
+                .collect(),
+        ),
+        other => other.clone(),
+    }
 }
 
 /// Sanitize a string to be a valid identifier (lowercase snake_case)

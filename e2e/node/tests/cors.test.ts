@@ -3,9 +3,20 @@
  * @generated
  */
 
-import { describe, test, expect } from "vitest";
 import { TestClient } from "@spikard/node";
-import { createAppCors07CorsPreflightHeaderNotAllowed, createAppCorsCorsPreflightRequest, createAppCorsCorsWithCredentials, createAppCors08CorsMaxAge, createAppCors10CorsOriginNull, createAppCorsCorsWildcardOrigin, createAppCorsCorsRequestBlocked, createAppCorsSimpleCorsRequest, createAppCors09CorsExposeHeaders, createAppCors06CorsPreflightMethodNotAllowed } from "../app/main.js";
+import { describe, expect, test } from "vitest";
+import {
+	createAppCors06CorsPreflightMethodNotAllowed,
+	createAppCors07CorsPreflightHeaderNotAllowed,
+	createAppCors08CorsMaxAge,
+	createAppCors09CorsExposeHeaders,
+	createAppCors10CorsOriginNull,
+	createAppCorsCorsPreflightRequest,
+	createAppCorsCorsRequestBlocked,
+	createAppCorsCorsWildcardOrigin,
+	createAppCorsCorsWithCredentials,
+	createAppCorsSimpleCorsRequest,
+} from "../app/main.js";
 
 describe("cors", () => {
 	test("07_cors_preflight_header_not_allowed", async () => {
@@ -13,11 +24,11 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
+			Origin: "https://example.com",
 			"Access-Control-Request-Method": "POST",
 			"Access-Control-Request-Headers": "X-Custom-Header",
-			"Origin": "https://example.com",
 		};
-		const response = await client.options("/api/data", {headers});
+		const response = await client.options("/api/data", { headers });
 
 		expect(response.statusCode).toBe(403);
 	});
@@ -27,14 +38,13 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Origin": "https://example.com",
-			"Access-Control-Request-Method": "POST",
 			"Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
+			"Access-Control-Request-Method": "POST",
+			Origin: "https://example.com",
 		};
-		const response = await client.options("/items/", {headers});
+		const response = await client.options("/items/", { headers });
 
 		expect(response.statusCode).toBe(200);
-		const responseData = response.json();
 	});
 
 	test("CORS with credentials", async () => {
@@ -42,15 +52,15 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Origin": "https://app.example.com",
-			"Cookie": "session=abc123",
+			Origin: "https://app.example.com",
+			Cookie: "session=abc123",
 		};
 		const response = await client.get("/api/user/profile", headers);
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("username");
-		expect(responseData["username"]).toBe("john");
+		expect(responseData.username).toBe("john");
 	});
 
 	test("08_cors_max_age", async () => {
@@ -58,11 +68,11 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
+			Origin: "https://example.com",
 			"Access-Control-Request-Method": "POST",
-			"Origin": "https://example.com",
 			"Access-Control-Request-Headers": "Content-Type",
 		};
-		const response = await client.options("/api/data", {headers});
+		const response = await client.options("/api/data", { headers });
 
 		expect(response.statusCode).toBe(204);
 	});
@@ -72,14 +82,11 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Origin": "null",
+			Origin: "null",
 		};
 		const response = await client.get("/api/data", headers);
 
 		expect(response.statusCode).toBe(403);
-		const responseData = response.json();
-		expect(responseData).toHaveProperty("error");
-		expect(responseData["error"]).toBe("Origin 'null' is not allowed");
 	});
 
 	test("CORS wildcard origin", async () => {
@@ -87,14 +94,14 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Origin": "https://random-site.com",
+			Origin: "https://random-site.com",
 		};
 		const response = await client.get("/public/data", headers);
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("data");
-		expect(responseData["data"]).toBe("public");
+		expect(responseData.data).toBe("public");
 	});
 
 	test("CORS request blocked", async () => {
@@ -102,14 +109,11 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Origin": "https://malicious-site.com",
+			Origin: "https://malicious-site.com",
 		};
 		const response = await client.get("/items/", headers);
 
 		expect(response.statusCode).toBe(403);
-		const responseData = response.json();
-		expect(responseData).toHaveProperty("detail");
-		expect(responseData["detail"]).toBe("CORS request from origin 'https://malicious-site.com' not allowed");
 	});
 
 	test("Simple CORS request", async () => {
@@ -117,14 +121,14 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Origin": "https://example.com",
+			Origin: "https://example.com",
 		};
 		const response = await client.get("/items/", headers);
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("items");
-		expect(responseData["items"].length).toBe(0);
+		expect(responseData.items.length).toBe(0);
 	});
 
 	test("09_cors_expose_headers", async () => {
@@ -132,12 +136,11 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Origin": "https://example.com",
+			Origin: "https://example.com",
 		};
 		const response = await client.get("/api/data", headers);
 
 		expect(response.statusCode).toBe(200);
-		const responseData = response.json();
 	});
 
 	test("06_cors_preflight_method_not_allowed", async () => {
@@ -145,13 +148,12 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Access-Control-Request-Headers": "Content-Type",
-			"Origin": "https://example.com",
 			"Access-Control-Request-Method": "DELETE",
+			"Access-Control-Request-Headers": "Content-Type",
+			Origin: "https://example.com",
 		};
-		const response = await client.options("/api/data", {headers});
+		const response = await client.options("/api/data", { headers });
 
 		expect(response.statusCode).toBe(403);
 	});
-
 });

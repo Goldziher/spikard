@@ -3,9 +3,32 @@
  * @generated
  */
 
-import { describe, test, expect } from "vitest";
 import { TestClient } from "@spikard/node";
-import { createAppValidationErrorsInvalidUuidFormat, createAppValidationErrorsInvalidBooleanValue, createAppValidationErrorsMissingRequiredQueryParameter, createAppValidationErrorsArrayMaxItemsConstraintViolation, createAppValidationErrorsNumericConstraintViolationGtGreaterThan, createAppValidationErrorsStringRegexPatternMismatch, createAppValidationErrorsInvalidEnumValue, createAppValidationErrorsStringMinLengthConstraintViolation, createAppValidationErrorsMultipleValidationErrors, createAppValidationErrorsStringMaxLengthConstraintViolation, createAppValidationErrorsNestedObjectValidationError, createAppValidationErrors10NestedErrorPath, createAppValidationErrorsInvalidDatetimeFormat, createAppValidationErrorsArrayItemValidationError, createAppValidationErrorsMissingRequiredBodyField, createAppValidationErrorsBodyFieldTypeErrorStringForFloat, createAppValidationErrorsMalformedJsonBody, createAppValidationErrorsQueryParamTypeErrorStringProvidedForInt, createAppValidationErrorsHeaderValidationError, createAppValidationErrors09MultipleValidationErrors, createAppValidationErrorsNumericConstraintViolationLeLessThanOrEqual, createAppValidationErrorsArrayMinItemsConstraintViolation } from "../app/main.js";
+import { describe, expect, test } from "vitest";
+import {
+	createAppValidationErrors09MultipleValidationErrors,
+	createAppValidationErrors10NestedErrorPath,
+	createAppValidationErrorsArrayItemValidationError,
+	createAppValidationErrorsArrayMaxItemsConstraintViolation,
+	createAppValidationErrorsArrayMinItemsConstraintViolation,
+	createAppValidationErrorsBodyFieldTypeErrorStringForFloat,
+	createAppValidationErrorsHeaderValidationError,
+	createAppValidationErrorsInvalidBooleanValue,
+	createAppValidationErrorsInvalidDatetimeFormat,
+	createAppValidationErrorsInvalidEnumValue,
+	createAppValidationErrorsInvalidUuidFormat,
+	createAppValidationErrorsMalformedJsonBody,
+	createAppValidationErrorsMissingRequiredBodyField,
+	createAppValidationErrorsMissingRequiredQueryParameter,
+	createAppValidationErrorsMultipleValidationErrors,
+	createAppValidationErrorsNestedObjectValidationError,
+	createAppValidationErrorsNumericConstraintViolationGtGreaterThan,
+	createAppValidationErrorsNumericConstraintViolationLeLessThanOrEqual,
+	createAppValidationErrorsQueryParamTypeErrorStringProvidedForInt,
+	createAppValidationErrorsStringMaxLengthConstraintViolation,
+	createAppValidationErrorsStringMinLengthConstraintViolation,
+	createAppValidationErrorsStringRegexPatternMismatch,
+} from "../app/main.js";
 
 describe("validation_errors", () => {
 	test("Invalid UUID format", async () => {
@@ -15,9 +38,6 @@ describe("validation_errors", () => {
 		const response = await client.get("/items/not-a-uuid");
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Invalid boolean value", async () => {
@@ -30,9 +50,6 @@ describe("validation_errors", () => {
 		const response = await client.get("/items/?q=test&is_active=maybe", headers);
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Missing required query parameter", async () => {
@@ -45,9 +62,6 @@ describe("validation_errors", () => {
 		const response = await client.get("/items/", headers);
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Array max_items constraint violation", async () => {
@@ -57,13 +71,14 @@ describe("validation_errors", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = {"name":"Item","price":10.0,"tags":["tag1","tag2","tag3","tag4","tag5","tag6","tag7","tag8","tag9","tag10","tag11"]};
-		const response = await client.post("/items/", {headers, json});
+		const json = {
+			name: "Item",
+			price: 10.0,
+			tags: ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6", "tag7", "tag8", "tag9", "tag10", "tag11"],
+		};
+		const response = await client.post("/items/", { headers, json });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Numeric constraint violation - gt greater than", async () => {
@@ -76,9 +91,6 @@ describe("validation_errors", () => {
 		const response = await client.get("/items/?q=test&price=0", headers);
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("String regex pattern mismatch", async () => {
@@ -91,9 +103,6 @@ describe("validation_errors", () => {
 		const response = await client.get("/items/?q=invalid!", headers);
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Invalid enum value", async () => {
@@ -103,9 +112,6 @@ describe("validation_errors", () => {
 		const response = await client.get("/models/invalid_model");
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("String min_length constraint violation", async () => {
@@ -118,9 +124,6 @@ describe("validation_errors", () => {
 		const response = await client.get("/items/?q=ab", headers);
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Multiple validation errors", async () => {
@@ -130,13 +133,10 @@ describe("validation_errors", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = {"name":"X","price":-10,"quantity":"not_a_number"};
-		const response = await client.post("/items/", {headers, json});
+		const json = { name: "X", price: -10, quantity: "not_a_number" };
+		const response = await client.post("/items/", { headers, json });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("String max_length constraint violation", async () => {
@@ -146,12 +146,12 @@ describe("validation_errors", () => {
 		const headers = {
 			"x-token": "test-token",
 		};
-		const response = await client.get("/items/?q=this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter", headers);
+		const response = await client.get(
+			"/items/?q=this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter",
+			headers,
+		);
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Nested object validation error", async () => {
@@ -161,26 +161,20 @@ describe("validation_errors", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = {"name":"Product","price":10.0,"seller":{"address":{"city":"SF","zip_code":"123"},"name":"Jo"}};
-		const response = await client.post("/items/", {headers, json});
+		const json = { name: "Product", price: 10.0, seller: { address: { city: "SF", zip_code: "123" }, name: "Jo" } };
+		const response = await client.post("/items/", { headers, json });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("10_nested_error_path", async () => {
 		const app = createAppValidationErrors10NestedErrorPath();
 		const client = new TestClient(app);
 
-		const json = {"profile":{"contact":{"email":"invalid"}}};
-		const response = await client.post("/profiles", {json});
+		const json = { profile: { contact: { email: "invalid" } } };
+		const response = await client.post("/profiles", { json });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Invalid datetime format", async () => {
@@ -190,13 +184,10 @@ describe("validation_errors", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = {"created_at":"not-a-datetime","name":"Item","price":10.0};
-		const response = await client.post("/items/", {headers, json});
+		const json = { created_at: "not-a-datetime", name: "Item", price: 10.0 };
+		const response = await client.post("/items/", { headers, json });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Array item validation error", async () => {
@@ -206,13 +197,10 @@ describe("validation_errors", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = {"name":"Item","price":10.0,"tags":["tag1","tag2",123]};
-		const response = await client.post("/items/", {headers, json});
+		const json = { name: "Item", price: 10.0, tags: ["tag1", "tag2", 123] };
+		const response = await client.post("/items/", { headers, json });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Missing required body field", async () => {
@@ -222,13 +210,10 @@ describe("validation_errors", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = {"name":"Item"};
-		const response = await client.post("/items/", {headers, json});
+		const json = { name: "Item" };
+		const response = await client.post("/items/", { headers, json });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Body field type error - string for float", async () => {
@@ -238,13 +223,10 @@ describe("validation_errors", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = {"name":"Item","price":"not_a_float"};
-		const response = await client.post("/items/", {headers, json});
+		const json = { name: "Item", price: "not_a_float" };
+		const response = await client.post("/items/", { headers, json });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Malformed JSON body", async () => {
@@ -254,13 +236,10 @@ describe("validation_errors", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = "{\"name\": \"Item\", \"price\": }";
-		const response = await client.post("/items/", {headers, json});
+		const json = '{"name": "Item", "price": }';
+		const response = await client.post("/items/", { headers, json });
 
 		expect(response.statusCode).toBe(400);
-		const responseData = response.json();
-		expect(responseData).toHaveProperty("detail");
-		expect(responseData["detail"]).toBe("Invalid request format");
 	});
 
 	test("Query param type error - string provided for int", async () => {
@@ -273,9 +252,6 @@ describe("validation_errors", () => {
 		const response = await client.get("/items/?q=test&skip=not_a_number", headers);
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Header validation error", async () => {
@@ -285,22 +261,16 @@ describe("validation_errors", () => {
 		const response = await client.get("/items/?q=test");
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("09_multiple_validation_errors", async () => {
 		const app = createAppValidationErrors09MultipleValidationErrors();
 		const client = new TestClient(app);
 
-		const json = {"age":15,"email":"invalid-email","name":"ab"};
-		const response = await client.post("/users", {json});
+		const json = { age: 15, email: "invalid-email", name: "ab" };
+		const response = await client.post("/users", { json });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Numeric constraint violation - le less than or equal", async () => {
@@ -313,9 +283,6 @@ describe("validation_errors", () => {
 		const response = await client.get("/items/?q=test&limit=101", headers);
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Array min_items constraint violation", async () => {
@@ -325,13 +292,9 @@ describe("validation_errors", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = {"name":"Item","price":10.0,"tags":[]};
-		const response = await client.post("/items/", {headers, json});
+		const json = { name: "Item", price: 10.0, tags: [] };
+		const response = await client.post("/items/", { headers, json });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
-
 });

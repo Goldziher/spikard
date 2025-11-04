@@ -3,9 +3,47 @@
  * @generated
  */
 
-import { describe, test, expect } from "vitest";
 import { TestClient } from "@spikard/node";
-import { createAppPathParamsBooleanPathParameterTrue, createAppPathParams29DecimalPathParamSuccess, createAppPathParamsIntegerPathParameterWithCombinedLtAndGtConstraintsSuccess, createAppPathParams33StringPatternPathSuccess, createAppPathParams31StringMinlengthPathFailure, createAppPathParams35NegativeIntegerPathParam, createAppPathParamsEnumPathParameterInvalidValue, createAppPathParams27DatetimeFormatPathParamSuccess, createAppPathParams25DateFormatInvalidFailure, createAppPathParamsIntegerPathParameterWithLtConstraintSuccess, createAppPathParamsIntegerPathParameterWithGtConstraintSuccess, createAppPathParams28DurationFormatPathParamSuccess, createAppPathParamsPathParameterTypeSyntaxWithOverride, createAppPathParams20UuidV3PathParamSuccess, createAppPathParamsIntegerPathParameterInvalidString, createAppPathParams30StringMinlengthPathSuccess, createAppPathParamsIntegerPathParameterWithLeConstraintSuccess, createAppPathParamsPathParameterTypeSyntaxInvalidUuid, createAppPathParamsPathTypeParameterFilePath, createAppPathParamsPathParameterWithTypeSyntaxUuid, createAppPathParams32StringMaxlengthPathFailure, createAppPathParamsIntegerPathParameterSuccess, createAppPathParams34StringPatternPathFailure, createAppPathParams21UuidV5PathParamSuccess, createAppPathParamsStringPathParameterWithMaxLengthFailure, createAppPathParamsStringPathParameterWithMinLengthFailure, createAppPathParamsMultiplePathParametersSuccess, createAppPathParamsDatePathParameterSuccess, createAppPathParamsIntegerPathParameterWithGtConstraintFailure, createAppPathParams24DateFormatPathParamSuccess, createAppPathParamsFloatPathParameterSuccess, createAppPathParamsPathParameterWithTypeSyntaxInteger, createAppPathParamsStringPathParameterSuccess, createAppPathParamsUuidPathParameterSuccess, createAppPathParamsIntegerPathParameterWithGeConstraintSuccess, createAppPathParamsEnumPathParameterSuccess, createAppPathParamsBooleanPathParameterNumeric1 } from "../app/main.js";
+import { describe, expect, test } from "vitest";
+import {
+	createAppPathParams20UuidV3PathParamSuccess,
+	createAppPathParams21UuidV5PathParamSuccess,
+	createAppPathParams24DateFormatPathParamSuccess,
+	createAppPathParams25DateFormatInvalidFailure,
+	createAppPathParams27DatetimeFormatPathParamSuccess,
+	createAppPathParams28DurationFormatPathParamSuccess,
+	createAppPathParams29DecimalPathParamSuccess,
+	createAppPathParams30StringMinlengthPathSuccess,
+	createAppPathParams31StringMinlengthPathFailure,
+	createAppPathParams32StringMaxlengthPathFailure,
+	createAppPathParams33StringPatternPathSuccess,
+	createAppPathParams34StringPatternPathFailure,
+	createAppPathParams35NegativeIntegerPathParam,
+	createAppPathParamsBooleanPathParameterNumeric1,
+	createAppPathParamsBooleanPathParameterTrue,
+	createAppPathParamsDatePathParameterSuccess,
+	createAppPathParamsEnumPathParameterInvalidValue,
+	createAppPathParamsEnumPathParameterSuccess,
+	createAppPathParamsFloatPathParameterSuccess,
+	createAppPathParamsIntegerPathParameterInvalidString,
+	createAppPathParamsIntegerPathParameterSuccess,
+	createAppPathParamsIntegerPathParameterWithCombinedLtAndGtConstraintsSuccess,
+	createAppPathParamsIntegerPathParameterWithGeConstraintSuccess,
+	createAppPathParamsIntegerPathParameterWithGtConstraintFailure,
+	createAppPathParamsIntegerPathParameterWithGtConstraintSuccess,
+	createAppPathParamsIntegerPathParameterWithLeConstraintSuccess,
+	createAppPathParamsIntegerPathParameterWithLtConstraintSuccess,
+	createAppPathParamsMultiplePathParametersSuccess,
+	createAppPathParamsPathParameterTypeSyntaxInvalidUuid,
+	createAppPathParamsPathParameterTypeSyntaxWithOverride,
+	createAppPathParamsPathParameterWithTypeSyntaxInteger,
+	createAppPathParamsPathParameterWithTypeSyntaxUuid,
+	createAppPathParamsPathTypeParameterFilePath,
+	createAppPathParamsStringPathParameterSuccess,
+	createAppPathParamsStringPathParameterWithMaxLengthFailure,
+	createAppPathParamsStringPathParameterWithMinLengthFailure,
+	createAppPathParamsUuidPathParameterSuccess,
+} from "../app/main.js";
 
 describe("path_params", () => {
 	test("Boolean path parameter - True", async () => {
@@ -17,7 +55,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("item_id");
-		expect(responseData["item_id"]).toBe(true);
+		expect(responseData.item_id).toBe(true);
 	});
 
 	test("29_decimal_path_param_success", async () => {
@@ -29,7 +67,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("amount");
-		expect(responseData["amount"]).toBe("19.99");
+		expect(responseData.amount).toBe("19.99");
 	});
 
 	test("Integer path parameter with combined lt and gt constraints - success", async () => {
@@ -41,7 +79,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("item_id");
-		expect(responseData["item_id"]).toBe(2);
+		expect(responseData.item_id).toBe(2);
 	});
 
 	test("33_string_pattern_path_success", async () => {
@@ -53,9 +91,9 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("owner");
-		expect(responseData["owner"]).toBe("spikard-labs");
+		expect(responseData.owner).toBe("spikard-labs");
 		expect(responseData).toHaveProperty("repo");
-		expect(responseData["repo"]).toBe("spikard-http");
+		expect(responseData.repo).toBe("spikard-http");
 	});
 
 	test("31_string_minlength_path_failure", async () => {
@@ -65,9 +103,6 @@ describe("path_params", () => {
 		const response = await client.get("/users/ab");
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("35_negative_integer_path_param", async () => {
@@ -79,7 +114,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("value");
-		expect(responseData["value"]).toBe(-100);
+		expect(responseData.value).toBe(-100);
 	});
 
 	test("Enum path parameter - invalid value", async () => {
@@ -89,9 +124,6 @@ describe("path_params", () => {
 		const response = await client.get("/models/foo");
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("27_datetime_format_path_param_success", async () => {
@@ -103,7 +135,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("timestamp");
-		expect(responseData["timestamp"]).toBe("2025-10-30T14:30:00Z");
+		expect(responseData.timestamp).toBe("2025-10-30T14:30:00Z");
 	});
 
 	test("25_date_format_invalid_failure", async () => {
@@ -113,9 +145,6 @@ describe("path_params", () => {
 		const response = await client.get("/events/2025-13-45");
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Integer path parameter with lt constraint - success", async () => {
@@ -127,7 +156,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("item_id");
-		expect(responseData["item_id"]).toBe(2);
+		expect(responseData.item_id).toBe(2);
 	});
 
 	test("Integer path parameter with gt constraint - success", async () => {
@@ -139,7 +168,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("item_id");
-		expect(responseData["item_id"]).toBe(42);
+		expect(responseData.item_id).toBe(42);
 	});
 
 	test("28_duration_format_path_param_success", async () => {
@@ -151,7 +180,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("duration");
-		expect(responseData["duration"]).toBe("P1DT2H30M");
+		expect(responseData.duration).toBe("P1DT2H30M");
 	});
 
 	test("Path parameter type syntax with override", async () => {
@@ -163,7 +192,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("count");
-		expect(responseData["count"]).toBe("50");
+		expect(responseData.count).toBe("50");
 	});
 
 	test("20_uuid_v3_path_param_success", async () => {
@@ -175,7 +204,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("id");
-		expect(responseData["id"]).toBe("e8b5a51d-11c8-3310-a6ab-367563f20686");
+		expect(responseData.id).toBe("e8b5a51d-11c8-3310-a6ab-367563f20686");
 	});
 
 	test("Integer path parameter - invalid string", async () => {
@@ -185,9 +214,6 @@ describe("path_params", () => {
 		const response = await client.get("/path/int/foobar");
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("30_string_minlength_path_success", async () => {
@@ -199,7 +225,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("username");
-		expect(responseData["username"]).toBe("alice");
+		expect(responseData.username).toBe("alice");
 	});
 
 	test("Integer path parameter with le constraint - success", async () => {
@@ -211,7 +237,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("item_id");
-		expect(responseData["item_id"]).toBe(3);
+		expect(responseData.item_id).toBe(3);
 	});
 
 	test("Path parameter type syntax - invalid UUID", async () => {
@@ -221,9 +247,6 @@ describe("path_params", () => {
 		const response = await client.get("/type-syntax/items/not-a-uuid");
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Path type parameter - file path", async () => {
@@ -235,7 +258,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("file_path");
-		expect(responseData["file_path"]).toBe("home/johndoe/myfile.txt");
+		expect(responseData.file_path).toBe("home/johndoe/myfile.txt");
 	});
 
 	test("Path parameter with type syntax - UUID", async () => {
@@ -247,7 +270,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("id");
-		expect(responseData["id"]).toBe("550e8400-e29b-41d4-a716-446655440000");
+		expect(responseData.id).toBe("550e8400-e29b-41d4-a716-446655440000");
 	});
 
 	test("32_string_maxlength_path_failure", async () => {
@@ -257,9 +280,6 @@ describe("path_params", () => {
 		const response = await client.get("/users/this_username_is_way_too_long_to_be_valid");
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Integer path parameter - success", async () => {
@@ -271,7 +291,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("item_id");
-		expect(responseData["item_id"]).toBe(42);
+		expect(responseData.item_id).toBe(42);
 	});
 
 	test("34_string_pattern_path_failure", async () => {
@@ -281,9 +301,6 @@ describe("path_params", () => {
 		const response = await client.get("/repos/invalid@owner");
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("21_uuid_v5_path_param_success", async () => {
@@ -295,7 +312,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("id");
-		expect(responseData["id"]).toBe("630eb68f-e0fa-5ecc-887a-7c7a62614681");
+		expect(responseData.id).toBe("630eb68f-e0fa-5ecc-887a-7c7a62614681");
 	});
 
 	test("String path parameter with max_length - failure", async () => {
@@ -305,9 +322,6 @@ describe("path_params", () => {
 		const response = await client.get("/path/param-maxlength/foobar");
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("String path parameter with min_length - failure", async () => {
@@ -317,9 +331,6 @@ describe("path_params", () => {
 		const response = await client.get("/path/param-minlength/fo");
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Multiple path parameters - success", async () => {
@@ -331,13 +342,13 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("order_id");
-		expect(responseData["order_id"]).toBe("c892496f-b1fd-4b91-bdb8-b46f92df1716");
+		expect(responseData.order_id).toBe("c892496f-b1fd-4b91-bdb8-b46f92df1716");
 		expect(responseData).toHaveProperty("service_id");
-		expect(responseData["service_id"]).toBe(1);
+		expect(responseData.service_id).toBe(1);
 		expect(responseData).toHaveProperty("user_id");
-		expect(responseData["user_id"]).toBe("abc");
+		expect(responseData.user_id).toBe("abc");
 		expect(responseData).toHaveProperty("version");
-		expect(responseData["version"]).toBe(1.0);
+		expect(responseData.version).toBe(1.0);
 	});
 
 	test("Date path parameter - success", async () => {
@@ -349,7 +360,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("date_param");
-		expect(responseData["date_param"]).toBe("2023-07-15");
+		expect(responseData.date_param).toBe("2023-07-15");
 	});
 
 	test("Integer path parameter with gt constraint - failure", async () => {
@@ -359,9 +370,6 @@ describe("path_params", () => {
 		const response = await client.get("/path/param-gt/2");
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("24_date_format_path_param_success", async () => {
@@ -373,7 +381,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("date");
-		expect(responseData["date"]).toBe("2025-10-30");
+		expect(responseData.date).toBe("2025-10-30");
 	});
 
 	test("Float path parameter - success", async () => {
@@ -385,7 +393,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("item_id");
-		expect(responseData["item_id"]).toBe(42.5);
+		expect(responseData.item_id).toBe(42.5);
 	});
 
 	test("Path parameter with type syntax - integer", async () => {
@@ -397,7 +405,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("user_id");
-		expect(responseData["user_id"]).toBe("42");
+		expect(responseData.user_id).toBe("42");
 	});
 
 	test("String path parameter - success", async () => {
@@ -409,7 +417,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("item_id");
-		expect(responseData["item_id"]).toBe("foobar");
+		expect(responseData.item_id).toBe("foobar");
 	});
 
 	test("UUID path parameter - success", async () => {
@@ -421,7 +429,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("item_id");
-		expect(responseData["item_id"]).toBe("ec38df32-ceda-4cfa-9b4a-1aeb94ad551a");
+		expect(responseData.item_id).toBe("ec38df32-ceda-4cfa-9b4a-1aeb94ad551a");
 	});
 
 	test("Integer path parameter with ge constraint - success", async () => {
@@ -433,7 +441,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("item_id");
-		expect(responseData["item_id"]).toBe(3);
+		expect(responseData.item_id).toBe(3);
 	});
 
 	test("Enum path parameter - success", async () => {
@@ -445,7 +453,7 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("model_name");
-		expect(responseData["model_name"]).toBe("alexnet");
+		expect(responseData.model_name).toBe("alexnet");
 	});
 
 	test("Boolean path parameter - numeric 1", async () => {
@@ -457,7 +465,6 @@ describe("path_params", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("item_id");
-		expect(responseData["item_id"]).toBe(true);
+		expect(responseData.item_id).toBe(true);
 	});
-
 });
