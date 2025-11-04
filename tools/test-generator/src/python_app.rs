@@ -337,7 +337,7 @@ fn generate_handler_function_for_fixture(
     let expected_status = fixture.expected_response.status_code;
     let expected_body_value = fixture.expected_response.body.as_ref();
     let expected_body = expected_body_value.map(json_to_python);
-    let expected_body_is_empty = expected_body_value.map_or(false, is_value_effectively_empty);
+    let expected_body_is_empty = expected_body_value.is_some_and(is_value_effectively_empty);
     let validation_errors_body = if let Some(errors) = fixture.expected_response.validation_errors.as_ref() {
         if errors.is_empty() {
             None
@@ -592,40 +592,43 @@ fn generate_typed_dict(schema: &Value, model_name: &str) -> Result<String> {
     code.push_str(&format!("class {}(TypedDict):\n", model_name));
     code.push_str("    \"\"\"Request body type (TypedDict - runtime is dict).\"\"\"\n\n");
 
-    if let Some(obj) = schema.as_object() {
-        if let Some(properties) = obj.get("properties").and_then(|v| v.as_object()) {
-            let required_fields: Vec<String> = obj
-                .get("required")
-                .and_then(|v| v.as_array())
-                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
-                .unwrap_or_default();
+    let Some(obj) = schema.as_object() else {
+        return Ok(code);
+    };
+    let Some(properties) = obj.get("properties").and_then(|v| v.as_object()) else {
+        return Ok(code);
+    };
 
-            // Separate required and optional fields for consistent ordering
-            let mut required_props: Vec<(&String, &Value)> = Vec::new();
-            let mut optional_props: Vec<(&String, &Value)> = Vec::new();
+    let required_fields: Vec<String> = obj
+        .get("required")
+        .and_then(|v| v.as_array())
+        .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+        .unwrap_or_default();
 
-            for (prop_name, prop_schema) in properties {
-                if required_fields.contains(prop_name) {
-                    required_props.push((prop_name, prop_schema));
-                } else {
-                    optional_props.push((prop_name, prop_schema));
-                }
-            }
+    // Separate required and optional fields for consistent ordering
+    let mut required_props: Vec<(&String, &Value)> = Vec::new();
+    let mut optional_props: Vec<(&String, &Value)> = Vec::new();
 
-            // Output required fields first
-            for (prop_name, prop_schema) in required_props {
-                let prop_type = json_type_to_python(prop_schema)?;
-                let python_prop_name = to_python_identifier(prop_name);
-                code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
-            }
-
-            // Then output optional fields
-            for (prop_name, prop_schema) in optional_props {
-                let prop_type = json_type_to_python(prop_schema)?;
-                let python_prop_name = to_python_identifier(prop_name);
-                code.push_str(&format!("    {}: {} | None\n", python_prop_name, prop_type));
-            }
+    for (prop_name, prop_schema) in properties {
+        if required_fields.contains(prop_name) {
+            required_props.push((prop_name, prop_schema));
+        } else {
+            optional_props.push((prop_name, prop_schema));
         }
+    }
+
+    // Output required fields first
+    for (prop_name, prop_schema) in required_props {
+        let prop_type = json_type_to_python(prop_schema)?;
+        let python_prop_name = to_python_identifier(prop_name);
+        code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+    }
+
+    // Then output optional fields
+    for (prop_name, prop_schema) in optional_props {
+        let prop_type = json_type_to_python(prop_schema)?;
+        let python_prop_name = to_python_identifier(prop_name);
+        code.push_str(&format!("    {}: {} | None\n", python_prop_name, prop_type));
     }
 
     Ok(code)
@@ -638,41 +641,44 @@ fn generate_dataclass(schema: &Value, model_name: &str) -> Result<String> {
     code.push_str(&format!("class {}:\n", model_name));
     code.push_str("    \"\"\"Request body dataclass.\"\"\"\n\n");
 
-    if let Some(obj) = schema.as_object() {
-        if let Some(properties) = obj.get("properties").and_then(|v| v.as_object()) {
-            let required_fields: Vec<String> = obj
-                .get("required")
-                .and_then(|v| v.as_array())
-                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
-                .unwrap_or_default();
+    let Some(obj) = schema.as_object() else {
+        return Ok(code);
+    };
+    let Some(properties) = obj.get("properties").and_then(|v| v.as_object()) else {
+        return Ok(code);
+    };
 
-            // Separate required and optional fields
-            // dataclass requires all fields without defaults to come before fields with defaults
-            let mut required_props: Vec<(&String, &Value)> = Vec::new();
-            let mut optional_props: Vec<(&String, &Value)> = Vec::new();
+    let required_fields: Vec<String> = obj
+        .get("required")
+        .and_then(|v| v.as_array())
+        .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+        .unwrap_or_default();
 
-            for (prop_name, prop_schema) in properties {
-                if required_fields.contains(prop_name) {
-                    required_props.push((prop_name, prop_schema));
-                } else {
-                    optional_props.push((prop_name, prop_schema));
-                }
-            }
+    // Separate required and optional fields
+    // dataclass requires all fields without defaults to come before fields with defaults
+    let mut required_props: Vec<(&String, &Value)> = Vec::new();
+    let mut optional_props: Vec<(&String, &Value)> = Vec::new();
 
-            // Output required fields first
-            for (prop_name, prop_schema) in required_props {
-                let prop_type = json_type_to_python(prop_schema)?;
-                let python_prop_name = to_python_identifier(prop_name);
-                code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
-            }
-
-            // Then output optional fields
-            for (prop_name, prop_schema) in optional_props {
-                let prop_type = json_type_to_python(prop_schema)?;
-                let python_prop_name = to_python_identifier(prop_name);
-                code.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
-            }
+    for (prop_name, prop_schema) in properties {
+        if required_fields.contains(prop_name) {
+            required_props.push((prop_name, prop_schema));
+        } else {
+            optional_props.push((prop_name, prop_schema));
         }
+    }
+
+    // Output required fields first
+    for (prop_name, prop_schema) in required_props {
+        let prop_type = json_type_to_python(prop_schema)?;
+        let python_prop_name = to_python_identifier(prop_name);
+        code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+    }
+
+    // Then output optional fields
+    for (prop_name, prop_schema) in optional_props {
+        let prop_type = json_type_to_python(prop_schema)?;
+        let python_prop_name = to_python_identifier(prop_name);
+        code.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
     }
 
     Ok(code)
@@ -684,41 +690,44 @@ fn generate_namedtuple(schema: &Value, model_name: &str) -> Result<String> {
     code.push_str(&format!("class {}(NamedTuple):\n", model_name));
     code.push_str("    \"\"\"Request body NamedTuple (immutable).\"\"\"\n\n");
 
-    if let Some(obj) = schema.as_object() {
-        if let Some(properties) = obj.get("properties").and_then(|v| v.as_object()) {
-            let required_fields: Vec<String> = obj
-                .get("required")
-                .and_then(|v| v.as_array())
-                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
-                .unwrap_or_default();
+    let Some(obj) = schema.as_object() else {
+        return Ok(code);
+    };
+    let Some(properties) = obj.get("properties").and_then(|v| v.as_object()) else {
+        return Ok(code);
+    };
 
-            // Separate required and optional fields
-            // NamedTuple requires all fields without defaults to come before fields with defaults
-            let mut required_props: Vec<(&String, &Value)> = Vec::new();
-            let mut optional_props: Vec<(&String, &Value)> = Vec::new();
+    let required_fields: Vec<String> = obj
+        .get("required")
+        .and_then(|v| v.as_array())
+        .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+        .unwrap_or_default();
 
-            for (prop_name, prop_schema) in properties {
-                if required_fields.contains(prop_name) {
-                    required_props.push((prop_name, prop_schema));
-                } else {
-                    optional_props.push((prop_name, prop_schema));
-                }
-            }
+    // Separate required and optional fields
+    // NamedTuple requires all fields without defaults to come before fields with defaults
+    let mut required_props: Vec<(&String, &Value)> = Vec::new();
+    let mut optional_props: Vec<(&String, &Value)> = Vec::new();
 
-            // Output required fields first
-            for (prop_name, prop_schema) in required_props {
-                let prop_type = json_type_to_python(prop_schema)?;
-                let python_prop_name = to_python_identifier(prop_name);
-                code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
-            }
-
-            // Then output optional fields
-            for (prop_name, prop_schema) in optional_props {
-                let prop_type = json_type_to_python(prop_schema)?;
-                let python_prop_name = to_python_identifier(prop_name);
-                code.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
-            }
+    for (prop_name, prop_schema) in properties {
+        if required_fields.contains(prop_name) {
+            required_props.push((prop_name, prop_schema));
+        } else {
+            optional_props.push((prop_name, prop_schema));
         }
+    }
+
+    // Output required fields first
+    for (prop_name, prop_schema) in required_props {
+        let prop_type = json_type_to_python(prop_schema)?;
+        let python_prop_name = to_python_identifier(prop_name);
+        code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+    }
+
+    // Then output optional fields
+    for (prop_name, prop_schema) in optional_props {
+        let prop_type = json_type_to_python(prop_schema)?;
+        let python_prop_name = to_python_identifier(prop_name);
+        code.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
     }
 
     Ok(code)
@@ -730,40 +739,43 @@ fn generate_msgspec_struct(schema: &Value, model_name: &str) -> Result<String> {
     code.push_str(&format!("class {}(msgspec.Struct):\n", model_name));
     code.push_str("    \"\"\"Request body msgspec.Struct (fast typed).\"\"\"\n\n");
 
-    if let Some(obj) = schema.as_object() {
-        if let Some(properties) = obj.get("properties").and_then(|v| v.as_object()) {
-            let required_fields: Vec<String> = obj
-                .get("required")
-                .and_then(|v| v.as_array())
-                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
-                .unwrap_or_default();
+    let Some(obj) = schema.as_object() else {
+        return Ok(code);
+    };
+    let Some(properties) = obj.get("properties").and_then(|v| v.as_object()) else {
+        return Ok(code);
+    };
 
-            // Separate required and optional fields for consistent ordering
-            let mut required_props: Vec<(&String, &Value)> = Vec::new();
-            let mut optional_props: Vec<(&String, &Value)> = Vec::new();
+    let required_fields: Vec<String> = obj
+        .get("required")
+        .and_then(|v| v.as_array())
+        .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+        .unwrap_or_default();
 
-            for (prop_name, prop_schema) in properties {
-                if required_fields.contains(prop_name) {
-                    required_props.push((prop_name, prop_schema));
-                } else {
-                    optional_props.push((prop_name, prop_schema));
-                }
-            }
+    // Separate required and optional fields for consistent ordering
+    let mut required_props: Vec<(&String, &Value)> = Vec::new();
+    let mut optional_props: Vec<(&String, &Value)> = Vec::new();
 
-            // Output required fields first
-            for (prop_name, prop_schema) in required_props {
-                let prop_type = json_type_to_python(prop_schema)?;
-                let python_prop_name = to_python_identifier(prop_name);
-                code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
-            }
-
-            // Then output optional fields
-            for (prop_name, prop_schema) in optional_props {
-                let prop_type = json_type_to_python(prop_schema)?;
-                let python_prop_name = to_python_identifier(prop_name);
-                code.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
-            }
+    for (prop_name, prop_schema) in properties {
+        if required_fields.contains(prop_name) {
+            required_props.push((prop_name, prop_schema));
+        } else {
+            optional_props.push((prop_name, prop_schema));
         }
+    }
+
+    // Output required fields first
+    for (prop_name, prop_schema) in required_props {
+        let prop_type = json_type_to_python(prop_schema)?;
+        let python_prop_name = to_python_identifier(prop_name);
+        code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+    }
+
+    // Then output optional fields
+    for (prop_name, prop_schema) in optional_props {
+        let prop_type = json_type_to_python(prop_schema)?;
+        let python_prop_name = to_python_identifier(prop_name);
+        code.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
     }
 
     Ok(code)
@@ -775,40 +787,43 @@ fn generate_pydantic_model(schema: &Value, model_name: &str) -> Result<String> {
     code.push_str(&format!("class {}(BaseModel):\n", model_name));
     code.push_str("    \"\"\"Request body Pydantic model.\"\"\"\n\n");
 
-    if let Some(obj) = schema.as_object() {
-        if let Some(properties) = obj.get("properties").and_then(|v| v.as_object()) {
-            let required_fields: Vec<String> = obj
-                .get("required")
-                .and_then(|v| v.as_array())
-                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
-                .unwrap_or_default();
+    let Some(obj) = schema.as_object() else {
+        return Ok(code);
+    };
+    let Some(properties) = obj.get("properties").and_then(|v| v.as_object()) else {
+        return Ok(code);
+    };
 
-            // Separate required and optional fields for consistent ordering
-            let mut required_props: Vec<(&String, &Value)> = Vec::new();
-            let mut optional_props: Vec<(&String, &Value)> = Vec::new();
+    let required_fields: Vec<String> = obj
+        .get("required")
+        .and_then(|v| v.as_array())
+        .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+        .unwrap_or_default();
 
-            for (prop_name, prop_schema) in properties {
-                if required_fields.contains(prop_name) {
-                    required_props.push((prop_name, prop_schema));
-                } else {
-                    optional_props.push((prop_name, prop_schema));
-                }
-            }
+    // Separate required and optional fields for consistent ordering
+    let mut required_props: Vec<(&String, &Value)> = Vec::new();
+    let mut optional_props: Vec<(&String, &Value)> = Vec::new();
 
-            // Output required fields first
-            for (prop_name, prop_schema) in required_props {
-                let prop_type = json_type_to_python(prop_schema)?;
-                let python_prop_name = to_python_identifier(prop_name);
-                code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
-            }
-
-            // Then output optional fields
-            for (prop_name, prop_schema) in optional_props {
-                let prop_type = json_type_to_python(prop_schema)?;
-                let python_prop_name = to_python_identifier(prop_name);
-                code.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
-            }
+    for (prop_name, prop_schema) in properties {
+        if required_fields.contains(prop_name) {
+            required_props.push((prop_name, prop_schema));
+        } else {
+            optional_props.push((prop_name, prop_schema));
         }
+    }
+
+    // Output required fields first
+    for (prop_name, prop_schema) in required_props {
+        let prop_type = json_type_to_python(prop_schema)?;
+        let python_prop_name = to_python_identifier(prop_name);
+        code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
+    }
+
+    // Then output optional fields
+    for (prop_name, prop_schema) in optional_props {
+        let prop_type = json_type_to_python(prop_schema)?;
+        let python_prop_name = to_python_identifier(prop_name);
+        code.push_str(&format!("    {}: {} | None = None\n", python_prop_name, prop_type));
     }
 
     Ok(code)
@@ -850,13 +865,11 @@ fn json_type_to_python(schema: &Value) -> Result<String> {
 
 /// Extract file parameters from handler.parameters.files
 fn extract_file_params(params: &Value) -> Option<String> {
-    if let Some(obj) = params.as_object() {
-        if let Some(files) = obj.get("files") {
-            let files_json = serde_json::to_string(files).ok()?;
-            return Some(json_to_python_dict(&files_json));
-        }
-    }
-    None
+    params
+        .as_object()
+        .and_then(|obj| obj.get("files"))
+        .and_then(|files| serde_json::to_string(files).ok())
+        .map(|files_json| json_to_python_dict(&files_json))
 }
 
 /// Build parameter schema with source fields for each parameter

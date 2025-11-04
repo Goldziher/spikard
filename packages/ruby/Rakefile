@@ -1,0 +1,21 @@
+# frozen_string_literal: true
+
+require 'bundler/gem_tasks'
+
+namespace :ext do
+  desc 'Build the native Ruby extension via cargo'
+  task :build do
+    Dir.chdir(File.expand_path('ext/spikard_rb', __dir__)) do
+      profile = ENV.fetch('CARGO_PROFILE', 'release')
+      sh({ 'CARGO_PROFILE' => profile }, 'bundle exec ruby extconf.rb')
+      sh({ 'CARGO_PROFILE' => profile }, 'make')
+    end
+  end
+end
+
+task default: ['spec']
+
+desc 'Run the Ruby spec suite'
+task :spec do
+  sh 'bundle exec rspec'
+end

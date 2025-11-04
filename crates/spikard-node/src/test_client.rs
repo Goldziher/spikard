@@ -1,294 +1,78 @@
 //! Test client for making HTTP requests to Spikard applications
 //!
-//! Implements JavaScript handler bridge using napi-rs ThreadsafeFunction
-//! for async handler invocation, following patterns from kreuzberg.
+//! Uses the shared spikard_http router pipeline and bridges into JavaScript
+//! handlers via napi ThreadsafeFunction.
 
 use crate::response::TestResponse;
-use axum::Router as AxumRouter;
 use axum::body::Body;
-use axum::extract::{Path, Request};
-use axum::http::{HeaderMap, HeaderValue, Method, StatusCode, Uri};
-use axum::routing::{any, delete, get, patch, post, put};
+use axum::extract::Request;
+use axum::http::{HeaderMap, HeaderValue, Method, StatusCode};
 use axum_test::TestServer;
-use cookie::Cookie;
-use http_body_util::BodyExt;
+use bytes::Bytes;
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::ThreadsafeFunction;
 use napi_derive::napi;
-use serde_json::{Map as JsonMap, Value};
-use spikard_http::handler::RequestData;
+use serde_json::{Map as JsonMap, Value, json};
+use spikard_http::handler::{ForeignHandler, HandlerFuture, HandlerResult, RequestData};
 use spikard_http::problem::ProblemDetails;
-use spikard_http::query_parser::parse_query_string_to_json;
-use spikard_http::{Route, RouteMetadata};
+use spikard_http::server::build_router_with_handlers;
+use spikard_http::{ParameterValidator, Route, RouteMetadata, SchemaValidator};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-fn to_camel_case(s: &str) -> String {
-    let mut parts = s
-        .split(|c: char| c == '_' || c == '-' || c == ' ')
-        .filter(|part| !part.is_empty());
+fn is_debug_mode() -> bool {
+    std::env::var("DEBUG")
+        .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+        .unwrap_or(false)
+}
 
-    let mut result = String::new();
-    if let Some(first) = parts.next() {
-        result.push_str(&first.to_lowercase());
+fn default_params(request_data: &RequestData) -> Value {
+    let mut params = JsonMap::new();
+
+    for (key, value) in &request_data.path_params {
+        params.insert(key.clone(), Value::String(value.clone()));
     }
-    for part in parts {
-        let mut chars = part.chars();
-        if let Some(first_char) = chars.next() {
-            result.push(first_char.to_ascii_uppercase());
-            for c in chars {
-                result.push(c);
-            }
+
+    if let Value::Object(query) = &request_data.query_params {
+        for (key, value) in query {
+            params.insert(key.clone(), value.clone());
         }
     }
 
-    if result.is_empty() { s.to_string() } else { result }
-}
-
-fn map_strings_to_json(input: &HashMap<String, String>) -> JsonMap<String, Value> {
-    let mut map = JsonMap::new();
-    for (key, value) in input {
-        map.insert(to_camel_case(key), Value::String(value.clone()));
-    }
-    map
-}
-
-fn headers_to_json(headers: &HeaderMap) -> JsonMap<String, Value> {
-    let mut map = JsonMap::new();
-    for (name, value) in headers.iter() {
-        if let Ok(val_str) = value.to_str() {
-            map.insert(to_camel_case(name.as_str()), Value::String(val_str.to_string()));
-        }
-    }
-    map
-}
-
-fn cookies_to_json(headers: &HeaderMap) -> JsonMap<String, Value> {
-    let mut map = JsonMap::new();
-    if let Some(cookie_header) = headers.get(axum::http::header::COOKIE) {
-        if let Ok(cookie_str) = cookie_header.to_str() {
-            for cookie in Cookie::split_parse(cookie_str).flatten() {
-                map.insert(to_camel_case(cookie.name()), Value::String(cookie.value().to_string()));
-            }
-        }
-    }
-    map
-}
-
-fn headers_to_lowercase_map(headers: &HeaderMap) -> HashMap<String, String> {
-    let mut map = HashMap::new();
-    for (name, value) in headers.iter() {
-        if let Ok(val_str) = value.to_str() {
-            map.insert(name.as_str().to_lowercase(), val_str.to_string());
-        }
-    }
-    map
-}
-
-fn cookies_to_map(headers: &HeaderMap) -> HashMap<String, String> {
-    let mut map = HashMap::new();
-    if let Some(cookie_header) = headers.get(axum::http::header::COOKIE) {
-        if let Ok(cookie_str) = cookie_header.to_str() {
-            for cookie in Cookie::split_parse(cookie_str).flatten() {
-                map.insert(cookie.name().to_string(), cookie.value().to_string());
-            }
-        }
-    }
-    map
-}
-
-fn parse_urlencoded_to_json(data: &[u8]) -> std::result::Result<Value, String> {
-    use std::collections::HashMap;
-
-    let body_str = std::str::from_utf8(data).map_err(|e| e.to_string())?;
-
-    if body_str.contains('[') {
-        let config = serde_qs::Config::new(10, false);
-        let parsed: HashMap<String, Value> = config.deserialize_str(body_str).map_err(|e| e.to_string())?;
-        let mut json_value = serde_json::to_value(parsed).map_err(|e| e.to_string())?;
-        convert_types_recursive(&mut json_value);
-        Ok(json_value)
-    } else {
-        Ok(parse_urlencoded_simple(data))
-    }
-}
-
-fn parse_urlencoded_simple(data: &[u8]) -> Value {
-    use rustc_hash::FxHashMap;
-    use urlencoding::decode;
-
-    let mut array_map: FxHashMap<String, Vec<Value>> = FxHashMap::default();
-
-    let body_str = String::from_utf8_lossy(data);
-    let body_str = body_str.replace('+', " ");
-
-    for pair in body_str.split('&') {
-        if pair.is_empty() {
-            continue;
-        }
-
-        let (key, value) = if let Some((k, v)) = pair.split_once('=') {
-            (
-                decode(k).unwrap_or_default().to_string(),
-                decode(v).unwrap_or_default().to_string(),
-            )
-        } else {
-            (pair.to_string(), String::new())
-        };
-
-        let json_value = convert_string_to_json_value(&value);
-
-        match array_map.get_mut(&key) {
-            Some(entry) => entry.push(json_value),
-            None => {
-                array_map.insert(key, vec![json_value]);
-            }
-        }
+    for (key, value) in &request_data.headers {
+        params.insert(key.clone(), Value::String(value.clone()));
     }
 
-    array_map
-        .iter()
-        .map(|(key, value)| {
-            if value.len() == 1 {
-                (key, value[0].clone())
-            } else {
-                (key, Value::Array(value.clone()))
-            }
-        })
-        .collect::<Value>()
-}
-
-fn convert_string_to_json_value(s: &str) -> Value {
-    if s.is_empty() {
-        return Value::String(String::new());
+    for (key, value) in &request_data.cookies {
+        params.insert(key.clone(), Value::String(value.clone()));
     }
 
-    if let Some(int_value) = try_parse_integer(s) {
-        return int_value;
-    }
-
-    if let Some(float_value) = try_parse_float(s) {
-        return float_value;
-    }
-
-    if let Some(bool_value) = try_parse_boolean(s) {
-        return bool_value;
-    }
-
-    Value::String(s.to_string())
+    Value::Object(params)
 }
 
-fn try_parse_integer(s: &str) -> Option<Value> {
-    s.parse::<i64>().ok().map(|i| Value::Number(i.into()))
+fn build_js_payload(handler: &JsHandler, request_data: &RequestData, validated_params: Option<Value>) -> Value {
+    let params_value = validated_params.unwrap_or_else(|| default_params(request_data));
+
+    let path_params = serde_json::to_value(&request_data.path_params).unwrap_or(Value::Null);
+    let raw_query = serde_json::to_value(&request_data.raw_query_params).unwrap_or(Value::Null);
+    let headers = serde_json::to_value(&request_data.headers).unwrap_or(Value::Null);
+    let cookies = serde_json::to_value(&request_data.cookies).unwrap_or(Value::Null);
+    let body = request_data.body.clone().unwrap_or(Value::Null);
+
+    json!({
+        "method": handler.method,
+        "path": handler.path,
+        "pathParams": path_params,
+        "query": request_data.query_params,
+        "rawQuery": raw_query,
+        "headers": headers,
+        "cookies": cookies,
+        "params": params_value,
+        "body": body
+    })
 }
 
-fn try_parse_float(s: &str) -> Option<Value> {
-    s.parse::<f64>()
-        .ok()
-        .and_then(|f| serde_json::Number::from_f64(f).map(|num| Value::Number(num)))
-}
-
-fn try_parse_boolean(s: &str) -> Option<Value> {
-    match s.to_ascii_lowercase().as_str() {
-        "true" => Some(Value::Bool(true)),
-        "false" => Some(Value::Bool(false)),
-        _ => None,
-    }
-}
-
-fn convert_types_recursive(value: &mut Value) {
-    match value {
-        Value::Object(map) => {
-            for (_, v) in map.iter_mut() {
-                convert_types_recursive(v);
-            }
-        }
-        Value::Array(arr) => {
-            for item in arr.iter_mut() {
-                convert_types_recursive(item);
-            }
-        }
-        Value::String(s) => {
-            if let Some(int_value) = try_parse_integer(s) {
-                *value = int_value;
-            } else if let Some(float_value) = try_parse_float(s) {
-                *value = float_value;
-            } else if let Some(bool_value) = try_parse_boolean(s) {
-                *value = bool_value;
-            }
-        }
-        _ => {}
-    }
-}
-
-fn value_to_camel_case_map(value: Value) -> JsonMap<String, Value> {
-    match value {
-        Value::Object(obj) => obj.into_iter().map(|(k, v)| (to_camel_case(&k), v)).collect(),
-        _ => JsonMap::new(),
-    }
-}
-
-fn merge_param_maps(maps: &[JsonMap<String, Value>]) -> JsonMap<String, Value> {
-    let mut merged = JsonMap::new();
-    for map in maps {
-        for (key, value) in map {
-            merged.insert(key.clone(), value.clone());
-        }
-    }
-    merged
-}
-
-fn parse_query_maps(uri: &Uri) -> (Value, HashMap<String, String>) {
-    let query_str = uri.query().unwrap_or("");
-    if query_str.is_empty() {
-        return (Value::Object(JsonMap::new()), HashMap::new());
-    }
-
-    let typed = parse_query_string_to_json(query_str.as_bytes(), true);
-
-    let mut raw_map = HashMap::new();
-    for (key, value) in url::form_urlencoded::parse(query_str.as_bytes()) {
-        raw_map.entry(key.to_string()).or_insert(value.to_string());
-    }
-
-    (typed, raw_map)
-}
-
-fn build_request_payload(
-    method: &str,
-    path: &str,
-    path_params: JsonMap<String, Value>,
-    query_params: JsonMap<String, Value>,
-    headers: JsonMap<String, Value>,
-    cookies: JsonMap<String, Value>,
-    params: JsonMap<String, Value>,
-    raw_query: HashMap<String, String>,
-    body: Option<Value>,
-) -> Value {
-    let mut payload = JsonMap::new();
-    payload.insert("method".to_string(), Value::String(method.to_string()));
-    payload.insert("path".to_string(), Value::String(path.to_string()));
-    payload.insert("pathParams".to_string(), Value::Object(path_params));
-    payload.insert("query".to_string(), Value::Object(query_params));
-    payload.insert("headers".to_string(), Value::Object(headers));
-    payload.insert("cookies".to_string(), Value::Object(cookies));
-    payload.insert("params".to_string(), Value::Object(params));
-    let raw_query_map: JsonMap<String, Value> = raw_query
-        .into_iter()
-        .map(|(k, v)| (to_camel_case(&k), Value::String(v)))
-        .collect();
-    payload.insert("rawQuery".to_string(), Value::Object(raw_query_map));
-    match body {
-        Some(value) => payload.insert("body".to_string(), value),
-        None => payload.insert("body".to_string(), Value::Null),
-    };
-    Value::Object(payload)
-}
-
-fn to_axum_route_path(path: &str) -> String {
-    spikard_http::type_hints::strip_type_hints(path)
-}
-
+#[derive(Clone)]
 struct HandlerResponsePayload {
     status: u16,
     headers: HashMap<String, String>,
@@ -340,104 +124,150 @@ fn interpret_handler_response(value: Value) -> HandlerResponsePayload {
     }
 }
 
-fn convert_parameter_schema(schema: Value) -> Option<Value> {
-    let container = schema.as_object()?;
-    let mut properties = JsonMap::new();
-    let mut required = Vec::new();
-
-    for (section, entries_value) in container {
-        let source = match section.as_str() {
-            "path" => "path",
-            "query" => "query",
-            "headers" => "header",
-            "cookies" => "cookie",
-            _ => continue,
-        };
-
-        let entries = match entries_value.as_object() {
-            Some(obj) => obj,
-            None => continue,
-        };
-
-        for (name, schema_value) in entries {
-            let mut map = match schema_value {
-                Value::Object(obj) => obj.clone(),
-                Value::String(s) => {
-                    let mut m = JsonMap::new();
-                    m.insert("type".to_string(), Value::String(s.clone()));
-                    m
-                }
-                _ => {
-                    let mut m = JsonMap::new();
-                    m.insert("type".to_string(), schema_value.clone());
-                    m
-                }
-            };
-
-            map.entry("type".to_string())
-                .or_insert_with(|| Value::String("string".to_string()));
-            map.insert("source".to_string(), Value::String(source.to_string()));
-
-            let is_optional = map.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
-            if !is_optional {
-                required.push(Value::String(name.clone()));
-            }
-
-            properties.insert(name.clone(), Value::Object(map));
-        }
-    }
-
-    if properties.is_empty() {
-        return None;
-    }
-
-    let mut result = JsonMap::new();
-    result.insert("type".to_string(), Value::String("object".to_string()));
-    result.insert("properties".to_string(), Value::Object(properties));
-    if !required.is_empty() {
-        result.insert("required".to_string(), Value::Array(required));
-    }
-
-    Some(Value::Object(result))
+fn problem_to_json(problem: &ProblemDetails) -> String {
+    problem
+        .to_json_pretty()
+        .unwrap_or_else(|e| format!("Failed to serialize problem details: {}", e))
 }
 
 /// JavaScript handler wrapper that can be called from Rust async context
 #[derive(Clone)]
 struct JsHandler {
-    /// Thread-safe reference to the JavaScript async function
-    /// Takes JSON string, returns Promise<JSON string>
-    /// Full signature: ThreadsafeFunction<InputType, OutputType, ReturnType, ErrorType, IsWeakRef>
     handler_fn: Arc<ThreadsafeFunction<String, Promise<String>, Vec<String>, napi::Status, false>>,
+    handler_name: String,
+    method: String,
+    path: String,
+    request_validator: Option<SchemaValidator>,
+    response_validator: Option<SchemaValidator>,
+    parameter_validator: Option<ParameterValidator>,
 }
 
-// SAFETY: ThreadsafeFunction from napi-rs is designed to be Send + Sync.
-// - ThreadsafeFunction uses internal synchronization to safely call JavaScript from any thread
-// - NAPI-RS guarantees thread-safe execution by marshaling through Node.js event loop
-// - The JavaScript function reference is managed by Node.js runtime
-// - Arc provides shared ownership with atomic reference counting
-unsafe impl Send for JsHandler {}
-unsafe impl Sync for JsHandler {}
-
 impl JsHandler {
-    /// Create a new handler from a JavaScript function
-    fn new(js_fn: Function<String, Promise<String>>) -> Result<Self> {
-        // Build ThreadsafeFunction with callback to wrap arguments
-        let tsfn = js_fn.build_threadsafe_function().build_callback(|ctx| {
-            // Wrap value in vec so JS receives it as separate argument
-            Ok(vec![ctx.value])
-        })?;
+    fn new(js_fn: Function<String, Promise<String>>, route: &Route) -> Result<Self> {
+        let tsfn = js_fn
+            .build_threadsafe_function()
+            .build_callback(|ctx| Ok(vec![ctx.value]))?;
 
         Ok(Self {
             handler_fn: Arc::new(tsfn),
+            handler_name: route.handler_name.clone(),
+            method: route.method.as_str().to_string(),
+            path: route.path.clone(),
+            request_validator: route.request_validator.clone(),
+            response_validator: route.response_validator.clone(),
+            parameter_validator: route.parameter_validator.clone(),
         })
     }
 
-    /// Call the JavaScript handler with request parameters
-    ///
-    /// Uses double await pattern:
-    /// - First await: enqueues callback on Node.js event loop
-    /// - Second await: waits for JavaScript Promise to resolve
-    async fn call(&self, payload: Value) -> Result<Value> {
+    async fn handle(&self, request_data: RequestData) -> HandlerResult {
+        if let (Some(validator), Some(body)) = (&self.request_validator, &request_data.body)
+            && let Err(errors) = validator.validate(body)
+        {
+            let problem = ProblemDetails::from_validation_error(&errors);
+            let error_json = problem_to_json(&problem);
+            return Err((problem.status_code(), error_json));
+        }
+
+        let validated_params = if let Some(validator) = &self.parameter_validator {
+            match validator.validate_and_extract(
+                &request_data.query_params,
+                &request_data.raw_query_params,
+                &request_data.path_params,
+                &request_data.headers,
+                &request_data.cookies,
+            ) {
+                Ok(params) => Some(params),
+                Err(errors) => {
+                    let problem = ProblemDetails::from_validation_error(&errors);
+                    let error_json = problem_to_json(&problem);
+                    return Err((problem.status_code(), error_json));
+                }
+            }
+        } else {
+            None
+        };
+
+        let payload = build_js_payload(self, &request_data, validated_params.clone());
+
+        let js_result = self.call_js(payload).await.map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Handler invocation failed: {}", e),
+            )
+        })?;
+
+        let mut handler_response = interpret_handler_response(js_result);
+        let response_body_clone = handler_response.body.clone();
+
+        if let (Some(validator), Some(body_value)) = (&self.response_validator, response_body_clone.as_ref())
+            && let Err(errors) = validator.validate(body_value)
+        {
+            let error_message = if is_debug_mode() {
+                json!({
+                    "error": "Response validation failed",
+                    "validation_errors": format!("{:?}", errors),
+                    "response_body": body_value,
+                    "handler": self.handler_name,
+                })
+                .to_string()
+            } else {
+                "Internal server error".to_string()
+            };
+            eprintln!(
+                "[spikard-node:test-client] response validation failed for {}: {}",
+                self.handler_name, error_message
+            );
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, error_message));
+        }
+
+        if handler_response.status >= 400
+            && let Some(debug_json) = handler_response
+                .body
+                .as_ref()
+                .and_then(|body| serde_json::to_string(body).ok())
+        {
+            eprintln!(
+                "[spikard-node:test-client] handler returned error for {}: status={} body={}",
+                self.handler_name, handler_response.status, debug_json
+            );
+        }
+
+        let mut response_builder = axum::http::Response::builder().status(handler_response.status);
+        let mut has_content_type = false;
+
+        for (name, value) in handler_response.headers.iter() {
+            if let Ok(header_value) = HeaderValue::from_str(value) {
+                if name.eq_ignore_ascii_case("content-type") {
+                    has_content_type = true;
+                }
+                response_builder = response_builder.header(name, header_value);
+            }
+        }
+
+        if !has_content_type {
+            response_builder = response_builder.header("content-type", HeaderValue::from_static("application/json"));
+        }
+
+        let body_bytes = if let Some(body_value) = handler_response.body.take() {
+            serde_json::to_vec(&body_value).map_err(|e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Failed to serialize handler response: {}", e),
+                )
+            })?
+        } else {
+            Vec::new()
+        };
+
+        response_builder.body(Body::from(body_bytes)).map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to build response: {}", e),
+            )
+        })
+    }
+
+    async fn call_js(&self, payload: Value) -> Result<Value> {
         let request_json = serde_json::to_string(&payload)
             .map_err(|e| Error::from_reason(format!("Failed to serialize request payload: {}", e)))?;
 
@@ -454,6 +284,13 @@ impl JsHandler {
     }
 }
 
+impl ForeignHandler for JsHandler {
+    fn call(&self, _req: Request<Body>, request_data: RequestData) -> HandlerFuture {
+        let handler = self.clone();
+        Box::pin(async move { handler.handle(request_data).await })
+    }
+}
+
 /// Test client for making HTTP requests to a Spikard application
 #[napi]
 pub struct TestClient {
@@ -463,473 +300,29 @@ pub struct TestClient {
 #[napi]
 impl TestClient {
     /// Create a new test client from routes and handlers
-    ///
-    /// # Arguments
-    /// * `routes_json` - JSON array of route metadata objects
-    /// * `handlers_map` - JavaScript object mapping handler names to handler functions
     #[napi(constructor)]
     pub fn new(routes_json: String, handlers_map: Object) -> Result<Self> {
-        // Parse routes
         let routes_data: Vec<RouteMetadata> = serde_json::from_str(&routes_json)
             .map_err(|e| Error::from_reason(format!("Failed to parse routes: {}", e)))?;
 
-        // Extract handler functions from the JavaScript object
-        let mut handlers: HashMap<String, JsHandler> = HashMap::new();
+        let mut prepared_routes: Vec<(Route, JsHandler)> = Vec::new();
 
-        for route_meta in &routes_data {
-            let handler_name = &route_meta.handler_name;
+        for metadata in routes_data {
+            let route = Route::from_metadata(metadata)
+                .map_err(|e| Error::from_reason(format!("Failed to build route: {}", e)))?;
 
-            // Get the JavaScript function from the handlers map
-            // Type it as Function<InputType, OutputType> to enable proper ThreadsafeFunction creation
+            let handler_name = route.handler_name.clone();
             let js_fn: Function<String, Promise<String>> = handlers_map
-                .get_named_property(handler_name)
+                .get_named_property(&handler_name)
                 .map_err(|e| Error::from_reason(format!("Failed to get handler '{}': {}", handler_name, e)))?;
 
-            // Create a JsHandler wrapper
-            let js_handler = JsHandler::new(js_fn)?;
-            handlers.insert(handler_name.clone(), js_handler);
+            let js_handler = JsHandler::new(js_fn, &route)?;
+            prepared_routes.push((route, js_handler));
         }
 
-        // Convert to Route objects
-        let routes: Vec<Route> = routes_data
-            .into_iter()
-            .map(|mut metadata| {
-                metadata.parameter_schema = metadata.parameter_schema.take().and_then(convert_parameter_schema);
-                Route::from_metadata(metadata).map_err(|e| Error::from_reason(format!("Failed to create route: {}", e)))
-            })
-            .collect::<Result<Vec<_>>>()?;
-
-        // Build Axum router with JavaScript handlers
-        let mut axum_router = AxumRouter::new();
-
-        for route in routes {
-            let handler = handlers
-                .get(&route.handler_name)
-                .ok_or_else(|| Error::from_reason(format!("Handler '{}' not found", route.handler_name)))?;
-
-            let handler_clone = handler.clone();
-            let path = route.path.clone();
-            let has_path_params = path.contains('{');
-            let axum_path = to_axum_route_path(&path);
-            println!(
-                "[spikard-node:test-client] register {} {} -> {}",
-                route.method.as_str(),
-                route.path,
-                axum_path
-            );
-
-            // Create handler function that calls JavaScript handler
-            let route_clone = route.clone();
-            let route_handler = move |path_params: Option<Path<HashMap<String, String>>>,
-                                      uri: Uri,
-                                      headers: HeaderMap,
-                                      request: Request| {
-                let handler = handler_clone.clone();
-                let route = route_clone.clone();
-                async move {
-                    let path_params_map = path_params.map(|p| p.0).unwrap_or_default();
-                    let path_json = map_strings_to_json(&path_params_map);
-
-                    let (query_value, raw_query_map) = parse_query_maps(&uri);
-                    let query_json = value_to_camel_case_map(query_value.clone());
-
-                    let headers_map = headers_to_lowercase_map(&headers);
-                    let headers_json = headers_to_json(&headers);
-
-                    let cookies_map = cookies_to_map(&headers);
-                    let cookies_json = cookies_to_json(&headers);
-
-                    let (_parts, body_stream) = request.into_parts();
-                    let body_result = body_stream.collect().await;
-
-                    println!(
-                        "[spikard-node:test-client] handling {} {}",
-                        route.method.as_str(),
-                        route.path
-                    );
-
-                    let mut body_value: Option<Value> = None;
-                    let content_type_header = headers_map.get("content-type").cloned();
-
-                    match body_result {
-                        Ok(bytes) => {
-                            let body_bytes = bytes.to_bytes();
-                            if !body_bytes.is_empty() {
-                                let is_urlencoded = content_type_header
-                                    .as_deref()
-                                    .map(|ct| ct.starts_with("application/x-www-form-urlencoded"))
-                                    .unwrap_or(false);
-
-                                if is_urlencoded {
-                                    match parse_urlencoded_to_json(body_bytes.as_ref()) {
-                                        Ok(json) => body_value = Some(json),
-                                        Err(err) => {
-                                            let problem = ProblemDetails::bad_request("Failed to parse form data")
-                                                .with_extension("error", Value::String(err));
-                                            let json_bytes = serde_json::to_vec(&problem).unwrap_or_default();
-                                            return axum::response::Response::builder()
-                                                .status(problem.status_code())
-                                                .header("content-type", "application/problem+json")
-                                                .body(Body::from(json_bytes))
-                                                .unwrap();
-                                        }
-                                    }
-                                } else {
-                                    match serde_json::from_slice::<Value>(&body_bytes) {
-                                        Ok(json) => body_value = Some(json),
-                                        Err(_) => {
-                                            let text = String::from_utf8_lossy(&body_bytes).to_string();
-                                            body_value = Some(Value::String(text));
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        Err(err) => {
-                            let problem = ProblemDetails::bad_request("Failed to read request body")
-                                .with_extension("message", Value::String(err.to_string()));
-                            let json_bytes = serde_json::to_vec(&problem).unwrap_or_default();
-                            return axum::response::Response::builder()
-                                .status(problem.status_code())
-                                .header("content-type", "application/problem+json")
-                                .body(Body::from(json_bytes))
-                                .unwrap();
-                        }
-                    }
-
-                    let request_data = RequestData {
-                        path_params: path_params_map.clone(),
-                        query_params: query_value.clone(),
-                        raw_query_params: raw_query_map.clone(),
-                        headers: headers_map.clone(),
-                        cookies: cookies_map.clone(),
-                        body: body_value.clone(),
-                    };
-
-                    if let Some(validator) = &route.request_validator {
-                        let body_for_validation = request_data.body.clone().unwrap_or(Value::Null);
-                        if let Err(errors) = validator.validate(&body_for_validation) {
-                            let problem = ProblemDetails::from_validation_error(&errors);
-                            let json_bytes = serde_json::to_vec(&problem).unwrap_or_default();
-                            return axum::response::Response::builder()
-                                .status(problem.status_code())
-                                .header("content-type", "application/problem+json")
-                                .body(Body::from(json_bytes))
-                                .unwrap();
-                        }
-                    }
-
-                    let validated_params_value = if let Some(param_validator) = &route.parameter_validator {
-                        match param_validator.validate_and_extract(
-                            &request_data.query_params,
-                            &request_data.raw_query_params,
-                            &request_data.path_params,
-                            &request_data.headers,
-                            &request_data.cookies,
-                        ) {
-                            Ok(params) => Some(params),
-                            Err(errors) => {
-                                let problem = ProblemDetails::from_validation_error(&errors);
-                                let json_bytes = serde_json::to_vec(&problem).unwrap_or_default();
-                                return axum::response::Response::builder()
-                                    .status(problem.status_code())
-                                    .header("content-type", "application/problem+json")
-                                    .body(Body::from(json_bytes))
-                                    .unwrap();
-                            }
-                        }
-                    } else {
-                        None
-                    };
-
-                    let params_combined = {
-                        let maps = vec![
-                            path_json.clone(),
-                            query_json.clone(),
-                            headers_json.clone(),
-                            cookies_json.clone(),
-                        ];
-                        merge_param_maps(&maps)
-                    };
-
-                    let params_for_handler = if let Some(validated) = validated_params_value.clone() {
-                        value_to_camel_case_map(validated)
-                    } else {
-                        params_combined.clone()
-                    };
-
-                    let payload = build_request_payload(
-                        route.method.as_str(),
-                        &route.path,
-                        path_json,
-                        query_json,
-                        headers_json,
-                        cookies_json,
-                        params_for_handler,
-                        raw_query_map,
-                        body_value,
-                    );
-
-                    match handler.call(payload).await {
-                        Ok(result) => {
-                            let handler_response = interpret_handler_response(result);
-                            let mut response_builder =
-                                axum::response::Response::builder().status(handler_response.status);
-                            let mut has_content_type = false;
-
-                            for (name, value) in handler_response.headers.iter() {
-                                if let Ok(header_value) = HeaderValue::from_str(value) {
-                                    if name.eq_ignore_ascii_case("content-type") {
-                                        has_content_type = true;
-                                    }
-                                    response_builder = response_builder.header(name, header_value);
-                                }
-                            }
-
-                            if !has_content_type {
-                                response_builder = response_builder
-                                    .header("content-type", HeaderValue::from_static("application/json"));
-                            }
-
-                            let body_bytes = handler_response
-                                .body
-                                .map(|value| serde_json::to_vec(&value).unwrap_or_default())
-                                .unwrap_or_default();
-
-                            response_builder.body(Body::from(body_bytes)).unwrap()
-                        }
-                        Err(e) => {
-                            let error = serde_json::json!({
-                                "error": "Handler failed",
-                                "message": e.to_string()
-                            });
-                            let json_bytes = serde_json::to_vec(&error).unwrap_or_default();
-                            axum::response::Response::builder()
-                                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                                .header("content-type", "application/json")
-                                .body(Body::from(json_bytes))
-                                .unwrap()
-                        }
-                    }
-                }
-            };
-
-            // Strip type hints from path for Axum compatibility
-            // Register route based on HTTP method
-            axum_router = match route.method.as_str() {
-                "GET" => {
-                    if has_path_params {
-                        let handler = route_handler;
-                        axum_router.route(
-                            &axum_path,
-                            get(
-                                move |path: Path<HashMap<String, String>>,
-                                      uri: Uri,
-                                      headers: HeaderMap,
-                                      req: Request| async move {
-                                    handler(Some(path), uri, headers, req).await
-                                },
-                            ),
-                        )
-                    } else {
-                        let handler = route_handler;
-                        axum_router.route(
-                            &axum_path,
-                            get(move |uri: Uri, headers: HeaderMap, req: Request| async move {
-                                handler(None, uri, headers, req).await
-                            }),
-                        )
-                    }
-                }
-                "POST" => {
-                    if has_path_params {
-                        let handler = route_handler;
-                        axum_router.route(
-                            &axum_path,
-                            post(
-                                move |path: Path<HashMap<String, String>>,
-                                      uri: Uri,
-                                      headers: HeaderMap,
-                                      req: Request| async move {
-                                    handler(Some(path), uri, headers, req).await
-                                },
-                            ),
-                        )
-                    } else {
-                        let handler = route_handler;
-                        axum_router.route(
-                            &axum_path,
-                            post(move |uri: Uri, headers: HeaderMap, req: Request| async move {
-                                handler(None, uri, headers, req).await
-                            }),
-                        )
-                    }
-                }
-                "PUT" => {
-                    if has_path_params {
-                        let handler = route_handler;
-                        axum_router.route(
-                            &axum_path,
-                            put(
-                                move |path: Path<HashMap<String, String>>,
-                                      uri: Uri,
-                                      headers: HeaderMap,
-                                      req: Request| async move {
-                                    handler(Some(path), uri, headers, req).await
-                                },
-                            ),
-                        )
-                    } else {
-                        let handler = route_handler;
-                        axum_router.route(
-                            &axum_path,
-                            put(move |uri: Uri, headers: HeaderMap, req: Request| async move {
-                                handler(None, uri, headers, req).await
-                            }),
-                        )
-                    }
-                }
-                "DELETE" => {
-                    if has_path_params {
-                        let handler = route_handler;
-                        axum_router.route(
-                            &axum_path,
-                            delete(
-                                move |path: Path<HashMap<String, String>>,
-                                      uri: Uri,
-                                      headers: HeaderMap,
-                                      req: Request| async move {
-                                    handler(Some(path), uri, headers, req).await
-                                },
-                            ),
-                        )
-                    } else {
-                        let handler = route_handler;
-                        axum_router.route(
-                            &axum_path,
-                            delete(move |uri: Uri, headers: HeaderMap, req: Request| async move {
-                                handler(None, uri, headers, req).await
-                            }),
-                        )
-                    }
-                }
-                "PATCH" => {
-                    if has_path_params {
-                        let handler = route_handler;
-                        axum_router.route(
-                            &axum_path,
-                            patch(
-                                move |path: Path<HashMap<String, String>>,
-                                      uri: Uri,
-                                      headers: HeaderMap,
-                                      req: Request| async move {
-                                    handler(Some(path), uri, headers, req).await
-                                },
-                            ),
-                        )
-                    } else {
-                        let handler = route_handler;
-                        axum_router.route(
-                            &axum_path,
-                            patch(move |uri: Uri, headers: HeaderMap, req: Request| async move {
-                                handler(None, uri, headers, req).await
-                            }),
-                        )
-                    }
-                }
-                "HEAD" => {
-                    if has_path_params {
-                        let handler = route_handler;
-                        axum_router.route(
-                            &axum_path,
-                            any(
-                                move |path: Path<HashMap<String, String>>,
-                                      uri: Uri,
-                                      headers: HeaderMap,
-                                      method: Method,
-                                      req: Request| async move {
-                                    if method == Method::HEAD {
-                                        handler(Some(path), uri, headers, req).await
-                                    } else {
-                                        axum::response::Response::builder()
-                                            .status(405)
-                                            .body(Body::empty())
-                                            .unwrap()
-                                    }
-                                },
-                            ),
-                        )
-                    } else {
-                        let handler = route_handler;
-                        axum_router.route(
-                            &axum_path,
-                            any(
-                                move |uri: Uri, headers: HeaderMap, method: Method, req: Request| async move {
-                                    if method == Method::HEAD {
-                                        handler(None, uri, headers, req).await
-                                    } else {
-                                        axum::response::Response::builder()
-                                            .status(405)
-                                            .body(Body::empty())
-                                            .unwrap()
-                                    }
-                                },
-                            ),
-                        )
-                    }
-                }
-                "OPTIONS" => {
-                    if has_path_params {
-                        let handler = route_handler;
-                        axum_router.route(
-                            &axum_path,
-                            any(
-                                move |path: Path<HashMap<String, String>>,
-                                      uri: Uri,
-                                      headers: HeaderMap,
-                                      method: Method,
-                                      req: Request| async move {
-                                    if method == Method::OPTIONS {
-                                        handler(Some(path), uri, headers, req).await
-                                    } else {
-                                        axum::response::Response::builder()
-                                            .status(405)
-                                            .body(Body::empty())
-                                            .unwrap()
-                                    }
-                                },
-                            ),
-                        )
-                    } else {
-                        let handler = route_handler;
-                        axum_router.route(
-                            &axum_path,
-                            any(
-                                move |uri: Uri, headers: HeaderMap, method: Method, req: Request| async move {
-                                    if method == Method::OPTIONS {
-                                        handler(None, uri, headers, req).await
-                                    } else {
-                                        axum::response::Response::builder()
-                                            .status(405)
-                                            .body(Body::empty())
-                                            .unwrap()
-                                    }
-                                },
-                            ),
-                        )
-                    }
-                }
-                _ => {
-                    return Err(Error::from_reason(format!(
-                        "Unsupported HTTP method: {}",
-                        route.method.as_str()
-                    )));
-                }
-            };
-        }
-
-        // Create test server from the router
-        let server = TestServer::new(axum_router.into_make_service())
+        let axum_router = build_router_with_handlers(prepared_routes)
+            .map_err(|e| Error::from_reason(format!("Failed to build router: {}", e)))?;
+        let server = TestServer::new(axum_router)
             .map_err(|e| Error::from_reason(format!("Failed to create test server: {}", e)))?;
 
         Ok(Self {
@@ -937,142 +330,329 @@ impl TestClient {
         })
     }
 
-    /// Make a GET request
     #[napi]
-    pub async fn get(&self, path: String, headers: Option<serde_json::Value>) -> Result<TestResponse> {
+    pub async fn get(&self, path: String, headers: Option<Value>) -> Result<TestResponse> {
         self.request("GET", path, headers, None).await
     }
 
-    /// Make a POST request
     #[napi]
-    pub async fn post(
-        &self,
-        path: String,
-        headers: Option<serde_json::Value>,
-        json: Option<serde_json::Value>,
-    ) -> Result<TestResponse> {
+    pub async fn post(&self, path: String, headers: Option<Value>, json: Option<Value>) -> Result<TestResponse> {
         self.request("POST", path, headers, json).await
     }
 
-    /// Make a PUT request
     #[napi]
-    pub async fn put(
-        &self,
-        path: String,
-        headers: Option<serde_json::Value>,
-        json: Option<serde_json::Value>,
-    ) -> Result<TestResponse> {
+    pub async fn put(&self, path: String, headers: Option<Value>, json: Option<Value>) -> Result<TestResponse> {
         self.request("PUT", path, headers, json).await
     }
 
-    /// Make a DELETE request
     #[napi]
-    pub async fn delete(&self, path: String, headers: Option<serde_json::Value>) -> Result<TestResponse> {
+    pub async fn delete(&self, path: String, headers: Option<Value>) -> Result<TestResponse> {
         self.request("DELETE", path, headers, None).await
     }
 
-    /// Make a PATCH request
     #[napi]
-    pub async fn patch(
-        &self,
-        path: String,
-        headers: Option<serde_json::Value>,
-        json: Option<serde_json::Value>,
-    ) -> Result<TestResponse> {
+    pub async fn patch(&self, path: String, headers: Option<Value>, json: Option<Value>) -> Result<TestResponse> {
         self.request("PATCH", path, headers, json).await
     }
 
-    /// Make a HEAD request
     #[napi]
-    pub async fn head(&self, path: String, headers: Option<serde_json::Value>) -> Result<TestResponse> {
+    pub async fn head(&self, path: String, headers: Option<Value>) -> Result<TestResponse> {
         self.request("HEAD", path, headers, None).await
     }
 
-    /// Make an OPTIONS request
     #[napi]
-    pub async fn options(&self, path: String, headers: Option<serde_json::Value>) -> Result<TestResponse> {
+    pub async fn options(&self, path: String, headers: Option<Value>) -> Result<TestResponse> {
         self.request("OPTIONS", path, headers, None).await
     }
 
-    /// Generic request method using axum-test
+    #[napi]
+    pub async fn trace(&self, path: String, headers: Option<Value>) -> Result<TestResponse> {
+        self.request("TRACE", path, headers, None).await
+    }
+
     async fn request(
         &self,
         method: &str,
         path: String,
-        headers: Option<serde_json::Value>,
-        json: Option<serde_json::Value>,
+        headers: Option<Value>,
+        body: Option<Value>,
     ) -> Result<TestResponse> {
-        // Build request using axum-test
         let mut request = match method {
             "GET" => self.server.get(&path),
-            "POST" => {
-                let mut req = self.server.post(&path);
-                if let Some(json_data) = json {
-                    req = req.json(&json_data);
-                }
-                req
-            }
-            "PUT" => {
-                let mut req = self.server.put(&path);
-                if let Some(json_data) = json {
-                    req = req.json(&json_data);
-                }
-                req
-            }
+            "POST" => self.server.post(&path),
+            "PUT" => self.server.put(&path),
             "DELETE" => self.server.delete(&path),
-            "PATCH" => {
-                let mut req = self.server.patch(&path);
-                if let Some(json_data) = json {
-                    req = req.json(&json_data);
-                }
-                req
-            }
-            "HEAD" | "OPTIONS" => {
-                // Use method() for HEAD and OPTIONS
-                self.server.method(
-                    axum::http::Method::from_bytes(method.as_bytes())
-                        .map_err(|e| Error::from_reason(format!("Invalid method: {}", e)))?,
-                    &path,
-                )
-            }
+            "PATCH" => self.server.patch(&path),
+            "HEAD" | "OPTIONS" | "TRACE" => self.server.method(
+                Method::from_bytes(method.as_bytes())
+                    .map_err(|e| Error::from_reason(format!("Invalid method: {}", e)))?,
+                &path,
+            ),
             _ => return Err(Error::from_reason(format!("Unsupported method: {}", method))),
         };
 
-        // Add headers if provided
-        #[allow(clippy::collapsible_if)]
-        if let Some(headers_val) = headers {
-            if let Some(headers_obj) = headers_val.as_object() {
-                for (name, value) in headers_obj {
-                    if let Some(value_str) = value.as_str() {
-                        request = request.add_header(
-                            axum::http::HeaderName::from_bytes(name.as_bytes())
-                                .map_err(|e| Error::from_reason(format!("Invalid header name: {}", e)))?,
-                            axum::http::HeaderValue::from_str(value_str)
-                                .map_err(|e| Error::from_reason(format!("Invalid header value: {}", e)))?,
-                        );
+        let mut headers_map = HeaderMap::new();
+
+        if let Some(headers_obj) = headers.as_ref().and_then(Value::as_object) {
+            for (name, value) in headers_obj {
+                let value_str = value
+                    .as_str()
+                    .ok_or_else(|| Error::from_reason(format!("Header '{}' must be a string value", name)))?;
+
+                let header_name = axum::http::HeaderName::from_bytes(name.as_bytes())
+                    .map_err(|e| Error::from_reason(format!("Invalid header name: {}", e)))?;
+                let header_value = axum::http::HeaderValue::from_str(value_str)
+                    .map_err(|e| Error::from_reason(format!("Invalid header value: {}", e)))?;
+
+                headers_map.insert(header_name.clone(), header_value.clone());
+                request = request.add_header(header_name, header_value);
+            }
+        }
+
+        if let Some(body_value) = body {
+            match determine_body_payload(&body_value) {
+                BodyPayload::Json(json_data) => {
+                    let body_vec = serde_json::to_vec(&json_data)
+                        .map_err(|e| Error::from_reason(format!("Failed to serialize JSON body: {}", e)))?;
+                    request = request.bytes(Bytes::from(body_vec));
+
+                    if !headers_map
+                        .keys()
+                        .any(|name| name.as_str().eq_ignore_ascii_case("content-type"))
+                    {
+                        request = request.content_type("application/json");
                     }
+                }
+                BodyPayload::Form(form_data) => {
+                    let body_vec = encode_form_body(form_data)
+                        .map_err(|err| Error::from_reason(format!("Failed to encode form body: {}", err)))?;
+                    request = request.bytes(Bytes::from(body_vec));
+
+                    if !headers_map
+                        .keys()
+                        .any(|name| name.as_str().eq_ignore_ascii_case("content-type"))
+                    {
+                        request = request.content_type("application/x-www-form-urlencoded");
+                    }
+                }
+                BodyPayload::Multipart(multipart) => {
+                    let (body_bytes, content_type) = encode_multipart_body(&multipart).map_err(Error::from_reason)?;
+
+                    request = request.bytes(Bytes::from(body_bytes));
+                    request = request.content_type(&content_type);
                 }
             }
         }
 
-        // Execute request
         let response = request.await;
-
-        // Extract response parts
         let status = response.status_code().as_u16();
-        let headers_map = response.headers();
+        let headers_map_resp = response.headers();
 
-        // Convert headers to JSON map
         let mut headers_json = serde_json::Map::new();
-        for (name, value) in headers_map.iter() {
+        for (name, value) in headers_map_resp.iter() {
             if let Ok(value_str) = value.to_str() {
                 headers_json.insert(name.to_string(), Value::String(value_str.to_string()));
             }
         }
 
-        // Get body bytes
         let body_bytes = response.into_bytes().to_vec();
 
         Ok(TestResponse::new(status, headers_json, body_bytes))
     }
+}
+
+fn encode_form_body(body: Value) -> std::result::Result<Vec<u8>, String> {
+    match body {
+        Value::String(s) => Ok(s.into_bytes()),
+        Value::Object(map) => {
+            let mut parts = Vec::new();
+            for (key, value) in map {
+                append_form_value(&mut parts, key, value)?;
+            }
+            Ok(parts.join("&").into_bytes())
+        }
+        other => serde_qs::to_string(&other)
+            .map(|encoded| encoded.into_bytes())
+            .map_err(|e| e.to_string()),
+    }
+}
+
+fn append_form_value(parts: &mut Vec<String>, key: String, value: Value) -> std::result::Result<(), String> {
+    match value {
+        Value::Array(items) => {
+            for item in items {
+                append_form_value(parts, key.clone(), item)?;
+            }
+            Ok(())
+        }
+        Value::Object(obj) => {
+            for (nested_key, nested_value) in obj {
+                let new_key = format!("{}[{}]", key, nested_key);
+                append_form_value(parts, new_key, nested_value)?;
+            }
+            Ok(())
+        }
+        other => {
+            let encoded_key = urlencoding::encode(&key).into_owned();
+            let value_string = value_to_form_string(&other);
+            let encoded_value = urlencoding::encode(&value_string).into_owned();
+            parts.push(format!("{}={}", encoded_key, encoded_value));
+            Ok(())
+        }
+    }
+}
+
+fn value_to_form_string(value: &Value) -> String {
+    match value {
+        Value::Null => String::new(),
+        Value::Bool(b) => b.to_string(),
+        Value::Number(n) => n.to_string(),
+        Value::String(s) => s.clone(),
+        other => other.to_string(),
+    }
+}
+
+enum BodyPayload {
+    Json(Value),
+    Form(Value),
+    Multipart(Value),
+}
+
+fn determine_body_payload(value: &Value) -> BodyPayload {
+    if !value.is_object() {
+        return BodyPayload::Json(value.clone());
+    }
+
+    if let Some(obj) = value.as_object() {
+        if let Some(form) = obj.get("__spikard_form__") {
+            return BodyPayload::Form(form.clone());
+        }
+
+        if let Some(multipart) = obj.get("__spikard_multipart__") {
+            return BodyPayload::Multipart(multipart.clone());
+        }
+    }
+
+    BodyPayload::Json(value.clone())
+}
+
+fn encode_multipart_body(value: &Value) -> std::result::Result<(Vec<u8>, String), String> {
+    let obj = value
+        .as_object()
+        .ok_or_else(|| "Multipart payload must be an object".to_string())?;
+
+    let fields = obj
+        .get("fields")
+        .and_then(|v| v.as_object())
+        .cloned()
+        .unwrap_or_default();
+    let files = obj.get("files").and_then(|v| v.as_array()).cloned().unwrap_or_default();
+
+    let boundary = format!(
+        "spikard-boundary-{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_err(|e| e.to_string())?
+            .as_nanos()
+    );
+
+    let mut body = Vec::new();
+
+    // Encode form fields
+    for (name, value) in fields {
+        append_field(&mut body, &boundary, &name, &value)?;
+    }
+
+    // Encode files
+    for file in files {
+        append_file(&mut body, &boundary, &file)?;
+    }
+
+    body.extend_from_slice(format!("--{}--\r\n", boundary).as_bytes());
+
+    let content_type = format!("multipart/form-data; boundary={}", boundary);
+    Ok((body, content_type))
+}
+
+fn append_field(body: &mut Vec<u8>, boundary: &str, name: &str, value: &Value) -> std::result::Result<(), String> {
+    match value {
+        Value::Array(values) => {
+            for item in values {
+                append_field(body, boundary, name, item)?;
+            }
+            Ok(())
+        }
+        _ => {
+            let string_value = match value {
+                Value::String(s) => s.clone(),
+                Value::Null => String::new(),
+                Value::Bool(b) => b.to_string(),
+                Value::Number(n) => n.to_string(),
+                other => serde_json::to_string(other).map_err(|e| e.to_string())?,
+            };
+
+            body.extend_from_slice(format!("--{}\r\n", boundary).as_bytes());
+            body.extend_from_slice(format!("Content-Disposition: form-data; name=\"{}\"\r\n\r\n", name).as_bytes());
+            body.extend_from_slice(string_value.as_bytes());
+            body.extend_from_slice(b"\r\n");
+            Ok(())
+        }
+    }
+}
+
+fn append_file(body: &mut Vec<u8>, boundary: &str, file: &Value) -> std::result::Result<(), String> {
+    let file_obj = file
+        .as_object()
+        .ok_or_else(|| "File entry must be an object".to_string())?;
+
+    let field_name = file_obj
+        .get("name")
+        .or_else(|| file_obj.get("field_name"))
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| "File entry missing 'name'".to_string())?;
+
+    let filename = file_obj.get("filename").and_then(|v| v.as_str()).unwrap_or("file");
+    let content_type = file_obj
+        .get("contentType")
+        .or_else(|| file_obj.get("content_type"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("application/octet-stream");
+
+    let content = if let Some(content) = file_obj.get("content").and_then(|v| v.as_str()) {
+        content.as_bytes().to_vec()
+    } else if let Some(magic) = file_obj.get("magic_bytes").and_then(|v| v.as_str()) {
+        decode_magic_bytes(magic)?
+    } else {
+        Vec::new()
+    };
+
+    body.extend_from_slice(format!("--{}\r\n", boundary).as_bytes());
+    body.extend_from_slice(
+        format!(
+            "Content-Disposition: form-data; name=\"{}\"; filename=\"{}\"\r\n",
+            field_name, filename
+        )
+        .as_bytes(),
+    );
+    body.extend_from_slice(format!("Content-Type: {}\r\n\r\n", content_type).as_bytes());
+    body.extend_from_slice(&content);
+    body.extend_from_slice(b"\r\n");
+
+    Ok(())
+}
+
+fn decode_magic_bytes(hex_str: &str) -> std::result::Result<Vec<u8>, String> {
+    if !hex_str.len().is_multiple_of(2) {
+        return Err("magic_bytes must have an even length".to_string());
+    }
+
+    let mut bytes = Vec::with_capacity(hex_str.len() / 2);
+
+    for chunk in hex_str.as_bytes().chunks(2) {
+        let hex_pair = std::str::from_utf8(chunk).map_err(|e| e.to_string())?;
+        let value = u8::from_str_radix(hex_pair, 16).map_err(|e| e.to_string())?;
+        bytes.push(value);
+    }
+
+    Ok(bytes)
 }

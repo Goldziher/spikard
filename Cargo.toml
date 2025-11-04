@@ -5,6 +5,7 @@ members = [
     "crates/spikard-cli",
     "crates/spikard-codegen",
     "crates/spikard-http",
+    "crates/spikard-rb",
     "crates/spikard-py",
     "crates/spikard-node",
     "crates/spikard-wasm",

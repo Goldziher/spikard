@@ -53,7 +53,7 @@
 
 use anyhow::{Context, Result};
 use serde_json::Value;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -465,10 +465,10 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
     let cors_config = extract_cors_config(fixtures);
 
     // For OPTIONS methods with CORS config, generate a CORS preflight handler
-    if method == "OPTIONS" {
-        if let Some(ref cors_cfg) = cors_config {
-            return generate_cors_preflight_handler(handler_name, cors_cfg);
-        }
+    if method == "OPTIONS"
+        && let Some(ref cors_cfg) = cors_config
+    {
+        return generate_cors_preflight_handler(handler_name, cors_cfg);
     }
 
     // Since we generate one handler per fixture, use the exact expected_response
@@ -564,22 +564,22 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
     let is_multipart = fixtures.iter().any(|f| {
         if let Some(handler) = &f.handler {
             // Check for file parameters
-            if let Some(params) = &handler.parameters {
-                if params.get("files").is_some() {
-                    return true;
-                }
+            if let Some(params) = &handler.parameters
+                && params.get("files").is_some()
+            {
+                return true;
             }
 
             // Check for binary format in body_schema
-            if let Some(body_schema) = &handler.body_schema {
-                if let Some(properties) = body_schema.get("properties").and_then(|p| p.as_object()) {
-                    return properties.values().any(|prop| {
-                        prop.get("format")
-                            .and_then(|f| f.as_str())
-                            .map(|s| s == "binary")
-                            .unwrap_or(false)
-                    });
-                }
+            if let Some(body_schema) = &handler.body_schema
+                && let Some(properties) = body_schema.get("properties").and_then(|p| p.as_object())
+            {
+                return properties.values().any(|prop| {
+                    prop.get("format")
+                        .and_then(|f| f.as_str())
+                        .map(|s| s == "binary")
+                        .unwrap_or(false)
+                });
             }
         }
         false
@@ -591,15 +591,15 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
         // Find the FIRST fixture with explicit handler.body_schema
         let mut explicit_schema = None;
         for fixture in fixtures {
-            if let Some(handler) = &fixture.handler {
-                if let Some(schema) = &handler.body_schema {
-                    eprintln!(
-                        "[SCHEMA EXTRACT] Using explicit body_schema from fixture: {}",
-                        fixture.name
-                    );
-                    explicit_schema = Some(schema.clone());
-                    break;
-                }
+            if let Some(handler) = &fixture.handler
+                && let Some(schema) = &handler.body_schema
+            {
+                eprintln!(
+                    "[SCHEMA EXTRACT] Using explicit body_schema from fixture: {}",
+                    fixture.name
+                );
+                explicit_schema = Some(schema.clone());
+                break;
             }
         }
 
@@ -1001,10 +1001,10 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
 /// Returns the CORS config from the first fixture that has one
 fn extract_cors_config(fixtures: &[&Fixture]) -> Option<Value> {
     for fixture in fixtures {
-        if let Some(handler) = &fixture.handler {
-            if let Some(cors) = &handler.cors {
-                return Some(cors.clone());
-            }
+        if let Some(handler) = &fixture.handler
+            && let Some(cors) = &handler.cors
+        {
+            return Some(cors.clone());
         }
     }
     None
@@ -1112,16 +1112,15 @@ fn extract_file_schemas(fixtures: &[&Fixture]) -> Option<Value> {
 
     // Find the first fixture with handler.parameters.files
     for fixture in fixtures {
-        if let Some(handler) = &fixture.handler {
-            if let Some(params) = &handler.parameters {
-                if let Some(files) = params.get("files").and_then(|f| f.as_object()) {
-                    eprintln!(
-                        "[FILE SCHEMA EXTRACT] Using explicit file parameters from fixture: {}",
-                        fixture.name
-                    );
-                    return Some(json!(files));
-                }
-            }
+        if let Some(handler) = &fixture.handler
+            && let Some(params) = &handler.parameters
+            && let Some(files) = params.get("files").and_then(|f| f.as_object())
+        {
+            eprintln!(
+                "[FILE SCHEMA EXTRACT] Using explicit file parameters from fixture: {}",
+                fixture.name
+            );
+            return Some(json!(files));
         }
     }
 
@@ -1154,76 +1153,76 @@ fn build_parameter_schema(fixtures: &[&Fixture]) -> Option<Value> {
 
     // Find the first fixture with explicit handler.parameters
     for fixture in fixtures {
-        if let Some(handler) = &fixture.handler {
-            if let Some(params) = &handler.parameters {
-                eprintln!(
-                    "[SCHEMA EXTRACT] Using explicit parameters from fixture: {}",
-                    fixture.name
-                );
+        if let Some(handler) = &fixture.handler
+            && let Some(params) = &handler.parameters
+        {
+            eprintln!(
+                "[SCHEMA EXTRACT] Using explicit parameters from fixture: {}",
+                fixture.name
+            );
 
-                // Transform to JSON Schema format with properties and source fields
-                let mut properties = serde_json::Map::new();
-                let mut required = Vec::new();
+            // Transform to JSON Schema format with properties and source fields
+            let mut properties = serde_json::Map::new();
+            let mut required = Vec::new();
 
-                // Process each source (query, path, header, cookie)
-                // Skip files since they're handled by multipart middleware, not parameter validation
-                for (source_name, source_params) in params.as_object().unwrap_or(&serde_json::Map::new()) {
-                    // Skip file parameters - they're handled separately by multipart middleware
-                    if source_name == "files" {
-                        continue;
-                    }
+            // Process each source (query, path, header, cookie)
+            // Skip files since they're handled by multipart middleware, not parameter validation
+            for (source_name, source_params) in params.as_object().unwrap_or(&serde_json::Map::new()) {
+                // Skip file parameters - they're handled separately by multipart middleware
+                if source_name == "files" {
+                    continue;
+                }
 
-                    if let Some(source_obj) = source_params.as_object() {
-                        for (param_name, param_def) in source_obj {
-                            // Clone the parameter definition and add the source field
-                            if let Some(mut param_obj) = param_def.as_object().cloned() {
-                                // Normalize source name to singular form
-                                let normalized_source = match source_name.as_str() {
-                                    "cookies" => "cookie",
-                                    "headers" => "header",
-                                    _ => source_name,
-                                };
-                                param_obj.insert("source".to_string(), json!(normalized_source));
+                if let Some(source_obj) = source_params.as_object() {
+                    for (param_name, param_def) in source_obj {
+                        // Clone the parameter definition and add the source field
+                        if let Some(mut param_obj) = param_def.as_object().cloned() {
+                            // Normalize source name to singular form
+                            let normalized_source = match source_name.as_str() {
+                                "cookies" => "cookie",
+                                "headers" => "header",
+                                _ => source_name,
+                            };
+                            param_obj.insert("source".to_string(), json!(normalized_source));
 
-                                // Check if required (following FastAPI semantics):
-                                // - Path params: always required
-                                // - Query/Header/Cookie: required unless has default or optional: true
-                                let has_default = param_obj.contains_key("default");
-                                let is_optional = param_obj.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
-                                let explicitly_required =
-                                    param_obj.get("required").and_then(|v| v.as_bool()).unwrap_or(false);
+                            // Check if required (following FastAPI semantics):
+                            // - Path params: always required
+                            // - Query/Header/Cookie: required unless has default or optional: true
+                            let has_default = param_obj.contains_key("default");
+                            let is_optional = param_obj.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
+                            let explicitly_required =
+                                param_obj.get("required").and_then(|v| v.as_bool()).unwrap_or(false);
 
-                                let is_required = if normalized_source == "path" || explicitly_required {
-                                    true // Path params always required, or explicitly marked
-                                } else if has_default || is_optional {
-                                    false // Has default or marked optional
-                                } else {
-                                    true // Default: required if no default and not optional
-                                };
+                            let is_required = if normalized_source == "path" || explicitly_required {
+                                true // Path params always required, or explicitly marked
+                            } else if has_default || is_optional {
+                                false // Has default or marked optional
+                            } else {
+                                true // Default: required if no default and not optional
+                            };
 
-                                if is_required {
-                                    required.push(param_name.clone());
-                                }
-
-                                // Remove annotation field (not part of JSON Schema)
-                                param_obj.remove("annotation");
-                                // Remove required field (handled at schema level)
-                                param_obj.remove("required");
-                                // Remove optional field (handled at schema level)
-                                param_obj.remove("optional");
-
-                                properties.insert(param_name.clone(), Value::Object(param_obj));
+                            if is_required {
+                                required.push(param_name.clone());
                             }
+
+                            // Remove annotation field (not part of JSON Schema)
+                            param_obj.remove("annotation");
+                            // Remove required field (handled at schema level)
+                            param_obj.remove("required");
+                            // Remove optional field (handled at schema level)
+                            param_obj.remove("optional");
+
+                            properties.insert(param_name.clone(), Value::Object(param_obj));
                         }
                     }
                 }
-
-                return Some(json!({
-                    "type": "object",
-                    "properties": properties,
-                    "required": required
-                }));
             }
+
+            return Some(json!({
+                "type": "object",
+                "properties": properties,
+                "required": required
+            }));
         }
     }
 

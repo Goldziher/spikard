@@ -11,6 +11,8 @@ use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyTuple};
 use serde_json::{Value, json};
 use std::collections::HashMap;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 
 /// Check if DEBUG mode is enabled
@@ -44,6 +46,17 @@ pub enum ResponseResult {
     Json(Value),
 }
 
+/// Result type returned by foreign handlers
+pub type HandlerResult = Result<Response<Body>, (StatusCode, String)>;
+
+/// Boxed future returned by foreign handlers
+pub type HandlerFuture = Pin<Box<dyn Future<Output = HandlerResult> + Send>>;
+
+/// Trait for foreign runtime handlers (Python, Node, etc.)
+pub trait ForeignHandler: Clone + Send + Sync + 'static {
+    fn call(&self, req: Request<Body>, request_data: RequestData) -> HandlerFuture;
+}
+
 /// Python handler wrapper that can be called from Axum
 #[derive(Clone)]
 pub struct PythonHandler {
@@ -75,11 +88,7 @@ impl PythonHandler {
     /// Call the Python handler
     ///
     /// This runs the Python code in a blocking task to avoid blocking the Tokio runtime
-    pub async fn call(
-        &self,
-        _req: Request<Body>,
-        request_data: RequestData,
-    ) -> Result<Response<Body>, (StatusCode, String)> {
+    pub async fn call(&self, _req: Request<Body>, request_data: RequestData) -> HandlerResult {
         // Validate request body in Rust if validator is present
         #[allow(clippy::collapsible_if)]
         if let Some(validator) = &self.request_validator {
@@ -384,6 +393,13 @@ impl PythonHandler {
                 Err((problem.status_code(), error_msg))
             }
         }
+    }
+}
+
+impl ForeignHandler for PythonHandler {
+    fn call(&self, req: Request<Body>, request_data: RequestData) -> HandlerFuture {
+        let handler = self.clone();
+        Box::pin(async move { handler.call(req, request_data).await })
     }
 }
 

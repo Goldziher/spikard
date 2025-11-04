@@ -17,6 +17,23 @@ export interface TestResponse {
 	bytes(): Buffer;
 }
 
+interface MultipartFile {
+	name: string;
+	filename?: string;
+	content: string;
+	contentType?: string;
+}
+
+export interface RequestOptions {
+	headers?: Record<string, string>;
+	json?: any;
+	form?: Record<string, any>;
+	multipart?: {
+		fields?: Record<string, any>;
+		files?: MultipartFile[];
+	};
+}
+
 /**
  * Test client for making HTTP requests to Spikard applications
  *
@@ -82,8 +99,8 @@ export class TestClient {
 	 * @param options - Request options
 	 * @returns Response promise
 	 */
-	async post(path: string, options?: { headers?: Record<string, string>; json?: any }): Promise<TestResponse> {
-		return this.nativeClient.post(path, options?.headers || null, options?.json || null);
+	async post(path: string, options?: RequestOptions): Promise<TestResponse> {
+		return this.nativeClient.post(path, this.buildHeaders(options), this.buildBody(options));
 	}
 
 	/**
@@ -93,8 +110,8 @@ export class TestClient {
 	 * @param options - Request options
 	 * @returns Response promise
 	 */
-	async put(path: string, options?: { headers?: Record<string, string>; json?: any }): Promise<TestResponse> {
-		return this.nativeClient.put(path, options?.headers || null, options?.json || null);
+	async put(path: string, options?: RequestOptions): Promise<TestResponse> {
+		return this.nativeClient.put(path, this.buildHeaders(options), this.buildBody(options));
 	}
 
 	/**
@@ -115,8 +132,8 @@ export class TestClient {
 	 * @param options - Request options
 	 * @returns Response promise
 	 */
-	async patch(path: string, options?: { headers?: Record<string, string>; json?: any }): Promise<TestResponse> {
-		return this.nativeClient.patch(path, options?.headers || null, options?.json || null);
+	async patch(path: string, options?: RequestOptions): Promise<TestResponse> {
+		return this.nativeClient.patch(path, this.buildHeaders(options), this.buildBody(options));
 	}
 
 	/**
@@ -137,7 +154,52 @@ export class TestClient {
 	 * @param options - Request options
 	 * @returns Response promise
 	 */
-	async options(path: string, options?: { headers?: Record<string, string> }): Promise<TestResponse> {
-		return this.nativeClient.options(path, options?.headers || null);
+	async options(path: string, options?: RequestOptions): Promise<TestResponse> {
+		return this.nativeClient.options(path, this.buildHeaders(options));
+	}
+
+	/**
+	 * Make a TRACE request
+	 *
+	 * @param path - Request path
+	 * @param headers - Optional request headers
+	 * @returns Response promise
+	 */
+	async trace(path: string, options?: RequestOptions): Promise<TestResponse> {
+		return this.nativeClient.trace(path, this.buildHeaders(options));
+	}
+
+	private buildHeaders(options?: RequestOptions): Record<string, string> | null {
+		if (!options?.headers || Object.keys(options.headers).length === 0) {
+			return null;
+		}
+		return options.headers;
+	}
+
+	private buildBody(options?: RequestOptions): any | null {
+		if (!options) {
+			return null;
+		}
+
+		if (options.multipart) {
+			return {
+				__spikard_multipart__: {
+					fields: options.multipart.fields ?? {},
+					files: options.multipart.files ?? [],
+				},
+			};
+		}
+
+		if (options.form) {
+			return {
+				__spikard_form__: options.form,
+			};
+		}
+
+		if ("json" in options) {
+			return options.json ?? null;
+		}
+
+		return null;
 	}
 }
