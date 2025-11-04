@@ -2,11 +2,15 @@
 //!
 //! Generates vitest test suites from fixtures for e2e testing.
 
-use anyhow::{Context, Result};
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use anyhow::{Context, Result, ensure};
+use spikard_codegen::openapi::from_fixtures::FixtureFile;
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
+use std::process::Command;
+
+const MAX_SAFE_INTEGER: i128 = 9007199254740991; // 2^53 - 1
 
 /// Generate Node.js test suite from fixtures
 pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
@@ -41,6 +45,8 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
         println!("  ✓ Generated tests/{}.test.ts ({} tests)", category, fixtures.len());
     }
 
+    format_generated_ts(output_dir)?;
+
     Ok(())
 }
 
@@ -50,8 +56,8 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
 
     // File header
     code.push_str(&format!("/**\n * E2E tests for {}\n * @generated\n */\n\n", category));
-    code.push_str("import { describe, test, expect } from \"vitest\";\n");
     code.push_str("import { TestClient } from \"@spikard/node\";\n");
+    code.push_str("import { describe, expect, test } from \"vitest\";\n");
 
     // Import all app factories for this category
     let mut app_factories = Vec::new();
@@ -60,11 +66,20 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
         let app_factory_name = format!("createApp{}", to_pascal_case(&fixture_id));
         app_factories.push(app_factory_name.clone());
     }
-
-    code.push_str(&format!(
-        "import {{ {} }} from \"../app/main.js\";\n\n",
-        app_factories.join(", ")
-    ));
+    app_factories.sort();
+    app_factories.dedup();
+    if app_factories.len() <= 4 && app_factories.join(", ").len() <= 120 {
+        code.push_str(&format!(
+            "import {{ {} }} from \"../app/main.js\";\n\n",
+            app_factories.join(", ")
+        ));
+    } else {
+        code.push_str("import {\n");
+        for factory in &app_factories {
+            code.push_str(&format!("\t{},\n", factory));
+        }
+        code.push_str("} from \"../app/main.js\";\n\n");
+    }
 
     // Generate test suite
     code.push_str(&format!("describe(\"{}\", () => {{\n", category));
@@ -100,56 +115,95 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     let path = &fixture.request.path;
 
     // Prepare request options
-    let mut has_options = false;
-    let mut options_parts = Vec::new();
+    let mut option_fields: Vec<&str> = Vec::new();
 
-    // Add headers
+    let mut header_entries: Vec<(String, String)> = Vec::new();
     if let Some(ref headers) = fixture.request.headers {
-        if !headers.is_empty() {
-            has_options = true;
-            code.push_str("\t\tconst headers = {\n");
-            for (key, value) in headers {
-                let escaped_value = escape_string(value);
-                code.push_str(&format!("\t\t\t\"{}\": \"{}\",\n", key, escaped_value));
-            }
-            code.push_str("\t\t};\n");
-            options_parts.push("headers");
+        for (key, value) in headers {
+            header_entries.push((key.clone(), value.clone()));
         }
     }
 
-    // Add body/json
-    if let Some(ref body) = fixture.request.body {
-        has_options = true;
-        let json_str = serde_json::to_string(body)?;
-        code.push_str(&format!("\t\tconst json = {};\n", json_str));
-        options_parts.push("json");
+    if let Some(ref cookies) = fixture.request.cookies {
+        if !cookies.is_empty() {
+            let cookie_value = cookies
+                .iter()
+                .map(|(name, value)| format!("{}={}", name, escape_string(value)))
+                .collect::<Vec<_>>()
+                .join("; ");
+            header_entries.push(("Cookie".to_string(), cookie_value));
+        }
     }
 
-    // Add form data (for URL-encoded forms)
-    if let Some(ref form_data) = fixture.request.form_data {
-        has_options = true;
-        code.push_str("\t\tconst json = {\n");
-        for (key, value) in form_data {
-            code.push_str(&format!("\t\t\t\"{}\": {},\n", key, json_to_typescript(value)));
+    if !header_entries.is_empty() {
+        code.push_str("\t\tconst headers = {\n");
+        for (key, value) in header_entries {
+            let escaped_value = escape_string(&value);
+            code.push_str(&format!(
+                "\t\t\t{}: \"{}\",\n",
+                format_ts_property_key(&key),
+                escaped_value
+            ));
         }
         code.push_str("\t\t};\n");
-        options_parts.push("json");
+        option_fields.push("headers");
+    }
+
+    let content_type = fixture.request.content_type.clone().or_else(|| {
+        fixture
+            .request
+            .headers
+            .as_ref()
+            .and_then(|h| h.get("Content-Type").cloned())
+    });
+
+    let content_type_lc = content_type.as_ref().map(|s| s.to_ascii_lowercase());
+    let has_files = fixture
+        .request
+        .files
+        .as_ref()
+        .map(|files| !files.is_empty())
+        .unwrap_or(false);
+
+    let is_multipart = content_type_lc
+        .as_ref()
+        .map(|ct| ct.contains("multipart/form-data"))
+        .unwrap_or(false)
+        || has_files;
+
+    let has_form_data = fixture
+        .request
+        .form_data
+        .as_ref()
+        .map(|data| !data.is_empty())
+        .unwrap_or(false);
+
+    let is_form = content_type_lc
+        .as_ref()
+        .map(|ct| ct.contains("application/x-www-form-urlencoded"))
+        .unwrap_or(false)
+        || (!is_multipart && has_form_data);
+
+    if is_multipart {
+        if let Some(definition) = build_multipart_definition(fixture)? {
+            code.push_str(&definition);
+            option_fields.push("multipart");
+        }
+    } else if is_form {
+        if let Some(definition) = build_form_definition(fixture)? {
+            code.push_str(&definition);
+            option_fields.push("form");
+        }
+    } else if let Some(ref body) = fixture.request.body {
+        let json_literal = json_to_typescript(body);
+        code.push_str(&format!("\t\tconst json = {};\n", json_literal));
+        option_fields.push("json");
     }
 
     // Build query params string if present
     let path_with_query = if let Some(ref query_params) = fixture.request.query_params {
         if !query_params.is_empty() {
-            let query_string: Vec<String> = query_params
-                .iter()
-                .map(|(k, v)| {
-                    let value_str = match v {
-                        serde_json::Value::String(s) => s.clone(),
-                        other => other.to_string(),
-                    };
-                    format!("{}={}", k, urlencoding::encode(&value_str))
-                })
-                .collect();
-            format!("{}?{}", path, query_string.join("&"))
+            build_path_with_query(path, query_params)
         } else {
             path.clone()
         }
@@ -157,24 +211,39 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         path.clone()
     };
 
+    let has_options = !option_fields.is_empty();
     if method == "get" || method == "delete" {
         if has_options {
-            code.push_str(&format!(
-                "\t\tconst response = await client.{}(\"{}\", headers);\n\n",
-                method, path_with_query
-            ));
+            if option_fields.len() == 1 && option_fields[0] == "headers" {
+                code.push_str(&format!(
+                    "\t\tconst response = await client.{}(\"{}\", headers);\n\n",
+                    method, path_with_query
+                ));
+            } else {
+                code.push_str(&format!(
+                    "\t\tconst response = await client.{}(\"{}\", {{ {} }});\n\n",
+                    method,
+                    path_with_query,
+                    option_fields.join(", ")
+                ));
+            }
         } else {
             code.push_str(&format!(
                 "\t\tconst response = await client.{}(\"{}\");\n\n",
                 method, path_with_query
             ));
         }
-    } else {
+    } else if has_options {
         code.push_str(&format!(
-            "\t\tconst response = await client.{}(\"{}\", {{{}}});\n\n",
+            "\t\tconst response = await client.{}(\"{}\", {{ {} }});\n\n",
             method,
             path_with_query,
-            options_parts.join(", ")
+            option_fields.join(", ")
+        ));
+    } else {
+        code.push_str(&format!(
+            "\t\tconst response = await client.{}(\"{}\");\n\n",
+            method, path_with_query
         ));
     }
 
@@ -189,17 +258,77 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     // Different assertion strategies based on status code
     if status_code == 200 {
         // Success case - verify response matches expected
-        let should_parse_json =
-            fixture.request.method.to_uppercase() != "HEAD" || fixture.expected_response.body.is_some();
+        let has_expected_body = fixture
+            .expected_response
+            .body
+            .as_ref()
+            .map(|body| !is_value_effectively_empty(body))
+            .unwrap_or(false);
+        let has_request_body = fixture
+            .request
+            .body
+            .as_ref()
+            .map(|body| !is_value_effectively_empty(body))
+            .unwrap_or(false);
+        let has_form_data = fixture
+            .request
+            .form_data
+            .as_ref()
+            .map(|data| !data.is_empty())
+            .unwrap_or(false);
+        let has_data_entries = fixture
+            .request
+            .data
+            .as_ref()
+            .map(|data| !data.is_empty())
+            .unwrap_or(false);
+        let has_query_params = fixture
+            .request
+            .query_params
+            .as_ref()
+            .map(|params| !params.is_empty())
+            .unwrap_or(false);
+        let requires_response_data =
+            has_expected_body || has_request_body || has_form_data || has_data_entries || has_query_params;
 
-        if should_parse_json {
+        if requires_response_data {
             code.push_str("\t\tconst responseData = response.json();\n");
         }
 
         // If fixture has expected response body, assert against that
         if let Some(ref expected_body) = fixture.expected_response.body {
-            generate_body_assertions(&mut code, expected_body, "responseData", 2);
-        } else if should_parse_json {
+            let expected_body_is_empty = is_value_effectively_empty(expected_body);
+            if !expected_body_is_empty {
+                generate_body_assertions(&mut code, expected_body, "responseData", 2, status_code >= 400);
+            } else if requires_response_data {
+                // Fallback: verify echoed parameters match what we sent
+                if let Some(ref body) = fixture.request.body {
+                    generate_echo_assertions(&mut code, body, "responseData", 2);
+                }
+
+                if let Some(ref form_data) = fixture.request.form_data {
+                    for (key, value) in form_data {
+                        let value_path = format_property_access("responseData", key);
+                        code.push_str(&format!(
+                            "\t\texpect({}).toBe({});\n",
+                            value_path,
+                            json_to_typescript(value)
+                        ));
+                    }
+                }
+
+                if let Some(ref query_params) = fixture.request.query_params {
+                    for (key, value) in query_params {
+                        let value_path = format_property_access("responseData", key);
+                        code.push_str(&format!(
+                            "\t\texpect({}).toBe({});\n",
+                            value_path,
+                            json_to_typescript(value)
+                        ));
+                    }
+                }
+            }
+        } else if requires_response_data {
             // Fallback: verify echoed parameters match what we sent
             if let Some(ref body) = fixture.request.body {
                 generate_echo_assertions(&mut code, body, "responseData", 2);
@@ -207,9 +336,10 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
 
             if let Some(ref form_data) = fixture.request.form_data {
                 for (key, value) in form_data {
+                    let value_path = format_property_access("responseData", key);
                     code.push_str(&format!(
-                        "\t\texpect(responseData[\"{}\"]).toBe({});\n",
-                        key,
+                        "\t\texpect({}).toBe({});\n",
+                        value_path,
                         json_to_typescript(value)
                     ));
                 }
@@ -217,30 +347,184 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
 
             if let Some(ref query_params) = fixture.request.query_params {
                 for (key, value) in query_params {
+                    let value_path = format_property_access("responseData", key);
                     code.push_str(&format!(
-                        "\t\texpect(responseData[\"{}\"]).toBe({});\n",
-                        key,
+                        "\t\texpect({}).toBe({});\n",
+                        value_path,
                         json_to_typescript(value)
                     ));
                 }
             }
         }
-    } else if status_code == 422 {
-        // Validation error - framework should reject before handler
-        code.push_str("\t\tconst responseData = response.json();\n");
-        code.push_str("\t\t// Validation should be done by framework, not handler\n");
-        code.push_str("\t\texpect(responseData).toHaveProperty(\"errors\");\n");
-    } else {
-        // Other status codes - assert expected response body
+    } else if status_code < 400 {
+        // Non-200 success status codes - assert expected response body if provided
         if let Some(ref body) = fixture.expected_response.body {
-            code.push_str("\t\tconst responseData = response.json();\n");
-            generate_body_assertions(&mut code, body, "responseData", 2);
+            if !is_value_effectively_empty(body) {
+                code.push_str("\t\tconst responseData = response.json();\n");
+                generate_body_assertions(&mut code, body, "responseData", 2, false);
+            }
         }
     }
 
     code.push_str("\t});\n");
 
     Ok(code)
+}
+
+fn build_form_definition(fixture: &Fixture) -> Result<Option<String>> {
+    if let Some(body_value) = fixture.request.body.as_ref() {
+        if let Some(body_str) = body_value.as_str() {
+            let escaped = escape_string(body_str);
+            return Ok(Some(format!("\t\tconst form = \"{}\";\n", escaped)));
+        }
+    }
+
+    if let Some(data) = fixture
+        .request
+        .form_data
+        .as_ref()
+        .filter(|data| !data.is_empty())
+        .or_else(|| fixture.request.data.as_ref().filter(|data| !data.is_empty()))
+    {
+        let mut map = serde_json::Map::new();
+        for (key, value) in data.iter() {
+            map.insert(key.clone(), value.clone());
+        }
+        let form_literal = json_to_typescript(&serde_json::Value::Object(map));
+        Ok(Some(format!("\t\tconst form = {};\n", form_literal)))
+    } else {
+        Ok(None)
+    }
+}
+
+fn build_multipart_definition(fixture: &Fixture) -> Result<Option<String>> {
+    let mut parts = Vec::new();
+
+    let field_source = fixture
+        .request
+        .data
+        .as_ref()
+        .filter(|data| !data.is_empty())
+        .or_else(|| fixture.request.form_data.as_ref().filter(|data| !data.is_empty()));
+
+    if let Some(fields) = field_source {
+        let mut map = serde_json::Map::new();
+        for (key, value) in fields.iter() {
+            map.insert(key.clone(), value.clone());
+        }
+        let fields_literal = json_to_typescript(&serde_json::Value::Object(map));
+        parts.push(format!("fields: {}", fields_literal));
+    }
+
+    if let Some(files) = fixture.request.files.as_ref() {
+        if !files.is_empty() {
+            let mut entries = Vec::new();
+            for file in files {
+                entries.push(format_fixture_file(file)?);
+            }
+            parts.push(format!("files: [{}]", entries.join(", ")));
+        }
+    }
+
+    if parts.is_empty() {
+        return Ok(None);
+    }
+
+    if !parts.iter().any(|part| part.starts_with("files:")) {
+        parts.push("files: []".to_string());
+    }
+
+    Ok(Some(format!("\t\tconst multipart = {{ {} }};\n", parts.join(", "))))
+}
+
+fn format_fixture_file(file: &FixtureFile) -> Result<String> {
+    let mut props = Vec::new();
+    props.push(format!("name: \"{}\"", escape_string(&file.field_name)));
+
+    if let Some(filename) = &file.filename {
+        props.push(format!("filename: \"{}\"", escape_string(filename)));
+    }
+
+    if let Some(content) = &file.content {
+        props.push(format!("content: \"{}\"", escape_string(content)));
+    }
+
+    if let Some(content_type) = &file.content_type {
+        props.push(format!("contentType: \"{}\"", escape_string(content_type)));
+    }
+
+    if let Some(magic_bytes) = &file.magic_bytes {
+        props.push(format!("magic_bytes: \"{}\"", magic_bytes));
+    }
+
+    Ok(format!("{{ {} }}", props.join(", ")))
+}
+
+fn build_path_with_query(path: &str, params: &std::collections::HashMap<String, serde_json::Value>) -> String {
+    let mut pairs = Vec::new();
+    for (key, value) in params {
+        append_query_value(&mut pairs, key, value);
+    }
+    if pairs.is_empty() {
+        path.to_string()
+    } else {
+        let separator = if path.contains('?') {
+            if path.ends_with('?') || path.ends_with('&') {
+                ""
+            } else {
+                "&"
+            }
+        } else {
+            "?"
+        };
+        format!("{}{}{}", path, separator, pairs.join("&"))
+    }
+}
+
+fn append_query_value(pairs: &mut Vec<String>, key: &str, value: &serde_json::Value) {
+    match value {
+        serde_json::Value::Array(items) => {
+            for item in items {
+                append_query_value(pairs, key, item);
+            }
+        }
+        serde_json::Value::Object(_) => {
+            let json_str = value.to_string();
+            pairs.push(format!("{}={}", key, urlencoding::encode(&json_str)));
+        }
+        _ => {
+            let literal = json_to_query_literal(value);
+            pairs.push(format!("{}={}", key, urlencoding::encode(&literal)));
+        }
+    }
+}
+
+fn json_to_query_literal(value: &serde_json::Value) -> String {
+    match value {
+        serde_json::Value::Null => String::new(),
+        serde_json::Value::Bool(b) => b.to_string(),
+        serde_json::Value::Number(n) => {
+            const MAX_SAFE: i128 = 9007199254740991; // 2^53 - 1
+            if let Some(i) = n.as_i64() {
+                let magnitude = i128::from(i).abs();
+                if magnitude > MAX_SAFE {
+                    format!("{}n", i)
+                } else {
+                    i.to_string()
+                }
+            } else if let Some(u) = n.as_u64() {
+                if u as i128 > MAX_SAFE {
+                    format!("{}n", u)
+                } else {
+                    u.to_string()
+                }
+            } else {
+                n.to_string()
+            }
+        }
+        serde_json::Value::String(s) => s.clone(),
+        serde_json::Value::Array(_) | serde_json::Value::Object(_) => value.to_string(),
+    }
 }
 
 /// Generate assertions for echoed parameters (success cases)
@@ -250,7 +534,7 @@ fn generate_echo_assertions(code: &mut String, sent_value: &serde_json::Value, p
     match sent_value {
         serde_json::Value::Object(obj) => {
             for (key, value) in obj {
-                let new_path = format!("{}[\"{}\"]", path, key);
+                let new_path = format_property_access(path, key);
                 code.push_str(&format!("{}expect({}).toHaveProperty(\"{}\");\n", indent, path, key));
 
                 match value {
@@ -287,30 +571,45 @@ fn generate_echo_assertions(code: &mut String, sent_value: &serde_json::Value, p
 }
 
 /// Generate assertions for response body
-fn generate_body_assertions(code: &mut String, body: &serde_json::Value, path: &str, indent_level: usize) {
+fn generate_body_assertions(
+    code: &mut String,
+    body: &serde_json::Value,
+    path: &str,
+    indent_level: usize,
+    skip_error_fields: bool,
+) {
     let indent = "\t".repeat(indent_level);
 
     match body {
         serde_json::Value::Object(obj) => {
             for (key, value) in obj {
-                let new_path = format!("{}[\"{}\"]", path, key);
+                let in_errors_path = path_contains_segment(path, "errors");
+                let skip_entire_property = (in_errors_path && (key == "ctx" || skip_error_fields))
+                    || (skip_error_fields && path == "responseData" && (key == "detail" || key == "errors"));
+                if skip_entire_property {
+                    continue;
+                }
+
+                let new_path = format_property_access(path, key);
                 code.push_str(&format!("{}expect({}).toHaveProperty(\"{}\");\n", indent, path, key));
 
                 match value {
                     serde_json::Value::Object(_) => {
                         // Skip "ctx" objects in validation errors
-                        let skip_ctx = key == "ctx" && path.contains("[\"errors\"]");
-                        if !skip_ctx {
-                            generate_body_assertions(code, value, &new_path, indent_level);
+                        if !(in_errors_path && key == "ctx") {
+                            generate_body_assertions(code, value, &new_path, indent_level, skip_error_fields);
                         }
                     }
                     serde_json::Value::Array(_) => {
-                        generate_body_assertions(code, value, &new_path, indent_level);
+                        generate_body_assertions(code, value, &new_path, indent_level, skip_error_fields);
+                    }
+                    serde_json::Value::Number(n) if is_large_integer(n) => {
+                        code.push_str(&format!("{}expect({}).toBe(\"{}\");\n", indent, new_path, n));
                     }
                     _ => {
                         // Skip certain fields inside validation errors
-                        let in_errors = path.contains("[\"errors\"]");
-                        let skip_assertion = in_errors && (key == "input" || key == "msg" || key == "type");
+                        let skip_assertion = (in_errors_path && (key == "input" || key == "msg" || key == "type"))
+                            || (skip_error_fields && path == "responseData" && key == "detail");
 
                         if !skip_assertion {
                             code.push_str(&format!(
@@ -325,10 +624,13 @@ fn generate_body_assertions(code: &mut String, body: &serde_json::Value, path: &
             }
         }
         serde_json::Value::Array(arr) => {
+            if skip_error_fields && path_contains_segment(path, "errors") {
+                return;
+            }
             code.push_str(&format!("{}expect({}.length).toBe({});\n", indent, path, arr.len()));
             for (idx, item) in arr.iter().enumerate() {
                 let new_path = format!("{}[{}]", path, idx);
-                generate_body_assertions(code, item, &new_path, indent_level);
+                generate_body_assertions(code, item, &new_path, indent_level, skip_error_fields);
             }
         }
         _ => {
@@ -347,7 +649,19 @@ fn json_to_typescript(value: &serde_json::Value) -> String {
     match value {
         serde_json::Value::Null => "null".to_string(),
         serde_json::Value::Bool(b) => b.to_string(),
-        serde_json::Value::Number(n) => n.to_string(),
+        serde_json::Value::Number(n) => {
+            if is_large_integer(n) {
+                if let Some(i) = n.as_i64() {
+                    format!("{}n", i)
+                } else if let Some(u) = n.as_u64() {
+                    format!("{}n", u)
+                } else {
+                    n.to_string()
+                }
+            } else {
+                n.to_string()
+            }
+        }
         serde_json::Value::String(s) => {
             let escaped = escape_string(s);
             format!("\"{}\"", escaped)
@@ -359,10 +673,31 @@ fn json_to_typescript(value: &serde_json::Value) -> String {
         serde_json::Value::Object(obj) => {
             let items: Vec<String> = obj
                 .iter()
-                .map(|(k, v)| format!("\"{}\": {}", k, json_to_typescript(v)))
+                .map(|(k, v)| format!("{}: {}", format_ts_property_key(k), json_to_typescript(v)))
                 .collect();
             format!("{{ {} }}", items.join(", "))
         }
+    }
+}
+
+fn is_large_integer(number: &serde_json::Number) -> bool {
+    if let Some(i) = number.as_i64() {
+        i128::from(i).abs() > MAX_SAFE_INTEGER
+    } else if let Some(u) = number.as_u64() {
+        (u as i128) > MAX_SAFE_INTEGER
+    } else {
+        false
+    }
+}
+
+fn is_value_effectively_empty(value: &serde_json::Value) -> bool {
+    match value {
+        serde_json::Value::Null => true,
+        serde_json::Value::Bool(_) => false,
+        serde_json::Value::Number(_) => false,
+        serde_json::Value::String(s) => s.is_empty(),
+        serde_json::Value::Array(arr) => arr.is_empty(),
+        serde_json::Value::Object(obj) => obj.is_empty(),
     }
 }
 
@@ -373,6 +708,55 @@ fn escape_string(s: &str) -> String {
         .replace('\n', "\\n")
         .replace('\r', "\\r")
         .replace('\t', "\\t")
+}
+
+fn is_valid_identifier(name: &str) -> bool {
+    let mut chars = name.chars();
+    match chars.next() {
+        Some(c) if c == '_' || c == '$' || c.is_ascii_alphabetic() => {}
+        _ => return false,
+    }
+    for ch in chars {
+        if ch == '_' || ch == '$' || ch.is_ascii_alphanumeric() {
+            continue;
+        }
+        return false;
+    }
+    true
+}
+
+fn format_ts_property_key(key: &str) -> String {
+    if is_valid_identifier(key) {
+        key.to_string()
+    } else {
+        format!("\"{}\"", escape_string(key))
+    }
+}
+
+fn format_property_access(base: &str, key: &str) -> String {
+    if is_valid_identifier(key) {
+        format!("{}.{}", base, key)
+    } else {
+        format!("{}[\"{}\"]", base, escape_string(key))
+    }
+}
+
+fn path_contains_segment(path: &str, segment: &str) -> bool {
+    path == segment || path.contains(&format!(".{}", segment)) || path.contains(&format!("[\"{}\"]", segment))
+}
+
+fn format_generated_ts(dir: &Path) -> Result<()> {
+    let status = Command::new("pnpm")
+        .current_dir(dir)
+        .args(["biome", "check", "--write", "."])
+        .status()
+        .context("Failed to run `pnpm biome check --write .` in e2e/node")?;
+    ensure!(
+        status.success(),
+        "`pnpm biome check --write .` exited with non-zero status"
+    );
+
+    Ok(())
 }
 
 /// Sanitize fixture name for test function

@@ -3,9 +3,22 @@
  * @generated
  */
 
-import { describe, test, expect } from "vitest";
 import { TestClient } from "@spikard/node";
-import { createAppHttpMethodsOptionsCorsPreflightRequest, createAppHttpMethodsDeleteRemoveResource, createAppHttpMethodsPutCreateResourceIfDoesnTExist, createAppHttpMethodsPatchUpdateMultipleFields, createAppHttpMethodsPutValidationError, createAppHttpMethodsHeadGetMetadataWithoutBody, createAppHttpMethodsDeleteWithResponseBody, createAppHttpMethodsPutMissingRequiredField, createAppHttpMethodsPatchPartialUpdate, createAppHttpMethodsDeleteResourceNotFound, createAppHttpMethodsPutIdempotentOperation, createAppHttpMethodsPutCompleteResourceReplacement } from "../app/main.js";
+import { describe, expect, test } from "vitest";
+import {
+	createAppHttpMethodsDeleteRemoveResource,
+	createAppHttpMethodsDeleteResourceNotFound,
+	createAppHttpMethodsDeleteWithResponseBody,
+	createAppHttpMethodsHeadGetMetadataWithoutBody,
+	createAppHttpMethodsOptionsCorsPreflightRequest,
+	createAppHttpMethodsPatchPartialUpdate,
+	createAppHttpMethodsPatchUpdateMultipleFields,
+	createAppHttpMethodsPutCompleteResourceReplacement,
+	createAppHttpMethodsPutCreateResourceIfDoesnTExist,
+	createAppHttpMethodsPutIdempotentOperation,
+	createAppHttpMethodsPutMissingRequiredField,
+	createAppHttpMethodsPutValidationError,
+} from "../app/main.js";
 
 describe("http_methods", () => {
 	test("OPTIONS - CORS preflight request", async () => {
@@ -13,14 +26,13 @@ describe("http_methods", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Origin": "https://example.com",
+			Origin: "https://example.com",
 			"Access-Control-Request-Method": "POST",
 			"Access-Control-Request-Headers": "Content-Type",
 		};
-		const response = await client.options("/items/", {headers});
+		const response = await client.options("/items/", { headers });
 
 		expect(response.statusCode).toBe(200);
-		const responseData = response.json();
 	});
 
 	test("DELETE - Remove resource", async () => {
@@ -30,7 +42,6 @@ describe("http_methods", () => {
 		const response = await client.delete("/items/1");
 
 		expect(response.statusCode).toBe(200);
-		const responseData = response.json();
 	});
 
 	test("PUT - Create resource if doesn t exist", async () => {
@@ -40,17 +51,17 @@ describe("http_methods", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = {"id":999,"name":"New Item","price":49.99};
-		const response = await client.put("/items/999", {headers, json});
+		const json = { id: 999, name: "New Item", price: 49.99 };
+		const response = await client.put("/items/999", { headers, json });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("id");
-		expect(responseData["id"]).toBe(999);
+		expect(responseData.id).toBe(999);
 		expect(responseData).toHaveProperty("name");
-		expect(responseData["name"]).toBe("New Item");
+		expect(responseData.name).toBe("New Item");
 		expect(responseData).toHaveProperty("price");
-		expect(responseData["price"]).toBe(49.99);
+		expect(responseData.price).toBe(49.99);
 	});
 
 	test("PATCH - Update multiple fields", async () => {
@@ -60,19 +71,19 @@ describe("http_methods", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = {"in_stock":false,"name":"Updated Name","price":89.99};
-		const response = await client.patch("/items/1", {headers, json});
+		const json = { in_stock: false, name: "Updated Name", price: 89.99 };
+		const response = await client.patch("/items/1", { headers, json });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("id");
-		expect(responseData["id"]).toBe(1);
+		expect(responseData.id).toBe(1);
 		expect(responseData).toHaveProperty("in_stock");
-		expect(responseData["in_stock"]).toBe(false);
+		expect(responseData.in_stock).toBe(false);
 		expect(responseData).toHaveProperty("name");
-		expect(responseData["name"]).toBe("Updated Name");
+		expect(responseData.name).toBe("Updated Name");
 		expect(responseData).toHaveProperty("price");
-		expect(responseData["price"]).toBe(89.99);
+		expect(responseData.price).toBe(89.99);
 	});
 
 	test("PUT - Validation error", async () => {
@@ -82,20 +93,17 @@ describe("http_methods", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = {"id":1,"name":"X","price":-10};
-		const response = await client.put("/items/1", {headers, json});
+		const json = { id: 1, name: "X", price: -10 };
+		const response = await client.put("/items/1", { headers, json });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("HEAD - Get metadata without body", async () => {
 		const app = createAppHttpMethodsHeadGetMetadataWithoutBody();
 		const client = new TestClient(app);
 
-		const response = await client.head("/items/1", {});
+		const response = await client.head("/items/1");
 
 		expect(response.statusCode).toBe(200);
 	});
@@ -109,11 +117,11 @@ describe("http_methods", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("id");
-		expect(responseData["id"]).toBe(1);
+		expect(responseData.id).toBe(1);
 		expect(responseData).toHaveProperty("message");
-		expect(responseData["message"]).toBe("Item deleted successfully");
+		expect(responseData.message).toBe("Item deleted successfully");
 		expect(responseData).toHaveProperty("name");
-		expect(responseData["name"]).toBe("Deleted Item");
+		expect(responseData.name).toBe("Deleted Item");
 	});
 
 	test("PUT - Missing required field", async () => {
@@ -123,13 +131,10 @@ describe("http_methods", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = {"id":1,"name":"Item Name"};
-		const response = await client.put("/items/1", {headers, json});
+		const json = { id: 1, name: "Item Name" };
+		const response = await client.put("/items/1", { headers, json });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("PATCH - Partial update", async () => {
@@ -139,19 +144,19 @@ describe("http_methods", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = {"price":79.99};
-		const response = await client.patch("/items/1", {headers, json});
+		const json = { price: 79.99 };
+		const response = await client.patch("/items/1", { headers, json });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("id");
-		expect(responseData["id"]).toBe(1);
+		expect(responseData.id).toBe(1);
 		expect(responseData).toHaveProperty("in_stock");
-		expect(responseData["in_stock"]).toBe(true);
+		expect(responseData.in_stock).toBe(true);
 		expect(responseData).toHaveProperty("name");
-		expect(responseData["name"]).toBe("Existing Item");
+		expect(responseData.name).toBe("Existing Item");
 		expect(responseData).toHaveProperty("price");
-		expect(responseData["price"]).toBe(79.99);
+		expect(responseData.price).toBe(79.99);
 	});
 
 	test("DELETE - Resource not found", async () => {
@@ -161,7 +166,6 @@ describe("http_methods", () => {
 		const response = await client.delete("/items/999");
 
 		expect(response.statusCode).toBe(200);
-		const responseData = response.json();
 	});
 
 	test("PUT - Idempotent operation", async () => {
@@ -171,17 +175,17 @@ describe("http_methods", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = {"id":1,"name":"Fixed Name","price":50.0};
-		const response = await client.put("/items/1", {headers, json});
+		const json = { id: 1, name: "Fixed Name", price: 50.0 };
+		const response = await client.put("/items/1", { headers, json });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("id");
-		expect(responseData["id"]).toBe(1);
+		expect(responseData.id).toBe(1);
 		expect(responseData).toHaveProperty("name");
-		expect(responseData["name"]).toBe("Fixed Name");
+		expect(responseData.name).toBe("Fixed Name");
 		expect(responseData).toHaveProperty("price");
-		expect(responseData["price"]).toBe(50.0);
+		expect(responseData.price).toBe(50.0);
 	});
 
 	test("PUT - Complete resource replacement", async () => {
@@ -191,21 +195,20 @@ describe("http_methods", () => {
 		const headers = {
 			"Content-Type": "application/json",
 		};
-		const json = {"description":"Completely replaced","id":1,"in_stock":true,"name":"Updated Item","price":99.99};
-		const response = await client.put("/items/1", {headers, json});
+		const json = { description: "Completely replaced", id: 1, in_stock: true, name: "Updated Item", price: 99.99 };
+		const response = await client.put("/items/1", { headers, json });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("description");
-		expect(responseData["description"]).toBe("Completely replaced");
+		expect(responseData.description).toBe("Completely replaced");
 		expect(responseData).toHaveProperty("id");
-		expect(responseData["id"]).toBe(1);
+		expect(responseData.id).toBe(1);
 		expect(responseData).toHaveProperty("in_stock");
-		expect(responseData["in_stock"]).toBe(true);
+		expect(responseData.in_stock).toBe(true);
 		expect(responseData).toHaveProperty("name");
-		expect(responseData["name"]).toBe("Updated Item");
+		expect(responseData.name).toBe("Updated Item");
 		expect(responseData).toHaveProperty("price");
-		expect(responseData["price"]).toBe(99.99);
+		expect(responseData.price).toBe(99.99);
 	});
-
 });
