@@ -11,8 +11,8 @@
 //! - Pydantic BaseModel (popular, slower)
 
 use anyhow::{Context, Result};
-use serde_json::Value;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use serde_json::{Value, json};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -176,7 +176,11 @@ fn generate_fixture_handler_and_app_python(
 
     // Strip query string from route
     let route_path = route.split('?').next().unwrap_or(&route);
-    let method = fixture.request.method.as_str();
+    let method = fixture
+        .handler
+        .as_ref()
+        .map(|h| h.method.as_str())
+        .unwrap_or_else(|| fixture.request.method.as_str());
 
     // Generate models at module level and get the model name
     let (models_code, model_name) =
@@ -237,21 +241,39 @@ fn generate_fixture_handler_and_app_python(
         "None".to_string()
     };
 
+    let method_upper = method.to_uppercase();
+    let request_method_upper = fixture.request.method.to_uppercase();
+    let additional_registration =
+        if request_method_upper != method_upper && is_supported_python_http_method(&request_method_upper) {
+            format!(
+                "\n    app.register_route(\"{}\", \"{}\", body_schema={}, parameter_schema={}, file_params={})({})",
+                request_method_upper,
+                route_path,
+                body_schema_str.clone(),
+                parameter_schema_str.clone(),
+                file_params_str.clone(),
+                handler_name
+            )
+        } else {
+            String::new()
+        };
+
     let app_factory_code = format!(
         r#"def {}() -> Spikard:
     """App factory for fixture: {}"""
     app = Spikard()
     # Register handler with this app instance
-    app.register_route("{}", "{}", body_schema={}, parameter_schema={}, file_params={})({})
+    app.register_route("{}", "{}", body_schema={}, parameter_schema={}, file_params={})({}){}
     return app"#,
         app_factory_name,
         fixture.name,
-        method.to_uppercase(),
+        method_upper,
         route_path, // Pass route with type hints - Spikard will parse them
         body_schema_str,
         parameter_schema_str,
         file_params_str,
-        handler_name
+        handler_name,
+        additional_registration
     );
 
     Ok((handler_code, app_factory_code))
@@ -313,7 +335,20 @@ fn generate_handler_function_for_fixture(
 
     // Get expected response status code and body
     let expected_status = fixture.expected_response.status_code;
-    let expected_body = fixture.expected_response.body.as_ref().map(json_to_python);
+    let expected_body_value = fixture.expected_response.body.as_ref();
+    let expected_body = expected_body_value.map(json_to_python);
+    let expected_body_is_empty = expected_body_value.map_or(false, is_value_effectively_empty);
+    let validation_errors_body = if let Some(errors) = fixture.expected_response.validation_errors.as_ref() {
+        if errors.is_empty() {
+            None
+        } else {
+            let errors_value = serde_json::to_value(errors)?;
+            let body_value = json!({ "errors": errors_value });
+            Some(json_to_python(&body_value))
+        }
+    } else {
+        None
+    };
 
     // Generate handler function
     let mut code = String::new();
@@ -353,23 +388,33 @@ fn generate_handler_function_for_fixture(
 
     // Function body - handle different response scenarios
     // Strategy:
-    // - 422 (validation errors): Echo parameters - if handler is called, validation passed
-    // - 200 with expected_response.body: Return expected body (business logic or type-converted params)
-    // - 200 without expected_response.body: Echo parameters - proves framework extracted values
-    // - Other status codes: Return expected response (business logic)
+    // - Return documented expected response body when provided.
+    // - Fall back to validation errors if available.
+    // - Otherwise echo parameters for happy-path tests that expect the handler to run.
+    // - For all remaining cases, return the expected status with an empty body.
 
-    let should_echo_params = (expected_status == 200 && expected_body.is_none()) || expected_status == 422;
-    let should_return_expected = expected_body.is_some() && expected_status != 422;
+    let should_return_expected = expected_body.is_some() && !expected_body_is_empty;
+    let should_return_validation_errors = validation_errors_body.is_some() && !should_return_expected;
+    let should_echo_params = expected_status == 200 && !should_return_expected && !should_return_validation_errors;
 
     if should_return_expected {
         // Return the expected response body (business logic or documented response format)
-        if let Some(body_json) = expected_body {
+        if let Some(body_json) = expected_body.as_ref() {
             code.push_str(&format!(
                 "    return Response(content={}, status_code={})\n",
                 body_json, expected_status
             ));
         } else {
             // No body, just status code (e.g., 204 No Content)
+            code.push_str(&format!("    return Response(status_code={})\n", expected_status));
+        }
+    } else if should_return_validation_errors {
+        if let Some(body_json) = validation_errors_body.as_ref() {
+            code.push_str(&format!(
+                "    return Response(content={}, status_code={})\n",
+                body_json, expected_status
+            ));
+        } else {
             code.push_str(&format!("    return Response(status_code={})\n", expected_status));
         }
     } else if should_echo_params {
@@ -917,6 +962,20 @@ fn build_parameter_schema_with_sources(params: &Value) -> Result<String> {
 
     let schema_json = serde_json::to_string(&schema)?;
     Ok(json_to_python_dict(&schema_json))
+}
+
+fn is_value_effectively_empty(value: &Value) -> bool {
+    match value {
+        Value::Null => true,
+        Value::Bool(_) | Value::Number(_) => false,
+        Value::String(s) => s.is_empty(),
+        Value::Array(arr) => arr.is_empty(),
+        Value::Object(obj) => obj.is_empty(),
+    }
+}
+
+fn is_supported_python_http_method(method: &str) -> bool {
+    matches!(method, "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "HEAD")
 }
 
 /// Convert JSON value to Python dict literal
