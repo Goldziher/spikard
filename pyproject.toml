@@ -60,6 +60,7 @@ lint.ignore = [
   "TD",      # We allow todo and fixme comments
   "TRY",     # Try except block, rules are too strict
 ]
+lint.exclude = [ "e2e/python/**" ]
 lint.per-file-ignores."**/tests/**/*.*" = [
   "A005",    # Module shadows standard library
   "ANN",     # Disable all annotation rules for tests

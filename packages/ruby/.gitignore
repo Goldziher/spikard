@@ -1,0 +1,6 @@
+/pkg
+/tmp
+*.bundle
+*.so
+*.dll
+*.dylib

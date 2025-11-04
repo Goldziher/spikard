@@ -1,7 +1,7 @@
 [package]
 name = "spikard-codegen"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 authors = ["Spikard Contributors"]
 description = "Code generation and configuration management for Spikard"
 license = "MIT"

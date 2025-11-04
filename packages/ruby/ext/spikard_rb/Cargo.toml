@@ -1,0 +1,17 @@
+[package]
+name = "spikard-rb"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
+
+[lib]
+name = "spikard_rb"
+path = "../../../../crates/spikard-rb/src/lib.rs"
+crate-type = ["cdylib"]
+
+[workspace]
+
+[dependencies]
+spikard-http = { path = "../../../../crates/spikard-http" }
+spikard-rb = { path = "../../../../crates/spikard-rb" }

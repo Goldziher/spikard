@@ -1,0 +1,2 @@
+[env]
+RUBY = "/opt/homebrew/opt/ruby/bin/ruby"

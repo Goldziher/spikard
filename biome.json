@@ -31,10 +31,25 @@
 			"linter": {
 				"rules": {
 					"suspicious": {
-						"noExplicitAny": "off"
+						"noExplicitAny": "off",
+						"noApproximativeNumericConstant": "off"
 					},
 					"correctness": {
-						"noUnusedFunctionParameters": "off"
+						"noUnusedFunctionParameters": "off",
+						"noUnusedVariables": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["e2e/node/app/main.ts"],
+			"linter": {
+				"rules": {
+					"complexity": {
+						"useLiteralKeys": "off"
+					},
+					"correctness": {
+						"noPrecisionLoss": "off"
 					}
 				}
 			}

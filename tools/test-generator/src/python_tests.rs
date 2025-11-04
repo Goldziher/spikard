@@ -3,7 +3,7 @@
 //! Generates pytest test suites from fixtures for e2e testing.
 
 use anyhow::{Context, Result};
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -66,10 +66,28 @@ This ensures complete test isolation and allows multiple tests for the same rout
 fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
     let mut code = String::new();
 
-    // File header
+    // Collect app factory imports so we can emit them once at the top
+    let mut app_factories: Vec<String> = fixtures
+        .iter()
+        .map(|fixture| {
+            let fixture_id = sanitize_identifier(&format!("{}_{}", category, &fixture.name));
+            format!("create_app_{}", fixture_id)
+        })
+        .collect();
+    app_factories.sort();
+    app_factories.dedup();
+
+    // File header and imports
     code.push_str(&format!("\"\"\"E2E tests for {}.\"\"\"\n\n", category));
-    code.push_str("import pytest\n");
-    code.push_str("from typing import Any\n\n");
+    code.push_str("from spikard.testing import TestClient\n");
+    if !app_factories.is_empty() {
+        code.push_str("from app.main import (\n");
+        for factory in &app_factories {
+            code.push_str(&format!("    {},\n", factory));
+        }
+        code.push_str(")\n");
+    }
+    code.push('\n');
 
     // Generate test for each fixture
     for fixture in fixtures {
@@ -89,14 +107,13 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     // No client parameter - create per-test client from app factory
     code.push_str(&format!("async def test_{}() -> None:\n", test_name));
     code.push_str(&format!("    \"\"\"{}.\"\"\"\n", fixture.description));
+    code.push('\n');
 
     // Import and create client from per-fixture app factory
     // The app factory name matches the one generated in python_app.rs:
     // sanitize_identifier(&format!("{}_{}", category, &fixture.name))
     let fixture_id = sanitize_identifier(&format!("{}_{}", category, &fixture.name));
     let app_factory_name = format!("create_app_{}", fixture_id);
-    code.push_str("    from spikard.testing import TestClient\n");
-    code.push_str(&format!("    from app.main import {}\n\n", app_factory_name));
     code.push_str(&format!("    app = {}()\n", app_factory_name));
     code.push_str("    client = TestClient(app)\n\n");
 
@@ -108,55 +125,55 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     let mut request_kwargs = Vec::new();
 
     // Add query params
-    if let Some(ref query_params) = fixture.request.query_params {
-        if !query_params.is_empty() {
-            code.push_str("    params = {\n");
-            for (key, value) in query_params {
-                code.push_str(&format!("        \"{}\": {},\n", key, json_to_python(value)));
-            }
-            code.push_str("    }\n");
-            request_kwargs.push("query_params=params");
+    if let Some(ref query_params) = fixture.request.query_params
+        && !query_params.is_empty()
+    {
+        code.push_str("    params = {\n");
+        for (key, value) in query_params {
+            code.push_str(&format!("        \"{}\": {},\n", key, json_to_python(value)));
         }
+        code.push_str("    }\n");
+        request_kwargs.push("query_params=params");
     }
 
     // Add headers
-    if let Some(ref headers) = fixture.request.headers {
-        if !headers.is_empty() {
-            code.push_str("    headers = {\n");
-            for (key, value) in headers {
-                // Escape special characters in header values
-                let escaped_value = value
-                    .replace('\\', "\\\\")
-                    .replace('"', "\\\"")
-                    .replace('\n', "\\n")
-                    .replace('\r', "\\r")
-                    .replace('\t', "\\t")
-                    .replace('\0', "\\0");
-                code.push_str(&format!("        \"{}\": \"{}\",\n", key, escaped_value));
-            }
-            code.push_str("    }\n");
-            request_kwargs.push("headers=headers");
+    if let Some(ref headers) = fixture.request.headers
+        && !headers.is_empty()
+    {
+        code.push_str("    headers = {\n");
+        for (key, value) in headers {
+            // Escape special characters in header values
+            let escaped_value = value
+                .replace('\\', "\\\\")
+                .replace('"', "\\\"")
+                .replace('\n', "\\n")
+                .replace('\r', "\\r")
+                .replace('\t', "\\t")
+                .replace('\0', "\\0");
+            code.push_str(&format!("        \"{}\": \"{}\",\n", key, escaped_value));
         }
+        code.push_str("    }\n");
+        request_kwargs.push("headers=headers");
     }
 
     // Add cookies
-    if let Some(ref cookies) = fixture.request.cookies {
-        if !cookies.is_empty() {
-            code.push_str("    cookies = {\n");
-            for (key, value) in cookies {
-                // Escape special characters in cookie values
-                let escaped_value = value
-                    .replace('\\', "\\\\")
-                    .replace('"', "\\\"")
-                    .replace('\n', "\\n")
-                    .replace('\r', "\\r")
-                    .replace('\t', "\\t")
-                    .replace('\0', "\\0");
-                code.push_str(&format!("        \"{}\": \"{}\",\n", key, escaped_value));
-            }
-            code.push_str("    }\n");
-            request_kwargs.push("cookies=cookies");
+    if let Some(ref cookies) = fixture.request.cookies
+        && !cookies.is_empty()
+    {
+        code.push_str("    cookies = {\n");
+        for (key, value) in cookies {
+            // Escape special characters in cookie values
+            let escaped_value = value
+                .replace('\\', "\\\\")
+                .replace('"', "\\\"")
+                .replace('\n', "\\n")
+                .replace('\r', "\\r")
+                .replace('\t', "\\t")
+                .replace('\0', "\\0");
+            code.push_str(&format!("        \"{}\": \"{}\",\n", key, escaped_value));
         }
+        code.push_str("    }\n");
+        request_kwargs.push("cookies=cookies");
     }
 
     // Add body
@@ -178,58 +195,58 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     }
 
     // Add files (for multipart form data)
-    if let Some(ref files) = fixture.request.files {
-        if !files.is_empty() {
-            // Group files by field_name to handle multiple files with same name
-            use std::collections::HashMap;
-            let mut files_by_name: HashMap<&str, Vec<String>> = HashMap::new();
+    if let Some(ref files) = fixture.request.files
+        && !files.is_empty()
+    {
+        // Group files by field_name to handle multiple files with same name
+        use std::collections::HashMap;
+        let mut files_by_name: HashMap<&str, Vec<String>> = HashMap::new();
 
-            for file in files {
-                let field_name = file.field_name.as_str();
-                let filename = file.filename.as_deref().unwrap_or("file.txt");
+        for file in files {
+            let field_name = file.field_name.as_str();
+            let filename = file.filename.as_deref().unwrap_or("file.txt");
 
-                // Handle content - either direct content or magic_bytes
-                let file_content = if let Some(ref content) = file.content {
-                    // Text or binary content
-                    let escaped = content
-                        .replace("\\", "\\\\")
-                        .replace("\"", "\\\"")
-                        .replace("\n", "\\n")
-                        .replace("\r", "\\r")
-                        .replace("\t", "\\t");
-                    format!("b\"{}\"", escaped)
-                } else if let Some(ref magic_bytes) = file.magic_bytes {
-                    // Hex-encoded binary data
-                    format!("bytes.fromhex(\"{}\")", magic_bytes)
-                } else {
-                    // Empty file
-                    "b\"\"".to_string()
-                };
+            // Handle content - either direct content or magic_bytes
+            let file_content = if let Some(ref content) = file.content {
+                // Text or binary content
+                let escaped = content
+                    .replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r")
+                    .replace("\t", "\\t");
+                format!("b\"{}\"", escaped)
+            } else if let Some(ref magic_bytes) = file.magic_bytes {
+                // Hex-encoded binary data
+                format!("bytes.fromhex(\"{}\")", magic_bytes)
+            } else {
+                // Empty file
+                "b\"\"".to_string()
+            };
 
-                // Include content_type if specified (TestClient supports 3-tuple format)
-                let file_tuple = if let Some(ref content_type) = file.content_type {
-                    format!("(\"{}\", {}, \"{}\")", filename, file_content, content_type)
-                } else {
-                    format!("(\"{}\", {})", filename, file_content)
-                };
+            // Include content_type if specified (TestClient supports 3-tuple format)
+            let file_tuple = if let Some(ref content_type) = file.content_type {
+                format!("(\"{}\", {}, \"{}\")", filename, file_content, content_type)
+            } else {
+                format!("(\"{}\", {})", filename, file_content)
+            };
 
-                files_by_name.entry(field_name).or_default().push(file_tuple);
-            }
-
-            // Generate files dict
-            code.push_str("    files = {\n");
-            for (field_name, file_tuples) in files_by_name.iter() {
-                if file_tuples.len() == 1 {
-                    // Single file for this field name
-                    code.push_str(&format!("        \"{}\": {},\n", field_name, file_tuples[0]));
-                } else {
-                    // Multiple files for this field name - use list
-                    code.push_str(&format!("        \"{}\": [{}],\n", field_name, file_tuples.join(", ")));
-                }
-            }
-            code.push_str("    }\n");
-            request_kwargs.push("files=files");
+            files_by_name.entry(field_name).or_default().push(file_tuple);
         }
+
+        // Generate files dict
+        code.push_str("    files = {\n");
+        for (field_name, file_tuples) in files_by_name.iter() {
+            if file_tuples.len() == 1 {
+                // Single file for this field name
+                code.push_str(&format!("        \"{}\": {},\n", field_name, file_tuples[0]));
+            } else {
+                // Multiple files for this field name - use list
+                code.push_str(&format!("        \"{}\": [{}],\n", field_name, file_tuples.join(", ")));
+            }
+        }
+        code.push_str("    }\n");
+        request_kwargs.push("files=files");
     }
 
     // Make request

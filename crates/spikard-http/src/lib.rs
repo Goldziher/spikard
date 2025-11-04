@@ -36,6 +36,7 @@ pub enum Method {
     Delete,
     Head,
     Options,
+    Trace,
 }
 
 impl Method {
@@ -48,6 +49,7 @@ impl Method {
             Method::Delete => "DELETE",
             Method::Head => "HEAD",
             Method::Options => "OPTIONS",
+            Method::Trace => "TRACE",
         }
     }
 }
@@ -64,6 +66,7 @@ impl std::str::FromStr for Method {
             "DELETE" => Ok(Method::Delete),
             "HEAD" => Ok(Method::Head),
             "OPTIONS" => Ok(Method::Options),
+            "TRACE" => Ok(Method::Trace),
             _ => Err(format!("Unknown HTTP method: {}", s)),
         }
     }
