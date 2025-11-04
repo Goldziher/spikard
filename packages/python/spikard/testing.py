@@ -23,6 +23,8 @@ class TestResponse:
     This wraps the Rust TestResponse and provides a Python-friendly interface.
     """
 
+    __test__ = False  # Tell pytest not to treat this helper as a test class.
+
     def __init__(self, rust_response: _TestResponse) -> None:
         self._response = rust_response
 
@@ -99,6 +101,8 @@ class TestClient:
         >>>     assert response.status_code == 200
         >>>     assert response.json() == {"message": "Hello, World!"}
     """
+
+    __test__ = False  # Prevent pytest from issuing collection warnings.
 
     def __init__(self, app: "Spikard") -> None:
         """Create a new test client for the given Spikard application.
