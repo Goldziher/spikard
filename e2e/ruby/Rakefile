@@ -1,0 +1,8 @@
+require "bundler/gem_tasks"
+
+desc "Run the Ruby E2E specs"
+task :spec do
+  sh "bundle exec rspec"
+end
+
+task default: [:spec]

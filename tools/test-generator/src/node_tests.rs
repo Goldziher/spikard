@@ -124,15 +124,13 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         }
     }
 
-    if let Some(ref cookies) = fixture.request.cookies {
-        if !cookies.is_empty() {
-            let cookie_value = cookies
-                .iter()
-                .map(|(name, value)| format!("{}={}", name, escape_string(value)))
-                .collect::<Vec<_>>()
-                .join("; ");
-            header_entries.push(("Cookie".to_string(), cookie_value));
-        }
+    if let Some(cookies) = fixture.request.cookies.as_ref().filter(|c| !c.is_empty()) {
+        let cookie_value = cookies
+            .iter()
+            .map(|(name, value)| format!("{}={}", name, escape_string(value)))
+            .collect::<Vec<_>>()
+            .join("; ");
+        header_entries.push(("Cookie".to_string(), cookie_value));
     }
 
     if !header_entries.is_empty() {
@@ -358,11 +356,14 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         }
     } else if status_code < 400 {
         // Non-200 success status codes - assert expected response body if provided
-        if let Some(ref body) = fixture.expected_response.body {
-            if !is_value_effectively_empty(body) {
-                code.push_str("\t\tconst responseData = response.json();\n");
-                generate_body_assertions(&mut code, body, "responseData", 2, false);
-            }
+        if let Some(body) = fixture
+            .expected_response
+            .body
+            .as_ref()
+            .filter(|body| !is_value_effectively_empty(body))
+        {
+            code.push_str("\t\tconst responseData = response.json();\n");
+            generate_body_assertions(&mut code, body, "responseData", 2, false);
         }
     }
 
@@ -372,11 +373,9 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
 }
 
 fn build_form_definition(fixture: &Fixture) -> Result<Option<String>> {
-    if let Some(body_value) = fixture.request.body.as_ref() {
-        if let Some(body_str) = body_value.as_str() {
-            let escaped = escape_string(body_str);
-            return Ok(Some(format!("\t\tconst form = \"{}\";\n", escaped)));
-        }
+    if let Some(body_str) = fixture.request.body.as_ref().and_then(|value| value.as_str()) {
+        let escaped = escape_string(body_str);
+        return Ok(Some(format!("\t\tconst form = \"{}\";\n", escaped)));
     }
 
     if let Some(data) = fixture
@@ -416,14 +415,12 @@ fn build_multipart_definition(fixture: &Fixture) -> Result<Option<String>> {
         parts.push(format!("fields: {}", fields_literal));
     }
 
-    if let Some(files) = fixture.request.files.as_ref() {
-        if !files.is_empty() {
-            let mut entries = Vec::new();
-            for file in files {
-                entries.push(format_fixture_file(file)?);
-            }
-            parts.push(format!("files: [{}]", entries.join(", ")));
+    if let Some(files) = fixture.request.files.as_ref().filter(|files| !files.is_empty()) {
+        let mut entries = Vec::new();
+        for file in files {
+            entries.push(format_fixture_file(file)?);
         }
+        parts.push(format!("files: [{}]", entries.join(", ")));
     }
 
     if parts.is_empty() {

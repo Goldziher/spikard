@@ -2,28 +2,16 @@
 /* eslint-disable */
 /** Test client for making HTTP requests to a Spikard application */
 export declare class TestClient {
-  /**
-   * Create a new test client from routes and handlers
-   *
-   * # Arguments
-   * * `routes_json` - JSON array of route metadata objects
-   * * `handlers_map` - JavaScript object mapping handler names to handler functions
-   */
+  /** Create a new test client from routes and handlers */
   constructor(routesJson: string, handlersMap: object)
-  /** Make a GET request */
   get(path: string, headers?: any | undefined | null): Promise<TestResponse>
-  /** Make a POST request */
   post(path: string, headers?: any | undefined | null, json?: any | undefined | null): Promise<TestResponse>
-  /** Make a PUT request */
   put(path: string, headers?: any | undefined | null, json?: any | undefined | null): Promise<TestResponse>
-  /** Make a DELETE request */
   delete(path: string, headers?: any | undefined | null): Promise<TestResponse>
-  /** Make a PATCH request */
   patch(path: string, headers?: any | undefined | null, json?: any | undefined | null): Promise<TestResponse>
-  /** Make a HEAD request */
   head(path: string, headers?: any | undefined | null): Promise<TestResponse>
-  /** Make an OPTIONS request */
   options(path: string, headers?: any | undefined | null): Promise<TestResponse>
+  trace(path: string, headers?: any | undefined | null): Promise<TestResponse>
 }
 
 /** HTTP Response wrapper */

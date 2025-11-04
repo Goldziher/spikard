@@ -1,6 +1,6 @@
 //! HTTP server implementation using Tokio and Axum
 
-use crate::handler::RequestData;
+use crate::handler::{ForeignHandler, RequestData};
 use crate::query_parser::parse_query_string_to_json;
 use crate::{PythonHandler, Router, ServerConfig};
 use axum::Router as AxumRouter;
@@ -126,6 +126,223 @@ async fn create_request_data_with_body(
     })
 }
 
+/// Build an Axum router from routes and foreign handlers
+pub fn build_router_with_handlers<H>(routes: Vec<(crate::Route, H)>) -> Result<AxumRouter, String>
+where
+    H: ForeignHandler,
+{
+    let mut app = AxumRouter::new();
+
+    // Group routes by path to support multiple methods on same route
+    let mut routes_by_path: HashMap<String, Vec<(crate::Route, H)>> = HashMap::new();
+    for (route, handler) in routes {
+        routes_by_path
+            .entry(route.path.clone())
+            .or_default()
+            .push((route, handler));
+    }
+
+    let mut sorted_paths: Vec<String> = routes_by_path.keys().cloned().collect();
+    sorted_paths.sort();
+
+    for path in sorted_paths {
+        let route_handlers = routes_by_path
+            .remove(&path)
+            .ok_or_else(|| format!("Missing handlers for path '{}'", path))?;
+
+        let mut handlers_by_method: HashMap<crate::Method, (crate::Route, H)> = HashMap::new();
+        for (route, handler) in route_handlers {
+            handlers_by_method.insert(route.method.clone(), (route, handler));
+        }
+
+        let mut combined_router: Option<MethodRouter> = None;
+        let has_path_params = path.contains('{');
+
+        for (_method, (route, handler)) in handlers_by_method {
+            let method_router: MethodRouter = match route.method.as_str() {
+                "GET" => {
+                    if has_path_params {
+                        let handler = handler.clone();
+                        axum::routing::get(
+                            move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                                let request_data =
+                                    create_request_data_without_body(req.uri(), req.headers(), path_params.0);
+                                handler.call(req, request_data).await
+                            },
+                        )
+                    } else {
+                        let handler = handler.clone();
+                        axum::routing::get(move |req: axum::extract::Request| async move {
+                            let request_data =
+                                create_request_data_without_body(req.uri(), req.headers(), HashMap::new());
+                            handler.call(req, request_data).await
+                        })
+                    }
+                }
+                "DELETE" => {
+                    if has_path_params {
+                        let handler = handler.clone();
+                        axum::routing::delete(
+                            move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                                let request_data =
+                                    create_request_data_without_body(req.uri(), req.headers(), path_params.0);
+                                handler.call(req, request_data).await
+                            },
+                        )
+                    } else {
+                        let handler = handler.clone();
+                        axum::routing::delete(move |req: axum::extract::Request| async move {
+                            let request_data =
+                                create_request_data_without_body(req.uri(), req.headers(), HashMap::new());
+                            handler.call(req, request_data).await
+                        })
+                    }
+                }
+                "HEAD" => {
+                    if has_path_params {
+                        let handler = handler.clone();
+                        axum::routing::head(
+                            move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                                let request_data =
+                                    create_request_data_without_body(req.uri(), req.headers(), path_params.0);
+                                handler.call(req, request_data).await
+                            },
+                        )
+                    } else {
+                        let handler = handler.clone();
+                        axum::routing::head(move |req: axum::extract::Request| async move {
+                            let request_data =
+                                create_request_data_without_body(req.uri(), req.headers(), HashMap::new());
+                            handler.call(req, request_data).await
+                        })
+                    }
+                }
+                "OPTIONS" => {
+                    if has_path_params {
+                        let handler = handler.clone();
+                        axum::routing::options(
+                            move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                                let request_data =
+                                    create_request_data_without_body(req.uri(), req.headers(), path_params.0);
+                                handler.call(req, request_data).await
+                            },
+                        )
+                    } else {
+                        let handler = handler.clone();
+                        axum::routing::options(move |req: axum::extract::Request| async move {
+                            let request_data =
+                                create_request_data_without_body(req.uri(), req.headers(), HashMap::new());
+                            handler.call(req, request_data).await
+                        })
+                    }
+                }
+                "TRACE" => {
+                    if has_path_params {
+                        let handler = handler.clone();
+                        axum::routing::trace(
+                            move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                                let request_data =
+                                    create_request_data_without_body(req.uri(), req.headers(), path_params.0);
+                                handler.call(req, request_data).await
+                            },
+                        )
+                    } else {
+                        let handler = handler.clone();
+                        axum::routing::trace(move |req: axum::extract::Request| async move {
+                            let request_data =
+                                create_request_data_without_body(req.uri(), req.headers(), HashMap::new());
+                            handler.call(req, request_data).await
+                        })
+                    }
+                }
+                "POST" => {
+                    if has_path_params {
+                        let handler = handler.clone();
+                        axum::routing::post(
+                            move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                                let (parts, body) = req.into_parts();
+                                let request_data = create_request_data_with_body(&parts, path_params.0, body).await?;
+                                let req = axum::extract::Request::from_parts(parts, Body::empty());
+                                handler.call(req, request_data).await
+                            },
+                        )
+                    } else {
+                        let handler = handler.clone();
+                        axum::routing::post(move |req: axum::extract::Request| async move {
+                            let (parts, body) = req.into_parts();
+                            let request_data = create_request_data_with_body(&parts, HashMap::new(), body).await?;
+                            let req = axum::extract::Request::from_parts(parts, Body::empty());
+                            handler.call(req, request_data).await
+                        })
+                    }
+                }
+                "PUT" => {
+                    if has_path_params {
+                        let handler = handler.clone();
+                        axum::routing::put(
+                            move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                                let (parts, body) = req.into_parts();
+                                let request_data = create_request_data_with_body(&parts, path_params.0, body).await?;
+                                let req = axum::extract::Request::from_parts(parts, Body::empty());
+                                handler.call(req, request_data).await
+                            },
+                        )
+                    } else {
+                        let handler = handler.clone();
+                        axum::routing::put(move |req: axum::extract::Request| async move {
+                            let (parts, body) = req.into_parts();
+                            let request_data = create_request_data_with_body(&parts, HashMap::new(), body).await?;
+                            let req = axum::extract::Request::from_parts(parts, Body::empty());
+                            handler.call(req, request_data).await
+                        })
+                    }
+                }
+                "PATCH" => {
+                    if has_path_params {
+                        let handler = handler.clone();
+                        axum::routing::patch(
+                            move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                                let (parts, body) = req.into_parts();
+                                let request_data = create_request_data_with_body(&parts, path_params.0, body).await?;
+                                let req = axum::extract::Request::from_parts(parts, Body::empty());
+                                handler.call(req, request_data).await
+                            },
+                        )
+                    } else {
+                        let handler = handler.clone();
+                        axum::routing::patch(move |req: axum::extract::Request| async move {
+                            let (parts, body) = req.into_parts();
+                            let request_data = create_request_data_with_body(&parts, HashMap::new(), body).await?;
+                            let req = axum::extract::Request::from_parts(parts, Body::empty());
+                            handler.call(req, request_data).await
+                        })
+                    }
+                }
+                _ => return Err(format!("Unsupported HTTP method: {}", route.method.as_str())),
+            };
+
+            combined_router = Some(match combined_router {
+                None => method_router,
+                Some(existing) => existing.merge(method_router),
+            });
+
+            tracing::info!("Registered route: {} {}", route.method.as_str(), path);
+        }
+
+        if let Some(router) = combined_router {
+            let axum_path = crate::type_hints::strip_type_hints(&path);
+            app = app.route(&axum_path, router);
+        }
+    }
+
+    app = app.layer(axum::middleware::from_fn(
+        crate::middleware::validate_content_type_middleware,
+    ));
+    app = app.layer(TraceLayer::new_for_http());
+
+    Ok(app)
+}
+
 /// HTTP Server
 pub struct Server {
     config: ServerConfig,
@@ -147,230 +364,19 @@ impl Server {
         _config: ServerConfig,
         routes: Vec<(crate::Route, Py<PyAny>)>,
     ) -> Result<AxumRouter, String> {
-        let mut app = AxumRouter::new();
-
-        // Group routes by path first to handle multiple methods for the same path.
-        // This prevents duplicate route registration errors when the same path has
-        // multiple HTTP methods (e.g., GET /api/data and POST /api/data).
-        let mut routes_by_path: HashMap<String, Vec<(crate::Route, Py<PyAny>)>> = HashMap::new();
+        let mut prepared_routes = Vec::new();
         for (route, handler_py) in routes {
-            routes_by_path
-                .entry(route.path.clone())
-                .or_default()
-                .push((route, handler_py));
+            let handler = PythonHandler::new(
+                handler_py,
+                route.is_async,
+                route.request_validator.clone(),
+                route.response_validator.clone(),
+                route.parameter_validator.clone(),
+            );
+            prepared_routes.push((route, handler));
         }
 
-        // Sort paths alphabetically for consistent route registration order
-        let mut sorted_paths: Vec<String> = routes_by_path.keys().cloned().collect();
-        sorted_paths.sort();
-
-        // Process each path with all its methods
-        for path in sorted_paths {
-            let route_handlers = routes_by_path.remove(&path).unwrap();
-
-            // Group by method within this path (last handler wins for duplicates)
-            // This handles multiple test fixtures testing the same route+method combination
-            let mut handlers_by_method: HashMap<crate::Method, (crate::Route, Py<PyAny>)> = HashMap::new();
-            for (route, handler_py) in route_handlers {
-                // Last handler wins if multiple fixtures test the same route+method
-                let method = route.method.clone();
-                handlers_by_method.insert(method, (route, handler_py));
-            }
-
-            let mut combined_router: Option<MethodRouter> = None;
-
-            for (_method, (route, handler_py)) in handlers_by_method {
-                let handler = PythonHandler::new(
-                    handler_py,
-                    route.is_async,
-                    route.request_validator.clone(),
-                    route.response_validator.clone(),
-                    route.parameter_validator.clone(),
-                );
-
-                // Check if route has path parameters
-                let has_path_params = path.contains('{');
-
-                // Create Axum route based on HTTP method
-                // Extract all request data in Rust before calling Python
-                // For routes without path parameters, don't try to extract Path
-                let method_router: MethodRouter = match route.method.as_str() {
-                    // Methods without body: GET, DELETE, HEAD, OPTIONS, TRACE
-                    "GET" => {
-                        if has_path_params {
-                            axum::routing::get(
-                                move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                                    let request_data =
-                                        create_request_data_without_body(req.uri(), req.headers(), path_params.0);
-                                    handler.call(req, request_data).await
-                                },
-                            )
-                        } else {
-                            axum::routing::get(move |req: axum::extract::Request| async move {
-                                let request_data =
-                                    create_request_data_without_body(req.uri(), req.headers(), HashMap::new());
-                                handler.call(req, request_data).await
-                            })
-                        }
-                    }
-                    "DELETE" => {
-                        if has_path_params {
-                            axum::routing::delete(
-                                move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                                    let request_data =
-                                        create_request_data_without_body(req.uri(), req.headers(), path_params.0);
-                                    handler.call(req, request_data).await
-                                },
-                            )
-                        } else {
-                            axum::routing::delete(move |req: axum::extract::Request| async move {
-                                let request_data =
-                                    create_request_data_without_body(req.uri(), req.headers(), HashMap::new());
-                                handler.call(req, request_data).await
-                            })
-                        }
-                    }
-                    "HEAD" => {
-                        if has_path_params {
-                            axum::routing::head(
-                                move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                                    let request_data =
-                                        create_request_data_without_body(req.uri(), req.headers(), path_params.0);
-                                    handler.call(req, request_data).await
-                                },
-                            )
-                        } else {
-                            axum::routing::head(move |req: axum::extract::Request| async move {
-                                let request_data =
-                                    create_request_data_without_body(req.uri(), req.headers(), HashMap::new());
-                                handler.call(req, request_data).await
-                            })
-                        }
-                    }
-                    "OPTIONS" => {
-                        if has_path_params {
-                            axum::routing::options(
-                                move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                                    let request_data =
-                                        create_request_data_without_body(req.uri(), req.headers(), path_params.0);
-                                    handler.call(req, request_data).await
-                                },
-                            )
-                        } else {
-                            axum::routing::options(move |req: axum::extract::Request| async move {
-                                let request_data =
-                                    create_request_data_without_body(req.uri(), req.headers(), HashMap::new());
-                                handler.call(req, request_data).await
-                            })
-                        }
-                    }
-                    "TRACE" => {
-                        if has_path_params {
-                            axum::routing::trace(
-                                move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                                    let request_data =
-                                        create_request_data_without_body(req.uri(), req.headers(), path_params.0);
-                                    handler.call(req, request_data).await
-                                },
-                            )
-                        } else {
-                            axum::routing::trace(move |req: axum::extract::Request| async move {
-                                let request_data =
-                                    create_request_data_without_body(req.uri(), req.headers(), HashMap::new());
-                                handler.call(req, request_data).await
-                            })
-                        }
-                    }
-                    // Methods with body: POST, PUT, PATCH
-                    "POST" => {
-                        if has_path_params {
-                            axum::routing::post(
-                                move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                                    let (parts, body) = req.into_parts();
-                                    let request_data =
-                                        create_request_data_with_body(&parts, path_params.0, body).await?;
-                                    let req = axum::extract::Request::from_parts(parts, Body::empty());
-                                    handler.call(req, request_data).await
-                                },
-                            )
-                        } else {
-                            axum::routing::post(move |req: axum::extract::Request| async move {
-                                let (parts, body) = req.into_parts();
-                                let request_data = create_request_data_with_body(&parts, HashMap::new(), body).await?;
-                                let req = axum::extract::Request::from_parts(parts, Body::empty());
-                                handler.call(req, request_data).await
-                            })
-                        }
-                    }
-                    "PUT" => {
-                        if has_path_params {
-                            axum::routing::put(
-                                move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                                    let (parts, body) = req.into_parts();
-                                    let request_data =
-                                        create_request_data_with_body(&parts, path_params.0, body).await?;
-                                    let req = axum::extract::Request::from_parts(parts, Body::empty());
-                                    handler.call(req, request_data).await
-                                },
-                            )
-                        } else {
-                            axum::routing::put(move |req: axum::extract::Request| async move {
-                                let (parts, body) = req.into_parts();
-                                let request_data = create_request_data_with_body(&parts, HashMap::new(), body).await?;
-                                let req = axum::extract::Request::from_parts(parts, Body::empty());
-                                handler.call(req, request_data).await
-                            })
-                        }
-                    }
-                    "PATCH" => {
-                        if has_path_params {
-                            axum::routing::patch(
-                                move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                                    let (parts, body) = req.into_parts();
-                                    let request_data =
-                                        create_request_data_with_body(&parts, path_params.0, body).await?;
-                                    let req = axum::extract::Request::from_parts(parts, Body::empty());
-                                    handler.call(req, request_data).await
-                                },
-                            )
-                        } else {
-                            axum::routing::patch(move |req: axum::extract::Request| async move {
-                                let (parts, body) = req.into_parts();
-                                let request_data = create_request_data_with_body(&parts, HashMap::new(), body).await?;
-                                let req = axum::extract::Request::from_parts(parts, Body::empty());
-                                handler.call(req, request_data).await
-                            })
-                        }
-                    }
-                    _ => return Err(format!("Unsupported HTTP method: {}", route.method.as_str())),
-                };
-
-                // Merge method routers for the same path
-                combined_router = Some(match combined_router {
-                    None => method_router,
-                    Some(existing) => existing.merge(method_router),
-                });
-
-                tracing::info!("Registered route: {} {}", route.method.as_str(), path);
-            }
-
-            // Register the combined router for this path
-            if let Some(router) = combined_router {
-                // Strip type hints from path for Axum compatibility
-                // /items/{id:uuid} -> /items/{id}
-                // /files/{path:path} -> /files/{*path}
-                let axum_path = crate::type_hints::strip_type_hints(&path);
-                app = app.route(&axum_path, router);
-            }
-        }
-
-        // Add middleware
-        app = app.layer(axum::middleware::from_fn(
-            crate::middleware::validate_content_type_middleware,
-        ));
-        app = app.layer(TraceLayer::new_for_http());
-
-        Ok(app)
+        build_router_with_handlers(prepared_routes)
     }
 
     /// Initialize logging

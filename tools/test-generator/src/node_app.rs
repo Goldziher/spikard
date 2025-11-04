@@ -551,12 +551,10 @@ fn build_parameter_schema_json(params: &Value) -> Result<String> {
 
 /// Extract file parameters JSON string
 fn extract_file_params_json(params: &Value) -> Option<String> {
-    if let Some(obj) = params.as_object() {
-        if let Some(files) = obj.get("files") {
-            return serde_json::to_string(files).ok();
-        }
-    }
-    None
+    params
+        .as_object()
+        .and_then(|obj| obj.get("files"))
+        .and_then(|files| serde_json::to_string(files).ok())
 }
 
 fn is_valid_identifier(name: &str) -> bool {

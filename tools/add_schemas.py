@@ -2,44 +2,52 @@
 """Add explicit schemas to all fixture files."""
 
 import json
+import re
 import sys
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
+
+Fixture = dict[str, Any]
+ErrorList = Sequence[dict[str, Any]]
+SectionSchema = dict[str, dict[str, Any]]
+ParametersSchema = dict[str, SectionSchema]
 
 
 def infer_type_from_value(value: Any) -> dict[str, Any]:
     """Infer JSON Schema type from a value."""
+    schema: dict[str, Any]
     if value is None:
-        return {"type": ["string", "null"]}
+        schema = {"type": ["string", "null"]}
     elif isinstance(value, bool):
-        return {"type": "boolean"}
+        schema = {"type": "boolean"}
     elif isinstance(value, int):
-        return {"type": "integer"}
+        schema = {"type": "integer"}
     elif isinstance(value, float):
-        return {"type": "number"}
+        schema = {"type": "number"}
     elif isinstance(value, str):
-        # Check for special formats
-        if len(value) == 36 and value.count('-') == 4:
-            return {"type": "string", "format": "uuid"}
-        elif 'T' in value and 'Z' in value:
-            return {"type": "string", "format": "date-time"}
-        elif len(value) == 10 and value.count('-') == 2:
-            return {"type": "string", "format": "date"}
-        return {"type": "string"}
+        schema = {"type": "string"}
+        if len(value) == 36 and value.count("-") == 4:
+            schema["format"] = "uuid"
+        elif "T" in value and value.endswith("Z"):
+            schema["format"] = "date-time"
+        elif len(value) == 10 and value.count("-") == 2:
+            schema["format"] = "date"
     elif isinstance(value, list):
+        schema = {"type": "array"}
         if value:
-            item_schema = infer_type_from_value(value[0])
-            return {"type": "array", "items": item_schema}
-        return {"type": "array"}
+            schema["items"] = infer_type_from_value(value[0])
     elif isinstance(value, dict):
-        properties = {}
-        for k, v in value.items():
-            properties[k] = infer_type_from_value(v)
-        return {"type": "object", "properties": properties}
-    return {"type": "string"}
+        properties: dict[str, Any] = {}
+        for key, item in value.items():
+            properties[key] = infer_type_from_value(item)
+        schema = {"type": "object", "properties": properties}
+    else:
+        schema = {"type": "string"}
+    return schema
 
 
-def extract_required_fields_from_errors(errors: list[dict]) -> set[str]:
+def extract_required_fields_from_errors(errors: ErrorList) -> set[str]:
     """Extract required field names from validation errors."""
     required = set()
     for error in errors:
@@ -49,9 +57,9 @@ def extract_required_fields_from_errors(errors: list[dict]) -> set[str]:
     return required
 
 
-def extract_constraints_from_errors(errors: list[dict]) -> dict[str, dict]:
+def extract_constraints_from_errors(errors: ErrorList) -> dict[str, dict[str, Any]]:
     """Extract validation constraints from error details."""
-    constraints = {}
+    constraints: dict[str, dict[str, Any]] = {}
     for error in errors:
         if len(error.get("loc", [])) >= 2:
             field_name = error["loc"][1]
@@ -75,7 +83,7 @@ def extract_constraints_from_errors(errors: list[dict]) -> dict[str, dict]:
     return constraints
 
 
-def add_body_schema(fixture: dict) -> bool:
+def add_body_schema(fixture: Fixture) -> bool:
     """Add body_schema to fixture if missing. Returns True if modified."""
     if not fixture.get("handler"):
         return False
@@ -89,8 +97,8 @@ def add_body_schema(fixture: dict) -> bool:
         return False
 
     # Infer schema from request body
-    properties = {}
-    required_fields = set()
+    properties: dict[str, dict[str, Any]] = {}
+    required_fields: set[str] = set()
 
     if isinstance(request_body, dict):
         for key, value in request_body.items():
@@ -103,7 +111,7 @@ def add_body_schema(fixture: dict) -> bool:
     # Check validation errors for required fields and constraints
     expected_response = fixture.get("expected_response", {})
     body = expected_response.get("body")
-    errors = []
+    errors: list[dict[str, Any]] = []
     if isinstance(body, dict):
         errors = body.get("detail", [])
     if errors and isinstance(errors, list):
@@ -124,10 +132,7 @@ def add_body_schema(fixture: dict) -> bool:
     if not properties:
         return False
 
-    schema = {
-        "type": "object",
-        "properties": properties
-    }
+    schema: dict[str, Any] = {"type": "object", "properties": properties}
 
     if required_fields:
         schema["required"] = sorted(required_fields)
@@ -136,7 +141,82 @@ def add_body_schema(fixture: dict) -> bool:
     return True
 
 
-def add_parameter_schema(fixture: dict) -> bool:
+def _build_query_schema(query_params: Mapping[str, Any]) -> SectionSchema:
+    schema: SectionSchema = {}
+    for key, value in query_params.items():
+        field_schema = infer_type_from_value(value)
+        field_schema["optional"] = True
+        schema[key] = field_schema
+    return schema
+
+
+def _build_path_schema(path_param_names: Iterable[str]) -> SectionSchema:
+    schema: SectionSchema = {}
+    for param in path_param_names:
+        schema[param] = {"type": "string"}
+    return schema
+
+
+def _build_header_schema(headers: Mapping[str, Any]) -> SectionSchema:
+    schema: SectionSchema = {}
+    for key, value in headers.items():
+        if key.lower() in {"content-type", "accept", "user-agent"}:
+            continue
+        field_schema = infer_type_from_value(value)
+        field_schema["optional"] = True
+        schema[key] = field_schema
+    return schema
+
+
+def _build_cookie_schema(cookies: Mapping[str, Any]) -> SectionSchema:
+    schema: SectionSchema = {}
+    for key, value in cookies.items():
+        field_schema = infer_type_from_value(value)
+        field_schema["optional"] = True
+        schema[key] = field_schema
+    return schema
+
+
+def _apply_error_metadata(parameters: ParametersSchema, errors: ErrorList) -> None:
+    if not errors:
+        return
+
+    source_map = {
+        "query": "query",
+        "path": "path",
+        "header": "headers",
+        "cookie": "cookies",
+    }
+
+    for error in errors:
+        if error.get("type") != "missing":
+            continue
+        loc = error.get("loc", [])
+        if len(loc) < 2:
+            continue
+        source = loc[0]
+        field_name = loc[1]
+
+        section_key = source_map.get(source)
+        if section_key is None:
+            continue
+        section = parameters.get(section_key)
+        if section is None:
+            continue
+        field_schema = section.get(field_name)
+        if field_schema is None:
+            continue
+        if source != "path":
+            field_schema["optional"] = False
+
+    constraints = extract_constraints_from_errors(errors)
+    for field, field_constraints in constraints.items():
+        for section in parameters.values():
+            if field in section:
+                section[field].update(field_constraints)
+
+
+def add_parameter_schema(fixture: Fixture) -> bool:
     """Add parameters schema to fixture if missing. Returns True if modified."""
     if not fixture.get("handler"):
         return False
@@ -147,90 +227,42 @@ def add_parameter_schema(fixture: dict) -> bool:
 
     request = fixture.get("request", {})
     query_params = request.get("query_params", {})
-    path = request.get("path", "")
     headers = request.get("headers", {})
     cookies = request.get("cookies", {})
 
-    # Extract path parameters from route
     route = fixture["handler"].get("route", "")
-    import re
-    path_param_names = set(re.findall(r'\{(\w+)(?::\w+)?\}', route))
+    path_param_names = set(re.findall(r"\{(\w+)(?::\w+)?\}", route))
 
-    parameters = {}
+    parameters: ParametersSchema = {}
 
-    # Add query parameters
-    if query_params:
-        query_schema = {}
-        for key, value in query_params.items():
-            query_schema[key] = infer_type_from_value(value)
-            query_schema[key]["optional"] = True  # Default to optional
-
+    if isinstance(query_params, Mapping):
+        query_schema = _build_query_schema(query_params)
         if query_schema:
             parameters["query"] = query_schema
 
-    # Add path parameters
     if path_param_names:
-        path_schema = {}
-        # Try to extract values from path
-        for param in path_param_names:
-            # Path params are always required
-            path_schema[param] = {"type": "string"}  # Default to string
-
+        path_schema = _build_path_schema(path_param_names)
         if path_schema:
             parameters["path"] = path_schema
 
-    # Add headers (exclude standard ones)
-    if headers:
-        header_schema = {}
-        for key, value in headers.items():
-            if key.lower() not in ["content-type", "accept", "user-agent"]:
-                header_schema[key] = infer_type_from_value(value)
-                header_schema[key]["optional"] = True
-
+    if isinstance(headers, Mapping):
+        header_schema = _build_header_schema(headers)
         if header_schema:
             parameters["headers"] = header_schema
 
-    # Add cookies
-    if cookies:
-        cookie_schema = {}
-        for key, value in cookies.items():
-            cookie_schema[key] = infer_type_from_value(value)
-            cookie_schema[key]["optional"] = True
-
+    if isinstance(cookies, Mapping):
+        cookie_schema = _build_cookie_schema(cookies)
         if cookie_schema:
             parameters["cookies"] = cookie_schema
 
-    # Check validation errors for required parameters
     expected_response = fixture.get("expected_response", {})
     body = expected_response.get("body")
-    errors = []
+    errors: list[dict[str, Any]] = []
     if isinstance(body, dict):
-        errors = body.get("detail", [])
-    if errors and isinstance(errors, list):
-        for error in errors:
-            if error.get("type") == "missing" and len(error.get("loc", [])) >= 2:
-                source = error["loc"][0]  # query, path, header, cookie
-                field_name = error["loc"][1]
-
-                if source == "query" and "query" in parameters:
-                    if field_name in parameters["query"]:
-                        parameters["query"][field_name]["optional"] = False
-                elif source == "path" and "path" in parameters:
-                    if field_name in parameters["path"]:
-                        pass  # Path params are always required
-                elif source == "header" and "headers" in parameters:
-                    if field_name in parameters["headers"]:
-                        parameters["headers"][field_name]["optional"] = False
-                elif source == "cookie" and "cookies" in parameters:
-                    if field_name in parameters["cookies"]:
-                        parameters["cookies"][field_name]["optional"] = False
-
-        # Apply constraints
-        constraints = extract_constraints_from_errors(errors)
-        for field, field_constraints in constraints.items():
-            for section in parameters.values():
-                if field in section:
-                    section[field].update(field_constraints)
+        detail = body.get("detail")
+        if isinstance(detail, list):
+            errors = detail
+    _apply_error_metadata(parameters, errors)
 
     if not parameters:
         return False
@@ -242,29 +274,30 @@ def add_parameter_schema(fixture: dict) -> bool:
 def process_fixture_file(file_path: Path) -> bool:
     """Process a single fixture file. Returns True if modified."""
     try:
-        with open(file_path) as f:
-            fixture = json.load(f)
+        with file_path.open() as handle:
+            fixture: Fixture = json.load(handle)
 
         modified = False
         modified |= add_body_schema(fixture)
         modified |= add_parameter_schema(fixture)
 
         if modified:
-            with open(file_path, 'w') as f:
-                json.dump(fixture, f, indent=2)
-                f.write('\n')
+            with file_path.open("w") as handle:
+                json.dump(fixture, handle, indent=2)
+                handle.write("\n")
             return True
 
         return False
-    except Exception as e:
-        print(f"Error processing {file_path}: {e}", file=sys.stderr)
+    except (OSError, json.JSONDecodeError) as exc:
+        sys.stderr.write(f"Error processing {file_path}: {exc}\n")
         return False
 
 
-def main():
+def main() -> None:
+    """Entry point for adding schemas across fixtures."""
     testing_data = Path("testing_data")
     if not testing_data.exists():
-        print("Error: testing_data directory not found", file=sys.stderr)
+        sys.stderr.write("Error: testing_data directory not found\n")
         sys.exit(1)
 
     modified_count = 0
@@ -281,9 +314,9 @@ def main():
             total_count += 1
             if process_fixture_file(fixture_file):
                 modified_count += 1
-                print(f"✓ {fixture_file.relative_to(testing_data)}")
+                sys.stdout.write(f"✓ {fixture_file.relative_to(testing_data)}\n")
 
-    print(f"\nModified {modified_count}/{total_count} fixtures")
+    sys.stdout.write(f"\nModified {modified_count}/{total_count} fixtures\n")
 
 
 if __name__ == "__main__":

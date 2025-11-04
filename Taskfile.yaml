@@ -69,6 +69,13 @@ tasks:
       - pnpm biome check packages/node/src crates/spikard-node/src e2e/node --log-level=warn
       - pnpm oxlint packages/node/src crates/spikard-node/src e2e/node
 
+  ruby:lint:
+    desc: "Lint Ruby bindings with Rubocop"
+    dir: packages/ruby
+    cmds:
+      - bundle check || bundle install
+      - bundle exec rubocop
+
   node:format:
     desc: "Format TypeScript code with biome"
     cmds:
@@ -102,11 +109,14 @@ tasks:
       - task: test:python
 
   lint:
-    desc: "Lint Python code with ruff/prek, Rust code with clippy/fmt, and TypeScript with biome/oxlint"
+    desc: "Run workspace linters for Rust, Python, TypeScript, and Ruby"
     cmds:
+      - task: fmt:rust:check
       - task: clippy:rust
-      - prek run --all-files
+      - uv run ruff check .
+      - uv run mypy benchmarks tools packages/python
       - task: node:lint
+      - task: ruby:lint
 
   fmt:
     desc: "Format Python, Rust, and TypeScript code"
@@ -208,6 +218,11 @@ tasks:
       - rm -rf e2e/node
       - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang node --output e2e/node
 
+  generate:tests:ruby:
+    desc: "Generate Ruby e2e test suite from fixtures"
+    cmds:
+      - echo "Ruby test generation is tracked in RUBY_TODO.md (not yet automated)."
+
   generate:tests:
     desc: "Generate all e2e test suites from fixtures"
     cmds:
@@ -215,6 +230,7 @@ tasks:
       - task: generate:tests:python
       - task: generate:tests:typescript
       - task: generate:tests:node
+      - task: generate:tests:ruby
 
   clean:generated:
     desc: "Remove all generated e2e test infrastructure"
@@ -247,6 +263,13 @@ tasks:
     cmds:
       - pnpm test
 
+  test:e2e:ruby:
+    desc: "Run Ruby e2e tests (fixture-driven integration tests)"
+    dir: e2e/ruby
+    cmds:
+      - bundle check || bundle install
+      - bundle exec rspec
+
   test:e2e:
     desc: "Run all e2e fixture-driven integration tests"
     cmds:
@@ -254,6 +277,7 @@ tasks:
       - task: test:e2e:python
       - task: test:e2e:typescript
       - task: test:e2e:node
+      - task: test:e2e:ruby
 
   build:js:
     desc: "Build all JavaScript/TypeScript packages (node, wasm)"
