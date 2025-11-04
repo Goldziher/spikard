@@ -1,11 +1,33 @@
 """E2E tests for edge_cases."""
 
+from app.main import (
+    create_app_edge_cases_11_utf8_query_parameter,
+    create_app_edge_cases_12_percent_encoded_special_chars,
+    create_app_edge_cases_13_empty_string_query_param_preserved,
+    create_app_edge_cases_14_large_integer_boundary,
+    create_app_edge_cases_15_float_precision_preservation,
+    create_app_edge_cases_16_negative_zero_handling,
+    create_app_edge_cases_17_extremely_long_string,
+    create_app_edge_cases_18_unicode_normalization,
+    create_app_edge_cases_19_emoji_in_strings,
+    create_app_edge_cases_20_null_byte_in_string,
+    create_app_edge_cases_21_scientific_notation_number,
+    create_app_edge_cases_22_leading_zeros_integer,
+    create_app_edge_cases_23_deeply_nested_json_limit,
+    create_app_edge_cases_24_array_with_holes,
+    create_app_edge_cases_deeply_nested_structure_10_levels,
+    create_app_edge_cases_empty_and_null_value_handling,
+    create_app_edge_cases_float_precision_and_rounding,
+    create_app_edge_cases_large_integer_boundary_values,
+    create_app_edge_cases_special_string_values_and_escaping,
+    create_app_edge_cases_unicode_and_emoji_handling,
+)
+
+from spikard.testing import TestClient
+
 
 async def test_19_emoji_in_strings() -> None:
     """Emoji characters should be handled correctly in string fields."""
-    from app.main import create_app_edge_cases_19_emoji_in_strings
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_19_emoji_in_strings()
     client = TestClient(app)
@@ -21,9 +43,6 @@ async def test_19_emoji_in_strings() -> None:
 
 async def test_12_percent_encoded_special_chars() -> None:
     """Percent-encoded special characters should be decoded correctly."""
-    from app.main import create_app_edge_cases_12_percent_encoded_special_chars
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_12_percent_encoded_special_chars()
     client = TestClient(app)
@@ -41,9 +60,6 @@ async def test_12_percent_encoded_special_chars() -> None:
 
 async def test_special_string_values_and_escaping() -> None:
     """Tests handling of special characters, null bytes, and escape sequences."""
-    from app.main import create_app_edge_cases_special_string_values_and_escaping
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_special_string_values_and_escaping()
     client = TestClient(app)
@@ -82,9 +98,6 @@ async def test_special_string_values_and_escaping() -> None:
 
 async def test_15_float_precision_preservation() -> None:
     """High-precision floating point numbers should be preserved without loss."""
-    from app.main import create_app_edge_cases_15_float_precision_preservation
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_15_float_precision_preservation()
     client = TestClient(app)
@@ -100,9 +113,6 @@ async def test_15_float_precision_preservation() -> None:
 
 async def test_13_empty_string_query_param_preserved() -> None:
     """Empty string query parameter should be preserved, not treated as missing."""
-    from app.main import create_app_edge_cases_13_empty_string_query_param_preserved
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_13_empty_string_query_param_preserved()
     client = TestClient(app)
@@ -120,9 +130,6 @@ async def test_13_empty_string_query_param_preserved() -> None:
 
 async def test_24_array_with_holes() -> None:
     """Array indices with gaps should be rejected in form data."""
-    from app.main import create_app_edge_cases_24_array_with_holes
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_24_array_with_holes()
     client = TestClient(app)
@@ -144,9 +151,6 @@ async def test_24_array_with_holes() -> None:
 
 async def test_21_scientific_notation_number() -> None:
     """Numbers in scientific notation should be parsed correctly."""
-    from app.main import create_app_edge_cases_21_scientific_notation_number
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_21_scientific_notation_number()
     client = TestClient(app)
@@ -162,9 +166,6 @@ async def test_21_scientific_notation_number() -> None:
 
 async def test_float_precision_and_rounding() -> None:
     """Tests floating point precision and rounding behavior."""
-    from app.main import create_app_edge_cases_float_precision_and_rounding
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_float_precision_and_rounding()
     client = TestClient(app)
@@ -196,9 +197,6 @@ async def test_float_precision_and_rounding() -> None:
 
 async def test_unicode_and_emoji_handling() -> None:
     """Tests proper handling of Unicode characters and emojis."""
-    from app.main import create_app_edge_cases_unicode_and_emoji_handling
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_unicode_and_emoji_handling()
     client = TestClient(app)
@@ -233,9 +231,6 @@ async def test_unicode_and_emoji_handling() -> None:
 
 async def test_17_extremely_long_string() -> None:
     """Very long string values should be validated against maxLength."""
-    from app.main import create_app_edge_cases_17_extremely_long_string
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_17_extremely_long_string()
     client = TestClient(app)
@@ -253,9 +248,6 @@ async def test_17_extremely_long_string() -> None:
 
 async def test_11_utf8_query_parameter() -> None:
     """Query parameter with UTF-8 characters should be handled correctly."""
-    from app.main import create_app_edge_cases_11_utf8_query_parameter
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_11_utf8_query_parameter()
     client = TestClient(app)
@@ -273,9 +265,6 @@ async def test_11_utf8_query_parameter() -> None:
 
 async def test_18_unicode_normalization() -> None:
     """Unicode characters with combining diacritics should be handled correctly."""
-    from app.main import create_app_edge_cases_18_unicode_normalization
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_18_unicode_normalization()
     client = TestClient(app)
@@ -291,9 +280,6 @@ async def test_18_unicode_normalization() -> None:
 
 async def test_20_null_byte_in_string() -> None:
     """Null byte character in strings should be rejected for security."""
-    from app.main import create_app_edge_cases_20_null_byte_in_string
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_20_null_byte_in_string()
     client = TestClient(app)
@@ -309,9 +295,6 @@ async def test_20_null_byte_in_string() -> None:
 
 async def test_23_deeply_nested_json_limit() -> None:
     """Extremely deeply nested JSON should be rejected to prevent DoS."""
-    from app.main import create_app_edge_cases_23_deeply_nested_json_limit
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_23_deeply_nested_json_limit()
     client = TestClient(app)
@@ -427,9 +410,6 @@ async def test_23_deeply_nested_json_limit() -> None:
 
 async def test_14_large_integer_boundary() -> None:
     """Very large integer at JavaScript MAX_SAFE_INTEGER boundary should be handled."""
-    from app.main import create_app_edge_cases_14_large_integer_boundary
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_14_large_integer_boundary()
     client = TestClient(app)
@@ -447,9 +427,6 @@ async def test_14_large_integer_boundary() -> None:
 
 async def test_22_leading_zeros_integer() -> None:
     """Integer values with leading zeros should be parsed as decimal (not octal)."""
-    from app.main import create_app_edge_cases_22_leading_zeros_integer
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_22_leading_zeros_integer()
     client = TestClient(app)
@@ -467,9 +444,6 @@ async def test_22_leading_zeros_integer() -> None:
 
 async def test_large_integer_boundary_values() -> None:
     """Tests handling of very large integer values near system limits."""
-    from app.main import create_app_edge_cases_large_integer_boundary_values
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_large_integer_boundary_values()
     client = TestClient(app)
@@ -496,9 +470,6 @@ async def test_large_integer_boundary_values() -> None:
 
 async def test_deeply_nested_structure_10_levels() -> None:
     """Tests handling of deeply nested JSON objects."""
-    from app.main import create_app_edge_cases_deeply_nested_structure_10_levels
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_deeply_nested_structure_10_levels()
     client = TestClient(app)
@@ -533,9 +504,6 @@ async def test_deeply_nested_structure_10_levels() -> None:
 
 async def test_empty_and_null_value_handling() -> None:
     """Tests distinction between null, empty, and missing values."""
-    from app.main import create_app_edge_cases_empty_and_null_value_handling
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_empty_and_null_value_handling()
     client = TestClient(app)
@@ -571,9 +539,6 @@ async def test_empty_and_null_value_handling() -> None:
 
 async def test_16_negative_zero_handling() -> None:
     """Negative zero (-0.0) should be handled correctly in numeric fields."""
-    from app.main import create_app_edge_cases_16_negative_zero_handling
-
-    from spikard.testing import TestClient
 
     app = create_app_edge_cases_16_negative_zero_handling()
     client = TestClient(app)
