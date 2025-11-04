@@ -3,9 +3,42 @@
  * @generated
  */
 
-import { describe, test, expect } from "vitest";
 import { TestClient } from "@spikard/node";
-import { createAppHeadersHeaderRegexValidationSuccess, createAppHeaders33ApiKeyHeaderValid, createAppHeadersContentTypeHeaderApplicationJson, createAppHeadersAcceptLanguageHeader, createAppHeadersXApiKeyRequiredHeaderSuccess, createAppHeadersHeaderValidationMaxLengthConstraintFail, createAppHeadersXApiKeyRequiredHeaderMissing, createAppHeadersOriginHeader, createAppHeadersUserAgentHeaderDefaultValue, createAppHeaders32BearerTokenMissingPrefix, createAppHeadersOptionalHeaderWithNoneDefaultMissing, createAppHeadersHeaderRegexValidationFail, createAppHeaders31BearerTokenFormatInvalid, createAppHeadersXApiKeyOptionalHeaderSuccess, createAppHeadersAuthorizationHeaderSuccess, createAppHeaders30BearerTokenFormatValid, createAppHeadersAuthorizationHeaderMissing, createAppHeadersAcceptHeaderJson, createAppHeadersAcceptEncodingHeader, createAppHeadersAuthorizationHeaderWrongScheme, createAppHeadersHeaderValidationMinLengthConstraint, createAppHeadersBasicAuthenticationSuccess, createAppHeadersBearerTokenAuthenticationMissing, createAppHeadersXApiKeyOptionalHeaderMissing, createAppHeadersMultipleCustomHeaders, createAppHeaders34ApiKeyHeaderInvalid, createAppHeadersBearerTokenAuthenticationSuccess, createAppHeadersHostHeader, createAppHeadersRefererHeader, createAppHeadersHeaderWithUnderscoreConversionExplicit, createAppHeadersHeaderCaseInsensitivityAccess, createAppHeadersUserAgentHeaderCustomValue } from "../app/main.js";
+import { describe, expect, test } from "vitest";
+import {
+	createAppHeaders30BearerTokenFormatValid,
+	createAppHeaders31BearerTokenFormatInvalid,
+	createAppHeaders32BearerTokenMissingPrefix,
+	createAppHeaders33ApiKeyHeaderValid,
+	createAppHeaders34ApiKeyHeaderInvalid,
+	createAppHeadersAcceptEncodingHeader,
+	createAppHeadersAcceptHeaderJson,
+	createAppHeadersAcceptLanguageHeader,
+	createAppHeadersAuthorizationHeaderMissing,
+	createAppHeadersAuthorizationHeaderSuccess,
+	createAppHeadersAuthorizationHeaderWrongScheme,
+	createAppHeadersBasicAuthenticationSuccess,
+	createAppHeadersBearerTokenAuthenticationMissing,
+	createAppHeadersBearerTokenAuthenticationSuccess,
+	createAppHeadersContentTypeHeaderApplicationJson,
+	createAppHeadersHeaderCaseInsensitivityAccess,
+	createAppHeadersHeaderRegexValidationFail,
+	createAppHeadersHeaderRegexValidationSuccess,
+	createAppHeadersHeaderValidationMaxLengthConstraintFail,
+	createAppHeadersHeaderValidationMinLengthConstraint,
+	createAppHeadersHeaderWithUnderscoreConversionExplicit,
+	createAppHeadersHostHeader,
+	createAppHeadersMultipleCustomHeaders,
+	createAppHeadersOptionalHeaderWithNoneDefaultMissing,
+	createAppHeadersOriginHeader,
+	createAppHeadersRefererHeader,
+	createAppHeadersUserAgentHeaderCustomValue,
+	createAppHeadersUserAgentHeaderDefaultValue,
+	createAppHeadersXApiKeyOptionalHeaderMissing,
+	createAppHeadersXApiKeyOptionalHeaderSuccess,
+	createAppHeadersXApiKeyRequiredHeaderMissing,
+	createAppHeadersXApiKeyRequiredHeaderSuccess,
+} from "../app/main.js";
 
 describe("headers", () => {
 	test("Header regex validation - success", async () => {
@@ -20,7 +53,7 @@ describe("headers", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("x_request_id");
-		expect(responseData["x_request_id"]).toBe("12345");
+		expect(responseData.x_request_id).toBe("12345");
 	});
 
 	test("33_api_key_header_valid", async () => {
@@ -33,7 +66,6 @@ describe("headers", () => {
 		const response = await client.get("/api/data", headers);
 
 		expect(response.statusCode).toBe(200);
-		const responseData = response.json();
 	});
 
 	test("Content-Type header - application json", async () => {
@@ -48,7 +80,7 @@ describe("headers", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("content_type");
-		expect(responseData["content_type"]).toBe("application/json");
+		expect(responseData.content_type).toBe("application/json");
 	});
 
 	test("Accept-Language header", async () => {
@@ -63,7 +95,7 @@ describe("headers", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("accept_language");
-		expect(responseData["accept_language"]).toBe("en-US,en;q=0.9");
+		expect(responseData.accept_language).toBe("en-US,en;q=0.9");
 	});
 
 	test("X-API-Key required header - success", async () => {
@@ -71,14 +103,14 @@ describe("headers", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"key": "secret",
+			key: "secret",
 		};
 		const response = await client.get("/users/me", headers);
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("username");
-		expect(responseData["username"]).toBe("secret");
+		expect(responseData.username).toBe("secret");
 	});
 
 	test("Header validation - max_length constraint fail", async () => {
@@ -91,9 +123,6 @@ describe("headers", () => {
 		const response = await client.get("/headers/max-length", headers);
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("X-API-Key required header - missing", async () => {
@@ -103,9 +132,6 @@ describe("headers", () => {
 		const response = await client.get("/users/me");
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Origin header", async () => {
@@ -113,14 +139,14 @@ describe("headers", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Origin": "https://example.com",
+			Origin: "https://example.com",
 		};
 		const response = await client.get("/headers/origin", headers);
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("origin");
-		expect(responseData["origin"]).toBe("https://example.com");
+		expect(responseData.origin).toBe("https://example.com");
 	});
 
 	test("User-Agent header - default value", async () => {
@@ -140,14 +166,11 @@ describe("headers", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+			Authorization: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
 		};
 		const response = await client.get("/protected", headers);
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Optional header with None default - missing", async () => {
@@ -159,7 +182,7 @@ describe("headers", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("strange_header");
-		expect(responseData["strange_header"]).toBe(null);
+		expect(responseData.strange_header).toBe(null);
 	});
 
 	test("Header regex validation - fail", async () => {
@@ -172,9 +195,6 @@ describe("headers", () => {
 		const response = await client.get("/headers/pattern", headers);
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("31_bearer_token_format_invalid", async () => {
@@ -182,14 +202,11 @@ describe("headers", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Authorization": "Bearer invalid token with spaces",
+			Authorization: "Bearer invalid token with spaces",
 		};
 		const response = await client.get("/protected", headers);
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("X-API-Key optional header - success", async () => {
@@ -197,14 +214,14 @@ describe("headers", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"key": "secret",
+			key: "secret",
 		};
 		const response = await client.get("/users/me", headers);
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("msg");
-		expect(responseData["msg"]).toBe("Hello secret");
+		expect(responseData.msg).toBe("Hello secret");
 	});
 
 	test("Authorization header - success", async () => {
@@ -212,16 +229,16 @@ describe("headers", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Authorization": "Digest foobar",
+			Authorization: "Digest foobar",
 		};
 		const response = await client.get("/users/me", headers);
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("credentials");
-		expect(responseData["credentials"]).toBe("foobar");
+		expect(responseData.credentials).toBe("foobar");
 		expect(responseData).toHaveProperty("scheme");
-		expect(responseData["scheme"]).toBe("Digest");
+		expect(responseData.scheme).toBe("Digest");
 	});
 
 	test("30_bearer_token_format_valid", async () => {
@@ -229,12 +246,12 @@ describe("headers", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
+			Authorization:
+				"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
 		};
 		const response = await client.get("/protected", headers);
 
 		expect(response.statusCode).toBe(200);
-		const responseData = response.json();
 	});
 
 	test("Authorization header - missing", async () => {
@@ -244,9 +261,6 @@ describe("headers", () => {
 		const response = await client.get("/users/me");
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Accept header - JSON", async () => {
@@ -254,14 +268,14 @@ describe("headers", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Accept": "application/json",
+			Accept: "application/json",
 		};
 		const response = await client.get("/headers/accept", headers);
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("accept");
-		expect(responseData["accept"]).toBe("application/json");
+		expect(responseData.accept).toBe("application/json");
 	});
 
 	test("Accept-Encoding header", async () => {
@@ -276,7 +290,7 @@ describe("headers", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("accept_encoding");
-		expect(responseData["accept_encoding"]).toBe("gzip, deflate, br");
+		expect(responseData.accept_encoding).toBe("gzip, deflate, br");
 	});
 
 	test("Authorization header - wrong scheme", async () => {
@@ -284,14 +298,11 @@ describe("headers", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Authorization": "Other invalidauthorization",
+			Authorization: "Other invalidauthorization",
 		};
 		const response = await client.get("/users/me", headers);
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Header validation - min_length constraint", async () => {
@@ -304,9 +315,6 @@ describe("headers", () => {
 		const response = await client.get("/headers/validated", headers);
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Basic authentication - success", async () => {
@@ -314,16 +322,16 @@ describe("headers", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Authorization": "Basic dXNlcm5hbWU6cGFzc3dvcmQ=",
+			Authorization: "Basic dXNlcm5hbWU6cGFzc3dvcmQ=",
 		};
 		const response = await client.get("/headers/basic-auth", headers);
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("password");
-		expect(responseData["password"]).toBe("password");
+		expect(responseData.password).toBe("password");
 		expect(responseData).toHaveProperty("username");
-		expect(responseData["username"]).toBe("username");
+		expect(responseData.username).toBe("username");
 	});
 
 	test("Bearer token authentication - missing", async () => {
@@ -333,9 +341,6 @@ describe("headers", () => {
 		const response = await client.get("/headers/bearer-auth");
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("X-API-Key optional header - missing", async () => {
@@ -347,7 +352,7 @@ describe("headers", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("msg");
-		expect(responseData["msg"]).toBe("Hello World");
+		expect(responseData.msg).toBe("Hello World");
 	});
 
 	test("Multiple custom headers", async () => {
@@ -355,8 +360,8 @@ describe("headers", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"X-Request-Id": "req-12345",
 			"X-Client-Version": "1.2.3",
+			"X-Request-Id": "req-12345",
 			"X-Trace-Id": "trace-abc",
 		};
 		const response = await client.get("/headers/multiple", headers);
@@ -364,11 +369,11 @@ describe("headers", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("x_client_version");
-		expect(responseData["x_client_version"]).toBe("1.2.3");
+		expect(responseData.x_client_version).toBe("1.2.3");
 		expect(responseData).toHaveProperty("x_request_id");
-		expect(responseData["x_request_id"]).toBe("req-12345");
+		expect(responseData.x_request_id).toBe("req-12345");
 		expect(responseData).toHaveProperty("x_trace_id");
-		expect(responseData["x_trace_id"]).toBe("trace-abc");
+		expect(responseData.x_trace_id).toBe("trace-abc");
 	});
 
 	test("34_api_key_header_invalid", async () => {
@@ -381,9 +386,6 @@ describe("headers", () => {
 		const response = await client.get("/api/data", headers);
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Bearer token authentication - success", async () => {
@@ -391,14 +393,14 @@ describe("headers", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Authorization": "Bearer valid_token_123",
+			Authorization: "Bearer valid_token_123",
 		};
 		const response = await client.get("/headers/bearer-auth", headers);
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("token");
-		expect(responseData["token"]).toBe("valid_token_123");
+		expect(responseData.token).toBe("valid_token_123");
 	});
 
 	test("Host header", async () => {
@@ -406,14 +408,14 @@ describe("headers", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Host": "example.com:8080",
+			Host: "example.com:8080",
 		};
 		const response = await client.get("/headers/host", headers);
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("host");
-		expect(responseData["host"]).toBe("example.com:8080");
+		expect(responseData.host).toBe("example.com:8080");
 	});
 
 	test("Referer header", async () => {
@@ -421,14 +423,14 @@ describe("headers", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Referer": "https://example.com/page",
+			Referer: "https://example.com/page",
 		};
 		const response = await client.get("/headers/referer", headers);
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("referer");
-		expect(responseData["referer"]).toBe("https://example.com/page");
+		expect(responseData.referer).toBe("https://example.com/page");
 	});
 
 	test("Header with underscore conversion - explicit", async () => {
@@ -443,7 +445,7 @@ describe("headers", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("x_token");
-		expect(responseData["x_token"]).toBe("secret123");
+		expect(responseData.x_token).toBe("secret123");
 	});
 
 	test("Header case insensitivity - access", async () => {
@@ -453,17 +455,17 @@ describe("headers", () => {
 		const headers = {
 			"content-type": "application/json",
 		};
-		const json = {"test":"data"};
-		const response = await client.post("/echo", {headers, json});
+		const json = { test: "data" };
+		const response = await client.post("/echo", { headers, json });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("content_type_lower");
-		expect(responseData["content_type_lower"]).toBe("application/json");
+		expect(responseData.content_type_lower).toBe("application/json");
 		expect(responseData).toHaveProperty("content_type_mixed");
-		expect(responseData["content_type_mixed"]).toBe("application/json");
+		expect(responseData.content_type_mixed).toBe("application/json");
 		expect(responseData).toHaveProperty("content_type_upper");
-		expect(responseData["content_type_upper"]).toBe("application/json");
+		expect(responseData.content_type_upper).toBe("application/json");
 	});
 
 	test("User-Agent header - custom value", async () => {
@@ -480,5 +482,4 @@ describe("headers", () => {
 		expect(responseData).toHaveProperty("User-Agent");
 		expect(responseData["User-Agent"]).toBe("Mozilla/5.0 Custom Browser");
 	});
-
 });

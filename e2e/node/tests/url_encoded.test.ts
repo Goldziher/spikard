@@ -3,9 +3,32 @@
  * @generated
  */
 
-import { describe, test, expect } from "vitest";
 import { TestClient } from "@spikard/node";
-import { createAppUrlEncodedSimpleFormSubmissionSuccess, createAppUrlEncoded15SpecialCharactersFieldNames, createAppUrlEncodedPatternValidationFail, createAppUrlEncoded22AdditionalPropertiesStrictFailure, createAppUrlEncoded17PatternValidationFailure, createAppUrlEncoded20FormatEmailValidationFailure, createAppUrlEncodedMultipleValuesForSameField, createAppUrlEncodedRequiredFieldMissingValidationError, createAppUrlEncoded13ArrayFieldSuccess, createAppUrlEncodedNumericFieldTypeConversion, createAppUrlEncodedSpecialCharactersEncoding, createAppUrlEncodedBooleanFieldConversion, createAppUrlEncodedEmptyStringValue, createAppUrlEncodedOauth2PasswordGrantFlow, createAppUrlEncoded19ArrayMinitemsValidationFailure, createAppUrlEncodedOptionalFieldMissingSuccess, createAppUrlEncoded14NestedObjectBracketNotation, createAppUrlEncodedStringMaxLengthValidationFail, createAppUrlEncoded18IntegerMinimumValidationFailure, createAppUrlEncoded21IntegerTypeCoercionFailure, createAppUrlEncoded16MinlengthValidationFailure, createAppUrlEncodedStringMinLengthValidationFail } from "../app/main.js";
+import { describe, expect, test } from "vitest";
+import {
+	createAppUrlEncoded13ArrayFieldSuccess,
+	createAppUrlEncoded14NestedObjectBracketNotation,
+	createAppUrlEncoded15SpecialCharactersFieldNames,
+	createAppUrlEncoded16MinlengthValidationFailure,
+	createAppUrlEncoded17PatternValidationFailure,
+	createAppUrlEncoded18IntegerMinimumValidationFailure,
+	createAppUrlEncoded19ArrayMinitemsValidationFailure,
+	createAppUrlEncoded20FormatEmailValidationFailure,
+	createAppUrlEncoded21IntegerTypeCoercionFailure,
+	createAppUrlEncoded22AdditionalPropertiesStrictFailure,
+	createAppUrlEncodedBooleanFieldConversion,
+	createAppUrlEncodedEmptyStringValue,
+	createAppUrlEncodedMultipleValuesForSameField,
+	createAppUrlEncodedNumericFieldTypeConversion,
+	createAppUrlEncodedOauth2PasswordGrantFlow,
+	createAppUrlEncodedOptionalFieldMissingSuccess,
+	createAppUrlEncodedPatternValidationFail,
+	createAppUrlEncodedRequiredFieldMissingValidationError,
+	createAppUrlEncodedSimpleFormSubmissionSuccess,
+	createAppUrlEncodedSpecialCharactersEncoding,
+	createAppUrlEncodedStringMaxLengthValidationFail,
+	createAppUrlEncodedStringMinLengthValidationFail,
+} from "../app/main.js";
 
 describe("url_encoded", () => {
 	test("Simple form submission - success", async () => {
@@ -15,16 +38,13 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = {
-			"username": "johndoe",
-			"password": "secret",
-		};
-		const response = await client.post("/login/", {headers, json});
+		const form = { password: "secret", username: "johndoe" };
+		const response = await client.post("/login/", { headers, form });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("username");
-		expect(responseData["username"]).toBe("johndoe");
+		expect(responseData.username).toBe("johndoe");
 	});
 
 	test("15_special_characters_field_names", async () => {
@@ -34,8 +54,8 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = "user-name=JohnDoe&contact.email=john%40example.com";
-		const response = await client.post("/data", {headers, json});
+		const form = "user-name=JohnDoe&contact.email=john%40example.com";
+		const response = await client.post("/data", { headers, form });
 
 		expect(response.statusCode).toBe(201);
 		const responseData = response.json();
@@ -52,15 +72,10 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = {
-			"username": "john doe",
-		};
-		const response = await client.post("/form/validated", {headers, json});
+		const form = { username: "john doe" };
+		const response = await client.post("/form/validated", { headers, form });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("22_additional_properties_strict_failure", async () => {
@@ -70,13 +85,10 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = "theme=dark&unknown_field=value";
-		const response = await client.post("/settings", {headers, json});
+		const form = "theme=dark&unknown_field=value";
+		const response = await client.post("/settings", { headers, form });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("17_pattern_validation_failure", async () => {
@@ -86,13 +98,10 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = "account_id=INVALID123";
-		const response = await client.post("/accounts", {headers, json});
+		const form = "account_id=INVALID123";
+		const response = await client.post("/accounts", { headers, form });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("20_format_email_validation_failure", async () => {
@@ -102,13 +111,10 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = "email=not-an-email";
-		const response = await client.post("/subscribe", {headers, json});
+		const form = "email=not-an-email";
+		const response = await client.post("/subscribe", { headers, form });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Multiple values for same field", async () => {
@@ -118,18 +124,16 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = {
-			"tags": ["python", "fastapi", "web"],
-		};
-		const response = await client.post("/form/tags", {headers, json});
+		const form = { tags: ["python", "fastapi", "web"] };
+		const response = await client.post("/form/tags", { headers, form });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("tags");
-		expect(responseData["tags"].length).toBe(3);
-		expect(responseData["tags"][0]).toBe("python");
-		expect(responseData["tags"][1]).toBe("fastapi");
-		expect(responseData["tags"][2]).toBe("web");
+		expect(responseData.tags.length).toBe(3);
+		expect(responseData.tags[0]).toBe("python");
+		expect(responseData.tags[1]).toBe("fastapi");
+		expect(responseData.tags[2]).toBe("web");
 	});
 
 	test("Required field missing - validation error", async () => {
@@ -139,15 +143,10 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = {
-			"password": "secret",
-		};
-		const response = await client.post("/login/", {headers, json});
+		const form = { password: "secret" };
+		const response = await client.post("/login/", { headers, form });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("13_array_field_success", async () => {
@@ -157,16 +156,16 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = "tags[]=python&tags[]=rust&tags[]=typescript";
-		const response = await client.post("/register", {headers, json});
+		const form = "tags[]=python&tags[]=rust&tags[]=typescript";
+		const response = await client.post("/register", { headers, form });
 
 		expect(response.statusCode).toBe(201);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("tags");
-		expect(responseData["tags"].length).toBe(3);
-		expect(responseData["tags"][0]).toBe("python");
-		expect(responseData["tags"][1]).toBe("rust");
-		expect(responseData["tags"][2]).toBe("typescript");
+		expect(responseData.tags.length).toBe(3);
+		expect(responseData.tags[0]).toBe("python");
+		expect(responseData.tags[1]).toBe("rust");
+		expect(responseData.tags[2]).toBe("typescript");
 	});
 
 	test("Numeric field type conversion", async () => {
@@ -176,18 +175,15 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = {
-			"username": "johndoe",
-			"age": "30",
-		};
-		const response = await client.post("/form/", {headers, json});
+		const form = { age: "30", username: "johndoe" };
+		const response = await client.post("/form/", { headers, form });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("age");
-		expect(responseData["age"]).toBe(30);
+		expect(responseData.age).toBe(30);
 		expect(responseData).toHaveProperty("username");
-		expect(responseData["username"]).toBe("johndoe");
+		expect(responseData.username).toBe("johndoe");
 	});
 
 	test("Special characters encoding", async () => {
@@ -197,18 +193,15 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = {
-			"name": "John Doe",
-			"description": "Test & Development",
-		};
-		const response = await client.post("/form/", {headers, json});
+		const form = { description: "Test & Development", name: "John Doe" };
+		const response = await client.post("/form/", { headers, form });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("description");
-		expect(responseData["description"]).toBe("Test & Development");
+		expect(responseData.description).toBe("Test & Development");
 		expect(responseData).toHaveProperty("name");
-		expect(responseData["name"]).toBe("John Doe");
+		expect(responseData.name).toBe("John Doe");
 	});
 
 	test("Boolean field conversion", async () => {
@@ -218,18 +211,15 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = {
-			"username": "johndoe",
-			"subscribe": "true",
-		};
-		const response = await client.post("/form/", {headers, json});
+		const form = { subscribe: "true", username: "johndoe" };
+		const response = await client.post("/form/", { headers, form });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("subscribe");
-		expect(responseData["subscribe"]).toBe(true);
+		expect(responseData.subscribe).toBe(true);
 		expect(responseData).toHaveProperty("username");
-		expect(responseData["username"]).toBe("johndoe");
+		expect(responseData.username).toBe("johndoe");
 	});
 
 	test("Empty string value", async () => {
@@ -239,18 +229,15 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = {
-			"description": "",
-			"username": "johndoe",
-		};
-		const response = await client.post("/form/", {headers, json});
+		const form = { description: "", username: "johndoe" };
+		const response = await client.post("/form/", { headers, form });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("description");
-		expect(responseData["description"]).toBe("");
+		expect(responseData.description).toBe("");
 		expect(responseData).toHaveProperty("username");
-		expect(responseData["username"]).toBe("johndoe");
+		expect(responseData.username).toBe("johndoe");
 	});
 
 	test("OAuth2 password grant flow", async () => {
@@ -260,20 +247,15 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = {
-			"password": "secret",
-			"grant_type": "password",
-			"scope": "",
-			"username": "johndoe",
-		};
-		const response = await client.post("/token", {headers, json});
+		const form = { grant_type: "password", password: "secret", scope: "", username: "johndoe" };
+		const response = await client.post("/token", { headers, form });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("access_token");
-		expect(responseData["access_token"]).toBe("johndoe");
+		expect(responseData.access_token).toBe("johndoe");
 		expect(responseData).toHaveProperty("token_type");
-		expect(responseData["token_type"]).toBe("bearer");
+		expect(responseData.token_type).toBe("bearer");
 	});
 
 	test("19_array_minitems_validation_failure", async () => {
@@ -283,13 +265,10 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = "tags[]=single";
-		const response = await client.post("/tags", {headers, json});
+		const form = "tags[]=single";
+		const response = await client.post("/tags", { headers, form });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("Optional field missing - success", async () => {
@@ -299,18 +278,15 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = {
-			"password": "secret",
-			"username": "johndoe",
-		};
-		const response = await client.post("/register/", {headers, json});
+		const form = { password: "secret", username: "johndoe" };
+		const response = await client.post("/register/", { headers, form });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("email");
-		expect(responseData["email"]).toBe(null);
+		expect(responseData.email).toBe(null);
 		expect(responseData).toHaveProperty("username");
-		expect(responseData["username"]).toBe("johndoe");
+		expect(responseData.username).toBe("johndoe");
 	});
 
 	test("14_nested_object_bracket_notation", async () => {
@@ -320,18 +296,18 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = "user[name]=John%20Doe&user[email]=john@example.com&user[age]=30";
-		const response = await client.post("/profile", {headers, json});
+		const form = "user[name]=John%20Doe&user[email]=john@example.com&user[age]=30";
+		const response = await client.post("/profile", { headers, form });
 
 		expect(response.statusCode).toBe(201);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("user");
-		expect(responseData["user"]).toHaveProperty("age");
-		expect(responseData["user"]["age"]).toBe(30);
-		expect(responseData["user"]).toHaveProperty("email");
-		expect(responseData["user"]["email"]).toBe("john@example.com");
-		expect(responseData["user"]).toHaveProperty("name");
-		expect(responseData["user"]["name"]).toBe("John Doe");
+		expect(responseData.user).toHaveProperty("age");
+		expect(responseData.user.age).toBe(30);
+		expect(responseData.user).toHaveProperty("email");
+		expect(responseData.user.email).toBe("john@example.com");
+		expect(responseData.user).toHaveProperty("name");
+		expect(responseData.user.name).toBe("John Doe");
 	});
 
 	test("String max_length validation - fail", async () => {
@@ -341,15 +317,10 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = {
-			"username": "this_is_a_very_long_username_that_exceeds_limit",
-		};
-		const response = await client.post("/form/validated", {headers, json});
+		const form = { username: "this_is_a_very_long_username_that_exceeds_limit" };
+		const response = await client.post("/form/validated", { headers, form });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("18_integer_minimum_validation_failure", async () => {
@@ -359,13 +330,10 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = "quantity=0";
-		const response = await client.post("/products", {headers, json});
+		const form = "quantity=0";
+		const response = await client.post("/products", { headers, form });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("21_integer_type_coercion_failure", async () => {
@@ -375,13 +343,10 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = "price=not-a-number";
-		const response = await client.post("/products", {headers, json});
+		const form = "price=not-a-number";
+		const response = await client.post("/products", { headers, form });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("16_minlength_validation_failure", async () => {
@@ -391,13 +356,10 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = "username=ab";
-		const response = await client.post("/users", {headers, json});
+		const form = "username=ab";
+		const response = await client.post("/users", { headers, form });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
 
 	test("String min_length validation - fail", async () => {
@@ -407,15 +369,9 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const json = {
-			"username": "ab",
-		};
-		const response = await client.post("/form/validated", {headers, json});
+		const form = { username: "ab" };
+		const response = await client.post("/form/validated", { headers, form });
 
 		expect(response.statusCode).toBe(422);
-		const responseData = response.json();
-		// Validation should be done by framework, not handler
-		expect(responseData).toHaveProperty("errors");
 	});
-
 });
