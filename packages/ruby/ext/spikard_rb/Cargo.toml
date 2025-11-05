@@ -1,5 +1,5 @@
 [package]
-name = "spikard-rb"
+name = "spikard-rb-ext"
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
@@ -7,11 +7,10 @@ authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 
 [lib]
 name = "spikard_rb"
-path = "../../../../crates/spikard-rb/src/lib.rs"
 crate-type = ["cdylib"]
 
 [workspace]
 
 [dependencies]
-spikard-http = { path = "../../../../crates/spikard-http" }
+magnus = { git = "https://github.com/matsadler/magnus", rev = "f6db11769efb517427bf7f121f9c32e18b059b38", features = ["rb-sys"] }
 spikard-rb = { path = "../../../../crates/spikard-rb" }

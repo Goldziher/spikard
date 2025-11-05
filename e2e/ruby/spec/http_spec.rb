@@ -39,7 +39,7 @@ RSpec.describe 'Spikard::Testing::TestClient integration' do
     response = client.post('/echo', json: { 'message' => 'hi' })
 
     expect(response.status_code).to eq(201)
-    expect(response.headers['X-Test']).to eq('1')
+    expect(response.headers['x-test']).to eq('1')
     expect(response.json).to eq('message' => 'hi', 'ack' => true)
   end
 end

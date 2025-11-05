@@ -20,8 +20,19 @@ module Spikard
       unknown_keys = options.keys - SUPPORTED_OPTIONS
       raise ArgumentError, "unknown route options: #{unknown_keys.join(', ')}" if unknown_keys.any?
 
-      metadata = { method: method, path: path, handler_name: handler_name }
-      SUPPORTED_OPTIONS.each { |key| metadata[key] = options[key] }
+      normalized_path = normalize_path(path)
+
+      metadata = {
+        method: method,
+        path: normalized_path,
+        handler_name: handler_name,
+        is_async: options.fetch(:is_async, false),
+      }
+      SUPPORTED_OPTIONS.each do |key|
+        next if key == :is_async
+
+        metadata[key] = options[key] if options.key?(key)
+      end
 
       @routes << RouteEntry.new(metadata, block)
       block
@@ -45,5 +56,18 @@ module Spikard
       end
       map
     end
+
+    def normalize_path(path)
+      segments = path.split('/').map do |segment|
+        if segment.start_with?(':') && segment.length > 1
+          "{#{segment[1..]}}"
+        else
+          segment
+        end
+      end
+
+      segments.join('/')
+    end
+
   end
 end
