@@ -206,12 +206,6 @@ tasks:
       - rm -rf e2e/python
       - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang python --output e2e/python
 
-  generate:tests:typescript:
-    desc: "Generate TypeScript e2e test suite from fixtures"
-    cmds:
-      - rm -rf e2e/typescript
-      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang typescript --output e2e/typescript
-
   generate:tests:node:
     desc: "Generate Node.js e2e test suite from fixtures (vitest)"
     cmds:
@@ -228,7 +222,6 @@ tasks:
     cmds:
       - task: generate:tests:rust
       - task: generate:tests:python
-      - task: generate:tests:typescript
       - task: generate:tests:node
       - task: generate:tests:ruby
 
@@ -248,12 +241,6 @@ tasks:
     dir: e2e/python
     cmds:
       - PYTHONPATH=../../packages/python uv run pytest tests/ -v
-
-  test:e2e:typescript:
-    desc: "Run TypeScript e2e tests (fixture-driven integration tests)"
-    dir: e2e/typescript
-    cmds:
-      - pnpm test
 
   test:e2e:node:
     desc: "Run Node.js e2e tests (fixture-driven integration tests with vitest)"
@@ -275,7 +262,6 @@ tasks:
     cmds:
       - task: test:e2e:rust
       - task: test:e2e:python
-      - task: test:e2e:typescript
       - task: test:e2e:node
       - task: test:e2e:ruby
 
