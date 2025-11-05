@@ -32,6 +32,11 @@ jobs:
         with:
           cache-key-prefix: rust-validate
 
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+
       - name: Load Cached Prek Dependencies
         id: cached-prek-dependencies
         uses: actions/cache@v4
