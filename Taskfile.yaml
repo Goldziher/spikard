@@ -215,7 +215,7 @@ tasks:
   generate:tests:ruby:
     desc: "Generate Ruby e2e test suite from fixtures"
     cmds:
-      - echo "Ruby test generation is tracked in RUBY_TODO.md (not yet automated)."
+      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang ruby --output e2e/ruby
 
   generate:tests:
     desc: "Generate all e2e test suites from fixtures"
@@ -254,8 +254,9 @@ tasks:
     desc: "Run Ruby e2e tests (fixture-driven integration tests)"
     dir: e2e/ruby
     cmds:
-      - bundle check || bundle install
-      - bundle exec rspec
+      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile bundle check || BUNDLE_GEMFILE=../../packages/ruby/Gemfile bundle install
+      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile bundle exec rake -C ../../packages/ruby ext:build
+      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile bundle exec rspec
 
   test:e2e:
     desc: "Run all e2e fixture-driven integration tests"

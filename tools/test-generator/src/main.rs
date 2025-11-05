@@ -7,6 +7,9 @@ mod node_app;
 mod node_tests;
 mod python_app;
 mod python_tests;
+mod ruby_app;
+mod ruby_tests;
+mod ruby_utils;
 mod rust_app;
 mod rust_tests;
 
@@ -46,7 +49,7 @@ enum Commands {
     /// Generate test suite for a language
     Tests {
         /// Target language
-        #[arg(long, value_parser = ["rust", "python", "typescript", "node"])]
+        #[arg(long, value_parser = ["rust", "python", "typescript", "node", "ruby"])]
         lang: String,
 
         /// Fixtures directory
@@ -125,6 +128,10 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
             node_app::generate_node_app(&fixtures, &output)?;
             // Then generate tests
             node_tests::generate_node_tests(&fixtures, &output)?;
+        }
+        "ruby" => {
+            ruby_app::generate_ruby_app(&fixtures, &output)?;
+            ruby_tests::generate_ruby_tests(&fixtures, &output)?;
         }
         _ => unreachable!("Invalid language"),
     }

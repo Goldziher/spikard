@@ -152,6 +152,10 @@ jobs:
         working-directory: crates/spikard-node
         run: pnpm build
 
+      - name: Run Node e2e tests
+        working-directory: e2e/node
+        run: pnpm test
+
       - name: Verify NAPI bindings were created
         working-directory: crates/spikard-node
         shell: bash
@@ -167,3 +171,35 @@ jobs:
         env:
           RUST_BACKTRACE: 1
         run: cargo test --release
+
+  ruby-tests:
+    needs:
+      - validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: rust-ruby
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: packages/ruby
+
+      - name: Build Ruby extension
+        env:
+          BUNDLE_GEMFILE: packages/ruby/Gemfile
+        run: bundle exec rake -C packages/ruby ext:build
+
+      - name: Run Ruby e2e smoke tests
+        working-directory: e2e/ruby
+        env:
+          BUNDLE_GEMFILE: ../../packages/ruby/Gemfile
+        run: bundle exec rspec spec/generated/query_params_spec.rb spec/http_spec.rb spec/version_spec.rb

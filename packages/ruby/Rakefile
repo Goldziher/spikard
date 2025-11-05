@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require 'bundler/gem_tasks'
+require 'fileutils'
+require 'rbconfig'
 
 namespace :ext do
   desc 'Build the native Ruby extension via cargo'
@@ -9,6 +11,18 @@ namespace :ext do
       profile = ENV.fetch('CARGO_PROFILE', 'release')
       sh({ 'CARGO_PROFILE' => profile }, 'bundle exec ruby extconf.rb')
       sh({ 'CARGO_PROFILE' => profile }, 'make')
+
+      extension_dir = File.expand_path('lib', __dir__)
+      FileUtils.mkdir_p(extension_dir)
+
+      dllext = RbConfig::CONFIG['DLEXT']
+      artifact = Dir.glob(File.join('target', profile, 'libspikard_rb*')).find do |path|
+        path =~ /\.(?:bundle|dylib|so)\z/i
+      end
+      raise 'Native extension artifact not found after build' unless artifact
+
+      target_path = File.join(extension_dir, "spikard_rb.#{dllext}")
+      FileUtils.cp(artifact, target_path)
     end
   end
 end
