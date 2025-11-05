@@ -33,6 +33,7 @@ jobs:
           cache-key-prefix: rust-validate
 
       - name: Setup Ruby
+        id: setup-ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.3'
@@ -45,6 +46,8 @@ jobs:
           key: prek|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Execute Prek
+        env:
+          RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
         run: uv run prek run --show-diff-on-failure --color=always --all-files
 
   rust-tests:
