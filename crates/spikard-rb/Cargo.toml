@@ -9,8 +9,21 @@ description = "Ruby bindings for the Spikard HTTP toolkit (thin Magnus wrapper a
 
 [lib]
 name = "spikard_rb"
-crate-type = ["cdylib", "rlib"]
+crate-type = ["rlib"]
 
 [dependencies]
 magnus = { git = "https://github.com/matsadler/magnus", rev = "f6db11769efb517427bf7f121f9c32e18b059b38", features = ["rb-sys"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 spikard-http = { path = "../spikard-http" }
+axum = { workspace = true }
+axum-test = "18"
+bytes = "1.10"
+cookie = "0.18"
+tokio = { workspace = true }
+serde_qs = "0.15"
+urlencoding = "2.1"
+once_cell = "1.19"
+
+[build-dependencies]
+rb-sys-build = "0.9"

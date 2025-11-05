@@ -4,7 +4,12 @@
 module Spikard
 end
 
-require 'json'
+begin
+  require 'json'
+rescue LoadError
+  # Fallback to pure-Ruby implementation when native JSON extension is unavailable
+  require 'json/pure'
+end
 require_relative 'spikard/version'
 require_relative 'spikard/response'
 require_relative 'spikard/app'
@@ -13,15 +18,8 @@ require_relative 'spikard/testing'
 begin
   require 'spikard_rb'
 rescue LoadError => e
-  warn "Unable to load the spikard native extension: #{e.message} -- falling back to pure Ruby shim."
-
-  module Spikard # :nodoc:
-    # Namespace stub for the native extension when the compiled library is unavailable.
-    module Native
-    end
-
-    def self.version
-      VERSION
-    end
-  end
+  raise LoadError, <<~MSG, e.backtrace
+    Failed to load the Spikard native extension (spikard_rb). Run `bundle exec rake ext:build` to compile it before executing tests.
+    Original error: #{e.message}
+  MSG
 end
