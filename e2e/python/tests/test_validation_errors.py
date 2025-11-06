@@ -1,5 +1,6 @@
 """E2E tests for validation_errors."""
 
+from spikard.testing import TestClient
 from app.main import (
     create_app_validation_errors_09_multiple_validation_errors,
     create_app_validation_errors_10_nested_error_path,
@@ -24,8 +25,6 @@ from app.main import (
     create_app_validation_errors_string_min_length_constraint_violation,
     create_app_validation_errors_string_regex_pattern_mismatch,
 )
-
-from spikard.testing import TestClient
 
 
 async def test_invalid_uuid_format() -> None:

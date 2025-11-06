@@ -1,5 +1,6 @@
 """E2E tests for json_bodies."""
 
+from spikard.testing import TestClient
 from app.main import (
     create_app_json_bodies_29_nested_object_validation_success,
     create_app_json_bodies_30_nested_object_missing_field,
@@ -52,8 +53,6 @@ from app.main import (
     create_app_json_bodies_uuid_field_success,
 )
 
-from spikard.testing import TestClient
-
 
 async def test_uuid_field_invalid_format() -> None:
     """Tests UUID field with invalid UUID format."""
@@ -103,7 +102,7 @@ async def test_boolean_field_success() -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "in_stock" in response_data
-    assert response_data["in_stock"]
+    assert response_data["in_stock"] == True
     assert "name" in response_data
     assert response_data["name"] == "Item"
     assert "price" in response_data
@@ -185,13 +184,13 @@ async def test_optional_fields_omitted() -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "description" in response_data
-    assert response_data["description"] is None
+    assert response_data["description"] == None
     assert "name" in response_data
     assert response_data["name"] == "Foo"
     assert "price" in response_data
     assert response_data["price"] == 35.4
     assert "tax" in response_data
-    assert response_data["tax"] is None
+    assert response_data["tax"] == None
 
 
 async def test_uuid_field_success() -> None:
@@ -629,13 +628,13 @@ async def test_empty_json_object() -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "description" in response_data
-    assert response_data["description"] is None
+    assert response_data["description"] == None
     assert "name" in response_data
-    assert response_data["name"] is None
+    assert response_data["name"] == None
     assert "price" in response_data
-    assert response_data["price"] is None
+    assert response_data["price"] == None
     assert "tax" in response_data
-    assert response_data["tax"] is None
+    assert response_data["tax"] == None
 
 
 async def test_string_pattern_validation_fail() -> None:
@@ -894,13 +893,13 @@ async def test_null_value_for_optional_field() -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "description" in response_data
-    assert response_data["description"] is None
+    assert response_data["description"] == None
     assert "name" in response_data
     assert response_data["name"] == "Item"
     assert "price" in response_data
     assert response_data["price"] == 42.0
     assert "tax" in response_data
-    assert response_data["tax"] is None
+    assert response_data["tax"] == None
 
 
 async def test_31_nullable_property_null_value() -> None:

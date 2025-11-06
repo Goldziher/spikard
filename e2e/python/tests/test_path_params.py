@@ -1,5 +1,6 @@
 """E2E tests for path_params."""
 
+from spikard.testing import TestClient
 from app.main import (
     create_app_path_params_20_uuid_v3_path_param_success,
     create_app_path_params_21_uuid_v5_path_param_success,
@@ -40,8 +41,6 @@ from app.main import (
     create_app_path_params_uuid_path_parameter_success,
 )
 
-from spikard.testing import TestClient
-
 
 async def test_boolean_path_parameter_true() -> None:
     """Tests boolean path parameter with 'True' string value."""
@@ -54,7 +53,7 @@ async def test_boolean_path_parameter_true() -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "item_id" in response_data
-    assert response_data["item_id"]
+    assert response_data["item_id"] == True
 
 
 async def test_29_decimal_path_param_success() -> None:
@@ -566,4 +565,4 @@ async def test_boolean_path_parameter_numeric_1() -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "item_id" in response_data
-    assert response_data["item_id"]
+    assert response_data["item_id"] == True

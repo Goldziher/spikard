@@ -1,16 +1,17 @@
 """E2E tests for status_codes."""
 
+from spikard.testing import TestClient
 from app.main import (
     create_app_status_codes_19_413_payload_too_large,
-    create_app_status_codes_20_414_uri_too_long,
-    create_app_status_codes_21_431_request_header_fields_too_large,
-    create_app_status_codes_22_501_not_implemented,
-    create_app_status_codes_23_503_service_unavailable,
     create_app_status_codes_200_ok_success,
     create_app_status_codes_201_created_resource_created,
     create_app_status_codes_202_accepted_request_accepted_for_processing,
     create_app_status_codes_204_no_content_success_with_no_body,
     create_app_status_codes_206_partial_content,
+    create_app_status_codes_20_414_uri_too_long,
+    create_app_status_codes_21_431_request_header_fields_too_large,
+    create_app_status_codes_22_501_not_implemented,
+    create_app_status_codes_23_503_service_unavailable,
     create_app_status_codes_301_moved_permanently_permanent_redirect,
     create_app_status_codes_302_found_temporary_redirect,
     create_app_status_codes_304_not_modified_cached_content_valid,
@@ -25,8 +26,6 @@ from app.main import (
     create_app_status_codes_500_internal_server_error_server_error,
     create_app_status_codes_503_service_unavailable_server_overload,
 )
-
-from spikard.testing import TestClient
 
 
 async def test_408_request_timeout() -> None:
@@ -222,7 +221,7 @@ async def test_307_temporary_redirect_method_preserved() -> None:
     response = await client.post("/redirect-post", headers=headers, json=json_data)
 
     assert response.status_code == 307
-    response.json()
+    response_data = response.json()
 
 
 async def test_500_internal_server_error_server_error() -> None:
@@ -254,7 +253,7 @@ async def test_20_414_uri_too_long() -> None:
     response = await client.get("/data?skip_template_expansion=true")
 
     assert response.status_code == 200
-    response.json()
+    response_data = response.json()
 
 
 async def test_401_unauthorized_missing_authentication() -> None:

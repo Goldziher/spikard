@@ -2,7 +2,7 @@
 
 use anyhow::{Context, Result};
 use spikard_codegen::openapi::Fixture;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 
@@ -46,8 +46,8 @@ fn sanitize_fixture_name(name: &str) -> String {
         .to_string()
 }
 
-fn discover_fixture_categories(fixtures_dir: &Path) -> Result<HashMap<String, Vec<(Fixture, String)>>> {
-    let mut categories = HashMap::new();
+fn discover_fixture_categories(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<(Fixture, String)>>> {
+    let mut categories = BTreeMap::new();
 
     for entry in fs::read_dir(fixtures_dir).context("Failed to read fixtures directory")? {
         let entry = entry.context("Failed to read directory entry")?;
@@ -89,6 +89,9 @@ fn discover_fixture_categories(fixtures_dir: &Path) -> Result<HashMap<String, Ve
             }
 
             if !fixtures_with_files.is_empty() {
+                fixtures_with_files.sort_by(|(fix_a, file_a), (fix_b, file_b)| {
+                    fix_a.name.cmp(&fix_b.name).then_with(|| file_a.cmp(file_b))
+                });
                 categories.insert(category, fixtures_with_files);
             }
         }

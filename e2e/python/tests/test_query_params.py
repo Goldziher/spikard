@@ -1,5 +1,6 @@
 """E2E tests for query_params."""
 
+from spikard.testing import TestClient
 from app.main import (
     create_app_query_params_42_negative_integer_query_param,
     create_app_query_params_43_scientific_notation_float,
@@ -73,8 +74,6 @@ from app.main import (
     create_app_query_params_uuid_query_parameter_invalid_format,
     create_app_query_params_uuid_query_parameter_success,
 )
-
-from spikard.testing import TestClient
 
 
 async def test_string_validation_with_regex_success() -> None:
@@ -210,7 +209,7 @@ async def test_57_boolean_empty_string_coercion() -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "active" in response_data
-    assert not response_data["active"]
+    assert response_data["active"] == False
 
 
 async def test_52_integer_le_constraint_boundary() -> None:
@@ -494,7 +493,7 @@ async def test_boolean_query_parameter_numeric_1() -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "flag" in response_data
-    assert response_data["flag"]
+    assert response_data["flag"] == True
 
 
 async def test_string_query_param_with_min_length_constraint_fail() -> None:
@@ -789,17 +788,17 @@ async def test_multiple_query_parameters_with_different_types() -> None:
     client = TestClient(app)
 
     params = {
-        "active": "true",
         "name": "john",
         "age": "30",
         "score": "95.5",
+        "active": "true",
     }
     response = await client.get("/query/multi-type", query_params=params)
 
     assert response.status_code == 200
     response_data = response.json()
     assert "active" in response_data
-    assert response_data["active"]
+    assert response_data["active"] == True
     assert "age" in response_data
     assert response_data["age"] == 30
     assert "name" in response_data
@@ -875,7 +874,7 @@ async def test_boolean_query_parameter_true() -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "flag" in response_data
-    assert response_data["flag"]
+    assert response_data["flag"] == True
 
 
 async def test_integer_query_param_with_le_constraint_boundary() -> None:

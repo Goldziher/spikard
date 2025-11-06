@@ -1,5 +1,6 @@
 """E2E tests for cookies."""
 
+from spikard.testing import TestClient
 from app.main import (
     create_app_cookies_24_cookie_samesite_strict,
     create_app_cookies_25_cookie_samesite_lax,
@@ -29,8 +30,6 @@ from app.main import (
     create_app_cookies_response_set_cookie_basic,
 )
 
-from spikard.testing import TestClient
-
 
 async def test_25_cookie_samesite_lax() -> None:
     """Cookie with SameSite=Lax attribute should be validated."""
@@ -44,7 +43,7 @@ async def test_25_cookie_samesite_lax() -> None:
     response = await client.get("/data", cookies=cookies)
 
     assert response.status_code == 200
-    response.json()
+    response_data = response.json()
 
 
 async def test_optional_cookie_parameter_success() -> None:
@@ -108,7 +107,7 @@ async def test_27_cookie_httponly_flag() -> None:
     response = await client.get("/secure", cookies=cookies)
 
     assert response.status_code == 200
-    response.json()
+    response_data = response.json()
 
 
 async def test_response_cookie_with_attributes() -> None:
@@ -137,7 +136,7 @@ async def test_24_cookie_samesite_strict() -> None:
     response = await client.get("/secure", cookies=cookies)
 
     assert response.status_code == 200
-    response.json()
+    response_data = response.json()
 
 
 async def test_apikey_cookie_authentication_success() -> None:
@@ -236,7 +235,7 @@ async def test_optional_cookie_parameter_missing() -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "ads_id" in response_data
-    assert response_data["ads_id"] is None
+    assert response_data["ads_id"] == None
 
 
 async def test_apikey_cookie_authentication_missing() -> None:
@@ -397,9 +396,9 @@ async def test_multiple_cookies_success() -> None:
     client = TestClient(app)
 
     cookies = {
-        "fatebook_tracker": "tracker456",
         "session_id": "session123",
         "googall_tracker": "ga789",
+        "fatebook_tracker": "tracker456",
     }
     response = await client.get("/items/", cookies=cookies)
 
@@ -425,7 +424,7 @@ async def test_26_cookie_secure_flag() -> None:
     response = await client.get("/secure", cookies=cookies)
 
     assert response.status_code == 200
-    response.json()
+    response_data = response.json()
 
 
 async def test_response_cookie_with_domain_attribute() -> None:

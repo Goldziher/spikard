@@ -1,5 +1,6 @@
 """E2E tests for url_encoded."""
 
+from spikard.testing import TestClient
 from app.main import (
     create_app_url_encoded_13_array_field_success,
     create_app_url_encoded_14_nested_object_bracket_notation,
@@ -24,8 +25,6 @@ from app.main import (
     create_app_url_encoded_string_max_length_validation_fail,
     create_app_url_encoded_string_min_length_validation_fail,
 )
-
-from spikard.testing import TestClient
 
 
 async def test_simple_form_submission_success() -> None:
@@ -207,7 +206,7 @@ async def test_numeric_field_type_conversion() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"username": "johndoe", "age": "30"}
+    json_data = {"age": "30", "username": "johndoe"}
     response = await client.post("/form/", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -247,13 +246,13 @@ async def test_boolean_field_conversion() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"username": "johndoe", "subscribe": "true"}
+    json_data = {"subscribe": "true", "username": "johndoe"}
     response = await client.post("/form/", headers=headers, json=json_data)
 
     assert response.status_code == 200
     response_data = response.json()
     assert "subscribe" in response_data
-    assert response_data["subscribe"]
+    assert response_data["subscribe"] == True
     assert "username" in response_data
     assert response_data["username"] == "johndoe"
 
@@ -267,7 +266,7 @@ async def test_empty_string_value() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"username": "johndoe", "description": ""}
+    json_data = {"description": "", "username": "johndoe"}
     response = await client.post("/form/", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -287,7 +286,7 @@ async def test_oauth2_password_grant_flow() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"password": "secret", "username": "johndoe", "scope": "", "grant_type": "password"}
+    json_data = {"grant_type": "password", "password": "secret", "scope": "", "username": "johndoe"}
     response = await client.post("/token", headers=headers, json=json_data)
 
     assert response.status_code == 200
@@ -325,13 +324,13 @@ async def test_optional_field_missing_success() -> None:
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    json_data = {"username": "johndoe", "password": "secret"}
+    json_data = {"password": "secret", "username": "johndoe"}
     response = await client.post("/register/", headers=headers, json=json_data)
 
     assert response.status_code == 200
     response_data = response.json()
     assert "email" in response_data
-    assert response_data["email"] is None
+    assert response_data["email"] == None
     assert "username" in response_data
     assert response_data["username"] == "johndoe"
 

@@ -50,6 +50,51 @@ jobs:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
         run: uv run prek run --show-diff-on-failure --color=always --all-files
 
+  verify-generated:
+    needs:
+      - validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install Task
+        uses: go-task/setup-task@v1
+        with:
+          version: '3.45.4'
+
+      - name: Setup Python environment
+        uses: ./.github/actions/setup-python-env
+        with:
+          python-version: '3.13'
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: rust-verify
+
+      - name: Setup Node workspace
+        uses: ./.github/actions/setup-node-workspace
+        with:
+          node-version: "20"
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: packages/ruby
+
+      - name: Install Ruby dependencies
+        run: task ruby:install
+
+      - name: Build Python bindings
+        run: task build:py
+
+      - name: Verify generated tests are clean
+        run: task verify:tests
+
   rust-tests:
     needs:
       - validate
