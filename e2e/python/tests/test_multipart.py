@@ -1,5 +1,6 @@
 """E2E tests for multipart."""
 
+from spikard.testing import TestClient
 from app.main import (
     create_app_multipart_17_file_magic_number_png_success,
     create_app_multipart_18_file_magic_number_jpeg_success,
@@ -24,8 +25,6 @@ from app.main import (
     create_app_multipart_required_file_upload_missing,
     create_app_multipart_simple_file_upload,
 )
-
-from spikard.testing import TestClient
 
 
 async def test_multiple_values_for_same_field_name() -> None:
@@ -225,7 +224,7 @@ async def test_mixed_files_and_form_data() -> None:
     app = create_app_multipart_mixed_files_and_form_data()
     client = TestClient(app)
 
-    data = {"age": "25", "username": "testuser", "active": "true"}
+    data = {"active": "true", "age": "25", "username": "testuser"}
     files = {
         "file": ("upload.txt", b"file data here", "text/plain"),
     }
@@ -305,7 +304,7 @@ async def test_optional_file_upload_missing() -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "file" in response_data
-    assert response_data["file"] is None
+    assert response_data["file"] == None
 
 
 async def test_file_upload_without_filename() -> None:
@@ -392,8 +391,8 @@ async def test_multiple_file_uploads() -> None:
     client = TestClient(app)
 
     files = {
-        "test1": ("test1.txt", b"<file1 content>", "text/plain"),
         "test2": ("test2.txt", b"<file2 content>", "text/plain"),
+        "test1": ("test1.txt", b"<file1 content>", "text/plain"),
     }
     response = await client.post("/", files=files)
 

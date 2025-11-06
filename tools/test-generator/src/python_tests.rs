@@ -178,8 +178,29 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
 
     // Add body
     if let Some(ref body) = fixture.request.body {
-        code.push_str(&format!("    json_data = {}\n", json_to_python(body)));
-        request_kwargs.push("json=json_data");
+        let content_type = fixture
+            .request
+            .headers
+            .as_ref()
+            .and_then(|headers| headers.get("Content-Type"))
+            .map(|value| value.to_ascii_lowercase());
+
+        let treat_as_json = content_type
+            .as_deref()
+            .map(|ct| {
+                ct.contains("application/json")
+                    || ct.contains("application/x-www-form-urlencoded")
+                    || ct.contains("application/xml")
+            })
+            .unwrap_or(true);
+
+        if treat_as_json {
+            code.push_str(&format!("    json_data = {}\n", json_to_python(body)));
+            request_kwargs.push("json=json_data");
+        } else {
+            code.push_str(&format!("    raw_body = {}\n", json_to_python(body)));
+            request_kwargs.push("data=raw_body");
+        }
     }
 
     // Add form data (for URL-encoded forms)
@@ -452,8 +473,10 @@ fn generate_body_assertions(code: &mut String, body: &serde_json::Value, path: &
 
 /// Convert HashMap to Python dict literal
 fn hashmap_to_python(map: &HashMap<String, serde_json::Value>) -> String {
-    let items: Vec<String> = map
-        .iter()
+    let mut entries: Vec<_> = map.iter().collect();
+    entries.sort_by(|(ak, _), (bk, _)| ak.cmp(bk));
+    let items: Vec<String> = entries
+        .into_iter()
         .map(|(k, v)| format!("\"{}\": {}", k, json_to_python(v)))
         .collect();
     format!("{{{}}}", items.join(", "))

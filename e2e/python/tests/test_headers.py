@@ -1,5 +1,6 @@
 """E2E tests for headers."""
 
+from spikard.testing import TestClient
 from app.main import (
     create_app_headers_30_bearer_token_format_valid,
     create_app_headers_31_bearer_token_format_invalid,
@@ -35,8 +36,6 @@ from app.main import (
     create_app_headers_x_api_key_required_header_success,
 )
 
-from spikard.testing import TestClient
-
 
 async def test_header_regex_validation_success() -> None:
     """Tests header with regex pattern validation success."""
@@ -67,7 +66,7 @@ async def test_33_api_key_header_valid() -> None:
     response = await client.get("/api/data", headers=headers)
 
     assert response.status_code == 200
-    response.json()
+    response_data = response.json()
 
 
 async def test_content_type_header_application_json() -> None:
@@ -211,7 +210,7 @@ async def test_optional_header_with_none_default_missing() -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert "strange_header" in response_data
-    assert response_data["strange_header"] is None
+    assert response_data["strange_header"] == None
 
 
 async def test_header_regex_validation_fail() -> None:
@@ -296,7 +295,7 @@ async def test_30_bearer_token_format_valid() -> None:
     response = await client.get("/protected", headers=headers)
 
     assert response.status_code == 200
-    response.json()
+    response_data = response.json()
 
 
 async def test_authorization_header_missing() -> None:

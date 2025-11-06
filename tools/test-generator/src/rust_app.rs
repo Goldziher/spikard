@@ -54,7 +54,7 @@
 use anyhow::{Context, Result};
 use serde_json::Value;
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::Path;
 
@@ -92,8 +92,8 @@ pub fn generate_rust_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-fn discover_fixture_categories(fixtures_dir: &Path) -> Result<HashMap<String, Vec<Fixture>>> {
-    let mut categories = HashMap::new();
+fn discover_fixture_categories(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<Fixture>>> {
+    let mut categories = BTreeMap::new();
 
     for entry in fs::read_dir(fixtures_dir).context("Failed to read fixtures directory")? {
         let entry = entry.context("Failed to read directory entry")?;
@@ -106,10 +106,11 @@ fn discover_fixture_categories(fixtures_dir: &Path) -> Result<HashMap<String, Ve
                 .context("Invalid directory name")?
                 .to_string();
 
-            let fixtures =
+            let mut fixtures =
                 load_fixtures_from_dir(&path).with_context(|| format!("Failed to load fixtures from {}", category))?;
 
             if !fixtures.is_empty() {
+                fixtures.sort_by(|a, b| a.name.cmp(&b.name));
                 categories.insert(category, fixtures);
             }
         }
@@ -153,7 +154,7 @@ percent-encoding = "2.3"
     .to_string()
 }
 
-fn generate_main_rs(_categories: &HashMap<String, Vec<Fixture>>) -> String {
+fn generate_main_rs(_categories: &BTreeMap<String, Vec<Fixture>>) -> String {
     r#"//! Generated test application
 //! This is a minimal Axum app that echoes back validated parameters
 
@@ -179,7 +180,7 @@ async fn main() {
     .to_string()
 }
 
-fn generate_lib_rs(categories: &HashMap<String, Vec<Fixture>>) -> String {
+fn generate_lib_rs(categories: &BTreeMap<String, Vec<Fixture>>) -> String {
     let mut handlers = Vec::new();
     let mut app_functions = Vec::new();
 

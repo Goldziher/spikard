@@ -1,5 +1,6 @@
 """E2E tests for http_methods."""
 
+from spikard.testing import TestClient
 from app.main import (
     create_app_http_methods_delete_remove_resource,
     create_app_http_methods_delete_resource_not_found,
@@ -15,8 +16,6 @@ from app.main import (
     create_app_http_methods_put_validation_error,
 )
 
-from spikard.testing import TestClient
-
 
 async def test_options_cors_preflight_request() -> None:
     """Tests OPTIONS method for CORS preflight."""
@@ -25,14 +24,14 @@ async def test_options_cors_preflight_request() -> None:
     client = TestClient(app)
 
     headers = {
-        "Access-Control-Request-Method": "POST",
         "Origin": "https://example.com",
         "Access-Control-Request-Headers": "Content-Type",
+        "Access-Control-Request-Method": "POST",
     }
     response = await client.options("/items/", headers=headers)
 
     assert response.status_code == 200
-    response.json()
+    response_data = response.json()
 
 
 async def test_delete_remove_resource() -> None:
@@ -44,7 +43,7 @@ async def test_delete_remove_resource() -> None:
     response = await client.delete("/items/1")
 
     assert response.status_code == 200
-    response.json()
+    response_data = response.json()
 
 
 async def test_put_create_resource_if_doesn_t_exist() -> None:
@@ -86,7 +85,7 @@ async def test_patch_update_multiple_fields() -> None:
     assert "id" in response_data
     assert response_data["id"] == 1
     assert "in_stock" in response_data
-    assert not response_data["in_stock"]
+    assert response_data["in_stock"] == False
     assert "name" in response_data
     assert response_data["name"] == "Updated Name"
     assert "price" in response_data
@@ -175,7 +174,7 @@ async def test_patch_partial_update() -> None:
     assert "id" in response_data
     assert response_data["id"] == 1
     assert "in_stock" in response_data
-    assert response_data["in_stock"]
+    assert response_data["in_stock"] == True
     assert "name" in response_data
     assert response_data["name"] == "Existing Item"
     assert "price" in response_data
@@ -191,7 +190,7 @@ async def test_delete_resource_not_found() -> None:
     response = await client.delete("/items/999")
 
     assert response.status_code == 200
-    response.json()
+    response_data = response.json()
 
 
 async def test_put_idempotent_operation() -> None:
@@ -241,7 +240,7 @@ async def test_put_complete_resource_replacement() -> None:
     assert "id" in response_data
     assert response_data["id"] == 1
     assert "in_stock" in response_data
-    assert response_data["in_stock"]
+    assert response_data["in_stock"] == True
     assert "name" in response_data
     assert response_data["name"] == "Updated Item"
     assert "price" in response_data
