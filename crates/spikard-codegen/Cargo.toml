@@ -23,7 +23,7 @@ tera = "1.20"
 
 # JSON Schema
 jsonschema = "0.33"
-schemars = "1.0"
+schemars = "1.1"
 
 # Utilities
 indexmap = { version = "2.12", features = ["serde"] }
