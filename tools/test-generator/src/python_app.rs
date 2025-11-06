@@ -134,9 +134,26 @@ fn generate_app_file_per_fixture(fixtures_by_category: &HashMap<String, Vec<Fixt
             // Rotate through body types for comprehensive testing
             let body_type = BodyType::for_index(index);
 
+            // Determine appropriate body type (fallback to plain dict for simple types)
+            let effective_body_type = if fixture
+                .handler
+                .as_ref()
+                .and_then(|handler| handler.body_schema.as_ref())
+                .and_then(|schema| schema.get("type").and_then(|v| v.as_str()))
+                .is_some_and(|schema_type| schema_type != "object" && schema_type != "array")
+            {
+                BodyType::PlainDict
+            } else {
+                body_type
+            };
+
             // Generate handler and app factory for this fixture
-            let (handler_code, app_factory_code) =
-                generate_fixture_handler_and_app_python(fixture, &handler_name, body_type, &mut handler_names)?;
+            let (handler_code, app_factory_code) = generate_fixture_handler_and_app_python(
+                fixture,
+                &handler_name,
+                effective_body_type,
+                &mut handler_names,
+            )?;
 
             code.push_str(&handler_code);
             code.push_str("\n\n");
@@ -359,9 +376,9 @@ fn generate_handler_function_for_fixture(
     // Add body parameter if present
     // IMPORTANT: All parameters must use their original names (no underscore prefix)
     // because Rust FFI passes them by name in kwargs.
-    if body_schema.is_some() {
+    if let Some(schema) = body_schema {
         let body_param_type = match body_type {
-            BodyType::PlainDict => "dict[str, Any]".to_string(),
+            BodyType::PlainDict => json_type_to_python(schema).unwrap_or_else(|_| "dict[str, Any]".to_string()),
             _ => model_name.unwrap_or("dict[str, Any]").to_string(),
         };
         code.push_str(&format!("    body: {},\n", body_param_type));

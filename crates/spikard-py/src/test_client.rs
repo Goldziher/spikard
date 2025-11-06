@@ -7,7 +7,7 @@ use axum::Router as AxumRouter;
 use axum::http::{HeaderName, HeaderValue, Method};
 use axum_test::{TestResponse as AxumTestResponse, TestServer as AxumTestServer};
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::types::{PyBytes, PyDict, PyString};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -146,7 +146,7 @@ impl TestClient {
         py: Python<'py>,
         path: &str,
         json: Option<&Bound<'py, PyAny>>,
-        data: Option<&Bound<'py, PyDict>>,
+        data: Option<&Bound<'py, PyAny>>,
         files: Option<&Bound<'py, PyDict>>,
         query_params: Option<&Bound<'py, PyDict>>,
         headers: Option<&Bound<'py, PyDict>>,
@@ -160,13 +160,31 @@ impl TestClient {
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
 
-        // Extract form data for multipart
-        let form_data = extract_dict_to_vec(data)?;
+        // Extract form data for multipart or capture raw body content
+        let mut form_data = Vec::new();
+        let mut raw_body: Option<Vec<u8>> = None;
+        if let Some(obj) = data {
+            if let Ok(dict) = obj.cast::<PyDict>() {
+                #[allow(clippy::needless_borrow)]
+                {
+                    form_data = extract_dict_to_vec(Some(&dict))?;
+                }
+            } else if let Ok(py_bytes) = obj.cast::<PyBytes>() {
+                raw_body = Some(py_bytes.as_bytes().to_vec());
+            } else if let Ok(py_str) = obj.cast::<PyString>() {
+                raw_body = Some(py_str.to_str()?.as_bytes().to_vec());
+            } else {
+                return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                    "data must be a dict, str, or bytes",
+                ));
+            }
+        }
 
         // Extract files data for multipart
         let files_data = extract_files(files)?;
 
         let server = Arc::clone(&self.server);
+        let raw_body = raw_body;
 
         let fut = async move {
             let full_path = build_full_path(&path, &query_params_vec);
@@ -196,6 +214,8 @@ impl TestClient {
 
                 // Set body
                 request = request.bytes(bytes::Bytes::from(multipart_body));
+            } else if let Some(body) = raw_body {
+                request = request.bytes(bytes::Bytes::from(body));
             } else if let Some(json_val) = json_value {
                 if is_form_encoded {
                     // For form-encoded requests, manually set Content-Type header and body bytes

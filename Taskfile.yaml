@@ -1,42 +1,135 @@
 version: "3"
 
+vars:
+  BUNDLER_VERSION: "2.7.2"
+  RBENV_BIN: "/opt/homebrew/bin/rbenv"
+  RBENV_VERSION: "3.4.7"
+  RBENV_RUBY:
+    sh: RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} which ruby
+
 env:
   DOCKER_BUILDKIT: 1
   BUILDKIT_PROGRESS: plain
+  RUBY: "{{.RBENV_RUBY}}"
 
 tasks:
   setup:
-    desc: "Install dependencies with uv and build Rust components"
+    desc: "Install language dependencies, developer tooling, and hooks"
     cmds:
-      - uv sync --all-extras --all-groups
-      - uv tool install cargo-binstall
-      - uv tool install cargo-upgrade
+      - task: python:install
+      - task: rust:install-tools
+      - task: node:install
+      - task: ruby:install
+      - task: pre-commit:install
       - task: build:py
-      - prek install
-      - prek install --hook-type commit-msg
-      - pnpm install
 
   update:
-    desc: "Update Python and Rust dependencies"
+    desc: "Update workspace dependencies across languages"
+    cmds:
+      - task: python:update
+      - task: rust:update
+      - corepack up
+      - corepack enable
+      - task: node:update
+      - task: ruby:update
+      - task: build:py
+      - task: pre-commit:update
+
+  python:install:
+    desc: "Install Python dependencies with uv"
+    cmds:
+      - uv sync --all-extras --all-groups
+
+  python:update:
+    desc: "Upgrade Python dependencies"
     cmds:
       - uv run uv-bump
+      - uv sync --all-extras --all-groups --upgrade
+
+  rust:install-tools:
+    desc: "Install Rust developer tooling"
+    cmds:
+      - uv tool install cargo-binstall
+      - uv tool install cargo-upgrade
+
+  rust:update:
+    desc: "Upgrade Rust dependencies"
+    cmds:
       - cargo upgrade --incompatible
       - cargo update
-      - uv sync --all-extras --all-groups --upgrade
-      - task: build:py
+
+  ruby:install:
+    desc: "Install Ruby dependencies"
+    dir: packages/ruby
+    cmds:
+      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ check || RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ install --jobs 4 --retry 3
+
+  ruby:update:
+    desc: "Update Ruby dependencies"
+    dir: packages/ruby
+    cmds:
+      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ update
+
+  ruby:build:
+    desc: "Build Ruby native extension"
+    deps:
+      - ruby:install
+    dir: packages/ruby
+    cmds:
+      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rake ext:build
+
+  ruby:test:
+    desc: "Run Ruby specs"
+    deps:
+      - ruby:build
+    dir: packages/ruby
+    cmds:
+      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rspec
+
+  pre-commit:install:
+    desc: "Install pre-commit hooks via Prek"
+    cmds:
+      - prek install
+      - prek install --hook-type commit-msg
+
+  pre-commit:update:
+    desc: "Update Prek hooks"
+    cmds:
       - prek autoupdate
 
-  test:python:
+  python:test:
     desc: "Run Python integration tests"
     deps:
       - build:py
     cmds:
       - PYTHONPATH=packages/python uv run pytest packages/python/tests -v
 
-  test:rust:
+  test:python:
+    desc: "Alias for python:test"
+    cmds:
+      - task: python:test
+
+  python:lint:
+    desc: "Run Python linters"
+    cmds:
+      - uv run ruff check .
+      - uv run mypy benchmarks tools packages/python
+
+  python:format:
+    desc: "Format Python code with Ruff"
+    cmds:
+      - uv run ruff check --fix .
+      - uv run ruff format .
+
+  rust:test:
     desc: "Run Rust workspace tests"
     cmds:
       - cargo test --workspace --release
+
+  test:rust:
+    desc: "Alias for rust:test"
+    cmds:
+      - task: rust:test
 
   check:rust:
     desc: "Fast check of Rust code (no codegen)"
@@ -61,7 +154,14 @@ tasks:
   node:install:
     desc: "Install Node.js dependencies with pnpm"
     cmds:
-      - pnpm install
+      - corepack enable
+      - pnpm install --frozen-lockfile
+
+  node:update:
+    desc: "Update Node.js dependencies with pnpm"
+    cmds:
+      - corepack enable
+      - pnpm up --latest -r
 
   node:lint:
     desc: "Lint TypeScript code with biome and oxlint"
@@ -71,10 +171,11 @@ tasks:
 
   ruby:lint:
     desc: "Lint Ruby bindings with Rubocop"
+    deps:
+      - ruby:install
     dir: packages/ruby
     cmds:
-      - bundle check || bundle install
-      - bundle exec rubocop
+      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rubocop
 
   node:format:
     desc: "Format TypeScript code with biome"
@@ -103,18 +204,19 @@ tasks:
       - cargo build --workspace
 
   test:
-    desc: "Run both Rust and Python tests"
+    desc: "Run core language test suites"
     cmds:
       - task: test:rust
       - task: test:python
+      - task: node:test
+      - task: ruby:test
 
   lint:
     desc: "Run workspace linters for Rust, Python, TypeScript, and Ruby"
     cmds:
       - task: fmt:rust:check
       - task: clippy:rust
-      - uv run ruff check .
-      - uv run mypy benchmarks tools packages/python
+      - task: python:lint
       - task: node:lint
       - task: ruby:lint
 
@@ -122,7 +224,7 @@ tasks:
     desc: "Format Python, Rust, and TypeScript code"
     cmds:
       - task: fmt:rust
-      - prek run ruff-format --all-files
+      - task: python:format
       - task: node:format
 
   check:
@@ -225,6 +327,42 @@ tasks:
       - task: generate:tests:node
       - task: generate:tests:ruby
 
+  verify:tests:rust:
+    desc: "Regenerate and run Rust e2e suite, ensuring no diff"
+    cmds:
+      - task: generate:tests:rust
+      - task: test:e2e:rust
+      - git diff --exit-code
+
+  verify:tests:python:
+    desc: "Regenerate and run Python e2e suite, ensuring no diff"
+    cmds:
+      - task: generate:tests:python
+      - task: test:e2e:python
+      - git diff --exit-code
+
+  verify:tests:node:
+    desc: "Regenerate and run Node e2e suite, ensuring no diff"
+    cmds:
+      - task: generate:tests:node
+      - task: test:e2e:node
+      - git diff --exit-code
+
+  verify:tests:ruby:
+    desc: "Regenerate and run Ruby e2e suite, ensuring no diff"
+    cmds:
+      - task: generate:tests:ruby
+      - task: test:e2e:ruby
+      - git diff --exit-code
+
+  verify:tests:
+    desc: "Verify all e2e suites are up to date and pass"
+    cmds:
+      - task: verify:tests:rust
+      - task: verify:tests:python
+      - task: verify:tests:node
+      - task: verify:tests:ruby
+
   clean:generated:
     desc: "Remove all generated e2e test infrastructure"
     cmds:
@@ -254,9 +392,9 @@ tasks:
     desc: "Run Ruby e2e tests (fixture-driven integration tests)"
     dir: e2e/ruby
     cmds:
-      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile bundle check || BUNDLE_GEMFILE=../../packages/ruby/Gemfile bundle install
-      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile bundle exec rake -C ../../packages/ruby ext:build
-      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile bundle exec rspec
+      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ check || BUNDLE_GEMFILE=../../packages/ruby/Gemfile RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ install --jobs 4 --retry 3
+      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rake -C ../../packages/ruby ext:build
+      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rspec
 
   test:e2e:
     desc: "Run all e2e fixture-driven integration tests"

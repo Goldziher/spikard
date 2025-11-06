@@ -1,5 +1,6 @@
 """E2E tests for edge_cases."""
 
+from spikard.testing import TestClient
 from app.main import (
     create_app_edge_cases_11_utf8_query_parameter,
     create_app_edge_cases_12_percent_encoded_special_chars,
@@ -22,8 +23,6 @@ from app.main import (
     create_app_edge_cases_special_string_values_and_escaping,
     create_app_edge_cases_unicode_and_emoji_handling,
 )
-
-from spikard.testing import TestClient
 
 
 async def test_19_emoji_in_strings() -> None:
@@ -530,11 +529,11 @@ async def test_empty_and_null_value_handling() -> None:
     assert "empty_string_length" in response_data
     assert response_data["empty_string_length"] == 0
     assert "explicit_null_is_null" in response_data
-    assert response_data["explicit_null_is_null"]
+    assert response_data["explicit_null_is_null"] == True
     assert "false_is_false" in response_data
-    assert response_data["false_is_false"]
+    assert response_data["false_is_false"] == True
     assert "zero_is_falsy" in response_data
-    assert response_data["zero_is_falsy"]
+    assert response_data["zero_is_falsy"] == True
 
 
 async def test_16_negative_zero_handling() -> None:

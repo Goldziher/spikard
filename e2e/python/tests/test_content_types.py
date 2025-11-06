@@ -1,5 +1,6 @@
 """E2E tests for content_types."""
 
+from spikard.testing import TestClient
 from app.main import (
     create_app_content_types_13_json_with_charset_utf16,
     create_app_content_types_14_content_type_case_insensitive,
@@ -22,8 +23,6 @@ from app.main import (
     create_app_content_types_png_image_response_image_png,
     create_app_content_types_xml_response_application_xml,
 )
-
-from spikard.testing import TestClient
 
 
 async def test_415_unsupported_media_type() -> None:
@@ -100,13 +99,13 @@ async def test_16_text_plain_not_accepted() -> None:
     headers = {
         "Content-Type": "text/plain",
     }
-    json_data = '{"data": "value"}'
-    response = await client.post("/data", headers=headers, json=json_data)
+    raw_body = '{"data": "value"}'
+    response = await client.post("/data", headers=headers, data=raw_body)
 
-    assert response.status_code == 422
+    assert response.status_code == 415
     response_data = response.json()
-    # Validation should be done by framework, not handler
-    assert "errors" in response_data or "detail" in response_data
+    assert "error" in response_data
+    assert response_data["error"] == "Unsupported Media Type. Expected application/json"
 
 
 async def test_pdf_response_application_pdf() -> None:
@@ -129,8 +128,8 @@ async def test_20_content_length_mismatch() -> None:
     client = TestClient(app)
 
     headers = {
-        "Content-Type": "application/json",
         "Content-Length": "100",
+        "Content-Type": "application/json",
     }
     json_data = {"value": "short"}
     response = await client.post("/data", headers=headers, json=json_data)
@@ -150,8 +149,8 @@ async def test_17_vendor_json_accepted() -> None:
     headers = {
         "Content-Type": "application/vnd.api+json",
     }
-    json_data = {"data": "value"}
-    response = await client.post("/api/v1/resource", headers=headers, json=json_data)
+    raw_body = {"data": "value"}
+    response = await client.post("/api/v1/resource", headers=headers, data=raw_body)
 
     assert response.status_code == 201
     response_data = response.json()

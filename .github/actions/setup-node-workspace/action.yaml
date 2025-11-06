@@ -12,6 +12,8 @@ runs:
   steps:
     - name: Install pnpm
       uses: pnpm/action-setup@v4
+      with:
+        package_json_file: package.json
 
     - name: Setup Node.js
       uses: actions/setup-node@v5
@@ -19,6 +21,9 @@ runs:
         node-version: ${{ inputs.node-version }}
         cache: pnpm
 
+    - name: Enable Corepack
+      shell: bash
+      run: corepack enable
     - name: Install dependencies
       shell: bash
       run: pnpm install --frozen-lockfile
