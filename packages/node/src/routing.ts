@@ -58,17 +58,10 @@ export interface RouteOptions {
  * }
  * ```
  */
-export function route(
-	path: string,
-	options: RouteOptions = {},
-): (target: unknown, propertyKey: string) => void {
+export function route(path: string, options: RouteOptions = {}): (target: unknown, propertyKey: string) => void {
 	return (target: unknown, propertyKey: string) => {
 		// Extract methods, defaulting to GET if not specified
-		const methods = options.methods
-			? Array.isArray(options.methods)
-				? options.methods
-				: [options.methods]
-			: ["GET"];
+		const methods = options.methods ? (Array.isArray(options.methods) ? options.methods : [options.methods]) : ["GET"];
 
 		// Store route metadata
 		const metadata: RouteMetadata = {
@@ -83,11 +76,12 @@ export function route(
 		};
 
 		// Attach metadata to the target
-		if (!Reflect.has(target.constructor, "__routes__")) {
-			Reflect.set(target.constructor, "__routes__", []);
+		const targetConstructor = (target as { constructor: object }).constructor;
+		if (!Reflect.has(targetConstructor, "__routes__")) {
+			Reflect.set(targetConstructor, "__routes__", []);
 		}
 
-		const routes = Reflect.get(target.constructor, "__routes__") as RouteMetadata[];
+		const routes = Reflect.get(targetConstructor, "__routes__") as RouteMetadata[];
 		routes.push(metadata);
 	};
 }
