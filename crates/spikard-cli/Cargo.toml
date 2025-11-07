@@ -15,14 +15,23 @@ path = "src/main.rs"
 [dependencies]
 spikard.workspace = true
 spikard-http = { path = "../spikard-http" }
-spikard-py = { path = "../spikard-py" }
 clap.workspace = true
 clap_complete.workspace = true
 clap_mangen.workspace = true
-pyo3.workspace = true
+anyhow = "1.0"
 tokio.workspace = true
 tracing.workspace = true
-anyhow = "1.0"
 axum.workspace = true
+
+# Optional language-specific dependencies
+pyo3 = { workspace = true, optional = true }
+_spikard = { package = "spikard-py", path = "../spikard-py", optional = true, default-features = false }
+
+[features]
+default = []
+python = ["dep:pyo3", "dep:_spikard", "pyo3/auto-initialize"]
+node = []    # TODO: Add Node.js support
+ruby = []    # TODO: Add Ruby support
+all = ["python", "node", "ruby"]
 
 [dev-dependencies]

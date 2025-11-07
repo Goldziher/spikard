@@ -10,6 +10,7 @@ members = [
     "crates/spikard-node",
     "crates/spikard-wasm",
     "tools/test-generator",
+    "tools/benchmark-harness",
 ]
 exclude = [
     "e2e/*",

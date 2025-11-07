@@ -1,13 +1,14 @@
 //! Spikard HTTP Server
 //!
-//! Core HTTP server implementation with route management and validation
+//! Pure Rust HTTP server with language-agnostic handler trait.
+//! Language bindings (Python, Node, WASM) implement the Handler trait.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 pub mod cors;
 pub mod debug;
-pub mod handler;
+pub mod handler_trait;
 pub mod middleware;
 pub mod parameters;
 pub mod problem;
@@ -18,7 +19,10 @@ pub mod server;
 pub mod type_hints;
 pub mod validation;
 
-pub use handler::PythonHandler;
+#[cfg(test)]
+mod handler_trait_tests;
+
+pub use handler_trait::{Handler, HandlerResult, RequestData, ValidatedParams};
 pub use parameters::ParameterValidator;
 pub use problem::{CONTENT_TYPE_PROBLEM_JSON, ProblemDetails};
 pub use response::Response;

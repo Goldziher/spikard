@@ -452,6 +452,183 @@ tasks:
       - find crates -type d -name "dist" -exec rm -rf {} + 2>/dev/null || true
       - find crates -type d -name "node_modules" -exec rm -rf {} + 2>/dev/null || true
 
+  # ============================================================================
+  # Benchmark Generation & Execution
+  # ============================================================================
+
+  bench:generator:build:
+    desc: "Build the app-generator tool"
+    cmds:
+      - cargo build --release --manifest-path tools/app-generator/Cargo.toml
+
+  bench:harness:build:
+    desc: "Build the benchmark-harness tool"
+    cmds:
+      - cargo build --release --manifest-path tools/benchmark-harness/Cargo.toml
+
+  bench:tools:build:
+    desc: "Build both benchmark tools (generator + harness)"
+    cmds:
+      - task: bench:generator:build
+      - task: bench:harness:build
+
+  bench:generate:python:
+    desc: "Generate Spikard-Python benchmark server from fixtures"
+    deps:
+      - bench:generator:build
+    cmds:
+      - rm -rf tools/benchmark-harness/apps/spikard-python
+      - ./tools/app-generator/target/release/app-generator generate --framework spikard-python --fixtures testing_data --categories query_params,json_bodies,path_params --output tools/benchmark-harness/apps/spikard-python
+      - task: bench:format:python
+      - task: bench:lint:python
+
+  bench:generate:rust:
+    desc: "Generate Spikard-Rust benchmark server from fixtures"
+    deps:
+      - bench:generator:build
+    cmds:
+      - rm -rf tools/benchmark-harness/apps/spikard-rust-gen
+      - ./tools/app-generator/target/release/app-generator generate --framework spikard-rust --fixtures testing_data --categories query_params,json_bodies,path_params --output tools/benchmark-harness/apps/spikard-rust-gen
+      - task: bench:format:rust:gen
+      - task: bench:lint:rust:gen
+
+  bench:generate:node:
+    desc: "Generate Spikard-Node benchmark server from fixtures"
+    deps:
+      - bench:generator:build
+    cmds:
+      - rm -rf tools/benchmark-harness/apps/spikard-node
+      - ./tools/app-generator/target/release/app-generator generate --framework spikard-node --fixtures testing_data --categories query_params,json_bodies,path_params --output tools/benchmark-harness/apps/spikard-node
+      - task: bench:format:node
+      - task: bench:lint:node
+
+  bench:generate:ruby:
+    desc: "Generate Spikard-Ruby benchmark server from fixtures"
+    deps:
+      - bench:generator:build
+    cmds:
+      - rm -rf tools/benchmark-harness/apps/spikard-ruby
+      - ./tools/app-generator/target/release/app-generator generate --framework spikard-ruby --fixtures testing_data --categories query_params,json_bodies,path_params --output tools/benchmark-harness/apps/spikard-ruby
+      - task: bench:lint:ruby
+
+  bench:generate:all:
+    desc: "Generate all benchmark servers (Python, Rust, Node, Ruby)"
+    cmds:
+      - task: bench:generate:python
+      - task: bench:generate:rust
+      - task: bench:generate:node
+      - task: bench:generate:ruby
+
+  bench:format:python:
+    desc: "Format generated Python benchmark code"
+    cmds:
+      - uv run ruff format tools/benchmark-harness/apps/spikard-python/ || true
+      - uv run ruff check --fix tools/benchmark-harness/apps/spikard-python/ || true
+
+  bench:lint:python:
+    desc: "Lint generated Python benchmark code"
+    cmds:
+      - uv run ruff check tools/benchmark-harness/apps/spikard-python/
+      - uv run mypy tools/benchmark-harness/apps/spikard-python/ || true
+
+  bench:format:rust:gen:
+    desc: "Format generated Rust benchmark code"
+    cmds:
+      - cargo fmt --manifest-path tools/benchmark-harness/apps/spikard-rust-gen/Cargo.toml || true
+
+  bench:lint:rust:gen:
+    desc: "Lint generated Rust benchmark code"
+    cmds:
+      - cargo clippy --manifest-path tools/benchmark-harness/apps/spikard-rust-gen/Cargo.toml -- -D warnings || true
+
+  bench:format:node:
+    desc: "Format generated Node benchmark code"
+    cmds:
+      - pnpm biome format --write tools/benchmark-harness/apps/spikard-node/ || true
+
+  bench:lint:node:
+    desc: "Lint generated Node benchmark code"
+    cmds:
+      - pnpm biome check tools/benchmark-harness/apps/spikard-node/ || true
+      - pnpm oxlint tools/benchmark-harness/apps/spikard-node/ || true
+
+  bench:lint:ruby:
+    desc: "Lint generated Ruby benchmark code"
+    deps:
+      - ruby:install
+    cmds:
+      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rubocop tools/benchmark-harness/apps/spikard-ruby/ || true
+
+  bench:build:python:
+    desc: "Verify generated Python benchmark app loads"
+    deps:
+      - build:py
+    cmds:
+      - PYTHONPATH=packages/python uv run python -m py_compile tools/benchmark-harness/apps/spikard-python/server.py
+
+  bench:build:rust:
+    desc: "Build generated Rust benchmark server"
+    cmds:
+      - cargo build --release --manifest-path tools/benchmark-harness/apps/spikard-rust/Cargo.toml
+
+  bench:build:rust:gen:
+    desc: "Build generated Rust benchmark server (from generator)"
+    cmds:
+      - cargo build --release --manifest-path tools/benchmark-harness/apps/spikard-rust-gen/Cargo.toml
+
+  bench:build:all:
+    desc: "Build all benchmark servers"
+    cmds:
+      - task: bench:build:python
+      - task: bench:build:rust
+      - task: bench:build:rust:gen
+
+  bench:run:python:
+    desc: "Run benchmark against Spikard-Python server"
+    deps:
+      - bench:harness:build
+      - bench:build:python
+    cmds:
+      - ./target/release/benchmark-harness run --framework spikard-python --app-dir tools/benchmark-harness/apps/spikard-python --workload query-params --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-python.json
+
+  bench:run:rust:
+    desc: "Run benchmark against Spikard-Rust server"
+    deps:
+      - bench:harness:build
+      - bench:build:rust
+    cmds:
+      - ./target/release/benchmark-harness run --framework spikard-rust --app-dir tools/benchmark-harness/apps/spikard-rust --workload baseline --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-rust.json
+
+  bench:run:all:
+    desc: "Run benchmarks for all frameworks"
+    cmds:
+      - task: bench:run:python
+      - task: bench:run:rust
+
+  bench:analyze:
+    desc: "Analyze fixtures and show statistics"
+    deps:
+      - bench:generator:build
+    cmds:
+      - ./tools/app-generator/target/release/app-generator analyze --fixtures testing_data
+
+  bench:clean:
+    desc: "Clean generated benchmark apps and results"
+    cmds:
+      - rm -rf tools/benchmark-harness/apps/spikard-python
+      - rm -rf tools/benchmark-harness/apps/spikard-rust-gen
+      - rm -rf tools/benchmark-harness/apps/spikard-node
+      - rm -rf tools/benchmark-harness/apps/spikard-ruby
+      - rm -rf tools/benchmark-harness/results/*.json
+
+  bench:
+    desc: "Full benchmark workflow: generate, lint, build, and run"
+    cmds:
+      - task: bench:generate:all
+      - task: bench:build:all
+      - task: bench:run:all
+      - echo "Benchmark results in tools/benchmark-harness/results/"
+
   default:
     desc: "Show available tasks"
     cmds:
