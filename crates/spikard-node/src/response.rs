@@ -15,6 +15,7 @@ pub struct TestResponse {
 #[napi]
 impl TestResponse {
     /// Create a new response
+    #[allow(dead_code)]
     pub(crate) fn new(status: u16, headers: serde_json::Map<String, Value>, body: Vec<u8>) -> Self {
         Self { status, headers, body }
     }
