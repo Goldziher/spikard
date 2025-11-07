@@ -2,6 +2,10 @@
 //!
 //! Uses the shared spikard_http router pipeline and bridges into JavaScript
 //! handlers via napi ThreadsafeFunction.
+//!
+//! NOTE: This module is temporarily disabled pending handler trait refactor
+
+#![allow(dead_code, unused_imports)]
 
 use crate::response::TestResponse;
 use axum::body::Body;
@@ -13,9 +17,11 @@ use napi::bindgen_prelude::*;
 use napi::threadsafe_function::ThreadsafeFunction;
 use napi_derive::napi;
 use serde_json::{Map as JsonMap, Value, json};
-use spikard_http::handler::{ForeignHandler, HandlerFuture, HandlerResult, RequestData};
+// TODO: Update to use current handler trait API
+// use spikard_http::handler::{ForeignHandler, HandlerFuture, HandlerResult, RequestData};
 use spikard_http::problem::ProblemDetails;
 use spikard_http::server::build_router_with_handlers;
+use spikard_http::{HandlerResult, RequestData};
 use spikard_http::{ParameterValidator, Route, RouteMetadata, SchemaValidator};
 use std::collections::HashMap;
 use std::sync::Arc;

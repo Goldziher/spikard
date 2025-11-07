@@ -101,8 +101,15 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
 
     // Determine command based on framework
     let mut cmd = match config.framework.as_str() {
-        // All Spikard frameworks now use the unified CLI
-        "spikard-python" | "spikard-node" | "spikard-ruby" | "spikard-rust" => {
+        // Rust server is a standalone binary, not using the CLI
+        "spikard-rust" => {
+            let server_binary = config.app_dir.join("target/release/server");
+            let mut cmd = Command::new(server_binary);
+            cmd.arg(port.to_string());
+            cmd
+        }
+        // Other Spikard frameworks use the unified CLI
+        "spikard-python" | "spikard-node" | "spikard-ruby" => {
             // Find workspace root and construct absolute path to CLI
             let workspace_root = find_workspace_root()?;
             let cli_path = workspace_root.join("target/release/spikard");
@@ -112,7 +119,6 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
                 "spikard-python" => "server.py",
                 "spikard-node" => "server.js",
                 "spikard-ruby" => "server.rb",
-                "spikard-rust" => "server.rs", // TODO: Not yet implemented
                 _ => unreachable!(),
             };
 
