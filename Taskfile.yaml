@@ -177,6 +177,11 @@ tasks:
     cmds:
       - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rubocop
 
+  php:lint:
+    desc: "Lint PHP code with PHPStan"
+    cmds:
+      - phpstan analyse --memory-limit=2G
+
   node:format:
     desc: "Format TypeScript code with biome"
     cmds:
@@ -212,13 +217,14 @@ tasks:
       - task: ruby:test
 
   lint:
-    desc: "Run workspace linters for Rust, Python, TypeScript, and Ruby"
+    desc: "Run workspace linters for Rust, Python, TypeScript, Ruby, and PHP"
     cmds:
       - task: fmt:rust:check
       - task: clippy:rust
       - task: python:lint
       - task: node:lint
       - task: ruby:lint
+      - task: php:lint
 
   fmt:
     desc: "Format Python, Rust, and TypeScript code"

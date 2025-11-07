@@ -69,7 +69,9 @@ enum Commands {
 enum GenerateLanguage {
     Python,
     TypeScript,
-    // Future: Ruby, Rust
+    Rust,
+    Ruby,
+    Php,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -143,6 +145,9 @@ fn main() -> Result<()> {
             let target_lang = match lang {
                 GenerateLanguage::Python => codegen::TargetLanguage::Python,
                 GenerateLanguage::TypeScript => codegen::TargetLanguage::TypeScript,
+                GenerateLanguage::Rust => codegen::TargetLanguage::Rust,
+                GenerateLanguage::Ruby => codegen::TargetLanguage::Ruby,
+                GenerateLanguage::Php => codegen::TargetLanguage::Php,
             };
 
             let code = codegen::generate_from_openapi(&schema, target_lang, output.as_deref())
@@ -157,6 +162,9 @@ fn main() -> Result<()> {
                     match lang {
                         GenerateLanguage::Python => "Python",
                         GenerateLanguage::TypeScript => "TypeScript",
+                        GenerateLanguage::Rust => "Rust",
+                        GenerateLanguage::Ruby => "Ruby",
+                        GenerateLanguage::Php => "PHP",
                     },
                     output.as_ref().unwrap().display()
                 );
