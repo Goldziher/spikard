@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.4.1",
-    "vitest": "^4.0.7"
+    "vitest": "^4.0.8"
   },
   "napi": {
     "name": "spikard-node",

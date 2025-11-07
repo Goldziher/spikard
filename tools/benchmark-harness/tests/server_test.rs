@@ -1,6 +1,6 @@
 //! Unit tests for server management
 
-use benchmark_harness::server::{find_available_port, ServerConfig, ServerHandle};
+use benchmark_harness::server::{ServerConfig, ServerHandle, find_available_port};
 use std::net::TcpListener;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};

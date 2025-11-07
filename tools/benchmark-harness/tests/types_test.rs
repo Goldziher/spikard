@@ -36,10 +36,10 @@ fn test_latency_metrics_from_oha_output() {
     let oha_output = OhaOutput {
         summary: OhaSummary {
             success_rate: 1.0,
-            total: Some(10.0), // seconds
-            slowest: Some(0.5), // 500ms
+            total: Some(10.0),    // seconds
+            slowest: Some(0.5),   // 500ms
             fastest: Some(0.001), // 1ms
-            average: Some(0.05), // 50ms
+            average: Some(0.05),  // 50ms
             requests_per_sec: 100.0,
             total_data: Some(10000.0),
             size_per_request: Some(100.0),

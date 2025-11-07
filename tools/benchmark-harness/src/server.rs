@@ -10,12 +10,12 @@ use tokio::time::sleep;
 /// Find the workspace root by looking for Cargo.toml
 fn find_workspace_root() -> Result<PathBuf> {
     // Start from the current executable's directory
-    let exe_path = env::current_exe()
-        .map_err(|e| Error::ServerStartFailed(format!("Failed to get executable path: {}", e)))?;
+    let exe_path =
+        env::current_exe().map_err(|e| Error::ServerStartFailed(format!("Failed to get executable path: {}", e)))?;
 
-    let mut current = exe_path.parent().ok_or_else(|| {
-        Error::ServerStartFailed("Failed to get executable parent directory".to_string())
-    })?;
+    let mut current = exe_path
+        .parent()
+        .ok_or_else(|| Error::ServerStartFailed("Failed to get executable parent directory".to_string()))?;
 
     // Walk up the directory tree looking for workspace Cargo.toml
     loop {
@@ -23,9 +23,10 @@ fn find_workspace_root() -> Result<PathBuf> {
         if cargo_toml.exists() {
             // Check if this is the workspace root by looking for [workspace] section
             if let Ok(contents) = std::fs::read_to_string(&cargo_toml)
-                && contents.contains("[workspace]") {
-                    return Ok(current.to_path_buf());
-                }
+                && contents.contains("[workspace]")
+            {
+                return Ok(current.to_path_buf());
+            }
         }
 
         // Move up one directory

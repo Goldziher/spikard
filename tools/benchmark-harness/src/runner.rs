@@ -156,8 +156,8 @@ impl BenchmarkRunner {
                         latency: latency.clone(),
                         success_rate: throughput.success_rate,
                         avg_memory_delta_mb: 0.0, // TODO: Calculate memory delta per request
-                                                   // This requires comparing memory samples before/during load test
-                                                   // Could be: (peak_memory - initialization_memory) / total_requests
+                                                  // This requires comparing memory samples before/during load test
+                                                  // Could be: (peak_memory - initialization_memory) / total_requests
                     }]
                 } else {
                     vec![]
@@ -247,17 +247,18 @@ fn classify_route_type(fixture: &Fixture) -> RouteType {
     let body_size_bytes = fixture.request.body.as_ref().map(|b| b.to_string().len()).unwrap_or(0);
 
     match method.as_str() {
-        "GET" => {
-            match (has_path_params, has_query_params) {
-                (true, true) => RouteType::GetBoth,
-                (true, false) => RouteType::GetPathParams,
-                (false, true) => RouteType::GetQueryParams,
-                (false, false) => RouteType::GetSimple,
-            }
-        }
+        "GET" => match (has_path_params, has_query_params) {
+            (true, true) => RouteType::GetBoth,
+            (true, false) => RouteType::GetPathParams,
+            (false, true) => RouteType::GetQueryParams,
+            (false, false) => RouteType::GetSimple,
+        },
         "POST" => {
             // Check for multipart based on content-type header
-            let is_multipart = fixture.request.headers.get("content-type")
+            let is_multipart = fixture
+                .request
+                .headers
+                .get("content-type")
                 .or_else(|| fixture.request.headers.get("Content-Type"))
                 .map(|ct| ct.contains("multipart"))
                 .unwrap_or(false);
@@ -313,9 +314,7 @@ fn is_nested_json(value: &serde_json::Value, depth: usize) -> bool {
             }
             false
         }
-        serde_json::Value::Array(arr) => {
-            arr.iter().any(|v| is_nested_json(v, depth + 1))
-        }
+        serde_json::Value::Array(arr) => arr.iter().any(|v| is_nested_json(v, depth + 1)),
         _ => false,
     }
 }
@@ -326,7 +325,12 @@ mod tests {
     use crate::fixture::{ExpectedResponse, Handler, Parameters, Request};
     use std::collections::HashMap;
 
-    fn create_test_fixture(method: &str, path_params: bool, query_params: bool, body: Option<serde_json::Value>) -> Fixture {
+    fn create_test_fixture(
+        method: &str,
+        path_params: bool,
+        query_params: bool,
+        body: Option<serde_json::Value>,
+    ) -> Fixture {
         let mut path = HashMap::new();
         if path_params {
             path.insert("id".to_string(), serde_json::json!("123"));

@@ -25,7 +25,7 @@ axum.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 serde_yaml = "0.9"
-openapiv3 = "2.0"
+openapiv3 = "2.2"
 heck = "0.5"  # For case conversion (snake_case, PascalCase)
 
 # Optional language-specific dependencies
