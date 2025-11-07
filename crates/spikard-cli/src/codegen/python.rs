@@ -93,7 +93,7 @@ app = Spikard()
                         let type_hint = match prop_schema_ref {
                             ReferenceOr::Item(prop_schema) => self.schema_to_python_type(prop_schema, !is_required),
                             ReferenceOr::Reference { reference } => {
-                                let ref_name = reference.split('/').last().unwrap();
+                                let ref_name = reference.split('/').next_back().unwrap();
                                 if is_required {
                                     ref_name.to_pascal_case()
                                 } else {
@@ -123,7 +123,7 @@ app = Spikard()
         match schema_ref {
             ReferenceOr::Reference { reference } => {
                 // Extract name from #/components/schemas/Pet -> Pet
-                let ref_name = reference.split('/').last().unwrap();
+                let ref_name = reference.split('/').next_back().unwrap();
                 ref_name.to_pascal_case()
             }
             ReferenceOr::Item(schema) => self.schema_to_python_type(schema, false),
@@ -140,7 +140,7 @@ app = Spikard()
                     .map(|schema_ref| self.extract_type_from_schema_ref(schema_ref))
             }),
             ReferenceOr::Reference { reference } => {
-                let ref_name = reference.split('/').last().unwrap();
+                let ref_name = reference.split('/').next_back().unwrap();
                 Some(ref_name.to_pascal_case())
             }
         })
@@ -161,14 +161,14 @@ app = Spikard()
         if let Some(response_ref) = response {
             match response_ref {
                 ReferenceOr::Item(response) => {
-                    if let Some(content) = response.content.get("application/json") {
-                        if let Some(schema_ref) = &content.schema {
-                            return self.extract_type_from_schema_ref(schema_ref);
-                        }
+                    if let Some(content) = response.content.get("application/json")
+                        && let Some(schema_ref) = &content.schema
+                    {
+                        return self.extract_type_from_schema_ref(schema_ref);
                     }
                 }
                 ReferenceOr::Reference { reference } => {
-                    let ref_name = reference.split('/').last().unwrap();
+                    let ref_name = reference.split('/').next_back().unwrap();
                     return ref_name.to_pascal_case();
                 }
             }
@@ -178,6 +178,7 @@ app = Spikard()
         "dict[str, object]".to_string()
     }
 
+    #[allow(clippy::only_used_in_recursion)]
     fn schema_to_python_type(&self, schema: &Schema, optional: bool) -> String {
         let base_type = match &schema.schema_kind {
             SchemaKind::Type(Type::String(_)) => "str".to_string(),
@@ -188,7 +189,7 @@ app = Spikard()
                 let item_type = match &arr.items {
                     Some(ReferenceOr::Item(item_schema)) => self.schema_to_python_type(item_schema, false),
                     Some(ReferenceOr::Reference { reference }) => {
-                        let ref_name = reference.split('/').last().unwrap();
+                        let ref_name = reference.split('/').next_back().unwrap();
                         ref_name.to_pascal_case()
                     }
                     None => "object".to_string(),
@@ -254,10 +255,7 @@ app = Spikard()
                 format!(
                     "{}_{}",
                     method,
-                    path.replace('/', "_")
-                        .replace('{', "")
-                        .replace('}', "")
-                        .trim_matches('_')
+                    path.replace('/', "_").replace(['{', '}'], "").trim_matches('_')
                 )
             });
 
@@ -266,20 +264,17 @@ app = Spikard()
         let mut query_params = Vec::new();
 
         for param_ref in &operation.parameters {
-            match param_ref {
-                ReferenceOr::Item(param) => {
-                    match param {
-                        Parameter::Path { parameter_data, .. } => {
-                            path_params.push((parameter_data.name.clone(), "str".to_string()));
-                        }
-                        Parameter::Query { parameter_data, .. } => {
-                            let type_hint = "str".to_string(); // Simplified
-                            query_params.push((parameter_data.name.clone(), type_hint, parameter_data.required));
-                        }
-                        _ => {}
+            if let ReferenceOr::Item(param) = param_ref {
+                match param {
+                    Parameter::Path { parameter_data, .. } => {
+                        path_params.push((parameter_data.name.clone(), "str".to_string()));
                     }
+                    Parameter::Query { parameter_data, .. } => {
+                        let type_hint = "str".to_string(); // Simplified
+                        query_params.push((parameter_data.name.clone(), type_hint, parameter_data.required));
+                    }
+                    _ => {}
                 }
-                _ => {}
             }
         }
 
