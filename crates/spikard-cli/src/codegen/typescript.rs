@@ -91,9 +91,9 @@ import {{ z }} from "zod";
                     let field_name = prop_name.to_snake_case();
 
                     let zod_type = match prop_schema_ref {
-                        ReferenceOr::Item(prop_schema) => self.schema_to_zod_type(prop_schema, !is_required),
+                        ReferenceOr::Item(prop_schema) => Self::schema_to_zod_type(prop_schema, !is_required),
                         ReferenceOr::Reference { reference } => {
-                            let ref_name = reference.split('/').last().unwrap();
+                            let ref_name = reference.split('/').next_back().unwrap();
                             let ref_schema = format!("{}Schema", ref_name.to_pascal_case());
                             if is_required {
                                 ref_schema
@@ -127,10 +127,10 @@ import {{ z }} from "zod";
         match schema_ref {
             ReferenceOr::Reference { reference } => {
                 // Extract name from #/components/schemas/Pet -> Pet
-                let ref_name = reference.split('/').last().unwrap();
+                let ref_name = reference.split('/').next_back().unwrap();
                 ref_name.to_pascal_case()
             }
-            ReferenceOr::Item(schema) => self.schema_to_typescript_type(schema, false),
+            ReferenceOr::Item(schema) => Self::schema_to_typescript_type(schema, false),
         }
     }
 
@@ -138,10 +138,10 @@ import {{ z }} from "zod";
     fn extract_zod_schema_from_ref(&self, schema_ref: &ReferenceOr<Schema>) -> String {
         match schema_ref {
             ReferenceOr::Reference { reference } => {
-                let ref_name = reference.split('/').last().unwrap();
+                let ref_name = reference.split('/').next_back().unwrap();
                 format!("{}Schema", ref_name.to_pascal_case())
             }
-            ReferenceOr::Item(schema) => self.schema_to_zod_type(schema, false),
+            ReferenceOr::Item(schema) => Self::schema_to_zod_type(schema, false),
         }
     }
 
@@ -155,7 +155,7 @@ import {{ z }} from "zod";
                     .map(|schema_ref| self.extract_zod_schema_from_ref(schema_ref))
             }),
             ReferenceOr::Reference { reference } => {
-                let ref_name = reference.split('/').last().unwrap();
+                let ref_name = reference.split('/').next_back().unwrap();
                 Some(format!("{}Schema", ref_name.to_pascal_case()))
             }
         })
@@ -176,14 +176,14 @@ import {{ z }} from "zod";
         if let Some(response_ref) = response {
             match response_ref {
                 ReferenceOr::Item(response) => {
-                    if let Some(content) = response.content.get("application/json") {
-                        if let Some(schema_ref) = &content.schema {
-                            return self.extract_type_from_schema_ref(schema_ref);
-                        }
+                    if let Some(content) = response.content.get("application/json")
+                        && let Some(schema_ref) = &content.schema
+                    {
+                        return self.extract_type_from_schema_ref(schema_ref);
                     }
                 }
                 ReferenceOr::Reference { reference } => {
-                    let ref_name = reference.split('/').last().unwrap();
+                    let ref_name = reference.split('/').next_back().unwrap();
                     return ref_name.to_pascal_case();
                 }
             }
@@ -193,7 +193,7 @@ import {{ z }} from "zod";
         "Record<string, unknown>".to_string()
     }
 
-    fn schema_to_zod_type(&self, schema: &Schema, optional: bool) -> String {
+    fn schema_to_zod_type(schema: &Schema, optional: bool) -> String {
         let base_type = match &schema.schema_kind {
             SchemaKind::Type(Type::String(_)) => "z.string()".to_string(),
             SchemaKind::Type(Type::Number(_)) => "z.number()".to_string(),
@@ -201,9 +201,9 @@ import {{ z }} from "zod";
             SchemaKind::Type(Type::Boolean(_)) => "z.boolean()".to_string(),
             SchemaKind::Type(Type::Array(arr)) => {
                 let item_type = match &arr.items {
-                    Some(ReferenceOr::Item(item_schema)) => self.schema_to_zod_type(item_schema, false),
+                    Some(ReferenceOr::Item(item_schema)) => Self::schema_to_zod_type(item_schema, false),
                     Some(ReferenceOr::Reference { reference }) => {
-                        let ref_name = reference.split('/').last().unwrap();
+                        let ref_name = reference.split('/').next_back().unwrap();
                         format!("{}Schema", ref_name.to_pascal_case())
                     }
                     None => "z.unknown()".to_string(),
@@ -221,16 +221,16 @@ import {{ z }} from "zod";
         }
     }
 
-    fn schema_to_typescript_type(&self, schema: &Schema, optional: bool) -> String {
+    fn schema_to_typescript_type(schema: &Schema, optional: bool) -> String {
         let base_type = match &schema.schema_kind {
             SchemaKind::Type(Type::String(_)) => "string".to_string(),
             SchemaKind::Type(Type::Number(_)) | SchemaKind::Type(Type::Integer(_)) => "number".to_string(),
             SchemaKind::Type(Type::Boolean(_)) => "boolean".to_string(),
             SchemaKind::Type(Type::Array(arr)) => {
                 let item_type = match &arr.items {
-                    Some(ReferenceOr::Item(item_schema)) => self.schema_to_typescript_type(item_schema, false),
+                    Some(ReferenceOr::Item(item_schema)) => Self::schema_to_typescript_type(item_schema, false),
                     Some(ReferenceOr::Reference { reference }) => {
-                        let ref_name = reference.split('/').last().unwrap();
+                        let ref_name = reference.split('/').next_back().unwrap();
                         ref_name.to_pascal_case()
                     }
                     None => "unknown".to_string(),
@@ -300,10 +300,7 @@ import {{ z }} from "zod";
                 format!(
                     "{}_{}",
                     method,
-                    path.replace('/', "_")
-                        .replace('{', "")
-                        .replace('}', "")
-                        .trim_matches('_')
+                    path.replace('/', "_").replace(['{', '}'], "").trim_matches('_')
                 )
             });
 
@@ -312,8 +309,8 @@ import {{ z }} from "zod";
         let mut query_params = Vec::new();
 
         for param_ref in &operation.parameters {
-            match param_ref {
-                ReferenceOr::Item(param) => match param {
+            if let ReferenceOr::Item(param) = param_ref {
+                match param {
                     Parameter::Path { parameter_data, .. } => {
                         path_params.push((parameter_data.name.clone(), "string".to_string()));
                     }
@@ -322,8 +319,7 @@ import {{ z }} from "zod";
                         query_params.push((parameter_data.name.clone(), type_hint, parameter_data.required));
                     }
                     _ => {}
-                },
-                _ => {}
+                }
             }
         }
 
