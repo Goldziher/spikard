@@ -1,11 +1,17 @@
 //! Code generation from OpenAPI schemas
 
 mod openapi;
+mod php;
 mod python;
+mod ruby;
+mod rust;
 mod typescript;
 
 pub use openapi::parse_openapi_schema;
+pub use php::PhpGenerator;
 pub use python::PythonGenerator;
+pub use ruby::RubyGenerator;
+pub use rust::RustGenerator;
 pub use typescript::TypeScriptGenerator;
 
 use anyhow::Result;
@@ -16,7 +22,9 @@ use std::path::Path;
 pub enum TargetLanguage {
     Python,
     TypeScript,
-    // Future: Ruby, Rust
+    Rust,
+    Ruby,
+    Php,
 }
 
 /// Generate server code from an OpenAPI schema file
@@ -36,6 +44,18 @@ pub fn generate_from_openapi(
         }
         TargetLanguage::TypeScript => {
             let generator = TypeScriptGenerator::new(spec);
+            generator.generate()?
+        }
+        TargetLanguage::Rust => {
+            let generator = RustGenerator::new(spec);
+            generator.generate()?
+        }
+        TargetLanguage::Ruby => {
+            let generator = RubyGenerator::new(spec);
+            generator.generate()?
+        }
+        TargetLanguage::Php => {
+            let generator = PhpGenerator::new(spec);
             generator.generate()?
         }
     };
