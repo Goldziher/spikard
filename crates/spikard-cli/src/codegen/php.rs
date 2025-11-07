@@ -59,7 +59,7 @@ namespace SpikardGenerated;
                 match schema_ref {
                     ReferenceOr::Item(schema) => {
                         output.push_str(&self.generate_model_class(name, schema)?);
-                        output.push_str("\n");
+                        output.push('\n');
                     }
                     ReferenceOr::Reference { .. } => {
                         // Skip references - they'll be resolved when used
@@ -104,9 +104,9 @@ namespace SpikardGenerated;
                         let field_name = Self::to_camel_case(prop_name);
 
                         let (type_hint, nullable) = match prop_schema_ref {
-                            ReferenceOr::Item(prop_schema) => self.schema_to_php_type(prop_schema, !is_required),
+                            ReferenceOr::Item(prop_schema) => Self::schema_to_php_type(prop_schema, !is_required),
                             ReferenceOr::Reference { reference } => {
-                                let ref_name = reference.split('/').last().unwrap();
+                                let ref_name = reference.split('/').next_back().unwrap();
                                 let ref_type = ref_name.to_pascal_case();
                                 if is_required {
                                     (ref_type, false)
@@ -122,12 +122,10 @@ namespace SpikardGenerated;
                         // Build property declaration
                         if is_required {
                             prop_line.push_str(&format!("        public {} ${},\n", type_hint, field_name));
+                        } else if nullable {
+                            prop_line.push_str(&format!("        public {} ${} = null,\n", type_hint, field_name));
                         } else {
-                            if nullable {
-                                prop_line.push_str(&format!("        public {} ${} = null,\n", type_hint, field_name));
-                            } else {
-                                prop_line.push_str(&format!("        public ?{} ${} = null,\n", type_hint, field_name));
-                            }
+                            prop_line.push_str(&format!("        public ?{} ${} = null,\n", type_hint, field_name));
                         }
 
                         property_lines.push(prop_line);
@@ -180,11 +178,11 @@ namespace SpikardGenerated;
         match schema_ref {
             ReferenceOr::Reference { reference } => {
                 // Extract name from #/components/schemas/Pet -> Pet
-                let ref_name = reference.split('/').last().unwrap();
+                let ref_name = reference.split('/').next_back().unwrap();
                 ref_name.to_pascal_case()
             }
             ReferenceOr::Item(schema) => {
-                let (php_type, _) = self.schema_to_php_type(schema, false);
+                let (php_type, _) = Self::schema_to_php_type(schema, false);
                 php_type
             }
         }
@@ -200,7 +198,7 @@ namespace SpikardGenerated;
                     .map(|schema_ref| self.extract_type_from_schema_ref(schema_ref))
             }),
             ReferenceOr::Reference { reference } => {
-                let ref_name = reference.split('/').last().unwrap();
+                let ref_name = reference.split('/').next_back().unwrap();
                 Some(ref_name.to_pascal_case())
             }
         })
@@ -221,14 +219,14 @@ namespace SpikardGenerated;
         if let Some(response_ref) = response {
             match response_ref {
                 ReferenceOr::Item(response) => {
-                    if let Some(content) = response.content.get("application/json") {
-                        if let Some(schema_ref) = &content.schema {
-                            return self.extract_type_from_schema_ref(schema_ref);
-                        }
+                    if let Some(content) = response.content.get("application/json")
+                        && let Some(schema_ref) = &content.schema
+                    {
+                        return self.extract_type_from_schema_ref(schema_ref);
                     }
                 }
                 ReferenceOr::Reference { reference } => {
-                    let ref_name = reference.split('/').last().unwrap();
+                    let ref_name = reference.split('/').next_back().unwrap();
                     return ref_name.to_pascal_case();
                 }
             }
@@ -240,7 +238,7 @@ namespace SpikardGenerated;
 
     /// Convert OpenAPI schema to PHP type hint
     /// Returns (type_hint, is_already_nullable)
-    fn schema_to_php_type(&self, schema: &Schema, optional: bool) -> (String, bool) {
+    fn schema_to_php_type(schema: &Schema, optional: bool) -> (String, bool) {
         let base_type = match &schema.schema_kind {
             SchemaKind::Type(Type::String(_)) => "string",
             SchemaKind::Type(Type::Number(_)) => "float",
@@ -249,11 +247,11 @@ namespace SpikardGenerated;
             SchemaKind::Type(Type::Array(arr)) => {
                 let _item_type = match &arr.items {
                     Some(ReferenceOr::Item(item_schema)) => {
-                        let (item_type, _) = self.schema_to_php_type(item_schema, false);
+                        let (item_type, _) = Self::schema_to_php_type(item_schema, false);
                         item_type
                     }
                     Some(ReferenceOr::Reference { reference }) => {
-                        let ref_name = reference.split('/').last().unwrap();
+                        let ref_name = reference.split('/').next_back().unwrap();
                         ref_name.to_pascal_case()
                     }
                     None => "mixed".to_string(),
@@ -273,7 +271,8 @@ namespace SpikardGenerated;
     }
 
     /// Generate PHPDoc type annotation for arrays
-    fn schema_to_phpdoc_type(&self, schema: &Schema, optional: bool) -> String {
+    #[allow(dead_code)]
+    fn schema_to_phpdoc_type(schema: &Schema, optional: bool) -> String {
         let base_type = match &schema.schema_kind {
             SchemaKind::Type(Type::String(_)) => "string".to_string(),
             SchemaKind::Type(Type::Number(_)) => "float".to_string(),
@@ -281,9 +280,9 @@ namespace SpikardGenerated;
             SchemaKind::Type(Type::Boolean(_)) => "bool".to_string(),
             SchemaKind::Type(Type::Array(arr)) => {
                 let item_type = match &arr.items {
-                    Some(ReferenceOr::Item(item_schema)) => self.schema_to_phpdoc_type(item_schema, false),
+                    Some(ReferenceOr::Item(item_schema)) => Self::schema_to_phpdoc_type(item_schema, false),
                     Some(ReferenceOr::Reference { reference }) => {
-                        let ref_name = reference.split('/').last().unwrap();
+                        let ref_name = reference.split('/').next_back().unwrap();
                         ref_name.to_pascal_case()
                     }
                     None => "mixed".to_string(),
@@ -360,7 +359,7 @@ namespace SpikardGenerated;
         // Generate each controller class
         for (controller_name, routes) in controllers {
             output.push_str(&self.generate_controller_class(&controller_name, &routes)?);
-            output.push_str("\n");
+            output.push('\n');
         }
 
         Ok(output)
@@ -432,10 +431,7 @@ namespace SpikardGenerated;
                 Self::to_camel_case(&format!(
                     "{}_{}",
                     method.to_lowercase(),
-                    path.replace('/', "_")
-                        .replace('{', "")
-                        .replace('}', "")
-                        .trim_matches('_')
+                    path.replace('/', "_").replace(['{', '}'], "").trim_matches('_')
                 ))
             });
 
@@ -444,33 +440,30 @@ namespace SpikardGenerated;
         let mut query_params = Vec::new();
 
         for param_ref in &operation.parameters {
-            match param_ref {
-                ReferenceOr::Item(param) => {
-                    match param {
-                        Parameter::Path { parameter_data, .. } => {
-                            let param_name = Self::to_camel_case(&parameter_data.name);
-                            let param_type = "string".to_string(); // Simplified
-                            path_params.push((param_name, param_type));
-                            output.push_str(&format!(
-                                "     * @param string ${}\n",
-                                Self::to_camel_case(&parameter_data.name)
-                            ));
-                        }
-                        Parameter::Query { parameter_data, .. } => {
-                            let param_name = Self::to_camel_case(&parameter_data.name);
-                            let param_type = "string".to_string(); // Simplified
-                            let required = parameter_data.required;
-                            query_params.push((param_name.clone(), param_type, required));
-                            if required {
-                                output.push_str(&format!("     * @param string ${}\n", param_name));
-                            } else {
-                                output.push_str(&format!("     * @param string|null ${}\n", param_name));
-                            }
-                        }
-                        _ => {}
+            if let ReferenceOr::Item(param) = param_ref {
+                match param {
+                    Parameter::Path { parameter_data, .. } => {
+                        let param_name = Self::to_camel_case(&parameter_data.name);
+                        let param_type = "string".to_string(); // Simplified
+                        path_params.push((param_name, param_type));
+                        output.push_str(&format!(
+                            "     * @param string ${}\n",
+                            Self::to_camel_case(&parameter_data.name)
+                        ));
                     }
+                    Parameter::Query { parameter_data, .. } => {
+                        let param_name = Self::to_camel_case(&parameter_data.name);
+                        let param_type = "string".to_string(); // Simplified
+                        let required = parameter_data.required;
+                        query_params.push((param_name.clone(), param_type, required));
+                        if required {
+                            output.push_str(&format!("     * @param string ${}\n", param_name));
+                        } else {
+                            output.push_str(&format!("     * @param string|null ${}\n", param_name));
+                        }
+                    }
+                    _ => {}
                 }
-                _ => {}
             }
         }
 
@@ -564,9 +557,7 @@ namespace SpikardGenerated;
  * OpenAPI: {}
  */
 "#,
-            self.spec.info.title,
-            self.spec.info.version,
-            self.spec.openapi
+            self.spec.info.title, self.spec.info.version, self.spec.openapi
         )
     }
 }

@@ -103,9 +103,9 @@ use std::net::SocketAddr;
                         }
 
                         let type_hint = match prop_schema_ref {
-                            ReferenceOr::Item(prop_schema) => self.schema_to_rust_type(prop_schema, !is_required),
+                            ReferenceOr::Item(prop_schema) => Self::schema_to_rust_type(prop_schema, !is_required),
                             ReferenceOr::Reference { reference } => {
-                                let ref_name = reference.split('/').last().unwrap();
+                                let ref_name = reference.split('/').next_back().unwrap();
                                 let base_type = ref_name.to_pascal_case();
                                 if is_required {
                                     base_type
@@ -134,10 +134,10 @@ use std::net::SocketAddr;
         match schema_ref {
             ReferenceOr::Reference { reference } => {
                 // Extract name from #/components/schemas/Pet -> Pet
-                let ref_name = reference.split('/').last().unwrap();
+                let ref_name = reference.split('/').next_back().unwrap();
                 ref_name.to_pascal_case()
             }
-            ReferenceOr::Item(schema) => self.schema_to_rust_type(schema, false),
+            ReferenceOr::Item(schema) => Self::schema_to_rust_type(schema, false),
         }
     }
 
@@ -151,7 +151,7 @@ use std::net::SocketAddr;
                     .map(|schema_ref| self.extract_type_from_schema_ref(schema_ref))
             }),
             ReferenceOr::Reference { reference } => {
-                let ref_name = reference.split('/').last().unwrap();
+                let ref_name = reference.split('/').next_back().unwrap();
                 Some(ref_name.to_pascal_case())
             }
         })
@@ -172,14 +172,14 @@ use std::net::SocketAddr;
         if let Some(response_ref) = response {
             match response_ref {
                 ReferenceOr::Item(response) => {
-                    if let Some(content) = response.content.get("application/json") {
-                        if let Some(schema_ref) = &content.schema {
-                            return self.extract_type_from_schema_ref(schema_ref);
-                        }
+                    if let Some(content) = response.content.get("application/json")
+                        && let Some(schema_ref) = &content.schema
+                    {
+                        return self.extract_type_from_schema_ref(schema_ref);
                     }
                 }
                 ReferenceOr::Reference { reference } => {
-                    let ref_name = reference.split('/').last().unwrap();
+                    let ref_name = reference.split('/').next_back().unwrap();
                     return ref_name.to_pascal_case();
                 }
             }
@@ -189,7 +189,7 @@ use std::net::SocketAddr;
         "()".to_string()
     }
 
-    fn schema_to_rust_type(&self, schema: &Schema, optional: bool) -> String {
+    fn schema_to_rust_type(schema: &Schema, optional: bool) -> String {
         let base_type = match &schema.schema_kind {
             SchemaKind::Type(Type::String(_)) => "String".to_string(),
             SchemaKind::Type(Type::Number(_)) => "f64".to_string(),
@@ -204,9 +204,9 @@ use std::net::SocketAddr;
             SchemaKind::Type(Type::Boolean(_)) => "bool".to_string(),
             SchemaKind::Type(Type::Array(arr)) => {
                 let item_type = match &arr.items {
-                    Some(ReferenceOr::Item(item_schema)) => self.schema_to_rust_type(item_schema, false),
+                    Some(ReferenceOr::Item(item_schema)) => Self::schema_to_rust_type(item_schema, false),
                     Some(ReferenceOr::Reference { reference }) => {
-                        let ref_name = reference.split('/').last().unwrap();
+                        let ref_name = reference.split('/').next_back().unwrap();
                         ref_name.to_pascal_case()
                     }
                     None => "serde_json::Value".to_string(),
@@ -278,10 +278,7 @@ use std::net::SocketAddr;
                 format!(
                     "{}_{}",
                     method,
-                    path.replace('/', "_")
-                        .replace('{', "")
-                        .replace('}', "")
-                        .trim_matches('_')
+                    path.replace('/', "_").replace(['{', '}'], "").trim_matches('_')
                 )
             });
 
@@ -290,8 +287,8 @@ use std::net::SocketAddr;
         let mut query_params = Vec::new();
 
         for param_ref in &operation.parameters {
-            match param_ref {
-                ReferenceOr::Item(param) => match param {
+            if let ReferenceOr::Item(param) = param_ref {
+                match param {
                     Parameter::Path { parameter_data, .. } => {
                         let param_type = "String".to_string();
                         path_params.push((parameter_data.name.clone(), param_type));
@@ -301,8 +298,7 @@ use std::net::SocketAddr;
                         query_params.push((parameter_data.name.clone(), param_type));
                     }
                     _ => {}
-                },
-                _ => {}
+                }
             }
         }
 
@@ -421,10 +417,7 @@ use std::net::SocketAddr;
                     .unwrap_or_else(|| {
                         format!(
                             "get_{}",
-                            path.replace('/', "_")
-                                .replace('{', "")
-                                .replace('}', "")
-                                .trim_matches('_')
+                            path.replace('/', "_").replace(['{', '}'], "").trim_matches('_')
                         )
                     });
                 methods.push(("get", func_name));
@@ -437,10 +430,7 @@ use std::net::SocketAddr;
                     .unwrap_or_else(|| {
                         format!(
                             "post_{}",
-                            path.replace('/', "_")
-                                .replace('{', "")
-                                .replace('}', "")
-                                .trim_matches('_')
+                            path.replace('/', "_").replace(['{', '}'], "").trim_matches('_')
                         )
                     });
                 methods.push(("post", func_name));
@@ -453,10 +443,7 @@ use std::net::SocketAddr;
                     .unwrap_or_else(|| {
                         format!(
                             "put_{}",
-                            path.replace('/', "_")
-                                .replace('{', "")
-                                .replace('}', "")
-                                .trim_matches('_')
+                            path.replace('/', "_").replace(['{', '}'], "").trim_matches('_')
                         )
                     });
                 methods.push(("put", func_name));
@@ -469,10 +456,7 @@ use std::net::SocketAddr;
                     .unwrap_or_else(|| {
                         format!(
                             "delete_{}",
-                            path.replace('/', "_")
-                                .replace('{', "")
-                                .replace('}', "")
-                                .trim_matches('_')
+                            path.replace('/', "_").replace(['{', '}'], "").trim_matches('_')
                         )
                     });
                 methods.push(("delete", func_name));
@@ -485,10 +469,7 @@ use std::net::SocketAddr;
                     .unwrap_or_else(|| {
                         format!(
                             "patch_{}",
-                            path.replace('/', "_")
-                                .replace('{', "")
-                                .replace('}', "")
-                                .trim_matches('_')
+                            path.replace('/', "_").replace(['{', '}'], "").trim_matches('_')
                         )
                     });
                 methods.push(("patch", func_name));
