@@ -5,7 +5,8 @@
 #![deny(clippy::all)]
 
 mod response;
-mod test_client;
+// TODO: Re-enable after updating to current handler trait API
+// mod test_client;
 
 use napi::Error;
 use napi_derive::napi;

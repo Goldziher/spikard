@@ -36,7 +36,7 @@ pub fn init_python_event_loop() -> PyResult<()> {
         let event_loop = asyncio.call_method0("new_event_loop")?;
         asyncio.call_method1("set_event_loop", (event_loop.clone(),))?;
 
-        TASK_LOCALS.get_or_try_init(|| TaskLocals::new(event_loop.into()).copy_context(py))?;
+        TASK_LOCALS.get_or_try_init(|| TaskLocals::new(event_loop).copy_context(py))?;
 
         Ok(())
     })
@@ -95,15 +95,15 @@ impl PythonHandler {
     /// This runs the Python code in a blocking task to avoid blocking the Tokio runtime
     pub async fn call(&self, _req: Request<Body>, request_data: RequestData) -> HandlerResult {
         // Validate request body in Rust if validator is present
-        if let Some(validator) = &self.request_validator {
-            if let Err(errors) = validator.validate(&request_data.body) {
-                // Return RFC 9457 Problem Details format
-                let problem = ProblemDetails::from_validation_error(&errors);
-                let error_json = problem
-                    .to_json_pretty()
-                    .unwrap_or_else(|e| format!("Failed to serialize: {}", e));
-                return Err((problem.status_code(), error_json));
-            }
+        if let Some(validator) = &self.request_validator
+            && let Err(errors) = validator.validate(&request_data.body)
+        {
+            // Return RFC 9457 Problem Details format
+            let problem = ProblemDetails::from_validation_error(&errors);
+            let error_json = problem
+                .to_json_pretty()
+                .unwrap_or_else(|e| format!("Failed to serialize: {}", e));
+            return Err((problem.status_code(), error_json));
         }
 
         // Validate and extract parameters in Rust if validator is present
@@ -196,7 +196,7 @@ impl PythonHandler {
             })?; // Await the Rust future directly (no spawn_blocking!)
 
             // Convert Python result back to ResponseResult
-            Python::attach(|py| python_to_response_result(py, &output.bind(py))).map_err(|e: PyErr| {
+            Python::attach(|py| python_to_response_result(py, output.bind(py))).map_err(|e: PyErr| {
                 (
                     axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                     format!("Python error: {}", e),
@@ -496,6 +496,7 @@ fn json_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'py, Py
 }
 
 /// Extract Python traceback from exception
+#[allow(dead_code)]
 fn get_python_traceback(py: Python<'_>, err: &PyErr) -> String {
     // Try to format the full Python traceback
     let traceback_module = match py.import("traceback") {
