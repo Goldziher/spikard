@@ -38,9 +38,9 @@ impl PythonGenerator {
 # Title: {}
 # DO NOT EDIT - regenerate from OpenAPI schema
 
-from dataclasses import dataclass
-from typing import Optional, List, Dict, Any
-from spikard import Spikard, Request, route, Query, Path, Body, Header
+import msgspec
+
+from spikard import Body, Path, Query, Request, Spikard, route
 
 app = Spikard()
 
@@ -80,8 +80,7 @@ app = Spikard()
             output.push_str(&format!("\"\"\" {} \"\"\"\n", description));
         }
         
-        output.push_str("@dataclass\n");
-        output.push_str(&format!("class {}:\n", class_name));
+        output.push_str(&format!("class {}(msgspec.Struct):\n", class_name));
         
         match &schema.schema_kind {
             SchemaKind::Type(Type::Object(obj)) => {
@@ -101,7 +100,7 @@ app = Spikard()
                                 if is_required {
                                     ref_name.to_pascal_case()
                                 } else {
-                                    format!("Optional[{}]", ref_name.to_pascal_case())
+                                    format!("{} | None", ref_name.to_pascal_case())
                                 }
                             }
                         };
@@ -122,6 +121,68 @@ app = Spikard()
         Ok(output)
     }
     
+    /// Extract type name from a schema reference or inline schema
+    fn extract_type_from_schema_ref(&self, schema_ref: &ReferenceOr<Schema>) -> String {
+        match schema_ref {
+            ReferenceOr::Reference { reference } => {
+                // Extract name from #/components/schemas/Pet -> Pet
+                let ref_name = reference.split('/').last().unwrap();
+                ref_name.to_pascal_case()
+            }
+            ReferenceOr::Item(schema) => {
+                self.schema_to_python_type(schema, false)
+            }
+        }
+    }
+
+    /// Extract request body type from operation
+    fn extract_request_body_type(&self, operation: &Operation) -> Option<String> {
+        operation.request_body.as_ref().and_then(|body_ref| {
+            match body_ref {
+                ReferenceOr::Item(request_body) => {
+                    request_body.content.get("application/json").and_then(|media_type| {
+                        media_type.schema.as_ref().map(|schema_ref| {
+                            self.extract_type_from_schema_ref(schema_ref)
+                        })
+                    })
+                }
+                ReferenceOr::Reference { reference } => {
+                    let ref_name = reference.split('/').last().unwrap();
+                    Some(ref_name.to_pascal_case())
+                }
+            }
+        })
+    }
+
+    /// Extract response type from operation (looks for 200/201 responses)
+    fn extract_response_type(&self, operation: &Operation) -> String {
+        use openapiv3::StatusCode;
+
+        // Try to find a successful response (200, 201, 2XX)
+        let response = operation.responses.responses.get(&StatusCode::Code(200))
+            .or_else(|| operation.responses.responses.get(&StatusCode::Code(201)))
+            .or_else(|| operation.responses.responses.get(&StatusCode::Range(2)));
+
+        if let Some(response_ref) = response {
+            match response_ref {
+                ReferenceOr::Item(response) => {
+                    if let Some(content) = response.content.get("application/json") {
+                        if let Some(schema_ref) = &content.schema {
+                            return self.extract_type_from_schema_ref(schema_ref);
+                        }
+                    }
+                }
+                ReferenceOr::Reference { reference } => {
+                    let ref_name = reference.split('/').last().unwrap();
+                    return ref_name.to_pascal_case();
+                }
+            }
+        }
+
+        // Default to dict[str, object] if no schema found
+        "dict[str, object]".to_string()
+    }
+
     fn schema_to_python_type(&self, schema: &Schema, optional: bool) -> String {
         let base_type = match &schema.schema_kind {
             SchemaKind::Type(Type::String(_)) => "str".to_string(),
@@ -137,16 +198,16 @@ app = Spikard()
                         let ref_name = reference.split('/').last().unwrap();
                         ref_name.to_pascal_case()
                     }
-                    None => "Any".to_string(),
+                    None => "object".to_string(),
                 };
-                format!("List[{}]", item_type)
+                format!("list[{}]", item_type)
             }
-            SchemaKind::Type(Type::Object(_)) => "Dict[str, Any]".to_string(),
-            _ => "Any".to_string(),
+            SchemaKind::Type(Type::Object(_)) => "dict[str, object]".to_string(),
+            _ => "object".to_string(),
         };
         
         if optional {
-            format!("Optional[{}]", base_type)
+            format!("{} | None", base_type)
         } else {
             base_type
         }
@@ -199,9 +260,7 @@ app = Spikard()
         // Parse parameters
         let mut path_params = Vec::new();
         let mut query_params = Vec::new();
-        let mut has_body = false;
-        let mut body_type = "Any".to_string();
-        
+
         for param_ref in &operation.parameters {
             match param_ref {
                 ReferenceOr::Item(param) => {
@@ -219,20 +278,12 @@ app = Spikard()
                 _ => {}
             }
         }
-        
-        // Check for request body
-        if let Some(request_body_ref) = &operation.request_body {
-            match request_body_ref {
-                ReferenceOr::Item(request_body) => {
-                    has_body = true;
-                    // Try to extract schema from JSON content
-                    if request_body.content.get("application/json").is_some() {
-                        body_type = "Dict[str, Any]".to_string(); // Simplified
-                    }
-                }
-                _ => {}
-            }
-        }
+
+        // Extract request body type
+        let body_type = self.extract_request_body_type(operation);
+
+        // Extract response type
+        let return_type = self.extract_response_type(operation);
         
         // Generate route decorator
         output.push_str(&format!("@route(\"{}\", methods=[\"{}\"])\n", path, method.to_uppercase()));
@@ -250,24 +301,23 @@ app = Spikard()
             if *required {
                 output.push_str(&format!(", {}: Query[{}]", param_name.to_snake_case(), param_type));
             } else {
-                output.push_str(&format!(", {}: Query[Optional[{}]] = None", param_name.to_snake_case(), param_type));
+                output.push_str(&format!(", {}: Query[{} | None] = Query(default=None)", param_name.to_snake_case(), param_type));
             }
         }
         
         // Add body parameter
-        if has_body {
-            output.push_str(&format!(", body: Body[{}]", body_type));
+        if let Some(body_type_name) = &body_type {
+            output.push_str(&format!(", body: Body[{}]", body_type_name));
         }
-        
-        output.push_str(") -> dict:\n");
+
+        output.push_str(&format!(") -> {}:\n", return_type));
         
         // Generate function body
         if let Some(desc) = &operation.description {
             output.push_str(&format!("    \"\"\"\n    {}\n    \"\"\"\n", desc));
         }
-        
-        output.push_str("    # TODO: Implement handler logic\n");
-        output.push_str("    return {\"message\": \"Not implemented\"}\n\n");
+
+        output.push_str("    raise NotImplementedError(\"TODO: Implement this endpoint\")\n\n");
         
         Ok(output)
     }
