@@ -203,36 +203,60 @@ fn run_python_server(module_path: PathBuf, host: String, port: u16) -> Result<()
             PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to get current directory: {}", e))
         })?;
 
-        // Try to find and add virtual environment site-packages
-        let venv_paths = [
-            current_dir.join(".venv").join("lib"),
-            std::env::var("VIRTUAL_ENV")
-                .ok()
-                .map(PathBuf::from)
-                .unwrap_or_default()
-                .join("lib"),
-        ];
-
         let sys = py.import("sys")?;
         let sys_path = sys.getattr("path")?;
 
+        // Try to find and add virtual environment site-packages
+        // Walk up directory tree to find .venv
+        let venv_lib_dir = {
+            let mut search_dir = current_dir.clone();
+            let mut found = None;
+
+            // Check VIRTUAL_ENV first
+            if let Ok(venv) = std::env::var("VIRTUAL_ENV") {
+                let venv_lib = PathBuf::from(venv).join("lib");
+                if venv_lib.exists() {
+                    found = Some(venv_lib);
+                }
+            }
+
+            // Walk up directory tree looking for .venv
+            if found.is_none() {
+                for _ in 0..10 {
+                    let candidate = search_dir.join(".venv").join("lib");
+                    if candidate.exists() {
+                        found = Some(candidate);
+                        break;
+                    }
+                    if let Some(parent) = search_dir.parent() {
+                        search_dir = parent.to_path_buf();
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            found
+        };
+
         // Add site-packages from venv
-        for venv_lib in &venv_paths {
-            if venv_lib.exists() {
-                // Find pythonX.Y directory
-                if let Ok(entries) = std::fs::read_dir(venv_lib) {
-                    for entry in entries.flatten() {
-                        let path = entry.path();
-                        if path.is_dir() {
-                            let site_packages = path.join("site-packages");
-                            if site_packages.exists() {
-                                tracing::debug!("Adding to sys.path: {}", site_packages.display());
-                                sys_path.call_method1("insert", (0, site_packages.to_string_lossy().as_ref()))?;
-                            }
+        if let Some(venv_lib) = venv_lib_dir {
+            tracing::debug!("Found venv lib directory: {}", venv_lib.display());
+            // Find pythonX.Y directory
+            if let Ok(entries) = std::fs::read_dir(&venv_lib) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_dir() {
+                        let site_packages = path.join("site-packages");
+                        if site_packages.exists() {
+                            tracing::debug!("Adding to sys.path: {}", site_packages.display());
+                            sys_path.call_method1("insert", (0, site_packages.to_string_lossy().as_ref()))?;
                         }
                     }
                 }
             }
+        } else {
+            tracing::warn!("Could not find .venv directory in current or parent directories");
         }
 
         // Add the spikard package to sys.path (for development)
