@@ -1,0 +1,48 @@
+[package]
+name = "benchmark-harness"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[[bin]]
+name = "benchmark-harness"
+path = "src/main.rs"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# HTTP client for health checks
+reqwest = { version = "0.12", features = ["json"] }
+
+# System monitoring
+sysinfo = "0.37"
+
+# Process management
+which = "8"
+
+# Error handling
+thiserror = "2"
+anyhow = "1"
+
+# Utilities
+chrono = { version = "0.4", features = ["serde"] }
+glob = "0.3"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[dev-dependencies]
+tempfile = "3"
+tokio = { version = "1", features = ["test-util", "macros", "rt-multi-thread"] }
+axum = "0.8"

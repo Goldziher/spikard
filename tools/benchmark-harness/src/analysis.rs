@@ -3,8 +3,8 @@
 //! This module provides functions to aggregate multiple benchmark runs,
 //! calculate statistics, detect outliers, and compute confidence intervals.
 
-use crate::types::{BenchmarkResult, ErrorMetrics, SerializationMetrics, StartupMetrics};
 use crate::Result;
+use crate::types::{BenchmarkResult, ErrorMetrics, SerializationMetrics, StartupMetrics};
 use serde::{Deserialize, Serialize};
 
 /// Aggregated benchmark result with statistical measures
@@ -140,9 +140,7 @@ pub struct AggregatedSerializationMetrics {
 /// Returns error if runs slice is empty or if frameworks/workloads don't match
 pub fn aggregate_runs(runs: &[BenchmarkResult]) -> Result<AggregatedResult> {
     if runs.is_empty() {
-        return Err(crate::Error::InvalidInput(
-            "Cannot aggregate empty runs".to_string(),
-        ));
+        return Err(crate::Error::InvalidInput("Cannot aggregate empty runs".to_string()));
     }
 
     // Validate all runs are for same framework/workload
@@ -244,10 +242,8 @@ fn aggregate_startup_metrics(runs: &[BenchmarkResult]) -> AggregatedStartupMetri
     }
 
     let process_spawn_ms: Vec<f64> = values.iter().map(|v| v.process_spawn_ms).collect();
-    let time_to_first_response_ms: Vec<f64> =
-        values.iter().map(|v| v.time_to_first_response_ms).collect();
-    let initialization_memory_mb: Vec<f64> =
-        values.iter().map(|v| v.initialization_memory_mb).collect();
+    let time_to_first_response_ms: Vec<f64> = values.iter().map(|v| v.time_to_first_response_ms).collect();
+    let initialization_memory_mb: Vec<f64> = values.iter().map(|v| v.initialization_memory_mb).collect();
     let total_startup_ms: Vec<f64> = values.iter().map(|v| v.total_startup_ms).collect();
 
     AggregatedStartupMetrics {
@@ -342,13 +338,11 @@ fn aggregate_error_metrics(runs: &[BenchmarkResult]) -> AggregatedErrorMetrics {
         };
     }
 
-    let validation_error_p99_ms: Vec<f64> =
-        values.iter().map(|v| v.validation_error_p99_ms).collect();
+    let validation_error_p99_ms: Vec<f64> = values.iter().map(|v| v.validation_error_p99_ms).collect();
     let not_found_p99_ms: Vec<f64> = values.iter().map(|v| v.not_found_p99_ms).collect();
     let server_error_p99_ms: Vec<f64> = values.iter().map(|v| v.server_error_p99_ms).collect();
     let error_throughput_rps: Vec<f64> = values.iter().map(|v| v.error_throughput_rps).collect();
-    let error_memory_impact_mb: Vec<f64> =
-        values.iter().map(|v| v.error_memory_impact_mb).collect();
+    let error_memory_impact_mb: Vec<f64> = values.iter().map(|v| v.error_memory_impact_mb).collect();
     let total_errors: Vec<f64> = values.iter().map(|v| v.total_errors as f64).collect();
     let error_rate: Vec<f64> = values.iter().map(|v| v.error_rate).collect();
 
@@ -364,8 +358,7 @@ fn aggregate_error_metrics(runs: &[BenchmarkResult]) -> AggregatedErrorMetrics {
 }
 
 fn aggregate_serialization_metrics(runs: &[BenchmarkResult]) -> AggregatedSerializationMetrics {
-    let values: Vec<&SerializationMetrics> =
-        runs.iter().filter_map(|r| r.serialization.as_ref()).collect();
+    let values: Vec<&SerializationMetrics> = runs.iter().filter_map(|r| r.serialization.as_ref()).collect();
 
     if values.is_empty() {
         let zero_stats = MetricStats {
@@ -386,14 +379,9 @@ fn aggregate_serialization_metrics(runs: &[BenchmarkResult]) -> AggregatedSerial
         };
     }
 
-    let json_parse_overhead_ms: Vec<f64> =
-        values.iter().map(|v| v.json_parse_overhead_ms).collect();
-    let json_serialize_overhead_ms: Vec<f64> = values
-        .iter()
-        .map(|v| v.json_serialize_overhead_ms)
-        .collect();
-    let validation_overhead_ms: Vec<f64> =
-        values.iter().map(|v| v.validation_overhead_ms).collect();
+    let json_parse_overhead_ms: Vec<f64> = values.iter().map(|v| v.json_parse_overhead_ms).collect();
+    let json_serialize_overhead_ms: Vec<f64> = values.iter().map(|v| v.json_serialize_overhead_ms).collect();
+    let validation_overhead_ms: Vec<f64> = values.iter().map(|v| v.validation_overhead_ms).collect();
     let total_overhead_pct: Vec<f64> = values.iter().map(|v| v.total_overhead_pct).collect();
     let sample_count: Vec<f64> = values.iter().map(|v| v.sample_count as f64).collect();
 
@@ -474,14 +462,14 @@ pub fn calculate_confidence_interval(values: &[f64], confidence: f64) -> (f64, f
     let t_critical = if values.len() < 30 {
         // Approximate t-values for common confidence levels
         match values.len() {
-            2 => 12.706, // df=1, 95% CI
-            3 => 4.303,  // df=2
-            4 => 3.182,  // df=3
-            5 => 2.776,  // df=4
-            6 => 2.571,  // df=5
-            7..=10 => 2.447, // df=6-9, approximate
+            2 => 12.706,      // df=1, 95% CI
+            3 => 4.303,       // df=2
+            4 => 3.182,       // df=3
+            5 => 2.776,       // df=4
+            6 => 2.571,       // df=5
+            7..=10 => 2.447,  // df=6-9, approximate
             11..=20 => 2.228, // df=10-19, approximate
-            _ => 2.093,  // df=20-29, approximate
+            _ => 2.093,       // df=20-29, approximate
         }
     } else {
         // For large samples, use z-score

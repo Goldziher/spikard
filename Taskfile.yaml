@@ -672,6 +672,52 @@ tasks:
     vars:
       COLON: ":"
 
+  codegen:typescript:
+    desc: "Generate TypeScript server code from OpenAPI schema"
+    deps:
+      - build:cli
+    cmds:
+      - "target/release/spikard generate {{.SCHEMA}} --lang type-script --output {{.OUTPUT}}"
+      - echo "Generated TypeScript code{{.COLON}} {{.OUTPUT}}"
+    vars:
+      COLON: ":"
+
+  codegen:typescript:format:
+    desc: "Format generated TypeScript code with Biome"
+    cmds:
+      - cd packages/node && pnpm biome format --write "{{.FILE}}"
+
+  codegen:typescript:lint:
+    desc: "Lint generated TypeScript code with oxlint and Biome"
+    cmds:
+      - cd packages/node && pnpm oxlint "{{.FILE}}"
+      - cd packages/node && pnpm biome check "{{.FILE}}"
+
+  codegen:typescript:typecheck:
+    desc: "Type check generated TypeScript code with tsc"
+    cmds:
+      - cd packages/node && pnpm tsc --noEmit "{{.FILE}}"
+
+  codegen:typescript:verify:
+    desc: "Generate, format, and validate TypeScript code from OpenAPI schema"
+    cmds:
+      - task: codegen:typescript
+        vars:
+          SCHEMA: "{{.SCHEMA}}"
+          OUTPUT: "{{.OUTPUT}}"
+      - task: codegen:typescript:format
+        vars:
+          FILE: "{{.OUTPUT}}"
+      - task: codegen:typescript:lint
+        vars:
+          FILE: "{{.OUTPUT}}"
+      - task: codegen:typescript:typecheck
+        vars:
+          FILE: "{{.OUTPUT}}"
+      - echo "✅ Generated TypeScript code validated successfully{{.COLON}} {{.OUTPUT}}"
+    vars:
+      COLON: ":"
+
   default:
     desc: "Show available tasks"
     cmds:

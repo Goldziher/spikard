@@ -1,8 +1,8 @@
 //! End-to-end integration tests for the benchmark harness
 
-use axum::{routing::get, Router};
+use axum::{Router, routing::get};
 use benchmark_harness::fixture::{Fixture, FixtureManager};
-use benchmark_harness::load_generator::{find_load_generator, LoadTestConfig};
+use benchmark_harness::load_generator::{LoadTestConfig, find_load_generator};
 use benchmark_harness::monitor::ResourceMonitor;
 use benchmark_harness::server::find_available_port;
 use serde_json::json;
@@ -34,9 +34,7 @@ async fn spawn_test_server() -> (u16, tokio::task::JoinHandle<()>) {
             match TcpListener::bind(addr).await {
                 Ok(listener) => {
                     let handle = tokio::spawn(async move {
-                        axum::serve(listener, app)
-                            .await
-                            .expect("Server failed to start");
+                        axum::serve(listener, app).await.expect("Server failed to start");
                     });
 
                     // Wait for server to be ready
@@ -173,8 +171,7 @@ fn verify_benchmark_results(
     assert!(!json.is_empty());
 
     // Verify deserialization
-    let deserialized: benchmark_harness::types::BenchmarkResult =
-        serde_json::from_str(&json).unwrap();
+    let deserialized: benchmark_harness::types::BenchmarkResult = serde_json::from_str(&json).unwrap();
     assert_eq!(deserialized.framework, "test-framework");
     assert!(deserialized.success);
 }
@@ -292,8 +289,7 @@ async fn test_concurrent_benchmarks() {
             fixture: None,
         };
 
-        let result =
-            benchmark_harness::load_generator::run_load_test(load_config, generator).await;
+        let result = benchmark_harness::load_generator::run_load_test(load_config, generator).await;
         if result.is_ok() {
             successes += 1;
         } else if let Err(e) = result {

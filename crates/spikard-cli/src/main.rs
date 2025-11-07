@@ -68,7 +68,8 @@ enum Commands {
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum GenerateLanguage {
     Python,
-    // Future: Node, Ruby, Rust
+    TypeScript,
+    // Future: Ruby, Rust
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -138,13 +139,10 @@ fn main() -> Result<()> {
             #[cfg(not(feature = "ruby"))]
             println!("Ruby:   ✗ (rebuild with --features ruby)");
         }
-        Commands::Generate {
-            schema,
-            lang,
-            output,
-        } => {
+        Commands::Generate { schema, lang, output } => {
             let target_lang = match lang {
                 GenerateLanguage::Python => codegen::TargetLanguage::Python,
+                GenerateLanguage::TypeScript => codegen::TargetLanguage::TypeScript,
             };
 
             let code = codegen::generate_from_openapi(&schema, target_lang, output.as_deref())
@@ -154,9 +152,11 @@ fn main() -> Result<()> {
                 // Print to stdout if no output file specified
                 println!("{}", code);
             } else {
-                println!("Generated {} code successfully: {}",
+                println!(
+                    "Generated {} code successfully: {}",
                     match lang {
                         GenerateLanguage::Python => "Python",
+                        GenerateLanguage::TypeScript => "TypeScript",
                     },
                     output.as_ref().unwrap().display()
                 );
