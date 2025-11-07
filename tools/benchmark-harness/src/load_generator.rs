@@ -99,15 +99,19 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
     // Calculate throughput metrics
     // Note: oha's "total" field is duration in seconds, not request count
     let total_duration = oha_output.summary.total.unwrap_or(0.0);
-    let total_requests = (oha_output.summary.requests_per_sec * total_duration) as u64;
-    let failed = total_requests - (total_requests as f64 * oha_output.summary.success_rate) as u64;
+    let requests_per_sec = oha_output.summary.requests_per_sec.unwrap_or(0.0);
+    let success_rate = oha_output.summary.success_rate.unwrap_or(1.0);
+    let size_per_sec = oha_output.summary.size_per_sec.unwrap_or(0.0);
+
+    let total_requests = (requests_per_sec * total_duration) as u64;
+    let failed = total_requests - (total_requests as f64 * success_rate) as u64;
 
     let throughput = ThroughputMetrics {
         total_requests,
-        requests_per_sec: oha_output.summary.requests_per_sec,
-        bytes_per_sec: oha_output.summary.size_per_sec as f64,
+        requests_per_sec,
+        bytes_per_sec: size_per_sec,
         failed_requests: failed,
-        success_rate: oha_output.summary.success_rate,
+        success_rate,
     };
 
     Ok((oha_output, throughput))

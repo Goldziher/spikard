@@ -311,8 +311,8 @@ pub struct OhaOutput {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct OhaSummary {
-    #[serde(rename = "successRate")]
-    pub success_rate: f64,
+    #[serde(rename = "successRate", default)]
+    pub success_rate: Option<f64>,
 
     #[serde(default)]
     pub total: Option<f64>,
@@ -323,8 +323,8 @@ pub struct OhaSummary {
 
     pub average: Option<f64>,
 
-    #[serde(rename = "requestsPerSec")]
-    pub requests_per_sec: f64,
+    #[serde(rename = "requestsPerSec", default)]
+    pub requests_per_sec: Option<f64>,
 
     #[serde(rename = "totalData", default)]
     pub total_data: Option<f64>,
@@ -332,8 +332,8 @@ pub struct OhaSummary {
     #[serde(rename = "sizePerRequest")]
     pub size_per_request: Option<f64>,
 
-    #[serde(rename = "sizePerSec")]
-    pub size_per_sec: f64,
+    #[serde(rename = "sizePerSec", default)]
+    pub size_per_sec: Option<f64>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

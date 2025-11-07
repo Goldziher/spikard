@@ -1,10 +1,39 @@
 //! Server management - start, stop, health check
 
 use crate::error::{Error, Result};
+use std::env;
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 use std::time::Duration;
 use tokio::time::sleep;
+
+/// Find the workspace root by looking for Cargo.toml
+fn find_workspace_root() -> Result<PathBuf> {
+    // Start from the current executable's directory
+    let exe_path = env::current_exe()
+        .map_err(|e| Error::ServerStartFailed(format!("Failed to get executable path: {}", e)))?;
+
+    let mut current = exe_path.parent().ok_or_else(|| {
+        Error::ServerStartFailed("Failed to get executable parent directory".to_string())
+    })?;
+
+    // Walk up the directory tree looking for workspace Cargo.toml
+    loop {
+        let cargo_toml = current.join("Cargo.toml");
+        if cargo_toml.exists() {
+            // Check if this is the workspace root by looking for [workspace] section
+            if let Ok(contents) = std::fs::read_to_string(&cargo_toml)
+                && contents.contains("[workspace]") {
+                    return Ok(current.to_path_buf());
+                }
+        }
+
+        // Move up one directory
+        current = current.parent().ok_or_else(|| {
+            Error::ServerStartFailed("Could not find workspace root (no Cargo.toml with [workspace])".to_string())
+        })?;
+    }
+}
 
 /// Server process handle
 pub struct ServerHandle {
@@ -73,8 +102,9 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     let mut cmd = match config.framework.as_str() {
         // All Spikard frameworks now use the unified CLI
         "spikard-python" | "spikard-node" | "spikard-ruby" | "spikard-rust" => {
-            // Path to unified CLI (relative to workspace root)
-            let cli_path = "../../target/release/spikard";
+            // Find workspace root and construct absolute path to CLI
+            let workspace_root = find_workspace_root()?;
+            let cli_path = workspace_root.join("target/release/spikard");
 
             // Determine server file based on framework
             let server_file = match config.framework.as_str() {
@@ -112,6 +142,7 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     if !config.framework.starts_with("spikard-") {
         cmd.current_dir(&config.app_dir);
     }
+    // Discard output to avoid blocking when buffers fill up
     cmd.stdout(Stdio::null()).stderr(Stdio::null());
 
     let process = cmd
