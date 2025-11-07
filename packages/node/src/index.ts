@@ -7,13 +7,13 @@
 export { process } from "..";
 
 // Parameter types
-export { Body, Path, Query, QueryDefault } from "./params";
+export type { Body, Path, Query, QueryDefault } from "./params";
 
 // Request interface
-export { type Request } from "./request";
+export type { Request } from "./request";
 
 // Routing
-export { del, get, patch, post, put, route, type RouteOptions } from "./routing";
+export { del, get, patch, post, put, type RouteOptions, route } from "./routing";
 
 // Testing utilities
 export { TestClient, type TestResponse } from "./testing";

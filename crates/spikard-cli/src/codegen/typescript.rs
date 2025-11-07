@@ -282,17 +282,14 @@ import {{ Body, Path, Query, Request, route }} from "@spikard/node";
     fn generate_route_handler(&self, path: &str, method: &str, operation: &Operation) -> Result<String> {
         let mut output = String::new();
 
-        // Generate JSDoc comment
+        // Generate JSDoc comment with route info
         if let Some(summary) = &operation.summary {
-            output.push_str(&format!("/** {} */\n", summary));
+            output.push_str(&format!("/**\n * {}\n", summary));
+        } else {
+            output.push_str("/**\n");
         }
-
-        // Generate route decorator
-        output.push_str(&format!(
-            "@route(\"{}\", {{ methods: [\"{}\"] }})\n",
-            path,
-            method.to_uppercase()
-        ));
+        output.push_str(&format!(" * Route: {} {}\n", method.to_uppercase(), path));
+        output.push_str(" */\n");
 
         // Convert operation_id to function name, or generate one
         let func_name = operation
@@ -376,7 +373,15 @@ import {{ Body, Path, Query, Request, route }} from "@spikard/node";
         }
 
         output.push_str("  throw new Error(\"TODO: Implement this endpoint\");\n");
-        output.push_str("}\n\n");
+        output.push_str("}\n");
+
+        // Add route registration call
+        output.push_str(&format!(
+            "route(\"{}\", {{ methods: [\"{}\"] }})({});\n\n",
+            path,
+            method.to_uppercase(),
+            func_name
+        ));
 
         Ok(output)
     }
