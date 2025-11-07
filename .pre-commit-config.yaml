@@ -44,3 +44,9 @@ repos:
         language: system
         types: [python]
         exclude: ^scripts/|^examples/|^e2e/
+      - id: phpstan
+        name: PHPStan
+        entry: phpstan analyse --memory-limit=2G --no-progress
+        language: system
+        types: [php]
+        pass_filenames: false

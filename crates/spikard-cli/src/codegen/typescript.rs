@@ -38,9 +38,9 @@ impl TypeScriptGenerator {
 // Title: {}
 // DO NOT EDIT - regenerate from OpenAPI schema
 
+import {{ route }} from "@spikard/node";
+import type {{ Body, Path, Query, Request }} from "@spikard/node";
 import {{ z }} from "zod";
-
-import {{ Body, Path, Query, Request, route }} from "@spikard/node";
 
 "#,
             self.spec.openapi, self.spec.info.title
@@ -103,7 +103,7 @@ import {{ Body, Path, Query, Request, route }} from "@spikard/node";
                         }
                     };
 
-                    output.push_str(&format!("  {}: {},\n", field_name, zod_type));
+                    output.push_str(&format!("\t{}: {},\n", field_name, zod_type));
                 }
 
                 output.push_str("});\n");
@@ -334,20 +334,20 @@ import {{ Body, Path, Query, Request, route }} from "@spikard/node";
         let return_type = self.extract_response_type(operation);
 
         // Generate function signature
-        output.push_str(&format!("export function {}(request: Request", func_name));
+        output.push_str(&format!("export function {}(_request: Request", func_name));
 
         // Add path parameters
         for (param_name, param_type) in &path_params {
-            output.push_str(&format!(", {}: Path<{}>", param_name.to_snake_case(), param_type));
+            output.push_str(&format!(", _{}: Path<{}>", param_name.to_snake_case(), param_type));
         }
 
         // Add query parameters
         for (param_name, param_type, required) in &query_params {
             if *required {
-                output.push_str(&format!(", {}: Query<{}>", param_name.to_snake_case(), param_type));
+                output.push_str(&format!(", _{}: Query<{}>", param_name.to_snake_case(), param_type));
             } else {
                 output.push_str(&format!(
-                    ", {}: Query<{} | undefined>",
+                    ", _{}: Query<{} | undefined>",
                     param_name.to_snake_case(),
                     param_type
                 ));
@@ -362,17 +362,17 @@ import {{ Body, Path, Query, Request, route }} from "@spikard/node";
             } else {
                 body_schema_name.as_str()
             };
-            output.push_str(&format!(", body: Body<{}>", body_type));
+            output.push_str(&format!(", _body: Body<{}>", body_type));
         }
 
         output.push_str(&format!("): {} {{\n", return_type));
 
         // Generate function body with description if present
         if let Some(desc) = &operation.description {
-            output.push_str(&format!("  /**\n   * {}\n   */\n", desc));
+            output.push_str(&format!("\t/**\n\t * {}\n\t */\n", desc));
         }
 
-        output.push_str("  throw new Error(\"TODO: Implement this endpoint\");\n");
+        output.push_str("\tthrow new Error(\"TODO: Implement this endpoint\");\n");
         output.push_str("}\n");
 
         // Add route registration call
