@@ -96,6 +96,18 @@ rules:
     - content: Before committing, run task lint to honor the Biome settings in biome.json for JS/TS, format Rust with cargo fmt --manifest-path Cargo.toml configured by rustfmt.toml, and sync Python dependencies with uv so pyproject.toml and uv.lock stay consistent—avoid introducing divergent toolchains or unchecked formatting drift.
       name: Lint & Formatting Discipline
       priority: medium
+    - content: 'For async Python handlers in `crates/spikard-py/src/handler.rs`, use `pyo3_async_runtimes::tokio::into_future()` to convert Python coroutines directly to Rust futures, eliminating spawn_blocking overhead. Initialize the event loop once with `TaskLocals` stored in a `OnceCell` to avoid per-request event loop creation. Ensure GIL is released before awaiting Rust futures: `Python::attach(|py| {...}).await` not `Python::with_gil(|py| {...}).await`.'
+      name: PyO3 Async Performance
+      priority: critical
+    - content: 'The `extension-module` feature in `crates/spikard-py/Cargo.toml` must NOT be in default features—it breaks linking for binaries that embed Python (like spikard-cli). Configure maturin in `pyproject.toml` with `features = ["extension-module"]` so Python extension modules build correctly. Binaries (CLI, tests) build without extension-module to link libpython; extensions (maturin builds) enable it for manylinux compliance.'
+      name: PyO3 Extension Module Management
+      priority: critical
+    - content: 'Convert `serde_json::Value` to Python objects using direct PyO3 type construction (PyDict::new, PyList::empty, PyString::new, etc.) instead of serialize-to-JSON-string then json.loads. This zero-copy approach in `crates/spikard-py/src/handler.rs::json_to_python()` eliminates 30-40% conversion overhead. Match on Value variants and recursively build native Python objects.'
+      name: Zero-Copy JSON to Python Conversion
+      priority: high
+    - content: 'In `crates/spikard-http`, define language-agnostic Handler trait with `Pin<Box<dyn Future<Output = HandlerResult> + Send>>` return type. Language bindings (`spikard-py`, `spikard-node`) implement this trait with Arc<dyn Handler> wrappers. The HTTP server accepts `Vec<(Route, Arc<dyn Handler>)>` enabling clean separation: spikard-http has zero FFI dependencies, all Python/Node/WASM code lives in binding crates.'
+      name: Handler Trait Abstraction
+      priority: critical
 sections:
     - content: |-
         ## Tooling

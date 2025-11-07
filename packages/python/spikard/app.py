@@ -127,19 +127,29 @@ class Spikard:
     ) -> None:
         """Run the application server.
 
-        This will execute the Rust binary which embeds Python and runs
+        This executes the unified Spikard CLI which embeds Python and runs
         the Tokio HTTP server.
+
+        The CLI must be built with Python support:
+            cargo build --release -p spikard-cli --features python
 
         Args:
             host: Host to bind to
             port: Port to bind to
             workers: Number of worker processes
             reload: Enable auto-reload on code changes
+
+        Raises:
+            RuntimeError: If spikard CLI binary not found or not built with Python support
         """
-        # Find the Rust binary (installed with package)
+        # Find the unified Rust CLI (installed with package or in PATH)
         binary = shutil.which("spikard")
         if not binary:
-            raise RuntimeError("spikard binary not found. Install with: pip install spikard")
+            raise RuntimeError(
+                "spikard CLI binary not found.\n"
+                "Build with: cargo build --release -p spikard-cli --features python\n"
+                "Or install from: pip install spikard"
+            )
 
         # Get the calling module's file path
         caller_frame = inspect.currentframe()
@@ -153,7 +163,7 @@ class Spikard:
         if not module_file:
             raise RuntimeError("Cannot determine module file path")
 
-        # Build command arguments
+        # Build command arguments for unified CLI
         command = [
             binary,
             "run",
@@ -169,7 +179,16 @@ class Spikard:
         if reload:
             command.append("--reload")
 
-        subprocess.run(command, check=True)
+        # Run the server
+        try:
+            subprocess.run(command, check=True)
+        except subprocess.CalledProcessError as e:
+            if "not supported in this build" in str(e):
+                raise RuntimeError(
+                    "The spikard CLI was not built with Python support.\n"
+                    "Rebuild with: cargo build --release -p spikard-cli --features python"
+                ) from e
+            raise
 
     def get_routes(self) -> list[Route]:
         """Get all registered routes.

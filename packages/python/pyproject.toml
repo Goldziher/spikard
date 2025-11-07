@@ -26,3 +26,6 @@ dependencies = [
 
 [tool.hatch.build.targets.wheel]
 packages = [ "spikard" ]
+
+[tool.hatch.build.targets.wheel.force-include]
+"spikard/py.typed" = "spikard/py.typed"
