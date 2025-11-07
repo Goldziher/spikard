@@ -1,17 +1,17 @@
 //! HTTP server implementation using Tokio and Axum
 
-use crate::handler::{ForeignHandler, RequestData};
+use crate::handler_trait::{Handler, RequestData};
 use crate::query_parser::parse_query_string_to_json;
-use crate::{PythonHandler, Router, ServerConfig};
+use crate::{Router, ServerConfig};
 use axum::Router as AxumRouter;
 use axum::body::Body;
 use axum::extract::Path;
 use axum::routing::{MethodRouter, get};
 use http_body_util::BodyExt;
-use pyo3::{Py, PyAny};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::net::SocketAddr;
+use std::sync::Arc;
 use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -30,17 +30,17 @@ fn extract_query_params(uri: &axum::http::Uri) -> Value {
 
 /// Extract raw query parameters as strings (no type conversion)
 /// Used for validation error messages to show the actual input values
-fn extract_raw_query_params(uri: &axum::http::Uri) -> HashMap<String, String> {
+fn extract_raw_query_params(uri: &axum::http::Uri) -> HashMap<String, Vec<String>> {
     let query_string = uri.query().unwrap_or("");
     if query_string.is_empty() {
         HashMap::new()
     } else {
         // Parse without number conversion to get raw string values
-        // For arrays, we just take the first value since validation errors typically show one value
+        // Collect all values for each key (supports repeated params like ?a=1&a=2)
         crate::query_parser::parse_query_string(query_string.as_bytes(), '&')
             .into_iter()
             .fold(HashMap::new(), |mut acc, (k, v)| {
-                acc.entry(k).or_insert(v);
+                acc.entry(k).or_insert_with(Vec::new).push(v);
                 acc
             })
     }
@@ -76,6 +76,7 @@ fn extract_cookies(headers: &axum::http::HeaderMap) -> HashMap<String, String> {
 /// Create RequestData from request parts (for requests without body)
 fn create_request_data_without_body(
     uri: &axum::http::Uri,
+    method: &axum::http::Method,
     headers: &axum::http::HeaderMap,
     path_params: HashMap<String, String>,
 ) -> RequestData {
@@ -85,7 +86,9 @@ fn create_request_data_without_body(
         raw_query_params: extract_raw_query_params(uri),
         headers: extract_headers(headers),
         cookies: extract_cookies(headers),
-        body: None,
+        body: Value::Null,
+        method: method.as_str().to_string(),
+        path: uri.path().to_string(),
     }
 }
 
@@ -111,9 +114,8 @@ async fn create_request_data_with_body(
     let body_value = if !body_bytes.is_empty() {
         serde_json::from_slice::<Value>(&body_bytes)
             .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?
-            .into()
     } else {
-        None
+        Value::Null
     };
 
     Ok(RequestData {
@@ -123,18 +125,17 @@ async fn create_request_data_with_body(
         headers: extract_headers(&parts.headers),
         cookies: extract_cookies(&parts.headers),
         body: body_value,
+        method: parts.method.as_str().to_string(),
+        path: parts.uri.path().to_string(),
     })
 }
 
 /// Build an Axum router from routes and foreign handlers
-pub fn build_router_with_handlers<H>(routes: Vec<(crate::Route, H)>) -> Result<AxumRouter, String>
-where
-    H: ForeignHandler,
-{
+pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>) -> Result<AxumRouter, String> {
     let mut app = AxumRouter::new();
 
     // Group routes by path to support multiple methods on same route
-    let mut routes_by_path: HashMap<String, Vec<(crate::Route, H)>> = HashMap::new();
+    let mut routes_by_path: HashMap<String, Vec<(crate::Route, Arc<dyn Handler>)>> = HashMap::new();
     for (route, handler) in routes {
         routes_by_path
             .entry(route.path.clone())
@@ -150,7 +151,7 @@ where
             .remove(&path)
             .ok_or_else(|| format!("Missing handlers for path '{}'", path))?;
 
-        let mut handlers_by_method: HashMap<crate::Method, (crate::Route, H)> = HashMap::new();
+        let mut handlers_by_method: HashMap<crate::Method, (crate::Route, Arc<dyn Handler>)> = HashMap::new();
         for (route, handler) in route_handlers {
             handlers_by_method.insert(route.method.clone(), (route, handler));
         }
@@ -165,16 +166,24 @@ where
                         let handler = handler.clone();
                         axum::routing::get(
                             move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                                let request_data =
-                                    create_request_data_without_body(req.uri(), req.headers(), path_params.0);
+                                let request_data = create_request_data_without_body(
+                                    req.uri(),
+                                    req.method(),
+                                    req.headers(),
+                                    path_params.0,
+                                );
                                 handler.call(req, request_data).await
                             },
                         )
                     } else {
                         let handler = handler.clone();
                         axum::routing::get(move |req: axum::extract::Request| async move {
-                            let request_data =
-                                create_request_data_without_body(req.uri(), req.headers(), HashMap::new());
+                            let request_data = create_request_data_without_body(
+                                req.uri(),
+                                req.method(),
+                                req.headers(),
+                                HashMap::new(),
+                            );
                             handler.call(req, request_data).await
                         })
                     }
@@ -184,16 +193,24 @@ where
                         let handler = handler.clone();
                         axum::routing::delete(
                             move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                                let request_data =
-                                    create_request_data_without_body(req.uri(), req.headers(), path_params.0);
+                                let request_data = create_request_data_without_body(
+                                    req.uri(),
+                                    req.method(),
+                                    req.headers(),
+                                    path_params.0,
+                                );
                                 handler.call(req, request_data).await
                             },
                         )
                     } else {
                         let handler = handler.clone();
                         axum::routing::delete(move |req: axum::extract::Request| async move {
-                            let request_data =
-                                create_request_data_without_body(req.uri(), req.headers(), HashMap::new());
+                            let request_data = create_request_data_without_body(
+                                req.uri(),
+                                req.method(),
+                                req.headers(),
+                                HashMap::new(),
+                            );
                             handler.call(req, request_data).await
                         })
                     }
@@ -203,16 +220,24 @@ where
                         let handler = handler.clone();
                         axum::routing::head(
                             move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                                let request_data =
-                                    create_request_data_without_body(req.uri(), req.headers(), path_params.0);
+                                let request_data = create_request_data_without_body(
+                                    req.uri(),
+                                    req.method(),
+                                    req.headers(),
+                                    path_params.0,
+                                );
                                 handler.call(req, request_data).await
                             },
                         )
                     } else {
                         let handler = handler.clone();
                         axum::routing::head(move |req: axum::extract::Request| async move {
-                            let request_data =
-                                create_request_data_without_body(req.uri(), req.headers(), HashMap::new());
+                            let request_data = create_request_data_without_body(
+                                req.uri(),
+                                req.method(),
+                                req.headers(),
+                                HashMap::new(),
+                            );
                             handler.call(req, request_data).await
                         })
                     }
@@ -222,16 +247,24 @@ where
                         let handler = handler.clone();
                         axum::routing::options(
                             move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                                let request_data =
-                                    create_request_data_without_body(req.uri(), req.headers(), path_params.0);
+                                let request_data = create_request_data_without_body(
+                                    req.uri(),
+                                    req.method(),
+                                    req.headers(),
+                                    path_params.0,
+                                );
                                 handler.call(req, request_data).await
                             },
                         )
                     } else {
                         let handler = handler.clone();
                         axum::routing::options(move |req: axum::extract::Request| async move {
-                            let request_data =
-                                create_request_data_without_body(req.uri(), req.headers(), HashMap::new());
+                            let request_data = create_request_data_without_body(
+                                req.uri(),
+                                req.method(),
+                                req.headers(),
+                                HashMap::new(),
+                            );
                             handler.call(req, request_data).await
                         })
                     }
@@ -241,16 +274,24 @@ where
                         let handler = handler.clone();
                         axum::routing::trace(
                             move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
-                                let request_data =
-                                    create_request_data_without_body(req.uri(), req.headers(), path_params.0);
+                                let request_data = create_request_data_without_body(
+                                    req.uri(),
+                                    req.method(),
+                                    req.headers(),
+                                    path_params.0,
+                                );
                                 handler.call(req, request_data).await
                             },
                         )
                     } else {
                         let handler = handler.clone();
                         axum::routing::trace(move |req: axum::extract::Request| async move {
-                            let request_data =
-                                create_request_data_without_body(req.uri(), req.headers(), HashMap::new());
+                            let request_data = create_request_data_without_body(
+                                req.uri(),
+                                req.method(),
+                                req.headers(),
+                                HashMap::new(),
+                            );
                             handler.call(req, request_data).await
                         })
                     }
@@ -357,26 +398,15 @@ impl Server {
 
     /// Create a new server with Python handlers
     ///
+    /// Build router with trait-based handlers
     /// Routes are grouped by path before registration to support multiple HTTP methods
     /// for the same path (e.g., GET /data and POST /data). Axum requires that all methods
     /// for a path be merged into a single MethodRouter before calling `.route()`.
-    pub fn with_python_handlers(
+    pub fn with_handlers(
         _config: ServerConfig,
-        routes: Vec<(crate::Route, Py<PyAny>)>,
+        routes: Vec<(crate::Route, Arc<dyn Handler>)>,
     ) -> Result<AxumRouter, String> {
-        let mut prepared_routes = Vec::new();
-        for (route, handler_py) in routes {
-            let handler = PythonHandler::new(
-                handler_py,
-                route.is_async,
-                route.request_validator.clone(),
-                route.response_validator.clone(),
-                route.parameter_validator.clone(),
-            );
-            prepared_routes.push((route, handler));
-        }
-
-        build_router_with_handlers(prepared_routes)
+        build_router_with_handlers(routes)
     }
 
     /// Initialize logging

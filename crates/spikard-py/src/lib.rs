@@ -2,10 +2,14 @@
 //!
 //! This crate provides Python bindings using PyO3
 
+pub mod handler;
 mod response;
 mod test_client;
 
 use pyo3::prelude::*;
+
+// Export handler for use in CLI and server
+pub use handler::{PythonHandler, init_python_event_loop};
 use pyo3::types::PyList;
 use spikard_http::RouteMetadata;
 use spikard_http::server::Server;
@@ -180,7 +184,23 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
         routes.len()
     );
 
-    let axum_router = Server::with_python_handlers(config, routes)
+    // Wrap each Python handler in PythonHandler and Arc<dyn Handler>
+    let handler_routes: Vec<(spikard_http::Route, std::sync::Arc<dyn spikard_http::Handler>)> = routes
+        .into_iter()
+        .map(|(route, py_handler)| {
+            let python_handler = PythonHandler::new(
+                py_handler,
+                route.is_async,
+                route.request_validator.clone(),
+                route.response_validator.clone(),
+                route.parameter_validator.clone(),
+            );
+            let arc_handler: std::sync::Arc<dyn spikard_http::Handler> = std::sync::Arc::new(python_handler);
+            (route, arc_handler)
+        })
+        .collect();
+
+    let axum_router = Server::with_handlers(config, handler_routes)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to build router: {}", e)))?;
 
     let _ = std::fs::write("/tmp/axum_router_built.log", "Axum router built successfully\n");
