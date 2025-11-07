@@ -68,6 +68,7 @@ crates/spikard-node/index.d.ts
 *.temp
 .cache/
 results/
+benchmark-results/
 reports/
 [Tt][Oo][Dd][Oo]*
 todo.md

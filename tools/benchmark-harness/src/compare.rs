@@ -137,10 +137,7 @@ pub enum RegressionSeverity {
 /// # Returns
 ///
 /// Comparison report with relative metrics for each framework
-pub fn compare_frameworks(
-    baseline: &BenchmarkResult,
-    comparisons: &[BenchmarkResult],
-) -> ComparisonReport {
+pub fn compare_frameworks(baseline: &BenchmarkResult, comparisons: &[BenchmarkResult]) -> ComparisonReport {
     let framework_comparisons: Vec<FrameworkComparison> = comparisons
         .iter()
         .map(|result| {
@@ -165,10 +162,7 @@ pub fn compare_frameworks(
 }
 
 /// Calculate relative performance metrics
-fn calculate_relative_metrics(
-    baseline: &BenchmarkResult,
-    comparison: &BenchmarkResult,
-) -> RelativeMetrics {
+fn calculate_relative_metrics(baseline: &BenchmarkResult, comparison: &BenchmarkResult) -> RelativeMetrics {
     // Throughput: higher is better (comparison/baseline)
     let throughput_ratio = safe_divide(
         comparison.throughput.requests_per_sec,
@@ -187,41 +181,24 @@ fn calculate_relative_metrics(
     let latency_p99_percent_diff = (latency_p99_ratio - 1.0) * 100.0;
 
     // Memory: lower is better (baseline/comparison)
-    let memory_avg_ratio = safe_divide(
-        baseline.resources.avg_memory_mb,
-        comparison.resources.avg_memory_mb,
-    );
+    let memory_avg_ratio = safe_divide(baseline.resources.avg_memory_mb, comparison.resources.avg_memory_mb);
     let memory_avg_percent_diff = (memory_avg_ratio - 1.0) * 100.0;
 
-    let memory_peak_ratio = safe_divide(
-        baseline.resources.peak_memory_mb,
-        comparison.resources.peak_memory_mb,
-    );
+    let memory_peak_ratio = safe_divide(baseline.resources.peak_memory_mb, comparison.resources.peak_memory_mb);
     let memory_peak_percent_diff = (memory_peak_ratio - 1.0) * 100.0;
 
     // CPU: lower is better (baseline/comparison)
-    let cpu_avg_ratio = safe_divide(
-        baseline.resources.avg_cpu_percent,
-        comparison.resources.avg_cpu_percent,
-    );
+    let cpu_avg_ratio = safe_divide(baseline.resources.avg_cpu_percent, comparison.resources.avg_cpu_percent);
     let cpu_avg_percent_diff = (cpu_avg_ratio - 1.0) * 100.0;
 
     // Success rate: higher is better (comparison/baseline)
-    let success_rate_ratio = safe_divide(
-        comparison.throughput.success_rate,
-        baseline.throughput.success_rate,
-    );
+    let success_rate_ratio = safe_divide(comparison.throughput.success_rate, baseline.throughput.success_rate);
     let success_rate_percent_diff = (success_rate_ratio - 1.0) * 100.0;
 
     // Startup time: lower is better (baseline/comparison)
     let (startup_time_ratio, startup_time_percent_diff) =
-        if let (Some(baseline_startup), Some(comparison_startup)) =
-            (&baseline.startup, &comparison.startup)
-        {
-            let ratio = safe_divide(
-                baseline_startup.total_startup_ms,
-                comparison_startup.total_startup_ms,
-            );
+        if let (Some(baseline_startup), Some(comparison_startup)) = (&baseline.startup, &comparison.startup) {
+            let ratio = safe_divide(baseline_startup.total_startup_ms, comparison_startup.total_startup_ms);
             let percent_diff = (ratio - 1.0) * 100.0;
             (Some(ratio), Some(percent_diff))
         } else {
@@ -281,10 +258,7 @@ fn classify_performance(relative: &RelativeMetrics) -> PerformanceSummary {
 /// # Returns
 ///
 /// Vector of regression warnings for metrics that degraded beyond threshold
-pub fn detect_regressions(
-    comparison: &ComparisonReport,
-    threshold_pct: f64,
-) -> Vec<RegressionWarning> {
+pub fn detect_regressions(comparison: &ComparisonReport, threshold_pct: f64) -> Vec<RegressionWarning> {
     let mut warnings = Vec::new();
 
     for comp in &comparison.comparisons {
@@ -346,10 +320,7 @@ pub fn detect_regressions(
         }
 
         // Check startup time if available
-        if let Some(startup_percent_diff) = rel
-            .startup_time_percent_diff
-            .filter(|&d| d < -threshold_pct)
-        {
+        if let Some(startup_percent_diff) = rel.startup_time_percent_diff.filter(|&d| d < -threshold_pct) {
             warnings.push(RegressionWarning {
                 framework: comp.framework.clone(),
                 metric: "startup_time".to_string(),
@@ -447,15 +418,9 @@ pub fn generate_markdown_report(comparison: &ComparisonReport) -> String {
             comp.result.resources.avg_cpu_percent, comp.relative.cpu_avg_percent_diff
         ));
 
-        if let (Some(startup), Some(diff)) = (
-            &comp.result.startup,
-            comp.relative.startup_time_percent_diff,
-        ) {
+        if let (Some(startup), Some(diff)) = (&comp.result.startup, comp.relative.startup_time_percent_diff) {
             report.push_str("\n**Startup:**\n");
-            report.push_str(&format!(
-                "- Total: {:.2}ms ({:+.1}%)\n",
-                startup.total_startup_ms, diff
-            ));
+            report.push_str(&format!("- Total: {:.2}ms ({:+.1}%)\n", startup.total_startup_ms, diff));
         }
 
         report.push('\n');
@@ -500,7 +465,7 @@ fn safe_divide(numerator: f64, denominator: f64) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{ThroughputMetrics, LatencyMetrics, ResourceMetrics};
+    use crate::types::{LatencyMetrics, ResourceMetrics, ThroughputMetrics};
     use chrono::Utc;
 
     fn create_test_result(framework: &str, rps: f64, latency_p99: f64) -> BenchmarkResult {
@@ -610,9 +575,6 @@ mod tests {
             startup_time_percent_diff: None,
         };
 
-        assert_eq!(
-            classify_performance(&much_better),
-            PerformanceSummary::MuchBetter
-        );
+        assert_eq!(classify_performance(&much_better), PerformanceSummary::MuchBetter);
     }
 }

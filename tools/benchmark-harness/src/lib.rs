@@ -13,10 +13,10 @@ pub mod runner;
 pub mod server;
 pub mod types;
 
-pub use analysis::{aggregate_runs, AggregatedResult, MetricStats};
+pub use analysis::{AggregatedResult, MetricStats, aggregate_runs};
 pub use compare::{
-    compare_frameworks, detect_regressions, generate_json_report, generate_markdown_report,
-    ComparisonReport, FrameworkComparison, RegressionWarning, RelativeMetrics,
+    ComparisonReport, FrameworkComparison, RegressionWarning, RelativeMetrics, compare_frameworks, detect_regressions,
+    generate_json_report, generate_markdown_report,
 };
 pub use error::{Error, Result};
 pub use fixture::{Fixture, FixtureManager};

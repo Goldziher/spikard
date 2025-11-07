@@ -2,9 +2,11 @@
 
 mod openapi;
 mod python;
+mod typescript;
 
 pub use openapi::parse_openapi_schema;
 pub use python::PythonGenerator;
+pub use typescript::TypeScriptGenerator;
 
 use anyhow::Result;
 use std::path::Path;
@@ -13,7 +15,8 @@ use std::path::Path;
 #[derive(Debug, Clone, Copy)]
 pub enum TargetLanguage {
     Python,
-    // Future: Node, Ruby, Rust
+    TypeScript,
+    // Future: Ruby, Rust
 }
 
 /// Generate server code from an OpenAPI schema file
@@ -24,19 +27,23 @@ pub fn generate_from_openapi(
 ) -> Result<String> {
     // Parse the OpenAPI schema
     let spec = parse_openapi_schema(schema_path)?;
-    
+
     // Generate code based on target language
     let code = match target_lang {
         TargetLanguage::Python => {
             let generator = PythonGenerator::new(spec);
             generator.generate()?
         }
+        TargetLanguage::TypeScript => {
+            let generator = TypeScriptGenerator::new(spec);
+            generator.generate()?
+        }
     };
-    
+
     // Write to file if output path specified, otherwise return code
     if let Some(out_path) = output_path {
         std::fs::write(out_path, &code)?;
     }
-    
+
     Ok(code)
 }

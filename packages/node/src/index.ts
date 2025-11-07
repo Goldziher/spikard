@@ -5,6 +5,17 @@
  */
 
 export { process } from "..";
+
+// Parameter types
+export { Body, Path, Query, QueryDefault } from "./params";
+
+// Request interface
+export { type Request } from "./request";
+
+// Routing
+export { del, get, patch, post, put, route, type RouteOptions } from "./routing";
+
+// Testing utilities
 export { TestClient, type TestResponse } from "./testing";
 
 /**
