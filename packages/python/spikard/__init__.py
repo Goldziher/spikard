@@ -7,6 +7,7 @@ from _spikard import Response
 from spikard._internal.converters import register_decoder
 from spikard.app import Spikard
 from spikard.params import Body, Cookie, Header, Path, Query
+from spikard.request import Request
 from spikard.routing import delete, get, head, options, patch, post, put, route, trace
 
 __all__ = [
@@ -15,6 +16,7 @@ __all__ = [
     "Header",
     "Path",
     "Query",
+    "Request",
     "Response",
     "Spikard",
     "delete",
