@@ -3,6 +3,8 @@
 //! Unified command-line interface for running Spikard applications
 //! across multiple language bindings (Rust, Python, Node.js, Ruby)
 
+mod codegen;
+
 use anyhow::{Context, Result, bail};
 use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
@@ -46,8 +48,27 @@ enum Commands {
         #[arg(long)]
         reload: bool,
     },
+    /// Generate server code from OpenAPI schema
+    Generate {
+        /// Path to OpenAPI schema file (JSON or YAML)
+        schema: PathBuf,
+
+        /// Target language for code generation
+        #[arg(long, short = 'l', default_value = "python")]
+        lang: GenerateLanguage,
+
+        /// Output file path (prints to stdout if not specified)
+        #[arg(long, short = 'o')]
+        output: Option<PathBuf>,
+    },
     /// Show which language runtimes are compiled into this binary
     Features,
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum GenerateLanguage {
+    Python,
+    // Future: Node, Ruby, Rust
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -116,6 +137,30 @@ fn main() -> Result<()> {
             println!("Ruby:   ✓");
             #[cfg(not(feature = "ruby"))]
             println!("Ruby:   ✗ (rebuild with --features ruby)");
+        }
+        Commands::Generate {
+            schema,
+            lang,
+            output,
+        } => {
+            let target_lang = match lang {
+                GenerateLanguage::Python => codegen::TargetLanguage::Python,
+            };
+
+            let code = codegen::generate_from_openapi(&schema, target_lang, output.as_deref())
+                .context("Failed to generate code from OpenAPI schema")?;
+
+            if output.is_none() {
+                // Print to stdout if no output file specified
+                println!("{}", code);
+            } else {
+                println!("Generated {} code successfully: {}",
+                    match lang {
+                        GenerateLanguage::Python => "Python",
+                    },
+                    output.as_ref().unwrap().display()
+                );
+            }
         }
         Commands::Run {
             file,
