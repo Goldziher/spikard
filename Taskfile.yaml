@@ -629,6 +629,49 @@ tasks:
       - task: bench:run:all
       - echo "Benchmark results in tools/benchmark-harness/results/"
 
+  # ============================================================================
+  # OpenAPI Code Generation
+  # ============================================================================
+
+  codegen:python:
+    desc: "Generate Python server code from OpenAPI schema"
+    deps:
+      - build:cli
+    cmds:
+      - "target/release/spikard generate {{.SCHEMA}} --lang python --output {{.OUTPUT}}"
+      - echo "Generated Python code{{.COLON}} {{.OUTPUT}}"
+    vars:
+      COLON: ":"
+
+  codegen:python:format:
+    desc: "Format generated Python code with ruff"
+    cmds:
+      - uv run ruff format {{.FILE}}
+      - uv run ruff check --fix {{.FILE}}
+
+  codegen:python:lint:
+    desc: "Lint generated Python code with ruff and mypy"
+    cmds:
+      - uv run ruff check {{.FILE}}
+      - uv run mypy {{.FILE}} --strict --allow-untyped-calls --allow-incomplete-defs
+
+  codegen:python:verify:
+    desc: "Generate, format, and validate Python code from OpenAPI schema"
+    cmds:
+      - task: codegen:python
+        vars:
+          SCHEMA: "{{.SCHEMA}}"
+          OUTPUT: "{{.OUTPUT}}"
+      - task: codegen:python:format
+        vars:
+          FILE: "{{.OUTPUT}}"
+      - task: codegen:python:lint
+        vars:
+          FILE: "{{.OUTPUT}}"
+      - echo "✅ Generated Python code validated successfully{{.COLON}} {{.OUTPUT}}"
+    vars:
+      COLON: ":"
+
   default:
     desc: "Show available tasks"
     cmds:

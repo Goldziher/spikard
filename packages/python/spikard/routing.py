@@ -197,8 +197,9 @@ def trace(path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
 
 def route(
     path: str,
-    http_method: str | list[str] | tuple[str, ...] = "GET",
+    http_method: str | list[str] | tuple[str, ...] | None = None,
     *,
+    methods: str | list[str] | tuple[str, ...] | None = None,
     body_schema: dict[str, Any] | None = None,
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Standalone route decorator with explicit HTTP method(s).
@@ -207,6 +208,7 @@ def route(
         path: URL path pattern
         http_method: HTTP method(s) - can be a single string like "GET"
                     or a sequence like ["GET", "HEAD"] or ("POST", "PUT")
+        methods: Alias for http_method (for FastAPI/OpenAPI compatibility)
         body_schema: JSON Schema for request body validation (required for POST/PUT/PATCH)
 
     Returns:
@@ -215,6 +217,10 @@ def route(
     Example:
         @route("/users", http_method="GET")
         async def get_users():
+            return []
+
+        @route("/items", methods=["GET"])
+        async def get_items():
             return []
 
         @route("/resource/{id}", http_method=["GET", "HEAD"])
@@ -233,11 +239,16 @@ def route(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
             )
 
+        # Handle both http_method and methods parameters (methods takes precedence)
+        method_value = methods if methods is not None else http_method
+        if method_value is None:
+            method_value = "GET"  # Default to GET
+
         # Normalize to list of methods
-        methods = [http_method] if isinstance(http_method, str) else list(http_method)
+        method_list = [method_value] if isinstance(method_value, str) else list(method_value)
 
         # Register the route for each method
-        for method in methods:
+        for method in method_list:
             method_upper = method.upper()
             app.register_route(method_upper, path, body_schema=body_schema)(func)
 

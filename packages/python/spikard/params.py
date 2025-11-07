@@ -6,7 +6,9 @@ and to specify default values and factories for query/body/path parameters.
 
 import re
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Generic, TypeVar
+
+T = TypeVar("T")
 
 
 class ParamBase:
@@ -53,7 +55,7 @@ class ParamBase:
         return self.default is not ... or self.default_factory is not None
 
 
-class Query(ParamBase):
+class Query(ParamBase, Generic[T]):
     """Query parameter with optional default or default_factory.
 
     Use this to specify defaults for query string parameters, similar to FastAPI.
@@ -62,20 +64,20 @@ class Query(ParamBase):
         >>> from spikard import get
         >>>
         >>> @get("/items/")
-        >>> def get_items(tags: list[str] = Query(default_factory=list)):
+        >>> def get_items(tags: Query[list[str]] = Query(default_factory=list)):
         ...     return {"tags": tags}
         >>>
         >>> @get("/items/")
-        >>> def get_items(limit: int = Query(default=10)):
+        >>> def get_items(limit: Query[int] = Query(default=10)):
         ...     return {"limit": limit}
         >>>
         >>> @get("/items/")
-        >>> def get_items(date: datetime.date = Query(default_factory=datetime.date.today)):
+        >>> def get_items(date: Query[datetime.date] = Query(default_factory=datetime.date.today)):
         ...     return {"date": date}
         >>>
         >>> # With custom JSON schema for validation
         >>> @get("/items/")
-        >>> def get_items(limit: int = Query(default=10, schema={"minimum": 1, "maximum": 100})):
+        >>> def get_items(limit: Query[int] = Query(default=10, schema={"minimum": 1, "maximum": 100})):
         ...     return {"limit": limit}
 
     Args:
@@ -89,7 +91,7 @@ class Query(ParamBase):
     """
 
 
-class Body(ParamBase):
+class Body(ParamBase, Generic[T]):
     """Request body parameter with optional default or default_factory.
 
     Use this to specify defaults for request body parameters.
@@ -98,12 +100,12 @@ class Body(ParamBase):
         >>> from spikard import post
         >>>
         >>> @post("/items/")
-        >>> def create_item(data: dict = Body(default_factory=dict)):
+        >>> def create_item(data: Body[dict] = Body(default_factory=dict)):
         ...     return data
         >>>
         >>> # With custom JSON schema for validation
         >>> @post("/items/")
-        >>> def create_item(data: dict = Body(schema={"required": ["name", "price"]})):
+        >>> def create_item(data: Body[dict] = Body(schema={"required": ["name", "price"]})):
         ...     return data
 
     Args:
@@ -113,7 +115,7 @@ class Body(ParamBase):
     """
 
 
-class Path(ParamBase):
+class Path(ParamBase, Generic[T]):
     """Path parameter metadata.
 
     Note: Path parameters are typically required and don't use defaults,
