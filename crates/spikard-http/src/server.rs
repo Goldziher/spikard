@@ -16,6 +16,9 @@ use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+/// Type alias for route handler pairs
+type RouteHandlerPair = (crate::Route, Arc<dyn Handler>);
+
 /// Extract and parse query parameters from request URI
 fn extract_query_params(uri: &axum::http::Uri) -> Value {
     let query_string = uri.query().unwrap_or("");
@@ -135,7 +138,7 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
     let mut app = AxumRouter::new();
 
     // Group routes by path to support multiple methods on same route
-    let mut routes_by_path: HashMap<String, Vec<(crate::Route, Arc<dyn Handler>)>> = HashMap::new();
+    let mut routes_by_path: HashMap<String, Vec<RouteHandlerPair>> = HashMap::new();
     for (route, handler) in routes {
         routes_by_path
             .entry(route.path.clone())

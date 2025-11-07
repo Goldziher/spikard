@@ -1,0 +1,42 @@
+//! Code generation from OpenAPI schemas
+
+mod openapi;
+mod python;
+
+pub use openapi::parse_openapi_schema;
+pub use python::PythonGenerator;
+
+use anyhow::Result;
+use std::path::Path;
+
+/// Supported target languages for code generation
+#[derive(Debug, Clone, Copy)]
+pub enum TargetLanguage {
+    Python,
+    // Future: Node, Ruby, Rust
+}
+
+/// Generate server code from an OpenAPI schema file
+pub fn generate_from_openapi(
+    schema_path: &Path,
+    target_lang: TargetLanguage,
+    output_path: Option<&Path>,
+) -> Result<String> {
+    // Parse the OpenAPI schema
+    let spec = parse_openapi_schema(schema_path)?;
+    
+    // Generate code based on target language
+    let code = match target_lang {
+        TargetLanguage::Python => {
+            let generator = PythonGenerator::new(spec);
+            generator.generate()?
+        }
+    };
+    
+    // Write to file if output path specified, otherwise return code
+    if let Some(out_path) = output_path {
+        std::fs::write(out_path, &code)?;
+    }
+    
+    Ok(code)
+}
