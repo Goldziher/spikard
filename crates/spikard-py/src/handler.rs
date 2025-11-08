@@ -28,12 +28,24 @@ use std::sync::Arc;
 /// Global Python event loop task locals for async handlers
 static TASK_LOCALS: OnceCell<TaskLocals> = OnceCell::new();
 
-/// Initialize Python event loop for async handlers
+/// Initialize Python event loop for async handlers using uvloop
 /// Must be called once after Python::initialize()
 pub fn init_python_event_loop() -> PyResult<()> {
     Python::attach(|py| {
+        // Try to use uvloop for better performance, fallback to asyncio if not available
+        let event_loop = match py.import("uvloop") {
+            Ok(uvloop) => {
+                eprintln!("[spikard] Using uvloop for event loop");
+                uvloop.call_method0("new_event_loop")?
+            }
+            Err(_) => {
+                eprintln!("[spikard] uvloop not available, falling back to asyncio");
+                let asyncio = py.import("asyncio")?;
+                asyncio.call_method0("new_event_loop")?
+            }
+        };
+
         let asyncio = py.import("asyncio")?;
-        let event_loop = asyncio.call_method0("new_event_loop")?;
         asyncio.call_method1("set_event_loop", (event_loop.clone(),))?;
 
         TASK_LOCALS.get_or_try_init(|| TaskLocals::new(event_loop).copy_context(py))?;
@@ -179,7 +191,13 @@ impl PythonHandler {
                 }
 
                 // Convert Python coroutine to Rust future using pyo3_async_runtimes
-                pyo3_async_runtimes::tokio::into_future(coroutine)
+                // Use the stored TaskLocals from initialization
+                let task_locals = TASK_LOCALS.get().ok_or_else(|| {
+                    pyo3::exceptions::PyRuntimeError::new_err(
+                        "Event loop not initialized. Call init_python_event_loop() first",
+                    )
+                })?;
+                pyo3_async_runtimes::into_future_with_locals(task_locals, coroutine)
             })
             .map_err(|e: PyErr| {
                 (

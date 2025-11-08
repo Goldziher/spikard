@@ -472,6 +472,7 @@ mod tests {
         BenchmarkResult {
             framework: framework.to_string(),
             workload: "test".to_string(),
+            variant: None,
             timestamp: Utc::now(),
             duration_secs: 60,
             concurrency: 100,

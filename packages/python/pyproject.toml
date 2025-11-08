@@ -24,6 +24,10 @@ dependencies = [
   "msgspec>=0.19",
 ]
 
+optional-dependencies.uvloop = [
+  "uvloop>=0.22",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = [ "spikard" ]
 

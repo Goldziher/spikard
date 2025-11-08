@@ -92,6 +92,8 @@ pub struct ServerConfig {
     pub framework: String,
     pub port: u16,
     pub app_dir: PathBuf,
+    /// Variant name (e.g., "sync", "async") - optional
+    pub variant: Option<String>,
 }
 
 /// Start a server and wait for it to be ready
@@ -114,9 +116,20 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
             let workspace_root = find_workspace_root()?;
             let cli_path = workspace_root.join("target/release/spikard");
 
-            // Determine server file based on framework
+            // Determine server file based on framework and variant
             let server_file = match config.framework.as_str() {
-                "spikard-python" => "server.py",
+                "spikard-python" => {
+                    // Check if variant is "async", use server_async.py
+                    if let Some(ref variant) = config.variant {
+                        if variant == "async" {
+                            "server_async.py"
+                        } else {
+                            "server.py"
+                        }
+                    } else {
+                        "server.py"
+                    }
+                }
                 "spikard-node" => "server.js",
                 "spikard-ruby" => "server.rb",
                 _ => unreachable!(),

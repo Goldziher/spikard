@@ -42,6 +42,10 @@ enum Commands {
         #[arg(short, long, default_value = "default")]
         workload: String,
 
+        /// Variant name (e.g., "sync", "async") - optional
+        #[arg(long)]
+        variant: Option<String>,
+
         /// Duration in seconds
         #[arg(short, long, default_value = "30")]
         duration: u64,
@@ -119,6 +123,7 @@ async fn main() -> Result<()> {
             framework,
             app_dir,
             workload,
+            variant,
             duration,
             concurrency,
             warmup,
@@ -140,6 +145,7 @@ async fn main() -> Result<()> {
                 duration_secs: duration,
                 concurrency,
                 warmup_secs: warmup,
+                variant,
             };
 
             // Run benchmark
