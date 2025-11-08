@@ -2,8 +2,6 @@
 
 import functools
 import inspect
-import shutil
-import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -127,68 +125,35 @@ class Spikard:
     ) -> None:
         """Run the application server.
 
-        This executes the unified Spikard CLI which embeds Python and runs
-        the Tokio HTTP server.
-
-        The CLI must be built with Python support:
-            cargo build --release -p spikard-cli --features python
+        This starts the Spikard server where Python manages the event loop
+        and calls into the Rust extension for HTTP handling. This enables
+        natural async/await support with uvloop integration.
 
         Args:
             host: Host to bind to
             port: Port to bind to
             workers: Number of worker processes
-            reload: Enable auto-reload on code changes
+            reload: Enable auto-reload on code changes (not yet implemented)
 
         Raises:
-            RuntimeError: If spikard CLI binary not found or not built with Python support
+            RuntimeError: If _spikard extension module not available
         """
-        # Find the unified Rust CLI (installed with package or in PATH)
-        binary = shutil.which("spikard")
-        if not binary:
-            raise RuntimeError(
-                "spikard CLI binary not found.\n"
-                "Build with: cargo build --release -p spikard-cli --features python\n"
-                "Or install from: pip install spikard"
-            )
-
-        # Get the calling module's file path
-        caller_frame = inspect.currentframe()
-        if caller_frame is None or caller_frame.f_back is None:
-            raise RuntimeError("Cannot determine module file path")
-        frame = caller_frame.f_back
-        module_file = frame.f_globals.get("__file__")
-        del frame
-        del caller_frame
-
-        if not module_file:
-            raise RuntimeError("Cannot determine module file path")
-
-        # Build command arguments for unified CLI
-        command = [
-            binary,
-            "run",
-            module_file,
-            "--host",
-            host,
-            "--port",
-            str(port),
-            "--workers",
-            str(workers),
-        ]
-
         if reload:
-            command.append("--reload")
+            pass
 
-        # Run the server
+        # Import the Rust extension's run_server function
         try:
-            subprocess.run(command, check=True)
-        except subprocess.CalledProcessError as e:
-            if "not supported in this build" in str(e):
-                raise RuntimeError(
-                    "The spikard CLI was not built with Python support.\n"
-                    "Rebuild with: cargo build --release -p spikard-cli --features python"
-                ) from e
-            raise
+            from _spikard import run_server  # noqa: PLC0415
+        except ImportError as e:
+            raise RuntimeError(
+                "Failed to import _spikard extension module.\n"
+                "Build the extension with: task build:py\n"
+                "Or: cd packages/python && maturin develop"
+            ) from e
+
+        # Run the server - the Rust extension handles everything
+        # including uvloop installation, route extraction, and Axum server startup
+        run_server(self, host=host, port=port, workers=workers)
 
     def get_routes(self) -> list[Route]:
         """Get all registered routes.
