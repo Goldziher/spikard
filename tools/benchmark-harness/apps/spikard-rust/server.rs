@@ -1072,650 +1072,780 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     eprintln!("Starting Spikard-Rust server on port {}", port);
 
+    let schema_registry = spikard_http::SchemaRegistry::new();
     let mut routes: Vec<(Route, Arc<dyn Handler>)> = Vec::new();
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "GET".to_string(),
-            path: "/accept-test/{id}".to_string(),
-            handler_name: "GetAcceptTestId".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/accept-test/{id}".to_string(),
+                handler_name: "GetAcceptTestId".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(GetAcceptTestId {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/items/".to_string(),
-            handler_name: "PostItems".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/items/".to_string(),
+                handler_name: "PostItems".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostItems {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/data".to_string(),
-            handler_name: "PostData".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/data".to_string(),
+                handler_name: "PostData".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostData {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/upload".to_string(),
-            handler_name: "PostUpload".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/upload".to_string(),
+                handler_name: "PostUpload".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostUpload {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/api/v1/resource".to_string(),
-            handler_name: "PostApiV1Resource".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/api/v1/resource".to_string(),
+                handler_name: "PostApiV1Resource".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostApiV1Resource {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/".to_string(),
-            handler_name: "PostRoot".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/".to_string(),
+                handler_name: "PostRoot".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostRoot {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/api/{id}".to_string(),
-            handler_name: "PostApiId".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/api/{id}".to_string(),
+                handler_name: "PostApiId".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostApiId {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/{lang}".to_string(),
-            handler_name: "PostLang".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/{lang}".to_string(),
+                handler_name: "PostLang".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostLang {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/items/nested".to_string(),
-            handler_name: "PostItemsNested".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/items/nested".to_string(),
+                handler_name: "PostItemsNested".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostItemsNested {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/items/list".to_string(),
-            handler_name: "PostItemsList".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/items/list".to_string(),
+                handler_name: "PostItemsList".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostItemsList {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/items/validated".to_string(),
-            handler_name: "PostItemsValidated".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/items/validated".to_string(),
+                handler_name: "PostItemsValidated".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostItemsValidated {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/items/optional-all".to_string(),
-            handler_name: "PostItemsOptionalAll".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/items/optional-all".to_string(),
+                handler_name: "PostItemsOptionalAll".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostItemsOptionalAll {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/items/list-validated".to_string(),
-            handler_name: "PostItemsListValidated".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/items/list-validated".to_string(),
+                handler_name: "PostItemsListValidated".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostItemsListValidated {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/events/".to_string(),
-            handler_name: "PostEvents".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/events/".to_string(),
+                handler_name: "PostEvents".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostEvents {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "PATCH".to_string(),
-            path: "/items/{id}".to_string(),
-            handler_name: "PatchItemsId".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "PATCH".to_string(),
+                path: "/items/{id}".to_string(),
+                handler_name: "PatchItemsId".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PatchItemsId {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/users".to_string(),
-            handler_name: "PostUsers".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/users".to_string(),
+                handler_name: "PostUsers".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostUsers {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/products".to_string(),
-            handler_name: "PostProducts".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/products".to_string(),
+                handler_name: "PostProducts".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostProducts {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/items".to_string(),
-            handler_name: "PostItems3".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/items".to_string(),
+                handler_name: "PostItems3".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostItems3 {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/payment".to_string(),
-            handler_name: "PostPayment".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/payment".to_string(),
+                handler_name: "PostPayment".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostPayment {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/contact".to_string(),
-            handler_name: "PostContact".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/contact".to_string(),
+                handler_name: "PostContact".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostContact {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/api/v1/data".to_string(),
-            handler_name: "PostApiV1Data".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/api/v1/data".to_string(),
+                handler_name: "PostApiV1Data".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostApiV1Data {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/config".to_string(),
-            handler_name: "PostConfig".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/config".to_string(),
+                handler_name: "PostConfig".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostConfig {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/billing".to_string(),
-            handler_name: "PostBilling".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/billing".to_string(),
+                handler_name: "PostBilling".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostBilling {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/files/optional".to_string(),
-            handler_name: "PostFilesOptional".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/files/optional".to_string(),
+                handler_name: "PostFilesOptional".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostFilesOptional {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/files/list".to_string(),
-            handler_name: "PostFilesList".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/files/list".to_string(),
+                handler_name: "PostFilesList".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostFilesList {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/files/upload".to_string(),
-            handler_name: "PostFilesUpload".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/files/upload".to_string(),
+                handler_name: "PostFilesUpload".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostFilesUpload {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/files/image".to_string(),
-            handler_name: "PostFilesImage".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/files/image".to_string(),
+                handler_name: "PostFilesImage".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostFilesImage {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/files/document".to_string(),
-            handler_name: "PostFilesDocument".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/files/document".to_string(),
+                handler_name: "PostFilesDocument".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostFilesDocument {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/files/validated".to_string(),
-            handler_name: "PostFilesValidated".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/files/validated".to_string(),
+                handler_name: "PostFilesValidated".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostFilesValidated {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/files/images-only".to_string(),
-            handler_name: "PostFilesImagesOnly".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/files/images-only".to_string(),
+                handler_name: "PostFilesImagesOnly".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostFilesImagesOnly {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/files/required".to_string(),
-            handler_name: "PostFilesRequired".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/files/required".to_string(),
+                handler_name: "PostFilesRequired".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostFilesRequired {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/login/".to_string(),
-            handler_name: "PostLogin".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/login/".to_string(),
+                handler_name: "PostLogin".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostLogin {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/register/".to_string(),
-            handler_name: "PostRegister".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/register/".to_string(),
+                handler_name: "PostRegister".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostRegister {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/form/".to_string(),
-            handler_name: "PostForm".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/form/".to_string(),
+                handler_name: "PostForm".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostForm {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/form/validated".to_string(),
-            handler_name: "PostFormValidated".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/form/validated".to_string(),
+                handler_name: "PostFormValidated".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostFormValidated {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/form/tags".to_string(),
-            handler_name: "PostFormTags".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/form/tags".to_string(),
+                handler_name: "PostFormTags".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostFormTags {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/token".to_string(),
-            handler_name: "PostToken".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/token".to_string(),
+                handler_name: "PostToken".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostToken {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/register".to_string(),
-            handler_name: "PostRegister2".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/register".to_string(),
+                handler_name: "PostRegister2".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostRegister2 {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/profile".to_string(),
-            handler_name: "PostProfile".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/profile".to_string(),
+                handler_name: "PostProfile".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostProfile {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/accounts".to_string(),
-            handler_name: "PostAccounts".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/accounts".to_string(),
+                handler_name: "PostAccounts".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostAccounts {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/tags".to_string(),
-            handler_name: "PostTags".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/tags".to_string(),
+                handler_name: "PostTags".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostTags {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/subscribe".to_string(),
-            handler_name: "PostSubscribe".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/subscribe".to_string(),
+                handler_name: "PostSubscribe".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostSubscribe {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
-        Route::from_metadata(RouteMetadata {
-            method: "POST".to_string(),
-            path: "/settings".to_string(),
-            handler_name: "PostSettings".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-        })?,
+        Route::from_metadata(
+            RouteMetadata {
+                method: "POST".to_string(),
+                path: "/settings".to_string(),
+                handler_name: "PostSettings".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &schema_registry,
+        )?,
         Arc::new(PostSettings {}) as Arc<dyn Handler>,
     ));
 

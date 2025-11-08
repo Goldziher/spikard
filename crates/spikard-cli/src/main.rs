@@ -397,13 +397,16 @@ fn run_python_server(module_path: PathBuf, host: String, port: u16) -> Result<()
         _spikard::extract_routes_from_app(py, &app)
     })?;
 
+    // Create schema registry for deduplication across all routes
+    let schema_registry = spikard_http::SchemaRegistry::new();
+
     // Build routes with handlers for the Axum router
     // Wrap each Python handler in PythonHandler and Arc<dyn Handler>
     let routes: Vec<(Route, Arc<dyn spikard_http::Handler>)> = routes_with_handlers
         .into_iter()
         .map(|rwh| {
             let path = rwh.metadata.path.clone();
-            Route::from_metadata(rwh.metadata.clone())
+            Route::from_metadata(rwh.metadata.clone(), &schema_registry)
                 .and_then(|route| {
                     // Create PythonHandler with validators from route
                     let python_handler = _spikard::PythonHandler::new(

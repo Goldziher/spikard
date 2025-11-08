@@ -9,11 +9,64 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use rustc_hash::FxHashMap;
 use serde_json::{Value, from_str};
+use std::borrow::Cow;
 use std::convert::Infallible;
-use urlencoding::decode;
 
 lazy_static! {
     static ref PARENTHESES_RE: Regex = Regex::new(r"(^\[.*\]$|^\{.*\}$)").unwrap();
+}
+
+/// URL-decode a byte slice, replacing '+' with space and handling percent-encoding.
+///
+/// Optimized to avoid intermediate allocations by:
+/// - Processing bytes directly without intermediate String conversion
+/// - Using Cow to avoid allocation when no encoding is present
+/// - Replacing '+' during decoding rather than as a separate pass
+#[inline]
+fn url_decode_optimized(input: &[u8]) -> Cow<'_, str> {
+    // Fast path: check if we need any decoding at all
+    let has_encoded = input.iter().any(|&b| b == b'+' || b == b'%');
+
+    if !has_encoded {
+        // No encoding - zero-copy conversion
+        return match std::str::from_utf8(input) {
+            Ok(s) => Cow::Borrowed(s),
+            Err(_) => Cow::Owned(String::from_utf8_lossy(input).into_owned()),
+        };
+    }
+
+    // Need decoding - process in-place style
+    let mut result = Vec::with_capacity(input.len());
+    let mut i = 0;
+
+    while i < input.len() {
+        match input[i] {
+            b'+' => {
+                result.push(b' ');
+                i += 1;
+            }
+            b'%' if i + 2 < input.len() => {
+                // Try to decode percent-encoded byte
+                if let (Some(hi), Some(lo)) = (
+                    char::from(input[i + 1]).to_digit(16),
+                    char::from(input[i + 2]).to_digit(16),
+                ) {
+                    result.push((hi * 16 + lo) as u8);
+                    i += 3;
+                } else {
+                    // Invalid percent-encoding, keep as-is
+                    result.push(input[i]);
+                    i += 1;
+                }
+            }
+            b => {
+                result.push(b);
+                i += 1;
+            }
+        }
+    }
+
+    Cow::Owned(String::from_utf8_lossy(&result).into_owned())
 }
 
 /// Parse a query string into a vector of (key, value) tuples.
@@ -29,22 +82,49 @@ lazy_static! {
 /// let result = parse_query_string(b"foo=1&foo=2&bar=test", '&');
 /// // vec![("foo", "1"), ("foo", "2"), ("bar", "test")]
 /// ```
+///
+/// # Performance
+/// Optimized to minimize allocations by:
+/// - Processing bytes directly without intermediate String allocation
+/// - Using custom URL decoder that handles '+' replacement in one pass
+/// - Pre-allocating result vector
 #[inline]
 pub fn parse_query_string(qs: &[u8], separator: char) -> Vec<(String, String)> {
-    String::from_utf8(qs.to_vec())
-        .unwrap_or_default()
-        .replace('+', " ")
-        .split(separator)
-        .filter_map(|value| {
-            if !value.is_empty() {
-                return match decode(value).unwrap_or_default().split_once('=') {
-                    Some((key, value)) => Some((key.to_owned(), value.to_owned())),
-                    None => Some((value.to_owned(), String::from(""))),
-                };
+    if qs.is_empty() {
+        return Vec::new();
+    }
+
+    let separator_byte = separator as u8;
+    let mut result = Vec::with_capacity(8); // Pre-allocate for common case
+
+    let mut start = 0;
+    let mut i = 0;
+
+    while i <= qs.len() {
+        if i == qs.len() || qs[i] == separator_byte {
+            // Process the pair from start..i
+            if i > start {
+                let pair = &qs[start..i];
+
+                // Find '=' separator
+                if let Some(eq_pos) = pair.iter().position(|&b| b == b'=') {
+                    let key = url_decode_optimized(&pair[..eq_pos]);
+                    let value = url_decode_optimized(&pair[eq_pos + 1..]);
+                    result.push((key.into_owned(), value.into_owned()));
+                } else {
+                    // No '=' found, treat whole thing as key with empty value
+                    let key = url_decode_optimized(pair);
+                    result.push((key.into_owned(), String::new()));
+                }
             }
-            None
-        })
-        .collect::<Vec<(String, String)>>()
+
+            start = i + 1;
+        }
+
+        i += 1;
+    }
+
+    result
 }
 
 /// Decode a string value into a JSON Value with type conversion.

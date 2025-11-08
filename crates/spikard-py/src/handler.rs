@@ -79,8 +79,8 @@ pub enum ResponseResult {
 pub struct PythonHandler {
     handler: Arc<Py<PyAny>>,
     is_async: bool,
-    request_validator: Option<SchemaValidator>,
-    response_validator: Option<SchemaValidator>,
+    request_validator: Option<Arc<SchemaValidator>>,
+    response_validator: Option<Arc<SchemaValidator>>,
     parameter_validator: Option<ParameterValidator>,
 }
 
@@ -89,8 +89,8 @@ impl PythonHandler {
     pub fn new(
         handler: Py<PyAny>,
         is_async: bool,
-        request_validator: Option<SchemaValidator>,
-        response_validator: Option<SchemaValidator>,
+        request_validator: Option<Arc<SchemaValidator>>,
+        response_validator: Option<Arc<SchemaValidator>>,
         parameter_validator: Option<ParameterValidator>,
     ) -> Self {
         Self {
@@ -129,6 +129,7 @@ impl PythonHandler {
                 .collect();
 
             // Pass query params as Value directly (fast-query-parsers already did type conversion)
+            // Arc auto-derefs to &HashMap
             match validator.validate_and_extract(
                 &request_data.query_params,
                 &raw_query_strings,
@@ -278,7 +279,7 @@ impl PythonHandler {
                         "validation_errors": format!("{:?}", errors),
                         "response_body": json_value,
                         "request_data": {
-                            "path_params": request_data_for_error.path_params,
+                            "path_params": &*request_data_for_error.path_params,
                             "query_params": request_data_for_error.query_params,
                             "body": request_data_for_error.body,
                         }
@@ -429,7 +430,7 @@ fn request_data_to_py_kwargs<'py>(
     let kwargs = PyDict::new(py);
 
     // Add path parameters as individual kwargs
-    for (key, value) in &request_data.path_params {
+    for (key, value) in request_data.path_params.iter() {
         // Try to parse as int first, fallback to string
         if let Ok(int_val) = value.parse::<i64>() {
             kwargs.set_item(key, int_val)?;

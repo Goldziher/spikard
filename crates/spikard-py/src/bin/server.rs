@@ -110,11 +110,12 @@ fn run_server(module_path: PathBuf, host: String, port: u16) -> Result<()> {
     })?;
 
     // Build routes with handlers for the Axum router
+    let schema_registry = spikard_http::SchemaRegistry::new();
     let routes: Vec<(Route, Py<PyAny>)> = routes_with_handlers
         .into_iter()
         .map(|rwh| {
             let path = rwh.metadata.path.clone();
-            Route::from_metadata(rwh.metadata)
+            Route::from_metadata(rwh.metadata, &schema_registry)
                 .map(|route| (route, rwh.handler))
                 .map_err(|e| anyhow::anyhow!("Failed to create route for {}: {}", path, e))
         })

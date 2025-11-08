@@ -714,9 +714,10 @@ mod tests {
 
         let validator = ParameterValidator::new(schema).expect("Failed to create validator");
         let path_params = HashMap::new();
-        let raw_query_params = HashMap::new();
 
         // Test integer 1 → true (as it comes from query parser with parse_numbers=true)
+        let mut raw_query_params = HashMap::new();
+        raw_query_params.insert("flag".to_string(), "1".to_string());
         let query_params = json!({"flag": 1});
         let result = validator.validate_and_extract(
             &query_params,
@@ -730,6 +731,8 @@ mod tests {
         assert_eq!(params, json!({"flag": true}));
 
         // Test integer 0 → false
+        let mut raw_query_params = HashMap::new();
+        raw_query_params.insert("flag".to_string(), "0".to_string());
         let query_params = json!({"flag": 0});
         let result = validator.validate_and_extract(
             &query_params,
@@ -743,6 +746,8 @@ mod tests {
         assert_eq!(params, json!({"flag": false}));
 
         // Test boolean true → true (should still work)
+        let mut raw_query_params = HashMap::new();
+        raw_query_params.insert("flag".to_string(), "true".to_string());
         let query_params = json!({"flag": true});
         let result = validator.validate_and_extract(
             &query_params,
@@ -760,6 +765,8 @@ mod tests {
         assert_eq!(params, json!({"flag": true}));
 
         // Test boolean false → false (should still work)
+        let mut raw_query_params = HashMap::new();
+        raw_query_params.insert("flag".to_string(), "false".to_string());
         let query_params = json!({"flag": false});
         let result = validator.validate_and_extract(
             &query_params,

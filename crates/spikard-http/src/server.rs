@@ -77,6 +77,8 @@ fn extract_cookies(headers: &axum::http::HeaderMap) -> HashMap<String, String> {
 }
 
 /// Create RequestData from request parts (for requests without body)
+///
+/// Wraps HashMaps in Arc to enable cheap cloning without duplicating data.
 fn create_request_data_without_body(
     uri: &axum::http::Uri,
     method: &axum::http::Method,
@@ -84,11 +86,11 @@ fn create_request_data_without_body(
     path_params: HashMap<String, String>,
 ) -> RequestData {
     RequestData {
-        path_params,
+        path_params: Arc::new(path_params),
         query_params: extract_query_params(uri),
-        raw_query_params: extract_raw_query_params(uri),
-        headers: extract_headers(headers),
-        cookies: extract_cookies(headers),
+        raw_query_params: Arc::new(extract_raw_query_params(uri)),
+        headers: Arc::new(extract_headers(headers)),
+        cookies: Arc::new(extract_cookies(headers)),
         body: Value::Null,
         method: method.as_str().to_string(),
         path: uri.path().to_string(),
@@ -96,6 +98,8 @@ fn create_request_data_without_body(
 }
 
 /// Create RequestData from request parts (for requests with body)
+///
+/// Wraps HashMaps in Arc to enable cheap cloning without duplicating data.
 async fn create_request_data_with_body(
     parts: &axum::http::request::Parts,
     path_params: HashMap<String, String>,
@@ -122,11 +126,11 @@ async fn create_request_data_with_body(
     };
 
     Ok(RequestData {
-        path_params,
+        path_params: Arc::new(path_params),
         query_params: extract_query_params(&parts.uri),
-        raw_query_params: extract_raw_query_params(&parts.uri),
-        headers: extract_headers(&parts.headers),
-        cookies: extract_cookies(&parts.headers),
+        raw_query_params: Arc::new(extract_raw_query_params(&parts.uri)),
+        headers: Arc::new(extract_headers(&parts.headers)),
+        cookies: Arc::new(extract_cookies(&parts.headers)),
         body: body_value,
         method: parts.method.as_str().to_string(),
         path: parts.uri.path().to_string(),

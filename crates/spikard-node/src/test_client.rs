@@ -311,10 +311,11 @@ impl TestClient {
         let routes_data: Vec<RouteMetadata> = serde_json::from_str(&routes_json)
             .map_err(|e| Error::from_reason(format!("Failed to parse routes: {}", e)))?;
 
+        let schema_registry = spikard_http::SchemaRegistry::new();
         let mut prepared_routes: Vec<(Route, JsHandler)> = Vec::new();
 
         for metadata in routes_data {
-            let route = Route::from_metadata(metadata)
+            let route = Route::from_metadata(metadata, &schema_registry)
                 .map_err(|e| Error::from_reason(format!("Failed to build route: {}", e)))?;
 
             let handler_name = route.handler_name.clone();
