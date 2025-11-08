@@ -760,6 +760,7 @@ version = "0.1.0"
 source = { editable = "packages/python" }
 dependencies = [
     { name = "msgspec" },
+    { name = "uvloop", marker = "sys_platform != 'win32'" },
 ]
 
 [package.optional-dependencies]
@@ -770,6 +771,7 @@ uvloop = [
 [package.metadata]
 requires-dist = [
     { name = "msgspec", specifier = ">=0.19" },
+    { name = "uvloop", marker = "sys_platform != 'win32'", specifier = ">=0.22" },
     { name = "uvloop", marker = "extra == 'uvloop'", specifier = ">=0.22" },
 ]
 provides-extras = ["uvloop"]

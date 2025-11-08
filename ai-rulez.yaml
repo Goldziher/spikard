@@ -24,6 +24,15 @@ agents:
     - name: docs-scribe
       description: Generates agent handbooks and CLAUDE briefs that summarize current rules and workflows.
       priority: medium
+    - name: ruby-engineer
+      description: Implements and maintains Ruby bindings via magnus/rb-sys, ensuring idiomatic Ruby patterns while preserving Rust performance and safety guarantees.
+      priority: medium
+    - name: php-engineer
+      description: Implements and maintains PHP bindings via ext-php-rs, ensuring PSR compliance and idiomatic PHP patterns while integrating with Rust core.
+      priority: medium
+    - name: typescript-engineer
+      description: Implements TypeScript type definitions and ensures napi-rs Node.js bindings provide full type safety with proper JSDoc annotations and .d.ts generation.
+      priority: high
 commands: []
 mcp_servers:
     - args:

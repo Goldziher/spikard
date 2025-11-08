@@ -13,10 +13,8 @@ use axum::{
     body::Body,
     http::{Request, Response, StatusCode},
 };
-use once_cell::sync::OnceCell;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyTuple};
-use pyo3_async_runtimes::TaskLocals;
 use serde_json::{Value, json};
 use spikard_http::{Handler, HandlerResult, RequestData};
 use spikard_http::{ParameterValidator, ProblemDetails, SchemaValidator};
@@ -25,30 +23,21 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-/// Global Python event loop task locals for async handlers
-static TASK_LOCALS: OnceCell<TaskLocals> = OnceCell::new();
-
-/// Initialize Python event loop for async handlers using uvloop
-/// Must be called once after Python::initialize()
+/// Initialize Python event loop configuration for async handlers
+/// Installs uvloop if available for better performance
+/// Each async handler will use asyncio.run() which creates its own event loop
 pub fn init_python_event_loop() -> PyResult<()> {
     Python::attach(|py| {
-        // Try to use uvloop for better performance, fallback to asyncio if not available
-        let event_loop = match py.import("uvloop") {
-            Ok(uvloop) => {
-                eprintln!("[spikard] Using uvloop for event loop");
-                uvloop.call_method0("new_event_loop")?
-            }
-            Err(_) => {
-                eprintln!("[spikard] uvloop not available, falling back to asyncio");
-                let asyncio = py.import("asyncio")?;
-                asyncio.call_method0("new_event_loop")?
-            }
-        };
+        // Install uvloop to patch asyncio for better performance (if available)
+        // This globally replaces asyncio's event loop policy
+        if let Ok(uvloop) = py.import("uvloop") {
+            uvloop.call_method0("install")?;
+            eprintln!("[spikard] uvloop installed - asyncio will use uvloop for all event loops");
+        } else {
+            eprintln!("[spikard] uvloop not available, using standard asyncio event loop");
+        }
 
-        let asyncio = py.import("asyncio")?;
-        asyncio.call_method1("set_event_loop", (event_loop.clone(),))?;
-
-        TASK_LOCALS.get_or_try_init(|| TaskLocals::new(event_loop).copy_context(py))?;
+        eprintln!("[spikard] Async handlers will use asyncio.run() with isolated event loops");
 
         Ok(())
     })
@@ -164,55 +153,54 @@ impl PythonHandler {
         let validated_params_for_task = validated_params.clone(); // Clone for passing to task
 
         let result = if is_async {
-            // For async handlers, use pyo3_async_runtimes to convert Python coroutine to Rust future
-            // This eliminates spawn_blocking overhead and reuses the event loop
-            let output = Python::attach(|py| {
-                let handler_obj = handler.bind(py);
+            // For async handlers, run the coroutine using asyncio.run() in a blocking task
+            // This creates a new event loop for each request and runs the coroutine to completion
+            let output = tokio::task::spawn_blocking(move || {
+                Python::attach(|py| -> PyResult<Py<PyAny>> {
+                    let handler_obj = handler.bind(py);
 
-                // Convert to Python kwargs - use validated params if available
-                let kwargs = if let Some(ref validated) = validated_params_for_task {
-                    validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
-                } else {
-                    request_data_to_py_kwargs(py, &request_data, handler_obj.clone())?
-                };
+                    // Convert to Python kwargs - use validated params if available
+                    let kwargs = if let Some(ref validated) = validated_params_for_task {
+                        validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
+                    } else {
+                        request_data_to_py_kwargs(py, &request_data, handler_obj.clone())?
+                    };
 
-                // Call the handler - this returns a coroutine
-                let coroutine = if kwargs.is_empty() {
-                    handler_obj.call0()?
-                } else {
-                    let empty_args = PyTuple::empty(py);
-                    handler_obj.call(empty_args, Some(&kwargs))?
-                };
+                    // Call the handler - this returns a coroutine
+                    let coroutine = if kwargs.is_empty() {
+                        handler_obj.call0()?
+                    } else {
+                        let empty_args = PyTuple::empty(py);
+                        handler_obj.call(empty_args, Some(&kwargs))?
+                    };
 
-                // Check if it's actually a coroutine
-                if !coroutine.hasattr("__await__")? {
-                    return Err(pyo3::exceptions::PyTypeError::new_err(
-                        "Handler marked as async but did not return a coroutine",
-                    ));
-                }
+                    // Check if it's actually a coroutine
+                    if !coroutine.hasattr("__await__")? {
+                        return Err(pyo3::exceptions::PyTypeError::new_err(
+                            "Handler marked as async but did not return a coroutine",
+                        ));
+                    }
 
-                // Convert Python coroutine to Rust future using pyo3_async_runtimes
-                // Use the stored TaskLocals from initialization
-                let task_locals = TASK_LOCALS.get().ok_or_else(|| {
-                    pyo3::exceptions::PyRuntimeError::new_err(
-                        "Event loop not initialized. Call init_python_event_loop() first",
-                    )
-                })?;
-                pyo3_async_runtimes::into_future_with_locals(task_locals, coroutine)
+                    // Run the coroutine using asyncio.run() which creates and manages the event loop
+                    let asyncio = py.import("asyncio")?;
+                    let result = asyncio.call_method1("run", (coroutine,))?;
+
+                    Ok(result.into())
+                })
             })
-            .map_err(|e: PyErr| {
+            .await
+            .map_err(|e| {
                 (
                     axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Python error: {}", e),
+                    format!("Tokio error: {}", e),
                 )
             })?
-            .await
             .map_err(|e: PyErr| {
                 (
                     axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Python error: {}", e),
+                    format!("Python async error: {}", e),
                 )
-            })?; // Await the Rust future directly (no spawn_blocking!)
+            })?;
 
             // Convert Python result back to ResponseResult
             Python::attach(|py| python_to_response_result(py, output.bind(py))).map_err(|e: PyErr| {
