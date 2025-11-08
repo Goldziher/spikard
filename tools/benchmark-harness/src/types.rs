@@ -13,6 +13,10 @@ pub struct BenchmarkResult {
     /// Workload name (e.g., "simple", "comprehensive")
     pub workload: String,
 
+    /// Variant name (e.g., "sync", "async") - optional for backwards compatibility
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub variant: Option<String>,
+
     /// Timestamp when benchmark started
     pub timestamp: DateTime<Utc>,
 

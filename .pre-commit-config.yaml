@@ -43,7 +43,7 @@ repos:
         require_serial: true
         language: system
         types: [python]
-        exclude: ^scripts/|^examples/|^e2e/
+        exclude: ^scripts/|^examples/|^e2e/|^tools/
       - id: phpstan
         name: PHPStan
         entry: phpstan analyse --memory-limit=2G --no-progress

@@ -19,6 +19,8 @@ pub struct RunnerConfig {
     pub duration_secs: u64,
     pub concurrency: usize,
     pub warmup_secs: u64,
+    /// Variant name (e.g., "sync", "async") - optional
+    pub variant: Option<String>,
 }
 
 /// Benchmark runner
@@ -54,6 +56,7 @@ impl BenchmarkRunner {
             framework: self.config.framework.clone(),
             port,
             app_dir: self.config.app_dir.clone(),
+            variant: self.config.variant.clone(),
         };
 
         let server = start_server(server_config).await?;
@@ -166,6 +169,7 @@ impl BenchmarkRunner {
                 Ok(BenchmarkResult {
                     framework: self.config.framework.clone(),
                     workload: self.config.workload_name.clone(),
+                    variant: self.config.variant.clone(),
                     timestamp,
                     duration_secs: self.config.duration_secs,
                     concurrency: self.config.concurrency,
@@ -205,6 +209,7 @@ impl BenchmarkRunner {
             Err(e) => Ok(BenchmarkResult {
                 framework: self.config.framework.clone(),
                 workload: self.config.workload_name.clone(),
+                variant: self.config.variant.clone(),
                 timestamp,
                 duration_secs: self.config.duration_secs,
                 concurrency: self.config.concurrency,
