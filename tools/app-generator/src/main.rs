@@ -167,7 +167,7 @@ path = "server.rs"
 [dependencies]
 spikard-http = { path = "../../../../crates/spikard-http" }
 tokio = { version = "1", features = ["full"] }
-axum = "0.7"
+axum = "0.8"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 "#

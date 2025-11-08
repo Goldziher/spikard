@@ -27,14 +27,14 @@ cargo build --release
   --framework spikard-rust \
   --fixtures ../../testing_data \
   --output ../benchmark-harness/apps/spikard-rust \
-  --categories simple,json_bodies
+  --categories json_bodies,multipart,url_encoded,content_types
 
 # Generate Python app
 ./target/release/app-generator generate \
   --framework spikard-python \
   --fixtures ../../testing_data \
   --output ../benchmark-harness/apps/spikard-python \
-  --categories simple,json_bodies
+  --categories json_bodies,multipart,url_encoded,content_types
 
 # Create async variant (Python)
 cp ../benchmark-harness/apps/spikard-python/server.py \
@@ -57,9 +57,10 @@ apps/
 
 ### Spikard Apps (Generated)
 - **Source**: Automatically generated from `../../testing_data/` fixtures
-- **Rust**: Uses the actual `spikard-http` crate (not raw Axum) - this benchmarks the real Spikard core
-- **Python**: Uses the PyO3 bindings to the Rust core
-- **Routes**: Implements 22 routes from the `simple` and `json_bodies` fixture categories
+- **Rust**: Uses Axum routing with `spikard-http` dependency (routes-only benchmark without full middleware stack)
+- **Python**: Uses the full Spikard Python bindings (PyO3) with decorators and complete middleware
+- **Routes**: Implements 45 routes from `json_bodies`, `multipart`, `url_encoded`, and `content_types` fixture categories
+- **Coverage**: Tests JSON APIs, file uploads (multipart/form-data), URL-encoded forms, and various response content types
 - **Port**: Accepts port as CLI argument (Rust) or via Spikard CLI (Python)
 - **DO NOT EDIT**: These files will be overwritten when regenerated
 
