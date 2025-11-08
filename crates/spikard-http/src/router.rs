@@ -1,6 +1,7 @@
 //! Route management and handler registration
 
 use crate::parameters::ParameterValidator;
+use crate::schema_registry::SchemaRegistry;
 use crate::validation::SchemaValidator;
 use crate::{Method, RouteMetadata};
 use serde_json::Value;
@@ -11,30 +12,44 @@ use std::sync::Arc;
 pub type RouteHandler = Arc<dyn Fn() -> String + Send + Sync>;
 
 /// Route definition with compiled validators
+///
+/// Validators are Arc-wrapped to enable cheap cloning across route instances
+/// and to support schema deduplication via SchemaRegistry.
 #[derive(Clone)]
 pub struct Route {
     pub method: Method,
     pub path: String,
     pub handler_name: String,
-    pub request_validator: Option<SchemaValidator>,
-    pub response_validator: Option<SchemaValidator>,
+    pub request_validator: Option<Arc<SchemaValidator>>,
+    pub response_validator: Option<Arc<SchemaValidator>>,
     pub parameter_validator: Option<ParameterValidator>,
     pub file_params: Option<Value>, // File parameter schema for validation
     pub is_async: bool,
 }
 
 impl Route {
-    /// Create a route from metadata
+    /// Create a route from metadata, using schema registry for deduplication
     ///
     /// Auto-generates parameter schema from type hints in the path if no explicit schema provided.
     /// Type hints like `/items/{id:uuid}` generate appropriate JSON Schema validation.
     /// Explicit parameter_schema overrides auto-generated schemas.
-    pub fn from_metadata(metadata: RouteMetadata) -> Result<Self, String> {
+    ///
+    /// The schema registry ensures each unique schema is compiled only once, improving
+    /// startup performance and memory usage for applications with many routes.
+    pub fn from_metadata(metadata: RouteMetadata, registry: &SchemaRegistry) -> Result<Self, String> {
         let method = metadata.method.parse()?;
 
-        let request_validator = metadata.request_schema.map(SchemaValidator::new).transpose()?;
+        let request_validator = metadata
+            .request_schema
+            .as_ref()
+            .map(|schema| registry.get_or_compile(schema))
+            .transpose()?;
 
-        let response_validator = metadata.response_schema.map(SchemaValidator::new).transpose()?;
+        let response_validator = metadata
+            .response_schema
+            .as_ref()
+            .map(|schema| registry.get_or_compile(schema))
+            .transpose()?;
 
         // Auto-generate parameter schema from type hints if not explicitly provided
         let final_parameter_schema = match (
@@ -121,6 +136,7 @@ mod tests {
     #[test]
     fn test_router_add_and_find() {
         let mut router = Router::new();
+        let registry = SchemaRegistry::new();
 
         let metadata = RouteMetadata {
             method: "GET".to_string(),
@@ -134,7 +150,7 @@ mod tests {
             cors: None,
         };
 
-        let route = Route::from_metadata(metadata).unwrap();
+        let route = Route::from_metadata(metadata, &registry).unwrap();
         router.add_route(route);
 
         assert_eq!(router.route_count(), 1);
@@ -144,6 +160,8 @@ mod tests {
 
     #[test]
     fn test_route_with_validators() {
+        let registry = SchemaRegistry::new();
+
         let metadata = RouteMetadata {
             method: "POST".to_string(),
             path: "/users".to_string(),
@@ -162,8 +180,60 @@ mod tests {
             cors: None,
         };
 
-        let route = Route::from_metadata(metadata).unwrap();
+        let route = Route::from_metadata(metadata, &registry).unwrap();
         assert!(route.request_validator.is_some());
         assert!(route.response_validator.is_none());
+    }
+
+    #[test]
+    fn test_schema_deduplication_in_routes() {
+        let registry = SchemaRegistry::new();
+
+        let shared_schema = json!({
+            "type": "object",
+            "properties": {
+                "id": {"type": "integer"}
+            }
+        });
+
+        // Create two routes with the same request schema
+        let metadata1 = RouteMetadata {
+            method: "POST".to_string(),
+            path: "/items".to_string(),
+            handler_name: "create_item".to_string(),
+            request_schema: Some(shared_schema.clone()),
+            response_schema: None,
+            parameter_schema: None,
+            file_params: None,
+            is_async: true,
+            cors: None,
+        };
+
+        let metadata2 = RouteMetadata {
+            method: "PUT".to_string(),
+            path: "/items/{id}".to_string(),
+            handler_name: "update_item".to_string(),
+            request_schema: Some(shared_schema),
+            response_schema: None,
+            parameter_schema: None,
+            file_params: None,
+            is_async: true,
+            cors: None,
+        };
+
+        let route1 = Route::from_metadata(metadata1, &registry).unwrap();
+        let route2 = Route::from_metadata(metadata2, &registry).unwrap();
+
+        // Both routes should have validators
+        assert!(route1.request_validator.is_some());
+        assert!(route2.request_validator.is_some());
+
+        // The validators should be the same Arc (pointer equality)
+        let validator1 = route1.request_validator.as_ref().unwrap();
+        let validator2 = route2.request_validator.as_ref().unwrap();
+        assert!(Arc::ptr_eq(validator1, validator2));
+
+        // Registry should only have 1 schema compiled
+        assert_eq!(registry.schema_count(), 1);
     }
 }

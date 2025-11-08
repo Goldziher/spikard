@@ -101,12 +101,13 @@ impl NativeTestClient {
             .const_get("JSON")
             .map_err(|_| Error::new(ruby.exception_runtime_error(), "JSON module not available"))?;
 
+        let schema_registry = spikard_http::SchemaRegistry::new();
         let mut prepared_routes = Vec::with_capacity(metadata.len());
         let mut handler_refs = Vec::with_capacity(metadata.len());
 
         for meta in metadata {
             let handler_value = fetch_handler(ruby, &handlers_hash, &meta.handler_name)?;
-            let route = Route::from_metadata(meta)
+            let route = Route::from_metadata(meta, &schema_registry)
                 .map_err(|err| Error::new(ruby.exception_runtime_error(), format!("Failed to build route: {err}")))?;
 
             let handler = RubyHandler::new(&route, handler_value, json_module)?;

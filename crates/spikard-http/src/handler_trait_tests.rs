@@ -25,7 +25,7 @@ mod tests {
         ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
             Box::pin(async move {
                 let response_body = json!({
-                    "path_params": request_data.path_params,
+                    "path_params": &*request_data.path_params,
                     "query_params": request_data.query_params,
                     "body": request_data.body,
                     "headers_count": request_data.headers.len(),
@@ -99,12 +99,12 @@ mod tests {
         headers.insert("content-type".to_string(), "application/json".to_string());
 
         let request_data = RequestData {
-            path_params,
+            path_params: Arc::new(path_params),
             query_params: json!({"page": 1}),
-            raw_query_params: HashMap::new(),
+            raw_query_params: Arc::new(HashMap::new()),
             body: json!({"test": "data"}),
-            headers,
-            cookies: HashMap::new(),
+            headers: Arc::new(headers),
+            cookies: Arc::new(HashMap::new()),
             method: "POST".to_string(),
             path: "/items/123".to_string(),
         };
@@ -127,12 +127,12 @@ mod tests {
         let handler = Arc::new(ErrorHandler);
 
         let request_data = RequestData {
-            path_params: HashMap::new(),
+            path_params: Arc::new(HashMap::new()),
             query_params: Value::Null,
-            raw_query_params: HashMap::new(),
+            raw_query_params: Arc::new(HashMap::new()),
             body: Value::Null,
-            headers: HashMap::new(),
-            cookies: HashMap::new(),
+            headers: Arc::new(HashMap::new()),
+            cookies: Arc::new(HashMap::new()),
             method: "GET".to_string(),
             path: "/error".to_string(),
         };
@@ -162,12 +162,12 @@ mod tests {
         raw_query_params.insert("api_key".to_string(), vec!["secret123".to_string()]);
 
         let request_data = RequestData {
-            path_params: HashMap::new(),
+            path_params: Arc::new(HashMap::new()),
             query_params: json!({"api_key": "secret123"}),
-            raw_query_params: raw_query_params.clone(),
+            raw_query_params: Arc::new(raw_query_params.clone()),
             body: Value::Null,
-            headers: HashMap::new(),
-            cookies: HashMap::new(),
+            headers: Arc::new(HashMap::new()),
+            cookies: Arc::new(HashMap::new()),
             method: "GET".to_string(),
             path: "/api/data".to_string(),
         };
@@ -183,12 +183,12 @@ mod tests {
 
         // Test with missing required parameter
         let request_data_no_param = RequestData {
-            path_params: HashMap::new(),
+            path_params: Arc::new(HashMap::new()),
             query_params: Value::Null,
-            raw_query_params: HashMap::new(),
+            raw_query_params: Arc::new(HashMap::new()),
             body: Value::Null,
-            headers: HashMap::new(),
-            cookies: HashMap::new(),
+            headers: Arc::new(HashMap::new()),
+            cookies: Arc::new(HashMap::new()),
             method: "GET".to_string(),
             path: "/api/data".to_string(),
         };
@@ -217,12 +217,12 @@ mod tests {
         raw_query_params.insert("filter".to_string(), vec!["active".to_string()]);
 
         let request_data = RequestData {
-            path_params,
+            path_params: Arc::new(path_params),
             query_params: json!({"filter": "active"}),
-            raw_query_params,
+            raw_query_params: Arc::new(raw_query_params),
             body: json!({"name": "test"}),
-            headers: HashMap::new(),
-            cookies: HashMap::new(),
+            headers: Arc::new(HashMap::new()),
+            cookies: Arc::new(HashMap::new()),
             method: "PUT".to_string(),
             path: "/users/42".to_string(),
         };
@@ -241,12 +241,12 @@ mod tests {
     fn test_request_data_default_values() {
         // Test that RequestData can be created with minimal fields
         let request_data = RequestData {
-            path_params: HashMap::new(),
+            path_params: Arc::new(HashMap::new()),
             query_params: Value::Null,
-            raw_query_params: HashMap::new(),
+            raw_query_params: Arc::new(HashMap::new()),
             body: Value::Null,
-            headers: HashMap::new(),
-            cookies: HashMap::new(),
+            headers: Arc::new(HashMap::new()),
+            cookies: Arc::new(HashMap::new()),
             method: "GET".to_string(),
             path: "/".to_string(),
         };
