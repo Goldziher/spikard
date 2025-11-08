@@ -309,36 +309,41 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, host: String, port: u16, w
         PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to build Axum router: {}", e))
     })?;
 
-    // Release GIL before starting server so Python can handle async
-    #[allow(deprecated)]
-    py.allow_threads(|| {
-        // Run server in Tokio runtime
-        tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .map_err(|e| {
+    // GIL is released when py goes out of scope at end of function
+    // Run server in Tokio runtime
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .map_err(|e| {
+            pyo3::Python::attach(|_py| {
                 PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to create Tokio runtime: {}", e))
-            })?
-            .block_on(async {
-                let addr = format!("{}:{}", config.host, config.port);
-                let socket_addr: std::net::SocketAddr = addr.parse().map_err(|e| {
+            })
+        })?
+        .block_on(async {
+            let addr = format!("{}:{}", config.host, config.port);
+            let socket_addr: std::net::SocketAddr = addr.parse().map_err(|e| {
+                pyo3::Python::attach(|_py| {
                     PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid socket address {}: {}", addr, e))
-                })?;
+                })
+            })?;
 
-                let listener = tokio::net::TcpListener::bind(socket_addr).await.map_err(|e| {
+            let listener = tokio::net::TcpListener::bind(socket_addr).await.map_err(|e| {
+                pyo3::Python::attach(|_py| {
                     PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
                         "Failed to bind to {}:{}: {}",
                         config.host, config.port, e
                     ))
-                })?;
+                })
+            })?;
 
-                eprintln!("[spikard] Server listening on {}", socket_addr);
+            eprintln!("[spikard] Server listening on {}", socket_addr);
 
-                axum::serve(listener, app_router)
-                    .await
-                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Server error: {}", e)))
+            axum::serve(listener, app_router).await.map_err(|e| {
+                pyo3::Python::attach(|_py| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Server error: {}", e))
+                })
             })
-    })
+        })
 }
 
 /// Python module for spikard
