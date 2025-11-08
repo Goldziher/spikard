@@ -218,6 +218,129 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
     Ok(client)
 }
 
+/// Run Spikard server from Python
+///
+/// This function enables Python to run Spikard, rather than having the Rust CLI embed Python.
+/// This allows Python to manage its own event loop, enabling natural async/await support.
+///
+/// Args:
+///     app: Spikard application instance
+///     host: Host to bind to (default: "127.0.0.1")
+///     port: Port to bind to (default: 8000)
+///     workers: Number of workers (default: 1)
+///
+/// Example:
+///     ```python
+///     from spikard import Spikard
+///
+///     app = Spikard()
+///
+///     @app.get("/")
+///     async def root():
+///         return {"message": "Hello"}
+///
+///     if __name__ == "__main__":
+///         app.run(host="0.0.0.0", port=8000)
+///     ```
+#[pyfunction]
+#[pyo3(signature = (app, host="127.0.0.1".to_string(), port=8000, workers=1))]
+fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, host: String, port: u16, workers: usize) -> PyResult<()> {
+    use spikard_http::{Route, Server, ServerConfig};
+    use std::sync::Arc;
+
+    if workers > 1 {
+        eprintln!("⚠️  Multi-worker mode not yet implemented, using single worker");
+    }
+
+    // Install uvloop if available (Python manages event loop)
+    init_python_event_loop()?;
+
+    // Extract routes from the Python app
+    let routes_with_handlers = extract_routes_from_app(py, app)?;
+
+    // Create schema registry for deduplication across all routes
+    let schema_registry = spikard_http::SchemaRegistry::new();
+
+    // Build routes with handlers for the Axum router
+    // Wrap each Python handler in PythonHandler and Arc<dyn Handler>
+    let routes: Vec<(Route, Arc<dyn spikard_http::Handler>)> = routes_with_handlers
+        .into_iter()
+        .map(|rwh| {
+            let path = rwh.metadata.path.clone();
+            Route::from_metadata(rwh.metadata.clone(), &schema_registry)
+                .map(|route| {
+                    // Create PythonHandler with validators from route
+                    let python_handler = PythonHandler::new(
+                        rwh.handler,
+                        rwh.metadata.is_async,
+                        route.request_validator.clone(),
+                        route.response_validator.clone(),
+                        route.parameter_validator.clone(),
+                    );
+                    // Wrap in Arc<dyn Handler>
+                    let arc_handler: Arc<dyn spikard_http::Handler> = Arc::new(python_handler);
+                    (route, arc_handler)
+                })
+                .map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+                        "Failed to create route for {}: {}",
+                        path, e
+                    ))
+                })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+
+    // Configure server
+    let config = ServerConfig {
+        host: host.clone(),
+        port,
+        workers: 1,
+    };
+
+    // Initialize logging
+    Server::init_logging();
+
+    eprintln!("[spikard] Starting Spikard server (Python manages event loop)");
+    eprintln!("[spikard] Registered {} routes", routes.len());
+    eprintln!("[spikard] Listening on http://{}:{}", host, port);
+
+    // Build Axum router with Python handlers
+    let app_router = Server::with_handlers(config.clone(), routes).map_err(|e| {
+        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to build Axum router: {}", e))
+    })?;
+
+    // Release GIL before starting server so Python can handle async
+    #[allow(deprecated)]
+    py.allow_threads(|| {
+        // Run server in Tokio runtime
+        tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .map_err(|e| {
+                PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to create Tokio runtime: {}", e))
+            })?
+            .block_on(async {
+                let addr = format!("{}:{}", config.host, config.port);
+                let socket_addr: std::net::SocketAddr = addr.parse().map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid socket address {}: {}", addr, e))
+                })?;
+
+                let listener = tokio::net::TcpListener::bind(socket_addr).await.map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+                        "Failed to bind to {}:{}: {}",
+                        config.host, config.port, e
+                    ))
+                })?;
+
+                eprintln!("[spikard] Server listening on {}", socket_addr);
+
+                axum::serve(listener, app_router)
+                    .await
+                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Server error: {}", e)))
+            })
+    })
+}
+
 /// Python module for spikard
 #[pymodule]
 fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -226,5 +349,6 @@ fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<test_client::TestResponse>()?;
     m.add_function(wrap_pyfunction!(create_test_client, m)?)?;
     m.add_function(wrap_pyfunction!(process, m)?)?;
+    m.add_function(wrap_pyfunction!(run_server, m)?)?;
     Ok(())
 }
