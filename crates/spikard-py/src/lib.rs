@@ -139,6 +139,9 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
         format!("Extracted {} routes\n", routes_with_handlers.len()),
     );
 
+    // Create schema registry for deduplication across all routes
+    let schema_registry = spikard_http::SchemaRegistry::new();
+
     // Convert to Route + Py<PyAny> pairs
     // Use Route::from_metadata() to enable type hint parsing and auto-generation
     let routes: Vec<_> = routes_with_handlers
@@ -151,7 +154,8 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
             );
 
             // Use Route::from_metadata() which handles type hint parsing and auto-generation
-            match spikard_http::Route::from_metadata(r.metadata) {
+            // Pass the registry to enable schema deduplication
+            match spikard_http::Route::from_metadata(r.metadata, &schema_registry) {
                 Ok(route) => {
                     let has_parameter_validator = route.parameter_validator.is_some();
                     eprintln!(

@@ -15,6 +15,7 @@ pub mod problem;
 pub mod query_parser;
 pub mod response;
 pub mod router;
+pub mod schema_registry;
 pub mod server;
 pub mod type_hints;
 pub mod validation;
@@ -27,6 +28,7 @@ pub use parameters::ParameterValidator;
 pub use problem::{CONTENT_TYPE_PROBLEM_JSON, ProblemDetails};
 pub use response::Response;
 pub use router::{Route, RouteHandler, Router};
+pub use schema_registry::SchemaRegistry;
 pub use server::Server;
 pub use validation::SchemaValidator;
 

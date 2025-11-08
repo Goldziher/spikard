@@ -15,16 +15,137 @@ use std::pin::Pin;
 
 /// Request data extracted from HTTP request
 /// This is the language-agnostic representation passed to handlers
-#[derive(Debug, Clone, Serialize, Deserialize)]
+///
+/// Uses Arc for HashMaps to enable cheap cloning without duplicating data.
+/// When RequestData is cloned, only the Arc pointers are cloned, not the underlying data.
+#[derive(Debug, Clone)]
 pub struct RequestData {
-    pub path_params: HashMap<String, String>,
+    pub path_params: std::sync::Arc<HashMap<String, String>>,
     pub query_params: Value,
-    pub raw_query_params: HashMap<String, Vec<String>>,
+    pub raw_query_params: std::sync::Arc<HashMap<String, Vec<String>>>,
     pub body: Value,
-    pub headers: HashMap<String, String>,
-    pub cookies: HashMap<String, String>,
+    pub headers: std::sync::Arc<HashMap<String, String>>,
+    pub cookies: std::sync::Arc<HashMap<String, String>>,
     pub method: String,
     pub path: String,
+}
+
+// Manual Serialize implementation to handle Arc
+impl Serialize for RequestData {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut state = serializer.serialize_struct("RequestData", 8)?;
+        state.serialize_field("path_params", &*self.path_params)?;
+        state.serialize_field("query_params", &self.query_params)?;
+        state.serialize_field("raw_query_params", &*self.raw_query_params)?;
+        state.serialize_field("body", &self.body)?;
+        state.serialize_field("headers", &*self.headers)?;
+        state.serialize_field("cookies", &*self.cookies)?;
+        state.serialize_field("method", &self.method)?;
+        state.serialize_field("path", &self.path)?;
+        state.end()
+    }
+}
+
+// Manual Deserialize implementation to handle Arc
+impl<'de> Deserialize<'de> for RequestData {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(field_identifier, rename_all = "snake_case")]
+        enum Field {
+            PathParams,
+            QueryParams,
+            RawQueryParams,
+            Body,
+            Headers,
+            Cookies,
+            Method,
+            Path,
+        }
+
+        struct RequestDataVisitor;
+
+        impl<'de> serde::de::Visitor<'de> for RequestDataVisitor {
+            type Value = RequestData;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("struct RequestData")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<RequestData, V::Error>
+            where
+                V: serde::de::MapAccess<'de>,
+            {
+                let mut path_params = None;
+                let mut query_params = None;
+                let mut raw_query_params = None;
+                let mut body = None;
+                let mut headers = None;
+                let mut cookies = None;
+                let mut method = None;
+                let mut path = None;
+
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::PathParams => {
+                            path_params = Some(std::sync::Arc::new(map.next_value()?));
+                        }
+                        Field::QueryParams => {
+                            query_params = Some(map.next_value()?);
+                        }
+                        Field::RawQueryParams => {
+                            raw_query_params = Some(std::sync::Arc::new(map.next_value()?));
+                        }
+                        Field::Body => {
+                            body = Some(map.next_value()?);
+                        }
+                        Field::Headers => {
+                            headers = Some(std::sync::Arc::new(map.next_value()?));
+                        }
+                        Field::Cookies => {
+                            cookies = Some(std::sync::Arc::new(map.next_value()?));
+                        }
+                        Field::Method => {
+                            method = Some(map.next_value()?);
+                        }
+                        Field::Path => {
+                            path = Some(map.next_value()?);
+                        }
+                    }
+                }
+
+                Ok(RequestData {
+                    path_params: path_params.ok_or_else(|| serde::de::Error::missing_field("path_params"))?,
+                    query_params: query_params.ok_or_else(|| serde::de::Error::missing_field("query_params"))?,
+                    raw_query_params: raw_query_params
+                        .ok_or_else(|| serde::de::Error::missing_field("raw_query_params"))?,
+                    body: body.ok_or_else(|| serde::de::Error::missing_field("body"))?,
+                    headers: headers.ok_or_else(|| serde::de::Error::missing_field("headers"))?,
+                    cookies: cookies.ok_or_else(|| serde::de::Error::missing_field("cookies"))?,
+                    method: method.ok_or_else(|| serde::de::Error::missing_field("method"))?,
+                    path: path.ok_or_else(|| serde::de::Error::missing_field("path"))?,
+                })
+            }
+        }
+
+        const FIELDS: &[&str] = &[
+            "path_params",
+            "query_params",
+            "raw_query_params",
+            "body",
+            "headers",
+            "cookies",
+            "method",
+            "path",
+        ];
+        deserializer.deserialize_struct("RequestData", FIELDS, RequestDataVisitor)
+    }
 }
 
 /// Result type for handlers
