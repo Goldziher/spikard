@@ -630,7 +630,7 @@ module E2ERubyApp
   def create_app_headers_2_31_bearer_token_format_invalid
     app = Spikard::App.new
     app.get("/protected", handler_name: "headers_2_31_bearer_token_format_invalid", parameter_schema: {"properties" => {"Authorization" => {"pattern" => "^Bearer [A-Za-z0-9-._~+/]+=*$", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"pattern" => "^Bearer [A-Za-z0-9-._~+/]+=*$", "value" => "Bearer invalid token with spaces"}, "loc" => ["headers", "Authorization"], "msg" => "Invalid Bearer token format", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"pattern" => "^Bearer [A-Za-z0-9-._~+/]+=*$", "value" => "Bearer invalid token with spaces"}, "loc" => ["headers", "authorization"], "msg" => "Invalid Bearer token format", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -638,7 +638,7 @@ module E2ERubyApp
   def create_app_headers_3_32_bearer_token_missing_prefix
     app = Spikard::App.new
     app.get("/protected", handler_name: "headers_3_32_bearer_token_missing_prefix", parameter_schema: {"properties" => {"Authorization" => {"pattern" => "^Bearer [A-Za-z0-9-._~+/]+=*$", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"pattern" => "^Bearer [A-Za-z0-9-._~+/]+=*$", "value" => "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"}, "loc" => ["headers", "Authorization"], "msg" => "Invalid Bearer token format", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"pattern" => "^Bearer [A-Za-z0-9-._~+/]+=*$", "value" => "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"}, "loc" => ["headers", "authorization"], "msg" => "Invalid Bearer token format", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -654,7 +654,7 @@ module E2ERubyApp
   def create_app_headers_5_34_api_key_header_invalid
     app = Spikard::App.new
     app.get("/api/data", handler_name: "headers_5_34_api_key_header_invalid", parameter_schema: {"properties" => {"X-API-Key" => {"pattern" => "^[a-f0-9]{32}$", "source" => "header", "type" => "string"}}, "required" => ["X-API-Key"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"pattern" => "^[a-f0-9]{32}$", "value" => "invalid-key"}, "loc" => ["headers", "X-API-Key"], "msg" => "Invalid API key format", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"pattern" => "^[a-f0-9]{32}$", "value" => "invalid-key"}, "loc" => ["headers", "x-api-key"], "msg" => "Invalid API key format", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
