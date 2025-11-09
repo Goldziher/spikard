@@ -363,10 +363,15 @@ impl ParameterValidator {
                             let source_str = match param_def.source {
                                 ParameterSource::Query => "query",
                                 ParameterSource::Path => "path",
-                                ParameterSource::Header => "headers",
+                                ParameterSource::Header => "header",
                                 ParameterSource::Cookie => "cookie",
                             };
                             error.loc[0] = source_str.to_string();
+
+                            // For headers, normalize the name to lowercase with hyphens
+                            if param_def.source == ParameterSource::Header {
+                                error.loc[1] = param_def.name.replace('_', "-").to_lowercase();
+                            }
 
                             // Replace the input value with the raw string (pre-validation approach)
                             if let Some(raw_value) = raw_values_map.get(&param_def.name) {
