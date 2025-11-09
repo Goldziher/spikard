@@ -24,7 +24,7 @@ RSpec.describe "headers" do
     expect(body['errors']).not_to be_empty
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
-    expect(body['errors'].first['loc']).to eq(["headers", "Authorization"])
+    expect(body['errors'].first['loc']).to eq(["headers", "authorization"])
     client.close
   end
 
@@ -39,7 +39,7 @@ RSpec.describe "headers" do
     expect(body['errors']).not_to be_empty
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
-    expect(body['errors'].first['loc']).to eq(["headers", "Authorization"])
+    expect(body['errors'].first['loc']).to eq(["headers", "authorization"])
     client.close
   end
 
@@ -63,7 +63,7 @@ RSpec.describe "headers" do
     expect(body['errors']).not_to be_empty
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
-    expect(body['errors'].first['loc']).to eq(["headers", "X-API-Key"])
+    expect(body['errors'].first['loc']).to eq(["headers", "x-api-key"])
     client.close
   end
 

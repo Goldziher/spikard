@@ -24,7 +24,7 @@
         {
           "type": "string_pattern_mismatch",
           "loc": [
-            "header",
+            "headers",
             "x-request-id"
           ],
           "msg": "String should match pattern '^[0-9]{3,}$'",

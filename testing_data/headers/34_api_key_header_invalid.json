@@ -39,7 +39,7 @@
           "type": "validation_error",
           "loc": [
             "headers",
-            "X-API-Key"
+            "x-api-key"
           ],
           "msg": "Invalid API key format",
           "ctx": {
