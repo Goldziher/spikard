@@ -575,3 +575,4 @@ module.exports = nativeBinding
 module.exports.TestClient = nativeBinding.TestClient
 module.exports.TestResponse = nativeBinding.TestResponse
 module.exports.process = nativeBinding.process
+module.exports.runServer = nativeBinding.runServer

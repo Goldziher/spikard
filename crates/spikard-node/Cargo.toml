@@ -30,6 +30,7 @@ cookie = "0.18"
 serde_qs = "0.15"
 rustc-hash = "2.1"
 urlencoding = "2.1"
+tracing.workspace = true
 
 [target.'cfg(all(any(windows, unix), target_arch = "x86_64", not(target_env = "musl")))'.dependencies]
 mimalloc-rust = "0.2"

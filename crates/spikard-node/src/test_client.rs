@@ -35,7 +35,7 @@ fn is_debug_mode() -> bool {
 fn default_params(request_data: &RequestData) -> Value {
     let mut params = JsonMap::new();
 
-    for (key, value) in &request_data.path_params {
+    for (key, value) in &*request_data.path_params {
         params.insert(key.clone(), Value::String(value.clone()));
     }
 
@@ -45,11 +45,11 @@ fn default_params(request_data: &RequestData) -> Value {
         }
     }
 
-    for (key, value) in &request_data.headers {
+    for (key, value) in &*request_data.headers {
         params.insert(key.clone(), Value::String(value.clone()));
     }
 
-    for (key, value) in &request_data.cookies {
+    for (key, value) in &*request_data.cookies {
         params.insert(key.clone(), Value::String(value.clone()));
     }
 
@@ -59,11 +59,11 @@ fn default_params(request_data: &RequestData) -> Value {
 fn build_js_payload(handler: &JsHandler, request_data: &RequestData, validated_params: Option<Value>) -> Value {
     let params_value = validated_params.unwrap_or_else(|| default_params(request_data));
 
-    let path_params = serde_json::to_value(&request_data.path_params).unwrap_or(Value::Null);
-    let raw_query = serde_json::to_value(&request_data.raw_query_params).unwrap_or(Value::Null);
-    let headers = serde_json::to_value(&request_data.headers).unwrap_or(Value::Null);
-    let cookies = serde_json::to_value(&request_data.cookies).unwrap_or(Value::Null);
-    let body = request_data.body.clone().unwrap_or(Value::Null);
+    let path_params = serde_json::to_value(&*request_data.path_params).unwrap_or(Value::Null);
+    let raw_query = serde_json::to_value(&*request_data.raw_query_params).unwrap_or(Value::Null);
+    let headers = serde_json::to_value(&*request_data.headers).unwrap_or(Value::Null);
+    let cookies = serde_json::to_value(&*request_data.cookies).unwrap_or(Value::Null);
+    let body = request_data.body.clone();
 
     json!({
         "method": handler.method,
@@ -143,8 +143,8 @@ struct JsHandler {
     handler_name: String,
     method: String,
     path: String,
-    request_validator: Option<SchemaValidator>,
-    response_validator: Option<SchemaValidator>,
+    request_validator: Option<Arc<SchemaValidator>>,
+    response_validator: Option<Arc<SchemaValidator>>,
     parameter_validator: Option<ParameterValidator>,
 }
 
@@ -166,8 +166,8 @@ impl JsHandler {
     }
 
     async fn handle(&self, request_data: RequestData) -> HandlerResult {
-        if let (Some(validator), Some(body)) = (&self.request_validator, &request_data.body)
-            && let Err(errors) = validator.validate(body)
+        if let Some(validator) = &self.request_validator
+            && let Err(errors) = validator.validate(&request_data.body)
         {
             let problem = ProblemDetails::from_validation_error(&errors);
             let error_json = problem_to_json(&problem);
@@ -175,9 +175,16 @@ impl JsHandler {
         }
 
         let validated_params = if let Some(validator) = &self.parameter_validator {
+            // Convert raw_query_params from Vec<String> to String (take first value)
+            let raw_query_strings: HashMap<String, String> = request_data
+                .raw_query_params
+                .iter()
+                .filter_map(|(k, v)| v.first().map(|first| (k.clone(), first.clone())))
+                .collect();
+
             match validator.validate_and_extract(
                 &request_data.query_params,
-                &request_data.raw_query_params,
+                &raw_query_strings,
                 &request_data.path_params,
                 &request_data.headers,
                 &request_data.cookies,
@@ -290,8 +297,12 @@ impl JsHandler {
     }
 }
 
-impl ForeignHandler for JsHandler {
-    fn call(&self, _req: Request<Body>, request_data: RequestData) -> HandlerFuture {
+impl spikard_http::Handler for JsHandler {
+    fn call(
+        &self,
+        _req: Request<Body>,
+        request_data: RequestData,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HandlerResult> + Send + '_>> {
         let handler = self.clone();
         Box::pin(async move { handler.handle(request_data).await })
     }
@@ -312,7 +323,7 @@ impl TestClient {
             .map_err(|e| Error::from_reason(format!("Failed to parse routes: {}", e)))?;
 
         let schema_registry = spikard_http::SchemaRegistry::new();
-        let mut prepared_routes: Vec<(Route, JsHandler)> = Vec::new();
+        let mut prepared_routes: Vec<(Route, Arc<dyn spikard_http::Handler>)> = Vec::new();
 
         for metadata in routes_data {
             let route = Route::from_metadata(metadata, &schema_registry)
@@ -324,7 +335,7 @@ impl TestClient {
                 .map_err(|e| Error::from_reason(format!("Failed to get handler '{}': {}", handler_name, e)))?;
 
             let js_handler = JsHandler::new(js_fn, &route)?;
-            prepared_routes.push((route, js_handler));
+            prepared_routes.push((route, Arc::new(js_handler) as Arc<dyn spikard_http::Handler>));
         }
 
         let axum_router = build_router_with_handlers(prepared_routes)
