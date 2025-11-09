@@ -11,12 +11,13 @@ use magnus::{Error, Module, RHash, Ruby, Value, function, gc::Marker, method};
 use once_cell::sync::Lazy;
 use serde_json::{Map as JsonMap, Value as JsonValue};
 use spikard_http::ParameterValidator;
-use spikard_http::handler::{ForeignHandler, HandlerFuture, HandlerResult, RequestData};
+use spikard_http::{Handler, HandlerResult, RequestData};
 use spikard_http::problem::ProblemDetails;
 use spikard_http::server::build_router_with_handlers;
 use spikard_http::{Route, RouteMetadata, SchemaValidator};
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::pin::Pin;
 use std::sync::Arc;
 use tokio::runtime::{Builder, Runtime};
 
@@ -64,8 +65,8 @@ struct RubyHandlerInner {
     method: String,
     path: String,
     json_module: Opaque<Value>,
-    request_validator: Option<SchemaValidator>,
-    response_validator: Option<SchemaValidator>,
+    request_validator: Option<Arc<SchemaValidator>>,
+    response_validator: Option<Arc<SchemaValidator>>,
     parameter_validator: Option<ParameterValidator>,
 }
 
@@ -111,7 +112,7 @@ impl NativeTestClient {
                 .map_err(|err| Error::new(ruby.exception_runtime_error(), format!("Failed to build route: {err}")))?;
 
             let handler = RubyHandler::new(&route, handler_value, json_module)?;
-            prepared_routes.push((route, handler.clone()));
+            prepared_routes.push((route, Arc::new(handler.clone()) as Arc<dyn spikard_http::Handler>));
             handler_refs.push(handler);
         }
 
@@ -189,6 +190,32 @@ impl RubyHandler {
         })
     }
 
+    /// Create a new RubyHandler for server mode
+    ///
+    /// This is used by run_server to create handlers from Ruby Procs
+    fn new_for_server(
+        _ruby: &Ruby,
+        handler_value: Value,
+        handler_name: String,
+        method: String,
+        path: String,
+        json_module: Value,
+        route: &Route,
+    ) -> Result<Self, Error> {
+        Ok(Self {
+            inner: Arc::new(RubyHandlerInner {
+                handler_proc: Opaque::from(handler_value),
+                handler_name,
+                method,
+                path,
+                json_module: Opaque::from(json_module),
+                request_validator: route.request_validator.clone(),
+                response_validator: route.response_validator.clone(),
+                parameter_validator: route.parameter_validator.clone(),
+            }),
+        })
+    }
+
     /// Required by Ruby GC; invoked through the magnus mark hook.
     #[allow(dead_code)]
     fn mark(&self, marker: &Marker) {
@@ -200,8 +227,8 @@ impl RubyHandler {
 
     fn handle(&self, request_data: RequestData) -> HandlerResult {
         // Validate incoming body if schema provided.
-        if let (Some(validator), Some(body)) = (&self.inner.request_validator, &request_data.body)
-            && let Err(errors) = validator.validate(body)
+        if let Some(validator) = &self.inner.request_validator
+            && let Err(errors) = validator.validate(&request_data.body)
         {
             let problem = ProblemDetails::from_validation_error(&errors);
             let error_json = problem_to_json(&problem);
@@ -209,12 +236,20 @@ impl RubyHandler {
         }
 
         let validated_params = if let Some(validator) = &self.inner.parameter_validator {
+            // Convert multimap to single-value map by taking first value
+            let raw_query_strings: HashMap<String, String> = request_data
+                .raw_query_params
+                .as_ref()
+                .iter()
+                .filter_map(|(k, v)| v.first().map(|first| (k.clone(), first.clone())))
+                .collect();
+
             match validator.validate_and_extract(
                 &request_data.query_params,
-                &request_data.raw_query_params,
-                &request_data.path_params,
-                &request_data.headers,
-                &request_data.cookies,
+                &raw_query_strings,
+                request_data.path_params.as_ref(),
+                request_data.headers.as_ref(),
+                request_data.cookies.as_ref(),
             ) {
                 Ok(value) => Some(value),
                 Err(errors) => {
@@ -315,8 +350,12 @@ impl RubyHandler {
     }
 }
 
-impl ForeignHandler for RubyHandler {
-    fn call(&self, _req: axum::extract::Request, request_data: RequestData) -> HandlerFuture {
+impl Handler for RubyHandler {
+    fn call(
+        &self,
+        _req: axum::http::Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn std::future::Future<Output = HandlerResult> + Send + '_>> {
         let handler = self.clone();
         Box::pin(async move { handler.handle(request_data) })
     }
@@ -485,26 +524,22 @@ fn build_ruby_request(
     hash.aset(ruby.intern("method"), ruby.str_new(&handler.method))?;
     hash.aset(ruby.intern("path"), ruby.str_new(&handler.path))?;
 
-    let path_params = map_to_ruby_hash(ruby, &request_data.path_params)?;
+    let path_params = map_to_ruby_hash(ruby, request_data.path_params.as_ref())?;
     hash.aset(ruby.intern("path_params"), path_params)?;
 
     let query_value = json_to_ruby(ruby, &request_data.query_params)?;
     hash.aset(ruby.intern("query"), query_value)?;
 
-    let raw_query = map_to_ruby_hash(ruby, &request_data.raw_query_params)?;
+    let raw_query = multimap_to_ruby_hash(ruby, request_data.raw_query_params.as_ref())?;
     hash.aset(ruby.intern("raw_query"), raw_query)?;
 
-    let headers = map_to_ruby_hash(ruby, &request_data.headers)?;
+    let headers = map_to_ruby_hash(ruby, request_data.headers.as_ref())?;
     hash.aset(ruby.intern("headers"), headers)?;
 
-    let cookies = map_to_ruby_hash(ruby, &request_data.cookies)?;
+    let cookies = map_to_ruby_hash(ruby, request_data.cookies.as_ref())?;
     hash.aset(ruby.intern("cookies"), cookies)?;
 
-    let body_value = if let Some(body) = &request_data.body {
-        json_to_ruby(ruby, body)?
-    } else {
-        ruby.qnil().as_value()
-    };
+    let body_value = json_to_ruby(ruby, &request_data.body)?;
     hash.aset(ruby.intern("body"), body_value)?;
 
     let params_value = if let Some(validated) = validated_params {
@@ -520,7 +555,7 @@ fn build_ruby_request(
 fn build_default_params(ruby: &Ruby, request_data: &RequestData) -> Result<Value, Error> {
     let mut map = JsonMap::new();
 
-    for (key, value) in &request_data.path_params {
+    for (key, value) in request_data.path_params.as_ref() {
         map.insert(key.clone(), JsonValue::String(value.clone()));
     }
 
@@ -530,11 +565,11 @@ fn build_default_params(ruby: &Ruby, request_data: &RequestData) -> Result<Value
         }
     }
 
-    for (key, value) in &request_data.headers {
+    for (key, value) in request_data.headers.as_ref() {
         map.insert(key.clone(), JsonValue::String(value.clone()));
     }
 
-    for (key, value) in &request_data.cookies {
+    for (key, value) in request_data.cookies.as_ref() {
         map.insert(key.clone(), JsonValue::String(value.clone()));
     }
 
@@ -678,6 +713,18 @@ fn map_to_ruby_hash(ruby: &Ruby, map: &HashMap<String, String>) -> Result<Value,
     Ok(hash.as_value())
 }
 
+fn multimap_to_ruby_hash(ruby: &Ruby, map: &HashMap<String, Vec<String>>) -> Result<Value, Error> {
+    let hash = ruby.hash_new();
+    for (key, values) in map {
+        let array = ruby.ary_new();
+        for value in values {
+            array.push(ruby.str_new(value))?;
+        }
+        hash.aset(ruby.str_new(key), array)?;
+    }
+    Ok(hash.as_value())
+}
+
 fn problem_to_json(problem: &ProblemDetails) -> String {
     problem
         .to_json_pretty()
@@ -721,6 +768,138 @@ fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
+/// Start the Spikard HTTP server from Ruby
+///
+/// Creates an Axum HTTP server in a dedicated background thread with its own Tokio runtime.
+///
+/// # Arguments
+///
+/// * `routes_json` - JSON string containing route metadata
+/// * `handlers` - Ruby Hash mapping handler_name => Proc
+/// * `host` - Host address to bind to (default: "127.0.0.1")
+/// * `port` - Port number to listen on (default: 8000)
+///
+/// # Example (Ruby)
+///
+/// ```ruby
+/// Spikard::Native.run_server(routes_json, handlers, '0.0.0.0', 8000)
+/// ```
+fn run_server(
+    ruby: &Ruby,
+    routes_json: String,
+    handlers: Value,
+    host: Option<String>,
+    port: Option<u32>,
+) -> Result<(), Error> {
+    use spikard_http::{Server, ServerConfig, SchemaRegistry};
+    use tracing::{error, info};
+
+    let host = host.unwrap_or_else(|| "127.0.0.1".to_string());
+    let port = port.unwrap_or(8000) as u16;
+
+    // Parse route metadata from JSON
+    let metadata: Vec<RouteMetadata> = serde_json::from_str(&routes_json)
+        .map_err(|err| Error::new(ruby.exception_arg_error(), format!("Invalid routes JSON: {}", err)))?;
+
+    // Extract handlers hash
+    let handlers_hash = RHash::from_value(handlers).ok_or_else(|| {
+        Error::new(
+            ruby.exception_arg_error(),
+            "handlers parameter must be a Hash of handler_name => Proc",
+        )
+    })?;
+
+    // Get JSON module for handler conversions
+    let json_module = ruby
+        .class_object()
+        .funcall::<_, _, Value>("const_get", ("JSON",))
+        .map_err(|err| {
+            Error::new(
+                ruby.exception_name_error(),
+                format!("JSON module not found: {}", err),
+            )
+        })?;
+
+    // Create schema registry for validator deduplication
+    let schema_registry = SchemaRegistry::new();
+
+    // Build routes with handlers
+    let mut routes_with_handlers: Vec<(Route, Arc<dyn spikard_http::Handler>)> = Vec::new();
+
+    for route_meta in metadata {
+        // Create Route from metadata
+        let route = Route::from_metadata(route_meta.clone(), &schema_registry)
+            .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("Failed to create route: {}", e)))?;
+
+        // Get handler Proc from handlers hash
+        let handler_key = ruby.str_new(&route_meta.handler_name);
+        let handler_value: Value = match handlers_hash.lookup(handler_key) {
+            Ok(val) => val,
+            Err(_) => {
+                return Err(Error::new(
+                    ruby.exception_arg_error(),
+                    format!("Handler '{}' not found in handlers hash", route_meta.handler_name),
+                ))
+            }
+        };
+
+        // Create RubyHandler
+        let ruby_handler = RubyHandler::new_for_server(
+            ruby,
+            handler_value,
+            route_meta.handler_name.clone(),
+            route_meta.method.clone(),
+            route_meta.path.clone(),
+            json_module,
+            &route,
+        )?;
+
+        routes_with_handlers.push((route, Arc::new(ruby_handler) as Arc<dyn spikard_http::Handler>));
+    }
+
+    // Create server config
+    let config = ServerConfig {
+        host: host.clone(),
+        port,
+        workers: 1,
+    };
+
+    // Initialize logging
+    Server::init_logging();
+
+    info!("Starting Spikard server on {}:{}", host, port);
+    info!("Registered {} routes", routes_with_handlers.len());
+
+    // Build Axum router with handlers
+    let app_router = Server::with_handlers(config.clone(), routes_with_handlers)
+        .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("Failed to build router: {}", e)))?;
+
+    // Start the server in a background thread with its own Tokio runtime
+    let addr = format!("{}:{}", config.host, config.port);
+    let socket_addr: std::net::SocketAddr = addr
+        .parse()
+        .map_err(|e| Error::new(ruby.exception_arg_error(), format!("Invalid socket address {}: {}", addr, e)))?;
+
+    std::thread::spawn(move || {
+        let runtime = tokio::runtime::Runtime::new()
+            .expect("Failed to create Tokio runtime");
+
+        runtime.block_on(async move {
+            let listener = tokio::net::TcpListener::bind(socket_addr)
+                .await
+                .unwrap_or_else(|_| panic!("Failed to bind to {}", socket_addr));
+
+            info!("Server listening on {}", socket_addr);
+
+            if let Err(e) = axum::serve(listener, app_router).await {
+                error!("Server error: {}", e);
+            }
+        });
+    });
+
+    Ok(())
+}
+
 #[magnus::init]
 pub fn init(ruby: &Ruby) -> Result<(), Error> {
     let spikard = ruby.define_module("Spikard")?;
@@ -730,6 +909,10 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
         Err(_) => spikard.define_module("Native")?,
     };
 
+    // Register run_server function
+    native.define_singleton_method("run_server", function!(run_server, 4))?;
+
+    // Register TestClient class
     let class = native.define_class("TestClient", ruby.class_object())?;
     class.define_alloc_func::<NativeTestClient>();
     class.define_method("initialize", method!(NativeTestClient::initialize, 2))?;
