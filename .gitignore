@@ -58,6 +58,8 @@ temp-test-*
 # NAPI-RS generated files
 crates/spikard-node/index.js
 crates/spikard-node/index.d.ts
+packages/node/index.js
+packages/node/index.d.ts
 
 # Task runner
 .task/
@@ -70,6 +72,11 @@ crates/spikard-node/index.d.ts
 results/
 benchmark-results/
 reports/
+
+# Generated benchmark apps
+tools/benchmark-harness/apps/spikard-node/
+tools/benchmark-harness/apps/spikard-python/
+tools/benchmark-harness/apps/spikard-rust/
 [Tt][Oo][Dd][Oo]*
 todo.md
 AGENTS.md

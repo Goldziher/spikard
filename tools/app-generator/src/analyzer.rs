@@ -49,7 +49,8 @@ pub struct AnalysisStats {
 
 /// Analyze fixtures and extract unique route signatures
 pub fn analyze_fixtures(fixtures: &[Fixture]) -> RouteAnalysis {
-    let mut route_map: IndexMap<RouteSignature, (Parameters, Vec<String>)> = IndexMap::new();
+    let mut route_map: IndexMap<RouteSignature, (String, Parameters, Vec<String>)> = IndexMap::new();
+    let mut canonical_paths: IndexMap<String, String> = IndexMap::new();
     let mut by_method: IndexMap<String, usize> = IndexMap::new();
     let mut by_category: IndexMap<String, usize> = IndexMap::new();
 
@@ -62,24 +63,35 @@ pub fn analyze_fixtures(fixtures: &[Fixture]) -> RouteAnalysis {
             *by_category.entry(cat.clone()).or_insert(0) += 1;
         }
 
-        // Group by route signature (route + method only)
+        // Normalize and canonicalize the route
+        let normalized = normalize_route(&fixture.handler.route);
+        let canonical = canonicalize_route(&normalized);
+
+        // Check if we've seen this canonical path before - if so, use the first normalized version
+        // This ensures all methods for /items/{id} and /items/{item_id} use the same parameter name
+        let consistent_normalized = canonical_paths
+            .entry(canonical.clone())
+            .or_insert_with(|| normalized.clone())
+            .clone();
+
         let sig = RouteSignature {
-            route: normalize_route(&fixture.handler.route),
+            route: consistent_normalized.clone(),
             method: fixture.handler.method.clone(),
         };
 
+        // Insert route with the consistent normalized path
         route_map
             .entry(sig)
-            .or_insert_with(|| (fixture.handler.parameters.clone(), Vec::new()))
-            .1
+            .or_insert_with(|| (consistent_normalized, fixture.handler.parameters.clone(), Vec::new()))
+            .2
             .push(fixture.name.clone());
     }
 
     // Convert to RouteInfo
     let routes: Vec<RouteInfo> = route_map
         .into_iter()
-        .map(|(sig, (params, example_fixtures))| RouteInfo {
-            route: sig.route,
+        .map(|(sig, (normalized_route, params, example_fixtures))| RouteInfo {
+            route: normalized_route,
             method: sig.method,
             params,
             fixture_count: example_fixtures.len(),
@@ -130,6 +142,23 @@ fn normalize_route(route: &str) -> String {
     }
 
     result
+}
+
+/// Create a canonical route pattern for deduplication
+/// Replaces all path parameter names with a generic placeholder to detect conflicts
+/// e.g. "/items/{id}" and "/items/{item_id}" both become "/items/{}"
+fn canonicalize_route(route: &str) -> String {
+    route
+        .split('/')
+        .map(|segment| {
+            if segment.starts_with('{') && segment.ends_with('}') {
+                "{}".to_string()
+            } else {
+                segment.to_string()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("/")
 }
 
 /// Extract path parameter names from a route pattern

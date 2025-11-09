@@ -44,22 +44,26 @@ export interface RouteOptions {
  *
  * @example
  * ```typescript
- * import { route } from '@spikard/node';
+ * import { route, Spikard } from '@spikard/node';
  * import { z } from 'zod';
+ *
+ * const app = new Spikard();
  *
  * const UserSchema = z.object({
  *   name: z.string(),
  *   email: z.string().email(),
  * });
  *
- * route("/users", { methods: ["POST"], bodySchema: UserSchema })
- * function createUser(request: Request, body: Body<z.infer<typeof UserSchema>>) {
- *   // Implementation
+ * route("/users", { methods: ["POST"], bodySchema: UserSchema})
+ * async function createUser() {
+ *   return { created: true };
  * }
+ *
+ * app.run();
  * ```
  */
-export function route(path: string, options: RouteOptions = {}): (target: unknown, propertyKey: string) => void {
-	return (target: unknown, propertyKey: string) => {
+export function route(path: string, options: RouteOptions = {}): (handler: Function) => Function {
+	return (handler: Function) => {
 		// Extract methods, defaulting to GET if not specified
 		const methods = options.methods ? (Array.isArray(options.methods) ? options.methods : [options.methods]) : ["GET"];
 
@@ -67,22 +71,18 @@ export function route(path: string, options: RouteOptions = {}): (target: unknow
 		const metadata: RouteMetadata = {
 			method: methods.join(","),
 			path,
-			handler_name: propertyKey,
+			handler_name: handler.name || "anonymous",
 			request_schema: options.bodySchema,
 			response_schema: options.responseSchema,
 			parameter_schema: options.parameterSchema,
 			cors: options.cors,
-			is_async: true, // TypeScript functions are async by default in Node
+			is_async: true, // Assume async by default
 		};
 
-		// Attach metadata to the target
-		const targetConstructor = (target as { constructor: object }).constructor;
-		if (!Reflect.has(targetConstructor, "__routes__")) {
-			Reflect.set(targetConstructor, "__routes__", []);
-		}
+		// Store metadata on the function
+		(handler as any).__route_metadata__ = metadata;
 
-		const routes = Reflect.get(targetConstructor, "__routes__") as RouteMetadata[];
-		routes.push(metadata);
+		return handler;
 	};
 }
 
@@ -103,49 +103,34 @@ export function route(path: string, options: RouteOptions = {}): (target: unknow
  * }
  * ```
  */
-export function get(
-	path: string,
-	options: Omit<RouteOptions, "methods"> = {},
-): (target: unknown, propertyKey: string) => void {
+export function get(path: string, options: Omit<RouteOptions, "methods"> = {}): (handler: Function) => Function {
 	return route(path, { ...options, methods: ["GET"] });
 }
 
 /**
  * POST route decorator
  */
-export function post(
-	path: string,
-	options: Omit<RouteOptions, "methods"> = {},
-): (target: unknown, propertyKey: string) => void {
+export function post(path: string, options: Omit<RouteOptions, "methods"> = {}): (handler: Function) => Function {
 	return route(path, { ...options, methods: ["POST"] });
 }
 
 /**
  * PUT route decorator
  */
-export function put(
-	path: string,
-	options: Omit<RouteOptions, "methods"> = {},
-): (target: unknown, propertyKey: string) => void {
+export function put(path: string, options: Omit<RouteOptions, "methods"> = {}): (handler: Function) => Function {
 	return route(path, { ...options, methods: ["PUT"] });
 }
 
 /**
  * DELETE route decorator
  */
-export function del(
-	path: string,
-	options: Omit<RouteOptions, "methods"> = {},
-): (target: unknown, propertyKey: string) => void {
+export function del(path: string, options: Omit<RouteOptions, "methods"> = {}): (handler: Function) => Function {
 	return route(path, { ...options, methods: ["DELETE"] });
 }
 
 /**
  * PATCH route decorator
  */
-export function patch(
-	path: string,
-	options: Omit<RouteOptions, "methods"> = {},
-): (target: unknown, propertyKey: string) => void {
+export function patch(path: string, options: Omit<RouteOptions, "methods"> = {}): (handler: Function) => Function {
 	return route(path, { ...options, methods: ["PATCH"] });
 }

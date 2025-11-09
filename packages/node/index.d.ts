@@ -30,3 +30,6 @@ export declare class TestResponse {
 
 /** Process using spikard (legacy function) */
 export declare function process(): void
+
+/** Run Spikard server from Node.js */
+export declare function runServer(app: object, host?: string | undefined | null, port?: number | undefined | null): void
