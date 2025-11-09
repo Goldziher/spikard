@@ -8,12 +8,12 @@ members = [
     "crates/spikard-py",
     "crates/spikard-node",
     "crates/spikard-wasm",
+    "crates/spikard-rb",
     "tools/test-generator",
     "tools/benchmark-harness",
 ]
 exclude = [
     "e2e/*",
-    "crates/spikard-rb",
 ]
 
 [workspace.package]
