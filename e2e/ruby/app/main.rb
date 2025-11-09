@@ -2814,7 +2814,7 @@ module E2ERubyApp
   def create_app_validation_errors_7_header_validation_error
     app = Spikard::App.new
     app.get("/items/", handler_name: "validation_errors_7_header_validation_error", parameter_schema: {"properties" => {"q" => {"source" => "query", "type" => "string"}, "x-token" => {"source" => "header", "type" => "string"}}, "required" => ["q", "x-token"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => nil, "loc" => ["header", "x-token"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => nil, "loc" => ["headers", "x-token"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
