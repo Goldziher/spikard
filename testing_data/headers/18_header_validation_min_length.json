@@ -24,7 +24,7 @@
         {
           "type": "string_too_short",
           "loc": [
-            "header",
+            "headers",
             "x-token"
           ],
           "msg": "String should have at least 3 characters",

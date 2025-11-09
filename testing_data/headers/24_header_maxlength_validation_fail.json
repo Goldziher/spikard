@@ -24,7 +24,7 @@
         {
           "type": "string_too_long",
           "loc": [
-            "header",
+            "headers",
             "x-session-id"
           ],
           "msg": "String should have at most 20 characters",

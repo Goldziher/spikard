@@ -13,7 +13,18 @@
   "expected_response": {
     "status_code": 422,
     "body": {
-      "detail": "Not authenticated"
+      "type": "https://spikard.dev/errors/validation-error",
+      "title": "Request Validation Failed",
+      "status": 422,
+      "detail": "1 validation error in request",
+      "errors": [
+        {
+          "type": "missing",
+          "loc": ["headers", "authorization"],
+          "msg": "Field required",
+          "input": null
+        }
+      ]
     }
   },
   "handler": {
