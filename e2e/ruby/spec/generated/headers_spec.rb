@@ -177,7 +177,7 @@ RSpec.describe "headers" do
     expect(body['errors']).not_to be_empty
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
-    expect(body['errors'].first['loc']).to eq(["header", "x-request-id"])
+    expect(body['errors'].first['loc']).to eq(["headers", "x-request-id"])
     expect(body['errors'].first['type']).to eq("string_pattern_mismatch")
     client.close
   end

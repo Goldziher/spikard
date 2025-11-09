@@ -750,7 +750,7 @@ module E2ERubyApp
   def create_app_headers_17_header_regex_validation_fail
     app = Spikard::App.new
     app.get("/headers/pattern", handler_name: "headers_17_header_regex_validation_fail", parameter_schema: {"properties" => {"X-Request-Id" => {"annotation" => "str", "pattern" => "^[0-9]{3,}$", "source" => "header", "type" => "string"}}, "required" => ["X-Request-Id"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"pattern" => "^[0-9]{3,}$"}, "input" => "invalid-format", "loc" => ["header", "x-request-id"], "msg" => "String should match pattern \'^[0-9]{3,}$\'", "type" => "string_pattern_mismatch"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"pattern" => "^[0-9]{3,}$"}, "input" => "invalid-format", "loc" => ["headers", "x-request-id"], "msg" => "String should match pattern \'^[0-9]{3,}$\'", "type" => "string_pattern_mismatch"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
