@@ -109,7 +109,7 @@ RSpec.describe "validation_errors" do
     expect(body['errors']).not_to be_empty
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
-    expect(body['errors'].first['loc']).to eq(["header", "x-token"])
+    expect(body['errors'].first['loc']).to eq(["headers", "x-token"])
     expect(body['errors'].first['type']).to eq("missing")
     client.close
   end
