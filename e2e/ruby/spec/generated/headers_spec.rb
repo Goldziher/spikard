@@ -99,7 +99,14 @@ RSpec.describe "headers" do
     client = Spikard::Testing.create_test_client(app)
     response = client.get("/users/me")
     expect(response.status_code).to eq(422)
-    expect(response.json).to eq({"detail" => "Not authenticated"})
+    body = response.json
+    expect(body).to be_a(Hash)
+    expect(body['errors']).to be_an(Array)
+    expect(body['errors']).not_to be_empty
+    expect(body['detail']).to eq("1 validation error in request")
+    expect(body['status']).to eq(422)
+    expect(body['errors'].first['loc']).to eq(["headers", "authorization"])
+    expect(body['errors'].first['type']).to eq("missing")
     client.close
   end
 
@@ -117,7 +124,14 @@ RSpec.describe "headers" do
     client = Spikard::Testing.create_test_client(app)
     response = client.get("/users/me", headers: {"Authorization" => "Other invalidauthorization"})
     expect(response.status_code).to eq(422)
-    expect(response.json).to eq({"detail" => "Invalid authentication credentials"})
+    body = response.json
+    expect(body).to be_a(Hash)
+    expect(body['errors']).to be_an(Array)
+    expect(body['errors']).not_to be_empty
+    expect(body['detail']).to eq("1 validation error in request")
+    expect(body['status']).to eq(422)
+    expect(body['errors'].first['loc']).to eq(["headers", "authorization"])
+    expect(body['errors'].first['type']).to eq("string_pattern_mismatch")
     client.close
   end
 
@@ -135,7 +149,14 @@ RSpec.describe "headers" do
     client = Spikard::Testing.create_test_client(app)
     response = client.get("/headers/bearer-auth", headers: {})
     expect(response.status_code).to eq(422)
-    expect(response.json).to eq({"detail" => "Not authenticated"})
+    body = response.json
+    expect(body).to be_a(Hash)
+    expect(body['errors']).to be_an(Array)
+    expect(body['errors']).not_to be_empty
+    expect(body['detail']).to eq("1 validation error in request")
+    expect(body['status']).to eq(422)
+    expect(body['errors'].first['loc']).to eq(["headers", "authorization"])
+    expect(body['errors'].first['type']).to eq("missing")
     client.close
   end
 
@@ -202,7 +223,7 @@ RSpec.describe "headers" do
     expect(body['errors']).not_to be_empty
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
-    expect(body['errors'].first['loc']).to eq(["header", "x-session-id"])
+    expect(body['errors'].first['loc']).to eq(["headers", "x-session-id"])
     expect(body['errors'].first['type']).to eq("string_too_long")
     client.close
   end
@@ -218,7 +239,7 @@ RSpec.describe "headers" do
     expect(body['errors']).not_to be_empty
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
-    expect(body['errors'].first['loc']).to eq(["header", "x-token"])
+    expect(body['errors'].first['loc']).to eq(["headers", "x-token"])
     expect(body['errors'].first['type']).to eq("string_too_short")
     client.close
   end
@@ -318,7 +339,14 @@ RSpec.describe "headers" do
     client = Spikard::Testing.create_test_client(app)
     response = client.get("/users/me")
     expect(response.status_code).to eq(422)
-    expect(response.json).to eq({"detail" => "Not authenticated"})
+    body = response.json
+    expect(body).to be_a(Hash)
+    expect(body['errors']).to be_an(Array)
+    expect(body['errors']).not_to be_empty
+    expect(body['detail']).to eq("1 validation error in request")
+    expect(body['status']).to eq(422)
+    expect(body['errors'].first['loc']).to eq(["headers", "x-api-key"])
+    expect(body['errors'].first['type']).to eq("missing")
     client.close
   end
 

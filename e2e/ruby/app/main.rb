@@ -686,7 +686,7 @@ module E2ERubyApp
   def create_app_headers_9_authorization_header_missing
     app = Spikard::App.new
     app.get("/users/me", handler_name: "headers_9_authorization_header_missing", parameter_schema: {"properties" => {"Authorization" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "Not authenticated"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => nil, "loc" => ["headers", "authorization"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -702,7 +702,7 @@ module E2ERubyApp
   def create_app_headers_11_authorization_header_wrong_scheme
     app = Spikard::App.new
     app.get("/users/me", handler_name: "headers_11_authorization_header_wrong_scheme", parameter_schema: {"properties" => {"Authorization" => {"annotation" => "str", "pattern" => "^Digest .+", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "Invalid authentication credentials"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => "Other invalidauthorization", "loc" => ["headers", "authorization"], "msg" => "String should match pattern \'^Digest .+\'", "type" => "string_pattern_mismatch"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -718,7 +718,7 @@ module E2ERubyApp
   def create_app_headers_13_bearer_token_authentication_missing
     app = Spikard::App.new
     app.get("/headers/bearer-auth", handler_name: "headers_13_bearer_token_authentication_missing", parameter_schema: {"properties" => {"Authorization" => {"annotation" => "str", "pattern" => "^Bearer .+", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "Not authenticated"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => nil, "loc" => ["headers", "authorization"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -766,7 +766,7 @@ module E2ERubyApp
   def create_app_headers_19_header_validation_max_length_constraint_fail
     app = Spikard::App.new
     app.get("/headers/max-length", handler_name: "headers_19_header_validation_max_length_constraint_fail", parameter_schema: {"properties" => {"X-Session-Id" => {"annotation" => "str", "maxLength" => 20, "source" => "header", "type" => "string"}}, "required" => ["X-Session-Id"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"max_length" => 20}, "input" => "this_is_way_too_long_for_validation", "loc" => ["header", "x-session-id"], "msg" => "String should have at most 20 characters", "type" => "string_too_long"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"max_length" => 20}, "input" => "this_is_way_too_long_for_validation", "loc" => ["headers", "x-session-id"], "msg" => "String should have at most 20 characters", "type" => "string_too_long"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -774,7 +774,7 @@ module E2ERubyApp
   def create_app_headers_20_header_validation_min_length_constraint
     app = Spikard::App.new
     app.get("/headers/validated", handler_name: "headers_20_header_validation_min_length_constraint", parameter_schema: {"properties" => {"X-Token" => {"annotation" => "str", "minLength" => 3, "source" => "header", "type" => "string"}}, "required" => ["X-Token"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"min_length" => 3}, "input" => "ab", "loc" => ["header", "x-token"], "msg" => "String should have at least 3 characters", "type" => "string_too_short"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"min_length" => 3}, "input" => "ab", "loc" => ["headers", "x-token"], "msg" => "String should have at least 3 characters", "type" => "string_too_short"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -862,7 +862,7 @@ module E2ERubyApp
   def create_app_headers_31_x_api_key_required_header_missing
     app = Spikard::App.new
     app.get("/users/me", handler_name: "headers_31_x_api_key_required_header_missing", parameter_schema: {"properties" => {"X-API-Key" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => ["X-API-Key"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "Not authenticated"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => nil, "loc" => ["headers", "x-api-key"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
