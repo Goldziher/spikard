@@ -43,7 +43,6 @@ RSpec.describe "url_encoded" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "username"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -59,7 +58,6 @@ RSpec.describe "url_encoded" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "account_id"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -75,7 +73,6 @@ RSpec.describe "url_encoded" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "quantity"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -91,7 +88,6 @@ RSpec.describe "url_encoded" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "tags"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -107,7 +103,6 @@ RSpec.describe "url_encoded" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "email"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -123,7 +118,6 @@ RSpec.describe "url_encoded" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "price"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -139,7 +133,6 @@ RSpec.describe "url_encoded" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "unknown_field"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 

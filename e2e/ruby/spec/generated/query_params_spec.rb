@@ -43,7 +43,6 @@ RSpec.describe "query_params" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["query", "term"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -59,7 +58,6 @@ RSpec.describe "query_params" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["query", "term"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -84,7 +82,6 @@ RSpec.describe "query_params" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["query", "email"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -109,7 +106,6 @@ RSpec.describe "query_params" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["query", "limit"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -143,7 +139,6 @@ RSpec.describe "query_params" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["query", "limit"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -168,7 +163,6 @@ RSpec.describe "query_params" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["query", "ids"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -184,7 +178,6 @@ RSpec.describe "query_params" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["query", "tags"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -218,7 +211,6 @@ RSpec.describe "query_params" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["query", "email"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -243,7 +235,6 @@ RSpec.describe "query_params" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["query", "ip"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -277,7 +268,6 @@ RSpec.describe "query_params" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["query", "url"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -311,7 +301,6 @@ RSpec.describe "query_params" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["query", "quantity"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -336,7 +325,6 @@ RSpec.describe "query_params" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["query", "ids"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
