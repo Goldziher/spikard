@@ -167,6 +167,9 @@ impl SchemaValidator {
                     let mut parts = vec!["body".to_string()];
                     parts.extend(param_name.split('/').map(|s| s.to_string()));
                     parts
+                } else if param_name == "body" {
+                    // Don't duplicate "body" - just return ["body"]
+                    vec!["body".to_string()]
                 } else {
                     vec!["body".to_string(), param_name.clone()]
                 };

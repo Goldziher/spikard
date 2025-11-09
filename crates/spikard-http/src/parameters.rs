@@ -212,12 +212,12 @@ impl ParameterValidator {
                 let source_str = match param_def.source {
                     ParameterSource::Query => "query",
                     ParameterSource::Path => "path",
-                    ParameterSource::Header => "header",
+                    ParameterSource::Header => "headers",
                     ParameterSource::Cookie => "cookie",
                 };
-                // For headers, use the HTTP header name (with hyphens) in error location
+                // For headers, use the HTTP header name (with hyphens, lowercase) in error location
                 let param_name_for_error = if param_def.source == ParameterSource::Header {
-                    param_def.name.replace('_', "-")
+                    param_def.name.replace('_', "-").to_lowercase()
                 } else {
                     param_def.name.clone()
                 };
@@ -256,7 +256,7 @@ impl ParameterValidator {
                         let source_str = match param_def.source {
                             ParameterSource::Query => "query",
                             ParameterSource::Path => "path",
-                            ParameterSource::Header => "header",
+                            ParameterSource::Header => "headers",
                             ParameterSource::Cookie => "cookie",
                         };
                         // Map type/format to FastAPI error type and message
@@ -293,9 +293,9 @@ impl ParameterValidator {
                                 }
                                 _ => ("type_error", e.clone()),
                             };
-                        // For headers, use the HTTP header name (with hyphens) in error location
+                        // For headers, use the HTTP header name (with hyphens, lowercase) in error location
                         let param_name_for_error = if param_def.source == ParameterSource::Header {
-                            param_def.name.replace('_', "-")
+                            param_def.name.replace('_', "-").to_lowercase()
                         } else {
                             param_def.name.clone()
                         };
@@ -363,7 +363,7 @@ impl ParameterValidator {
                             let source_str = match param_def.source {
                                 ParameterSource::Query => "query",
                                 ParameterSource::Path => "path",
-                                ParameterSource::Header => "header",
+                                ParameterSource::Header => "headers",
                                 ParameterSource::Cookie => "cookie",
                             };
                             error.loc[0] = source_str.to_string();

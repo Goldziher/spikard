@@ -38,7 +38,7 @@
         {
           "type": "missing",
           "loc": [
-            "header",
+            "headers",
             "x-token"
           ],
           "msg": "Field required",
