@@ -110,6 +110,14 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
         options.push(format!("cookies: {}", string_map_to_ruby(cookies)));
     }
 
+    // Handle file uploads for multipart requests
+    if let Some(files) = fixture.request.files.as_ref()
+        && !files.is_empty()
+    {
+        let files_hash = build_files_hash(files);
+        options.push(format!("files: {}", files_hash));
+    }
+
     let mut content_type_value = fixture.request.content_type.clone();
     if content_type_value.is_none()
         && let Some(headers) = fixture.request.headers.as_ref()
@@ -124,27 +132,47 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
     } else if let Some(data) = fixture.request.data.as_ref() {
         options.push(format!("data: {}", value_map_to_ruby(data)));
     } else if let Some(body) = fixture.request.body.as_ref() {
-        let use_json = match content_type {
-            None => true,
-            Some(ct) => ct.contains("json") || ct == "application/merge-patch+json",
+        // Handle body based on content type
+        let use_raw_body = if let Some(ct) = content_type {
+            // For URL-encoded content with string body, use raw_body
+            ct.contains("application/x-www-form-urlencoded") && matches!(body, Value::String(_))
+        } else {
+            false
         };
 
-        if use_json {
-            options.push(format!("json: {}", value_to_ruby(body)));
-        } else if let Some(ct) = content_type {
-            if ct.contains("application/x-www-form-urlencoded") {
-                if let Value::Object(map) = body {
-                    let mut converted: HashMap<String, Value> = HashMap::new();
-                    for (key, value) in map {
-                        converted.insert(key.clone(), value.clone());
-                    }
-                    options.push(format!("data: {}", value_map_to_ruby(&converted)));
-                }
-            } else if let Value::String(s) = body {
+        if use_raw_body {
+            // URL-encoded string body should be sent as raw_body
+            if let Value::String(s) = body {
                 options.push(format!("raw_body: {}", string_literal(s)));
-            } else {
-                let serialized = serde_json::to_string(body).unwrap_or_else(|_| body.to_string());
-                options.push(format!("raw_body: {}", string_literal(&serialized)));
+            }
+        } else {
+            // Match Python behavior: treat JSON, XML, and URL-encoded as json parameter
+            let use_json = match content_type {
+                None => true,
+                Some(ct) => {
+                    ct.contains("application/json")
+                        || ct.contains("application/x-www-form-urlencoded")
+                        || ct.contains("application/xml")
+                }
+            };
+
+            if use_json {
+                options.push(format!("json: {}", value_to_ruby(body)));
+            } else if let Some(ct) = content_type {
+                if ct.contains("application/x-www-form-urlencoded") {
+                    if let Value::Object(map) = body {
+                        let mut converted: HashMap<String, Value> = HashMap::new();
+                        for (key, value) in map {
+                            converted.insert(key.clone(), value.clone());
+                        }
+                        options.push(format!("data: {}", value_map_to_ruby(&converted)));
+                    }
+                } else if let Value::String(s) = body {
+                    options.push(format!("raw_body: {}", string_literal(s)));
+                } else {
+                    let serialized = serde_json::to_string(body).unwrap_or_else(|_| body.to_string());
+                    options.push(format!("raw_body: {}", string_literal(&serialized)));
+                }
             }
         }
     }
@@ -169,15 +197,14 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
         "    client = Spikard::Testing.create_test_client(app)
 ",
     );
-    example.push_str(
-        "    path = app.route_metadata.first[:path]
-",
-    );
 
+    // Use the actual request path from the fixture (which has path params substituted)
+    // instead of the route template
+    let base_path = &fixture.request.path;
     let request_path_expr = if let Some(suffix) = query_suffix.as_ref() {
-        format!("\"#{{path}}{}\"", suffix)
+        format!("\"{}{}\"", base_path, suffix)
     } else {
-        "path".to_string()
+        format!("\"{}\"", base_path)
     };
 
     example.push_str(&format!(
@@ -311,4 +338,64 @@ fn build_expectations(expected: &FixtureExpectedResponse) -> String {
 
     expectations.push_str("    expect(response.body_text).to be_nil\n");
     expectations
+}
+
+/// Build Ruby hash representation of file uploads
+/// Format: {"field_name" => ["filename", "content", "content_type"]}
+/// For multiple files with same field_name: {"field_name" => [["file1", "content1", "type1"], ["file2", "content2", "type2"]]}
+fn build_files_hash(files: &[spikard_codegen::openapi::from_fixtures::FixtureFile]) -> String {
+    use std::collections::HashMap;
+
+    // Group files by field_name
+    let mut grouped: HashMap<String, Vec<&spikard_codegen::openapi::from_fixtures::FixtureFile>> = HashMap::new();
+    for file in files {
+        grouped.entry(file.field_name.clone()).or_default().push(file);
+    }
+
+    let mut entries = Vec::new();
+
+    // Sort by field name for consistent output
+    let mut sorted_fields: Vec<_> = grouped.keys().collect();
+    sorted_fields.sort();
+
+    for field_name in sorted_fields {
+        let field_files = &grouped[field_name];
+
+        if field_files.len() == 1 {
+            // Single file: {"field" => ["filename", "content", "type"]}
+            let file = field_files[0];
+            let filename = file.filename.as_deref().unwrap_or("file.txt");
+            let content = file.content.as_deref().unwrap_or("");
+
+            let mut array_elements = vec![string_literal(filename), string_literal(content)];
+
+            if let Some(ref ct) = file.content_type {
+                array_elements.push(string_literal(ct));
+            }
+
+            let array_str = format!("[{}]", array_elements.join(", "));
+            entries.push(format!("{} => {}", string_literal(field_name), array_str));
+        } else {
+            // Multiple files: {"field" => [["file1", "content1", "type1"], ["file2", "content2", "type2"]]}
+            let mut file_arrays = Vec::new();
+
+            for file in field_files {
+                let filename = file.filename.as_deref().unwrap_or("file.txt");
+                let content = file.content.as_deref().unwrap_or("");
+
+                let mut array_elements = vec![string_literal(filename), string_literal(content)];
+
+                if let Some(ref ct) = file.content_type {
+                    array_elements.push(string_literal(ct));
+                }
+
+                file_arrays.push(format!("[{}]", array_elements.join(", ")));
+            }
+
+            let nested_array = format!("[{}]", file_arrays.join(", "));
+            entries.push(format!("{} => {}", string_literal(field_name), nested_array));
+        }
+    }
+
+    format!("{{{}}}", entries.join(", "))
 }

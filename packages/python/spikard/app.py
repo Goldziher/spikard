@@ -55,12 +55,20 @@ class Spikard:
         """
 
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-            request_schema, response_schema = extract_schemas(func)
-            extracted_parameter_schema = extract_parameter_schema(func, path)
+            # For GET/DELETE/HEAD/OPTIONS requests, don't auto-extract body schema
+            # since these methods typically don't have request bodies
+            methods_without_body = {"GET", "DELETE", "HEAD", "OPTIONS"}
+            if method.upper() in methods_without_body:
+                request_schema = None
+                _, response_schema = extract_schemas(func)
+            else:
+                request_schema, response_schema = extract_schemas(func)
+                # Explicit body_schema takes precedence over extracted request_schema
+                # Note: if body_schema is explicitly None, it will stay None
+                if body_schema is not None:
+                    request_schema = body_schema
 
-            # Explicit body_schema takes precedence over extracted request_schema
-            if body_schema is not None:
-                request_schema = body_schema
+            extracted_parameter_schema = extract_parameter_schema(func, path)
 
             # Explicit parameter_schema takes precedence over extracted parameter_schema
             if parameter_schema is not None:

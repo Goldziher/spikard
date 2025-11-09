@@ -156,16 +156,7 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
             // Use Route::from_metadata() which handles type hint parsing and auto-generation
             // Pass the registry to enable schema deduplication
             match spikard_http::Route::from_metadata(r.metadata, &schema_registry) {
-                Ok(route) => {
-                    let has_parameter_validator = route.parameter_validator.is_some();
-                    eprintln!(
-                        "[UNCONDITIONAL DEBUG] Route after from_metadata: {} {} has_parameter_validator={}",
-                        route.method.as_str(),
-                        route.path,
-                        has_parameter_validator
-                    );
-                    Some((route, r.handler))
-                }
+                Ok(route) => Some((route, r.handler)),
                 Err(e) => {
                     eprintln!("[UNCONDITIONAL DEBUG] Failed to create route: {}", e);
                     None

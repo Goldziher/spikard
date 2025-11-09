@@ -378,7 +378,11 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
         }
 
         if let Some(router) = combined_router {
-            let axum_path = crate::type_hints::strip_type_hints(&path);
+            let mut axum_path = crate::type_hints::strip_type_hints(&path);
+            // Ensure path starts with / for Axum compatibility
+            if !axum_path.starts_with('/') {
+                axum_path = format!("/{}", axum_path);
+            }
             app = app.route(&axum_path, router);
         }
     }

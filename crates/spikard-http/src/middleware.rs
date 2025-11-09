@@ -503,11 +503,11 @@ fn validate_content_type_headers(headers: &HeaderMap, _declared_body_size: usize
             }
         };
 
+        let is_json = is_json_content_type(&parsed_mime);
+        let is_multipart = parsed_mime.type_() == mime::MULTIPART && parsed_mime.subtype() == "form-data";
+
         // Validation 1: multipart/form-data MUST have boundary parameter
-        if parsed_mime.type_() == mime::MULTIPART
-            && parsed_mime.subtype() == "form-data"
-            && parsed_mime.get_param(mime::BOUNDARY).is_none()
-        {
+        if is_multipart && parsed_mime.get_param(mime::BOUNDARY).is_none() {
             let error_body = json!({
                 "error": "multipart/form-data requires 'boundary' parameter"
             });
@@ -516,7 +516,7 @@ fn validate_content_type_headers(headers: &HeaderMap, _declared_body_size: usize
 
         // Validation 2: JSON content types (including +json variants) must use UTF-8 charset (or have no charset)
         #[allow(clippy::collapsible_if)]
-        if is_json_content_type(&parsed_mime) {
+        if is_json {
             if let Some(charset) = parsed_mime.get_param(mime::CHARSET).map(|c| c.as_str()) {
                 // Only UTF-8 is allowed (the mime crate normalizes charset names)
                 if !charset.eq_ignore_ascii_case("utf-8") && !charset.eq_ignore_ascii_case("utf8") {
@@ -527,9 +527,6 @@ fn validate_content_type_headers(headers: &HeaderMap, _declared_body_size: usize
                 }
             }
         }
-
-        // Validation 3: application/x-www-form-urlencoded is allowed without additional validation
-        // (standard form encoding, no special parameters required)
     }
 
     Ok(())
