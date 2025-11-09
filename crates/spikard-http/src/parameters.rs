@@ -363,7 +363,7 @@ impl ParameterValidator {
                             let source_str = match param_def.source {
                                 ParameterSource::Query => "query",
                                 ParameterSource::Path => "path",
-                                ParameterSource::Header => "header",
+                                ParameterSource::Header => "headers",
                                 ParameterSource::Cookie => "cookie",
                             };
                             error.loc[0] = source_str.to_string();

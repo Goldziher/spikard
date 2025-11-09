@@ -39,7 +39,7 @@
           "type": "validation_error",
           "loc": [
             "headers",
-            "Authorization"
+            "authorization"
           ],
           "msg": "Invalid Bearer token format",
           "ctx": {
