@@ -42,6 +42,9 @@ module Spikard
     end
 
     def normalize_path(path)
+      # Preserve trailing slash for consistent routing
+      has_trailing_slash = path.end_with?('/')
+
       segments = path.split('/').map do |segment|
         if segment.start_with?(':') && segment.length > 1
           "{#{segment[1..]}}"
@@ -50,7 +53,9 @@ module Spikard
         end
       end
 
-      segments.join('/')
+      normalized = segments.join('/')
+      # Restore trailing slash if original path had one
+      has_trailing_slash && !normalized.end_with?('/') ? "#{normalized}/" : normalized
     end
 
     def validate_route_arguments!(block, options)

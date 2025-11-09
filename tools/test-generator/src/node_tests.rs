@@ -156,6 +156,8 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     });
 
     let content_type_lc = content_type.as_ref().map(|s| s.to_ascii_lowercase());
+    // Check if fixture has files field (even if empty - needed for optional file params)
+    let has_files_field = fixture.request.files.is_some();
     let has_files = fixture
         .request
         .files
@@ -167,8 +169,10 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         .as_ref()
         .map(|ct| ct.contains("multipart/form-data"))
         .unwrap_or(false)
-        || has_files;
+        || has_files
+        || has_files_field; // Include even empty files array for optional params
 
+    let has_form_data_field = fixture.request.form_data.is_some();
     let has_form_data = fixture
         .request
         .form_data
@@ -180,7 +184,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         .as_ref()
         .map(|ct| ct.contains("application/x-www-form-urlencoded"))
         .unwrap_or(false)
-        || (!is_multipart && has_form_data);
+        || (!is_multipart && (has_form_data || has_form_data_field));
 
     if is_multipart {
         if let Some(definition) = build_multipart_definition(fixture)? {
@@ -397,6 +401,17 @@ fn build_form_definition(fixture: &Fixture) -> Result<Option<String>> {
 }
 
 fn build_multipart_definition(fixture: &Fixture) -> Result<Option<String>> {
+    // Check if fixture explicitly has files, form_data, or data fields
+    // (even if they're empty - we need to send an empty multipart request for validation)
+    let has_files_field = fixture.request.files.is_some();
+    let has_form_data_field = fixture.request.form_data.is_some();
+    let has_data_field = fixture.request.data.is_some();
+
+    // If none of these fields are present, don't generate multipart
+    if !has_files_field && !has_form_data_field && !has_data_field {
+        return Ok(None);
+    }
+
     let mut parts = Vec::new();
 
     let field_source = fixture
@@ -423,10 +438,8 @@ fn build_multipart_definition(fixture: &Fixture) -> Result<Option<String>> {
         parts.push(format!("files: [{}]", entries.join(", ")));
     }
 
-    if parts.is_empty() {
-        return Ok(None);
-    }
-
+    // Always generate multipart if files or form_data fields are present
+    // (even if parts is empty - this handles optional file parameters)
     if !parts.iter().any(|part| part.starts_with("files:")) {
         parts.push("files: []".to_string());
     }

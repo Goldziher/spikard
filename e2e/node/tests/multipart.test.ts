@@ -263,7 +263,8 @@ describe("multipart", () => {
 		const app = createAppMultipartOptionalFileUploadMissing();
 		const client = new TestClient(app);
 
-		const response = await client.post("/files/optional");
+		const multipart = { files: [] };
+		const response = await client.post("/files/optional", { multipart });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
@@ -402,7 +403,8 @@ describe("multipart", () => {
 		const app = createAppMultipartRequiredFileUploadMissing();
 		const client = new TestClient(app);
 
-		const response = await client.post("/files/required");
+		const multipart = { files: [] };
+		const response = await client.post("/files/required", { multipart });
 
 		expect(response.statusCode).toBe(422);
 	});

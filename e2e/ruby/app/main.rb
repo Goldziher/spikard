@@ -38,7 +38,7 @@ module E2ERubyApp
   def create_app_content_types_4_16_text_plain_not_accepted
     app = Spikard::App.new
     app.post("/data", handler_name: "content_types_4_16_text_plain_not_accepted", request_schema: {"properties" => {"data" => {"type" => "string"}}, "required" => ["data"], "type" => "object"}) do |_request|
-      build_response(content: {"error" => "Unsupported Media Type. Expected application/json"}, status: 422, headers: nil)
+      build_response(content: {"error" => "Unsupported Media Type. Expected application/json"}, status: 415, headers: nil)
     end
     app
   end
@@ -69,7 +69,7 @@ module E2ERubyApp
 
   def create_app_content_types_8_20_content_length_mismatch
     app = Spikard::App.new
-    app.post("/data", handler_name: "content_types_8_20_content_length_mismatch", parameter_schema: {"properties" => {"Content-Length" => {"source" => "header", "type" => "string"}}, "type" => "object"}, request_schema: {"properties" => {"value" => {"type" => "string"}}, "type" => "object"}) do |_request|
+    app.post("/data", handler_name: "content_types_8_20_content_length_mismatch", parameter_schema: {"properties" => {"Content-Length" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, request_schema: {"properties" => {"value" => {"type" => "string"}}, "type" => "object"}) do |_request|
       build_response(content: {"error" => "Content-Length header does not match actual body size"}, status: 400, headers: nil)
     end
     app
@@ -85,7 +85,7 @@ module E2ERubyApp
 
   def create_app_content_types_10_binary_response_application_octet_stream
     app = Spikard::App.new
-    app.get("/download/file.bin") do |_request|
+    app.get("/download/file.bin", handler_name: "content_types_10_binary_response_application_octet_stream") do |_request|
       build_response(content: "binary_data_placeholder", status: 200, headers: nil)
     end
     app
@@ -93,7 +93,7 @@ module E2ERubyApp
 
   def create_app_content_types_11_csv_response_text_csv
     app = Spikard::App.new
-    app.get("/export/data.csv") do |_request|
+    app.get("/export/data.csv", handler_name: "content_types_11_csv_response_text_csv") do |_request|
       build_response(content: "id,name,price\n1,Item A,10.0\n2,Item B,20.0", status: 200, headers: nil)
     end
     app
@@ -109,7 +109,7 @@ module E2ERubyApp
 
   def create_app_content_types_13_html_response_text_html
     app = Spikard::App.new
-    app.get("/html") do |_request|
+    app.get("/html", handler_name: "content_types_13_html_response_text_html") do |_request|
       build_response(content: "<html><body><h1>Hello</h1></body></html>", status: 200, headers: nil)
     end
     app
@@ -117,7 +117,7 @@ module E2ERubyApp
 
   def create_app_content_types_14_jpeg_image_response_image_jpeg
     app = Spikard::App.new
-    app.get("/images/photo.jpg") do |_request|
+    app.get("/images/photo.jpg", handler_name: "content_types_14_jpeg_image_response_image_jpeg") do |_request|
       build_response(content: "jpeg_binary_data", status: 200, headers: nil)
     end
     app
@@ -125,7 +125,7 @@ module E2ERubyApp
 
   def create_app_content_types_15_json_response_application_json
     app = Spikard::App.new
-    app.get("/items/json") do |_request|
+    app.get("/items/json", handler_name: "content_types_15_json_response_application_json") do |_request|
       build_response(content: {"name" => "Item", "price" => 42.0}, status: 200, headers: nil)
     end
     app
@@ -133,7 +133,7 @@ module E2ERubyApp
 
   def create_app_content_types_16_json_with_utf_8_charset
     app = Spikard::App.new
-    app.get("/items/unicode") do |_request|
+    app.get("/items/unicode", handler_name: "content_types_16_json_with_utf_8_charset") do |_request|
       build_response(content: {"emoji" => "\u{2615}", "name" => "Caf\u{e9}"}, status: 200, headers: nil)
     end
     app
@@ -141,7 +141,7 @@ module E2ERubyApp
 
   def create_app_content_types_17_pdf_response_application_pdf
     app = Spikard::App.new
-    app.get("/download/document.pdf") do |_request|
+    app.get("/download/document.pdf", handler_name: "content_types_17_pdf_response_application_pdf") do |_request|
       build_response(content: "pdf_binary_data", status: 200, headers: nil)
     end
     app
@@ -149,7 +149,7 @@ module E2ERubyApp
 
   def create_app_content_types_18_png_image_response_image_png
     app = Spikard::App.new
-    app.get("/images/logo.png") do |_request|
+    app.get("/images/logo.png", handler_name: "content_types_18_png_image_response_image_png") do |_request|
       build_response(content: "png_binary_data", status: 200, headers: nil)
     end
     app
@@ -157,7 +157,7 @@ module E2ERubyApp
 
   def create_app_content_types_19_plain_text_response_text_plain
     app = Spikard::App.new
-    app.get("/text") do |_request|
+    app.get("/text", handler_name: "content_types_19_plain_text_response_text_plain") do |_request|
       build_response(content: "Hello, World!", status: 200, headers: nil)
     end
     app
@@ -165,7 +165,7 @@ module E2ERubyApp
 
   def create_app_content_types_20_xml_response_application_xml
     app = Spikard::App.new
-    app.get("/xml") do |_request|
+    app.get("/xml", handler_name: "content_types_20_xml_response_application_xml") do |_request|
       build_response(content: "<?xml version=\"1.0\"?><item><name>Item</name><price>42.0</price></item>", status: 200, headers: nil)
     end
     app
@@ -213,7 +213,7 @@ module E2ERubyApp
 
   def create_app_cookies_6_apikey_cookie_authentication_success
     app = Spikard::App.new
-    app.get("/users/me", handler_name: "cookies_6_apikey_cookie_authentication_success", parameter_schema: {"properties" => {"key" => {"source" => "cookie", "type" => "string"}}, "type" => "object"}) do |_request|
+    app.get("/users/me", handler_name: "cookies_6_apikey_cookie_authentication_success", parameter_schema: {"properties" => {"key" => {"source" => "cookie", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"username" => "secret"}, status: 200, headers: nil)
     end
     app
@@ -229,7 +229,7 @@ module E2ERubyApp
 
   def create_app_cookies_8_cookie_regex_pattern_validation_success
     app = Spikard::App.new
-    app.get("/cookies/pattern", handler_name: "cookies_8_cookie_regex_pattern_validation_success", parameter_schema: {"properties" => {"tracking_id" => {"source" => "cookie", "type" => "string"}}, "type" => "object"}) do |_request|
+    app.get("/cookies/pattern", handler_name: "cookies_8_cookie_regex_pattern_validation_success", parameter_schema: {"properties" => {"tracking_id" => {"source" => "cookie", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"tracking_id" => "ABC12345"}, status: 200, headers: nil)
     end
     app
@@ -245,7 +245,7 @@ module E2ERubyApp
 
   def create_app_cookies_10_cookie_validation_min_length_constraint_success
     app = Spikard::App.new
-    app.get("/cookies/min-length", handler_name: "cookies_10_cookie_validation_min_length_constraint_success", parameter_schema: {"properties" => {"token" => {"source" => "cookie", "type" => "string"}}, "type" => "object"}) do |_request|
+    app.get("/cookies/min-length", handler_name: "cookies_10_cookie_validation_min_length_constraint_success", parameter_schema: {"properties" => {"token" => {"source" => "cookie", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"token" => "abc"}, status: 200, headers: nil)
     end
     app
@@ -261,7 +261,7 @@ module E2ERubyApp
 
   def create_app_cookies_12_multiple_cookies_success
     app = Spikard::App.new
-    app.get("/items/", handler_name: "cookies_12_multiple_cookies_success", parameter_schema: {"properties" => {"fatebook_tracker" => {"source" => "cookie", "type" => "string"}, "googall_tracker" => {"source" => "cookie", "type" => "string"}, "session_id" => {"source" => "cookie", "type" => "string"}}, "type" => "object"}) do |_request|
+    app.get("/items/", handler_name: "cookies_12_multiple_cookies_success", parameter_schema: {"properties" => {"fatebook_tracker" => {"source" => "cookie", "type" => "string"}, "googall_tracker" => {"source" => "cookie", "type" => "string"}, "session_id" => {"source" => "cookie", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"fatebook_tracker" => "tracker456", "googall_tracker" => "ga789", "session_id" => "session123"}, status: 200, headers: nil)
     end
     app
@@ -269,7 +269,7 @@ module E2ERubyApp
 
   def create_app_cookies_13_optional_apikey_cookie_missing
     app = Spikard::App.new
-    app.get("/users/me", handler_name: "cookies_13_optional_apikey_cookie_missing", parameter_schema: {"properties" => {"key" => {"source" => "cookie", "type" => "string"}}, "type" => "object"}) do |_request|
+    app.get("/users/me", handler_name: "cookies_13_optional_apikey_cookie_missing", parameter_schema: {"properties" => {"key" => {"source" => "cookie", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"msg" => "Create an account first"}, status: 200, headers: nil)
     end
     app
@@ -277,7 +277,7 @@ module E2ERubyApp
 
   def create_app_cookies_14_optional_cookie_parameter_missing
     app = Spikard::App.new
-    app.get("/items/", handler_name: "cookies_14_optional_cookie_parameter_missing", parameter_schema: {"properties" => {"ads_id" => {"source" => "cookie", "type" => "string"}}, "type" => "object"}) do |_request|
+    app.get("/items/", handler_name: "cookies_14_optional_cookie_parameter_missing", parameter_schema: {"properties" => {"ads_id" => {"source" => "cookie", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"ads_id" => nil}, status: 200, headers: nil)
     end
     app
@@ -285,7 +285,7 @@ module E2ERubyApp
 
   def create_app_cookies_15_optional_cookie_parameter_success
     app = Spikard::App.new
-    app.get("/items/", handler_name: "cookies_15_optional_cookie_parameter_success", parameter_schema: {"properties" => {"ads_id" => {"source" => "cookie", "type" => "string"}}, "type" => "object"}) do |_request|
+    app.get("/items/", handler_name: "cookies_15_optional_cookie_parameter_success", parameter_schema: {"properties" => {"ads_id" => {"source" => "cookie", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"ads_id" => "abc123"}, status: 200, headers: nil)
     end
     app
@@ -301,7 +301,7 @@ module E2ERubyApp
 
   def create_app_cookies_17_response_delete_cookie
     app = Spikard::App.new
-    app.post("/cookies/delete", handler_name: "cookies_17_response_delete_cookie", parameter_schema: {"properties" => {"session" => {"source" => "cookie", "type" => "string"}}, "type" => "object"}) do |_request|
+    app.post("/cookies/delete", handler_name: "cookies_17_response_delete_cookie", parameter_schema: {"properties" => {"session" => {"source" => "cookie", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"message" => "Cookie deleted"}, status: 200, headers: nil)
     end
     app
@@ -349,7 +349,7 @@ module E2ERubyApp
 
   def create_app_cookies_23_response_cookie_with_attributes
     app = Spikard::App.new
-    app.get("/cookie/set") do |_request|
+    app.get("/cookie/set", handler_name: "cookies_23_response_cookie_with_attributes") do |_request|
       build_response(content: {"message" => "Cookie set"}, status: 200, headers: nil)
     end
     app
@@ -373,7 +373,7 @@ module E2ERubyApp
 
   def create_app_cookies_26_response_set_cookie_basic
     app = Spikard::App.new
-    app.post("/cookie/") do |_request|
+    app.post("/cookie/", handler_name: "cookies_26_response_set_cookie_basic") do |_request|
       build_response(content: {"message" => "Come to the dark side, we have cookies"}, status: 200, headers: nil)
     end
     app
@@ -381,7 +381,7 @@ module E2ERubyApp
 
   def create_app_cors_1_06_cors_preflight_method_not_allowed
     app = Spikard::App.new
-    app.get("/api/data", handler_name: "cors_1_06_cors_preflight_method_not_allowed", parameter_schema: {"properties" => {"Access-Control-Request-Headers" => {"source" => "header", "type" => "string"}, "Access-Control-Request-Method" => {"source" => "header", "type" => "string"}, "Origin" => {"source" => "header", "type" => "string"}}, "type" => "object"}, cors: {"allowed_headers" => ["Content-Type"], "allowed_methods" => ["GET", "POST"], "allowed_origins" => ["https://example.com"]}) do |_request|
+    app.get("/api/data", handler_name: "cors_1_06_cors_preflight_method_not_allowed", parameter_schema: {"properties" => {"Access-Control-Request-Headers" => {"source" => "header", "type" => "string"}, "Access-Control-Request-Method" => {"source" => "header", "type" => "string"}, "Origin" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, cors: {"allowed_headers" => ["Content-Type"], "allowed_methods" => ["GET", "POST"], "allowed_origins" => ["https://example.com"]}) do |_request|
       build_response(content: nil, status: 403, headers: nil)
     end
     app
@@ -389,7 +389,7 @@ module E2ERubyApp
 
   def create_app_cors_2_07_cors_preflight_header_not_allowed
     app = Spikard::App.new
-    app.post("/api/data", handler_name: "cors_2_07_cors_preflight_header_not_allowed", parameter_schema: {"properties" => {"Access-Control-Request-Headers" => {"source" => "header", "type" => "string"}, "Access-Control-Request-Method" => {"source" => "header", "type" => "string"}, "Origin" => {"source" => "header", "type" => "string"}}, "type" => "object"}, cors: {"allowed_headers" => ["Content-Type"], "allowed_methods" => ["POST"], "allowed_origins" => ["https://example.com"]}) do |_request|
+    app.post("/api/data", handler_name: "cors_2_07_cors_preflight_header_not_allowed", parameter_schema: {"properties" => {"Access-Control-Request-Headers" => {"source" => "header", "type" => "string"}, "Access-Control-Request-Method" => {"source" => "header", "type" => "string"}, "Origin" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, cors: {"allowed_headers" => ["Content-Type"], "allowed_methods" => ["POST"], "allowed_origins" => ["https://example.com"]}) do |_request|
       build_response(content: nil, status: 403, headers: nil)
     end
     app
@@ -397,7 +397,7 @@ module E2ERubyApp
 
   def create_app_cors_3_08_cors_max_age
     app = Spikard::App.new
-    app.post("/api/data", handler_name: "cors_3_08_cors_max_age", parameter_schema: {"properties" => {"Access-Control-Request-Headers" => {"source" => "header", "type" => "string"}, "Access-Control-Request-Method" => {"source" => "header", "type" => "string"}, "Origin" => {"source" => "header", "type" => "string"}}, "type" => "object"}, cors: {"allowed_headers" => ["Content-Type"], "allowed_methods" => ["POST"], "allowed_origins" => ["https://example.com"], "max_age" => 3600}) do |_request|
+    app.post("/api/data", handler_name: "cors_3_08_cors_max_age", parameter_schema: {"properties" => {"Access-Control-Request-Headers" => {"source" => "header", "type" => "string"}, "Access-Control-Request-Method" => {"source" => "header", "type" => "string"}, "Origin" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, cors: {"allowed_headers" => ["Content-Type"], "allowed_methods" => ["POST"], "allowed_origins" => ["https://example.com"], "max_age" => 3600}) do |_request|
       build_response(content: nil, status: 204, headers: nil)
     end
     app
@@ -405,7 +405,7 @@ module E2ERubyApp
 
   def create_app_cors_4_09_cors_expose_headers
     app = Spikard::App.new
-    app.get("/api/data", handler_name: "cors_4_09_cors_expose_headers", parameter_schema: {"properties" => {"Origin" => {"source" => "header", "type" => "string"}}, "type" => "object"}, cors: {"allowed_methods" => ["GET"], "allowed_origins" => ["https://example.com"], "expose_headers" => ["X-Total-Count", "X-Request-Id"]}) do |_request|
+    app.get("/api/data", handler_name: "cors_4_09_cors_expose_headers", parameter_schema: {"properties" => {"Origin" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, cors: {"allowed_methods" => ["GET"], "allowed_origins" => ["https://example.com"], "expose_headers" => ["X-Total-Count", "X-Request-Id"]}) do |_request|
       build_response(content: nil, status: 200, headers: nil)
     end
     app
@@ -413,7 +413,7 @@ module E2ERubyApp
 
   def create_app_cors_5_10_cors_origin_null
     app = Spikard::App.new
-    app.get("/api/data", handler_name: "cors_5_10_cors_origin_null", parameter_schema: {"properties" => {"Origin" => {"source" => "header", "type" => "string"}}, "type" => "object"}, cors: {"allowed_methods" => ["GET"], "allowed_origins" => ["https://example.com"]}) do |_request|
+    app.get("/api/data", handler_name: "cors_5_10_cors_origin_null", parameter_schema: {"properties" => {"Origin" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, cors: {"allowed_methods" => ["GET"], "allowed_origins" => ["https://example.com"]}) do |_request|
       build_response(content: {"error" => "Origin \'null\' is not allowed"}, status: 403, headers: nil)
     end
     app
@@ -421,7 +421,7 @@ module E2ERubyApp
 
   def create_app_cors_6_cors_preflight_request
     app = Spikard::App.new
-    app.options("/items/") do |_request|
+    app.options("/items/", handler_name: "cors_6_cors_preflight_request") do |_request|
       build_response(content: nil, status: 200, headers: nil)
     end
     app
@@ -429,7 +429,7 @@ module E2ERubyApp
 
   def create_app_cors_7_cors_request_blocked
     app = Spikard::App.new
-    app.get("/items/", handler_name: "cors_7_cors_request_blocked", parameter_schema: {"properties" => {"Origin" => {"source" => "header", "type" => "string"}}, "type" => "object"}, cors: {"allowed_headers" => ["Content-Type"], "allowed_methods" => ["GET", "POST"], "allowed_origins" => ["https://example.com"]}) do |_request|
+    app.get("/items/", handler_name: "cors_7_cors_request_blocked", parameter_schema: {"properties" => {"Origin" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, cors: {"allowed_headers" => ["Content-Type"], "allowed_methods" => ["GET", "POST"], "allowed_origins" => ["https://example.com"]}) do |_request|
       build_response(content: {"detail" => "CORS request from origin \'https://malicious-site.com\' not allowed"}, status: 403, headers: nil)
     end
     app
@@ -437,7 +437,7 @@ module E2ERubyApp
 
   def create_app_cors_8_cors_wildcard_origin
     app = Spikard::App.new
-    app.get("/public/data") do |_request|
+    app.get("/public/data", handler_name: "cors_8_cors_wildcard_origin") do |_request|
       build_response(content: {"data" => "public"}, status: 200, headers: nil)
     end
     app
@@ -445,7 +445,7 @@ module E2ERubyApp
 
   def create_app_cors_9_cors_with_credentials
     app = Spikard::App.new
-    app.get("/api/user/profile") do |_request|
+    app.get("/api/user/profile", handler_name: "cors_9_cors_with_credentials") do |_request|
       build_response(content: {"username" => "john"}, status: 200, headers: nil)
     end
     app
@@ -453,7 +453,7 @@ module E2ERubyApp
 
   def create_app_cors_10_simple_cors_request
     app = Spikard::App.new
-    app.get("/items/") do |_request|
+    app.get("/items/", handler_name: "cors_10_simple_cors_request") do |_request|
       build_response(content: {"items" => []}, status: 200, headers: nil)
     end
     app
@@ -805,7 +805,7 @@ module E2ERubyApp
 
   def create_app_headers_24_optional_header_with_none_default_missing
     app = Spikard::App.new
-    app.get("/items/", handler_name: "headers_24_optional_header_with_none_default_missing", parameter_schema: {"properties" => {"strange-header" => {"annotation" => "str", "default" => nil, "source" => "header", "type" => "string"}}, "type" => "object"}) do |_request|
+    app.get("/items/", handler_name: "headers_24_optional_header_with_none_default_missing", parameter_schema: {"properties" => {"strange-header" => {"annotation" => "str", "default" => nil, "source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"strange_header" => nil}, status: 200, headers: nil)
     end
     app
@@ -837,7 +837,7 @@ module E2ERubyApp
 
   def create_app_headers_28_user_agent_header_default_value
     app = Spikard::App.new
-    app.get("/items/", handler_name: "headers_28_user_agent_header_default_value", parameter_schema: {"properties" => {"User-Agent" => {"annotation" => "str", "default" => "testclient", "source" => "header", "type" => "string"}}, "type" => "object"}) do |_request|
+    app.get("/items/", handler_name: "headers_28_user_agent_header_default_value", parameter_schema: {"properties" => {"User-Agent" => {"annotation" => "str", "default" => "testclient", "source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"User-Agent" => "testclient"}, status: 200, headers: nil)
     end
     app
@@ -845,7 +845,7 @@ module E2ERubyApp
 
   def create_app_headers_29_x_api_key_optional_header_missing
     app = Spikard::App.new
-    app.get("/users/me", handler_name: "headers_29_x_api_key_optional_header_missing", parameter_schema: {"properties" => {"key" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "type" => "object"}) do |_request|
+    app.get("/users/me", handler_name: "headers_29_x_api_key_optional_header_missing", parameter_schema: {"properties" => {"key" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"msg" => "Hello World"}, status: 200, headers: nil)
     end
     app
@@ -853,7 +853,7 @@ module E2ERubyApp
 
   def create_app_headers_30_x_api_key_optional_header_success
     app = Spikard::App.new
-    app.get("/users/me", handler_name: "headers_30_x_api_key_optional_header_success", parameter_schema: {"properties" => {"key" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "type" => "object"}) do |_request|
+    app.get("/users/me", handler_name: "headers_30_x_api_key_optional_header_success", parameter_schema: {"properties" => {"key" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"msg" => "Hello secret"}, status: 200, headers: nil)
     end
     app
@@ -909,7 +909,7 @@ module E2ERubyApp
 
   def create_app_http_methods_5_options_cors_preflight_request
     app = Spikard::App.new
-    app.options("/items/") do |_request|
+    app.options("/items/", handler_name: "http_methods_5_options_cors_preflight_request") do |_request|
       build_response(content: nil, status: 200, headers: nil)
     end
     app
@@ -1414,7 +1414,7 @@ module E2ERubyApp
   def create_app_multipart_7_content_type_validation_invalid_type
     app = Spikard::App.new
     app.post("/files/images-only", handler_name: "multipart_7_content_type_validation_invalid_type", file_params: {"file" => {"content_type" => ["image/jpeg", "image/png", "image/gif"], "required" => true}}, request_schema: {"additionalProperties" => false, "properties" => {"file" => {"format" => "binary", "type" => "string"}}, "type" => "object"}) do |_request|
-      build_response(content: nil, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"loc" => ["files", "file"], "msg" => "Invalid content type \'application/x-sh\'. Allowed types: image/jpeg, image/png, image/gif", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -1765,7 +1765,7 @@ module E2ERubyApp
 
   def create_app_path_params_29_path_parameter_type_syntax_invalid_uuid
     app = Spikard::App.new
-    app.get("/type-syntax/items/{id:uuid}") do |_request|
+    app.get("/type-syntax/items/{id:uuid}", handler_name: "path_params_29_path_parameter_type_syntax_invalid_uuid") do |_request|
       build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => "not-a-uuid", "loc" => ["path", "id"], "msg" => "Input should be a valid UUID", "type" => "uuid_parsing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
@@ -1781,7 +1781,7 @@ module E2ERubyApp
 
   def create_app_path_params_31_path_parameter_with_type_syntax_uuid
     app = Spikard::App.new
-    app.get("/type-syntax/items/{id:uuid}") do |_request|
+    app.get("/type-syntax/items/{id:uuid}", handler_name: "path_params_31_path_parameter_with_type_syntax_uuid") do |_request|
       build_response(content: {"id" => "550e8400-e29b-41d4-a716-446655440000"}, status: 200, headers: nil)
     end
     app
@@ -1789,7 +1789,7 @@ module E2ERubyApp
 
   def create_app_path_params_32_path_parameter_with_type_syntax_integer
     app = Spikard::App.new
-    app.get("/type-syntax/users/{user_id:int}") do |_request|
+    app.get("/type-syntax/users/{user_id:int}", handler_name: "path_params_32_path_parameter_with_type_syntax_integer") do |_request|
       build_response(content: {"user_id" => "42"}, status: 200, headers: nil)
     end
     app
@@ -2085,7 +2085,7 @@ module E2ERubyApp
 
   def create_app_query_params_32_array_query_parameter_empty_array
     app = Spikard::App.new
-    app.get("/query/list-default", handler_name: "query_params_32_array_query_parameter_empty_array", parameter_schema: {"properties" => {"tags" => {"annotation" => "list[str]", "default" => [], "items" => {"type" => "string"}, "source" => "query", "type" => "array"}}, "type" => "object"}) do |_request|
+    app.get("/query/list-default", handler_name: "query_params_32_array_query_parameter_empty_array", parameter_schema: {"properties" => {"tags" => {"annotation" => "list[str]", "default" => [], "items" => {"type" => "string"}, "source" => "query", "type" => "array"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: [], status: 200, headers: nil)
     end
     app
@@ -2093,7 +2093,7 @@ module E2ERubyApp
 
   def create_app_query_params_33_array_query_parameter_single_value
     app = Spikard::App.new
-    app.get("/query/list-default", handler_name: "query_params_33_array_query_parameter_single_value", parameter_schema: {"properties" => {"tags" => {"annotation" => "list[str]", "default" => [], "items" => {"type" => "string"}, "source" => "query", "type" => "array"}}, "type" => "object"}) do |_request|
+    app.get("/query/list-default", handler_name: "query_params_33_array_query_parameter_single_value", parameter_schema: {"properties" => {"tags" => {"annotation" => "list[str]", "default" => [], "items" => {"type" => "string"}, "source" => "query", "type" => "array"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: ["apple"], status: 200, headers: nil)
     end
     app
@@ -2189,7 +2189,7 @@ module E2ERubyApp
 
   def create_app_query_params_45_integer_with_default_value_not_provided
     app = Spikard::App.new
-    app.get("/query/int/default", handler_name: "query_params_45_integer_with_default_value_not_provided", parameter_schema: {"properties" => {"query" => {"annotation" => "int", "default" => 10, "source" => "query", "type" => "integer"}}, "type" => "object"}) do |_request|
+    app.get("/query/int/default", handler_name: "query_params_45_integer_with_default_value_not_provided", parameter_schema: {"properties" => {"query" => {"annotation" => "int", "default" => 10, "source" => "query", "type" => "integer"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: "foo bar 10", status: 200, headers: nil)
     end
     app
@@ -2197,7 +2197,7 @@ module E2ERubyApp
 
   def create_app_query_params_46_integer_with_default_value_override
     app = Spikard::App.new
-    app.get("/query/int/default", handler_name: "query_params_46_integer_with_default_value_override", parameter_schema: {"properties" => {"query" => {"annotation" => "int", "default" => 10, "source" => "query", "type" => "integer"}}, "type" => "object"}) do |_request|
+    app.get("/query/int/default", handler_name: "query_params_46_integer_with_default_value_override", parameter_schema: {"properties" => {"query" => {"annotation" => "int", "default" => 10, "source" => "query", "type" => "integer"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: "foo bar 50", status: 200, headers: nil)
     end
     app
@@ -2213,7 +2213,7 @@ module E2ERubyApp
 
   def create_app_query_params_48_list_of_strings_multiple_values
     app = Spikard::App.new
-    app.get("/items/", handler_name: "query_params_48_list_of_strings_multiple_values", parameter_schema: {"properties" => {"q" => {"annotation" => "list[str]", "items" => {"type" => "string"}, "source" => "query", "type" => "array"}}, "type" => "object"}) do |_request|
+    app.get("/items/", handler_name: "query_params_48_list_of_strings_multiple_values", parameter_schema: {"properties" => {"q" => {"annotation" => "list[str]", "items" => {"type" => "string"}, "source" => "query", "type" => "array"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"q" => ["foo", "bar"]}, status: 200, headers: nil)
     end
     app
@@ -2229,7 +2229,7 @@ module E2ERubyApp
 
   def create_app_query_params_50_list_with_default_empty_array_no_values_provided
     app = Spikard::App.new
-    app.get("/query/list-default", handler_name: "query_params_50_list_with_default_empty_array_no_values_provided", parameter_schema: {"properties" => {"tags" => {"annotation" => "list[str]", "default" => [], "items" => {"type" => "string"}, "source" => "query", "type" => "array"}}, "type" => "object"}) do |_request|
+    app.get("/query/list-default", handler_name: "query_params_50_list_with_default_empty_array_no_values_provided", parameter_schema: {"properties" => {"tags" => {"annotation" => "list[str]", "default" => [], "items" => {"type" => "string"}, "source" => "query", "type" => "array"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: [], status: 200, headers: nil)
     end
     app
@@ -2245,7 +2245,7 @@ module E2ERubyApp
 
   def create_app_query_params_52_optional_integer_query_parameter_missing
     app = Spikard::App.new
-    app.get("/query/int/optional", handler_name: "query_params_52_optional_integer_query_parameter_missing", parameter_schema: {"properties" => {"query" => {"annotation" => "int", "source" => "query", "type" => "integer"}}, "type" => "object"}) do |_request|
+    app.get("/query/int/optional", handler_name: "query_params_52_optional_integer_query_parameter_missing", parameter_schema: {"properties" => {"query" => {"annotation" => "int", "source" => "query", "type" => "integer"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: "foo bar None", status: 200, headers: nil)
     end
     app
@@ -2253,7 +2253,7 @@ module E2ERubyApp
 
   def create_app_query_params_53_optional_query_parameter_with_default_value
     app = Spikard::App.new
-    app.get("/query/optional-default", handler_name: "query_params_53_optional_query_parameter_with_default_value", parameter_schema: {"properties" => {"limit" => {"annotation" => "int", "default" => 10, "source" => "query", "type" => "integer"}}, "type" => "object"}) do |_request|
+    app.get("/query/optional-default", handler_name: "query_params_53_optional_query_parameter_with_default_value", parameter_schema: {"properties" => {"limit" => {"annotation" => "int", "default" => 10, "source" => "query", "type" => "integer"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"limit" => 10}, status: 200, headers: nil)
     end
     app
@@ -2261,7 +2261,7 @@ module E2ERubyApp
 
   def create_app_query_params_54_optional_string_query_parameter_missing
     app = Spikard::App.new
-    app.get("/query/optional", handler_name: "query_params_54_optional_string_query_parameter_missing", parameter_schema: {"properties" => {"query" => {"annotation" => "str", "source" => "query", "type" => "string"}}, "type" => "object"}) do |_request|
+    app.get("/query/optional", handler_name: "query_params_54_optional_string_query_parameter_missing", parameter_schema: {"properties" => {"query" => {"annotation" => "str", "source" => "query", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: "foo bar None", status: 200, headers: nil)
     end
     app
@@ -2269,7 +2269,7 @@ module E2ERubyApp
 
   def create_app_query_params_55_optional_string_query_parameter_provided
     app = Spikard::App.new
-    app.get("/query/optional", handler_name: "query_params_55_optional_string_query_parameter_provided", parameter_schema: {"properties" => {"query" => {"annotation" => "str", "source" => "query", "type" => "string"}}, "type" => "object"}) do |_request|
+    app.get("/query/optional", handler_name: "query_params_55_optional_string_query_parameter_provided", parameter_schema: {"properties" => {"query" => {"annotation" => "str", "source" => "query", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: "foo bar baz", status: 200, headers: nil)
     end
     app
@@ -2445,7 +2445,7 @@ module E2ERubyApp
 
   def create_app_status_codes_6_206_partial_content
     app = Spikard::App.new
-    app.get("/files/document.pdf") do |_request|
+    app.get("/files/document.pdf", handler_name: "status_codes_6_206_partial_content") do |_request|
       build_response(content: "binary_data_1024_bytes", status: 206, headers: nil)
     end
     app
@@ -2453,7 +2453,7 @@ module E2ERubyApp
 
   def create_app_status_codes_7_20_414_uri_too_long
     app = Spikard::App.new
-    app.get("/data") do |_request|
+    app.get("/data", handler_name: "status_codes_7_20_414_uri_too_long") do |_request|
       build_response(content: {}, status: 200, headers: nil)
     end
     app
@@ -2461,7 +2461,7 @@ module E2ERubyApp
 
   def create_app_status_codes_8_21_431_request_header_fields_too_large
     app = Spikard::App.new
-    app.get("/data", handler_name: "status_codes_8_21_431_request_header_fields_too_large", parameter_schema: {"properties" => {"X-Large-Header" => {"source" => "header", "type" => "string"}}, "type" => "object"}) do |_request|
+    app.get("/data", handler_name: "status_codes_8_21_431_request_header_fields_too_large", parameter_schema: {"properties" => {"X-Large-Header" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"error" => "Request Header Fields Too Large", "message" => "Request headers exceed maximum allowed size of 8192 bytes"}, status: 431, headers: nil)
     end
     app
@@ -2469,7 +2469,7 @@ module E2ERubyApp
 
   def create_app_status_codes_9_22_501_not_implemented
     app = Spikard::App.new
-    app.get("/data") do |_request|
+    app.get("/data", handler_name: "status_codes_9_22_501_not_implemented") do |_request|
       build_response(content: nil, status: 405, headers: nil)
     end
     app
@@ -2477,7 +2477,7 @@ module E2ERubyApp
 
   def create_app_status_codes_10_23_503_service_unavailable
     app = Spikard::App.new
-    app.get("/data") do |_request|
+    app.get("/data", handler_name: "status_codes_10_23_503_service_unavailable") do |_request|
       build_response(content: {"error" => "Service Unavailable", "message" => "The service is temporarily unavailable. Please try again later."}, status: 503, headers: nil)
     end
     app
@@ -2485,7 +2485,7 @@ module E2ERubyApp
 
   def create_app_status_codes_11_301_moved_permanently_permanent_redirect
     app = Spikard::App.new
-    app.get("/old-path") do |_request|
+    app.get("/old-path", handler_name: "status_codes_11_301_moved_permanently_permanent_redirect") do |_request|
       build_response(content: nil, status: 301, headers: nil)
     end
     app
@@ -2493,7 +2493,7 @@ module E2ERubyApp
 
   def create_app_status_codes_12_302_found_temporary_redirect
     app = Spikard::App.new
-    app.get("/temp-redirect") do |_request|
+    app.get("/temp-redirect", handler_name: "status_codes_12_302_found_temporary_redirect") do |_request|
       build_response(content: nil, status: 302, headers: nil)
     end
     app
@@ -2525,7 +2525,7 @@ module E2ERubyApp
 
   def create_app_status_codes_16_401_unauthorized_missing_authentication
     app = Spikard::App.new
-    app.get("/users/me") do |_request|
+    app.get("/users/me", handler_name: "status_codes_16_401_unauthorized_missing_authentication") do |_request|
       build_response(content: {"detail" => "Not authenticated"}, status: 401, headers: nil)
     end
     app
@@ -2533,7 +2533,7 @@ module E2ERubyApp
 
   def create_app_status_codes_17_403_forbidden_insufficient_permissions
     app = Spikard::App.new
-    app.get("/admin/users") do |_request|
+    app.get("/admin/users", handler_name: "status_codes_17_403_forbidden_insufficient_permissions") do |_request|
       build_response(content: {"detail" => "Not enough permissions"}, status: 403, headers: nil)
     end
     app
@@ -2565,7 +2565,7 @@ module E2ERubyApp
 
   def create_app_status_codes_21_429_too_many_requests
     app = Spikard::App.new
-    app.get("/api/resource") do |_request|
+    app.get("/api/resource", handler_name: "status_codes_21_429_too_many_requests") do |_request|
       build_response(content: {"detail" => "Rate limit exceeded. Try again in 60 seconds."}, status: 429, headers: nil)
     end
     app
@@ -2573,7 +2573,7 @@ module E2ERubyApp
 
   def create_app_status_codes_22_500_internal_server_error_server_error
     app = Spikard::App.new
-    app.get("/error") do |_request|
+    app.get("/error", handler_name: "status_codes_22_500_internal_server_error_server_error") do |_request|
       build_response(content: {"detail" => "Internal server error", "status" => 500, "title" => "Internal Server Error", "type" => "https://spikard.dev/errors/internal-server-error"}, status: 500, headers: nil)
     end
     app
@@ -2581,7 +2581,7 @@ module E2ERubyApp
 
   def create_app_status_codes_23_503_service_unavailable_server_overload
     app = Spikard::App.new
-    app.get("/health") do |_request|
+    app.get("/health", handler_name: "status_codes_23_503_service_unavailable_server_overload") do |_request|
       build_response(content: {"detail" => "Service temporarily unavailable"}, status: 503, headers: nil)
     end
     app

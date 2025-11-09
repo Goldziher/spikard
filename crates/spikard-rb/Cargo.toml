@@ -9,7 +9,7 @@ description = "Ruby bindings for the Spikard HTTP toolkit (thin Magnus wrapper a
 
 [lib]
 name = "spikard_rb"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 magnus = { git = "https://github.com/matsadler/magnus", rev = "f6db11769efb517427bf7f121f9c32e18b059b38", features = ["rb-sys"] }
