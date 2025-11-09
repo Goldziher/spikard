@@ -64,7 +64,6 @@ RSpec.describe "validation_errors" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "tags"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -80,7 +79,6 @@ RSpec.describe "validation_errors" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "tags"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 

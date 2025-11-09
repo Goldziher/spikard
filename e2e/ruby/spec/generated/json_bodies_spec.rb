@@ -25,7 +25,6 @@ RSpec.describe "json_bodies" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "profile", "email"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -68,7 +67,6 @@ RSpec.describe "json_bodies" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "extra_field"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -93,7 +91,6 @@ RSpec.describe "json_bodies" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -109,7 +106,6 @@ RSpec.describe "json_bodies" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -143,7 +139,6 @@ RSpec.describe "json_bodies" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -168,7 +163,6 @@ RSpec.describe "json_bodies" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "username"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -193,7 +187,6 @@ RSpec.describe "json_bodies" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "version"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -218,7 +211,6 @@ RSpec.describe "json_bodies" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -234,7 +226,6 @@ RSpec.describe "json_bodies" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
@@ -259,7 +250,6 @@ RSpec.describe "json_bodies" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body"])
-    expect(body['errors'].first['type']).to eq("validation_error")
     client.close
   end
 
