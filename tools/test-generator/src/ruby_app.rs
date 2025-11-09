@@ -143,23 +143,14 @@ fn build_fixture_function(category: &str, index: usize, fixture: &Fixture) -> St
 ",
     );
 
-    if args.len() == 1 {
-        function.push_str(&format!(
-            "    app.{}({}) do |_request|
+    let args_joined = args.join(", ");
+    function.push_str(&format!(
+        "    app.{}({}, {}) do |_request|
 ",
-            method,
-            string_literal(route)
-        ));
-    } else {
-        let args_joined = args.join(", ");
-        function.push_str(&format!(
-            "    app.{}({}, {}) do |_request|
-",
-            method,
-            string_literal(route),
-            args_joined
-        ));
-    }
+        method,
+        string_literal(route),
+        args_joined
+    ));
 
     let response_expr = build_response_expression(&fixture.expected_response);
     function.push_str(&format!(
@@ -248,9 +239,8 @@ fn build_parameter_schema(params: &Value) -> Option<Value> {
     schema.insert("type".to_string(), Value::String("object".to_string()));
     schema.insert("properties".to_string(), Value::Object(properties));
 
-    if !required_fields.is_empty() {
-        schema.insert("required".to_string(), Value::Array(required_fields));
-    }
+    // Always include required field, even if empty, for consistency
+    schema.insert("required".to_string(), Value::Array(required_fields));
 
     Some(Value::Object(schema))
 }
@@ -261,10 +251,50 @@ fn extract_file_params(params: &Value) -> Option<Value> {
 
 fn build_response_expression(expected: &FixtureExpectedResponse) -> String {
     let status = expected.status_code;
-    let body_code = expected
-        .body
-        .as_ref()
-        .map(value_to_ruby)
-        .unwrap_or_else(|| "nil".to_string());
+
+    // If validation_errors is present, build a validation error response
+    let body_code = if let Some(ref validation_errors) = expected.validation_errors {
+        let count = validation_errors.len();
+        let detail = if count == 1 {
+            "1 validation error in request"
+        } else {
+            &format!("{} validation errors in request", count)
+        };
+
+        // Build errors array
+        let mut errors = Vec::new();
+        for err in validation_errors {
+            let mut error_map = Map::new();
+            error_map.insert("type".to_string(), Value::String(err.error_type.clone()));
+            error_map.insert(
+                "loc".to_string(),
+                Value::Array(err.loc.iter().map(|s| Value::String(s.clone())).collect()),
+            );
+            error_map.insert("msg".to_string(), Value::String(err.msg.clone()));
+            errors.push(Value::Object(error_map));
+        }
+
+        let mut response_map = Map::new();
+        response_map.insert("detail".to_string(), Value::String(detail.to_string()));
+        response_map.insert("errors".to_string(), Value::Array(errors));
+        response_map.insert("status".to_string(), Value::Number(status.into()));
+        response_map.insert(
+            "title".to_string(),
+            Value::String("Request Validation Failed".to_string()),
+        );
+        response_map.insert(
+            "type".to_string(),
+            Value::String("https://spikard.dev/errors/validation-error".to_string()),
+        );
+
+        value_to_ruby(&Value::Object(response_map))
+    } else {
+        expected
+            .body
+            .as_ref()
+            .map(value_to_ruby)
+            .unwrap_or_else(|| "nil".to_string())
+    };
+
     "build_response(content: ".to_string() + &body_code + &format!(", status: {}, headers: nil)", status)
 }

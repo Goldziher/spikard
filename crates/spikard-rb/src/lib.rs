@@ -7,13 +7,13 @@ use bytes::Bytes;
 use cookie::Cookie;
 use magnus::prelude::*;
 use magnus::value::{InnerValue, Opaque};
-use magnus::{Error, Module, RHash, Ruby, Value, function, gc::Marker, method};
+use magnus::{Error, Module, RArray, RHash, Ruby, Value, function, gc::Marker, method};
 use once_cell::sync::Lazy;
 use serde_json::{Map as JsonMap, Value as JsonValue};
 use spikard_http::ParameterValidator;
-use spikard_http::{Handler, HandlerResult, RequestData};
 use spikard_http::problem::ProblemDetails;
 use spikard_http::server::build_router_with_handlers;
+use spikard_http::{Handler, HandlerResult, RequestData};
 use spikard_http::{Route, RouteMetadata, SchemaValidator};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -52,6 +52,18 @@ enum RequestBody {
     Json(JsonValue),
     Form(JsonValue),
     Raw(String),
+    Multipart {
+        form_data: Vec<(String, String)>,
+        files: Vec<FileData>,
+    },
+}
+
+#[derive(Debug, Clone)]
+struct FileData {
+    field_name: String,
+    filename: String,
+    content: Vec<u8>,
+    content_type: Option<String>,
 }
 
 #[derive(Clone)]
@@ -406,6 +418,13 @@ async fn execute_request(
             RequestBody::Raw(raw) => {
                 request = request.bytes(Bytes::from(raw));
             }
+            RequestBody::Multipart { form_data, files } => {
+                let boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
+                let multipart_body = build_multipart_body(&form_data, &files, boundary);
+                request = request
+                    .content_type(&format!("multipart/form-data; boundary={}", boundary))
+                    .bytes(Bytes::from(multipart_body));
+            }
         }
     }
 
@@ -483,7 +502,50 @@ fn parse_request_config(ruby: &Ruby, options: Value) -> Result<RequestConfig, Er
         HashMap::new()
     };
 
-    let body = if let Some(value) = get_kw(ruby, hash, "json") {
+    // Check if files are provided (for multipart)
+    let files_opt = get_kw(ruby, hash, "files");
+    let has_files = files_opt.is_some() && !files_opt.unwrap().is_nil();
+
+    let body = if has_files {
+        // Extract files for multipart upload
+        let files_value = files_opt.unwrap();
+        let files = extract_files(ruby, files_value)?;
+
+        // Extract form data if provided (can have both data and files in multipart)
+        let mut form_data = Vec::new();
+        if let Some(data_value) = get_kw(ruby, hash, "data")
+            && !data_value.is_nil()
+        {
+            let data_hash = RHash::try_convert(data_value)?;
+
+            // Call Ruby's .keys method to get an array of keys
+            let keys_array: RArray = data_hash.funcall("keys", ())?;
+
+            for i in 0..keys_array.len() {
+                let key_val = keys_array.entry::<Value>(i as isize)?;
+                let field_name = String::try_convert(key_val)?;
+                let value = data_hash
+                    .get(key_val)
+                    .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "Failed to get hash value"))?;
+
+                // Check if value is an array
+                if let Some(array) = RArray::from_value(value) {
+                    // Multiple values: add each array element as a separate form field
+                    for j in 0..array.len() {
+                        let item = array.entry::<Value>(j as isize)?;
+                        let item_str = String::try_convert(item)?;
+                        form_data.push((field_name.clone(), item_str));
+                    }
+                } else {
+                    // Single value: convert to string
+                    let value_str = String::try_convert(value)?;
+                    form_data.push((field_name, value_str));
+                }
+            }
+        }
+
+        Some(RequestBody::Multipart { form_data, files })
+    } else if let Some(value) = get_kw(ruby, hash, "json") {
         if value.is_nil() {
             None
         } else {
@@ -768,6 +830,147 @@ fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
+/// Extract files from Ruby hash for multipart upload
+/// Expects:
+/// - Single file: {"field_name" => ["filename", content_bytes, "content_type" (optional)], ...}
+/// - Multiple files: {"field_name" => [["file1", content1, "type1"], ["file2", content2, "type2"]], ...}
+fn extract_files(ruby: &Ruby, files_value: Value) -> Result<Vec<FileData>, Error> {
+    let files_hash = RHash::try_convert(files_value)?;
+
+    // Call Ruby's .keys method to get an array of keys
+    let keys_array: RArray = files_hash.funcall("keys", ())?;
+    let mut result = Vec::new();
+
+    for i in 0..keys_array.len() {
+        let key_val = keys_array.entry::<Value>(i as isize)?;
+        let field_name = String::try_convert(key_val)?;
+        let value = files_hash
+            .get(key_val)
+            .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "Failed to get hash value"))?;
+
+        // Check if it's an array
+        if let Some(outer_array) = RArray::from_value(value) {
+            if outer_array.is_empty() {
+                continue;
+            }
+
+            // Check first element to see if it's a nested array (multiple files) or single file
+            let first_elem = outer_array.entry::<Value>(0)?;
+
+            if RArray::from_value(first_elem).is_some() {
+                // Multiple files: [["file1", content1], ["file2", content2]]
+                for j in 0..outer_array.len() {
+                    let file_array = outer_array.entry::<Value>(j as isize)?;
+                    let file_data = extract_single_file(ruby, &field_name, file_array)?;
+                    result.push(file_data);
+                }
+            } else {
+                // Single file: ["filename", content]
+                let file_data = extract_single_file(ruby, &field_name, value)?;
+                result.push(file_data);
+            }
+        }
+    }
+
+    Ok(result)
+}
+
+/// Extract a single file from Ruby array [filename, content, content_type (optional)]
+fn extract_single_file(ruby: &Ruby, field_name: &str, array_value: Value) -> Result<FileData, Error> {
+    let array = RArray::from_value(array_value)
+        .ok_or_else(|| Error::new(ruby.exception_arg_error(), "file must be an Array [filename, content]"))?;
+
+    if array.len() < 2 {
+        return Err(Error::new(
+            ruby.exception_arg_error(),
+            "file Array must have at least 2 elements: [filename, content]",
+        ));
+    }
+
+    let filename: String = String::try_convert(array.shift()?)?;
+    let content_str: String = String::try_convert(array.shift()?)?;
+    let content = content_str.into_bytes();
+
+    // Optional content_type (3rd element)
+    let content_type: Option<String> = if !array.is_empty() {
+        String::try_convert(array.shift()?).ok()
+    } else {
+        None
+    };
+
+    Ok(FileData {
+        field_name: field_name.to_string(),
+        filename,
+        content,
+        content_type,
+    })
+}
+
+/// Build multipart/form-data body
+fn build_multipart_body(form_data: &[(String, String)], files: &[FileData], boundary: &str) -> Vec<u8> {
+    let mut body = Vec::new();
+
+    // Add form fields first
+    for (field_name, field_value) in form_data {
+        // Boundary line
+        body.extend_from_slice(b"--");
+        body.extend_from_slice(boundary.as_bytes());
+        body.extend_from_slice(b"\r\n");
+
+        // Content-Disposition header (no filename for regular fields)
+        body.extend_from_slice(b"Content-Disposition: form-data; name=\"");
+        body.extend_from_slice(field_name.as_bytes());
+        body.extend_from_slice(b"\"\r\n");
+
+        // Empty line before content
+        body.extend_from_slice(b"\r\n");
+
+        // Field value
+        body.extend_from_slice(field_value.as_bytes());
+
+        // CRLF after content
+        body.extend_from_slice(b"\r\n");
+    }
+
+    // Add files
+    for file in files {
+        // Boundary line
+        body.extend_from_slice(b"--");
+        body.extend_from_slice(boundary.as_bytes());
+        body.extend_from_slice(b"\r\n");
+
+        // Content-Disposition header
+        body.extend_from_slice(b"Content-Disposition: form-data; name=\"");
+        body.extend_from_slice(file.field_name.as_bytes());
+        body.extend_from_slice(b"\"; filename=\"");
+        body.extend_from_slice(file.filename.as_bytes());
+        body.extend_from_slice(b"\"\r\n");
+
+        // Content-Type header (if specified)
+        if let Some(ref content_type) = file.content_type {
+            body.extend_from_slice(b"Content-Type: ");
+            body.extend_from_slice(content_type.as_bytes());
+            body.extend_from_slice(b"\r\n");
+        }
+
+        // Empty line before content
+        body.extend_from_slice(b"\r\n");
+
+        // File content
+        body.extend_from_slice(&file.content);
+
+        // CRLF after content
+        body.extend_from_slice(b"\r\n");
+    }
+
+    // Final boundary
+    body.extend_from_slice(b"--");
+    body.extend_from_slice(boundary.as_bytes());
+    body.extend_from_slice(b"--\r\n");
+
+    body
+}
+
 /// Start the Spikard HTTP server from Ruby
 ///
 /// Creates an Axum HTTP server in a dedicated background thread with its own Tokio runtime.
@@ -791,7 +994,7 @@ fn run_server(
     host: Option<String>,
     port: Option<u32>,
 ) -> Result<(), Error> {
-    use spikard_http::{Server, ServerConfig, SchemaRegistry};
+    use spikard_http::{SchemaRegistry, Server, ServerConfig};
     use tracing::{error, info};
 
     let host = host.unwrap_or_else(|| "127.0.0.1".to_string());
@@ -813,12 +1016,7 @@ fn run_server(
     let json_module = ruby
         .class_object()
         .funcall::<_, _, Value>("const_get", ("JSON",))
-        .map_err(|err| {
-            Error::new(
-                ruby.exception_name_error(),
-                format!("JSON module not found: {}", err),
-            )
-        })?;
+        .map_err(|err| Error::new(ruby.exception_name_error(), format!("JSON module not found: {}", err)))?;
 
     // Create schema registry for validator deduplication
     let schema_registry = SchemaRegistry::new();
@@ -839,7 +1037,7 @@ fn run_server(
                 return Err(Error::new(
                     ruby.exception_arg_error(),
                     format!("Handler '{}' not found in handlers hash", route_meta.handler_name),
-                ))
+                ));
             }
         };
 
@@ -876,13 +1074,15 @@ fn run_server(
 
     // Start the server in a background thread with its own Tokio runtime
     let addr = format!("{}:{}", config.host, config.port);
-    let socket_addr: std::net::SocketAddr = addr
-        .parse()
-        .map_err(|e| Error::new(ruby.exception_arg_error(), format!("Invalid socket address {}: {}", addr, e)))?;
+    let socket_addr: std::net::SocketAddr = addr.parse().map_err(|e| {
+        Error::new(
+            ruby.exception_arg_error(),
+            format!("Invalid socket address {}: {}", addr, e),
+        )
+    })?;
 
     std::thread::spawn(move || {
-        let runtime = tokio::runtime::Runtime::new()
-            .expect("Failed to create Tokio runtime");
+        let runtime = tokio::runtime::Runtime::new().expect("Failed to create Tokio runtime");
 
         runtime.block_on(async move {
             let listener = tokio::net::TcpListener::bind(socket_addr)
