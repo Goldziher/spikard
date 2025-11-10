@@ -9,6 +9,7 @@ from spikard.config import (
     ApiKeyConfig,
     CompressionConfig,
     JwtConfig,
+    OpenApiConfig,
     RateLimitConfig,
     ServerConfig,
     StaticFilesConfig,
@@ -232,9 +233,7 @@ class TestServerConfig:
         assert config.static_files == []
         assert config.graceful_shutdown is True
         assert config.shutdown_timeout == 30
-        assert config.enable_openapi is False
-        assert config.openapi_title is None
-        assert config.openapi_version is None
+        assert config.openapi is None
 
     def test_custom_server_config(self) -> None:
         """Test custom server configuration."""
@@ -252,9 +251,11 @@ class TestServerConfig:
             static_files=[StaticFilesConfig(directory="./public", route_prefix="/static")],
             graceful_shutdown=False,
             shutdown_timeout=60,
-            enable_openapi=True,
-            openapi_title="My API",
-            openapi_version="1.0.0",
+            openapi=OpenApiConfig(
+                enabled=True,
+                title="My API",
+                version="1.0.0",
+            ),
         )
         assert config.host == "0.0.0.0"
         assert config.port == 8080
@@ -273,9 +274,10 @@ class TestServerConfig:
         assert len(config.static_files) == 1
         assert config.graceful_shutdown is False
         assert config.shutdown_timeout == 60
-        assert config.enable_openapi is True
-        assert config.openapi_title == "My API"
-        assert config.openapi_version == "1.0.0"
+        assert config.openapi is not None
+        assert config.openapi.enabled is True
+        assert config.openapi.title == "My API"
+        assert config.openapi.version == "1.0.0"
         # Check middleware configs (assert not None first for mypy)
         assert config.compression is not None
         assert config.rate_limit is not None

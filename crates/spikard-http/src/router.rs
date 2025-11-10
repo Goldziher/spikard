@@ -26,6 +26,9 @@ pub struct Route {
     pub file_params: Option<Value>, // File parameter schema for validation
     pub is_async: bool,
     pub cors: Option<CorsConfig>,
+    /// Precomputed flag: true if this route expects a JSON request body
+    /// Used by middleware to validate Content-Type headers
+    pub expects_json_body: bool,
 }
 
 impl Route {
@@ -77,6 +80,9 @@ impl Route {
 
         let parameter_validator = final_parameter_schema.map(ParameterValidator::new).transpose()?;
 
+        // Precompute: route expects JSON body if it has a request validator
+        let expects_json_body = request_validator.is_some();
+
         Ok(Self {
             method,
             path: metadata.path,
@@ -87,6 +93,7 @@ impl Route {
             file_params: metadata.file_params,
             is_async: metadata.is_async,
             cors: metadata.cors,
+            expects_json_body,
         })
     }
 }

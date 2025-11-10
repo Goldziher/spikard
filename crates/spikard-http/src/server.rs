@@ -188,6 +188,24 @@ async fn create_request_data_with_body(
 pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>) -> Result<AxumRouter, String> {
     let mut app = AxumRouter::new();
 
+    // Build route registry for middleware lookup
+    let mut registry = HashMap::new();
+    for (route, _) in &routes {
+        let axum_path = crate::type_hints::strip_type_hints(&route.path);
+        let axum_path = if axum_path.starts_with('/') {
+            axum_path
+        } else {
+            format!("/{}", axum_path)
+        };
+        registry.insert(
+            (route.method.as_str().to_string(), axum_path),
+            crate::middleware::RouteInfo {
+                expects_json_body: route.expects_json_body,
+            },
+        );
+    }
+    let route_registry: crate::middleware::RouteRegistry = Arc::new(registry);
+
     // Group routes by path to support multiple methods on same route
     let mut routes_by_path: HashMap<String, Vec<RouteHandlerPair>> = HashMap::new();
     for (route, handler) in routes {
@@ -470,6 +488,10 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
         crate::middleware::validate_content_type_middleware,
     ));
     app = app.layer(TraceLayer::new_for_http());
+
+    // Inject route registry as extension for middleware lookup
+    // This must be added AFTER middleware so it runs FIRST (layers run in reverse order)
+    app = app.layer(axum::Extension(route_registry));
 
     Ok(app)
 }
