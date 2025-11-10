@@ -16,15 +16,17 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 
 ### Middleware & Performance
 - [x] Request ID generation (UUID-based, X-Request-ID)
-- [x] Response compression (gzip, brotli)
+- [x] Response compression (gzip, brotli) with `CompressionConfig`
 - [x] Request timeouts (configurable)
 - [x] Body size limits (configurable max size)
-- [x] Rate limiting (IP-based, configurable)
+- [x] Rate limiting (IP-based, configurable) with `RateLimitConfig`
 - [x] Graceful shutdown (SIGTERM/SIGINT)
-- [x] Static file serving (with cache-control)
+- [x] Static file serving (with cache-control) with `StaticFilesConfig`
 - [x] Sensitive header hiding (Authorization, Cookie)
-- [ ] JWT authentication middleware
-- [ ] API Key authentication middleware
+- [x] Comprehensive `ServerConfig` with all middleware settings
+- [x] `JwtConfig` and `ApiKeyConfig` (Rust implementation pending)
+- [ ] JWT authentication middleware (config ready, Rust impl pending)
+- [ ] API Key authentication middleware (config ready, Rust impl pending)
 
 ### Advanced Features
 - [ ] OpenAPI 3.1.0 generation
@@ -37,11 +39,11 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - [ ] Test client
 
 ### Language Bindings
-- [x] Python (PyO3) - Full support
+- [x] Python (PyO3) - Full support with `ServerConfig`
 - [x] Node.js (napi-rs) - Full support
 - [x] Ruby (Magnus) - Full support
 - [x] WebAssembly (wasm-bindgen) - Basic support
-- [ ] Python: Typed config forwarding
+- [x] Python: Typed config forwarding with dataclasses + msgspec
 - [ ] Node.js: Typed config forwarding
 - [ ] Ruby: Typed config forwarding
 
@@ -70,6 +72,126 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - `crates/spikard-node` - Node.js bindings (napi-rs)
 - `crates/spikard-wasm` - WebAssembly bindings (wasm-bindgen)
 - `packages/python/tests` - Fixture-driven integration tests backed by `testing_data/`
+
+## Quick Start
+
+### Python
+
+```python
+from spikard import Spikard, get
+from spikard.config import ServerConfig, CompressionConfig, RateLimitConfig
+
+# Create a simple API
+app = Spikard()
+
+@get("/hello")
+def hello_world():
+    return {"message": "Hello, World!"}
+
+@get("/users/{user_id:int}")
+def get_user(user_id: int):
+    return {"id": user_id, "name": f"User {user_id}"}
+
+# Configure server with middleware
+config = ServerConfig(
+    host="0.0.0.0",
+    port=8080,
+    workers=4,
+    compression=CompressionConfig(
+        gzip=True,
+        brotli=True,
+        quality=9
+    ),
+    rate_limit=RateLimitConfig(
+        per_second=100,
+        burst=200,
+        ip_based=True
+    ),
+    enable_request_id=True,
+    graceful_shutdown=True
+)
+
+# Run the server
+app.run(config=config)
+```
+
+### Configuration Options
+
+The `ServerConfig` class provides comprehensive server configuration:
+
+```python
+from spikard.config import (
+    ServerConfig,
+    CompressionConfig,
+    RateLimitConfig,
+    JwtConfig,
+    ApiKeyConfig,
+    StaticFilesConfig,
+)
+
+config = ServerConfig(
+    # Network settings
+    host="0.0.0.0",
+    port=8080,
+    workers=4,
+
+    # Request handling
+    enable_request_id=True,
+    max_body_size=10 * 1024 * 1024,  # 10MB
+    request_timeout=30,
+
+    # Compression middleware
+    compression=CompressionConfig(
+        gzip=True,
+        brotli=True,
+        min_size=1024,
+        quality=6
+    ),
+
+    # Rate limiting (IP-based)
+    rate_limit=RateLimitConfig(
+        per_second=100,
+        burst=200,
+        ip_based=True
+    ),
+
+    # JWT authentication (coming soon)
+    jwt_auth=JwtConfig(
+        secret="your-secret-key",
+        algorithm="HS256",
+        audience=["https://api.example.com"],
+        issuer="https://auth.example.com"
+    ),
+
+    # API key authentication (coming soon)
+    api_key_auth=ApiKeyConfig(
+        keys=["secret-key-1", "secret-key-2"],
+        header_name="X-API-Key"
+    ),
+
+    # Static file serving
+    static_files=[
+        StaticFilesConfig(
+            directory="./public",
+            route_prefix="/static",
+            cache_control="public, max-age=3600"
+        )
+    ],
+
+    # Graceful shutdown
+    graceful_shutdown=True,
+    shutdown_timeout=30
+)
+```
+
+### Backwards Compatibility
+
+The old API still works for simple use cases:
+
+```python
+app = Spikard()
+app.run(host="0.0.0.0", port=8080, workers=4)
+```
 
 ## Development
 
