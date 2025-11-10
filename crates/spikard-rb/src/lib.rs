@@ -1059,7 +1059,7 @@ fn run_server(
     let config = ServerConfig {
         host: host.clone(),
         port,
-        workers: 1,
+        ..Default::default()
     };
 
     // Initialize logging
