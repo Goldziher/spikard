@@ -6,6 +6,20 @@
 
 // Application
 export { Spikard } from "./app";
+// Configuration types
+export type {
+	ApiKeyConfig,
+	CompressionConfig,
+	ContactInfo,
+	JwtConfig,
+	LicenseInfo,
+	OpenApiConfig,
+	RateLimitConfig,
+	SecuritySchemeInfo,
+	ServerConfig,
+	ServerInfo,
+	StaticFilesConfig,
+} from "./config";
 // Parameter types
 export type { Body, Path, Query, QueryDefault } from "./params";
 // Request interface
