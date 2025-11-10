@@ -29,6 +29,19 @@ import {
 } from "../app/main.js";
 
 describe("content_types", () => {
+	test("415 Unsupported Media Type", async () => {
+		const app = createAppContentTypes415UnsupportedMediaType();
+		const client = new TestClient(app);
+
+		const headers = {
+			"Content-Type": "application/xml",
+		};
+		const json = '<?xml version="1.0"?><item><name>Item</name></item>';
+		const response = await client.post("/items/", { headers, json });
+
+		expect(response.statusCode).toBe(415);
+	});
+
 	test("XML response - application xml", async () => {
 		const app = createAppContentTypesXmlResponseApplicationXml();
 		const client = new TestClient(app);
@@ -68,6 +81,19 @@ describe("content_types", () => {
 		expect(responseData.emoji).toBe("☕");
 		expect(responseData).toHaveProperty("name");
 		expect(responseData.name).toBe("Café");
+	});
+
+	test("16_text_plain_not_accepted", async () => {
+		const app = createAppContentTypes16TextPlainNotAccepted();
+		const client = new TestClient(app);
+
+		const headers = {
+			"Content-Type": "text/plain",
+		};
+		const json = '{"data": "value"}';
+		const response = await client.post("/data", { headers, json });
+
+		expect(response.statusCode).toBe(415);
 	});
 
 	test("PDF response - application pdf", async () => {

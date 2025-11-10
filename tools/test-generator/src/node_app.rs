@@ -145,7 +145,26 @@ fn generate_app_file_per_fixture(fixtures_by_category: &HashMap<String, Vec<Fixt
     code.push_str(" */\n\n");
 
     // Imports
-    code.push_str("import type { RouteMetadata, SpikardApp } from \"@spikard/node\";\n\n");
+    code.push_str("import type { RouteMetadata, SpikardApp } from \"@spikard/node\";\n");
+
+    // Check if any fixture uses middleware - if so, import ServerConfig types
+    let has_middleware = fixtures_by_category
+        .values()
+        .flat_map(|fixtures| fixtures.iter())
+        .any(|f| f.handler.as_ref().and_then(|h| h.middleware.as_ref()).is_some());
+
+    if has_middleware {
+        code.push_str("import type {\n");
+        code.push_str("\tServerConfig,\n");
+        code.push_str("\tJwtConfig,\n");
+        code.push_str("\tApiKeyConfig,\n");
+        code.push_str("\tOpenApiConfig,\n");
+        code.push_str("\tContactInfo,\n");
+        code.push_str("\tLicenseInfo,\n");
+        code.push_str("\tServerInfo,\n");
+        code.push_str("} from \"@spikard/node\";\n");
+    }
+    code.push('\n');
 
     // Track handler names for uniqueness
     let mut handler_names = HashMap::new();
@@ -234,9 +253,21 @@ fn generate_fixture_handler_and_app_node(fixture: &Fixture, handler_name: &str) 
         "undefined".to_string()
     };
 
+    // Generate ServerConfig if middleware is present
+    let config_code = if let Some(handler) = &fixture.handler {
+        if let Some(middleware) = &handler.middleware {
+            generate_server_config_ts(middleware)?
+        } else {
+            String::new()
+        }
+    } else {
+        String::new()
+    };
+
     // Generate app factory
-    let app_factory_code = format!(
-        r#"export function {}(): SpikardApp {{
+    let app_factory_code = if config_code.is_empty() {
+        format!(
+            r#"export function {}(): SpikardApp {{
 	const route: RouteMetadata = {{
 		method: "{}",
 		path: "{}",
@@ -255,16 +286,52 @@ fn generate_fixture_handler_and_app_node(fixture: &Fixture, handler_name: &str) 
 		}},
 	}};
 }}"#,
-        app_factory_name,
-        method.to_uppercase(),
-        route_path,
-        handler_name,
-        body_schema_str,
-        parameter_schema_str,
-        file_params_str,
-        handler_name,
-        to_camel_case(handler_name) // Fix: use camelCase for function reference
-    );
+            app_factory_name,
+            method.to_uppercase(),
+            route_path,
+            handler_name,
+            body_schema_str,
+            parameter_schema_str,
+            file_params_str,
+            handler_name,
+            to_camel_case(handler_name)
+        )
+    } else {
+        format!(
+            r#"export function {}(): SpikardApp {{
+{}
+
+	const route: RouteMetadata = {{
+		method: "{}",
+		path: "{}",
+		handler_name: "{}",
+		request_schema: {},
+		response_schema: undefined,
+		parameter_schema: {},
+		file_params: {},
+		is_async: true,
+	}};
+
+	return {{
+		routes: [route],
+		handlers: {{
+			{}: {},
+		}},
+		config,
+	}};
+}}"#,
+            app_factory_name,
+            config_code,
+            method.to_uppercase(),
+            route_path,
+            handler_name,
+            body_schema_str,
+            parameter_schema_str,
+            file_params_str,
+            handler_name,
+            to_camel_case(handler_name)
+        )
+    };
 
     Ok((handler_func, app_factory_code))
 }
@@ -555,6 +622,169 @@ fn extract_file_params_json(params: &Value) -> Option<String> {
         .as_object()
         .and_then(|obj| obj.get("files"))
         .and_then(|files| serde_json::to_string(files).ok())
+}
+
+/// Generate ServerConfig TypeScript code from middleware JSON
+fn generate_server_config_ts(middleware: &Value) -> Result<String> {
+    let mut config_parts = Vec::new();
+
+    if let Some(obj) = middleware.as_object() {
+        // Handle JWT authentication
+        if let Some(jwt_auth) = obj.get("jwt_auth")
+            && let Some(jwt_obj) = jwt_auth.as_object()
+        {
+            let enabled = jwt_obj.get("enabled").and_then(|v| v.as_bool()).unwrap_or(true);
+            if enabled {
+                let mut jwt_config_parts = Vec::new();
+
+                if let Some(secret) = jwt_obj.get("secret").and_then(|v| v.as_str()) {
+                    jwt_config_parts.push(format!("\t\tsecret: \"{}\"", secret));
+                }
+                if let Some(algorithm) = jwt_obj.get("algorithm").and_then(|v| v.as_str()) {
+                    jwt_config_parts.push(format!("\t\talgorithm: \"{}\"", algorithm));
+                }
+                if let Some(audience) = jwt_obj.get("audience") {
+                    let aud_str = serde_json::to_string(audience)?;
+                    jwt_config_parts.push(format!("\t\taudience: {}", aud_str));
+                }
+                if let Some(issuer) = jwt_obj.get("issuer").and_then(|v| v.as_str()) {
+                    jwt_config_parts.push(format!("\t\tissuer: \"{}\"", issuer));
+                }
+                if let Some(leeway) = jwt_obj.get("leeway").and_then(|v| v.as_i64()) {
+                    jwt_config_parts.push(format!("\t\tleeway: {}", leeway));
+                }
+
+                if !jwt_config_parts.is_empty() {
+                    config_parts.push(format!("\t\tjwtAuth: {{\n{}\n\t\t}}", jwt_config_parts.join(",\n")));
+                }
+            }
+        }
+
+        // Handle API key authentication
+        if let Some(api_key_auth) = obj.get("api_key_auth")
+            && let Some(api_key_obj) = api_key_auth.as_object()
+        {
+            let enabled = api_key_obj.get("enabled").and_then(|v| v.as_bool()).unwrap_or(true);
+            if enabled {
+                let mut api_key_config_parts = Vec::new();
+
+                if let Some(keys) = api_key_obj.get("keys") {
+                    let keys_str = serde_json::to_string(keys)?;
+                    api_key_config_parts.push(format!("\t\tkeys: {}", keys_str));
+                }
+                if let Some(header_name) = api_key_obj.get("header_name").and_then(|v| v.as_str()) {
+                    api_key_config_parts.push(format!("\t\theaderName: \"{}\"", header_name));
+                }
+
+                if !api_key_config_parts.is_empty() {
+                    config_parts.push(format!(
+                        "\t\tapiKeyAuth: {{\n{}\n\t\t}}",
+                        api_key_config_parts.join(",\n")
+                    ));
+                }
+            }
+        }
+
+        // Handle OpenAPI configuration
+        if let Some(openapi) = obj.get("openapi")
+            && let Some(openapi_obj) = openapi.as_object()
+        {
+            let enabled = openapi_obj.get("enabled").and_then(|v| v.as_bool()).unwrap_or(false);
+            if enabled {
+                let mut openapi_config_parts = Vec::new();
+                openapi_config_parts.push("\t\tenabled: true".to_string());
+
+                if let Some(title) = openapi_obj.get("title").and_then(|v| v.as_str()) {
+                    openapi_config_parts.push(format!("\t\ttitle: \"{}\"", title));
+                }
+                if let Some(version) = openapi_obj.get("version").and_then(|v| v.as_str()) {
+                    openapi_config_parts.push(format!("\t\tversion: \"{}\"", version));
+                }
+                if let Some(description) = openapi_obj.get("description").and_then(|v| v.as_str()) {
+                    openapi_config_parts.push(format!("\t\tdescription: \"{}\"", description));
+                }
+                if let Some(swagger_ui_path) = openapi_obj.get("swagger_ui_path").and_then(|v| v.as_str()) {
+                    openapi_config_parts.push(format!("\t\tswaggerUiPath: \"{}\"", swagger_ui_path));
+                }
+                if let Some(redoc_path) = openapi_obj.get("redoc_path").and_then(|v| v.as_str()) {
+                    openapi_config_parts.push(format!("\t\tredocPath: \"{}\"", redoc_path));
+                }
+                if let Some(openapi_json_path) = openapi_obj.get("openapi_json_path").and_then(|v| v.as_str()) {
+                    openapi_config_parts.push(format!("\t\topenapiJsonPath: \"{}\"", openapi_json_path));
+                }
+
+                // Handle contact info
+                if let Some(contact) = openapi_obj.get("contact")
+                    && let Some(contact_obj) = contact.as_object()
+                {
+                    let mut contact_parts = Vec::new();
+                    if let Some(name) = contact_obj.get("name").and_then(|v| v.as_str()) {
+                        contact_parts.push(format!("\t\t\tname: \"{}\"", name));
+                    }
+                    if let Some(email) = contact_obj.get("email").and_then(|v| v.as_str()) {
+                        contact_parts.push(format!("\t\t\temail: \"{}\"", email));
+                    }
+                    if let Some(url) = contact_obj.get("url").and_then(|v| v.as_str()) {
+                        contact_parts.push(format!("\t\t\turl: \"{}\"", url));
+                    }
+                    if !contact_parts.is_empty() {
+                        openapi_config_parts.push(format!("\t\tcontact: {{\n{}\n\t\t}}", contact_parts.join(",\n")));
+                    }
+                }
+
+                // Handle license info
+                if let Some(license) = openapi_obj.get("license")
+                    && let Some(license_obj) = license.as_object()
+                {
+                    let mut license_parts = Vec::new();
+                    if let Some(name) = license_obj.get("name").and_then(|v| v.as_str()) {
+                        license_parts.push(format!("\t\t\tname: \"{}\"", name));
+                    }
+                    if let Some(url) = license_obj.get("url").and_then(|v| v.as_str()) {
+                        license_parts.push(format!("\t\t\turl: \"{}\"", url));
+                    }
+                    if !license_parts.is_empty() {
+                        openapi_config_parts.push(format!("\t\tlicense: {{\n{}\n\t\t}}", license_parts.join(",\n")));
+                    }
+                }
+
+                // Handle servers
+                if let Some(servers) = openapi_obj.get("servers")
+                    && let Some(servers_array) = servers.as_array()
+                {
+                    let mut server_items = Vec::new();
+                    for server in servers_array {
+                        if let Some(server_obj) = server.as_object() {
+                            let mut server_parts = Vec::new();
+                            if let Some(url) = server_obj.get("url").and_then(|v| v.as_str()) {
+                                server_parts.push(format!("\t\t\t\turl: \"{}\"", url));
+                            }
+                            if let Some(desc) = server_obj.get("description").and_then(|v| v.as_str()) {
+                                server_parts.push(format!("\t\t\t\tdescription: \"{}\"", desc));
+                            }
+                            if !server_parts.is_empty() {
+                                server_items.push(format!("\t\t\t{{\n{}\n\t\t\t}}", server_parts.join(",\n")));
+                            }
+                        }
+                    }
+                    if !server_items.is_empty() {
+                        openapi_config_parts.push(format!("\t\tservers: [\n{}\n\t\t]", server_items.join(",\n")));
+                    }
+                }
+
+                config_parts.push(format!("\t\topenapi: {{\n{}\n\t\t}}", openapi_config_parts.join(",\n")));
+            }
+        }
+    }
+
+    if config_parts.is_empty() {
+        return Ok(String::new());
+    }
+
+    Ok(format!(
+        "\tconst config: ServerConfig = {{\n{}\n\t}};",
+        config_parts.join(",\n")
+    ))
 }
 
 fn is_valid_identifier(name: &str) -> bool {
