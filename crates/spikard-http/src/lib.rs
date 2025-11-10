@@ -6,6 +6,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+pub mod auth;
 pub mod cors;
 pub mod debug;
 pub mod handler_trait;
@@ -23,6 +24,7 @@ pub mod validation;
 #[cfg(test)]
 mod handler_trait_tests;
 
+pub use auth::{Claims, api_key_auth_middleware, jwt_auth_middleware};
 pub use handler_trait::{Handler, HandlerResult, RequestData, ValidatedParams};
 pub use parameters::ParameterValidator;
 pub use problem::{CONTENT_TYPE_PROBLEM_JSON, ProblemDetails};

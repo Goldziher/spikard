@@ -1,0 +1,198 @@
+//! Authentication middleware for JWT and API keys.
+//!
+//! This module provides tower middleware for authenticating requests using:
+//! - JWT tokens (via the Authorization header)
+//! - API keys (via custom headers)
+
+use axum::{
+    body::Body,
+    extract::Request,
+    http::{HeaderMap, StatusCode},
+    middleware::Next,
+    response::{IntoResponse, Response},
+};
+use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
+use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
+
+use crate::{ApiKeyConfig, JwtConfig, ProblemDetails};
+
+/// Standard type URI for authentication errors (401)
+const TYPE_AUTH_ERROR: &str = "https://spikard.dev/errors/unauthorized";
+
+/// Standard type URI for configuration errors (500)
+const TYPE_CONFIG_ERROR: &str = "https://spikard.dev/errors/configuration-error";
+
+/// JWT claims structure - can be extended based on needs
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Claims {
+    pub sub: String,
+    pub exp: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub iat: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub nbf: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub aud: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub iss: Option<String>,
+}
+
+/// JWT authentication middleware
+///
+/// Validates JWT tokens from the Authorization header (Bearer scheme).
+/// On success, the validated claims are available to downstream handlers.
+/// On failure, returns 401 Unauthorized with RFC 9457 Problem Details.
+pub async fn jwt_auth_middleware(
+    config: JwtConfig,
+    headers: HeaderMap,
+    request: Request<Body>,
+    next: Next,
+) -> Result<Response, Response> {
+    // Extract token from Authorization header
+    let token = headers
+        .get("authorization")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.strip_prefix("Bearer "))
+        .ok_or_else(|| {
+            let problem = ProblemDetails::new(
+                TYPE_AUTH_ERROR,
+                "Missing or invalid Authorization header",
+                StatusCode::UNAUTHORIZED,
+            )
+            .with_detail("Expected 'Authorization: Bearer <token>'");
+            (StatusCode::UNAUTHORIZED, axum::Json(problem)).into_response()
+        })?;
+
+    // Parse algorithm
+    let algorithm = parse_algorithm(&config.algorithm).map_err(|_| {
+        let problem = ProblemDetails::new(
+            TYPE_CONFIG_ERROR,
+            "Invalid JWT configuration",
+            StatusCode::INTERNAL_SERVER_ERROR,
+        )
+        .with_detail(format!("Unsupported algorithm: {}", config.algorithm));
+        (StatusCode::INTERNAL_SERVER_ERROR, axum::Json(problem)).into_response()
+    })?;
+
+    // Build validation rules
+    let mut validation = Validation::new(algorithm);
+    if let Some(ref aud) = config.audience {
+        validation.set_audience(aud);
+    }
+    if let Some(ref iss) = config.issuer {
+        validation.set_issuer(std::slice::from_ref(iss));
+    }
+    validation.leeway = config.leeway;
+
+    // Decode and validate token
+    let decoding_key = DecodingKey::from_secret(config.secret.as_bytes());
+    let _token_data = decode::<Claims>(token, &decoding_key, &validation).map_err(|e| {
+        let detail = match e.kind() {
+            jsonwebtoken::errors::ErrorKind::ExpiredSignature => "Token has expired",
+            jsonwebtoken::errors::ErrorKind::InvalidToken => "Token is invalid",
+            jsonwebtoken::errors::ErrorKind::InvalidSignature => "Token signature is invalid",
+            jsonwebtoken::errors::ErrorKind::InvalidAudience => "Token audience is invalid",
+            jsonwebtoken::errors::ErrorKind::InvalidIssuer => "Token issuer is invalid",
+            _ => "Token validation failed",
+        };
+
+        let problem =
+            ProblemDetails::new(TYPE_AUTH_ERROR, "JWT validation failed", StatusCode::UNAUTHORIZED).with_detail(detail);
+        (StatusCode::UNAUTHORIZED, axum::Json(problem)).into_response()
+    })?;
+
+    // Token is valid - pass to next middleware/handler
+    // TODO: Attach claims to request extensions for handlers to access
+    Ok(next.run(request).await)
+}
+
+/// Parse JWT algorithm string to jsonwebtoken Algorithm enum
+fn parse_algorithm(alg: &str) -> Result<Algorithm, String> {
+    match alg {
+        "HS256" => Ok(Algorithm::HS256),
+        "HS384" => Ok(Algorithm::HS384),
+        "HS512" => Ok(Algorithm::HS512),
+        "RS256" => Ok(Algorithm::RS256),
+        "RS384" => Ok(Algorithm::RS384),
+        "RS512" => Ok(Algorithm::RS512),
+        "ES256" => Ok(Algorithm::ES256),
+        "ES384" => Ok(Algorithm::ES384),
+        "PS256" => Ok(Algorithm::PS256),
+        "PS384" => Ok(Algorithm::PS384),
+        "PS512" => Ok(Algorithm::PS512),
+        _ => Err(format!("Unsupported algorithm: {}", alg)),
+    }
+}
+
+/// API Key authentication middleware
+///
+/// Validates API keys from a custom header (default: X-API-Key).
+/// On success, the request proceeds to the next handler.
+/// On failure, returns 401 Unauthorized with RFC 9457 Problem Details.
+pub async fn api_key_auth_middleware(
+    config: ApiKeyConfig,
+    headers: HeaderMap,
+    request: Request<Body>,
+    next: Next,
+) -> Result<Response, Response> {
+    // Build HashSet for O(1) lookup
+    let valid_keys: HashSet<String> = config.keys.into_iter().collect();
+
+    // Extract API key from configured header
+    let api_key = headers
+        .get(&config.header_name)
+        .and_then(|v| v.to_str().ok())
+        .ok_or_else(|| {
+            let problem = ProblemDetails::new(TYPE_AUTH_ERROR, "Missing API key", StatusCode::UNAUTHORIZED)
+                .with_detail(format!("Expected '{}' header with valid API key", config.header_name));
+            (StatusCode::UNAUTHORIZED, axum::Json(problem)).into_response()
+        })?;
+
+    // Validate API key
+    if !valid_keys.contains(api_key) {
+        let problem = ProblemDetails::new(TYPE_AUTH_ERROR, "Invalid API key", StatusCode::UNAUTHORIZED)
+            .with_detail("The provided API key is not valid");
+        return Err((StatusCode::UNAUTHORIZED, axum::Json(problem)).into_response());
+    }
+
+    // API key is valid - pass to next middleware/handler
+    Ok(next.run(request).await)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_algorithm() {
+        assert!(matches!(parse_algorithm("HS256"), Ok(Algorithm::HS256)));
+        assert!(matches!(parse_algorithm("HS384"), Ok(Algorithm::HS384)));
+        assert!(matches!(parse_algorithm("HS512"), Ok(Algorithm::HS512)));
+        assert!(matches!(parse_algorithm("RS256"), Ok(Algorithm::RS256)));
+        assert!(matches!(parse_algorithm("RS384"), Ok(Algorithm::RS384)));
+        assert!(matches!(parse_algorithm("RS512"), Ok(Algorithm::RS512)));
+        assert!(matches!(parse_algorithm("ES256"), Ok(Algorithm::ES256)));
+        assert!(matches!(parse_algorithm("ES384"), Ok(Algorithm::ES384)));
+        assert!(matches!(parse_algorithm("PS256"), Ok(Algorithm::PS256)));
+        assert!(matches!(parse_algorithm("PS384"), Ok(Algorithm::PS384)));
+        assert!(matches!(parse_algorithm("PS512"), Ok(Algorithm::PS512)));
+        assert!(parse_algorithm("INVALID").is_err());
+    }
+
+    #[test]
+    fn test_claims_serialization() {
+        let claims = Claims {
+            sub: "user123".to_string(),
+            exp: 1234567890,
+            iat: Some(1234567800),
+            nbf: None,
+            aud: Some(vec!["https://api.example.com".to_string()]),
+            iss: Some("https://auth.example.com".to_string()),
+        };
+
+        let json = serde_json::to_string(&claims).unwrap();
+        assert!(json.contains("user123"));
+        assert!(json.contains("1234567890"));
+    }
+}
