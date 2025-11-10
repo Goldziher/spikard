@@ -33,7 +33,6 @@ class Request:
         Note: In practice, Request objects are created by the Rust backend,
         not by user code.
         """
-        ...
 
     def json(self) -> Any:
         """Parse request body as JSON.
