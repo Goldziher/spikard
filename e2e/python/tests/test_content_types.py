@@ -128,8 +128,8 @@ async def test_20_content_length_mismatch() -> None:
     client = TestClient(app)
 
     headers = {
-        "Content-Length": "100",
         "Content-Type": "application/json",
+        "Content-Length": "100",
     }
     json_data = {"value": "short"}
     response = await client.post("/data", headers=headers, json=json_data)
@@ -237,7 +237,6 @@ async def test_html_response_text_html() -> None:
     response = await client.get("/html")
 
     assert response.status_code == 200
-    response_data = response.json()
     assert response_data == "<html><body><h1>Hello</h1></body></html>"
 
 

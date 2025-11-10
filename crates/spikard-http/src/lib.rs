@@ -11,6 +11,7 @@ pub mod cors;
 pub mod debug;
 pub mod handler_trait;
 pub mod middleware;
+pub mod openapi;
 pub mod parameters;
 pub mod problem;
 pub mod query_parser;
@@ -26,6 +27,7 @@ mod handler_trait_tests;
 
 pub use auth::{Claims, api_key_auth_middleware, jwt_auth_middleware};
 pub use handler_trait::{Handler, HandlerResult, RequestData, ValidatedParams};
+pub use openapi::{ContactInfo, LicenseInfo, OpenApiConfig, SecuritySchemeInfo, ServerInfo};
 pub use parameters::ParameterValidator;
 pub use problem::{CONTENT_TYPE_PROBLEM_JSON, ProblemDetails};
 pub use response::Response;
@@ -59,6 +61,12 @@ impl Method {
             Method::Options => "OPTIONS",
             Method::Trace => "TRACE",
         }
+    }
+}
+
+impl std::fmt::Display for Method {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str())
     }
 }
 
@@ -252,12 +260,8 @@ pub struct ServerConfig {
     pub graceful_shutdown: bool,
     /// Graceful shutdown timeout (seconds)
     pub shutdown_timeout: u64,
-    /// Enable OpenAPI/Swagger documentation
-    pub enable_openapi: bool,
-    /// OpenAPI title
-    pub openapi_title: Option<String>,
-    /// OpenAPI version
-    pub openapi_version: Option<String>,
+    /// OpenAPI documentation configuration
+    pub openapi: Option<crate::openapi::OpenApiConfig>,
 }
 
 impl Default for ServerConfig {
@@ -276,9 +280,7 @@ impl Default for ServerConfig {
             static_files: Vec::new(),
             graceful_shutdown: true,
             shutdown_timeout: 30,
-            enable_openapi: false,
-            openapi_title: None,
-            openapi_version: None,
+            openapi: None,
         }
     }
 }

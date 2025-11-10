@@ -41,8 +41,40 @@ module Spikard
       map
     end
 
-    def run(host: '0.0.0.0', port: 8000)
+    # Run the Spikard server with the given configuration
+    #
+    # @param config [ServerConfig, Hash, nil] Server configuration
+    #   Can be a ServerConfig object, a Hash with configuration keys, or nil to use defaults.
+    #   If a Hash is provided, it will be converted to a ServerConfig.
+    #   For backward compatibility, also accepts host: and port: keyword arguments.
+    #
+    # @example With ServerConfig
+    #   config = Spikard::ServerConfig.new(
+    #     host: '0.0.0.0',
+    #     port: 8080,
+    #     compression: Spikard::CompressionConfig.new(quality: 9)
+    #   )
+    #   app.run(config: config)
+    #
+    # @example With Hash
+    #   app.run(config: { host: '0.0.0.0', port: 8080 })
+    #
+    # @example Backward compatible (deprecated)
+    #   app.run(host: '0.0.0.0', port: 8000)
+    def run(config: nil, host: nil, port: nil)
       require 'json'
+
+      # Backward compatibility: if host/port are provided directly, create a config
+      if config.nil? && (host || port)
+        config = ServerConfig.new(
+          host: host || '127.0.0.1',
+          port: port || 8000
+        )
+      elsif config.nil?
+        config = ServerConfig.new
+      elsif config.is_a?(Hash)
+        config = ServerConfig.new(**config)
+      end
 
       # Convert route metadata to JSON
       routes_json = JSON.generate(route_metadata)
@@ -51,7 +83,7 @@ module Spikard
       handlers = handler_map
 
       # Call the Rust extension's run_server function
-      Spikard::Native.run_server(routes_json, handlers, host, port)
+      Spikard::Native.run_server(routes_json, handlers, config)
 
       # Keep Ruby process alive while server runs
       sleep

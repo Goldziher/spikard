@@ -298,8 +298,18 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
 
     if status_code == 200 {
         // Success case - verify response matches expected
+        // Check if response is HTML (Swagger UI, Redoc, etc.) - don't parse as JSON
+        let is_html_response = fixture
+            .expected_response
+            .headers
+            .as_ref()
+            .and_then(|h| h.get("content-type"))
+            .map(|ct| ct.contains("text/html"))
+            .unwrap_or(false);
+
         // Skip parsing JSON for HEAD requests without expected body (HEAD has no response body)
-        let should_parse_json = method != "HEAD" || fixture.expected_response.body.is_some();
+        // Also skip for HTML responses
+        let should_parse_json = !is_html_response && (method != "HEAD" || fixture.expected_response.body.is_some());
 
         if should_parse_json {
             code.push_str("    response_data = response.json()\n");

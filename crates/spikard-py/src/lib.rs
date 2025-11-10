@@ -142,8 +142,8 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
     // Create schema registry for deduplication across all routes
     let schema_registry = spikard_http::SchemaRegistry::new();
 
-    // Convert to Route + Py<PyAny> pairs
-    // Use Route::from_metadata() to enable type hint parsing and auto-generation
+    // Convert to (Route, RouteMetadata, Handler) tuples
+    // Keep metadata for OpenAPI generation
     let routes: Vec<_> = routes_with_handlers
         .into_iter()
         .filter_map(|r| {
@@ -153,10 +153,13 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
                 r.metadata.method, r.metadata.path, has_explicit_parameter_schema
             );
 
+            // Clone metadata before consuming it for Route creation
+            let metadata_clone = r.metadata.clone();
+
             // Use Route::from_metadata() which handles type hint parsing and auto-generation
             // Pass the registry to enable schema deduplication
             match spikard_http::Route::from_metadata(r.metadata, &schema_registry) {
-                Ok(route) => Some((route, r.handler)),
+                Ok(route) => Some((route, metadata_clone, r.handler)),
                 Err(e) => {
                     eprintln!("[UNCONDITIONAL DEBUG] Failed to create route: {}", e);
                     None
@@ -187,10 +190,14 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
         routes.len()
     );
 
+    // Separate metadata and routes for OpenAPI generation
+    let route_metadata: Vec<spikard_http::RouteMetadata> =
+        routes.iter().map(|(_, metadata, _)| metadata.clone()).collect();
+
     // Wrap each Python handler in PythonHandler and Arc<dyn Handler>
     let handler_routes: Vec<(spikard_http::Route, std::sync::Arc<dyn spikard_http::Handler>)> = routes
         .into_iter()
-        .map(|(route, py_handler)| {
+        .map(|(route, _metadata, py_handler)| {
             let python_handler = PythonHandler::new(
                 py_handler,
                 route.is_async,
@@ -203,7 +210,7 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
         })
         .collect();
 
-    let axum_router = Server::with_handlers(config, handler_routes)
+    let axum_router = Server::with_handlers_and_metadata(config, handler_routes, route_metadata)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to build router: {}", e)))?;
 
     let _ = std::fs::write("/tmp/axum_router_built.log", "Axum router built successfully\n");
@@ -219,7 +226,11 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
 
 /// Convert Python ServerConfig to Rust ServerConfig
 fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyResult<spikard_http::ServerConfig> {
-    use spikard_http::{ApiKeyConfig, CompressionConfig, JwtConfig, RateLimitConfig, ServerConfig, StaticFilesConfig};
+    use spikard_http::{
+        ApiKeyConfig, CompressionConfig, ContactInfo, JwtConfig, LicenseInfo, OpenApiConfig, RateLimitConfig,
+        SecuritySchemeInfo, ServerConfig, ServerInfo, StaticFilesConfig,
+    };
+    use std::collections::HashMap;
 
     // Extract basic fields
     let host: String = py_config.getattr("host")?.extract()?;
@@ -228,13 +239,10 @@ fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyRes
     let enable_request_id: bool = py_config.getattr("enable_request_id")?.extract()?;
     let graceful_shutdown: bool = py_config.getattr("graceful_shutdown")?.extract()?;
     let shutdown_timeout: u64 = py_config.getattr("shutdown_timeout")?.extract()?;
-    let enable_openapi: bool = py_config.getattr("enable_openapi")?.extract()?;
 
     // Extract optional fields
     let max_body_size: Option<usize> = py_config.getattr("max_body_size")?.extract()?;
     let request_timeout: Option<u64> = py_config.getattr("request_timeout")?.extract()?;
-    let openapi_title: Option<String> = py_config.getattr("openapi_title")?.extract()?;
-    let openapi_version: Option<String> = py_config.getattr("openapi_version")?.extract()?;
 
     // Extract compression config
     let compression = py_config.getattr("compression")?;
@@ -315,6 +323,98 @@ fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyRes
         })
         .collect::<PyResult<Vec<_>>>()?;
 
+    // Extract OpenAPI config
+    let openapi_py = py_config.getattr("openapi")?;
+    let openapi_config = if openapi_py.is_none() {
+        None
+    } else {
+        let enabled: bool = openapi_py.getattr("enabled")?.extract()?;
+        let title: String = openapi_py.getattr("title")?.extract()?;
+        let version: String = openapi_py.getattr("version")?.extract()?;
+        let description: Option<String> = openapi_py.getattr("description")?.extract()?;
+        let swagger_ui_path: String = openapi_py.getattr("swagger_ui_path")?.extract()?;
+        let redoc_path: String = openapi_py.getattr("redoc_path")?.extract()?;
+        let openapi_json_path: String = openapi_py.getattr("openapi_json_path")?.extract()?;
+
+        // Extract contact info
+        let contact_py = openapi_py.getattr("contact")?;
+        let contact = if contact_py.is_none() {
+            None
+        } else {
+            let name: Option<String> = contact_py.getattr("name")?.extract()?;
+            let email: Option<String> = contact_py.getattr("email")?.extract()?;
+            let url: Option<String> = contact_py.getattr("url")?.extract()?;
+            Some(ContactInfo { name, email, url })
+        };
+
+        // Extract license info
+        let license_py = openapi_py.getattr("license")?;
+        let license = if license_py.is_none() {
+            None
+        } else {
+            let name: String = license_py.getattr("name")?.extract()?;
+            let url: Option<String> = license_py.getattr("url")?.extract()?;
+            Some(LicenseInfo { name, url })
+        };
+
+        // Extract servers
+        let servers_list: Vec<Bound<'_, PyAny>> = openapi_py.getattr("servers")?.extract()?;
+        let servers: Vec<ServerInfo> = servers_list
+            .iter()
+            .map(|s| {
+                let url: String = s.getattr("url")?.extract()?;
+                let description: Option<String> = s.getattr("description")?.extract()?;
+                Ok(ServerInfo { url, description })
+            })
+            .collect::<PyResult<Vec<_>>>()?;
+
+        // Extract security schemes (dict)
+        let security_schemes_dict: HashMap<String, Bound<'_, PyAny>> =
+            openapi_py.getattr("security_schemes")?.extract()?;
+        let security_schemes: HashMap<String, SecuritySchemeInfo> = security_schemes_dict
+            .iter()
+            .map(|(name, scheme_py)| {
+                let scheme_type: String = scheme_py.getattr("type")?.extract()?;
+                let scheme_info = match scheme_type.as_str() {
+                    "http" => {
+                        let scheme: String = scheme_py.getattr("scheme")?.extract()?;
+                        let bearer_format: Option<String> = scheme_py.getattr("bearer_format")?.extract()?;
+                        SecuritySchemeInfo::Http { scheme, bearer_format }
+                    }
+                    "apiKey" => {
+                        let location: String = scheme_py.getattr("location")?.extract()?;
+                        let param_name: String = scheme_py.getattr("name")?.extract()?;
+                        SecuritySchemeInfo::ApiKey {
+                            location,
+                            name: param_name,
+                        }
+                    }
+                    _ => {
+                        return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                            "Invalid security scheme type: {}",
+                            scheme_type
+                        )));
+                    }
+                };
+                Ok((name.clone(), scheme_info))
+            })
+            .collect::<PyResult<HashMap<_, _>>>()?;
+
+        Some(OpenApiConfig {
+            enabled,
+            title,
+            version,
+            description,
+            swagger_ui_path,
+            redoc_path,
+            openapi_json_path,
+            contact,
+            license,
+            servers,
+            security_schemes,
+        })
+    };
+
     Ok(ServerConfig {
         host,
         port,
@@ -329,9 +429,7 @@ fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyRes
         static_files,
         graceful_shutdown,
         shutdown_timeout,
-        enable_openapi,
-        openapi_title,
-        openapi_version,
+        openapi: openapi_config,
     })
 }
 
