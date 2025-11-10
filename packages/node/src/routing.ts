@@ -2,7 +2,7 @@
  * Routing decorators and utilities for Spikard
  */
 
-import type { RouteMetadata } from "./index";
+import type { CorsConfig, JsonSchema, RouteMetadata } from "./index";
 
 /**
  * Route configuration options
@@ -15,24 +15,24 @@ export interface RouteOptions {
 	methods?: string | string[];
 
 	/**
-	 * Request body schema (Zod schema)
+	 * Request body schema (JSON Schema or Zod schema)
 	 */
-	bodySchema?: unknown;
+	bodySchema?: JsonSchema;
 
 	/**
-	 * Response schema (Zod schema)
+	 * Response schema (JSON Schema or Zod schema)
 	 */
-	responseSchema?: unknown;
+	responseSchema?: JsonSchema;
 
 	/**
-	 * Parameter schema (Zod schema for path and query parameters)
+	 * Parameter schema (JSON Schema or Zod schema for path and query parameters)
 	 */
-	parameterSchema?: unknown;
+	parameterSchema?: JsonSchema;
 
 	/**
 	 * CORS configuration
 	 */
-	cors?: unknown;
+	cors?: CorsConfig;
 }
 
 /**
