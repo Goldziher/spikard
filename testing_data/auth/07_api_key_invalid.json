@@ -1,0 +1,46 @@
+{
+	"name": "API key authentication - invalid key",
+	"description": "Tests API key authentication failure when provided key is not in the valid keys list",
+	"category": "auth",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastapi security",
+		"test_case": "API key validation failure"
+	},
+	"handler": {
+		"route": "/api/data",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"X-API-Key": {
+					"type": "string",
+					"required": true
+				}
+			}
+		},
+		"middleware": {
+			"api_key_auth": {
+				"enabled": true,
+				"keys": ["sk_test_123456", "sk_test_789012"],
+				"header_name": "X-API-Key"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/data",
+		"headers": {
+			"X-API-Key": "invalid_key_12345"
+		}
+	},
+	"expected_response": {
+		"status_code": 401,
+		"body": {
+			"type": "https://spikard.dev/errors/unauthorized",
+			"title": "Invalid API key",
+			"status": 401,
+			"detail": "The provided API key is not valid"
+		}
+	},
+	"tags": ["auth", "api_key", "security", "middleware", "error", "unauthorized"]
+}

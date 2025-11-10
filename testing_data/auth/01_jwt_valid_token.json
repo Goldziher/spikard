@@ -1,0 +1,48 @@
+{
+	"name": "JWT authentication - valid token",
+	"description": "Tests JWT authentication with a valid token containing correct signature and claims",
+	"category": "auth",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastapi security",
+		"test_case": "JWT token validation success"
+	},
+	"handler": {
+		"route": "/protected/user",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Authorization": {
+					"type": "string",
+					"required": true,
+					"description": "JWT token in Bearer format"
+				}
+			}
+		},
+		"middleware": {
+			"jwt_auth": {
+				"enabled": true,
+				"algorithm": "HS256",
+				"secret": "test-secret-key-do-not-use-in-production",
+				"audience": ["https://api.example.com"],
+				"issuer": "https://auth.example.com"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/protected/user",
+		"headers": {
+			"Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNTM0MDIzMDA3OTksImlhdCI6MTczMTI1MjAwMCwiYXVkIjpbImh0dHBzOi8vYXBpLmV4YW1wbGUuY29tIl0sImlzcyI6Imh0dHBzOi8vYXV0aC5leGFtcGxlLmNvbSJ9.xxxxxx"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Access granted",
+			"user_id": "user123"
+		}
+	},
+	"tags": ["auth", "jwt", "bearer", "security", "middleware", "success"],
+	"notes": "Token expires in year 2050 to avoid expiration issues. Real signature should be computed with the secret."
+}
