@@ -285,7 +285,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, host: String, port: u16, w
     let config = ServerConfig {
         host: host.clone(),
         port,
-        workers: 1,
+        ..Default::default()
     };
 
     // Initialize logging

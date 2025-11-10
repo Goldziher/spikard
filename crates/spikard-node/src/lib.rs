@@ -163,7 +163,7 @@ pub fn run_server(_env: Env, app: Object, host: Option<String>, port: Option<u32
     let config = ServerConfig {
         host: host.clone(),
         port,
-        workers: 1,
+        ..Default::default()
     };
 
     // Create schema registry for validator deduplication

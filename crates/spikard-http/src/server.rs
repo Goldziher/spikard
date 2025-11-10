@@ -5,19 +5,66 @@ use crate::query_parser::parse_query_string_to_json;
 use crate::{CorsConfig, Router, ServerConfig};
 use axum::Router as AxumRouter;
 use axum::body::Body;
-use axum::extract::Path;
+use axum::extract::{DefaultBodyLimit, Path};
 use axum::routing::{MethodRouter, get};
 use http_body_util::BodyExt;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::net::TcpListener;
+use tower_governor::governor::GovernorConfigBuilder;
+use tower_http::compression::CompressionLayer;
+use tower_http::request_id::{MakeRequestId, PropagateRequestIdLayer, RequestId, SetRequestIdLayer};
+use tower_http::sensitive_headers::SetSensitiveRequestHeadersLayer;
+use tower_http::services::ServeDir;
+use tower_http::set_header::SetResponseHeaderLayer;
+use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use uuid::Uuid;
 
 /// Type alias for route handler pairs
 type RouteHandlerPair = (crate::Route, Arc<dyn Handler>);
+
+/// Request ID generator using UUIDs
+#[derive(Clone, Default)]
+struct MakeRequestUuid;
+
+impl MakeRequestId for MakeRequestUuid {
+    fn make_request_id<B>(&mut self, _request: &axum::http::Request<B>) -> Option<RequestId> {
+        let id = Uuid::new_v4().to_string().parse().ok()?;
+        Some(RequestId::new(id))
+    }
+}
+
+/// Graceful shutdown signal handler
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c().await.expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {
+            tracing::info!("Received SIGINT (Ctrl+C), starting graceful shutdown");
+        },
+        _ = terminate => {
+            tracing::info!("Received SIGTERM, starting graceful shutdown");
+        },
+    }
+}
 
 /// Extract and parse query parameters from request URI
 fn extract_query_params(uri: &axum::http::Uri) -> Value {
@@ -427,6 +474,99 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
     Ok(app)
 }
 
+/// Build router with handlers and apply middleware based on config
+fn build_router_with_handlers_and_config(
+    routes: Vec<RouteHandlerPair>,
+    config: ServerConfig,
+) -> Result<AxumRouter, String> {
+    // Start with the basic router
+    let mut app = build_router_with_handlers(routes)?;
+
+    // Apply middleware layers directly (they're applied in reverse order)
+    // Layer order: last added = first executed
+
+    // 1. Sensitive headers (hide auth tokens from logs)
+    app = app.layer(SetSensitiveRequestHeadersLayer::new([
+        axum::http::header::AUTHORIZATION,
+        axum::http::header::COOKIE,
+    ]));
+
+    // 2. Compression (should compress final responses)
+    if let Some(compression) = config.compression {
+        let mut compression_layer = CompressionLayer::new();
+        if !compression.gzip {
+            compression_layer = compression_layer.gzip(false);
+        }
+        if !compression.brotli {
+            compression_layer = compression_layer.br(false);
+        }
+        app = app.layer(compression_layer);
+    }
+
+    // 3. Rate limiting (before other processing to reject early)
+    if let Some(rate_limit) = config.rate_limit {
+        let governor_conf = Arc::new(
+            GovernorConfigBuilder::default()
+                .per_second(rate_limit.per_second)
+                .burst_size(rate_limit.burst)
+                .finish()
+                .ok_or_else(|| "Failed to create rate limiter".to_string())?,
+        );
+        app = app.layer(tower_governor::GovernorLayer::new(governor_conf));
+    }
+
+    // 4. Timeout layer (should wrap everything except request ID)
+    if let Some(timeout_secs) = config.request_timeout {
+        app = app.layer(TimeoutLayer::new(Duration::from_secs(timeout_secs)));
+    }
+
+    // 5. Request ID (outermost - should be first to execute)
+    if config.enable_request_id {
+        app = app
+            .layer(PropagateRequestIdLayer::x_request_id())
+            .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid));
+    }
+
+    // 6. Body size limit (applied directly as it's not a tower::Layer)
+    if let Some(max_size) = config.max_body_size {
+        app = app.layer(DefaultBodyLimit::max(max_size));
+    } else {
+        // Disable body limit if None (not recommended for production)
+        app = app.layer(DefaultBodyLimit::disable());
+    }
+
+    // 7. Add static file serving routes
+    for static_config in config.static_files {
+        let mut serve_dir = ServeDir::new(&static_config.directory);
+        if static_config.index_file {
+            serve_dir = serve_dir.append_index_html_on_directories(true);
+        }
+
+        // Optionally add cache-control header by wrapping in a Router
+        if let Some(cache_control) = static_config.cache_control {
+            let static_router =
+                AxumRouter::new()
+                    .nest_service("/", serve_dir)
+                    .layer(SetResponseHeaderLayer::overriding(
+                        axum::http::header::CACHE_CONTROL,
+                        axum::http::HeaderValue::from_str(&cache_control)
+                            .map_err(|e| format!("Invalid cache-control header: {}", e))?,
+                    ));
+            app = app.nest_service(&static_config.route_prefix, static_router);
+        } else {
+            app = app.nest_service(&static_config.route_prefix, serve_dir);
+        }
+
+        tracing::info!(
+            "Serving static files from '{}' at '{}'",
+            static_config.directory,
+            static_config.route_prefix
+        );
+    }
+
+    Ok(app)
+}
+
 /// HTTP Server
 pub struct Server {
     config: ServerConfig,
@@ -446,10 +586,29 @@ impl Server {
     /// for the same path (e.g., GET /data and POST /data). Axum requires that all methods
     /// for a path be merged into a single MethodRouter before calling `.route()`.
     pub fn with_handlers(
-        _config: ServerConfig,
+        config: ServerConfig,
         routes: Vec<(crate::Route, Arc<dyn Handler>)>,
     ) -> Result<AxumRouter, String> {
-        build_router_with_handlers(routes)
+        build_router_with_handlers_and_config(routes, config)
+    }
+
+    /// Run the server with the Axum router and config
+    pub async fn run_with_config(app: AxumRouter, config: ServerConfig) -> Result<(), Box<dyn std::error::Error>> {
+        let addr = format!("{}:{}", config.host, config.port);
+        let socket_addr: SocketAddr = addr.parse()?;
+        let listener = TcpListener::bind(socket_addr).await?;
+
+        tracing::info!("Listening on http://{}", socket_addr);
+
+        if config.graceful_shutdown {
+            axum::serve(listener, app)
+                .with_graceful_shutdown(shutdown_signal())
+                .await?;
+        } else {
+            axum::serve(listener, app).await?;
+        }
+
+        Ok(())
     }
 
     /// Initialize logging
