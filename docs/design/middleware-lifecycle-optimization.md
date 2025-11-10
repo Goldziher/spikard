@@ -1,16 +1,22 @@
 # Middleware, Lifecycle Hooks, and Performance Optimization
 
-**Date:** January 2025
+**Date:** January 2025 (Updated November 2025)
+**Status:** Phase 1 (Middleware) ✅ Complete | Phase 2 (Lifecycle Hooks) 🟡 Pending
 **Research-driven design document based on 2024-2025 ecosystem analysis**
 
 ## Executive Summary
 
 Based on comprehensive research of the Axum, Fastify, Litestar, PyO3, and napi-rs ecosystems in 2024-2025, this document outlines Spikard's approach to:
 
-1. **Rust-native middleware** using tower-http (battle-tested, production-ready)
-2. **Zero-overhead lifecycle hooks** for Python/TypeScript plugins
-3. **Pre-computation and caching** for optimal startup and runtime performance
-4. **Conditional feature compilation** to eliminate unused code paths
+1. **Rust-native middleware** using tower-http ✅ **IMPLEMENTED** (battle-tested, production-ready)
+2. **Zero-overhead lifecycle hooks** for Python/TypeScript/Ruby plugins 🟡 **PENDING**
+3. **Pre-computation and caching** ✅ **IMPLEMENTED** (SchemaRegistry with deduplication)
+4. **Conditional feature compilation** ✅ **IMPLEMENTED** (feature flags in Cargo.toml)
+
+**Current Status (November 2025):**
+- All core middleware integrated: compression, rate limiting, timeouts, graceful shutdown, static files, request IDs
+- Configuration exposed via typed `ServerConfig` struct to Python/Node/Ruby bindings
+- Lifecycle hooks designed but not yet implemented - this is the next major feature
 
 ## 1. Middleware Architecture (All in Rust)
 
@@ -393,26 +399,62 @@ For DI, the Rust engine resolves all dependencies in one pass, minimizing FFI ca
 
 ## 4. Implementation Strategy
 
-### Phase 1: Rust Middleware (Immediate)
-- ✅ Integrate tower-http middleware
-- ✅ Expose Python/TypeScript configuration APIs
-- ✅ Feature flags for conditional compilation
+### Phase 1: Rust Middleware ✅ COMPLETE (November 2025)
 
-### Phase 2: Lifecycle Hooks (Next)
+Implemented in `crates/spikard-http/src/server.rs`:
+
+- ✅ Request ID generation (UUID-based, X-Request-ID with PropagateRequestIdLayer)
+- ✅ Response compression (gzip, brotli via CompressionLayer)
+- ✅ Request timeouts (configurable via TimeoutLayer)
+- ✅ Body size limits (configurable via DefaultBodyLimit)
+- ✅ Rate limiting (IP-based via tower_governor GovernorLayer)
+- ✅ Graceful shutdown (SIGTERM/SIGINT signal handlers)
+- ✅ Static file serving (ServeDir with cache-control headers)
+- ✅ Sensitive header hiding (Authorization, Cookie via SetSensitiveRequestHeadersLayer)
+
+**Configuration:** All middleware exposed via `ServerConfig` struct with typed options:
+- `CompressionConfig` - gzip/brotli settings
+- `RateLimitConfig` - per_second, burst, ip_based
+- `StaticFilesConfig` - directory, route_prefix, cache_control
+- Request/response limits, timeouts, graceful shutdown timeout
+
+**Middleware Stack Order (reverse order - last added = first executed):**
+1. Request ID (outermost)
+2. Timeout
+3. Rate Limit
+4. Compression
+5. Sensitive Headers
+6. Body Limit
+
+**Bindings:** Python/Node/Ruby use `ServerConfig::default()` with field overrides.
+
+**Status:** Production-ready. All tower-http middleware integrated and tested.
+
+### Phase 2: Lifecycle Hooks (Pending)
 - [ ] Implement hook registration system
-- [ ] Add conditional execution (skip if no hooks)
-- [ ] Python API with async support
+- [ ] Add conditional execution (skip if no hooks registered)
+- [ ] Python API with async support (onRequest, preValidation, preHandler, onResponse)
 - [ ] TypeScript API with async support
+- [ ] Ruby API with fiber support
 
-### Phase 3: Pre-Computation (Parallel)
-- [ ] Schema caching at startup
-- [ ] DI graph pre-computation (see [07-dependency-injection.md](./07-dependency-injection.md))
-- [ ] Benchmark improvements
+**Design:** Hooks will be optional Arc<dyn Fn> closures checked at runtime with ~0.5ns overhead when not registered.
 
-### Phase 4: Optimization (Ongoing)
+### Phase 3: Pre-Computation ✅ COMPLETE
+- ✅ Schema caching at startup (SchemaRegistry with Arc-wrapped validators)
+- ✅ Route pre-compilation (Route::from_metadata with validator deduplication)
+- [ ] DI graph pre-computation (see dependency-injection.md)
+- [ ] Benchmark suite improvements
+
+### Phase 4: Authentication Middleware (Pending)
+- [ ] JWT authentication (jsonwebtoken crate integrated)
+- [ ] API Key authentication (config struct ready)
+- [ ] Hook into preHandler phase
+- [ ] Expose via Python/TypeScript/Ruby APIs
+
+### Phase 5: Optimization (Ongoing)
 - [ ] Profile PyO3/napi-rs overhead
 - [ ] Minimize FFI boundary crossings
-- [ ] Add benchmarking suite
+- [ ] Add comprehensive benchmarking suite
 
 ## 5. Performance Targets (Based on 2024-2025 Research)
 
@@ -447,14 +489,46 @@ pub struct DependencyResolver {
 
 **Recommendation:** Start with Litestar vendoring for speed, optimize to Rust later if needed.
 
-## 7. Next Steps
+## 7. Next Steps (November 2025)
 
-1. **Implement tower-http middleware integration** (1-2 days)
-2. **Design lifecycle hook registration API** (1 day)
-3. **Implement schema caching** (1 day)
-4. **Vendor or implement DI system** (3-5 days)
-5. **Benchmark and optimize** (ongoing)
+### Immediate Priorities
+
+1. **Implement Lifecycle Hooks System** (3-5 days)
+   - [ ] Design hook registration API for Python/TypeScript/Ruby
+   - [ ] Implement conditional execution in Rust (skip if no hooks)
+   - [ ] Add Python async hook support via pyo3_async_runtimes
+   - [ ] Add TypeScript async hook support via ThreadsafeFunction
+   - [ ] Add Ruby fiber-based hook support
+   - [ ] Update e2e tests with lifecycle hook examples
+
+2. **Implement Authentication Middleware** (2-3 days)
+   - [ ] JWT authentication using jsonwebtoken crate
+   - [ ] API Key authentication using existing config structs
+   - [ ] Integrate with preHandler lifecycle hook
+   - [ ] Add Python/TypeScript/Ruby configuration APIs
+   - [ ] Add comprehensive tests for auth flows
+
+3. **Implement OpenAPI Generation** (3-5 days)
+   - [ ] Integrate utoipa for OpenAPI 3.1.0 generation
+   - [ ] Add Swagger UI endpoint
+   - [ ] Add Redoc endpoint
+   - [ ] Cache schema on first use
+   - [ ] Validate generated schema in tests
+
+4. **Forward Typed Configs to Bindings** (2-3 days)
+   - [ ] Python: Add ServerConfig pydantic model
+   - [ ] TypeScript: Add ServerConfig interface with Zod validation
+   - [ ] Ruby: Add ServerConfig struct with type checking
+   - [ ] Document all config options in each language
+
+### Long-term
+
+5. **Test Client for Integration Testing** (2-3 days)
+6. **WebSocket Support with AsyncAPI** (5-7 days)
+7. **Server-Sent Events (SSE)** (2-3 days)
+8. **Streaming Responses** (2-3 days)
+9. **Background Tasks** (3-5 days)
 
 ---
 
-**Key Takeaway:** By keeping all standard middleware in Rust (using battle-tested tower-http), conditionally invoking lifecycle hooks, and pre-computing schemas/DI graphs at startup, we achieve near-zero overhead while maintaining full flexibility for user plugins.
+**Key Takeaway:** By keeping all standard middleware in Rust (using battle-tested tower-http) ✅ DONE, conditionally invoking lifecycle hooks 🟡 NEXT, and pre-computing schemas at startup ✅ DONE, we achieve near-zero overhead while maintaining full flexibility for user plugins.
