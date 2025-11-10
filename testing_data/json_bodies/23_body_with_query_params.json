@@ -7,7 +7,7 @@
     "test_function": "test_body_with_query"
   },
   "handler": {
-    "route": "/items/?limit=10",
+    "route": "/items/",
     "method": "POST",
     "parameters": {
       "query": {

@@ -1165,7 +1165,7 @@ module E2ERubyApp
 
   def create_app_json_bodies_25_body_with_query_parameters
     app = Spikard::App.new
-    app.post("/items/?limit=10", handler_name: "json_bodies_25_body_with_query_parameters", parameter_schema: {"properties" => {"limit" => {"source" => "query", "type" => "integer"}}, "required" => ["limit"], "type" => "object"}, request_schema: {"additionalProperties" => false, "properties" => {"name" => {"type" => "string"}, "price" => {"type" => "number"}}, "required" => ["name", "price"], "type" => "object"}) do |_request|
+    app.post("/items/", handler_name: "json_bodies_25_body_with_query_parameters", parameter_schema: {"properties" => {"limit" => {"source" => "query", "type" => "integer"}}, "required" => ["limit"], "type" => "object"}, request_schema: {"additionalProperties" => false, "properties" => {"name" => {"type" => "string"}, "price" => {"type" => "number"}}, "required" => ["name", "price"], "type" => "object"}) do |_request|
       build_response(content: {"item" => {"name" => "Item", "price" => 42.0}, "limit" => 10}, status: 200, headers: nil)
     end
     app
