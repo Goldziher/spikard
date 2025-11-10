@@ -13,10 +13,12 @@
       "type": "object",
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "minLength": 3
         },
         "price": {
-          "type": "integer"
+          "type": "integer",
+          "exclusiveMinimum": 0
         },
         "quantity": {
           "type": "integer"
