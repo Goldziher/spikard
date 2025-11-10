@@ -225,15 +225,37 @@ spec = app.openapi_spec()  # Returns dict
 
 ---
 
-## 4. Authentication Middleware 📦
+## 4. Authentication Middleware 📦 → ⚠️ IN PROGRESS
 
 ### Dependencies
 ```toml
 [dependencies]
-jsonwebtoken = "9.3"  # MIT license, 78M+ downloads
+jsonwebtoken = { version = "10.2", features = ["use_pem", "rust_crypto"] }  # ✅ UPGRADED
 ```
 
-### Implementation Plan
+### Implementation Status
+
+**✅ Phase 1: Configuration Infrastructure (COMPLETE)**
+- Added `JwtConfig` in `packages/python/spikard/config.py`
+  - Algorithm validation (HS256/384/512, RS256/384/512, ES256/384/512, PS256/384/512)
+  - Audience and issuer configuration
+  - Leeway support for clock skew
+- Added `ApiKeyConfig` for API key authentication
+- Python → Rust config extraction in `crates/spikard-py/src/lib.rs`
+- Comprehensive tests in `packages/python/tests/test_server_config.py`
+
+**🚧 Phase 2: Rust Middleware Implementation (IN PROGRESS)**
+- TODO: Implement JWT middleware in `crates/spikard-http/src/auth.rs`
+- TODO: Implement API key middleware
+- TODO: Add to middleware stack in server.rs
+
+**📋 Phase 3: Testing & Integration (PENDING)**
+- TODO: Add `testing_data/auth/` fixtures
+- TODO: Test valid/invalid/expired JWT tokens
+- TODO: Test API key validation
+- TODO: Add integration tests across all language bindings
+
+### Implementation Plan (Updated)
 
 **JWT Middleware**:
 ```rust
