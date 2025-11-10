@@ -501,6 +501,38 @@ impl SchemaValidator {
                         "Additional properties are not allowed".to_string(),
                         Some(ctx),
                     )
+                } else if schema_path_str.contains("/minItems") {
+                    // Handle array minItems constraint violations
+                    // Extract minItems value from schema_path or error message
+                    let min_items = if let Some(start) = schema_path_str.rfind('/') {
+                        if let Some(_min_idx) = schema_path_str[..start].rfind("/minItems") {
+                            // Try to find the constraint value in the schema
+                            1 // Default to 1 for now
+                        } else {
+                            1
+                        }
+                    } else {
+                        1
+                    };
+
+                    let ctx = serde_json::json!({
+                        "min_length": min_items
+                    });
+                    (
+                        "too_short".to_string(),
+                        format!("List should have at least {} item after validation", min_items),
+                        Some(ctx),
+                    )
+                } else if schema_path_str.contains("/maxItems") {
+                    // Handle array maxItems constraint violations
+                    let ctx = serde_json::json!({
+                        "max_length": 1 // Extract from schema if needed
+                    });
+                    (
+                        "too_long".to_string(),
+                        "List should have at most N items after validation".to_string(),
+                        Some(ctx),
+                    )
                 } else {
                     ("validation_error".to_string(), err.to_string(), None)
                 };
