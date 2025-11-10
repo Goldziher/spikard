@@ -1,50 +1,47 @@
 {
-  "name": "test_fields_alias_generator_006",
-  "description": "Extracted from Litestar: test_fields_alias_generator case 6",
-  "category": "json_bodies",
-  "source": {
-    "framework": "litestar",
-    "test_file": "tests/unit/test_dto/test_factory/test_integration.py",
-    "test_function": "test_fields_alias_generator",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/",
-    "method": "POST",
-    "parameters": {
-      "query": {
-        "data": {
-          "type": "string",
-          "annotation": "Fzop"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/",
-    "query_params": {
-      "data": {
-        "spam-bar": "star",
-        "spam-model": {
-          "main-id": "spam-id"
-        }
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "data": {
-        "spam-bar": "star",
-        "spam-model": {
-          "main-id": "spam-id"
-        }
-      }
-    }
-  },
-  "tags": [
-    "success",
-    "body"
-  ]
+	"name": "test_fields_alias_generator_006",
+	"description": "Extracted from Litestar: test_fields_alias_generator case 6",
+	"category": "json_bodies",
+	"source": {
+		"framework": "litestar",
+		"test_file": "tests/unit/test_dto/test_factory/test_integration.py",
+		"test_function": "test_fields_alias_generator",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/",
+		"method": "POST",
+		"parameters": {
+			"query": {
+				"data": {
+					"type": "string",
+					"annotation": "Fzop"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/",
+		"query_params": {
+			"data": {
+				"spam-bar": "star",
+				"spam-model": {
+					"main-id": "spam-id"
+				}
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"data": {
+				"spam-bar": "star",
+				"spam-model": {
+					"main-id": "spam-id"
+				}
+			}
+		}
+	},
+	"tags": ["success", "body"]
 }

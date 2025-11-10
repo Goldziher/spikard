@@ -1,35 +1,35 @@
 {
-  "name": "Cookie regex pattern validation - success",
-  "description": "Tests cookie with regex pattern validation success",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_cookie_params/test_tutorial001.py",
-    "test_function": "test_cookie_pattern_success"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/cookies/pattern",
-    "cookies": {
-      "tracking_id": "ABC12345"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "tracking_id": "ABC12345"
-    }
-  },
-  "notes": "Valid pattern: 8 uppercase alphanumeric characters",
-  "handler": {
-    "route": "/cookies/pattern",
-    "method": "GET",
-    "parameters": {
-      "cookies": {
-        "tracking_id": {
-          "type": "string",
-          "optional": true
-        }
-      }
-    }
-  }
+	"name": "Cookie regex pattern validation - success",
+	"description": "Tests cookie with regex pattern validation success",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_cookie_params/test_tutorial001.py",
+		"test_function": "test_cookie_pattern_success"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/cookies/pattern",
+		"cookies": {
+			"tracking_id": "ABC12345"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"tracking_id": "ABC12345"
+		}
+	},
+	"notes": "Valid pattern: 8 uppercase alphanumeric characters",
+	"handler": {
+		"route": "/cookies/pattern",
+		"method": "GET",
+		"parameters": {
+			"cookies": {
+				"tracking_id": {
+					"type": "string",
+					"optional": true
+				}
+			}
+		}
+	}
 }

@@ -1,28 +1,25 @@
 {
-  "name": "test_media_type_inferred_005",
-  "description": "Extracted from Litestar: test_media_type_inferred case 5",
-  "category": "query_params",
-  "source": {
-    "framework": "litestar",
-    "test_file": "tests/unit/test_template/test_template.py",
-    "test_function": "test_media_type_inferred",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/",
-    "method": "GET",
-    "parameters": {}
-  },
-  "request": {
-    "method": "GET",
-    "path": "/"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {}
-  },
-  "tags": [
-    "success",
-    "query"
-  ]
+	"name": "test_media_type_inferred_005",
+	"description": "Extracted from Litestar: test_media_type_inferred case 5",
+	"category": "query_params",
+	"source": {
+		"framework": "litestar",
+		"test_file": "tests/unit/test_template/test_template.py",
+		"test_function": "test_media_type_inferred",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/",
+		"method": "GET",
+		"parameters": {}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {}
+	},
+	"tags": ["success", "query"]
 }

@@ -1,43 +1,43 @@
 {
-  "name": "X-API-Key required header - missing",
-  "description": "Tests required X-API-Key header when not provided, returns 403",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_security_api_key_header.py",
-    "test_function": "test_security_api_key_no_key"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/users/me"
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "missing",
-          "loc": ["headers", "x-api-key"],
-          "msg": "Field required",
-          "input": null
-        }
-      ]
-    }
-  },
-  "handler": {
-    "route": "/users/me",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "X-API-Key": {
-          "type": "string",
-          "annotation": "str",
-          "required": true
-        }
-      }
-    }
-  }
+	"name": "X-API-Key required header - missing",
+	"description": "Tests required X-API-Key header when not provided, returns 403",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_security_api_key_header.py",
+		"test_function": "test_security_api_key_no_key"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/users/me"
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "missing",
+					"loc": ["headers", "x-api-key"],
+					"msg": "Field required",
+					"input": null
+				}
+			]
+		}
+	},
+	"handler": {
+		"route": "/users/me",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"X-API-Key": {
+					"type": "string",
+					"annotation": "str",
+					"required": true
+				}
+			}
+		}
+	}
 }

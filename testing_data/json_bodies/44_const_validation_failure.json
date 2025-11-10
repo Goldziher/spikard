@@ -1,67 +1,56 @@
 {
-  "name": "44_const_validation_failure",
-  "description": "Field with const constraint not matching exact value should fail",
-  "category": "json_bodies",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "const constraint validation failure"
-  },
-  "handler": {
-    "route": "/api/v1/data",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "required": [
-        "version",
-        "data"
-      ],
-      "properties": {
-        "version": {
-          "type": "string",
-          "const": "1.0"
-        },
-        "data": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/api/v1/data",
-    "body": {
-      "version": "2.0",
-      "data": "test"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "validation_error",
-          "loc": [
-            "body",
-            "version"
-          ],
-          "msg": "Value must be exactly '1.0'",
-          "ctx": {
-            "const": "1.0",
-            "value": "2.0"
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "json_bodies",
-    "const",
-    "validation",
-    "error"
-  ]
+	"name": "44_const_validation_failure",
+	"description": "Field with const constraint not matching exact value should fail",
+	"category": "json_bodies",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "const constraint validation failure"
+	},
+	"handler": {
+		"route": "/api/v1/data",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"required": ["version", "data"],
+			"properties": {
+				"version": {
+					"type": "string",
+					"const": "1.0"
+				},
+				"data": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/api/v1/data",
+		"body": {
+			"version": "2.0",
+			"data": "test"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "validation_error",
+					"loc": ["body", "version"],
+					"msg": "Value must be exactly '1.0'",
+					"ctx": {
+						"const": "1.0",
+						"value": "2.0"
+					}
+				}
+			]
+		}
+	},
+	"tags": ["json_bodies", "const", "validation", "error"]
 }

@@ -1,43 +1,43 @@
 {
-  "name": "Response cookie with domain attribute",
-  "description": "Tests setting cookie with specific domain",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_responses.py",
-    "test_function": "test_set_cookie_with_domain"
-  },
-  "handler": {
-    "route": "/cookies/set-with-domain",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "value": {
-          "type": "string"
-        }
-      },
-      "required": ["value"],
-      "additionalProperties": false
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/cookies/set-with-domain",
-    "body": {
-      "value": "domain_test"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "message": "Cookie set with domain"
-    },
-    "cookies": {
-      "session": {
-        "value": "domain_test",
-        "domain": ".example.com"
-      }
-    }
-  },
-  "notes": "Cookie with domain attribute restricts to .example.com"
+	"name": "Response cookie with domain attribute",
+	"description": "Tests setting cookie with specific domain",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_responses.py",
+		"test_function": "test_set_cookie_with_domain"
+	},
+	"handler": {
+		"route": "/cookies/set-with-domain",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"value": {
+					"type": "string"
+				}
+			},
+			"required": ["value"],
+			"additionalProperties": false
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/cookies/set-with-domain",
+		"body": {
+			"value": "domain_test"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Cookie set with domain"
+		},
+		"cookies": {
+			"session": {
+				"value": "domain_test",
+				"domain": ".example.com"
+			}
+		}
+	},
+	"notes": "Cookie with domain attribute restricts to .example.com"
 }

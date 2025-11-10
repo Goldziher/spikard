@@ -1,141 +1,137 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Query Parameter Test Fixture",
-  "description": "Schema for query parameter test fixtures covering types, validation, arrays, and edge cases",
-  "type": "object",
-  "required": ["name", "description", "source", "request", "expected_response"],
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "Human-readable test case name",
-      "minLength": 1
-    },
-    "description": {
-      "type": "string",
-      "description": "What this test validates",
-      "minLength": 1
-    },
-    "source": {
-      "type": "object",
-      "description": "Source framework and test location",
-      "required": ["framework", "test_file", "test_function"],
-      "properties": {
-        "framework": {
-          "type": "string",
-          "enum": ["fastapi", "starlette", "litestar"],
-          "description": "Source framework"
-        },
-        "test_file": {
-          "type": "string",
-          "description": "Path to original test file relative to framework root",
-          "minLength": 1
-        },
-        "test_function": {
-          "type": "string",
-          "description": "Name of the test function",
-          "minLength": 1
-        }
-      },
-      "additionalProperties": false
-    },
-    "request": {
-      "type": "object",
-      "description": "HTTP request details",
-      "required": ["method", "path"],
-      "properties": {
-        "method": {
-          "type": "string",
-          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
-          "description": "HTTP method"
-        },
-        "path": {
-          "type": "string",
-          "description": "Request path without query string",
-          "minLength": 1
-        },
-        "query_params": {
-          "type": "object",
-          "description": "Query parameters as key-value pairs. Arrays are represented as arrays in JSON.",
-          "additionalProperties": {
-            "oneOf": [
-              { "type": "string" },
-              { "type": "number" },
-              { "type": "boolean" },
-              { "type": "null" },
-              {
-                "type": "array",
-                "items": {
-                  "oneOf": [
-                    { "type": "string" },
-                    { "type": "number" },
-                    { "type": "boolean" }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        "query_string": {
-          "type": "string",
-          "description": "Raw query string for exact encoding tests (e.g., 'a=1&b=2&b=3')"
-        },
-        "headers": {
-          "type": "object",
-          "description": "HTTP headers",
-          "additionalProperties": { "type": "string" }
-        }
-      },
-      "additionalProperties": false
-    },
-    "expected_response": {
-      "type": "object",
-      "description": "Expected HTTP response",
-      "required": ["status_code"],
-      "properties": {
-        "status_code": {
-          "type": "integer",
-          "description": "Expected HTTP status code",
-          "minimum": 100,
-          "maximum": 599
-        },
-        "body": {
-          "description": "Expected response body (any JSON type)"
-        },
-        "headers": {
-          "type": "object",
-          "description": "Expected response headers",
-          "additionalProperties": { "type": "string" }
-        },
-        "validation_errors": {
-          "type": "array",
-          "description": "Expected validation errors for 422 responses",
-          "items": {
-            "type": "object",
-            "required": ["loc", "msg", "type"],
-            "properties": {
-              "loc": {
-                "type": "array",
-                "description": "Error location path (e.g., ['query', 'param_name'])",
-                "items": { "type": "string" }
-              },
-              "msg": {
-                "type": "string",
-                "description": "Error message"
-              },
-              "type": {
-                "type": "string",
-                "description": "Error type (e.g., 'missing', 'int_parsing', 'value_error')"
-              }
-            }
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    "notes": {
-      "type": "string",
-      "description": "Additional notes about this test case"
-    }
-  },
-  "additionalProperties": false
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Query Parameter Test Fixture",
+	"description": "Schema for query parameter test fixtures covering types, validation, arrays, and edge cases",
+	"type": "object",
+	"required": ["name", "description", "source", "request", "expected_response"],
+	"properties": {
+		"name": {
+			"type": "string",
+			"description": "Human-readable test case name",
+			"minLength": 1
+		},
+		"description": {
+			"type": "string",
+			"description": "What this test validates",
+			"minLength": 1
+		},
+		"source": {
+			"type": "object",
+			"description": "Source framework and test location",
+			"required": ["framework", "test_file", "test_function"],
+			"properties": {
+				"framework": {
+					"type": "string",
+					"enum": ["fastapi", "starlette", "litestar"],
+					"description": "Source framework"
+				},
+				"test_file": {
+					"type": "string",
+					"description": "Path to original test file relative to framework root",
+					"minLength": 1
+				},
+				"test_function": {
+					"type": "string",
+					"description": "Name of the test function",
+					"minLength": 1
+				}
+			},
+			"additionalProperties": false
+		},
+		"request": {
+			"type": "object",
+			"description": "HTTP request details",
+			"required": ["method", "path"],
+			"properties": {
+				"method": {
+					"type": "string",
+					"enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
+					"description": "HTTP method"
+				},
+				"path": {
+					"type": "string",
+					"description": "Request path without query string",
+					"minLength": 1
+				},
+				"query_params": {
+					"type": "object",
+					"description": "Query parameters as key-value pairs. Arrays are represented as arrays in JSON.",
+					"additionalProperties": {
+						"oneOf": [
+							{ "type": "string" },
+							{ "type": "number" },
+							{ "type": "boolean" },
+							{ "type": "null" },
+							{
+								"type": "array",
+								"items": {
+									"oneOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }]
+								}
+							}
+						]
+					}
+				},
+				"query_string": {
+					"type": "string",
+					"description": "Raw query string for exact encoding tests (e.g., 'a=1&b=2&b=3')"
+				},
+				"headers": {
+					"type": "object",
+					"description": "HTTP headers",
+					"additionalProperties": { "type": "string" }
+				}
+			},
+			"additionalProperties": false
+		},
+		"expected_response": {
+			"type": "object",
+			"description": "Expected HTTP response",
+			"required": ["status_code"],
+			"properties": {
+				"status_code": {
+					"type": "integer",
+					"description": "Expected HTTP status code",
+					"minimum": 100,
+					"maximum": 599
+				},
+				"body": {
+					"description": "Expected response body (any JSON type)"
+				},
+				"headers": {
+					"type": "object",
+					"description": "Expected response headers",
+					"additionalProperties": { "type": "string" }
+				},
+				"validation_errors": {
+					"type": "array",
+					"description": "Expected validation errors for 422 responses",
+					"items": {
+						"type": "object",
+						"required": ["loc", "msg", "type"],
+						"properties": {
+							"loc": {
+								"type": "array",
+								"description": "Error location path (e.g., ['query', 'param_name'])",
+								"items": { "type": "string" }
+							},
+							"msg": {
+								"type": "string",
+								"description": "Error message"
+							},
+							"type": {
+								"type": "string",
+								"description": "Error type (e.g., 'missing', 'int_parsing', 'value_error')"
+							}
+						}
+					}
+				}
+			},
+			"additionalProperties": false
+		},
+		"notes": {
+			"type": "string",
+			"description": "Additional notes about this test case"
+		}
+	},
+	"additionalProperties": false
 }

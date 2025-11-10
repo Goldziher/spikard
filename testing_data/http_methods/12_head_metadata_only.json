@@ -1,32 +1,32 @@
 {
-  "name": "HEAD - Get metadata without body",
-  "description": "Tests HEAD method returns headers without response body",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_methods.py",
-    "test_function": "test_head_request"
-  },
-  "handler": {
-    "route": "/items/{id}",
-    "method": "HEAD",
-    "parameters": {
-      "path": {
-        "id": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "HEAD",
-    "path": "/items/1"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "headers": {
-      "Content-Type": "application/json",
-      "Content-Length": "85"
-    }
-  },
-  "notes": "HEAD returns same headers as GET but without response body"
+	"name": "HEAD - Get metadata without body",
+	"description": "Tests HEAD method returns headers without response body",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_methods.py",
+		"test_function": "test_head_request"
+	},
+	"handler": {
+		"route": "/items/{id}",
+		"method": "HEAD",
+		"parameters": {
+			"path": {
+				"id": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "HEAD",
+		"path": "/items/1"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Content-Type": "application/json",
+			"Content-Length": "85"
+		}
+	},
+	"notes": "HEAD returns same headers as GET but without response body"
 }

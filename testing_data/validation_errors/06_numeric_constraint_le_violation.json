@@ -1,55 +1,52 @@
 {
-  "name": "Numeric constraint violation - le (less than or equal)",
-  "description": "Tests validation error when value violates le constraint",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_query_params_str_validations/test_tutorial011.py",
-    "test_function": "test_query_params_le"
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "q": {
-          "type": "string"
-        },
-        "limit": {
-          "type": "integer",
-          "maximum": 100
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items/?q=test&limit=101",
-    "headers": {
-      "x-token": "test-token"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "less_than_equal",
-          "loc": [
-            "query",
-            "limit"
-          ],
-          "msg": "Input should be less than or equal to 100",
-          "input": "101",
-          "ctx": {
-            "le": 100
-          }
-        }
-      ]
-    }
-  },
-  "notes": "le (less than or equal) constraint requires value <= threshold"
+	"name": "Numeric constraint violation - le (less than or equal)",
+	"description": "Tests validation error when value violates le constraint",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_query_params_str_validations/test_tutorial011.py",
+		"test_function": "test_query_params_le"
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"q": {
+					"type": "string"
+				},
+				"limit": {
+					"type": "integer",
+					"maximum": 100
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items/?q=test&limit=101",
+		"headers": {
+			"x-token": "test-token"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "less_than_equal",
+					"loc": ["query", "limit"],
+					"msg": "Input should be less than or equal to 100",
+					"input": "101",
+					"ctx": {
+						"le": 100
+					}
+				}
+			]
+		}
+	},
+	"notes": "le (less than or equal) constraint requires value <= threshold"
 }

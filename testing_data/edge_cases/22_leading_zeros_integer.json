@@ -1,36 +1,36 @@
 {
-  "name": "22_leading_zeros_integer",
-  "description": "Integer values with leading zeros should be parsed as decimal (not octal)",
-  "category": "edge_cases",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "security_best_practices",
-    "test_case": "Leading zero handling in integers"
-  },
-  "handler": {
-    "route": "/data",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "value": {
-          "type": "integer",
-          "annotation": "int"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/data",
-    "query_params": {
-      "value": "0123"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "value": 123
-    }
-  },
-  "tags": ["edge_cases", "integer", "leading_zeros", "parsing", "success"]
+	"name": "22_leading_zeros_integer",
+	"description": "Integer values with leading zeros should be parsed as decimal (not octal)",
+	"category": "edge_cases",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "security_best_practices",
+		"test_case": "Leading zero handling in integers"
+	},
+	"handler": {
+		"route": "/data",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"value": {
+					"type": "integer",
+					"annotation": "int"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/data",
+		"query_params": {
+			"value": "0123"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"value": 123
+		}
+	},
+	"tags": ["edge_cases", "integer", "leading_zeros", "parsing", "success"]
 }

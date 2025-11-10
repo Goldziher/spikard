@@ -1,53 +1,48 @@
 {
-  "name": "20_content_length_mismatch",
-  "description": "Content-Length header mismatch with actual body size should fail",
-  "category": "content_types",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "http_specs",
-    "test_case": "Content-Length validation"
-  },
-  "handler": {
-    "route": "/data",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "value": {
-          "type": "string"
-        }
-      }
-    },
-    "parameters": {
-      "headers": {
-        "Content-Length": {
-          "type": "string",
-          "optional": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/data",
-    "headers": {
-      "Content-Type": "application/json",
-      "Content-Length": "100"
-    },
-    "body": {
-      "value": "short"
-    }
-  },
-  "expected_response": {
-    "status_code": 400,
-    "body": {
-      "error": "Content-Length header does not match actual body size"
-    }
-  },
-  "tags": [
-    "content_types",
-    "content_length",
-    "validation",
-    "error"
-  ]
+	"name": "20_content_length_mismatch",
+	"description": "Content-Length header mismatch with actual body size should fail",
+	"category": "content_types",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "http_specs",
+		"test_case": "Content-Length validation"
+	},
+	"handler": {
+		"route": "/data",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"value": {
+					"type": "string"
+				}
+			}
+		},
+		"parameters": {
+			"headers": {
+				"Content-Length": {
+					"type": "string",
+					"optional": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/data",
+		"headers": {
+			"Content-Type": "application/json",
+			"Content-Length": "100"
+		},
+		"body": {
+			"value": "short"
+		}
+	},
+	"expected_response": {
+		"status_code": 400,
+		"body": {
+			"error": "Content-Length header does not match actual body size"
+		}
+	},
+	"tags": ["content_types", "content_length", "validation", "error"]
 }

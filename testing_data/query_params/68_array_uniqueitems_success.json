@@ -1,39 +1,39 @@
 {
-  "name": "68_array_uniqueitems_success",
-  "description": "Array query parameter with unique items should succeed",
-  "category": "query_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "uniqueItems constraint validation"
-  },
-  "handler": {
-    "route": "/items",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "ids": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          },
-          "uniqueItems": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items",
-    "query_params": {
-      "ids": ["1", "2", "3", "4"]
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "ids": [1, 2, 3, 4]
-    }
-  },
-  "tags": ["query_params", "array", "uniqueItems", "validation", "success"]
+	"name": "68_array_uniqueitems_success",
+	"description": "Array query parameter with unique items should succeed",
+	"category": "query_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "uniqueItems constraint validation"
+	},
+	"handler": {
+		"route": "/items",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"ids": {
+					"type": "array",
+					"items": {
+						"type": "integer"
+					},
+					"uniqueItems": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items",
+		"query_params": {
+			"ids": ["1", "2", "3", "4"]
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"ids": [1, 2, 3, 4]
+		}
+	},
+	"tags": ["query_params", "array", "uniqueItems", "validation", "success"]
 }

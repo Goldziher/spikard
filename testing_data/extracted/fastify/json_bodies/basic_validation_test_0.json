@@ -1,28 +1,24 @@
 {
-  "name": "basic_validation_test_0",
-  "description": "Extracted from Fastify: Basic validation test",
-  "category": "json_bodies",
-  "source": {
-    "framework": "fastify",
-    "test_file": "test/schema-validation.test.js",
-    "test_function": "Basic validation test",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/",
-    "method": "POST",
-    "parameters": {}
-  },
-  "request": {
-    "method": "POST",
-    "path": "/"
-  },
-  "expected_response": {
-    "status_code": 400
-  },
-  "tags": [
-    "error",
-    "validation",
-    "body"
-  ]
+	"name": "basic_validation_test_0",
+	"description": "Extracted from Fastify: Basic validation test",
+	"category": "json_bodies",
+	"source": {
+		"framework": "fastify",
+		"test_file": "test/schema-validation.test.js",
+		"test_function": "Basic validation test",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/",
+		"method": "POST",
+		"parameters": {}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/"
+	},
+	"expected_response": {
+		"status_code": 400
+	},
+	"tags": ["error", "validation", "body"]
 }

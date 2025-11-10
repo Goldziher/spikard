@@ -1,98 +1,80 @@
 {
-  "name": "09_multiple_validation_errors",
-  "description": "Multiple validation errors should be returned together in batch",
-  "category": "validation_errors",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "nestjs",
-    "test_case": "Batch validation error collection"
-  },
-  "handler": {
-    "route": "/users",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "required": [
-        "name",
-        "email",
-        "age"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "minLength": 3
-        },
-        "email": {
-          "type": "string",
-          "format": "email"
-        },
-        "age": {
-          "type": "integer",
-          "minimum": 18
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/users",
-    "body": {
-      "name": "ab",
-      "email": "invalid-email",
-      "age": 15
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "3 validation errors in request",
-      "errors": [
-        {
-          "type": "greater_than_equal",
-          "loc": [
-            "body",
-            "age"
-          ],
-          "msg": "Input should be greater than or equal to 18",
-          "input": 15,
-          "ctx": {
-            "ge": 18
-          }
-        },
-        {
-          "type": "string_pattern_mismatch",
-          "loc": [
-            "body",
-            "email"
-          ],
-          "msg": "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'",
-          "input": "invalid-email",
-          "ctx": {
-            "pattern": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
-          }
-        },
-        {
-          "type": "string_too_short",
-          "loc": [
-            "body",
-            "name"
-          ],
-          "msg": "String should have at least 3 characters",
-          "input": "ab",
-          "ctx": {
-            "min_length": 3
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "validation_errors",
-    "multiple",
-    "batch",
-    "error_reporting"
-  ]
+	"name": "09_multiple_validation_errors",
+	"description": "Multiple validation errors should be returned together in batch",
+	"category": "validation_errors",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "nestjs",
+		"test_case": "Batch validation error collection"
+	},
+	"handler": {
+		"route": "/users",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"required": ["name", "email", "age"],
+			"properties": {
+				"name": {
+					"type": "string",
+					"minLength": 3
+				},
+				"email": {
+					"type": "string",
+					"format": "email"
+				},
+				"age": {
+					"type": "integer",
+					"minimum": 18
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/users",
+		"body": {
+			"name": "ab",
+			"email": "invalid-email",
+			"age": 15
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "3 validation errors in request",
+			"errors": [
+				{
+					"type": "greater_than_equal",
+					"loc": ["body", "age"],
+					"msg": "Input should be greater than or equal to 18",
+					"input": 15,
+					"ctx": {
+						"ge": 18
+					}
+				},
+				{
+					"type": "string_pattern_mismatch",
+					"loc": ["body", "email"],
+					"msg": "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'",
+					"input": "invalid-email",
+					"ctx": {
+						"pattern": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
+					}
+				},
+				{
+					"type": "string_too_short",
+					"loc": ["body", "name"],
+					"msg": "String should have at least 3 characters",
+					"input": "ab",
+					"ctx": {
+						"min_length": 3
+					}
+				}
+			]
+		}
+	},
+	"tags": ["validation_errors", "multiple", "batch", "error_reporting"]
 }

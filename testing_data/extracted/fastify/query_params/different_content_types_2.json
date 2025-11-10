@@ -1,27 +1,24 @@
 {
-  "name": "different_content_types_2",
-  "description": "Extracted from Fastify: Different content types",
-  "category": "query_params",
-  "source": {
-    "framework": "fastify",
-    "test_file": "test/schema-serialization.test.js",
-    "test_function": "Different content types",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/",
-    "method": "GET",
-    "parameters": {}
-  },
-  "request": {
-    "method": "GET",
-    "path": "/test"
-  },
-  "expected_response": {
-    "status_code": 200
-  },
-  "tags": [
-    "success",
-    "query"
-  ]
+	"name": "different_content_types_2",
+	"description": "Extracted from Fastify: Different content types",
+	"category": "query_params",
+	"source": {
+		"framework": "fastify",
+		"test_file": "test/schema-serialization.test.js",
+		"test_function": "Different content types",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/",
+		"method": "GET",
+		"parameters": {}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/test"
+	},
+	"expected_response": {
+		"status_code": 200
+	},
+	"tags": ["success", "query"]
 }

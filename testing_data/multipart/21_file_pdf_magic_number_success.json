@@ -1,39 +1,39 @@
 {
-  "name": "21_file_pdf_magic_number_success",
-  "description": "File with correct PDF magic number should be accepted",
-  "category": "multipart",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "nestjs",
-    "test_case": "FileTypeValidator PDF magic number validation"
-  },
-  "handler": {
-    "route": "/upload",
-    "method": "POST",
-    "parameters": {
-      "files": {
-        "document": {
-          "required": true,
-          "content_type": ["application/pdf"],
-          "validate_magic_numbers": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/upload",
-    "files": [
-      {
-        "field_name": "document",
-        "filename": "test.pdf",
-        "content_type": "application/pdf",
-        "magic_bytes": "25504446"
-      }
-    ]
-  },
-  "expected_response": {
-    "status_code": 201
-  },
-  "tags": ["multipart", "file", "magic_number", "pdf", "security", "validation", "success"]
+	"name": "21_file_pdf_magic_number_success",
+	"description": "File with correct PDF magic number should be accepted",
+	"category": "multipart",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "nestjs",
+		"test_case": "FileTypeValidator PDF magic number validation"
+	},
+	"handler": {
+		"route": "/upload",
+		"method": "POST",
+		"parameters": {
+			"files": {
+				"document": {
+					"required": true,
+					"content_type": ["application/pdf"],
+					"validate_magic_numbers": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/upload",
+		"files": [
+			{
+				"field_name": "document",
+				"filename": "test.pdf",
+				"content_type": "application/pdf",
+				"magic_bytes": "25504446"
+			}
+		]
+	},
+	"expected_response": {
+		"status_code": 201
+	},
+	"tags": ["multipart", "file", "magic_number", "pdf", "security", "validation", "success"]
 }

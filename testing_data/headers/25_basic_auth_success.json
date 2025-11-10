@@ -1,36 +1,36 @@
 {
-  "name": "Basic authentication - success",
-  "description": "Tests Authorization header with Basic auth scheme",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_security_http_basic.py",
-    "test_function": "test_security_http_basic"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/headers/basic-auth",
-    "headers": {
-      "Authorization": "Basic dXNlcm5hbWU6cGFzc3dvcmQ="
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "username": "username",
-      "password": "password"
-    }
-  },
-  "notes": "Basic auth: base64(username:password) = dXNlcm5hbWU6cGFzc3dvcmQ=",
-  "handler": {
-    "route": "/headers/basic-auth",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "Authorization": {
-          "type": "string",
-          "annotation": "str"
-        }
-      }
-    }
-  }
+	"name": "Basic authentication - success",
+	"description": "Tests Authorization header with Basic auth scheme",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_security_http_basic.py",
+		"test_function": "test_security_http_basic"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/headers/basic-auth",
+		"headers": {
+			"Authorization": "Basic dXNlcm5hbWU6cGFzc3dvcmQ="
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"username": "username",
+			"password": "password"
+		}
+	},
+	"notes": "Basic auth: base64(username:password) = dXNlcm5hbWU6cGFzc3dvcmQ=",
+	"handler": {
+		"route": "/headers/basic-auth",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Authorization": {
+					"type": "string",
+					"annotation": "str"
+				}
+			}
+		}
+	}
 }

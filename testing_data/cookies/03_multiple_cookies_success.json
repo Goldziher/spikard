@@ -1,47 +1,47 @@
 {
-  "name": "Multiple cookies - success",
-  "description": "Tests multiple cookie parameters in a single request",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_cookie_param_models/test_tutorial001.py",
-    "test_function": "test_cookie_param_model"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items/",
-    "cookies": {
-      "session_id": "session123",
-      "fatebook_tracker": "tracker456",
-      "googall_tracker": "ga789"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "session_id": "session123",
-      "fatebook_tracker": "tracker456",
-      "googall_tracker": "ga789"
-    }
-  },
-  "notes": "Multiple cookies can be provided and accessed together",
-  "handler": {
-    "route": "/items/",
-    "method": "GET",
-    "parameters": {
-      "cookies": {
-        "session_id": {
-          "type": "string",
-          "optional": true
-        },
-        "fatebook_tracker": {
-          "type": "string",
-          "optional": true
-        },
-        "googall_tracker": {
-          "type": "string",
-          "optional": true
-        }
-      }
-    }
-  }
+	"name": "Multiple cookies - success",
+	"description": "Tests multiple cookie parameters in a single request",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_cookie_param_models/test_tutorial001.py",
+		"test_function": "test_cookie_param_model"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items/",
+		"cookies": {
+			"session_id": "session123",
+			"fatebook_tracker": "tracker456",
+			"googall_tracker": "ga789"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"session_id": "session123",
+			"fatebook_tracker": "tracker456",
+			"googall_tracker": "ga789"
+		}
+	},
+	"notes": "Multiple cookies can be provided and accessed together",
+	"handler": {
+		"route": "/items/",
+		"method": "GET",
+		"parameters": {
+			"cookies": {
+				"session_id": {
+					"type": "string",
+					"optional": true
+				},
+				"fatebook_tracker": {
+					"type": "string",
+					"optional": true
+				},
+				"googall_tracker": {
+					"type": "string",
+					"optional": true
+				}
+			}
+		}
+	}
 }

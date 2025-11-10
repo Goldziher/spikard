@@ -1,28 +1,24 @@
 {
-  "name": "should_return_custom_error_messages_with_ajv-errors_11",
-  "description": "Extracted from Fastify: should return custom error messages with ajv-errors",
-  "category": "json_bodies",
-  "source": {
-    "framework": "fastify",
-    "test_file": "test/schema-examples.test.js",
-    "test_function": "should return custom error messages with ajv-errors",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/",
-    "method": "POST",
-    "parameters": {}
-  },
-  "request": {
-    "method": "POST",
-    "path": "/"
-  },
-  "expected_response": {
-    "status_code": 400
-  },
-  "tags": [
-    "error",
-    "validation",
-    "body"
-  ]
+	"name": "should_return_custom_error_messages_with_ajv-errors_11",
+	"description": "Extracted from Fastify: should return custom error messages with ajv-errors",
+	"category": "json_bodies",
+	"source": {
+		"framework": "fastify",
+		"test_file": "test/schema-examples.test.js",
+		"test_function": "should return custom error messages with ajv-errors",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/",
+		"method": "POST",
+		"parameters": {}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/"
+	},
+	"expected_response": {
+		"status_code": 400
+	},
+	"tags": ["error", "validation", "body"]
 }

@@ -1,45 +1,43 @@
 {
-  "name": "408 Request Timeout",
-  "description": "Tests 408 status code when request takes too long",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_timeouts.py",
-    "test_function": "test_request_timeout"
-  },
-  "handler": {
-    "route": "/slow-endpoint",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "data"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/slow-endpoint",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "data": "large_data"
-    }
-  },
-  "expected_response": {
-    "status_code": 408,
-    "body": {
-      "detail": "Request timeout"
-    },
-    "headers": {
-      "Connection": "close"
-    }
-  },
-  "notes": "408 Request Timeout when server times out waiting for complete request"
+	"name": "408 Request Timeout",
+	"description": "Tests 408 status code when request takes too long",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_timeouts.py",
+		"test_function": "test_request_timeout"
+	},
+	"handler": {
+		"route": "/slow-endpoint",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"data": {
+					"type": "string"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["data"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/slow-endpoint",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"data": "large_data"
+		}
+	},
+	"expected_response": {
+		"status_code": 408,
+		"body": {
+			"detail": "Request timeout"
+		},
+		"headers": {
+			"Connection": "close"
+		}
+	},
+	"notes": "408 Request Timeout when server times out waiting for complete request"
 }

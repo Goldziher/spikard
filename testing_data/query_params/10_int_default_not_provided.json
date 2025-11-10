@@ -1,32 +1,32 @@
 {
-  "name": "Integer with default value - not provided",
-  "description": "Tests integer parameter with default value when not provided",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_query.py",
-    "test_function": "test_query_int_default"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/query/int/default"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": "foo bar 10"
-  },
-  "notes": "Default value is 10",
-  "handler": {
-    "route": "/query/int/default",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "query": {
-          "type": "integer",
-          "annotation": "int",
-          "optional": true,
-          "default": 10
-        }
-      }
-    }
-  }
+	"name": "Integer with default value - not provided",
+	"description": "Tests integer parameter with default value when not provided",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_query.py",
+		"test_function": "test_query_int_default"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/query/int/default"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": "foo bar 10"
+	},
+	"notes": "Default value is 10",
+	"handler": {
+		"route": "/query/int/default",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"query": {
+					"type": "integer",
+					"annotation": "int",
+					"optional": true,
+					"default": 10
+				}
+			}
+		}
+	}
 }

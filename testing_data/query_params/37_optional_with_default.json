@@ -1,35 +1,35 @@
 {
-  "name": "Optional query parameter with default value",
-  "description": "Tests optional query parameter that uses default when not provided",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_query.py",
-    "test_function": "test_query_param_optional_default"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/query/optional-default",
-    "query_params": {}
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "limit": 10
-    }
-  },
-  "notes": "Optional int parameter with default value of 10 when not provided",
-  "handler": {
-    "route": "/query/optional-default",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "limit": {
-          "type": "integer",
-          "annotation": "int",
-          "optional": true,
-          "default": 10
-        }
-      }
-    }
-  }
+	"name": "Optional query parameter with default value",
+	"description": "Tests optional query parameter that uses default when not provided",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_query.py",
+		"test_function": "test_query_param_optional_default"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/query/optional-default",
+		"query_params": {}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"limit": 10
+		}
+	},
+	"notes": "Optional int parameter with default value of 10 when not provided",
+	"handler": {
+		"route": "/query/optional-default",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"limit": {
+					"type": "integer",
+					"annotation": "int",
+					"optional": true,
+					"default": 10
+				}
+			}
+		}
+	}
 }

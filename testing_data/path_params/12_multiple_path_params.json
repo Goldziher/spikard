@@ -1,44 +1,44 @@
 {
-  "name": "Multiple path parameters - success",
-  "description": "Tests multiple path parameters in single route",
-  "source": {
-    "framework": "litestar",
-    "test_file": "tests/unit/test_kwargs/test_path_params.py",
-    "test_function": "test_path_params"
-  },
-  "handler": {
-    "route": "/{version}/{service_id}/{user_id}/{order_id}",
-    "method": "GET",
-    "parameters": {
-      "path": {
-        "version": {
-          "type": "number"
-        },
-        "service_id": {
-          "type": "integer"
-        },
-        "user_id": {
-          "type": "string"
-        },
-        "order_id": {
-          "type": "string",
-          "format": "uuid"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/1.0/1/abc/c892496f-b1fd-4b91-bdb8-b46f92df1716"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "version": 1.0,
-      "service_id": 1,
-      "user_id": "abc",
-      "order_id": "c892496f-b1fd-4b91-bdb8-b46f92df1716"
-    }
-  },
-  "notes": "Path template: /{version:float}/{service_id:int}/{user_id:str}/{order_id:uuid}"
+	"name": "Multiple path parameters - success",
+	"description": "Tests multiple path parameters in single route",
+	"source": {
+		"framework": "litestar",
+		"test_file": "tests/unit/test_kwargs/test_path_params.py",
+		"test_function": "test_path_params"
+	},
+	"handler": {
+		"route": "/{version}/{service_id}/{user_id}/{order_id}",
+		"method": "GET",
+		"parameters": {
+			"path": {
+				"version": {
+					"type": "number"
+				},
+				"service_id": {
+					"type": "integer"
+				},
+				"user_id": {
+					"type": "string"
+				},
+				"order_id": {
+					"type": "string",
+					"format": "uuid"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/1.0/1/abc/c892496f-b1fd-4b91-bdb8-b46f92df1716"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"version": 1.0,
+			"service_id": 1,
+			"user_id": "abc",
+			"order_id": "c892496f-b1fd-4b91-bdb8-b46f92df1716"
+		}
+	},
+	"notes": "Path template: /{version:float}/{service_id:int}/{user_id:str}/{order_id:uuid}"
 }

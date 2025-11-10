@@ -1,23 +1,23 @@
 {
-  "name": "401 Unauthorized - Missing authentication",
-  "description": "Tests 401 Unauthorized when authentication is missing",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_security_oauth2.py",
-    "test_function": "test_no_token"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/users/me"
-  },
-  "expected_response": {
-    "status_code": 401,
-    "body": {
-      "detail": "Not authenticated"
-    },
-    "headers": {
-      "www-authenticate": "Bearer"
-    }
-  },
-  "notes": "401 Unauthorized - authentication required but not provided"
+	"name": "401 Unauthorized - Missing authentication",
+	"description": "Tests 401 Unauthorized when authentication is missing",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_security_oauth2.py",
+		"test_function": "test_no_token"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/users/me"
+	},
+	"expected_response": {
+		"status_code": 401,
+		"body": {
+			"detail": "Not authenticated"
+		},
+		"headers": {
+			"www-authenticate": "Bearer"
+		}
+	},
+	"notes": "401 Unauthorized - authentication required but not provided"
 }

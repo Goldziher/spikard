@@ -1,60 +1,51 @@
 {
-  "name": "67_multipleof_constraint_failure",
-  "description": "Integer query parameter that is not multiple of constraint should fail",
-  "category": "query_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "multipleOf constraint validation failure"
-  },
-  "handler": {
-    "route": "/items",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "quantity": {
-          "type": "integer",
-          "multipleOf": 5,
-          "required": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items",
-    "query_params": {
-      "quantity": "17"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "validation_error",
-          "loc": [
-            "query",
-            "quantity"
-          ],
-          "msg": "Value must be a multiple of 5",
-          "ctx": {
-            "multiple_of": 5,
-            "value": 17
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "query_params",
-    "integer",
-    "multipleOf",
-    "validation",
-    "error"
-  ]
+	"name": "67_multipleof_constraint_failure",
+	"description": "Integer query parameter that is not multiple of constraint should fail",
+	"category": "query_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "multipleOf constraint validation failure"
+	},
+	"handler": {
+		"route": "/items",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"quantity": {
+					"type": "integer",
+					"multipleOf": 5,
+					"required": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items",
+		"query_params": {
+			"quantity": "17"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "validation_error",
+					"loc": ["query", "quantity"],
+					"msg": "Value must be a multiple of 5",
+					"ctx": {
+						"multiple_of": 5,
+						"value": 17
+					}
+				}
+			]
+		}
+	},
+	"tags": ["query_params", "integer", "multipleOf", "validation", "error"]
 }

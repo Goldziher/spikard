@@ -1,32 +1,32 @@
 {
-  "name": "Optional cookie parameter - missing",
-  "description": "Tests optional cookie parameter returns None when not provided",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_cookie_params/test_tutorial001.py",
-    "test_function": "test"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items/"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "ads_id": null
-    }
-  },
-  "notes": "Optional cookie returns None when not provided",
-  "handler": {
-    "route": "/items/",
-    "method": "GET",
-    "parameters": {
-      "cookies": {
-        "ads_id": {
-          "type": "string",
-          "optional": true
-        }
-      }
-    }
-  }
+	"name": "Optional cookie parameter - missing",
+	"description": "Tests optional cookie parameter returns None when not provided",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_cookie_params/test_tutorial001.py",
+		"test_function": "test"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items/"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"ads_id": null
+		}
+	},
+	"notes": "Optional cookie returns None when not provided",
+	"handler": {
+		"route": "/items/",
+		"method": "GET",
+		"parameters": {
+			"cookies": {
+				"ads_id": {
+					"type": "string",
+					"optional": true
+				}
+			}
+		}
+	}
 }

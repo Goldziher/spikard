@@ -1,27 +1,24 @@
 {
-  "name": "should_return_localized_error_messages_with_ajv-i18n_13",
-  "description": "Extracted from Fastify: should return localized error messages with ajv-i18n",
-  "category": "json_bodies",
-  "source": {
-    "framework": "fastify",
-    "test_file": "test/schema-examples.test.js",
-    "test_function": "should return localized error messages with ajv-i18n",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/",
-    "method": "POST",
-    "parameters": {}
-  },
-  "request": {
-    "method": "POST",
-    "path": "/"
-  },
-  "expected_response": {
-    "status_code": 200
-  },
-  "tags": [
-    "success",
-    "body"
-  ]
+	"name": "should_return_localized_error_messages_with_ajv-i18n_13",
+	"description": "Extracted from Fastify: should return localized error messages with ajv-i18n",
+	"category": "json_bodies",
+	"source": {
+		"framework": "fastify",
+		"test_file": "test/schema-examples.test.js",
+		"test_function": "should return localized error messages with ajv-i18n",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/",
+		"method": "POST",
+		"parameters": {}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/"
+	},
+	"expected_response": {
+		"status_code": 200
+	},
+	"tags": ["success", "body"]
 }

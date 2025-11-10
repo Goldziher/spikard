@@ -1,38 +1,38 @@
 {
-  "name": "19_413_payload_too_large",
-  "description": "Request with body exceeding max size should return 413",
-  "category": "status_codes",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "http_specs",
-    "test_case": "Payload size limit enforcement"
-  },
-  "handler": {
-    "route": "/upload",
-    "method": "POST",
-    "max_body_size": 1024,
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/upload",
-    "body": {
-      "data": "{{ repeat 'x' 2000 times }}"
-    }
-  },
-  "expected_response": {
-    "status_code": 413,
-    "body": {
-      "error": "Payload Too Large",
-      "message": "Request body size exceeds maximum allowed size of 1024 bytes"
-    }
-  },
-  "tags": ["status_codes", "413", "payload_size", "error"]
+	"name": "19_413_payload_too_large",
+	"description": "Request with body exceeding max size should return 413",
+	"category": "status_codes",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "http_specs",
+		"test_case": "Payload size limit enforcement"
+	},
+	"handler": {
+		"route": "/upload",
+		"method": "POST",
+		"max_body_size": 1024,
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"data": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/upload",
+		"body": {
+			"data": "{{ repeat 'x' 2000 times }}"
+		}
+	},
+	"expected_response": {
+		"status_code": 413,
+		"body": {
+			"error": "Payload Too Large",
+			"message": "Request body size exceeds maximum allowed size of 1024 bytes"
+		}
+	},
+	"tags": ["status_codes", "413", "payload_size", "error"]
 }

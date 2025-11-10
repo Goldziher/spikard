@@ -4,3 +4,7 @@ AllCops:
   Exclude:
     - "ext/**"
     - "tmp/**/*"
+
+Metrics/BlockLength:
+  Exclude:
+    - 'Rakefile'

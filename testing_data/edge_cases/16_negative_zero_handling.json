@@ -1,37 +1,37 @@
 {
-  "name": "16_negative_zero_handling",
-  "description": "Negative zero (-0.0) should be handled correctly in numeric fields",
-  "category": "edge_cases",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "Negative zero edge case"
-  },
-  "handler": {
-    "route": "/data",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "required": ["offset"],
-      "properties": {
-        "offset": {
-          "type": "number"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/data",
-    "body": {
-      "offset": -0.0
-    }
-  },
-  "expected_response": {
-    "status_code": 201,
-    "body": {
-      "offset": 0
-    }
-  },
-  "tags": ["edge_cases", "numeric", "negative_zero", "success"]
+	"name": "16_negative_zero_handling",
+	"description": "Negative zero (-0.0) should be handled correctly in numeric fields",
+	"category": "edge_cases",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "Negative zero edge case"
+	},
+	"handler": {
+		"route": "/data",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"required": ["offset"],
+			"properties": {
+				"offset": {
+					"type": "number"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/data",
+		"body": {
+			"offset": -0.0
+		}
+	},
+	"expected_response": {
+		"status_code": 201,
+		"body": {
+			"offset": 0
+		}
+	},
+	"tags": ["edge_cases", "numeric", "negative_zero", "success"]
 }

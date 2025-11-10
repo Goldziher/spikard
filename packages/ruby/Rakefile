@@ -10,12 +10,12 @@ namespace :ext do
     lib_dir = File.expand_path('lib', __dir__)
     dllext = RbConfig::CONFIG['DLEXT']
     so_file = File.join(lib_dir, "spikard_rb.#{dllext}")
-    FileUtils.rm_f(so_file) if File.exist?(so_file)
+    FileUtils.rm_f(so_file)
     puts "Cleaned #{so_file}"
   end
 
   desc 'Build the native Ruby extension via cargo'
-  task :build => :clean do
+  task build: :clean do
     Dir.chdir(File.expand_path('ext/spikard_rb', __dir__)) do
       profile = ENV.fetch('CARGO_PROFILE', 'release')
       sh({ 'CARGO_PROFILE' => profile }, 'bundle exec ruby extconf.rb')

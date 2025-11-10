@@ -1,53 +1,48 @@
 {
-  "name": "Required file upload - missing",
-  "description": "Tests required file parameter when no file is provided",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_request_files/test_tutorial001.py",
-    "test_function": "test_required_file_missing"
-  },
-  "handler": {
-    "route": "/files/required",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "file": {
-          "type": "string",
-          "format": "binary"
-        }
-      },
-      "required": [
-        "file"
-      ],
-      "additionalProperties": false
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/files/required",
-    "files": [],
-    "form_data": {}
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "missing",
-          "loc": [
-            "body",
-            "file"
-          ],
-          "msg": "Field required",
-          "input": "required"
-        }
-      ]
-    }
-  },
-  "notes": "Required file parameter returns 422 when not provided"
+	"name": "Required file upload - missing",
+	"description": "Tests required file parameter when no file is provided",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_request_files/test_tutorial001.py",
+		"test_function": "test_required_file_missing"
+	},
+	"handler": {
+		"route": "/files/required",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"file": {
+					"type": "string",
+					"format": "binary"
+				}
+			},
+			"required": ["file"],
+			"additionalProperties": false
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/files/required",
+		"files": [],
+		"form_data": {}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "missing",
+					"loc": ["body", "file"],
+					"msg": "Field required",
+					"input": "required"
+				}
+			]
+		}
+	},
+	"notes": "Required file parameter returns 422 when not provided"
 }

@@ -1,44 +1,41 @@
 {
-  "name": "test_fields_alias_generator_000",
-  "description": "Extracted from Litestar: test_fields_alias_generator case 0",
-  "category": "json_bodies",
-  "source": {
-    "framework": "litestar",
-    "test_file": "tests/unit/test_dto/test_factory/test_integration.py",
-    "test_function": "test_fields_alias_generator",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/",
-    "method": "POST",
-    "parameters": {
-      "query": {
-        "data": {
-          "type": "string",
-          "annotation": "Fzop"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/",
-    "query_params": {
-      "data": {
-        "BAR": "hi"
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "data": {
-        "BAR": "hi"
-      }
-    }
-  },
-  "tags": [
-    "success",
-    "body"
-  ]
+	"name": "test_fields_alias_generator_000",
+	"description": "Extracted from Litestar: test_fields_alias_generator case 0",
+	"category": "json_bodies",
+	"source": {
+		"framework": "litestar",
+		"test_file": "tests/unit/test_dto/test_factory/test_integration.py",
+		"test_function": "test_fields_alias_generator",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/",
+		"method": "POST",
+		"parameters": {
+			"query": {
+				"data": {
+					"type": "string",
+					"annotation": "Fzop"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/",
+		"query_params": {
+			"data": {
+				"BAR": "hi"
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"data": {
+				"BAR": "hi"
+			}
+		}
+	},
+	"tags": ["success", "body"]
 }

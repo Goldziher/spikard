@@ -1,40 +1,38 @@
 {
-  "name": "Array query parameter - single value",
-  "description": "Tests array query parameter with single value",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_query.py",
-    "test_function": "test_query_param_list_single"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/query/list-default",
-    "query_params": {
-      "tags": "apple"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": [
-      "apple"
-    ]
-  },
-  "notes": "Single value for array parameter is converted to array with one element",
-  "handler": {
-    "route": "/query/list-default",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "tags": {
-          "type": "array",
-          "annotation": "list[str]",
-          "items": {
-            "type": "string"
-          },
-          "optional": true,
-          "default": []
-        }
-      }
-    }
-  }
+	"name": "Array query parameter - single value",
+	"description": "Tests array query parameter with single value",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_query.py",
+		"test_function": "test_query_param_list_single"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/query/list-default",
+		"query_params": {
+			"tags": "apple"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": ["apple"]
+	},
+	"notes": "Single value for array parameter is converted to array with one element",
+	"handler": {
+		"route": "/query/list-default",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"tags": {
+					"type": "array",
+					"annotation": "list[str]",
+					"items": {
+						"type": "string"
+					},
+					"optional": true,
+					"default": []
+				}
+			}
+		}
+	}
 }

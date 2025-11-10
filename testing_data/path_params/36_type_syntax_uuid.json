@@ -1,25 +1,25 @@
 {
-  "name": "Path parameter with type syntax - UUID",
-  "description": "Tests path parameter with :uuid type syntax auto-generates UUID validation",
-  "category": "path_params",
-  "source": {
-    "framework": "spikard",
-    "test_file": "type_syntax_demo",
-    "test_function": "test_type_syntax_uuid"
-  },
-  "handler": {
-    "route": "/type-syntax/items/{id:uuid}",
-    "method": "GET"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/type-syntax/items/550e8400-e29b-41d4-a716-446655440000"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "id": "550e8400-e29b-41d4-a716-446655440000"
-    }
-  },
-  "notes": "Type syntax :uuid automatically generates {\"type\": \"string\", \"format\": \"uuid\"} schema in Spikard core"
+	"name": "Path parameter with type syntax - UUID",
+	"description": "Tests path parameter with :uuid type syntax auto-generates UUID validation",
+	"category": "path_params",
+	"source": {
+		"framework": "spikard",
+		"test_file": "type_syntax_demo",
+		"test_function": "test_type_syntax_uuid"
+	},
+	"handler": {
+		"route": "/type-syntax/items/{id:uuid}",
+		"method": "GET"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/type-syntax/items/550e8400-e29b-41d4-a716-446655440000"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"id": "550e8400-e29b-41d4-a716-446655440000"
+		}
+	},
+	"notes": "Type syntax :uuid automatically generates {\"type\": \"string\", \"format\": \"uuid\"} schema in Spikard core"
 }

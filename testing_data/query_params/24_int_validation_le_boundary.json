@@ -1,36 +1,36 @@
 {
-  "name": "Integer query param with le constraint - boundary",
-  "description": "Tests integer query parameter with le validation at boundary value",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_query.py",
-    "test_function": "test_query_param_int_le"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/query/int-le",
-    "query_params": {
-      "value": "100"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "value": 100
-    }
-  },
-  "notes": "le=100 constraint, value 100 is valid (boundary test)",
-  "handler": {
-    "route": "/query/int-le",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "value": {
-          "type": "integer",
-          "annotation": "int",
-          "maximum": 100
-        }
-      }
-    }
-  }
+	"name": "Integer query param with le constraint - boundary",
+	"description": "Tests integer query parameter with le validation at boundary value",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_query.py",
+		"test_function": "test_query_param_int_le"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/query/int-le",
+		"query_params": {
+			"value": "100"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"value": 100
+		}
+	},
+	"notes": "le=100 constraint, value 100 is valid (boundary test)",
+	"handler": {
+		"route": "/query/int-le",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"value": {
+					"type": "integer",
+					"annotation": "int",
+					"maximum": 100
+				}
+			}
+		}
+	}
 }

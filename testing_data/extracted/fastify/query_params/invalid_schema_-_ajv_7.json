@@ -1,27 +1,24 @@
 {
-  "name": "invalid_schema_-_ajv_7",
-  "description": "Extracted from Fastify: invalid schema - ajv",
-  "category": "query_params",
-  "source": {
-    "framework": "fastify",
-    "test_file": "test/reply-error.test.js",
-    "test_function": "invalid schema - ajv",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/",
-    "method": "GET",
-    "parameters": {}
-  },
-  "request": {
-    "method": "GET",
-    "path": "/?id=abc"
-  },
-  "expected_response": {
-    "status_code": 200
-  },
-  "tags": [
-    "success",
-    "query"
-  ]
+	"name": "invalid_schema_-_ajv_7",
+	"description": "Extracted from Fastify: invalid schema - ajv",
+	"category": "query_params",
+	"source": {
+		"framework": "fastify",
+		"test_file": "test/reply-error.test.js",
+		"test_function": "invalid schema - ajv",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/",
+		"method": "GET",
+		"parameters": {}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/?id=abc"
+	},
+	"expected_response": {
+		"status_code": 200
+	},
+	"tags": ["success", "query"]
 }

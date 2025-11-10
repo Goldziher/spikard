@@ -1,28 +1,25 @@
 {
-  "name": "test_asgi_middleware_exclude_by_scope_type_002",
-  "description": "Extracted from Litestar: test_asgi_middleware_exclude_by_scope_type case 2",
-  "category": "query_params",
-  "source": {
-    "framework": "litestar",
-    "test_file": "tests/unit/test_middleware/test_base_middleware.py",
-    "test_function": "test_asgi_middleware_exclude_by_scope_type",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/http",
-    "method": "GET",
-    "parameters": {}
-  },
-  "request": {
-    "method": "GET",
-    "path": "/http"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {}
-  },
-  "tags": [
-    "success",
-    "query"
-  ]
+	"name": "test_asgi_middleware_exclude_by_scope_type_002",
+	"description": "Extracted from Litestar: test_asgi_middleware_exclude_by_scope_type case 2",
+	"category": "query_params",
+	"source": {
+		"framework": "litestar",
+		"test_file": "tests/unit/test_middleware/test_base_middleware.py",
+		"test_function": "test_asgi_middleware_exclude_by_scope_type",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/http",
+		"method": "GET",
+		"parameters": {}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/http"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {}
+	},
+	"tags": ["success", "query"]
 }

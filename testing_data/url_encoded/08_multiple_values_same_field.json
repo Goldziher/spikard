@@ -1,42 +1,42 @@
 {
-  "name": "Multiple values for same field",
-  "description": "Tests form field with multiple values (array)",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_request_forms/test_tutorial001.py",
-    "test_function": "test_form_multiple_values"
-  },
-  "handler": {
-    "route": "/form/tags",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "required": ["tags"],
-      "properties": {
-        "tags": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/form/tags",
-    "headers": {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    "form_data": {
-      "tags": ["python", "fastapi", "web"]
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "tags": ["python", "fastapi", "web"]
-    }
-  },
-  "notes": "Multiple 'tags' fields with different values are treated as array"
+	"name": "Multiple values for same field",
+	"description": "Tests form field with multiple values (array)",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_request_forms/test_tutorial001.py",
+		"test_function": "test_form_multiple_values"
+	},
+	"handler": {
+		"route": "/form/tags",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"required": ["tags"],
+			"properties": {
+				"tags": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/form/tags",
+		"headers": {
+			"Content-Type": "application/x-www-form-urlencoded"
+		},
+		"form_data": {
+			"tags": ["python", "fastapi", "web"]
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"tags": ["python", "fastapi", "web"]
+		}
+	},
+	"notes": "Multiple 'tags' fields with different values are treated as array"
 }

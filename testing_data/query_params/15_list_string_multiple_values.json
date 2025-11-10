@@ -1,46 +1,40 @@
 {
-  "name": "List of strings - multiple values",
-  "description": "Tests list of string query parameters with multiple values",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_query_params_str_validations/test_tutorial011.py",
-    "test_function": "test_multi_query_values"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items/",
-    "query_string": "q=foo&q=bar",
-    "query_params": {
-      "q": [
-        "foo",
-        "bar"
-      ]
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "q": [
-        "foo",
-        "bar"
-      ]
-    }
-  },
-  "notes": "List[str] with ?q=foo&q=bar",
-  "handler": {
-    "route": "/items/",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "q": {
-          "type": "array",
-          "annotation": "list[str]",
-          "items": {
-            "type": "string"
-          },
-          "optional": true
-        }
-      }
-    }
-  }
+	"name": "List of strings - multiple values",
+	"description": "Tests list of string query parameters with multiple values",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_query_params_str_validations/test_tutorial011.py",
+		"test_function": "test_multi_query_values"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items/",
+		"query_string": "q=foo&q=bar",
+		"query_params": {
+			"q": ["foo", "bar"]
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"q": ["foo", "bar"]
+		}
+	},
+	"notes": "List[str] with ?q=foo&q=bar",
+	"handler": {
+		"route": "/items/",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"q": {
+					"type": "array",
+					"annotation": "list[str]",
+					"items": {
+						"type": "string"
+					},
+					"optional": true
+				}
+			}
+		}
+	}
 }

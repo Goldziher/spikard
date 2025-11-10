@@ -1,21 +1,21 @@
 {
-  "name": "XML response - application/xml",
-  "description": "Tests XML response",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_responses.py",
-    "test_function": "test_xml_response"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/xml"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "headers": {
-      "content-type": "application/xml"
-    },
-    "body": "<?xml version=\"1.0\"?><item><name>Item</name><price>42.0</price></item>"
-  },
-  "notes": "XML response with application/xml content type"
+	"name": "XML response - application/xml",
+	"description": "Tests XML response",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_responses.py",
+		"test_function": "test_xml_response"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/xml"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"content-type": "application/xml"
+		},
+		"body": "<?xml version=\"1.0\"?><item><name>Item</name><price>42.0</price></item>"
+	},
+	"notes": "XML response with application/xml content type"
 }

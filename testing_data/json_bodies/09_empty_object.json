@@ -1,36 +1,36 @@
 {
-  "name": "Empty JSON object",
-  "description": "Tests empty JSON object when all fields are optional",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
-    "test_function": "test_post_empty_body"
-  },
-  "handler": {
-    "route": "/items/optional-all",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {},
-      "additionalProperties": false
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/optional-all",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {}
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "name": null,
-      "description": null,
-      "price": null,
-      "tax": null
-    }
-  },
-  "notes": "Empty object {} when all fields are optional"
+	"name": "Empty JSON object",
+	"description": "Tests empty JSON object when all fields are optional",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
+		"test_function": "test_post_empty_body"
+	},
+	"handler": {
+		"route": "/items/optional-all",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {},
+			"additionalProperties": false
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/optional-all",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"name": null,
+			"description": null,
+			"price": null,
+			"tax": null
+		}
+	},
+	"notes": "Empty object {} when all fields are optional"
 }

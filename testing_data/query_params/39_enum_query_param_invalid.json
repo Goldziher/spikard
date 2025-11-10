@@ -1,57 +1,50 @@
 {
-  "name": "Enum query parameter - invalid value",
-  "description": "Tests enum query parameter with value not in enum",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_query.py",
-    "test_function": "test_query_param_enum_invalid"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/query/enum",
-    "query_params": {
-      "model": "vgg16"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "enum",
-          "loc": [
-            "query",
-            "model"
-          ],
-          "msg": "Input should be 'alexnet', 'resnet' or 'lenet'",
-          "input": "vgg16",
-          "ctx": {
-            "expected": "'alexnet', 'resnet' or 'lenet'"
-          }
-        }
-      ]
-    }
-  },
-  "notes": "Valid enum values: alexnet, resnet, lenet. 'vgg16' is invalid",
-  "handler": {
-    "route": "/query/enum",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "model": {
-          "type": "string",
-          "annotation": "str",
-          "enum": [
-            "alexnet",
-            "resnet",
-            "lenet"
-          ]
-        }
-      }
-    }
-  }
+	"name": "Enum query parameter - invalid value",
+	"description": "Tests enum query parameter with value not in enum",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_query.py",
+		"test_function": "test_query_param_enum_invalid"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/query/enum",
+		"query_params": {
+			"model": "vgg16"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "enum",
+					"loc": ["query", "model"],
+					"msg": "Input should be 'alexnet', 'resnet' or 'lenet'",
+					"input": "vgg16",
+					"ctx": {
+						"expected": "'alexnet', 'resnet' or 'lenet'"
+					}
+				}
+			]
+		}
+	},
+	"notes": "Valid enum values: alexnet, resnet, lenet. 'vgg16' is invalid",
+	"handler": {
+		"route": "/query/enum",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"model": {
+					"type": "string",
+					"annotation": "str",
+					"enum": ["alexnet", "resnet", "lenet"]
+				}
+			}
+		}
+	}
 }

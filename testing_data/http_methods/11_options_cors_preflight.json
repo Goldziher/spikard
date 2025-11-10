@@ -1,28 +1,28 @@
 {
-  "name": "OPTIONS - CORS preflight request",
-  "description": "Tests OPTIONS method for CORS preflight",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_cors.py",
-    "test_function": "test_options_preflight"
-  },
-  "request": {
-    "method": "OPTIONS",
-    "path": "/items/",
-    "headers": {
-      "Origin": "https://example.com",
-      "Access-Control-Request-Method": "POST",
-      "Access-Control-Request-Headers": "Content-Type"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "headers": {
-      "Access-Control-Allow-Origin": "https://example.com",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Max-Age": "86400"
-    }
-  },
-  "notes": "OPTIONS used for CORS preflight checks before actual request"
+	"name": "OPTIONS - CORS preflight request",
+	"description": "Tests OPTIONS method for CORS preflight",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_cors.py",
+		"test_function": "test_options_preflight"
+	},
+	"request": {
+		"method": "OPTIONS",
+		"path": "/items/",
+		"headers": {
+			"Origin": "https://example.com",
+			"Access-Control-Request-Method": "POST",
+			"Access-Control-Request-Headers": "Content-Type"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Access-Control-Allow-Origin": "https://example.com",
+			"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+			"Access-Control-Allow-Headers": "Content-Type",
+			"Access-Control-Max-Age": "86400"
+		}
+	},
+	"notes": "OPTIONS used for CORS preflight checks before actual request"
 }

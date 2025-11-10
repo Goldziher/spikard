@@ -1,61 +1,51 @@
 {
-  "name": "53_integer_le_constraint_failure",
-  "description": "Integer query parameter exceeding maximum should fail validation",
-  "category": "query_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "litestar",
-    "test_case": "Parameter le (less than or equal) validation failure"
-  },
-  "handler": {
-    "route": "/items",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "limit": {
-          "type": "integer",
-          "maximum": 100,
-          "required": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items",
-    "query_params": {
-      "limit": "101"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "validation_error",
-          "loc": [
-            "query",
-            "limit"
-          ],
-          "msg": "Value must not exceed 100",
-          "ctx": {
-            "maximum": 100,
-            "value": 101
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "query_params",
-    "integer",
-    "le",
-    "maximum",
-    "validation",
-    "error"
-  ]
+	"name": "53_integer_le_constraint_failure",
+	"description": "Integer query parameter exceeding maximum should fail validation",
+	"category": "query_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "litestar",
+		"test_case": "Parameter le (less than or equal) validation failure"
+	},
+	"handler": {
+		"route": "/items",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"limit": {
+					"type": "integer",
+					"maximum": 100,
+					"required": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items",
+		"query_params": {
+			"limit": "101"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "validation_error",
+					"loc": ["query", "limit"],
+					"msg": "Value must not exceed 100",
+					"ctx": {
+						"maximum": 100,
+						"value": 101
+					}
+				}
+			]
+		}
+	},
+	"tags": ["query_params", "integer", "le", "maximum", "validation", "error"]
 }

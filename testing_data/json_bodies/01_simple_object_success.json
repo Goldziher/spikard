@@ -1,60 +1,55 @@
 {
-  "name": "Simple JSON object - success",
-  "description": "Tests simple JSON object with all required fields",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
-    "test_function": "test_post_body"
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "price": {
-          "type": "number"
-        },
-        "tax": {
-          "type": "number"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "description",
-        "price",
-        "tax"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "name": "Foo",
-      "description": "A very nice Item",
-      "price": 35.4,
-      "tax": 3.2
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "name": "Foo",
-      "description": "A very nice Item",
-      "price": 35.4,
-      "tax": 3.2
-    }
-  },
-  "notes": "Simple object with string, float fields"
+	"name": "Simple JSON object - success",
+	"description": "Tests simple JSON object with all required fields",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
+		"test_function": "test_post_body"
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"description": {
+					"type": "string"
+				},
+				"price": {
+					"type": "number"
+				},
+				"tax": {
+					"type": "number"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["name", "description", "price", "tax"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"name": "Foo",
+			"description": "A very nice Item",
+			"price": 35.4,
+			"tax": 3.2
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"name": "Foo",
+			"description": "A very nice Item",
+			"price": 35.4,
+			"tax": 3.2
+		}
+	},
+	"notes": "Simple object with string, float fields"
 }

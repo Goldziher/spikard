@@ -1,39 +1,39 @@
 {
-  "name": "72_array_separator_space",
-  "description": "Array query parameter with space separator should parse correctly",
-  "category": "query_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "nestjs",
-    "test_case": "ParseArrayPipe with space separator"
-  },
-  "handler": {
-    "route": "/search",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "keywords": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "separator": " "
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/search?keywords=rust%20web%20framework",
-    "query_params": {
-      "keywords": "rust web framework"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "keywords": ["rust", "web", "framework"]
-    }
-  },
-  "tags": ["query_params", "array", "separator", "space", "percent_encoding", "parsing", "success"]
+	"name": "72_array_separator_space",
+	"description": "Array query parameter with space separator should parse correctly",
+	"category": "query_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "nestjs",
+		"test_case": "ParseArrayPipe with space separator"
+	},
+	"handler": {
+		"route": "/search",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"keywords": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"separator": " "
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/search?keywords=rust%20web%20framework",
+		"query_params": {
+			"keywords": "rust web framework"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"keywords": ["rust", "web", "framework"]
+		}
+	},
+	"tags": ["query_params", "array", "separator", "space", "percent_encoding", "parsing", "success"]
 }

@@ -1,39 +1,39 @@
 {
-  "name": "18_file_magic_number_jpeg_success",
-  "description": "File with correct JPEG magic number and matching MIME type should be accepted",
-  "category": "multipart",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "nestjs",
-    "test_case": "FileTypeValidator JPEG magic number validation"
-  },
-  "handler": {
-    "route": "/upload",
-    "method": "POST",
-    "parameters": {
-      "files": {
-        "image": {
-          "required": true,
-          "content_type": ["image/jpeg"],
-          "validate_magic_numbers": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/upload",
-    "files": [
-      {
-        "field_name": "image",
-        "filename": "test.jpg",
-        "content_type": "image/jpeg",
-        "magic_bytes": "ffd8ffe0"
-      }
-    ]
-  },
-  "expected_response": {
-    "status_code": 201
-  },
-  "tags": ["multipart", "file", "magic_number", "jpeg", "security", "validation", "success"]
+	"name": "18_file_magic_number_jpeg_success",
+	"description": "File with correct JPEG magic number and matching MIME type should be accepted",
+	"category": "multipart",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "nestjs",
+		"test_case": "FileTypeValidator JPEG magic number validation"
+	},
+	"handler": {
+		"route": "/upload",
+		"method": "POST",
+		"parameters": {
+			"files": {
+				"image": {
+					"required": true,
+					"content_type": ["image/jpeg"],
+					"validate_magic_numbers": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/upload",
+		"files": [
+			{
+				"field_name": "image",
+				"filename": "test.jpg",
+				"content_type": "image/jpeg",
+				"magic_bytes": "ffd8ffe0"
+			}
+		]
+	},
+	"expected_response": {
+		"status_code": 201
+	},
+	"tags": ["multipart", "file", "magic_number", "jpeg", "security", "validation", "success"]
 }

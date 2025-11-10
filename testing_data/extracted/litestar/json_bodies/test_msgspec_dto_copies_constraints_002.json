@@ -1,35 +1,32 @@
 {
-  "name": "test_msgspec_dto_copies_constraints_002",
-  "description": "Extracted from Litestar: test_msgspec_dto_copies_constraints case 2",
-  "category": "json_bodies",
-  "source": {
-    "framework": "litestar",
-    "test_file": "tests/unit/test_dto/test_factory/test_integration.py",
-    "test_function": "test_msgspec_dto_copies_constraints",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/",
-    "method": "POST",
-    "parameters": {
-      "query": {
-        "data": {
-          "type": "string",
-          "annotation": "struct"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {}
-  },
-  "tags": [
-    "success",
-    "body"
-  ]
+	"name": "test_msgspec_dto_copies_constraints_002",
+	"description": "Extracted from Litestar: test_msgspec_dto_copies_constraints case 2",
+	"category": "json_bodies",
+	"source": {
+		"framework": "litestar",
+		"test_file": "tests/unit/test_dto/test_factory/test_integration.py",
+		"test_function": "test_msgspec_dto_copies_constraints",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/",
+		"method": "POST",
+		"parameters": {
+			"query": {
+				"data": {
+					"type": "string",
+					"annotation": "struct"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {}
+	},
+	"tags": ["success", "body"]
 }

@@ -1,36 +1,36 @@
 {
-  "name": "63_format_uri_success",
-  "description": "Query parameter with valid URI should be accepted",
-  "category": "query_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "Format validator uri"
-  },
-  "handler": {
-    "route": "/redirect",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "url": {
-          "type": "string",
-          "format": "uri"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/redirect",
-    "query_params": {
-      "url": "https://example.com/path?query=value"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "url": "https://example.com/path?query=value"
-    }
-  },
-  "tags": ["query_params", "format", "uri", "validation", "success"]
+	"name": "63_format_uri_success",
+	"description": "Query parameter with valid URI should be accepted",
+	"category": "query_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "Format validator uri"
+	},
+	"handler": {
+		"route": "/redirect",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"url": {
+					"type": "string",
+					"format": "uri"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/redirect",
+		"query_params": {
+			"url": "https://example.com/path?query=value"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"url": "https://example.com/path?query=value"
+		}
+	},
+	"tags": ["query_params", "format", "uri", "validation", "success"]
 }

@@ -1,36 +1,36 @@
 {
-  "name": "60_format_ipv4_success",
-  "description": "Query parameter with valid IPv4 address should be accepted",
-  "category": "query_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "Format validator ipv4"
-  },
-  "handler": {
-    "route": "/network",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "ip": {
-          "type": "string",
-          "format": "ipv4"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/network",
-    "query_params": {
-      "ip": "192.168.1.1"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "ip": "192.168.1.1"
-    }
-  },
-  "tags": ["query_params", "format", "ipv4", "validation", "success"]
+	"name": "60_format_ipv4_success",
+	"description": "Query parameter with valid IPv4 address should be accepted",
+	"category": "query_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "Format validator ipv4"
+	},
+	"handler": {
+		"route": "/network",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"ip": {
+					"type": "string",
+					"format": "ipv4"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/network",
+		"query_params": {
+			"ip": "192.168.1.1"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"ip": "192.168.1.1"
+		}
+	},
+	"tags": ["query_params", "format", "ipv4", "validation", "success"]
 }

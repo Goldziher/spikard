@@ -1,47 +1,45 @@
 {
-  "name": "Image file upload",
-  "description": "Tests uploading an image file (JPEG)",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_request_files/test_tutorial003.py",
-    "test_function": "test_upload_image"
-  },
-  "handler": {
-    "route": "/files/image",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "image": {
-          "type": "string",
-          "format": "binary"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "image"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/files/image",
-    "files": [
-      {
-        "field_name": "image",
-        "filename": "photo.jpg",
-        "content": "fake_jpeg_content_here",
-        "content_type": "image/jpeg"
-      }
-    ]
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "filename": "photo.jpg",
-      "content_type": "image/jpeg",
-      "size": 22
-    }
-  },
-  "notes": "Image file with image/jpeg content type"
+	"name": "Image file upload",
+	"description": "Tests uploading an image file (JPEG)",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_request_files/test_tutorial003.py",
+		"test_function": "test_upload_image"
+	},
+	"handler": {
+		"route": "/files/image",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"image": {
+					"type": "string",
+					"format": "binary"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["image"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/files/image",
+		"files": [
+			{
+				"field_name": "image",
+				"filename": "photo.jpg",
+				"content": "fake_jpeg_content_here",
+				"content_type": "image/jpeg"
+			}
+		]
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"filename": "photo.jpg",
+			"content_type": "image/jpeg",
+			"size": 22
+		}
+	},
+	"notes": "Image file with image/jpeg content type"
 }

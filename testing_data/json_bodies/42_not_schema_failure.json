@@ -1,68 +1,53 @@
 {
-  "name": "42_not_schema_failure",
-  "description": "not schema - fails when value matches the prohibited schema",
-  "category": "json_bodies",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "not schema composition failure"
-  },
-  "handler": {
-    "route": "/users",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "required": [
-        "username"
-      ],
-      "properties": {
-        "username": {
-          "type": "string",
-          "not": {
-            "enum": [
-              "admin",
-              "root",
-              "system"
-            ]
-          }
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/users",
-    "body": {
-      "username": "admin"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "validation_error",
-          "loc": [
-            "body",
-            "username"
-          ],
-          "msg": "Must not match the schema",
-          "ctx": {
-            "prohibited_value": "admin"
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "json_bodies",
-    "not",
-    "composition",
-    "validation",
-    "error"
-  ]
+	"name": "42_not_schema_failure",
+	"description": "not schema - fails when value matches the prohibited schema",
+	"category": "json_bodies",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "not schema composition failure"
+	},
+	"handler": {
+		"route": "/users",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"required": ["username"],
+			"properties": {
+				"username": {
+					"type": "string",
+					"not": {
+						"enum": ["admin", "root", "system"]
+					}
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/users",
+		"body": {
+			"username": "admin"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "validation_error",
+					"loc": ["body", "username"],
+					"msg": "Must not match the schema",
+					"ctx": {
+						"prohibited_value": "admin"
+					}
+				}
+			]
+		}
+	},
+	"tags": ["json_bodies", "not", "composition", "validation", "error"]
 }

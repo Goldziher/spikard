@@ -1,35 +1,35 @@
 {
-  "name": "14_large_integer_boundary",
-  "description": "Very large integer at JavaScript MAX_SAFE_INTEGER boundary should be handled",
-  "category": "edge_cases",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "litestar",
-    "test_case": "Large integer boundary handling"
-  },
-  "handler": {
-    "route": "/items",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "id": {
-          "type": "integer"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items",
-    "query_params": {
-      "id": "9007199254740991"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "id": 9007199254740991
-    }
-  },
-  "tags": ["edge_cases", "integer", "boundary", "max_safe_integer", "success"]
+	"name": "14_large_integer_boundary",
+	"description": "Very large integer at JavaScript MAX_SAFE_INTEGER boundary should be handled",
+	"category": "edge_cases",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "litestar",
+		"test_case": "Large integer boundary handling"
+	},
+	"handler": {
+		"route": "/items",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"id": {
+					"type": "integer"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items",
+		"query_params": {
+			"id": "9007199254740991"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"id": 9007199254740991
+		}
+	},
+	"tags": ["edge_cases", "integer", "boundary", "max_safe_integer", "success"]
 }

@@ -1,27 +1,24 @@
 {
-  "name": "should_expose_router_options_via_getters_on_request_and_reply_0",
-  "description": "Extracted from Fastify: Should expose router options via getters on request and reply",
-  "category": "query_params",
-  "source": {
-    "framework": "fastify",
-    "test_file": "test/router-options.test.js",
-    "test_function": "Should expose router options via getters on request and reply",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/test/:id",
-    "method": "GET",
-    "parameters": {}
-  },
-  "request": {
-    "method": "GET",
-    "path": "/test/123456789"
-  },
-  "expected_response": {
-    "status_code": 200
-  },
-  "tags": [
-    "success",
-    "query"
-  ]
+	"name": "should_expose_router_options_via_getters_on_request_and_reply_0",
+	"description": "Extracted from Fastify: Should expose router options via getters on request and reply",
+	"category": "query_params",
+	"source": {
+		"framework": "fastify",
+		"test_file": "test/router-options.test.js",
+		"test_function": "Should expose router options via getters on request and reply",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/test/:id",
+		"method": "GET",
+		"parameters": {}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/test/123456789"
+	},
+	"expected_response": {
+		"status_code": 200
+	},
+	"tags": ["success", "query"]
 }

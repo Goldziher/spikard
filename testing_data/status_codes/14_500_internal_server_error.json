@@ -1,23 +1,23 @@
 {
-  "name": "500 Internal Server Error - Server error",
-  "description": "Tests 500 Internal Server Error for unhandled exceptions",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_starlette_exception.py",
-    "test_function": "test_server_error"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/error"
-  },
-  "expected_response": {
-    "status_code": 500,
-    "body": {
-      "type": "https://spikard.dev/errors/internal-server-error",
-      "title": "Internal Server Error",
-      "status": 500,
-      "detail": "Internal server error"
-    }
-  },
-  "notes": "500 Internal Server Error - unhandled exception in server code"
+	"name": "500 Internal Server Error - Server error",
+	"description": "Tests 500 Internal Server Error for unhandled exceptions",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_starlette_exception.py",
+		"test_function": "test_server_error"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/error"
+	},
+	"expected_response": {
+		"status_code": 500,
+		"body": {
+			"type": "https://spikard.dev/errors/internal-server-error",
+			"title": "Internal Server Error",
+			"status": 500,
+			"detail": "Internal server error"
+		}
+	},
+	"notes": "500 Internal Server Error - unhandled exception in server code"
 }

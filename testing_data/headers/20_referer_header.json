@@ -1,35 +1,35 @@
 {
-  "name": "Referer header",
-  "description": "Tests Referer header (standard misspelling)",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_requests.py",
-    "test_function": "test_request_headers"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/headers/referer",
-    "headers": {
-      "Referer": "https://example.com/page"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "referer": "https://example.com/page"
-    }
-  },
-  "notes": "Referer header (note the spelling)",
-  "handler": {
-    "route": "/headers/referer",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "Referer": {
-          "type": "string",
-          "annotation": "str"
-        }
-      }
-    }
-  }
+	"name": "Referer header",
+	"description": "Tests Referer header (standard misspelling)",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_requests.py",
+		"test_function": "test_request_headers"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/headers/referer",
+		"headers": {
+			"Referer": "https://example.com/page"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"referer": "https://example.com/page"
+		}
+	},
+	"notes": "Referer header (note the spelling)",
+	"handler": {
+		"route": "/headers/referer",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Referer": {
+					"type": "string",
+					"annotation": "str"
+				}
+			}
+		}
+	}
 }

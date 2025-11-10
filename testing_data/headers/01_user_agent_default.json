@@ -1,34 +1,34 @@
 {
-  "name": "User-Agent header - default value",
-  "description": "Tests optional User-Agent header when not provided, uses testclient default",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_header_params/test_tutorial001.py",
-    "test_function": "test_no_user_agent"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items/"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "User-Agent": "testclient"
-    }
-  },
-  "notes": "When User-Agent not provided, defaults to test client value",
-  "handler": {
-    "route": "/items/",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "User-Agent": {
-          "type": "string",
-          "annotation": "str",
-          "optional": true,
-          "default": "testclient"
-        }
-      }
-    }
-  }
+	"name": "User-Agent header - default value",
+	"description": "Tests optional User-Agent header when not provided, uses testclient default",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_header_params/test_tutorial001.py",
+		"test_function": "test_no_user_agent"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items/"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"User-Agent": "testclient"
+		}
+	},
+	"notes": "When User-Agent not provided, defaults to test client value",
+	"handler": {
+		"route": "/items/",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"User-Agent": {
+					"type": "string",
+					"annotation": "str",
+					"optional": true,
+					"default": "testclient"
+				}
+			}
+		}
+	}
 }

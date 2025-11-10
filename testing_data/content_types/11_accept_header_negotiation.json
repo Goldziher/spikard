@@ -1,38 +1,38 @@
 {
-  "name": "Content negotiation - Accept header",
-  "description": "Tests content negotiation based on Accept header",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_response_model.py",
-    "test_function": "test_accept_negotiation"
-  },
-  "handler": {
-    "route": "/accept-test/{id}",
-    "method": "GET",
-    "parameters": {
-      "path": {
-        "id": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/accept-test/1",
-    "headers": {
-      "Accept": "application/json"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "headers": {
-      "content-type": "application/json"
-    },
-    "body": {
-      "id": 1,
-      "name": "Item"
-    }
-  },
-  "notes": "Server responds with JSON based on Accept header"
+	"name": "Content negotiation - Accept header",
+	"description": "Tests content negotiation based on Accept header",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_response_model.py",
+		"test_function": "test_accept_negotiation"
+	},
+	"handler": {
+		"route": "/accept-test/{id}",
+		"method": "GET",
+		"parameters": {
+			"path": {
+				"id": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/accept-test/1",
+		"headers": {
+			"Accept": "application/json"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"content-type": "application/json"
+		},
+		"body": {
+			"id": 1,
+			"name": "Item"
+		}
+	},
+	"notes": "Server responds with JSON based on Accept header"
 }

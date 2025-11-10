@@ -1,32 +1,32 @@
 {
-  "name": "35_negative_integer_path_param",
-  "description": "Path parameter with negative integer should be parsed correctly",
-  "category": "path_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "nestjs",
-    "test_case": "Negative integer in path parameter"
-  },
-  "handler": {
-    "route": "/offset/{value}",
-    "method": "GET",
-    "parameters": {
-      "path": {
-        "value": {
-          "type": "integer"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/offset/-100"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "value": -100
-    }
-  },
-  "tags": ["path_params", "integer", "negative", "type_coercion", "success"]
+	"name": "35_negative_integer_path_param",
+	"description": "Path parameter with negative integer should be parsed correctly",
+	"category": "path_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "nestjs",
+		"test_case": "Negative integer in path parameter"
+	},
+	"handler": {
+		"route": "/offset/{value}",
+		"method": "GET",
+		"parameters": {
+			"path": {
+				"value": {
+					"type": "integer"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/offset/-100"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"value": -100
+		}
+	},
+	"tags": ["path_params", "integer", "negative", "type_coercion", "success"]
 }

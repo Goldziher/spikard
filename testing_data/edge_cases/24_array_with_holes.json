@@ -1,50 +1,42 @@
 {
-  "name": "24_array_with_holes",
-  "description": "Array indices with gaps should be rejected in form data",
-  "category": "edge_cases",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "nestjs",
-    "test_case": "Sparse array handling in forms"
-  },
-  "handler": {
-    "route": "/items",
-    "method": "POST",
-    "content_type": "application/x-www-form-urlencoded",
-    "body_schema": {
-      "type": "object",
-      "required": [
-        "items"
-      ],
-      "properties": {
-        "items": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items",
-    "headers": {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    "body": "items[0]=first&items[2]=third&items[5]=sixth"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "items": ["first", "third", "sixth"]
-    }
-  },
-  "tags": [
-    "edge_cases",
-    "arrays",
-    "sparse",
-    "validation",
-    "error"
-  ]
+	"name": "24_array_with_holes",
+	"description": "Array indices with gaps should be rejected in form data",
+	"category": "edge_cases",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "nestjs",
+		"test_case": "Sparse array handling in forms"
+	},
+	"handler": {
+		"route": "/items",
+		"method": "POST",
+		"content_type": "application/x-www-form-urlencoded",
+		"body_schema": {
+			"type": "object",
+			"required": ["items"],
+			"properties": {
+				"items": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items",
+		"headers": {
+			"Content-Type": "application/x-www-form-urlencoded"
+		},
+		"body": "items[0]=first&items[2]=third&items[5]=sixth"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"items": ["first", "third", "sixth"]
+		}
+	},
+	"tags": ["edge_cases", "arrays", "sparse", "validation", "error"]
 }

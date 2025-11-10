@@ -1,36 +1,36 @@
 {
-  "name": "Integer query param with lt constraint - valid",
-  "description": "Tests integer query parameter with lt validation, value below limit",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_query.py",
-    "test_function": "test_query_param_int_lt"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/query/int-lt",
-    "query_params": {
-      "value": "49"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "value": 49
-    }
-  },
-  "notes": "lt=50 constraint, value 49 is valid (just below boundary)",
-  "handler": {
-    "route": "/query/int-lt",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "value": {
-          "type": "integer",
-          "annotation": "int",
-          "exclusiveMaximum": 50
-        }
-      }
-    }
-  }
+	"name": "Integer query param with lt constraint - valid",
+	"description": "Tests integer query parameter with lt validation, value below limit",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_query.py",
+		"test_function": "test_query_param_int_lt"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/query/int-lt",
+		"query_params": {
+			"value": "49"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"value": 49
+		}
+	},
+	"notes": "lt=50 constraint, value 49 is valid (just below boundary)",
+	"handler": {
+		"route": "/query/int-lt",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"value": {
+					"type": "integer",
+					"annotation": "int",
+					"exclusiveMaximum": 50
+				}
+			}
+		}
+	}
 }

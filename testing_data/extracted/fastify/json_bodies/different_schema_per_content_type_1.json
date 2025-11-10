@@ -1,28 +1,24 @@
 {
-  "name": "different_schema_per_content_type_1",
-  "description": "Extracted from Fastify: Different schema per content type",
-  "category": "json_bodies",
-  "source": {
-    "framework": "fastify",
-    "test_file": "test/schema-validation.test.js",
-    "test_function": "Different schema per content type",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/",
-    "method": "POST",
-    "parameters": {}
-  },
-  "request": {
-    "method": "POST",
-    "path": "/"
-  },
-  "expected_response": {
-    "status_code": 400
-  },
-  "tags": [
-    "error",
-    "validation",
-    "body"
-  ]
+	"name": "different_schema_per_content_type_1",
+	"description": "Extracted from Fastify: Different schema per content type",
+	"category": "json_bodies",
+	"source": {
+		"framework": "fastify",
+		"test_file": "test/schema-validation.test.js",
+		"test_function": "Different schema per content type",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/",
+		"method": "POST",
+		"parameters": {}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/"
+	},
+	"expected_response": {
+		"status_code": 400
+	},
+	"tags": ["error", "validation", "body"]
 }

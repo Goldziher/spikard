@@ -1,70 +1,54 @@
 {
-  "name": "56_array_maxitems_constraint_failure",
-  "description": "Array query parameter exceeding maxItems constraint should fail validation",
-  "category": "query_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "litestar",
-    "test_case": "Parameter maxItems validation failure"
-  },
-  "handler": {
-    "route": "/items",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "tags": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "maxItems": 5,
-          "required": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items",
-    "query_params": {
-      "tags": [
-        "a",
-        "b",
-        "c",
-        "d",
-        "e",
-        "f"
-      ]
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "validation_error",
-          "loc": [
-            "query",
-            "tags"
-          ],
-          "msg": "Array must not contain more than 5 items",
-          "ctx": {
-            "max_items": 5,
-            "actual_items": 6
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "query_params",
-    "array",
-    "maxItems",
-    "validation",
-    "error"
-  ]
+	"name": "56_array_maxitems_constraint_failure",
+	"description": "Array query parameter exceeding maxItems constraint should fail validation",
+	"category": "query_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "litestar",
+		"test_case": "Parameter maxItems validation failure"
+	},
+	"handler": {
+		"route": "/items",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"tags": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"maxItems": 5,
+					"required": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items",
+		"query_params": {
+			"tags": ["a", "b", "c", "d", "e", "f"]
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "validation_error",
+					"loc": ["query", "tags"],
+					"msg": "Array must not contain more than 5 items",
+					"ctx": {
+						"max_items": 5,
+						"actual_items": 6
+					}
+				}
+			]
+		}
+	},
+	"tags": ["query_params", "array", "maxItems", "validation", "error"]
 }

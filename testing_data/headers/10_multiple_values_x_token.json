@@ -1,41 +1,35 @@
 {
-  "name": "Multiple header values - X-Token",
-  "description": "Tests multiple values for same header name (X-Token)",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_header_params/test_tutorial003.py",
-    "test_function": "test_multi_values"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items/",
-    "headers": {
-      "x-token": [
-        "foo",
-        "bar"
-      ]
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "X-Token values": [
-        "foo",
-        "bar"
-      ]
-    }
-  },
-  "notes": "Multiple values with same header name",
-  "handler": {
-    "route": "/items/",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "x-token": {
-          "type": "string",
-          "annotation": "str"
-        }
-      }
-    }
-  }
+	"name": "Multiple header values - X-Token",
+	"description": "Tests multiple values for same header name (X-Token)",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_header_params/test_tutorial003.py",
+		"test_function": "test_multi_values"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items/",
+		"headers": {
+			"x-token": ["foo", "bar"]
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"X-Token values": ["foo", "bar"]
+		}
+	},
+	"notes": "Multiple values with same header name",
+	"handler": {
+		"route": "/items/",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"x-token": {
+					"type": "string",
+					"annotation": "str"
+				}
+			}
+		}
+	}
 }

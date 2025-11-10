@@ -1,39 +1,39 @@
 {
-  "name": "19_emoji_in_strings",
-  "description": "Emoji characters should be handled correctly in string fields",
-  "category": "edge_cases",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "litestar",
-    "test_case": "Emoji character support"
-  },
-  "handler": {
-    "route": "/messages",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "required": ["text"],
-      "properties": {
-        "text": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 100
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/messages",
-    "body": {
-      "text": "Hello 👋 World 🌍"
-    }
-  },
-  "expected_response": {
-    "status_code": 201,
-    "body": {
-      "text": "Hello 👋 World 🌍"
-    }
-  },
-  "tags": ["edge_cases", "emoji", "unicode", "strings", "success"]
+	"name": "19_emoji_in_strings",
+	"description": "Emoji characters should be handled correctly in string fields",
+	"category": "edge_cases",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "litestar",
+		"test_case": "Emoji character support"
+	},
+	"handler": {
+		"route": "/messages",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"required": ["text"],
+			"properties": {
+				"text": {
+					"type": "string",
+					"minLength": 1,
+					"maxLength": 100
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/messages",
+		"body": {
+			"text": "Hello 👋 World 🌍"
+		}
+	},
+	"expected_response": {
+		"status_code": 201,
+		"body": {
+			"text": "Hello 👋 World 🌍"
+		}
+	},
+	"tags": ["edge_cases", "emoji", "unicode", "strings", "success"]
 }

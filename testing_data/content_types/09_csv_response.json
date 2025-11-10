@@ -1,22 +1,22 @@
 {
-  "name": "CSV response - text/csv",
-  "description": "Tests CSV file response",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_responses.py",
-    "test_function": "test_csv_response"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/export/data.csv"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "headers": {
-      "content-type": "text/csv; charset=utf-8",
-      "content-disposition": "attachment; filename=data.csv"
-    },
-    "body": "id,name,price\n1,Item A,10.0\n2,Item B,20.0"
-  },
-  "notes": "CSV export with text/csv content type"
+	"name": "CSV response - text/csv",
+	"description": "Tests CSV file response",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_responses.py",
+		"test_function": "test_csv_response"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/export/data.csv"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"content-type": "text/csv; charset=utf-8",
+			"content-disposition": "attachment; filename=data.csv"
+		},
+		"body": "id,name,price\n1,Item A,10.0\n2,Item B,20.0"
+	},
+	"notes": "CSV export with text/csv content type"
 }

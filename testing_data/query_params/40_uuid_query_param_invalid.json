@@ -1,50 +1,47 @@
 {
-  "name": "UUID query parameter - invalid format",
-  "description": "Tests UUID query parameter with invalid UUID format",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_query.py",
-    "test_function": "test_query_param_uuid_invalid"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/query/uuid",
-    "query_params": {
-      "item_id": "not-a-uuid"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "uuid_parsing",
-          "loc": [
-            "query",
-            "item_id"
-          ],
-          "msg": "Input should be a valid UUID",
-          "input": "not-a-uuid"
-        }
-      ]
-    }
-  },
-  "notes": "Invalid UUID format should return 422 validation error",
-  "handler": {
-    "route": "/query/uuid",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "item_id": {
-          "type": "string",
-          "annotation": "str",
-          "format": "uuid"
-        }
-      }
-    }
-  }
+	"name": "UUID query parameter - invalid format",
+	"description": "Tests UUID query parameter with invalid UUID format",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_query.py",
+		"test_function": "test_query_param_uuid_invalid"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/query/uuid",
+		"query_params": {
+			"item_id": "not-a-uuid"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "uuid_parsing",
+					"loc": ["query", "item_id"],
+					"msg": "Input should be a valid UUID",
+					"input": "not-a-uuid"
+				}
+			]
+		}
+	},
+	"notes": "Invalid UUID format should return 422 validation error",
+	"handler": {
+		"route": "/query/uuid",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"item_id": {
+					"type": "string",
+					"annotation": "str",
+					"format": "uuid"
+				}
+			}
+		}
+	}
 }
