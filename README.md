@@ -1,6 +1,65 @@
 # Spikard
 
-A multi-language package built with Rust, targeting Python, Node.js, and WebAssembly.
+A multi-language package built with Rust, targeting Python, Node.js, Ruby, and WebAssembly.
+
+## Features
+
+### Core HTTP Framework
+- [x] Request/Response handling (path, query, headers, cookies, body)
+- [x] JSON Schema validation (Draft 2020-12)
+- [x] Format validation (UUID, date, datetime, email, URI, IPv4/IPv6)
+- [x] CORS support (preflight, origin/method/header validation)
+- [x] Multipart/form-data handling
+- [x] URL-encoded form handling
+- [x] RFC 9457 Problem Details error responses
+- [x] Type hints in routes (`/items/{id:uuid}`, `/users/{id:int}`)
+
+### Middleware & Performance
+- [x] Request ID generation (UUID-based, X-Request-ID)
+- [x] Response compression (gzip, brotli)
+- [x] Request timeouts (configurable)
+- [x] Body size limits (configurable max size)
+- [x] Rate limiting (IP-based, configurable)
+- [x] Graceful shutdown (SIGTERM/SIGINT)
+- [x] Static file serving (with cache-control)
+- [x] Sensitive header hiding (Authorization, Cookie)
+- [ ] JWT authentication middleware
+- [ ] API Key authentication middleware
+
+### Advanced Features
+- [ ] OpenAPI 3.1.0 generation
+- [ ] Swagger UI integration
+- [ ] Redoc integration
+- [ ] WebSocket support
+- [ ] Server-Sent Events (SSE)
+- [ ] Streaming responses
+- [ ] Background tasks
+- [ ] Test client
+
+### Language Bindings
+- [x] Python (PyO3) - Full support
+- [x] Node.js (napi-rs) - Full support
+- [x] Ruby (Magnus) - Full support
+- [x] WebAssembly (wasm-bindgen) - Basic support
+- [ ] Python: Typed config forwarding
+- [ ] Node.js: Typed config forwarding
+- [ ] Ruby: Typed config forwarding
+
+### CLI & Code Generation
+- [x] OpenAPI to handler generation
+- [x] Multi-language code generation (Python, Node, Ruby, Rust)
+- [x] Fixture-based testing
+- [ ] AsyncAPI support (WebSocket generation)
+
+### Testing & Benchmarking
+- [x] Fixture-driven integration tests
+- [x] Python e2e tests
+- [x] Node.js e2e tests
+- [x] Ruby e2e tests
+- [x] Benchmark harness
+- [x] Performance benchmarks (Python, Node, Ruby)
+- [ ] WebSocket benchmarks
+- [ ] SSE benchmarks
 
 ## Structure
 
