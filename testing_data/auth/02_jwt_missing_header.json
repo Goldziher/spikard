@@ -1,0 +1,36 @@
+{
+	"name": "JWT authentication - missing Authorization header",
+	"description": "Tests JWT authentication failure when Authorization header is not provided",
+	"category": "auth",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastapi security",
+		"test_case": "JWT token missing"
+	},
+	"handler": {
+		"route": "/protected/user",
+		"method": "GET",
+		"parameters": {},
+		"middleware": {
+			"jwt_auth": {
+				"enabled": true,
+				"algorithm": "HS256",
+				"secret": "test-secret-key-do-not-use-in-production"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/protected/user"
+	},
+	"expected_response": {
+		"status_code": 401,
+		"body": {
+			"type": "https://spikard.dev/errors/unauthorized",
+			"title": "Missing or invalid Authorization header",
+			"status": 401,
+			"detail": "Expected 'Authorization: Bearer <token>'"
+		}
+	},
+	"tags": ["auth", "jwt", "bearer", "security", "middleware", "error", "unauthorized"]
+}

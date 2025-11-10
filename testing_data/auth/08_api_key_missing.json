@@ -1,0 +1,36 @@
+{
+	"name": "API key authentication - missing header",
+	"description": "Tests API key authentication failure when required header is not provided",
+	"category": "auth",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastapi security",
+		"test_case": "API key missing"
+	},
+	"handler": {
+		"route": "/api/data",
+		"method": "GET",
+		"parameters": {},
+		"middleware": {
+			"api_key_auth": {
+				"enabled": true,
+				"keys": ["sk_test_123456", "sk_test_789012"],
+				"header_name": "X-API-Key"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/data"
+	},
+	"expected_response": {
+		"status_code": 401,
+		"body": {
+			"type": "https://spikard.dev/errors/unauthorized",
+			"title": "Missing API key",
+			"status": 401,
+			"detail": "Expected 'X-API-Key' header with valid API key"
+		}
+	},
+	"tags": ["auth", "api_key", "security", "middleware", "error", "unauthorized", "missing"]
+}
