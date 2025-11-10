@@ -1,0 +1,75 @@
+{
+	"name": "OpenAPI spec with JWT security scheme",
+	"description": "Tests that JWT authentication is auto-detected and included in OpenAPI security schemes",
+	"category": "openapi",
+	"source": {
+		"framework": "spikard",
+		"test_case": "OpenAPI security scheme detection - JWT"
+	},
+	"handler": {
+		"route": "/protected/data",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Authorization": {
+					"type": "string",
+					"required": true,
+					"description": "JWT token in Bearer format"
+				}
+			}
+		},
+		"response_schema": {
+			"type": "object",
+			"properties": {
+				"data": {
+					"type": "string"
+				}
+			},
+			"required": ["data"]
+		},
+		"middleware": {
+			"openapi": {
+				"enabled": true,
+				"title": "Secure API",
+				"version": "1.0.0"
+			},
+			"jwt_auth": {
+				"enabled": true,
+				"algorithm": "HS256",
+				"secret": "test-secret-key"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/openapi.json",
+		"headers": {
+			"accept": "application/json"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"content-type": "application/json"
+		},
+		"body_partial": {
+			"openapi": "3.1.0",
+			"components": {
+				"securitySchemes": {
+					"bearerAuth": {
+						"type": "http",
+						"scheme": "bearer",
+						"bearerFormat": "JWT"
+					}
+				}
+			},
+			"security": [
+				{
+					"bearerAuth": []
+				}
+			]
+		}
+	},
+	"tags": ["openapi", "security", "jwt", "authentication", "middleware"],
+	"notes": "JWT config should be auto-detected and added to OpenAPI spec as a security scheme"
+}

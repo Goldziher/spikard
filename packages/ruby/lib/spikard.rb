@@ -11,6 +11,7 @@ rescue LoadError
   require 'json/pure'
 end
 require_relative 'spikard/version'
+require_relative 'spikard/config'
 require_relative 'spikard/response'
 require_relative 'spikard/app'
 require_relative 'spikard/testing'

@@ -44,6 +44,210 @@ use spikard_http::{RouteMetadata, Server, ServerConfig};
 use std::sync::Arc;
 use tracing::{error, info};
 
+/// Extract ServerConfig from Node.js Object
+///
+/// Complete extraction of all middleware configurations following the Python pattern in spikard-py
+fn extract_server_config(config: &Object) -> Result<ServerConfig> {
+    use spikard_http::{
+        ApiKeyConfig, CompressionConfig, ContactInfo, JwtConfig, LicenseInfo, OpenApiConfig, RateLimitConfig,
+        ServerInfo, StaticFilesConfig,
+    };
+    use std::collections::HashMap;
+
+    // Extract host (default: "127.0.0.1")
+    let host = config.get::<String>("host")?.unwrap_or_else(|| "127.0.0.1".to_string());
+
+    // Extract port (default: 8000)
+    let port = config.get::<u32>("port")?.unwrap_or(8000) as u16;
+
+    // Extract workers (default: 1)
+    let workers = config.get::<u32>("workers")?.unwrap_or(1) as usize;
+
+    // Extract enableRequestId (default: true)
+    let enable_request_id = config.get::<bool>("enableRequestId")?.unwrap_or(true);
+
+    // Extract optional maxBodySize
+    let max_body_size = config.get::<u32>("maxBodySize")?.map(|v| v as usize);
+
+    // Extract optional requestTimeout
+    let request_timeout = config.get::<u32>("requestTimeout")?.map(|v| v as u64);
+
+    // Extract gracefulShutdown (default: true)
+    let graceful_shutdown = config.get::<bool>("gracefulShutdown")?.unwrap_or(true);
+
+    // Extract shutdownTimeout (default: 30)
+    let shutdown_timeout = config.get::<u32>("shutdownTimeout")?.unwrap_or(30) as u64;
+
+    // Extract compression config
+    let compression = config.get::<Object>("compression")?.and_then(|comp| {
+        let gzip = comp.get::<bool>("gzip").ok()?.unwrap_or(true);
+        let brotli = comp.get::<bool>("brotli").ok()?.unwrap_or(true);
+        let min_size = comp.get::<u32>("minSize").ok()?.unwrap_or(1024) as usize;
+        let quality = comp.get::<u32>("quality").ok()?.unwrap_or(6);
+
+        Some(CompressionConfig {
+            gzip,
+            brotli,
+            min_size,
+            quality,
+        })
+    });
+
+    // Extract rate limit config
+    let rate_limit = config.get::<Object>("rateLimit")?.and_then(|rl| {
+        let per_second = rl.get::<u32>("perSecond").ok()?? as u64;
+        let burst = rl.get::<u32>("burst").ok()??;
+        let ip_based = rl.get::<bool>("ipBased").ok()?.unwrap_or(true);
+        Some(RateLimitConfig {
+            per_second,
+            burst,
+            ip_based,
+        })
+    });
+
+    // Extract JWT auth config
+    let jwt_auth = config.get::<Object>("jwtAuth")?.and_then(|jwt| {
+        let secret = jwt.get::<String>("secret").ok()??;
+        let algorithm = jwt
+            .get::<String>("algorithm")
+            .ok()?
+            .unwrap_or_else(|| "HS256".to_string());
+        let audience: Option<Vec<String>> = jwt.get::<Vec<String>>("audience").ok()?;
+        let issuer: Option<String> = jwt.get::<String>("issuer").ok()?;
+        let leeway = jwt.get::<u32>("leeway").ok()?.unwrap_or(0) as u64;
+        Some(JwtConfig {
+            secret,
+            algorithm,
+            audience,
+            issuer,
+            leeway,
+        })
+    });
+
+    // Extract API key auth config
+    let api_key_auth = config.get::<Object>("apiKeyAuth")?.and_then(|api| {
+        let keys: Vec<String> = api.get::<Vec<String>>("keys").ok()??;
+        let header_name = api
+            .get::<String>("headerName")
+            .ok()?
+            .unwrap_or_else(|| "X-API-Key".to_string());
+        Some(ApiKeyConfig { keys, header_name })
+    });
+
+    // Extract static files config (array)
+    let static_files = config
+        .get::<Object>("staticFiles")?
+        .and_then(|arr| {
+            let length = arr.get_array_length().ok()?;
+            let mut configs = Vec::new();
+            for i in 0..length {
+                let sf: Object = arr.get_element(i).ok()?;
+                let directory = sf.get::<String>("directory").ok()??;
+                let route_prefix = sf.get::<String>("routePrefix").ok()??;
+                let index_file = sf.get::<bool>("indexFile").ok()?.unwrap_or(true);
+                let cache_control: Option<String> = sf.get::<String>("cacheControl").ok()?;
+                configs.push(StaticFilesConfig {
+                    directory,
+                    route_prefix,
+                    index_file,
+                    cache_control,
+                });
+            }
+            Some(configs)
+        })
+        .unwrap_or_default();
+
+    // Extract OpenAPI config
+    let openapi = config.get::<Object>("openapi")?.and_then(|api| {
+        let enabled = api.get::<bool>("enabled").ok()?.unwrap_or(false);
+        let title = api.get::<String>("title").ok()?.unwrap_or_else(|| "API".to_string());
+        let version = api
+            .get::<String>("version")
+            .ok()?
+            .unwrap_or_else(|| "1.0.0".to_string());
+        let description: Option<String> = api.get::<String>("description").ok()?;
+        let swagger_ui_path = api
+            .get::<String>("swaggerUiPath")
+            .ok()?
+            .unwrap_or_else(|| "/docs".to_string());
+        let redoc_path = api
+            .get::<String>("redocPath")
+            .ok()?
+            .unwrap_or_else(|| "/redoc".to_string());
+        let openapi_json_path = api
+            .get::<String>("openapiJsonPath")
+            .ok()?
+            .unwrap_or_else(|| "/openapi.json".to_string());
+
+        // Extract contact info
+        let contact = api.get::<Object>("contact").ok()?.and_then(|c| {
+            let name: Option<String> = c.get::<String>("name").ok()?;
+            let email: Option<String> = c.get::<String>("email").ok()?;
+            let url: Option<String> = c.get::<String>("url").ok()?;
+            Some(ContactInfo { name, email, url })
+        });
+
+        // Extract license info
+        let license = api.get::<Object>("license").ok()?.and_then(|l| {
+            let name = l.get::<String>("name").ok()??;
+            let url: Option<String> = l.get::<String>("url").ok()?;
+            Some(LicenseInfo { name, url })
+        });
+
+        // Extract servers (array)
+        let servers = api
+            .get::<Object>("servers")
+            .ok()?
+            .and_then(|arr| {
+                let length = arr.get_array_length().ok()?;
+                let mut server_list = Vec::new();
+                for i in 0..length {
+                    let s: Object = arr.get_element(i).ok()?;
+                    let url = s.get::<String>("url").ok()??;
+                    let description: Option<String> = s.get::<String>("description").ok()?;
+                    server_list.push(ServerInfo { url, description });
+                }
+                Some(server_list)
+            })
+            .unwrap_or_default();
+
+        // Extract security schemes (Record<string, SecuritySchemeInfo>)
+        // For now, return empty map - security schemes will be auto-detected from middleware
+        let security_schemes = HashMap::new();
+
+        Some(OpenApiConfig {
+            enabled,
+            title,
+            version,
+            description,
+            swagger_ui_path,
+            redoc_path,
+            openapi_json_path,
+            contact,
+            license,
+            servers,
+            security_schemes,
+        })
+    });
+
+    Ok(ServerConfig {
+        host,
+        port,
+        workers,
+        enable_request_id,
+        max_body_size,
+        request_timeout,
+        compression,
+        rate_limit,
+        jwt_auth,
+        api_key_auth,
+        static_files,
+        graceful_shutdown,
+        shutdown_timeout,
+        openapi,
+    })
+}
+
 /// Start the Spikard HTTP server from Node.js
 ///
 /// Creates an Axum HTTP server in a dedicated background thread with its own Tokio runtime.
@@ -52,8 +256,7 @@ use tracing::{error, info};
 /// # Arguments
 ///
 /// * `app` - Application object containing routes and handler functions
-/// * `host` - Host address to bind to (default: "127.0.0.1")
-/// * `port` - Port number to listen on (default: 8000)
+/// * `config` - Optional ServerConfig with all middleware settings
 ///
 /// # Returns
 ///
@@ -71,24 +274,33 @@ use tracing::{error, info};
 /// # Example
 ///
 /// ```typescript
-/// const app = {
-///   routes: [{
-///     method: 'GET',
-///     path: '/',
-///     handler_name: 'root',
-///     is_async: true
-///   }],
-///   handlers: {
-///     root: async () => ({ message: 'Hello' })
+/// import { Spikard, ServerConfig } from '@spikard/node';
+///
+/// const config: ServerConfig = {
+///   host: '0.0.0.0',
+///   port: 8000,
+///   compression: { quality: 9 },
+///   openapi: {
+///     enabled: true,
+///     title: 'My API',
+///     version: '1.0.0'
 ///   }
 /// };
 ///
-/// runServer(app, '0.0.0.0', 8000);
+/// const app = new Spikard();
+/// app.run(config);
 /// ```
 #[napi]
-pub fn run_server(_env: Env, app: Object, host: Option<String>, port: Option<u32>) -> Result<()> {
-    let host = host.unwrap_or_else(|| "127.0.0.1".to_string());
-    let port = port.unwrap_or(8000) as u16;
+pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> {
+    // Extract config or use defaults
+    let server_config = if let Some(cfg) = config {
+        extract_server_config(&cfg)?
+    } else {
+        ServerConfig::default()
+    };
+
+    let host = server_config.host.clone();
+    let port = server_config.port;
 
     // Extract routes from the app object
     let routes_array: Object = app
@@ -159,12 +371,7 @@ pub fn run_server(_env: Env, app: Object, host: Option<String>, port: Option<u32
         );
     }
 
-    // Create server config
-    let config = ServerConfig {
-        host: host.clone(),
-        port,
-        ..Default::default()
-    };
+    // Use the extracted config
 
     // Create schema registry for validator deduplication
     let schema_registry = spikard_http::SchemaRegistry::new();
@@ -192,12 +399,12 @@ pub fn run_server(_env: Env, app: Object, host: Option<String>, port: Option<u32
     info!("Registered {} routes", routes_with_handlers.len());
 
     // Build Axum router with handlers
-    let app_router = Server::with_handlers(config.clone(), routes_with_handlers)
+    let app_router = Server::with_handlers(server_config.clone(), routes_with_handlers)
         .map_err(|e| Error::from_reason(format!("Failed to build router: {}", e)))?;
 
     // Start the server in a background thread with its own Tokio runtime
     // This keeps the Node.js event loop free to process ThreadsafeFunction calls
-    let addr = format!("{}:{}", config.host, config.port);
+    let addr = format!("{}:{}", server_config.host, server_config.port);
     let socket_addr: std::net::SocketAddr = addr
         .parse()
         .map_err(|e| Error::from_reason(format!("Invalid socket address {}: {}", addr, e)))?;

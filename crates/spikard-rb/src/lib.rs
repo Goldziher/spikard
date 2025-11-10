@@ -971,6 +971,259 @@ fn build_multipart_body(form_data: &[(String, String)], files: &[FileData], boun
     body
 }
 
+/// Extract ServerConfig from Ruby ServerConfig object
+fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_http::ServerConfig, Error> {
+    use spikard_http::{
+        ApiKeyConfig, CompressionConfig, ContactInfo, JwtConfig, LicenseInfo, OpenApiConfig, RateLimitConfig,
+        ServerInfo, StaticFilesConfig,
+    };
+    use std::collections::HashMap;
+
+    // Extract host
+    let host: String = config_value.funcall("host", ())?;
+
+    // Extract port
+    let port: u32 = config_value.funcall("port", ())?;
+
+    // Extract workers
+    let workers: usize = config_value.funcall("workers", ())?;
+
+    // Extract enable_request_id
+    let enable_request_id: bool = config_value.funcall("enable_request_id", ())?;
+
+    // Extract max_body_size (can be nil)
+    let max_body_size_value: Value = config_value.funcall("max_body_size", ())?;
+    let max_body_size = if max_body_size_value.is_nil() {
+        None
+    } else {
+        Some(u64::try_convert(max_body_size_value)? as usize)
+    };
+
+    // Extract request_timeout (can be nil)
+    let request_timeout_value: Value = config_value.funcall("request_timeout", ())?;
+    let request_timeout = if request_timeout_value.is_nil() {
+        None
+    } else {
+        Some(u64::try_convert(request_timeout_value)?)
+    };
+
+    // Extract graceful_shutdown
+    let graceful_shutdown: bool = config_value.funcall("graceful_shutdown", ())?;
+
+    // Extract shutdown_timeout
+    let shutdown_timeout: u64 = config_value.funcall("shutdown_timeout", ())?;
+
+    // Extract compression config (can be nil)
+    let compression_value: Value = config_value.funcall("compression", ())?;
+    let compression = if compression_value.is_nil() {
+        None
+    } else {
+        let gzip: bool = compression_value.funcall("gzip", ())?;
+        let brotli: bool = compression_value.funcall("brotli", ())?;
+        let min_size: usize = compression_value.funcall("min_size", ())?;
+        let quality: u32 = compression_value.funcall("quality", ())?;
+        Some(CompressionConfig {
+            gzip,
+            brotli,
+            min_size,
+            quality,
+        })
+    };
+
+    // Extract rate_limit config (can be nil)
+    let rate_limit_value: Value = config_value.funcall("rate_limit", ())?;
+    let rate_limit = if rate_limit_value.is_nil() {
+        None
+    } else {
+        let per_second: u64 = rate_limit_value.funcall("per_second", ())?;
+        let burst: u32 = rate_limit_value.funcall("burst", ())?;
+        let ip_based: bool = rate_limit_value.funcall("ip_based", ())?;
+        Some(RateLimitConfig {
+            per_second,
+            burst,
+            ip_based,
+        })
+    };
+
+    // Extract jwt_auth config (can be nil)
+    let jwt_auth_value: Value = config_value.funcall("jwt_auth", ())?;
+    let jwt_auth = if jwt_auth_value.is_nil() {
+        None
+    } else {
+        let secret: String = jwt_auth_value.funcall("secret", ())?;
+        let algorithm: String = jwt_auth_value.funcall("algorithm", ())?;
+        let audience_value: Value = jwt_auth_value.funcall("audience", ())?;
+        let audience = if audience_value.is_nil() {
+            None
+        } else {
+            Some(Vec::<String>::try_convert(audience_value)?)
+        };
+        let issuer_value: Value = jwt_auth_value.funcall("issuer", ())?;
+        let issuer = if issuer_value.is_nil() {
+            None
+        } else {
+            Some(String::try_convert(issuer_value)?)
+        };
+        let leeway: u64 = jwt_auth_value.funcall("leeway", ())?;
+        Some(JwtConfig {
+            secret,
+            algorithm,
+            audience,
+            issuer,
+            leeway,
+        })
+    };
+
+    // Extract api_key_auth config (can be nil)
+    let api_key_auth_value: Value = config_value.funcall("api_key_auth", ())?;
+    let api_key_auth = if api_key_auth_value.is_nil() {
+        None
+    } else {
+        let keys: Vec<String> = api_key_auth_value.funcall("keys", ())?;
+        let header_name: String = api_key_auth_value.funcall("header_name", ())?;
+        Some(ApiKeyConfig { keys, header_name })
+    };
+
+    // Extract static_files config (array)
+    let static_files_value: Value = config_value.funcall("static_files", ())?;
+    let static_files_array = RArray::from_value(static_files_value)
+        .ok_or_else(|| Error::new(ruby.exception_type_error(), "static_files must be an Array"))?;
+
+    let mut static_files = Vec::new();
+    for i in 0..static_files_array.len() {
+        let sf_value = static_files_array.entry::<Value>(i as isize)?;
+        let directory: String = sf_value.funcall("directory", ())?;
+        let route_prefix: String = sf_value.funcall("route_prefix", ())?;
+        let index_file: bool = sf_value.funcall("index_file", ())?;
+        let cache_control_value: Value = sf_value.funcall("cache_control", ())?;
+        let cache_control = if cache_control_value.is_nil() {
+            None
+        } else {
+            Some(String::try_convert(cache_control_value)?)
+        };
+        static_files.push(StaticFilesConfig {
+            directory,
+            route_prefix,
+            index_file,
+            cache_control,
+        });
+    }
+
+    // Extract openapi config (can be nil)
+    let openapi_value: Value = config_value.funcall("openapi", ())?;
+    let openapi = if openapi_value.is_nil() {
+        None
+    } else {
+        let enabled: bool = openapi_value.funcall("enabled", ())?;
+        let title: String = openapi_value.funcall("title", ())?;
+        let version: String = openapi_value.funcall("version", ())?;
+        let description_value: Value = openapi_value.funcall("description", ())?;
+        let description = if description_value.is_nil() {
+            None
+        } else {
+            Some(String::try_convert(description_value)?)
+        };
+        let swagger_ui_path: String = openapi_value.funcall("swagger_ui_path", ())?;
+        let redoc_path: String = openapi_value.funcall("redoc_path", ())?;
+        let openapi_json_path: String = openapi_value.funcall("openapi_json_path", ())?;
+
+        // Extract contact (can be nil)
+        let contact_value: Value = openapi_value.funcall("contact", ())?;
+        let contact = if contact_value.is_nil() {
+            None
+        } else {
+            let name_value: Value = contact_value.funcall("name", ())?;
+            let email_value: Value = contact_value.funcall("email", ())?;
+            let url_value: Value = contact_value.funcall("url", ())?;
+            Some(ContactInfo {
+                name: if name_value.is_nil() {
+                    None
+                } else {
+                    Some(String::try_convert(name_value)?)
+                },
+                email: if email_value.is_nil() {
+                    None
+                } else {
+                    Some(String::try_convert(email_value)?)
+                },
+                url: if url_value.is_nil() {
+                    None
+                } else {
+                    Some(String::try_convert(url_value)?)
+                },
+            })
+        };
+
+        // Extract license (can be nil)
+        let license_value: Value = openapi_value.funcall("license", ())?;
+        let license = if license_value.is_nil() {
+            None
+        } else {
+            let name: String = license_value.funcall("name", ())?;
+            let url_value: Value = license_value.funcall("url", ())?;
+            let url = if url_value.is_nil() {
+                None
+            } else {
+                Some(String::try_convert(url_value)?)
+            };
+            Some(LicenseInfo { name, url })
+        };
+
+        // Extract servers (array)
+        let servers_value: Value = openapi_value.funcall("servers", ())?;
+        let servers_array = RArray::from_value(servers_value)
+            .ok_or_else(|| Error::new(ruby.exception_type_error(), "servers must be an Array"))?;
+
+        let mut servers = Vec::new();
+        for i in 0..servers_array.len() {
+            let server_value = servers_array.entry::<Value>(i as isize)?;
+            let url: String = server_value.funcall("url", ())?;
+            let description_value: Value = server_value.funcall("description", ())?;
+            let description = if description_value.is_nil() {
+                None
+            } else {
+                Some(String::try_convert(description_value)?)
+            };
+            servers.push(ServerInfo { url, description });
+        }
+
+        // Extract security_schemes (hash) - for now, return empty map
+        // Security schemes will be auto-detected from middleware
+        let security_schemes = HashMap::new();
+
+        Some(OpenApiConfig {
+            enabled,
+            title,
+            version,
+            description,
+            swagger_ui_path,
+            redoc_path,
+            openapi_json_path,
+            contact,
+            license,
+            servers,
+            security_schemes,
+        })
+    };
+
+    Ok(spikard_http::ServerConfig {
+        host,
+        port: port as u16,
+        workers,
+        enable_request_id,
+        max_body_size,
+        request_timeout,
+        compression,
+        rate_limit,
+        jwt_auth,
+        api_key_auth,
+        static_files,
+        graceful_shutdown,
+        shutdown_timeout,
+        openapi,
+    })
+}
+
 /// Start the Spikard HTTP server from Ruby
 ///
 /// Creates an Axum HTTP server in a dedicated background thread with its own Tokio runtime.
@@ -979,26 +1232,23 @@ fn build_multipart_body(form_data: &[(String, String)], files: &[FileData], boun
 ///
 /// * `routes_json` - JSON string containing route metadata
 /// * `handlers` - Ruby Hash mapping handler_name => Proc
-/// * `host` - Host address to bind to (default: "127.0.0.1")
-/// * `port` - Port number to listen on (default: 8000)
+/// * `config` - Ruby ServerConfig object with all middleware settings
 ///
 /// # Example (Ruby)
 ///
 /// ```ruby
-/// Spikard::Native.run_server(routes_json, handlers, '0.0.0.0', 8000)
+/// config = Spikard::ServerConfig.new(host: '0.0.0.0', port: 8000)
+/// Spikard::Native.run_server(routes_json, handlers, config)
 /// ```
-fn run_server(
-    ruby: &Ruby,
-    routes_json: String,
-    handlers: Value,
-    host: Option<String>,
-    port: Option<u32>,
-) -> Result<(), Error> {
-    use spikard_http::{SchemaRegistry, Server, ServerConfig};
+fn run_server(ruby: &Ruby, routes_json: String, handlers: Value, config_value: Value) -> Result<(), Error> {
+    use spikard_http::{SchemaRegistry, Server};
     use tracing::{error, info};
 
-    let host = host.unwrap_or_else(|| "127.0.0.1".to_string());
-    let port = port.unwrap_or(8000) as u16;
+    // Extract ServerConfig from Ruby object
+    let config = extract_server_config(ruby, config_value)?;
+
+    let host = config.host.clone();
+    let port = config.port;
 
     // Parse route metadata from JSON
     let metadata: Vec<RouteMetadata> = serde_json::from_str(&routes_json)
@@ -1055,13 +1305,6 @@ fn run_server(
         routes_with_handlers.push((route, Arc::new(ruby_handler) as Arc<dyn spikard_http::Handler>));
     }
 
-    // Create server config
-    let config = ServerConfig {
-        host: host.clone(),
-        port,
-        ..Default::default()
-    };
-
     // Initialize logging
     Server::init_logging();
 
@@ -1109,8 +1352,8 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
         Err(_) => spikard.define_module("Native")?,
     };
 
-    // Register run_server function
-    native.define_singleton_method("run_server", function!(run_server, 4))?;
+    // Register run_server function (now takes 3 args: routes_json, handlers, config)
+    native.define_singleton_method("run_server", function!(run_server, 3))?;
 
     // Register TestClient class
     let class = native.define_class("TestClient", ruby.class_object())?;
