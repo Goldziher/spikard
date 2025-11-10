@@ -263,7 +263,7 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
                     if let Some(ref cors_cfg) = route.cors {
                         let cors_config = cors_cfg.clone();
                         axum::routing::options(move |req: axum::extract::Request| async move {
-                            crate::cors::handle_preflight(req.headers(), &cors_config)
+                            crate::cors::handle_preflight(req.headers(), &cors_config).map_err(|e| *e)
                         })
                     } else if has_path_params {
                         let handler = handler.clone();
@@ -398,7 +398,7 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
         {
             let cors_config_clone: CorsConfig = cors_cfg.clone();
             let options_router = axum::routing::options(move |req: axum::extract::Request| async move {
-                crate::cors::handle_preflight(req.headers(), &cors_config_clone)
+                crate::cors::handle_preflight(req.headers(), &cors_config_clone).map_err(|e| *e)
             });
 
             combined_router = Some(match combined_router {
