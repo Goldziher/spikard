@@ -515,6 +515,20 @@ fn build_router_with_handlers_and_config(
         app = app.layer(tower_governor::GovernorLayer::new(governor_conf));
     }
 
+    // 3a. JWT authentication (after rate limiting, before business logic)
+    if let Some(jwt_config) = config.jwt_auth {
+        app = app.layer(axum::middleware::from_fn(move |headers, req, next| {
+            crate::auth::jwt_auth_middleware(jwt_config.clone(), headers, req, next)
+        }));
+    }
+
+    // 3b. API key authentication (after rate limiting, before business logic)
+    if let Some(api_key_config) = config.api_key_auth {
+        app = app.layer(axum::middleware::from_fn(move |headers, req, next| {
+            crate::auth::api_key_auth_middleware(api_key_config.clone(), headers, req, next)
+        }));
+    }
+
     // 4. Timeout layer (should wrap everything except request ID)
     if let Some(timeout_secs) = config.request_timeout {
         app = app.layer(TimeoutLayer::new(Duration::from_secs(timeout_secs)));
