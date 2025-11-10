@@ -321,11 +321,15 @@ impl TestClient {
         let routes_data: Vec<RouteMetadata> = serde_json::from_str(&routes_json)
             .map_err(|e| Error::from_reason(format!("Failed to parse routes: {}", e)))?;
 
-        // Extract config or use defaults
+        // Extract config or use test-friendly defaults (no compression)
         let server_config = if let Some(cfg) = config {
             crate::extract_server_config(&cfg)?
         } else {
-            spikard_http::ServerConfig::default()
+            // Use defaults but disable compression for test clarity
+            spikard_http::ServerConfig {
+                compression: None,
+                ..Default::default()
+            }
         };
 
         let schema_registry = spikard_http::SchemaRegistry::new();

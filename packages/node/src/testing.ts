@@ -77,7 +77,7 @@ export class TestClient {
 		}
 		const routesJson = JSON.stringify(app.routes);
 		const handlersMap = app.handlers || {};
-		const config = (app as any).config || null;
+		const config = app.config || null;
 
 		this.nativeClient = new NativeTestClient(routesJson, handlersMap, config);
 	}
