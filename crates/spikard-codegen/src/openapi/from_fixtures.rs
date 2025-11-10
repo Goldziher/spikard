@@ -40,7 +40,13 @@ pub struct FixtureHandler {
     pub body_schema: Option<Value>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub response_schema: Option<Value>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub cors: Option<Value>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub middleware: Option<Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -99,6 +105,12 @@ pub struct FixtureExpectedResponse {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub body: Option<Value>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub body_partial: Option<Value>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub headers: Option<HashMap<String, String>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub validation_errors: Option<Vec<ValidationError>>,

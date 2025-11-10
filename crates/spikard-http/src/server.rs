@@ -478,6 +478,7 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
 fn build_router_with_handlers_and_config(
     routes: Vec<RouteHandlerPair>,
     config: ServerConfig,
+    route_metadata: Vec<crate::RouteMetadata>,
 ) -> Result<AxumRouter, String> {
     // Start with the basic router
     let mut app = build_router_with_handlers(routes)?;
@@ -578,6 +579,69 @@ fn build_router_with_handlers_and_config(
         );
     }
 
+    // 8. Add OpenAPI documentation routes (without authentication)
+    if let Some(openapi_config) = config.openapi.filter(|cfg| cfg.enabled) {
+        use axum::response::{Html, Json};
+
+        // Generate OpenAPI spec from routes
+        let schema_registry = crate::SchemaRegistry::new();
+        let openapi_spec = crate::openapi::generate_openapi_spec(&route_metadata, &openapi_config, &schema_registry)
+            .map_err(|e| format!("Failed to generate OpenAPI spec: {}", e))?;
+
+        // Serialize to JSON once
+        let spec_json =
+            serde_json::to_string(&openapi_spec).map_err(|e| format!("Failed to serialize OpenAPI spec: {}", e))?;
+        let spec_value = serde_json::from_str::<serde_json::Value>(&spec_json)
+            .map_err(|e| format!("Failed to parse OpenAPI spec: {}", e))?;
+
+        // OpenAPI JSON endpoint
+        let openapi_json_path = openapi_config.openapi_json_path.clone();
+        app = app.route(&openapi_json_path, get(move || async move { Json(spec_value) }));
+
+        // Swagger UI endpoint
+        let swagger_html = format!(
+            r#"<!DOCTYPE html>
+<html>
+<head>
+    <title>Swagger UI</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css">
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+    <script>
+        SwaggerUIBundle({{
+            url: '{}',
+            dom_id: '#swagger-ui',
+        }});
+    </script>
+</body>
+</html>"#,
+            openapi_json_path
+        );
+        let swagger_ui_path = openapi_config.swagger_ui_path.clone();
+        app = app.route(&swagger_ui_path, get(move || async move { Html(swagger_html) }));
+
+        // Redoc endpoint
+        let redoc_html = format!(
+            r#"<!DOCTYPE html>
+<html>
+<head>
+    <title>Redoc</title>
+</head>
+<body>
+    <redoc spec-url='{}'></redoc>
+    <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+</body>
+</html>"#,
+            openapi_json_path
+        );
+        let redoc_path = openapi_config.redoc_path;
+        app = app.route(&redoc_path, get(move || async move { Html(redoc_html) }));
+
+        tracing::info!("OpenAPI documentation enabled at {}", openapi_json_path);
+    }
+
     Ok(app)
 }
 
@@ -603,7 +667,31 @@ impl Server {
         config: ServerConfig,
         routes: Vec<(crate::Route, Arc<dyn Handler>)>,
     ) -> Result<AxumRouter, String> {
-        build_router_with_handlers_and_config(routes, config)
+        // Extract metadata from routes for backward compatibility
+        let metadata: Vec<crate::RouteMetadata> = routes
+            .iter()
+            .map(|(route, _)| crate::RouteMetadata {
+                method: route.method.to_string(),
+                path: route.path.clone(),
+                handler_name: route.handler_name.clone(),
+                request_schema: None,   // Lost in compilation
+                response_schema: None,  // Lost in compilation
+                parameter_schema: None, // Lost in compilation
+                file_params: route.file_params.clone(),
+                is_async: route.is_async,
+                cors: route.cors.clone(),
+            })
+            .collect();
+        build_router_with_handlers_and_config(routes, config, metadata)
+    }
+
+    /// Create a new server with Python handlers and metadata for OpenAPI
+    pub fn with_handlers_and_metadata(
+        config: ServerConfig,
+        routes: Vec<(crate::Route, Arc<dyn Handler>)>,
+        metadata: Vec<crate::RouteMetadata>,
+    ) -> Result<AxumRouter, String> {
+        build_router_with_handlers_and_config(routes, config, metadata)
     }
 
     /// Run the server with the Axum router and config

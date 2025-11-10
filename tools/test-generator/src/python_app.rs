@@ -117,7 +117,12 @@ fn generate_app_file_per_fixture(fixtures_by_category: &HashMap<String, Vec<Fixt
     code.push_str("from uuid import UUID\n\n");
     code.push_str("import msgspec\n");
     code.push_str("from pydantic import BaseModel\n\n");
-    code.push_str("from spikard import Response, Spikard, delete, get, head, options, patch, post, put\n\n");
+    code.push_str("from spikard import Response, Spikard, delete, get, head, options, patch, post, put\n");
+    code.push_str("from spikard.config import (\n");
+    code.push_str("    ServerConfig, CompressionConfig, RateLimitConfig,\n");
+    code.push_str("    JwtConfig, ApiKeyConfig, StaticFilesConfig,\n");
+    code.push_str("    OpenApiConfig, ContactInfo, LicenseInfo, ServerInfo, SecuritySchemeInfo\n");
+    code.push_str(")\n\n");
 
     // Track handler names for uniqueness
     let mut handler_names = HashMap::new();
@@ -275,23 +280,57 @@ fn generate_fixture_handler_and_app_python(
             String::new()
         };
 
-    let app_factory_code = format!(
-        r#"def {}() -> Spikard:
+    // Extract middleware configuration if present
+    let config_str = if let Some(handler) = &fixture.handler {
+        if let Some(middleware) = &handler.middleware {
+            generate_server_config_from_middleware(middleware)?
+        } else {
+            "None".to_string()
+        }
+    } else {
+        "None".to_string()
+    };
+
+    // Generate app factory with config
+    let app_factory_code = if config_str == "None" {
+        format!(
+            r#"def {}() -> Spikard:
     """App factory for fixture: {}"""
     app = Spikard()
     # Register handler with this app instance
     app.register_route("{}", "{}", body_schema={}, parameter_schema={}, file_params={})({}){}
     return app"#,
-        app_factory_name,
-        fixture.name,
-        method_upper,
-        route_path, // Pass route with type hints - Spikard will parse them
-        body_schema_str,
-        parameter_schema_str,
-        file_params_str,
-        handler_name,
-        additional_registration
-    );
+            app_factory_name,
+            fixture.name,
+            method_upper,
+            route_path,
+            body_schema_str,
+            parameter_schema_str,
+            file_params_str,
+            handler_name,
+            additional_registration
+        )
+    } else {
+        format!(
+            r#"def {}() -> Spikard:
+    """App factory for fixture: {}"""
+    config = {}
+    app = Spikard(config=config)
+    # Register handler with this app instance
+    app.register_route("{}", "{}", body_schema={}, parameter_schema={}, file_params={})({}){}
+    return app"#,
+            app_factory_name,
+            fixture.name,
+            config_str,
+            method_upper,
+            route_path,
+            body_schema_str,
+            parameter_schema_str,
+            file_params_str,
+            handler_name,
+            additional_registration
+        )
+    };
 
     Ok((handler_code, app_factory_code))
 }
@@ -1055,4 +1094,139 @@ fn to_pascal_case(s: &str) -> String {
         .filter(|part| !part.is_empty())
         .map(capitalize)
         .collect()
+}
+
+/// Generate Python ServerConfig code from middleware configuration
+fn generate_server_config_from_middleware(middleware: &Value) -> Result<String> {
+    let mut config_code = String::from("ServerConfig(\n");
+    let mut has_fields = false;
+
+    // OpenAPI configuration
+    if let Some(openapi) = middleware.get("openapi") {
+        has_fields = true;
+        config_code.push_str("        openapi=OpenApiConfig(\n");
+
+        if let Some(enabled) = openapi.get("enabled") {
+            config_code.push_str(&format!("            enabled={},\n", json_to_python(enabled)));
+        }
+        if let Some(title) = openapi.get("title") {
+            config_code.push_str(&format!("            title={},\n", json_to_python(title)));
+        }
+        if let Some(version) = openapi.get("version") {
+            config_code.push_str(&format!("            version={},\n", json_to_python(version)));
+        }
+        if let Some(description) = openapi.get("description") {
+            config_code.push_str(&format!("            description={},\n", json_to_python(description)));
+        }
+        if let Some(swagger_ui_path) = openapi.get("swagger_ui_path") {
+            config_code.push_str(&format!(
+                "            swagger_ui_path={},\n",
+                json_to_python(swagger_ui_path)
+            ));
+        }
+        if let Some(redoc_path) = openapi.get("redoc_path") {
+            config_code.push_str(&format!("            redoc_path={},\n", json_to_python(redoc_path)));
+        }
+        if let Some(openapi_json_path) = openapi.get("openapi_json_path") {
+            config_code.push_str(&format!(
+                "            openapi_json_path={},\n",
+                json_to_python(openapi_json_path)
+            ));
+        }
+
+        // Contact info
+        if let Some(contact) = openapi.get("contact") {
+            config_code.push_str("            contact=ContactInfo(\n");
+            if let Some(name) = contact.get("name") {
+                config_code.push_str(&format!("                name={},\n", json_to_python(name)));
+            }
+            if let Some(email) = contact.get("email") {
+                config_code.push_str(&format!("                email={},\n", json_to_python(email)));
+            }
+            if let Some(url) = contact.get("url") {
+                config_code.push_str(&format!("                url={},\n", json_to_python(url)));
+            }
+            config_code.push_str("            ),\n");
+        }
+
+        // License info
+        if let Some(license) = openapi.get("license") {
+            config_code.push_str("            license=LicenseInfo(\n");
+            if let Some(name) = license.get("name") {
+                config_code.push_str(&format!("                name={},\n", json_to_python(name)));
+            }
+            if let Some(url) = license.get("url") {
+                config_code.push_str(&format!("                url={},\n", json_to_python(url)));
+            }
+            config_code.push_str("            ),\n");
+        }
+
+        // Servers
+        if let Some(servers) = openapi.get("servers").and_then(|v| v.as_array()) {
+            config_code.push_str("            servers=[\n");
+            for server in servers {
+                config_code.push_str("                ServerInfo(\n");
+                if let Some(url) = server.get("url") {
+                    config_code.push_str(&format!("                    url={},\n", json_to_python(url)));
+                }
+                if let Some(description) = server.get("description") {
+                    config_code.push_str(&format!(
+                        "                    description={},\n",
+                        json_to_python(description)
+                    ));
+                }
+                config_code.push_str("                ),\n");
+            }
+            config_code.push_str("            ],\n");
+        }
+
+        config_code.push_str("        ),\n");
+    }
+
+    // JWT authentication
+    if let Some(jwt) = middleware.get("jwt_auth") {
+        has_fields = true;
+        config_code.push_str("        jwt_auth=JwtConfig(\n");
+
+        if let Some(secret) = jwt.get("secret") {
+            config_code.push_str(&format!("            secret={},\n", json_to_python(secret)));
+        }
+        if let Some(algorithm) = jwt.get("algorithm") {
+            config_code.push_str(&format!("            algorithm={},\n", json_to_python(algorithm)));
+        }
+        if let Some(audience) = jwt.get("audience") {
+            config_code.push_str(&format!("            audience={},\n", json_to_python(audience)));
+        }
+        if let Some(issuer) = jwt.get("issuer") {
+            config_code.push_str(&format!("            issuer={},\n", json_to_python(issuer)));
+        }
+        if let Some(leeway) = jwt.get("leeway") {
+            config_code.push_str(&format!("            leeway={},\n", json_to_python(leeway)));
+        }
+
+        config_code.push_str("        ),\n");
+    }
+
+    // API key authentication
+    if let Some(api_key) = middleware.get("api_key_auth") {
+        has_fields = true;
+        config_code.push_str("        api_key_auth=ApiKeyConfig(\n");
+
+        if let Some(keys) = api_key.get("keys") {
+            config_code.push_str(&format!("            keys={},\n", json_to_python(keys)));
+        }
+        if let Some(header_name) = api_key.get("header_name") {
+            config_code.push_str(&format!("            header_name={},\n", json_to_python(header_name)));
+        }
+
+        config_code.push_str("        ),\n");
+    }
+
+    config_code.push_str("    )");
+
+    if !has_fields {
+        return Ok("None".to_string());
+    }
+
+    Ok(config_code)
 }
