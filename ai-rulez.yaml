@@ -1,10 +1,10 @@
 $schema: https://github.com/Goldziher/ai-rulez/schema/ai-rules-v2.schema.json
 agents:
     - name: rust-polyglot-architect
-      description: Designs Rust-first APIs and keeps Python, Node, and WASM bindings aligned with shared memory-safety and error contracts.
+      description: Designs Rust-first APIs and keeps Python, Node, Ruby, and WASM bindings aligned with shared memory-safety and error contracts. Plans for future PHP bindings.
       priority: critical
     - name: integration-qa
-      description: Expands fixture-driven coverage and hunts for regressions across Rust, Python, and Node integration suites.
+      description: Expands fixture-driven coverage and hunts for regressions across Rust, Python, Node, and Ruby integration suites.
       priority: high
     - name: docs-strategist
       description: Maintains developer guides, upgrade notes, and architecture references so contributors can follow cross-language patterns.
@@ -16,7 +16,7 @@ agents:
       description: Structures Cargo workspaces, feature flags, and dependency graph to avoid duplication across crates.
       priority: high
     - name: interop-build-engineer
-      description: Ensures binding build scripts for PyO3, napi-rs, and wasm-pack stay in sync and optimized.
+      description: Ensures binding build scripts for PyO3, napi-rs, magnus/rb-sys, and wasm-pack stay in sync and optimized. Plans for future ext-php-rs integration.
       priority: medium
     - name: fixture-tester
       description: Evolves `testing_data` fixtures and validation schemas so every handler respects documented contracts.
@@ -24,14 +24,23 @@ agents:
     - name: docs-scribe
       description: Generates agent handbooks and CLAUDE briefs that summarize current rules and workflows.
       priority: medium
-    - name: ruby-engineer
-      description: Implements and maintains Ruby bindings via magnus/rb-sys, ensuring idiomatic Ruby patterns while preserving Rust performance and safety guarantees.
-      priority: medium
-    - name: php-engineer
-      description: Implements and maintains PHP bindings via ext-php-rs, ensuring PSR compliance and idiomatic PHP patterns while integrating with Rust core.
-      priority: medium
+    - name: python-engineer
+      description: Implements and maintains Python bindings via PyO3, ensuring Pythonic patterns with async/await support, proper type hints, and zero-copy msgspec integration.
+      priority: high
     - name: typescript-engineer
       description: Implements TypeScript type definitions and ensures napi-rs Node.js bindings provide full type safety with proper JSDoc annotations and .d.ts generation.
+      priority: high
+    - name: ruby-engineer
+      description: Implements and maintains Ruby bindings via magnus/rb-sys, ensuring idiomatic Ruby patterns while preserving Rust performance and safety guarantees.
+      priority: high
+    - name: php-engineer
+      description: (FUTURE) Implements and maintains PHP bindings via ext-php-rs, ensuring PSR compliance and idiomatic PHP patterns while integrating with Rust core.
+      priority: medium
+    - name: wasm-engineer
+      description: (FUTURE) Maintains WebAssembly bindings via wasm-bindgen for browser and server-side WASM runtimes.
+      priority: medium
+    - name: middleware-architect
+      description: Implements tower-http middleware stack, lifecycle hooks, and authentication middleware while maintaining zero-overhead design principles.
       priority: high
 commands: []
 mcp_servers:
@@ -43,7 +52,7 @@ mcp_servers:
       description: AI-Rulez MCP server for configuration management
       name: ai-rulez
 metadata:
-    description: Spikard is a Rust-centric multi-language toolkit that provides a core library, command-line interface, and HTTP runtime surfaced through Python (PyO3), Node.js (napi-rs), and WebAssembly bindings to build and validate typed web services. The monorepo couples Rust 2024 workspace crates with Python/uv, Node.js/pnpm, and taskfile automation, backed by extensive fixture-driven tests to ensure consistent request handling across platforms.
+    description: Spikard is a Rust-centric multi-language toolkit that provides a core library, command-line interface, and HTTP runtime with tower-http middleware surfaced through Python (PyO3), Node.js (napi-rs), Ruby (magnus), and WebAssembly bindings to build and validate typed web services. The monorepo couples Rust 2024 workspace crates with Python/uv, Node.js/pnpm, Ruby, and taskfile automation, backed by extensive fixture-driven tests to ensure consistent request handling across platforms. Future bindings planned for PHP (ext-php-rs).
     name: spikard
     version: 1.0.0
 outputs:
@@ -78,13 +87,13 @@ rules:
     - content: When adding behavior, introduce or update fixtures under the relevant `testing_data/*` directory and extend the parametrized suites in `packages/python/tests/test_all_fixtures.py`, `packages/python/tests/test_integration_query_params.py`, and peers. Do not ship without running `task test` plus the language targets (`task test:rust`, `task test:python`) so local runs match CI.
       name: Fixture-First Testing
       priority: critical
-    - content: 'Guard every HTTP-facing change with the validation strategy captured in `docs/design/01-validation-strategy.md`: enforce cookie rules via `testing_data/cookies/*.json`, headers/auth via `testing_data/headers/*.json`, and CORS expectations via `testing_data/cors/*.json`. Strip secrets from logs and ensure new handlers never bypass the existing validator layer before reaching business logic.'
+    - content: 'Guard every HTTP-facing change with the validation strategy captured in `docs/design/validation-strategy.md`: enforce cookie rules via `testing_data/cookies/*.json`, headers/auth via `testing_data/headers/*.json`, and CORS expectations via `testing_data/cors/*.json`. Strip secrets from logs and ensure new handlers never bypass the existing validator layer before reaching business logic.'
       name: Request Surface Security
       priority: high
     - content: Respect the project’s zero-copy serialization choices—keep Rust structs `serde`-ready so bindings reuse them, lean on the `msgspec` adapters documented in `docs/design/msgspec-type-conversion.md`, and wrap heavy work in async-safe boundaries (`tokio::task::spawn_blocking` in Rust, `pyo3::Python::allow_threads` when calling back into Python). Reuse fixture loaders such as `packages/python/tests/fixture_app.py` instead of re-parsing schema files per request.
       name: Async-Friendly Performance
       priority: medium
-    - content: Implement cross-cutting logic in `crates/spikard/src` and expose it through thin adapters in `crates/spikard-http`, `crates/spikard-py`, `crates/spikard-node`, and `crates/spikard-wasm`. Keep build metadata confined to each binding’s manifest (`pyproject.toml`, `crates/spikard-node/package.json`, `crates/spikard-wasm/package.json`) and register new workflows in `Taskfile.yaml` so `task build`/`task lint` continue to orchestrate the monorepo.
+    - content: Implement cross-cutting logic in `crates/spikard/src` and expose it through thin adapters in `crates/spikard-http`, `crates/spikard-py`, `crates/spikard-node`, `crates/spikard-rb`, and `crates/spikard-wasm`. Keep build metadata confined to each binding's manifest (`pyproject.toml`, `crates/spikard-node/package.json`, `crates/spikard-wasm/package.json`) and register new workflows in `Taskfile.yaml` so `task build`/`task lint` continue to orchestrate the monorepo.
       name: Layered Code Organization
       priority: high
     - content: When updating handlers in crates/spikard-http, translate domain failures into the JSON payloads maintained under testing_data/status_codes and testing_data/validation_errors; add the matching fixture files and assertions in packages/python/tests/test_all_fixtures.py or the focused integration suites, and keep every testing_data/**/schema.json aligned with the new variants.
@@ -96,7 +105,7 @@ rules:
     - content: Authentication, header, and cookie code must enforce the scenarios captured in testing_data/headers and testing_data/cookies—reject deviations from those schemas, add explicit fixtures plus assertions in packages/python/tests/test_integration_query_params.py for new header names or cookie attributes, and keep Secure/HttpOnly/SameSite defaults intact.
       name: Header & Cookie Security
       priority: high
-    - content: Consolidate heavy computation inside the shared Rust core (crates/spikard) and expose thin bindings in crates/spikard-py, packages/python, crates/spikard-node, and crates/spikard-wasm; stress-test large or deeply nested payloads with testing_data/edge_cases and verify optimized builds via task build:rust, task build:py, and task build:node.
+    - content: Consolidate heavy computation inside the shared Rust core (crates/spikard) and expose thin bindings in crates/spikard-py, packages/python, crates/spikard-node, crates/spikard-rb, and crates/spikard-wasm; stress-test large or deeply nested payloads with testing_data/edge_cases and verify optimized builds via task build:rust, task build:py, task build:node, and task build:ruby.
       name: Cross-Target Performance
       priority: medium
     - content: Place reusable domain types and logic in crates/spikard/src/ and keep feature-specific glue isolated within sibling crates (spikard-http, spikard-cli, bindings); mirror module changes across Cargo manifests and refresh the relevant docs/design/* notes whenever the layering or routing changes.
@@ -114,9 +123,18 @@ rules:
     - content: 'Convert `serde_json::Value` to Python objects using direct PyO3 type construction (PyDict::new, PyList::empty, PyString::new, etc.) instead of serialize-to-JSON-string then json.loads. This zero-copy approach in `crates/spikard-py/src/handler.rs::json_to_python()` eliminates 30-40% conversion overhead. Match on Value variants and recursively build native Python objects.'
       name: Zero-Copy JSON to Python Conversion
       priority: high
-    - content: 'In `crates/spikard-http`, define language-agnostic Handler trait with `Pin<Box<dyn Future<Output = HandlerResult> + Send>>` return type. Language bindings (`spikard-py`, `spikard-node`) implement this trait with Arc<dyn Handler> wrappers. The HTTP server accepts `Vec<(Route, Arc<dyn Handler>)>` enabling clean separation: spikard-http has zero FFI dependencies, all Python/Node/WASM code lives in binding crates.'
+    - content: 'In `crates/spikard-http`, define language-agnostic Handler trait with `Pin<Box<dyn Future<Output = HandlerResult> + Send>>` return type. Language bindings (`spikard-py`, `spikard-node`, `spikard-rb`) implement this trait with Arc<dyn Handler> wrappers. The HTTP server accepts `Vec<(Route, Arc<dyn Handler>)>` enabling clean separation: spikard-http has zero FFI dependencies, all Python/Node/Ruby/WASM code lives in binding crates.'
       name: Handler Trait Abstraction
       priority: critical
+    - content: 'All standard middleware (compression, rate limiting, timeouts, graceful shutdown, static files, request IDs) is implemented in Rust using tower-http and exposed via typed ServerConfig. Configuration structs (CompressionConfig, RateLimitConfig, StaticFilesConfig, etc.) must be forwarded to Python/TypeScript/Ruby bindings with proper type safety. See `docs/design/middleware-lifecycle-optimization.md` for the complete middleware stack order and configuration options.'
+      name: Tower-HTTP Middleware Stack
+      priority: high
+    - content: 'Lifecycle hooks (onRequest, preValidation, preHandler, onResponse, onError) must follow the zero-cost design in `docs/design/lifecycle-hooks-implementation.md`: use Option<Arc<dyn Fn>> for conditional execution (<1ns when not registered), provide async support via pyo3_async_runtimes for Python and ThreadsafeFunction for TypeScript, and allow hooks to short-circuit with early responses. Implement HookResult enum with Continue/ShortCircuit variants.'
+      name: Lifecycle Hooks Implementation
+      priority: high
+    - content: 'Language bindings (spikard-py, spikard-node, spikard-rb) must NOT duplicate middleware logic. All middleware lives in Rust (tower-http). Bindings only expose configuration APIs that construct ServerConfig and pass it to the Rust server. Ruby bindings use magnus for FFI, TypeScript uses napi-rs, Python uses PyO3. Future PHP bindings will use ext-php-rs.'
+      name: Binding-Level Configuration Only
+      priority: high
 sections:
     - content: |-
         ## Tooling
@@ -152,7 +170,7 @@ sections:
         cargo run -p spikard-cli -- --help
         ```
         - Python examples under `examples/` assume the bindings built from `crates/spikard-py`; run them with the synced uv environment after building the crate.
-        - Design docs in `docs/design/` (e.g., `docs/design/00-architecture.md`) capture architectural decisions; update them alongside code changes.
+        - Design docs in `docs/design/` (e.g., `docs/design/architecture.md`, `docs/design/middleware-lifecycle-optimization.md`) capture architectural decisions; update them alongside code changes.
       name: Development Workflow
       priority: medium
     - content: |-
@@ -199,8 +217,9 @@ sections:
         ## Rust Workspace Layout
         - Core library: `crates/spikard/Cargo.toml`.
         - CLI frontend: `crates/spikard-cli/`.
-        - Server: `crates/spikard-http/`.
-        - Bindings: `crates/spikard-{node,py,wasm}/`.
+        - Server with tower-http middleware: `crates/spikard-http/`.
+        - Bindings: `crates/spikard-{py,node,rb,wasm}/` for Python (PyO3), Node.js (napi-rs), Ruby (magnus), and WebAssembly (wasm-bindgen).
+        - Future bindings: PHP via ext-php-rs.
 
         ## Python & Testing
         - Python package scaffold: `packages/python/spikard`.
@@ -208,8 +227,10 @@ sections:
         - Pytests live in `packages/python/tests/`, using fixture helpers (`packages/python/tests/fixture_app.py`) and sample apps in `examples/`.
 
         ## Reference Docs
-        - High-level design: `docs/design/00-architecture.md`.
-        - Validation strategy: `docs/design/01-validation-strategy.md`.
+        - High-level design: `docs/design/architecture.md`.
+        - Validation strategy: `docs/design/validation-strategy.md`.
+        - Middleware & lifecycle: `docs/design/middleware-lifecycle-optimization.md` (Phase 1 COMPLETE).
+        - Lifecycle hooks implementation: `docs/design/lifecycle-hooks-implementation.md` (Phase 2 PENDING).
         - Routing notes: `docs/design/axum-routing.md`.
       name: Architecture Overview
       priority: medium
