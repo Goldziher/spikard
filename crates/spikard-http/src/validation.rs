@@ -143,7 +143,7 @@ impl SchemaValidator {
                 // Determine the parameter name/path
                 // For required fields, extract field name and combine with instance path
                 // For additional properties, extract property name from error message
-                let param_name = if schema_path_str == "/required" {
+                let param_name = if schema_path_str.ends_with("/required") {
                     // Extract field name from error message: '"field_name" is a required property'
                     let field_name = if let Some(start) = error_msg.find('"') {
                         if let Some(end) = error_msg[start + 1..].find('"') {
@@ -477,7 +477,7 @@ impl SchemaValidator {
                         ),
                     };
                     (error_type, msg, None)
-                } else if schema_path_str == "/required" {
+                } else if schema_path_str.ends_with("/required") {
                     // Handle required field errors
                     ("missing".to_string(), "Field required".to_string(), None)
                 } else if schema_path_str.contains("/additionalProperties")
