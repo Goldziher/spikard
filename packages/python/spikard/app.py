@@ -3,23 +3,13 @@
 import functools
 import inspect
 from collections.abc import Callable
-from dataclasses import dataclass
 from typing import Any
 
+from spikard.config import ServerConfig
 from spikard.introspection import extract_parameter_schema
 from spikard.params import ParamBase
 from spikard.schema import extract_schemas
 from spikard.types import Route
-
-
-@dataclass
-class ServerConfig:
-    """Server configuration."""
-
-    host: str = "127.0.0.1"
-    port: int = 8000
-    workers: int = 1
-    reload: bool = False
 
 
 class Spikard:
@@ -27,9 +17,15 @@ class Spikard:
 
     current_instance: "Spikard | None" = None
 
-    def __init__(self) -> None:
-        """Initialize Spikard application."""
+    def __init__(self, config: ServerConfig | None = None) -> None:
+        """Initialize Spikard application.
+
+        Args:
+            config: Optional server configuration. If not provided, defaults will be used.
+                   You can also pass configuration to the run() method.
+        """
         self._routes: list[Route] = []
+        self._config = config
         Spikard.current_instance = self
 
     def register_route(
@@ -126,9 +122,10 @@ class Spikard:
     def run(
         self,
         *,
-        host: str = "127.0.0.1",
-        port: int = 8000,
-        workers: int = 1,
+        config: ServerConfig | None = None,
+        host: str | None = None,
+        port: int | None = None,
+        workers: int | None = None,
         reload: bool = False,
     ) -> None:
         """Run the application server.
@@ -138,13 +135,33 @@ class Spikard:
         natural async/await support with uvloop integration.
 
         Args:
-            host: Host to bind to
-            port: Port to bind to
-            workers: Number of worker processes
+            config: Complete server configuration. Takes precedence over individual parameters.
+            host: Host to bind to (deprecated: use config instead)
+            port: Port to bind to (deprecated: use config instead)
+            workers: Number of worker processes (deprecated: use config instead)
             reload: Enable auto-reload on code changes (not yet implemented)
 
         Raises:
             RuntimeError: If _spikard extension module not available
+
+        Example:
+            Using ServerConfig (recommended):
+            ```python
+            from spikard import Spikard, ServerConfig, CompressionConfig
+
+            config = ServerConfig(host="0.0.0.0", port=8080, compression=CompressionConfig(quality=9))
+
+            app = Spikard(config=config)
+            # or
+            app = Spikard()
+            app.run(config=config)
+            ```
+
+            Using individual parameters (backwards compatible):
+            ```python
+            app = Spikard()
+            app.run(host="0.0.0.0", port=8080)
+            ```
         """
         if reload:
             pass
@@ -159,9 +176,20 @@ class Spikard:
                 "Or: cd packages/python && maturin develop"
             ) from e
 
+        # Determine final config - priority: method arg > __init__ arg > defaults
+        final_config = config or self._config or ServerConfig()
+
+        # Override with individual parameters if provided (backwards compatibility)
+        if host is not None:
+            final_config = final_config.copy(host=host)
+        if port is not None:
+            final_config = final_config.copy(port=port)
+        if workers is not None:
+            final_config = final_config.copy(workers=workers)
+
         # Run the server - the Rust extension handles everything
         # including uvloop installation, route extraction, and Axum server startup
-        run_server(self, host=host, port=port, workers=workers)
+        run_server(self, config=final_config)
 
     def get_routes(self) -> list[Route]:
         """Get all registered routes.
