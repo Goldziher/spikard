@@ -20,8 +20,7 @@ use serde_json::{Map as JsonMap, Value, json};
 // TODO: Update to use current handler trait API
 // use spikard_http::handler::{ForeignHandler, HandlerFuture, HandlerResult, RequestData};
 use spikard_http::problem::ProblemDetails;
-use spikard_http::server::build_router_with_handlers;
-use spikard_http::{HandlerResult, RequestData};
+use spikard_http::{HandlerResult, RequestData, Server};
 use spikard_http::{ParameterValidator, Route, RouteMetadata, SchemaValidator};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -318,14 +317,25 @@ pub struct TestClient {
 impl TestClient {
     /// Create a new test client from routes and handlers
     #[napi(constructor)]
-    pub fn new(routes_json: String, handlers_map: Object) -> Result<Self> {
+    pub fn new(routes_json: String, handlers_map: Object, config: Option<Object>) -> Result<Self> {
         let routes_data: Vec<RouteMetadata> = serde_json::from_str(&routes_json)
             .map_err(|e| Error::from_reason(format!("Failed to parse routes: {}", e)))?;
 
+        // Extract config or use defaults
+        let server_config = if let Some(cfg) = config {
+            crate::extract_server_config(&cfg)?
+        } else {
+            spikard_http::ServerConfig::default()
+        };
+
         let schema_registry = spikard_http::SchemaRegistry::new();
         let mut prepared_routes: Vec<(Route, Arc<dyn spikard_http::Handler>)> = Vec::new();
+        let mut metadata_list: Vec<RouteMetadata> = Vec::new();
 
         for metadata in routes_data {
+            // Clone metadata before converting to Route
+            metadata_list.push(metadata.clone());
+
             let route = Route::from_metadata(metadata, &schema_registry)
                 .map_err(|e| Error::from_reason(format!("Failed to build route: {}", e)))?;
 
@@ -338,8 +348,10 @@ impl TestClient {
             prepared_routes.push((route, Arc::new(js_handler) as Arc<dyn spikard_http::Handler>));
         }
 
-        let axum_router = build_router_with_handlers(prepared_routes)
-            .map_err(|e| Error::from_reason(format!("Failed to build router: {}", e)))?;
+        // Use Server::with_handlers_and_metadata to build router with full config support
+        let axum_router =
+            spikard_http::Server::with_handlers_and_metadata(server_config, prepared_routes, metadata_list)
+                .map_err(|e| Error::from_reason(format!("Failed to build router: {}", e)))?;
         let server = TestServer::new(axum_router)
             .map_err(|e| Error::from_reason(format!("Failed to create test server: {}", e)))?;
 
