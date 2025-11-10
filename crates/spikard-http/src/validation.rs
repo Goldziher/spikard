@@ -140,18 +140,65 @@ impl SchemaValidator {
                 let schema_path_str = err.schema_path.as_str();
                 let error_msg = err.to_string();
 
-                // For required field errors, extract field name from error message
-                // Error message format: '"field_name" is a required property'
+                // Determine the parameter name/path
+                // For required fields, extract field name and combine with instance path
+                // For additional properties, extract property name from error message
                 let param_name = if schema_path_str == "/required" {
-                    // Extract field name from error message
-                    if let Some(start) = error_msg.find('"') {
+                    // Extract field name from error message: '"field_name" is a required property'
+                    let field_name = if let Some(start) = error_msg.find('"') {
                         if let Some(end) = error_msg[start + 1..].find('"') {
                             error_msg[start + 1..start + 1 + end].to_string()
                         } else {
-                            "body".to_string()
+                            "".to_string()
                         }
                     } else {
+                        "".to_string()
+                    };
+
+                    // Combine instance_path with field_name for nested objects
+                    // e.g., instance_path="/profile", field_name="email" -> "profile/email"
+                    if !instance_path.is_empty() && instance_path.starts_with('/') && instance_path.len() > 1 {
+                        let base_path = &instance_path[1..]; // Remove leading '/'
+                        if !field_name.is_empty() {
+                            format!("{}/{}", base_path, field_name)
+                        } else {
+                            base_path.to_string()
+                        }
+                    } else if !field_name.is_empty() {
+                        field_name
+                    } else {
                         "body".to_string()
+                    }
+                } else if schema_path_str.contains("/additionalProperties") {
+                    // For additionalProperties errors, extract property name from error message
+                    // Error message format: "Additional properties are not allowed ('field_name' was unexpected)"
+                    if let Some(start) = error_msg.find('(') {
+                        if let Some(quote_start) = error_msg[start..].find('\'') {
+                            let abs_start = start + quote_start + 1;
+                            if let Some(quote_end) = error_msg[abs_start..].find('\'') {
+                                let property_name = error_msg[abs_start..abs_start + quote_end].to_string();
+                                // Combine with instance_path if present
+                                if !instance_path.is_empty()
+                                    && instance_path.starts_with('/')
+                                    && instance_path.len() > 1
+                                {
+                                    format!("{}/{}", &instance_path[1..], property_name)
+                                } else {
+                                    property_name
+                                }
+                            } else {
+                                instance_path[1..].to_string()
+                            }
+                        } else {
+                            instance_path[1..].to_string()
+                        }
+                    } else {
+                        // Fallback: use instance path if available
+                        if instance_path.starts_with('/') && instance_path.len() > 1 {
+                            instance_path[1..].to_string()
+                        } else {
+                            "body".to_string()
+                        }
                     }
                 } else if instance_path.starts_with('/') && instance_path.len() > 1 {
                     instance_path[1..].to_string()
@@ -433,6 +480,27 @@ impl SchemaValidator {
                 } else if schema_path_str == "/required" {
                     // Handle required field errors
                     ("missing".to_string(), "Field required".to_string(), None)
+                } else if schema_path_str.contains("/additionalProperties")
+                    || error_msg.contains("Additional properties are not allowed")
+                {
+                    // Handle additionalProperties validation errors
+                    // Extract the unexpected field name from param_name (already extracted above)
+                    let unexpected_field = if param_name.contains('/') {
+                        // Get the last component of the path (the actual field name)
+                        param_name.split('/').next_back().unwrap_or(&param_name).to_string()
+                    } else {
+                        param_name.clone()
+                    };
+
+                    let ctx = serde_json::json!({
+                        "additional_properties": false,
+                        "unexpected_field": unexpected_field
+                    });
+                    (
+                        "validation_error".to_string(),
+                        "Additional properties are not allowed".to_string(),
+                        Some(ctx),
+                    )
                 } else {
                     ("validation_error".to_string(), err.to_string(), None)
                 };
