@@ -1,0 +1,47 @@
+{
+	"name": "JWT authentication - expired token",
+	"description": "Tests JWT authentication failure when token has expired (exp claim in the past)",
+	"category": "auth",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastapi security",
+		"test_case": "JWT token expired"
+	},
+	"handler": {
+		"route": "/protected/user",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Authorization": {
+					"type": "string",
+					"required": true
+				}
+			}
+		},
+		"middleware": {
+			"jwt_auth": {
+				"enabled": true,
+				"algorithm": "HS256",
+				"secret": "test-secret-key-do-not-use-in-production"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/protected/user",
+		"headers": {
+			"Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoxNjAwMDAwMDAwLCJpYXQiOjE1OTAwMDAwMDB9.xxxxxx"
+		}
+	},
+	"expected_response": {
+		"status_code": 401,
+		"body": {
+			"type": "https://spikard.dev/errors/unauthorized",
+			"title": "JWT validation failed",
+			"status": 401,
+			"detail": "Token has expired"
+		}
+	},
+	"tags": ["auth", "jwt", "bearer", "security", "middleware", "error", "unauthorized", "expired"],
+	"notes": "Token expired in September 2020"
+}

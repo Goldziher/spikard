@@ -1,0 +1,45 @@
+{
+	"name": "API key authentication - valid key",
+	"description": "Tests API key authentication with a valid API key in custom header",
+	"category": "auth",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastapi security",
+		"test_case": "API key validation success"
+	},
+	"handler": {
+		"route": "/api/data",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"X-API-Key": {
+					"type": "string",
+					"required": true,
+					"description": "API key for authentication"
+				}
+			}
+		},
+		"middleware": {
+			"api_key_auth": {
+				"enabled": true,
+				"keys": ["sk_test_123456", "sk_test_789012"],
+				"header_name": "X-API-Key"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/data",
+		"headers": {
+			"X-API-Key": "sk_test_123456"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Access granted",
+			"data": "sensitive information"
+		}
+	},
+	"tags": ["auth", "api_key", "security", "middleware", "success"]
+}
