@@ -209,6 +209,124 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
     Ok(client)
 }
 
+/// Convert Python ServerConfig to Rust ServerConfig
+fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyResult<spikard_http::ServerConfig> {
+    use spikard_http::{ApiKeyConfig, CompressionConfig, JwtConfig, RateLimitConfig, ServerConfig, StaticFilesConfig};
+
+    // Extract basic fields
+    let host: String = py_config.getattr("host")?.extract()?;
+    let port: u16 = py_config.getattr("port")?.extract()?;
+    let workers: usize = py_config.getattr("workers")?.extract()?;
+    let enable_request_id: bool = py_config.getattr("enable_request_id")?.extract()?;
+    let graceful_shutdown: bool = py_config.getattr("graceful_shutdown")?.extract()?;
+    let shutdown_timeout: u64 = py_config.getattr("shutdown_timeout")?.extract()?;
+    let enable_openapi: bool = py_config.getattr("enable_openapi")?.extract()?;
+
+    // Extract optional fields
+    let max_body_size: Option<usize> = py_config.getattr("max_body_size")?.extract()?;
+    let request_timeout: Option<u64> = py_config.getattr("request_timeout")?.extract()?;
+    let openapi_title: Option<String> = py_config.getattr("openapi_title")?.extract()?;
+    let openapi_version: Option<String> = py_config.getattr("openapi_version")?.extract()?;
+
+    // Extract compression config
+    let compression = py_config.getattr("compression")?;
+    let compression_config = if compression.is_none() {
+        None
+    } else {
+        let gzip: bool = compression.getattr("gzip")?.extract()?;
+        let brotli: bool = compression.getattr("brotli")?.extract()?;
+        let min_size: usize = compression.getattr("min_size")?.extract()?;
+        let quality: u32 = compression.getattr("quality")?.extract()?;
+        Some(CompressionConfig {
+            gzip,
+            brotli,
+            min_size,
+            quality,
+        })
+    };
+
+    // Extract rate limit config
+    let rate_limit = py_config.getattr("rate_limit")?;
+    let rate_limit_config = if rate_limit.is_none() {
+        None
+    } else {
+        let per_second: u64 = rate_limit.getattr("per_second")?.extract()?;
+        let burst: u32 = rate_limit.getattr("burst")?.extract()?;
+        let ip_based: bool = rate_limit.getattr("ip_based")?.extract()?;
+        Some(RateLimitConfig {
+            per_second,
+            burst,
+            ip_based,
+        })
+    };
+
+    // Extract JWT auth config
+    let jwt_auth = py_config.getattr("jwt_auth")?;
+    let jwt_auth_config = if jwt_auth.is_none() {
+        None
+    } else {
+        let secret: String = jwt_auth.getattr("secret")?.extract()?;
+        let algorithm: String = jwt_auth.getattr("algorithm")?.extract()?;
+        let audience: Option<Vec<String>> = jwt_auth.getattr("audience")?.extract()?;
+        let issuer: Option<String> = jwt_auth.getattr("issuer")?.extract()?;
+        let leeway: u64 = jwt_auth.getattr("leeway")?.extract()?;
+        Some(JwtConfig {
+            secret,
+            algorithm,
+            audience,
+            issuer,
+            leeway,
+        })
+    };
+
+    // Extract API key auth config
+    let api_key_auth = py_config.getattr("api_key_auth")?;
+    let api_key_auth_config = if api_key_auth.is_none() {
+        None
+    } else {
+        let keys: Vec<String> = api_key_auth.getattr("keys")?.extract()?;
+        let header_name: String = api_key_auth.getattr("header_name")?.extract()?;
+        Some(ApiKeyConfig { keys, header_name })
+    };
+
+    // Extract static files config (list)
+    let static_files_list: Vec<Bound<'_, PyAny>> = py_config.getattr("static_files")?.extract()?;
+    let static_files: Vec<StaticFilesConfig> = static_files_list
+        .iter()
+        .map(|sf| {
+            let directory: String = sf.getattr("directory")?.extract()?;
+            let route_prefix: String = sf.getattr("route_prefix")?.extract()?;
+            let index_file: bool = sf.getattr("index_file")?.extract()?;
+            let cache_control: Option<String> = sf.getattr("cache_control")?.extract()?;
+            Ok(StaticFilesConfig {
+                directory,
+                route_prefix,
+                index_file,
+                cache_control,
+            })
+        })
+        .collect::<PyResult<Vec<_>>>()?;
+
+    Ok(ServerConfig {
+        host,
+        port,
+        workers,
+        enable_request_id,
+        max_body_size,
+        request_timeout,
+        compression: compression_config,
+        rate_limit: rate_limit_config,
+        jwt_auth: jwt_auth_config,
+        api_key_auth: api_key_auth_config,
+        static_files,
+        graceful_shutdown,
+        shutdown_timeout,
+        enable_openapi,
+        openapi_title,
+        openapi_version,
+    })
+}
+
 /// Run Spikard server from Python
 ///
 /// This function enables Python to run Spikard, rather than having the Rust CLI embed Python.
@@ -216,13 +334,17 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
 ///
 /// Args:
 ///     app: Spikard application instance
-///     host: Host to bind to (default: "127.0.0.1")
-///     port: Port to bind to (default: 8000)
-///     workers: Number of workers (default: 1)
+///     config: ServerConfig instance with all middleware settings
 ///
 /// Example:
 ///     ```python
-///     from spikard import Spikard
+///     from spikard import Spikard, ServerConfig, CompressionConfig
+///
+///     config = ServerConfig(
+///         host="0.0.0.0",
+///         port=8080,
+///         compression=CompressionConfig(quality=9)
+///     )
 ///
 ///     app = Spikard()
 ///
@@ -231,15 +353,18 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
 ///         return {"message": "Hello"}
 ///
 ///     if __name__ == "__main__":
-///         app.run(host="0.0.0.0", port=8000)
+///         app.run(config=config)
 ///     ```
 #[pyfunction]
-#[pyo3(signature = (app, host="127.0.0.1".to_string(), port=8000, workers=1))]
-fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, host: String, port: u16, workers: usize) -> PyResult<()> {
-    use spikard_http::{Route, Server, ServerConfig};
+#[pyo3(signature = (app, config))]
+fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>) -> PyResult<()> {
+    use spikard_http::{Route, Server};
     use std::sync::Arc;
 
-    if workers > 1 {
+    // Extract server config from Python object
+    let config = extract_server_config(py, config)?;
+
+    if config.workers > 1 {
         eprintln!("⚠️  Multi-worker mode not yet implemented, using single worker");
     }
 
@@ -281,19 +406,12 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, host: String, port: u16, w
         })
         .collect::<Result<Vec<_>, _>>()?;
 
-    // Configure server
-    let config = ServerConfig {
-        host: host.clone(),
-        port,
-        ..Default::default()
-    };
-
     // Initialize logging
     Server::init_logging();
 
     eprintln!("[spikard] Starting Spikard server (Python manages event loop)");
     eprintln!("[spikard] Registered {} routes", routes.len());
-    eprintln!("[spikard] Listening on http://{}:{}", host, port);
+    eprintln!("[spikard] Listening on http://{}:{}", config.host, config.port);
 
     // Build Axum router with Python handlers
     let app_router = Server::with_handlers(config.clone(), routes).map_err(|e| {
