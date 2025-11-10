@@ -8,6 +8,48 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use serde_json::json;
+use std::collections::HashMap;
+use std::sync::Arc;
+
+/// Route information for middleware validation
+#[derive(Debug, Clone)]
+pub struct RouteInfo {
+    /// Whether this route expects a JSON request body
+    pub expects_json_body: bool,
+}
+
+/// Registry of route metadata indexed by (method, path)
+pub type RouteRegistry = Arc<HashMap<(String, String), RouteInfo>>;
+
+/// Validate that Content-Type is JSON-compatible when route expects JSON
+#[allow(clippy::result_large_err)]
+fn validate_json_content_type(headers: &HeaderMap) -> Result<(), Response> {
+    if let Some(content_type_header) = headers.get(axum::http::header::CONTENT_TYPE)
+        && let Ok(content_type_str) = content_type_header.to_str()
+    {
+        // Parse Content-Type using the mime crate
+        if let Ok(parsed_mime) = content_type_str.parse::<mime::Mime>() {
+            // Check if it's JSON (application/json or +json variants)
+            let is_json = (parsed_mime.type_() == mime::APPLICATION && parsed_mime.subtype() == mime::JSON)
+                || parsed_mime.suffix() == Some(mime::JSON);
+
+            // Also accept form data (will be converted to JSON by middleware)
+            let is_form = (parsed_mime.type_() == mime::APPLICATION
+                && parsed_mime.subtype() == "x-www-form-urlencoded")
+                || (parsed_mime.type_() == mime::MULTIPART && parsed_mime.subtype() == "form-data");
+
+            if !is_json && !is_form {
+                // Content-Type is present but not JSON/form - return 415
+                let error_body = json!({
+                    "error": "Unsupported Media Type. Expected application/json"
+                });
+                return Err((StatusCode::UNSUPPORTED_MEDIA_TYPE, axum::Json(error_body)).into_response());
+            }
+        }
+    }
+    // No Content-Type header is okay - default behavior
+    Ok(())
+}
 
 /// Validate Content-Length header matches actual body size
 #[allow(clippy::result_large_err, clippy::collapsible_if)]
@@ -35,9 +77,26 @@ pub async fn validate_content_type_middleware(request: Request, next: Next) -> R
     let (parts, body) = request.into_parts();
     let headers = &parts.headers;
 
+    // Look up route info from registry using request path
+    // Note: We use the actual request path, not MatchedPath, since this middleware
+    // runs before routing and MatchedPath isn't available yet
+    let route_info = parts.extensions.get::<RouteRegistry>().and_then(|registry| {
+        let method = parts.method.as_str();
+        let path = parts.uri.path();
+        // Try exact match first
+        registry.get(&(method.to_string(), path.to_string())).cloned()
+    });
+
     // Only validate for methods that have bodies
     let method = &parts.method;
     if method == axum::http::Method::POST || method == axum::http::Method::PUT || method == axum::http::Method::PATCH {
+        // If route expects JSON, validate Content-Type before processing
+        if let Some(info) = &route_info
+            && info.expects_json_body
+        {
+            validate_json_content_type(headers)?;
+        }
+
         // Validate Content-Type headers first
         validate_content_type_headers(headers, 0)?;
 
