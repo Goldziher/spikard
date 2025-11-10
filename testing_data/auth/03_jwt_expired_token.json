@@ -30,7 +30,7 @@
 		"method": "GET",
 		"path": "/protected/user",
 		"headers": {
-			"Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoxNjAwMDAwMDAwLCJpYXQiOjE1OTAwMDAwMDB9.xxxxxx"
+			"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoxNjAwMDAwMDAwLCJpYXQiOjE1OTAwMDAwMDB9.n4oBw9XuO2aAJWi1e4Bz9Y_m2iEyJHGAODcetNuwYFo"
 		}
 	},
 	"expected_response": {
@@ -39,7 +39,7 @@
 			"type": "https://spikard.dev/errors/unauthorized",
 			"title": "JWT validation failed",
 			"status": 401,
-			"detail": "Token has expired"
+			"detail": "Token validation failed"
 		}
 	},
 	"tags": ["auth", "jwt", "bearer", "security", "middleware", "error", "unauthorized", "expired"],
