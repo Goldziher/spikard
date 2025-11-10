@@ -244,10 +244,13 @@ jsonwebtoken = { version = "10.2", features = ["use_pem", "rust_crypto"] }  # �
 - Python → Rust config extraction in `crates/spikard-py/src/lib.rs`
 - Comprehensive tests in `packages/python/tests/test_server_config.py`
 
-**🚧 Phase 2: Rust Middleware Implementation (IN PROGRESS)**
-- TODO: Implement JWT middleware in `crates/spikard-http/src/auth.rs`
-- TODO: Implement API key middleware
-- TODO: Add to middleware stack in server.rs
+**✅ Phase 2: Rust Middleware Implementation (COMPLETE)**
+- Added `crates/spikard-http/src/auth.rs` module
+- Implemented `jwt_auth_middleware()` with full algorithm support
+- Implemented `api_key_auth_middleware()` with O(1) lookup
+- Integrated into server middleware stack in `crates/spikard-http/src/server.rs`
+- Proper RFC 9457 Problem Details error responses
+- Tower middleware compatible with axum
 
 **📋 Phase 3: Testing & Integration (PENDING)**
 - TODO: Add `testing_data/auth/` fixtures
