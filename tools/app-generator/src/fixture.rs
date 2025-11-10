@@ -22,6 +22,36 @@ pub struct Handler {
     pub method: String,
     #[serde(default)]
     pub parameters: Parameters,
+    #[serde(default)]
+    pub middleware: Option<MiddlewareConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MiddlewareConfig {
+    #[serde(default)]
+    pub jwt_auth: Option<JwtAuthConfig>,
+    #[serde(default)]
+    pub api_key_auth: Option<ApiKeyAuthConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct JwtAuthConfig {
+    pub enabled: bool,
+    pub algorithm: String,
+    pub secret: String,
+    #[serde(default)]
+    pub audience: Option<Vec<String>>,
+    #[serde(default)]
+    pub issuer: Option<String>,
+    #[serde(default)]
+    pub leeway: Option<i64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApiKeyAuthConfig {
+    pub enabled: bool,
+    pub keys: Vec<String>,
+    pub header_name: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

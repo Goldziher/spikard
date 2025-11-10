@@ -170,8 +170,16 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
         format!("Converted {} routes\n", routes.len()),
     );
 
-    // Create server config (not used for test client, but needed for API)
-    let config = spikard_http::ServerConfig::default();
+    // Extract server config from Python app if available
+    let config = if let Ok(py_config) = app.getattr("_config") {
+        if !py_config.is_none() {
+            extract_server_config(py, &py_config)?
+        } else {
+            spikard_http::ServerConfig::default()
+        }
+    } else {
+        spikard_http::ServerConfig::default()
+    };
 
     // Build Axum router with Python handlers
     eprintln!(

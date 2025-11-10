@@ -1,6 +1,6 @@
 //! Analyze fixtures and extract route definitions
 
-use crate::fixture::{Fixture, Handler, Parameters};
+use crate::fixture::{Fixture, Handler, MiddlewareConfig, Parameters};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
@@ -32,11 +32,20 @@ pub struct RouteInfo {
     /// Parameter definitions
     pub params: Parameters,
 
+    /// Middleware configuration
+    pub middleware: Option<MiddlewareConfig>,
+
     /// Example fixtures using this route
     pub example_fixtures: Vec<String>,
 
     /// How many fixtures use this route
     pub fixture_count: usize,
+}
+
+impl RouteInfo {
+    pub fn has_middleware(&self) -> bool {
+        self.middleware.is_some()
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -49,7 +58,8 @@ pub struct AnalysisStats {
 
 /// Analyze fixtures and extract unique route signatures
 pub fn analyze_fixtures(fixtures: &[Fixture]) -> RouteAnalysis {
-    let mut route_map: IndexMap<RouteSignature, (String, Parameters, Vec<String>)> = IndexMap::new();
+    let mut route_map: IndexMap<RouteSignature, (String, Parameters, Option<MiddlewareConfig>, Vec<String>)> =
+        IndexMap::new();
     let mut canonical_paths: IndexMap<String, String> = IndexMap::new();
     let mut by_method: IndexMap<String, usize> = IndexMap::new();
     let mut by_category: IndexMap<String, usize> = IndexMap::new();
@@ -79,24 +89,34 @@ pub fn analyze_fixtures(fixtures: &[Fixture]) -> RouteAnalysis {
             method: fixture.handler.method.clone(),
         };
 
-        // Insert route with the consistent normalized path
+        // Insert route with the consistent normalized path and middleware config
         route_map
             .entry(sig)
-            .or_insert_with(|| (consistent_normalized, fixture.handler.parameters.clone(), Vec::new()))
-            .2
+            .or_insert_with(|| {
+                (
+                    consistent_normalized,
+                    fixture.handler.parameters.clone(),
+                    fixture.handler.middleware.clone(),
+                    Vec::new(),
+                )
+            })
+            .3
             .push(fixture.name.clone());
     }
 
     // Convert to RouteInfo
     let routes: Vec<RouteInfo> = route_map
         .into_iter()
-        .map(|(sig, (normalized_route, params, example_fixtures))| RouteInfo {
-            route: normalized_route,
-            method: sig.method,
-            params,
-            fixture_count: example_fixtures.len(),
-            example_fixtures: example_fixtures.into_iter().take(3).collect(),
-        })
+        .map(
+            |(sig, (normalized_route, params, middleware, example_fixtures))| RouteInfo {
+                route: normalized_route,
+                method: sig.method,
+                params,
+                middleware,
+                fixture_count: example_fixtures.len(),
+                example_fixtures: example_fixtures.into_iter().take(3).collect(),
+            },
+        )
         .collect();
 
     RouteAnalysis {
