@@ -1,52 +1,52 @@
 {
-  "name": "32_schema_ref_definitions",
-  "description": "JSON Schema $ref with definitions should validate correctly",
-  "category": "json_bodies",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "Schema composition with $ref and definitions"
-  },
-  "handler": {
-    "route": "/products",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "required": ["product"],
-      "properties": {
-        "product": {
-          "$ref": "#/definitions/Product"
-        }
-      },
-      "definitions": {
-        "Product": {
-          "type": "object",
-          "required": ["name", "price"],
-          "properties": {
-            "name": {
-              "type": "string"
-            },
-            "price": {
-              "type": "number",
-              "minimum": 0
-            }
-          }
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/products",
-    "body": {
-      "product": {
-        "name": "Widget",
-        "price": 9.99
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 201
-  },
-  "tags": ["json_bodies", "schema_ref", "definitions", "composition", "validation", "success"]
+	"name": "32_schema_ref_definitions",
+	"description": "JSON Schema $ref with definitions should validate correctly",
+	"category": "json_bodies",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "Schema composition with $ref and definitions"
+	},
+	"handler": {
+		"route": "/products",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"required": ["product"],
+			"properties": {
+				"product": {
+					"$ref": "#/definitions/Product"
+				}
+			},
+			"definitions": {
+				"Product": {
+					"type": "object",
+					"required": ["name", "price"],
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"price": {
+							"type": "number",
+							"minimum": 0
+						}
+					}
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/products",
+		"body": {
+			"product": {
+				"name": "Widget",
+				"price": 9.99
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 201
+	},
+	"tags": ["json_bodies", "schema_ref", "definitions", "composition", "validation", "success"]
 }

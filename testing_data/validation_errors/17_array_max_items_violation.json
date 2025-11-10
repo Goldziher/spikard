@@ -1,94 +1,63 @@
 {
-  "name": "Array max_items constraint violation",
-  "description": "Tests validation error when array has more items than max_items",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_body_multiple_params/test_tutorial001.py",
-    "test_function": "test_array_max_items"
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "price": {
-          "type": "number"
-        },
-        "tags": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "maxItems": 10
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "price",
-        "tags"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "name": "Item",
-      "price": 10.0,
-      "tags": [
-        "tag1",
-        "tag2",
-        "tag3",
-        "tag4",
-        "tag5",
-        "tag6",
-        "tag7",
-        "tag8",
-        "tag9",
-        "tag10",
-        "tag11"
-      ]
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "validation_error",
-          "loc": [
-            "body",
-            "tags"
-          ],
-          "msg": "[\"tag1\",\"tag2\",\"tag3\",\"tag4\",\"tag5\",\"tag6\",\"tag7\",\"tag8\",\"tag9\",\"tag10\",\"tag11\"] has more than 10 items",
-          "input": [
-            "tag1",
-            "tag2",
-            "tag3",
-            "tag4",
-            "tag5",
-            "tag6",
-            "tag7",
-            "tag8",
-            "tag9",
-            "tag10",
-            "tag11"
-          ]
-        }
-      ]
-    }
-  },
-  "notes": "max_items constraint limits maximum number of array elements"
+	"name": "Array max_items constraint violation",
+	"description": "Tests validation error when array has more items than max_items",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_body_multiple_params/test_tutorial001.py",
+		"test_function": "test_array_max_items"
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"price": {
+					"type": "number"
+				},
+				"tags": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"maxItems": 10
+				}
+			},
+			"additionalProperties": false,
+			"required": ["name", "price", "tags"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"name": "Item",
+			"price": 10.0,
+			"tags": ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6", "tag7", "tag8", "tag9", "tag10", "tag11"]
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "validation_error",
+					"loc": ["body", "tags"],
+					"msg": "[\"tag1\",\"tag2\",\"tag3\",\"tag4\",\"tag5\",\"tag6\",\"tag7\",\"tag8\",\"tag9\",\"tag10\",\"tag11\"] has more than 10 items",
+					"input": ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6", "tag7", "tag8", "tag9", "tag10", "tag11"]
+				}
+			]
+		}
+	},
+	"notes": "max_items constraint limits maximum number of array elements"
 }

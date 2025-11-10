@@ -1,31 +1,31 @@
 {
-  "name": "Malformed JSON body",
-  "description": "Tests validation error when request body contains malformed JSON",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_request_body.py",
-    "test_function": "test_malformed_json"
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "POST",
-    "body_schema": {
-      "type": "string"
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": "{\"name\": \"Item\", \"price\": }"
-  },
-  "expected_response": {
-    "status_code": 400,
-    "body": {
-      "detail": "Invalid request format"
-    }
-  },
-  "notes": "Malformed JSON is a syntax error (400 Bad Request), not a validation error (422)"
+	"name": "Malformed JSON body",
+	"description": "Tests validation error when request body contains malformed JSON",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_request_body.py",
+		"test_function": "test_malformed_json"
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "POST",
+		"body_schema": {
+			"type": "string"
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": "{\"name\": \"Item\", \"price\": }"
+	},
+	"expected_response": {
+		"status_code": 400,
+		"body": {
+			"detail": "Invalid request format"
+		}
+	},
+	"notes": "Malformed JSON is a syntax error (400 Bad Request), not a validation error (422)"
 }

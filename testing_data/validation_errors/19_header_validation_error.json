@@ -1,51 +1,48 @@
 {
-  "name": "Header validation error",
-  "description": "Tests validation error when required header is missing",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_header_params/test_tutorial001.py",
-    "test_function": "test_header_missing"
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "q": {
-          "type": "string"
-        }
-      },
-      "headers": {
-        "x-token": {
-          "type": "string",
-          "required": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items/?q=test"
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "missing",
-          "loc": [
-            "headers",
-            "x-token"
-          ],
-          "msg": "Field required",
-          "input": null
-        }
-      ]
-    }
-  },
-  "notes": "Required headers must be present in request"
+	"name": "Header validation error",
+	"description": "Tests validation error when required header is missing",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_header_params/test_tutorial001.py",
+		"test_function": "test_header_missing"
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"q": {
+					"type": "string"
+				}
+			},
+			"headers": {
+				"x-token": {
+					"type": "string",
+					"required": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items/?q=test"
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "missing",
+					"loc": ["headers", "x-token"],
+					"msg": "Field required",
+					"input": null
+				}
+			]
+		}
+	},
+	"notes": "Required headers must be present in request"
 }

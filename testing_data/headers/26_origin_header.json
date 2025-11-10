@@ -1,35 +1,35 @@
 {
-  "name": "Origin header",
-  "description": "Tests Origin header for CORS",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/middleware/test_cors.py",
-    "test_function": "test_cors_allow_origin"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/headers/origin",
-    "headers": {
-      "Origin": "https://example.com"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "origin": "https://example.com"
-    }
-  },
-  "notes": "Origin header used in CORS requests",
-  "handler": {
-    "route": "/headers/origin",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "Origin": {
-          "type": "string",
-          "annotation": "str"
-        }
-      }
-    }
-  }
+	"name": "Origin header",
+	"description": "Tests Origin header for CORS",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/middleware/test_cors.py",
+		"test_function": "test_cors_allow_origin"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/headers/origin",
+		"headers": {
+			"Origin": "https://example.com"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"origin": "https://example.com"
+		}
+	},
+	"notes": "Origin header used in CORS requests",
+	"handler": {
+		"route": "/headers/origin",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Origin": {
+					"type": "string",
+					"annotation": "str"
+				}
+			}
+		}
+	}
 }

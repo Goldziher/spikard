@@ -1,84 +1,81 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "URL-Encoded Forms Test Fixture",
-  "description": "Schema for URL-encoded form data test fixtures",
-  "type": "object",
-  "required": ["name", "description", "source", "request", "expected_response"],
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "Human-readable test case name"
-    },
-    "description": {
-      "type": "string",
-      "description": "What this test validates"
-    },
-    "source": {
-      "type": "object",
-      "required": ["framework", "test_file", "test_function"],
-      "properties": {
-        "framework": {
-          "type": "string",
-          "enum": ["fastapi", "starlette", "litestar"]
-        },
-        "test_file": {
-          "type": "string"
-        },
-        "test_function": {
-          "type": "string"
-        }
-      }
-    },
-    "request": {
-      "type": "object",
-      "required": ["method", "path"],
-      "properties": {
-        "method": {
-          "type": "string",
-          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
-        },
-        "path": {
-          "type": "string"
-        },
-        "headers": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "form_data": {
-          "type": "object",
-          "description": "URL-encoded form fields (key-value pairs)",
-          "additionalProperties": {
-            "oneOf": [
-              {"type": "string"},
-              {"type": "array", "items": {"type": "string"}}
-            ]
-          }
-        }
-      }
-    },
-    "expected_response": {
-      "type": "object",
-      "required": ["status_code"],
-      "properties": {
-        "status_code": {
-          "type": "integer"
-        },
-        "body": {
-          "description": "Expected response body (can be any valid JSON type)"
-        },
-        "headers": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "notes": {
-      "type": "string",
-      "description": "Additional notes about the test case"
-    }
-  }
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "URL-Encoded Forms Test Fixture",
+	"description": "Schema for URL-encoded form data test fixtures",
+	"type": "object",
+	"required": ["name", "description", "source", "request", "expected_response"],
+	"properties": {
+		"name": {
+			"type": "string",
+			"description": "Human-readable test case name"
+		},
+		"description": {
+			"type": "string",
+			"description": "What this test validates"
+		},
+		"source": {
+			"type": "object",
+			"required": ["framework", "test_file", "test_function"],
+			"properties": {
+				"framework": {
+					"type": "string",
+					"enum": ["fastapi", "starlette", "litestar"]
+				},
+				"test_file": {
+					"type": "string"
+				},
+				"test_function": {
+					"type": "string"
+				}
+			}
+		},
+		"request": {
+			"type": "object",
+			"required": ["method", "path"],
+			"properties": {
+				"method": {
+					"type": "string",
+					"enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+				},
+				"path": {
+					"type": "string"
+				},
+				"headers": {
+					"type": "object",
+					"additionalProperties": {
+						"type": "string"
+					}
+				},
+				"form_data": {
+					"type": "object",
+					"description": "URL-encoded form fields (key-value pairs)",
+					"additionalProperties": {
+						"oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }]
+					}
+				}
+			}
+		},
+		"expected_response": {
+			"type": "object",
+			"required": ["status_code"],
+			"properties": {
+				"status_code": {
+					"type": "integer"
+				},
+				"body": {
+					"description": "Expected response body (can be any valid JSON type)"
+				},
+				"headers": {
+					"type": "object",
+					"additionalProperties": {
+						"type": "string"
+					}
+				}
+			}
+		},
+		"notes": {
+			"type": "string",
+			"description": "Additional notes about the test case"
+		}
+	}
 }

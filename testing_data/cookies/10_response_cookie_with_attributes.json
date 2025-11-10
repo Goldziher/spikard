@@ -1,31 +1,31 @@
 {
-  "name": "Response cookie with attributes",
-  "description": "Tests setting a cookie with max_age, secure, httponly, and samesite attributes",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_responses.py",
-    "test_function": "test_set_cookie"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/cookie/set"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "message": "Cookie set"
-    },
-    "cookies": {
-      "mycookie": {
-        "value": "myvalue",
-        "max_age": 3600,
-        "path": "/",
-        "domain": "example.com",
-        "secure": true,
-        "httponly": true,
-        "samesite": "strict"
-      }
-    }
-  },
-  "notes": "Cookie can be set with all standard attributes"
+	"name": "Response cookie with attributes",
+	"description": "Tests setting a cookie with max_age, secure, httponly, and samesite attributes",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_responses.py",
+		"test_function": "test_set_cookie"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/cookie/set"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Cookie set"
+		},
+		"cookies": {
+			"mycookie": {
+				"value": "myvalue",
+				"max_age": 3600,
+				"path": "/",
+				"domain": "example.com",
+				"secure": true,
+				"httponly": true,
+				"samesite": "strict"
+			}
+		}
+	},
+	"notes": "Cookie can be set with all standard attributes"
 }

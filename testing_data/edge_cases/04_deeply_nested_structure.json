@@ -1,159 +1,136 @@
 {
-  "name": "Deeply nested structure (10+ levels)",
-  "description": "Tests handling of deeply nested JSON objects",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_nesting.py",
-    "test_function": "test_deep_nesting"
-  },
-  "handler": {
-    "route": "/nested/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "level1": {
-          "type": "object",
-          "properties": {
-            "level2": {
-              "type": "object",
-              "properties": {
-                "level3": {
-                  "type": "object",
-                  "properties": {
-                    "level4": {
-                      "type": "object",
-                      "properties": {
-                        "level5": {
-                          "type": "object",
-                          "properties": {
-                            "level6": {
-                              "type": "object",
-                              "properties": {
-                                "level7": {
-                                  "type": "object",
-                                  "properties": {
-                                    "level8": {
-                                      "type": "object",
-                                      "properties": {
-                                        "level9": {
-                                          "type": "object",
-                                          "properties": {
-                                            "level10": {
-                                              "type": "object",
-                                              "properties": {
-                                                "value": {
-                                                  "type": "string"
-                                                },
-                                                "depth": {
-                                                  "type": "integer"
-                                                }
-                                              },
-                                              "additionalProperties": false,
-                                              "required": [
-                                                "value",
-                                                "depth"
-                                              ]
-                                            }
-                                          },
-                                          "additionalProperties": false,
-                                          "required": [
-                                            "level10"
-                                          ]
-                                        }
-                                      },
-                                      "additionalProperties": false,
-                                      "required": [
-                                        "level9"
-                                      ]
-                                    }
-                                  },
-                                  "additionalProperties": false,
-                                  "required": [
-                                    "level8"
-                                  ]
-                                }
-                              },
-                              "additionalProperties": false,
-                              "required": [
-                                "level7"
-                              ]
-                            }
-                          },
-                          "additionalProperties": false,
-                          "required": [
-                            "level6"
-                          ]
-                        }
-                      },
-                      "additionalProperties": false,
-                      "required": [
-                        "level5"
-                      ]
-                    }
-                  },
-                  "additionalProperties": false,
-                  "required": [
-                    "level4"
-                  ]
-                }
-              },
-              "additionalProperties": false,
-              "required": [
-                "level3"
-              ]
-            }
-          },
-          "additionalProperties": false,
-          "required": [
-            "level2"
-          ]
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "level1"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/nested/",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "level1": {
-        "level2": {
-          "level3": {
-            "level4": {
-              "level5": {
-                "level6": {
-                  "level7": {
-                    "level8": {
-                      "level9": {
-                        "level10": {
-                          "value": "deep",
-                          "depth": 10
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "message": "Processed deeply nested structure",
-      "max_depth": 10,
-      "value_found": "deep"
-    }
-  },
-  "notes": "Tests parser handles deep nesting without stack overflow"
+	"name": "Deeply nested structure (10+ levels)",
+	"description": "Tests handling of deeply nested JSON objects",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_nesting.py",
+		"test_function": "test_deep_nesting"
+	},
+	"handler": {
+		"route": "/nested/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"level1": {
+					"type": "object",
+					"properties": {
+						"level2": {
+							"type": "object",
+							"properties": {
+								"level3": {
+									"type": "object",
+									"properties": {
+										"level4": {
+											"type": "object",
+											"properties": {
+												"level5": {
+													"type": "object",
+													"properties": {
+														"level6": {
+															"type": "object",
+															"properties": {
+																"level7": {
+																	"type": "object",
+																	"properties": {
+																		"level8": {
+																			"type": "object",
+																			"properties": {
+																				"level9": {
+																					"type": "object",
+																					"properties": {
+																						"level10": {
+																							"type": "object",
+																							"properties": {
+																								"value": {
+																									"type": "string"
+																								},
+																								"depth": {
+																									"type": "integer"
+																								}
+																							},
+																							"additionalProperties": false,
+																							"required": ["value", "depth"]
+																						}
+																					},
+																					"additionalProperties": false,
+																					"required": ["level10"]
+																				}
+																			},
+																			"additionalProperties": false,
+																			"required": ["level9"]
+																		}
+																	},
+																	"additionalProperties": false,
+																	"required": ["level8"]
+																}
+															},
+															"additionalProperties": false,
+															"required": ["level7"]
+														}
+													},
+													"additionalProperties": false,
+													"required": ["level6"]
+												}
+											},
+											"additionalProperties": false,
+											"required": ["level5"]
+										}
+									},
+									"additionalProperties": false,
+									"required": ["level4"]
+								}
+							},
+							"additionalProperties": false,
+							"required": ["level3"]
+						}
+					},
+					"additionalProperties": false,
+					"required": ["level2"]
+				}
+			},
+			"additionalProperties": false,
+			"required": ["level1"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/nested/",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"level1": {
+				"level2": {
+					"level3": {
+						"level4": {
+							"level5": {
+								"level6": {
+									"level7": {
+										"level8": {
+											"level9": {
+												"level10": {
+													"value": "deep",
+													"depth": 10
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Processed deeply nested structure",
+			"max_depth": 10,
+			"value_found": "deep"
+		}
+	},
+	"notes": "Tests parser handles deep nesting without stack overflow"
 }

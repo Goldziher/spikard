@@ -1,40 +1,40 @@
 {
-  "name": "17_vendor_json_accepted",
-  "description": "Vendor-specific JSON content-type should be accepted",
-  "category": "content_types",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "http_specs",
-    "test_case": "Vendor-specific media types"
-  },
-  "handler": {
-    "route": "/api/v1/resource",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "required": ["data"],
-      "properties": {
-        "data": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/api/v1/resource",
-    "headers": {
-      "Content-Type": "application/vnd.api+json"
-    },
-    "body": {
-      "data": "value"
-    }
-  },
-  "expected_response": {
-    "status_code": 201,
-    "body": {
-      "data": "value"
-    }
-  },
-  "tags": ["content_types", "vendor", "json", "success"]
+	"name": "17_vendor_json_accepted",
+	"description": "Vendor-specific JSON content-type should be accepted",
+	"category": "content_types",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "http_specs",
+		"test_case": "Vendor-specific media types"
+	},
+	"handler": {
+		"route": "/api/v1/resource",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"required": ["data"],
+			"properties": {
+				"data": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/api/v1/resource",
+		"headers": {
+			"Content-Type": "application/vnd.api+json"
+		},
+		"body": {
+			"data": "value"
+		}
+	},
+	"expected_response": {
+		"status_code": 201,
+		"body": {
+			"data": "value"
+		}
+	},
+	"tags": ["content_types", "vendor", "json", "success"]
 }

@@ -1,33 +1,33 @@
 {
-  "name": "28_duration_format_path_param_success",
-  "description": "Path parameter with valid ISO 8601 duration should be accepted",
-  "category": "path_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "litestar",
-    "test_case": "Timedelta/Duration type path parameter conversion"
-  },
-  "handler": {
-    "route": "/delays/{duration}",
-    "method": "GET",
-    "parameters": {
-      "path": {
-        "duration": {
-          "type": "string",
-          "format": "duration"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/delays/P1DT2H30M"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "duration": "P1DT2H30M"
-    }
-  },
-  "tags": ["path_params", "duration", "format", "iso8601", "validation", "success"]
+	"name": "28_duration_format_path_param_success",
+	"description": "Path parameter with valid ISO 8601 duration should be accepted",
+	"category": "path_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "litestar",
+		"test_case": "Timedelta/Duration type path parameter conversion"
+	},
+	"handler": {
+		"route": "/delays/{duration}",
+		"method": "GET",
+		"parameters": {
+			"path": {
+				"duration": {
+					"type": "string",
+					"format": "duration"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/delays/P1DT2H30M"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"duration": "P1DT2H30M"
+		}
+	},
+	"tags": ["path_params", "duration", "format", "iso8601", "validation", "success"]
 }

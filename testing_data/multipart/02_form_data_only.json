@@ -1,36 +1,36 @@
 {
-  "name": "Form data without files",
-  "description": "Multipart form with only text fields, no file uploads",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_formparsers.py",
-    "test_function": "test_multipart_request_data"
-  },
-  "handler": {
-    "route": "/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "some": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/",
-    "content_type": "multipart/form-data",
-    "data": {
-      "some": "data"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "some": "data"
-    }
-  }
+	"name": "Form data without files",
+	"description": "Multipart form with only text fields, no file uploads",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_formparsers.py",
+		"test_function": "test_multipart_request_data"
+	},
+	"handler": {
+		"route": "/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"some": {
+					"type": "string"
+				}
+			},
+			"additionalProperties": false
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/",
+		"content_type": "multipart/form-data",
+		"data": {
+			"some": "data"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"some": "data"
+		}
+	}
 }

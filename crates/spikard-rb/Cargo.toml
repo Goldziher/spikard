@@ -8,7 +8,7 @@ repository = "https://github.com/Goldziher/spikard"
 description = "Ruby bindings for the Spikard HTTP toolkit (thin Magnus wrapper around the Rust engine)."
 
 [lib]
-name = "spikard_rb"
+name = "spikard_rb_core"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]

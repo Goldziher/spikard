@@ -1,49 +1,46 @@
 {
-  "name": "Missing required query parameter",
-  "description": "Tests validation error when required query param is missing",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_query_params/test_tutorial001.py",
-    "test_function": "test_query_params_required_missing"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items/",
-    "headers": {
-      "x-token": "test-token"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "missing",
-          "loc": [
-            "query",
-            "q"
-          ],
-          "msg": "Field required",
-          "input": null
-        }
-      ]
-    }
-  },
-  "notes": "Required query parameter without default must be provided",
-  "handler": {
-    "route": "/items/",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "q": {
-          "type": "string",
-          "required": true
-        }
-      }
-    }
-  }
+	"name": "Missing required query parameter",
+	"description": "Tests validation error when required query param is missing",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_query_params/test_tutorial001.py",
+		"test_function": "test_query_params_required_missing"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items/",
+		"headers": {
+			"x-token": "test-token"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "missing",
+					"loc": ["query", "q"],
+					"msg": "Field required",
+					"input": null
+				}
+			]
+		}
+	},
+	"notes": "Required query parameter without default must be provided",
+	"handler": {
+		"route": "/items/",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"q": {
+					"type": "string",
+					"required": true
+				}
+			}
+		}
+	}
 }

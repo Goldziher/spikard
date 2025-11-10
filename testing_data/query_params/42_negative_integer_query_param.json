@@ -1,36 +1,36 @@
 {
-  "name": "42_negative_integer_query_param",
-  "description": "Query parameter with negative integer value should be parsed correctly",
-  "category": "query_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "nestjs",
-    "test_case": "Negative number handling in ParseIntPipe"
-  },
-  "handler": {
-    "route": "/items/negative",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "offset": {
-          "type": "integer",
-          "annotation": "int"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items/negative",
-    "query_params": {
-      "offset": "-10"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "offset": -10
-    }
-  },
-  "tags": ["query_params", "integer", "negative", "type_coercion", "success"]
+	"name": "42_negative_integer_query_param",
+	"description": "Query parameter with negative integer value should be parsed correctly",
+	"category": "query_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "nestjs",
+		"test_case": "Negative number handling in ParseIntPipe"
+	},
+	"handler": {
+		"route": "/items/negative",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"offset": {
+					"type": "integer",
+					"annotation": "int"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items/negative",
+		"query_params": {
+			"offset": "-10"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"offset": -10
+		}
+	},
+	"tags": ["query_params", "integer", "negative", "type_coercion", "success"]
 }

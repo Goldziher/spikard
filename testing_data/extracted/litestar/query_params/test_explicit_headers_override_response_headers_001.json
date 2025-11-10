@@ -1,28 +1,25 @@
 {
-  "name": "test_explicit_headers_override_response_headers_001",
-  "description": "Extracted from Litestar: test_explicit_headers_override_response_headers case 1",
-  "category": "query_params",
-  "source": {
-    "framework": "litestar",
-    "test_file": "tests/unit/test_response/test_response_headers.py",
-    "test_function": "test_explicit_headers_override_response_headers",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/",
-    "method": "GET",
-    "parameters": {}
-  },
-  "request": {
-    "method": "GET",
-    "path": "/"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {}
-  },
-  "tags": [
-    "success",
-    "query"
-  ]
+	"name": "test_explicit_headers_override_response_headers_001",
+	"description": "Extracted from Litestar: test_explicit_headers_override_response_headers case 1",
+	"category": "query_params",
+	"source": {
+		"framework": "litestar",
+		"test_file": "tests/unit/test_response/test_response_headers.py",
+		"test_function": "test_explicit_headers_override_response_headers",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/",
+		"method": "GET",
+		"parameters": {}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {}
+	},
+	"tags": ["success", "query"]
 }

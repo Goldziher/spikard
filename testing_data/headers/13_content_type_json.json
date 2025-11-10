@@ -1,35 +1,35 @@
 {
-  "name": "Content-Type header - application/json",
-  "description": "Tests Content-Type header with JSON media type",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_requests.py",
-    "test_function": "test_request_headers"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/headers/content-type",
-    "headers": {
-      "Content-Type": "application/json"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "content_type": "application/json"
-    }
-  },
-  "notes": "Standard Content-Type header for JSON requests",
-  "handler": {
-    "route": "/headers/content-type",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "Content-Type": {
-          "type": "string",
-          "annotation": "str"
-        }
-      }
-    }
-  }
+	"name": "Content-Type header - application/json",
+	"description": "Tests Content-Type header with JSON media type",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_requests.py",
+		"test_function": "test_request_headers"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/headers/content-type",
+		"headers": {
+			"Content-Type": "application/json"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"content_type": "application/json"
+		}
+	},
+	"notes": "Standard Content-Type header for JSON requests",
+	"handler": {
+		"route": "/headers/content-type",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Content-Type": {
+					"type": "string",
+					"annotation": "str"
+				}
+			}
+		}
+	}
 }

@@ -1,34 +1,34 @@
 {
-  "name": "20_uuid_v3_path_param_success",
-  "description": "Path parameter with valid UUID v3 should be accepted",
-  "category": "path_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "nestjs",
-    "test_case": "ParseUUIDPipe version 3 validation"
-  },
-  "handler": {
-    "route": "/items/{id}",
-    "method": "GET",
-    "parameters": {
-      "path": {
-        "id": {
-          "type": "string",
-          "format": "uuid",
-          "uuidVersion": "3"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items/e8b5a51d-11c8-3310-a6ab-367563f20686"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "id": "e8b5a51d-11c8-3310-a6ab-367563f20686"
-    }
-  },
-  "tags": ["path_params", "uuid", "v3", "format", "validation", "success"]
+	"name": "20_uuid_v3_path_param_success",
+	"description": "Path parameter with valid UUID v3 should be accepted",
+	"category": "path_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "nestjs",
+		"test_case": "ParseUUIDPipe version 3 validation"
+	},
+	"handler": {
+		"route": "/items/{id}",
+		"method": "GET",
+		"parameters": {
+			"path": {
+				"id": {
+					"type": "string",
+					"format": "uuid",
+					"uuidVersion": "3"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items/e8b5a51d-11c8-3310-a6ab-367563f20686"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"id": "e8b5a51d-11c8-3310-a6ab-367563f20686"
+		}
+	},
+	"tags": ["path_params", "uuid", "v3", "format", "validation", "success"]
 }

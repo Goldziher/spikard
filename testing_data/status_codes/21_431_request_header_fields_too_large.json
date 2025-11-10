@@ -1,43 +1,38 @@
 {
-  "name": "21_431_request_header_fields_too_large",
-  "description": "Request with excessively large headers should return 431",
-  "category": "status_codes",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "http_specs",
-    "test_case": "Header size limit enforcement"
-  },
-  "handler": {
-    "route": "/data",
-    "method": "GET",
-    "max_header_size": 8192,
-    "parameters": {
-      "headers": {
-        "X-Large-Header": {
-          "type": "string",
-          "optional": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/data",
-    "headers": {
-      "X-Large-Header": "{{ repeat 'x' 10000 times }}"
-    }
-  },
-  "expected_response": {
-    "status_code": 431,
-    "body": {
-      "error": "Request Header Fields Too Large",
-      "message": "Request headers exceed maximum allowed size of 8192 bytes"
-    }
-  },
-  "tags": [
-    "status_codes",
-    "431",
-    "header_size",
-    "error"
-  ]
+	"name": "21_431_request_header_fields_too_large",
+	"description": "Request with excessively large headers should return 431",
+	"category": "status_codes",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "http_specs",
+		"test_case": "Header size limit enforcement"
+	},
+	"handler": {
+		"route": "/data",
+		"method": "GET",
+		"max_header_size": 8192,
+		"parameters": {
+			"headers": {
+				"X-Large-Header": {
+					"type": "string",
+					"optional": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/data",
+		"headers": {
+			"X-Large-Header": "{{ repeat 'x' 10000 times }}"
+		}
+	},
+	"expected_response": {
+		"status_code": 431,
+		"body": {
+			"error": "Request Header Fields Too Large",
+			"message": "Request headers exceed maximum allowed size of 8192 bytes"
+		}
+	},
+	"tags": ["status_codes", "431", "header_size", "error"]
 }

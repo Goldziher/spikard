@@ -1,46 +1,43 @@
 {
-  "name": "Invalid UUID format",
-  "description": "Tests validation error when UUID format is invalid",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_path_params/test_tutorial004.py",
-    "test_function": "test_get_uuid_invalid"
-  },
-  "handler": {
-    "route": "/items/{item_id}",
-    "method": "GET",
-    "parameters": {
-      "path": {
-        "item_id": {
-          "type": "string",
-          "format": "uuid"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items/not-a-uuid"
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "uuid_parsing",
-          "loc": [
-            "path",
-            "item_id"
-          ],
-          "msg": "Input should be a valid UUID, invalid character: expected an optional prefix of `urn:uuid:` followed by [0-9a-fA-F-], found `n` at 0",
-          "input": "not-a-uuid"
-        }
-      ]
-    }
-  },
-  "notes": "UUID validation ensures proper format (8-4-4-4-12 hex digits)"
+	"name": "Invalid UUID format",
+	"description": "Tests validation error when UUID format is invalid",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_path_params/test_tutorial004.py",
+		"test_function": "test_get_uuid_invalid"
+	},
+	"handler": {
+		"route": "/items/{item_id}",
+		"method": "GET",
+		"parameters": {
+			"path": {
+				"item_id": {
+					"type": "string",
+					"format": "uuid"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items/not-a-uuid"
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "uuid_parsing",
+					"loc": ["path", "item_id"],
+					"msg": "Input should be a valid UUID, invalid character: expected an optional prefix of `urn:uuid:` followed by [0-9a-fA-F-], found `n` at 0",
+					"input": "not-a-uuid"
+				}
+			]
+		}
+	},
+	"notes": "UUID validation ensures proper format (8-4-4-4-12 hex digits)"
 }

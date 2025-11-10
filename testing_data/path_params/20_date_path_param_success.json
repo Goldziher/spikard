@@ -1,32 +1,32 @@
 {
-  "name": "Date path parameter - success",
-  "description": "Tests date path parameter with ISO format date",
-  "source": {
-    "framework": "litestar",
-    "test_file": "tests/unit/test_kwargs/test_path_params.py",
-    "test_function": "test_path_param_type_resolution"
-  },
-  "handler": {
-    "route": "/date/{date_param}",
-    "method": "GET",
-    "parameters": {
-      "path": {
-        "date_param": {
-          "type": "string",
-          "format": "date"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/date/2023-07-15"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "date_param": "2023-07-15"
-    }
-  },
-  "notes": "Path template: /date/{date_param:date}, ISO 8601 date format (YYYY-MM-DD)"
+	"name": "Date path parameter - success",
+	"description": "Tests date path parameter with ISO format date",
+	"source": {
+		"framework": "litestar",
+		"test_file": "tests/unit/test_kwargs/test_path_params.py",
+		"test_function": "test_path_param_type_resolution"
+	},
+	"handler": {
+		"route": "/date/{date_param}",
+		"method": "GET",
+		"parameters": {
+			"path": {
+				"date_param": {
+					"type": "string",
+					"format": "date"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/date/2023-07-15"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"date_param": "2023-07-15"
+		}
+	},
+	"notes": "Path template: /date/{date_param:date}, ISO 8601 date format (YYYY-MM-DD)"
 }

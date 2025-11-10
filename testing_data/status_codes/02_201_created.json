@@ -1,43 +1,41 @@
 {
-  "name": "201 Created - Resource created",
-  "description": "Tests 201 Created response for successful POST request",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_response_model/test_tutorial001.py",
-    "test_function": "test_create_item"
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "name": "New Item"
-    }
-  },
-  "expected_response": {
-    "status_code": 201,
-    "body": {
-      "id": 1,
-      "name": "New Item"
-    }
-  },
-  "notes": "201 Created indicates successful resource creation"
+	"name": "201 Created - Resource created",
+	"description": "Tests 201 Created response for successful POST request",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_response_model/test_tutorial001.py",
+		"test_function": "test_create_item"
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["name"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"name": "New Item"
+		}
+	},
+	"expected_response": {
+		"status_code": 201,
+		"body": {
+			"id": 1,
+			"name": "New Item"
+		}
+	},
+	"notes": "201 Created indicates successful resource creation"
 }

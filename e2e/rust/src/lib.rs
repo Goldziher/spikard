@@ -2,12 +2,11 @@
 
 use axum::response::IntoResponse;
 use axum::{
-    middleware, routing,
+    Json, Router, middleware, routing,
     routing::{delete, get, head, options, patch, post, put, trace},
-    Json, Router,
 };
 use form_urlencoded;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use spikard_http::parameters::ParameterValidator;
 use std::collections::HashMap;
 
@@ -5524,8 +5523,8 @@ async fn cookies_Response_set_cookie___basic_handler() -> impl axum::response::I
 async fn cors_06_cors_preflight_method_not_allowed_handler(
     headers: axum::http::HeaderMap,
 ) -> axum::response::Result<axum::response::Response<axum::body::Body>, axum::response::Response<axum::body::Body>> {
-    use spikard_http::cors::handle_preflight;
     use spikard_http::CorsConfig;
+    use spikard_http::cors::handle_preflight;
 
     // Parse CORS configuration
     let cors_config: CorsConfig = serde_json::from_str("{\"allowed_headers\":[\"Content-Type\"],\"allowed_methods\":[\"GET\",\"POST\"],\"allowed_origins\":[\"https://example.com\"]}").unwrap();
@@ -5537,8 +5536,8 @@ async fn cors_06_cors_preflight_method_not_allowed_handler(
 async fn cors_07_cors_preflight_header_not_allowed_handler(
     headers: axum::http::HeaderMap,
 ) -> axum::response::Result<axum::response::Response<axum::body::Body>, axum::response::Response<axum::body::Body>> {
-    use spikard_http::cors::handle_preflight;
     use spikard_http::CorsConfig;
+    use spikard_http::cors::handle_preflight;
 
     // Parse CORS configuration
     let cors_config: CorsConfig = serde_json::from_str("{\"allowed_headers\":[\"Content-Type\"],\"allowed_methods\":[\"POST\"],\"allowed_origins\":[\"https://example.com\"]}").unwrap();
@@ -5550,8 +5549,8 @@ async fn cors_07_cors_preflight_header_not_allowed_handler(
 async fn cors_08_cors_max_age_handler(
     headers: axum::http::HeaderMap,
 ) -> axum::response::Result<axum::response::Response<axum::body::Body>, axum::response::Response<axum::body::Body>> {
-    use spikard_http::cors::handle_preflight;
     use spikard_http::CorsConfig;
+    use spikard_http::cors::handle_preflight;
 
     // Parse CORS configuration
     let cors_config: CorsConfig = serde_json::from_str("{\"allowed_headers\":[\"Content-Type\"],\"allowed_methods\":[\"POST\"],\"allowed_origins\":[\"https://example.com\"],\"max_age\":3600}").unwrap();
@@ -5569,8 +5568,8 @@ async fn cors_09_cors_expose_headers_handler(
     use std::collections::HashMap;
 
     // CORS validation
-    use spikard_http::cors::{add_cors_headers, validate_cors_request};
     use spikard_http::CorsConfig;
+    use spikard_http::cors::{add_cors_headers, validate_cors_request};
 
     let cors_config: CorsConfig = serde_json::from_str("{\"allowed_methods\":[\"GET\"],\"allowed_origins\":[\"https://example.com\"],\"expose_headers\":[\"X-Total-Count\",\"X-Request-Id\"]}").unwrap();
     let origin = headers.get("origin").and_then(|v| v.to_str().ok());
@@ -5655,8 +5654,8 @@ async fn cors_09_cors_expose_headers_handler(
 
 async fn cors_10_cors_origin_null_handler(headers: axum::http::HeaderMap) -> impl axum::response::IntoResponse {
     // CORS validation
-    use spikard_http::cors::{add_cors_headers, validate_cors_request};
     use spikard_http::CorsConfig;
+    use spikard_http::cors::{add_cors_headers, validate_cors_request};
 
     let cors_config: CorsConfig =
         serde_json::from_str("{\"allowed_methods\":[\"GET\"],\"allowed_origins\":[\"https://example.com\"]}").unwrap();
@@ -5681,8 +5680,8 @@ async fn cors_CORS_preflight_request_handler() -> impl axum::response::IntoRespo
 
 async fn cors_CORS_request_blocked_handler(headers: axum::http::HeaderMap) -> impl axum::response::IntoResponse {
     // CORS validation
-    use spikard_http::cors::{add_cors_headers, validate_cors_request};
     use spikard_http::CorsConfig;
+    use spikard_http::cors::{add_cors_headers, validate_cors_request};
 
     let cors_config: CorsConfig = serde_json::from_str("{\"allowed_headers\":[\"Content-Type\"],\"allowed_methods\":[\"GET\",\"POST\"],\"allowed_origins\":[\"https://example.com\"]}").unwrap();
     let origin = headers.get("origin").and_then(|v| v.to_str().ok());

@@ -1,71 +1,63 @@
 {
-  "name": "Field type validation - invalid type",
-  "description": "Tests type validation error when field has wrong type",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
-    "test_function": "test_post_body_invalid_type"
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "price": {
-          "type": "number"
-        },
-        "tax": {
-          "type": "number"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "description",
-        "price",
-        "tax"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "name": "Foo",
-      "description": "A very nice Item",
-      "price": "not a number",
-      "tax": 3.2
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "float_parsing",
-          "loc": [
-            "body",
-            "price"
-          ],
-          "msg": "Input should be a valid number",
-          "input": "not a number"
-        }
-      ]
-    }
-  },
-  "notes": "price field expects float, got string"
+	"name": "Field type validation - invalid type",
+	"description": "Tests type validation error when field has wrong type",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
+		"test_function": "test_post_body_invalid_type"
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"description": {
+					"type": "string"
+				},
+				"price": {
+					"type": "number"
+				},
+				"tax": {
+					"type": "number"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["name", "description", "price", "tax"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"name": "Foo",
+			"description": "A very nice Item",
+			"price": "not a number",
+			"tax": 3.2
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "float_parsing",
+					"loc": ["body", "price"],
+					"msg": "Input should be a valid number",
+					"input": "not a number"
+				}
+			]
+		}
+	},
+	"notes": "price field expects float, got string"
 }

@@ -1,31 +1,31 @@
 {
-  "name": "404 Not Found - Resource not found",
-  "description": "Tests 404 Not Found for non-existent resource",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_response_model/test_tutorial001.py",
-    "test_function": "test_get_nonexistent_item"
-  },
-  "handler": {
-    "route": "/status-test/{code}",
-    "method": "GET",
-    "parameters": {
-      "path": {
-        "code": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/status-test/404"
-  },
-  "expected_response": {
-    "status_code": 404,
-    "body": {
-      "detail": "Item not found"
-    }
-  },
-  "notes": "404 Not Found - requested resource does not exist"
+	"name": "404 Not Found - Resource not found",
+	"description": "Tests 404 Not Found for non-existent resource",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_response_model/test_tutorial001.py",
+		"test_function": "test_get_nonexistent_item"
+	},
+	"handler": {
+		"route": "/status-test/{code}",
+		"method": "GET",
+		"parameters": {
+			"path": {
+				"code": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/status-test/404"
+	},
+	"expected_response": {
+		"status_code": 404,
+		"body": {
+			"detail": "Item not found"
+		}
+	},
+	"notes": "404 Not Found - requested resource does not exist"
 }

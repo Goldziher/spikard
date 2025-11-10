@@ -1,33 +1,33 @@
 {
-  "name": "DELETE - With response body",
-  "description": "Tests DELETE returning deleted resource data",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_methods.py",
-    "test_function": "test_delete_with_body"
-  },
-  "handler": {
-    "route": "/items/{id}",
-    "method": "DELETE",
-    "parameters": {
-      "path": {
-        "id": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "DELETE",
-    "path": "/items/1"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "id": 1,
-      "name": "Deleted Item",
-      "message": "Item deleted successfully"
-    }
-  },
-  "notes": "DELETE can return 200 with body showing deleted resource"
+	"name": "DELETE - With response body",
+	"description": "Tests DELETE returning deleted resource data",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_methods.py",
+		"test_function": "test_delete_with_body"
+	},
+	"handler": {
+		"route": "/items/{id}",
+		"method": "DELETE",
+		"parameters": {
+			"path": {
+				"id": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "DELETE",
+		"path": "/items/1"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"id": 1,
+			"name": "Deleted Item",
+			"message": "Item deleted successfully"
+		}
+	},
+	"notes": "DELETE can return 200 with body showing deleted resource"
 }

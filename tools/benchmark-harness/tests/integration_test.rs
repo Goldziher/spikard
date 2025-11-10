@@ -70,7 +70,7 @@ async fn test_full_benchmark_flow() {
     let mut attempts = 0;
     let max_attempts = 10;
     loop {
-        match client.get(&format!("{}/health", base_url)).send().await {
+        match client.get(format!("{}/health", base_url)).send().await {
             Ok(response) if response.status().is_success() => break,
             _ if attempts < max_attempts => {
                 attempts += 1;
@@ -151,6 +151,7 @@ fn verify_benchmark_results(
     let benchmark_result = benchmark_harness::types::BenchmarkResult {
         framework: "test-framework".to_string(),
         workload: "test-workload".to_string(),
+        variant: None,
         timestamp: chrono::Utc::now(),
         duration_secs: 2,
         concurrency: 10,
@@ -352,6 +353,7 @@ fn test_benchmark_result_output_format() {
     let result = benchmark_harness::types::BenchmarkResult {
         framework: "test".to_string(),
         workload: "simple".to_string(),
+        variant: None,
         timestamp: chrono::Utc::now(),
         duration_secs: 10,
         concurrency: 50,

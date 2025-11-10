@@ -1,48 +1,45 @@
 {
-  "name": "Numeric le validation - success",
-  "description": "Tests numeric field with le (less than or equal) constraint at boundary",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_body_fields/test_tutorial001.py",
-    "test_function": "test_numeric_le_success"
-  },
-  "handler": {
-    "route": "/items/validated",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "price": {
-          "type": "number"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "price"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/validated",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "name": "Item",
-      "price": 100.0
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "name": "Item",
-      "price": 100.0
-    }
-  },
-  "notes": "price field has le=100 constraint, 100.0 is valid (boundary)"
+	"name": "Numeric le validation - success",
+	"description": "Tests numeric field with le (less than or equal) constraint at boundary",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_body_fields/test_tutorial001.py",
+		"test_function": "test_numeric_le_success"
+	},
+	"handler": {
+		"route": "/items/validated",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"price": {
+					"type": "number"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["name", "price"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/validated",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"name": "Item",
+			"price": 100.0
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"name": "Item",
+			"price": 100.0
+		}
+	},
+	"notes": "price field has le=100 constraint, 100.0 is valid (boundary)"
 }

@@ -1,50 +1,47 @@
 {
-  "name": "String path parameter with max_length - failure",
-  "description": "Tests string path parameter with max_length validation fails when too long",
-  "category": "path_params",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_path.py",
-    "test_function": "test_path_param_maxlength_foobar"
-  },
-  "handler": {
-    "route": "/path/param-maxlength/{item_id}",
-    "method": "GET",
-    "parameters": {
-      "path": {
-        "item_id": {
-          "type": "string",
-          "maxLength": 3
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/path/param-maxlength/foobar"
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "string_too_long",
-          "loc": [
-            "path",
-            "item_id"
-          ],
-          "msg": "String should have at most 3 characters",
-          "input": "foobar",
-          "ctx": {
-            "max_length": 3
-          }
-        }
-      ]
-    }
-  },
-  "notes": "Path param with max_length=3, value 'foobar' (6 chars) fails"
+	"name": "String path parameter with max_length - failure",
+	"description": "Tests string path parameter with max_length validation fails when too long",
+	"category": "path_params",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_path.py",
+		"test_function": "test_path_param_maxlength_foobar"
+	},
+	"handler": {
+		"route": "/path/param-maxlength/{item_id}",
+		"method": "GET",
+		"parameters": {
+			"path": {
+				"item_id": {
+					"type": "string",
+					"maxLength": 3
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/path/param-maxlength/foobar"
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "string_too_long",
+					"loc": ["path", "item_id"],
+					"msg": "String should have at most 3 characters",
+					"input": "foobar",
+					"ctx": {
+						"max_length": 3
+					}
+				}
+			]
+		}
+	},
+	"notes": "Path param with max_length=3, value 'foobar' (6 chars) fails"
 }

@@ -1,42 +1,42 @@
 {
-  "name": "File size validation - too large",
-  "description": "Tests file upload exceeding max size limit",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_request_files/test_tutorial003.py",
-    "test_function": "test_file_too_large"
-  },
-  "handler": {
-    "route": "/files/validated",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "file": {
-          "type": "string",
-          "format": "binary"
-        }
-      },
-      "additionalProperties": false
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/files/validated",
-    "files": [
-      {
-        "field_name": "file",
-        "filename": "large.txt",
-        "content": "x",
-        "content_type": "text/plain"
-      }
-    ]
-  },
-  "expected_response": {
-    "status_code": 413,
-    "body": {
-      "detail": "File too large. Maximum size is 1MB"
-    }
-  },
-  "notes": "File size validation (simulated as 1 byte but represents >1MB)"
+	"name": "File size validation - too large",
+	"description": "Tests file upload exceeding max size limit",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_request_files/test_tutorial003.py",
+		"test_function": "test_file_too_large"
+	},
+	"handler": {
+		"route": "/files/validated",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"file": {
+					"type": "string",
+					"format": "binary"
+				}
+			},
+			"additionalProperties": false
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/files/validated",
+		"files": [
+			{
+				"field_name": "file",
+				"filename": "large.txt",
+				"content": "x",
+				"content_type": "text/plain"
+			}
+		]
+	},
+	"expected_response": {
+		"status_code": 413,
+		"body": {
+			"detail": "File too large. Maximum size is 1MB"
+		}
+	},
+	"notes": "File size validation (simulated as 1 byte but represents >1MB)"
 }

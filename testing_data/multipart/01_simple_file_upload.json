@@ -1,51 +1,49 @@
 {
-  "name": "Simple file upload",
-  "description": "Single file upload with text/plain content type",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_formparsers.py",
-    "test_function": "test_multipart_request_files"
-  },
-  "handler": {
-    "route": "/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "test": {
-          "type": "string",
-          "format": "binary"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "test"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/",
-    "content_type": "multipart/form-data",
-    "files": [
-      {
-        "field_name": "test",
-        "filename": "test.txt",
-        "content": "<file content>",
-        "content_encoding": "text",
-        "content_type": "text/plain"
-      }
-    ]
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "test": {
-        "filename": "test.txt",
-        "size": 14,
-        "content": "<file content>",
-        "content_type": "text/plain"
-      }
-    }
-  }
+	"name": "Simple file upload",
+	"description": "Single file upload with text/plain content type",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_formparsers.py",
+		"test_function": "test_multipart_request_files"
+	},
+	"handler": {
+		"route": "/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"test": {
+					"type": "string",
+					"format": "binary"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["test"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/",
+		"content_type": "multipart/form-data",
+		"files": [
+			{
+				"field_name": "test",
+				"filename": "test.txt",
+				"content": "<file content>",
+				"content_encoding": "text",
+				"content_type": "text/plain"
+			}
+		]
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"test": {
+				"filename": "test.txt",
+				"size": 14,
+				"content": "<file content>",
+				"content_type": "text/plain"
+			}
+		}
+	}
 }

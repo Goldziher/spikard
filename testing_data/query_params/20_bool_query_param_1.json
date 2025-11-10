@@ -1,35 +1,35 @@
 {
-  "name": "Boolean query parameter - numeric 1",
-  "description": "Tests boolean query parameter with '1' converts to true",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_query.py",
-    "test_function": "test_query_param_bool_1"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/query/bool",
-    "query_params": {
-      "flag": "1"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "flag": true
-    }
-  },
-  "notes": "Boolean conversion: '1' -> true",
-  "handler": {
-    "route": "/query/bool",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "flag": {
-          "type": "boolean",
-          "annotation": "bool"
-        }
-      }
-    }
-  }
+	"name": "Boolean query parameter - numeric 1",
+	"description": "Tests boolean query parameter with '1' converts to true",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_query.py",
+		"test_function": "test_query_param_bool_1"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/query/bool",
+		"query_params": {
+			"flag": "1"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"flag": true
+		}
+	},
+	"notes": "Boolean conversion: '1' -> true",
+	"handler": {
+		"route": "/query/bool",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"flag": {
+					"type": "boolean",
+					"annotation": "bool"
+				}
+			}
+		}
+	}
 }

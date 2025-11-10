@@ -1,32 +1,32 @@
 {
-  "name": "Required integer query parameter - success",
-  "description": "Tests a required integer query parameter with valid value",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_query.py",
-    "test_function": "test_query_int_query_42"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/query/int",
-    "query_params": {
-      "query": 42
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": "foo bar 42"
-  },
-  "handler": {
-    "route": "/query/int",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "query": {
-          "type": "integer",
-          "annotation": "int"
-        }
-      }
-    }
-  }
+	"name": "Required integer query parameter - success",
+	"description": "Tests a required integer query parameter with valid value",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_query.py",
+		"test_function": "test_query_int_query_42"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/query/int",
+		"query_params": {
+			"query": 42
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": "foo bar 42"
+	},
+	"handler": {
+		"route": "/query/int",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"query": {
+					"type": "integer",
+					"annotation": "int"
+				}
+			}
+		}
+	}
 }

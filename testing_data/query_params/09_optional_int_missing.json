@@ -1,30 +1,30 @@
 {
-  "name": "Optional integer query parameter - missing",
-  "description": "Tests optional integer parameter without value, should not error",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_query.py",
-    "test_function": "test_query_int_optional"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/query/int/optional"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": "foo bar None"
-  },
-  "handler": {
-    "route": "/query/int/optional",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "query": {
-          "type": "integer",
-          "annotation": "int",
-          "optional": true
-        }
-      }
-    }
-  }
+	"name": "Optional integer query parameter - missing",
+	"description": "Tests optional integer parameter without value, should not error",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_query.py",
+		"test_function": "test_query_int_optional"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/query/int/optional"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": "foo bar None"
+	},
+	"handler": {
+		"route": "/query/int/optional",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"query": {
+					"type": "integer",
+					"annotation": "int",
+					"optional": true
+				}
+			}
+		}
+	}
 }

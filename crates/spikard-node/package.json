@@ -1,23 +1,23 @@
 {
-  "name": "@spikard/node",
-  "version": "0.1.0",
-  "description": "Node.js bindings for spikard",
-  "main": "index.js",
-  "types": "index.d.ts",
-  "license": "MIT",
-  "scripts": {
-    "build": "napi build --platform --release",
-    "build:debug": "napi build --platform",
-    "test": "vitest run"
-  },
-  "devDependencies": {
-    "@napi-rs/cli": "^3.4.1",
-    "vitest": "^4.0.8"
-  },
-  "napi": {
-    "name": "spikard-node",
-    "triples": {
-      "defaults": true
-    }
-  }
+	"name": "@spikard/node",
+	"version": "0.1.0",
+	"description": "Node.js bindings for spikard",
+	"main": "index.js",
+	"types": "index.d.ts",
+	"license": "MIT",
+	"scripts": {
+		"build": "napi build --platform --release",
+		"build:debug": "napi build --platform",
+		"test": "vitest run"
+	},
+	"devDependencies": {
+		"@napi-rs/cli": "^3.4.1",
+		"vitest": "^4.0.8"
+	},
+	"napi": {
+		"name": "spikard-node",
+		"triples": {
+			"defaults": true
+		}
+	}
 }

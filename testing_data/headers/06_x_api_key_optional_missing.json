@@ -1,33 +1,33 @@
 {
-  "name": "X-API-Key optional header - missing",
-  "description": "Tests optional X-API-Key header when not provided, returns fallback message",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_security_api_key_header_optional.py",
-    "test_function": "test_security_api_key_no_key"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/users/me"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "msg": "Hello World"
-    }
-  },
-  "notes": "Optional header returns fallback when not provided",
-  "handler": {
-    "route": "/users/me",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "key": {
-          "type": "string",
-          "annotation": "str",
-          "optional": true
-        }
-      }
-    }
-  }
+	"name": "X-API-Key optional header - missing",
+	"description": "Tests optional X-API-Key header when not provided, returns fallback message",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_security_api_key_header_optional.py",
+		"test_function": "test_security_api_key_no_key"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/users/me"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"msg": "Hello World"
+		}
+	},
+	"notes": "Optional header returns fallback when not provided",
+	"handler": {
+		"route": "/users/me",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"key": {
+					"type": "string",
+					"annotation": "str",
+					"optional": true
+				}
+			}
+		}
+	}
 }

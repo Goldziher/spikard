@@ -219,12 +219,7 @@ tasks:
   lint:
     desc: "Run workspace linters for Rust, Python, TypeScript, Ruby, and PHP"
     cmds:
-      - task: fmt:rust:check
-      - task: clippy:rust
-      - task: python:lint
-      - task: node:lint
-      - task: ruby:lint
-      - task: php:lint
+      - prek run --all-files
 
   fmt:
     desc: "Format Python, Rust, and TypeScript code"
@@ -605,11 +600,29 @@ tasks:
     cmds:
       - ./target/release/benchmark-harness run --framework spikard-rust --app-dir tools/benchmark-harness/apps/spikard-rust --workload baseline --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-rust.json
 
+  bench:run:ruby:
+    desc: "Run benchmark against Spikard-Ruby server"
+    deps:
+      - bench:harness:build
+      - ruby:build
+    cmds:
+      - ./target/release/benchmark-harness run --framework spikard-ruby --app-dir tools/benchmark-harness/apps/spikard-ruby --workload baseline --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-ruby.json
+
+  bench:run:node:
+    desc: "Run benchmark against Spikard-Node server"
+    deps:
+      - bench:harness:build
+      - build:node
+    cmds:
+      - ./target/release/benchmark-harness run --framework spikard-node --app-dir tools/benchmark-harness/apps/spikard-node --workload baseline --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-node.json
+
   bench:run:all:
     desc: "Run benchmarks for all frameworks"
     cmds:
       - task: bench:run:python
       - task: bench:run:rust
+      - task: bench:run:ruby
+      - task: bench:run:node
 
   bench:analyze:
     desc: "Analyze fixtures and show statistics"

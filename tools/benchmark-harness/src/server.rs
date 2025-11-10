@@ -110,8 +110,8 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
             cmd.arg(port.to_string());
             cmd
         }
-        // Other Spikard frameworks use the unified CLI
-        "spikard-python" | "spikard-node" | "spikard-ruby" => {
+        // Spikard Python and Node use the unified CLI (when available)
+        "spikard-python" | "spikard-node" => {
             // Find workspace root and construct absolute path to CLI
             let workspace_root = find_workspace_root()?;
             let cli_path = workspace_root.join("target/release/spikard");
@@ -130,8 +130,7 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
                         "server.py"
                     }
                 }
-                "spikard-node" => "server.js",
-                "spikard-ruby" => "server.rb",
+                "spikard-node" => "server.ts",
                 _ => unreachable!(),
             };
 
@@ -139,6 +138,12 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
 
             let mut cmd = Command::new(cli_path);
             cmd.arg("run").arg(&server_path).arg("--port").arg(port.to_string());
+            cmd
+        }
+        // Spikard Ruby runs directly with ruby interpreter
+        "spikard-ruby" => {
+            let mut cmd = Command::new("ruby");
+            cmd.arg("server.rb").arg(port.to_string());
             cmd
         }
         "fastapi" => {
@@ -157,9 +162,9 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     };
 
     // Set working directory and spawn process
-    // Note: Spikard frameworks use absolute paths, so they don't need current_dir
-    // but it doesn't hurt to set it
-    if !config.framework.starts_with("spikard-") {
+    // Spikard Python/Node use absolute paths via CLI, but Ruby runs directly
+    // fastapi, fastify, and spikard-ruby need the working directory set
+    if !config.framework.starts_with("spikard-") || config.framework == "spikard-ruby" {
         cmd.current_dir(&config.app_dir);
     }
     // Discard output to avoid blocking when buffers fill up

@@ -1,39 +1,39 @@
 {
-  "name": "24_cookie_samesite_strict",
-  "description": "Cookie with SameSite=Strict attribute should be validated",
-  "category": "cookies",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "nestjs",
-    "test_case": "Cookie SameSite attribute validation"
-  },
-  "handler": {
-    "route": "/secure",
-    "method": "GET",
-    "parameters": {
-      "cookies": {
-        "session_id": {
-          "type": "string",
-          "required": true,
-          "samesite": "Strict"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/secure",
-    "cookies": {
-      "session_id": "abc123xyz789"
-    },
-    "cookie_attributes": {
-      "session_id": {
-        "SameSite": "Strict"
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 200
-  },
-  "tags": ["cookies", "samesite", "strict", "security", "validation", "success"]
+	"name": "24_cookie_samesite_strict",
+	"description": "Cookie with SameSite=Strict attribute should be validated",
+	"category": "cookies",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "nestjs",
+		"test_case": "Cookie SameSite attribute validation"
+	},
+	"handler": {
+		"route": "/secure",
+		"method": "GET",
+		"parameters": {
+			"cookies": {
+				"session_id": {
+					"type": "string",
+					"required": true,
+					"samesite": "Strict"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/secure",
+		"cookies": {
+			"session_id": "abc123xyz789"
+		},
+		"cookie_attributes": {
+			"session_id": {
+				"SameSite": "Strict"
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 200
+	},
+	"tags": ["cookies", "samesite", "strict", "security", "validation", "success"]
 }

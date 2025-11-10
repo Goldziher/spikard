@@ -1,51 +1,51 @@
 {
-  "name": "39_anyof_schema_multiple_match_success",
-  "description": "anyOf schema composition - succeeds when multiple schemas match",
-  "category": "json_bodies",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "anyOf schema composition with multiple matches"
-  },
-  "handler": {
-    "route": "/contact",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "required": ["name"],
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "email": {
-          "type": "string",
-          "format": "email"
-        },
-        "phone": {
-          "type": "string"
-        }
-      },
-      "anyOf": [
-        {
-          "required": ["email"]
-        },
-        {
-          "required": ["phone"]
-        }
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/contact",
-    "body": {
-      "name": "John Doe",
-      "email": "john@example.com",
-      "phone": "+1-555-0100"
-    }
-  },
-  "expected_response": {
-    "status_code": 201
-  },
-  "tags": ["json_bodies", "anyOf", "composition", "validation", "success"]
+	"name": "39_anyof_schema_multiple_match_success",
+	"description": "anyOf schema composition - succeeds when multiple schemas match",
+	"category": "json_bodies",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "anyOf schema composition with multiple matches"
+	},
+	"handler": {
+		"route": "/contact",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"required": ["name"],
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"email": {
+					"type": "string",
+					"format": "email"
+				},
+				"phone": {
+					"type": "string"
+				}
+			},
+			"anyOf": [
+				{
+					"required": ["email"]
+				},
+				{
+					"required": ["phone"]
+				}
+			]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/contact",
+		"body": {
+			"name": "John Doe",
+			"email": "john@example.com",
+			"phone": "+1-555-0100"
+		}
+	},
+	"expected_response": {
+		"status_code": 201
+	},
+	"tags": ["json_bodies", "anyOf", "composition", "validation", "success"]
 }

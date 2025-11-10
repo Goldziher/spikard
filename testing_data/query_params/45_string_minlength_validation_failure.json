@@ -1,60 +1,51 @@
 {
-  "name": "45_string_minlength_validation_failure",
-  "description": "String query parameter below minLength constraint should fail validation",
-  "category": "query_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "litestar",
-    "test_case": "Parameter minLength validation failure"
-  },
-  "handler": {
-    "route": "/search",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "term": {
-          "type": "string",
-          "minLength": 3,
-          "required": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/search",
-    "query_params": {
-      "term": "ab"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "validation_error",
-          "loc": [
-            "query",
-            "term"
-          ],
-          "msg": "String length must be at least 3",
-          "ctx": {
-            "min_length": 3,
-            "actual_length": 2
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "query_params",
-    "string",
-    "minLength",
-    "validation",
-    "error"
-  ]
+	"name": "45_string_minlength_validation_failure",
+	"description": "String query parameter below minLength constraint should fail validation",
+	"category": "query_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "litestar",
+		"test_case": "Parameter minLength validation failure"
+	},
+	"handler": {
+		"route": "/search",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"term": {
+					"type": "string",
+					"minLength": 3,
+					"required": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/search",
+		"query_params": {
+			"term": "ab"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "validation_error",
+					"loc": ["query", "term"],
+					"msg": "String length must be at least 3",
+					"ctx": {
+						"min_length": 3,
+						"actual_length": 2
+					}
+				}
+			]
+		}
+	},
+	"tags": ["query_params", "string", "minLength", "validation", "error"]
 }

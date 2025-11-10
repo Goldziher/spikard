@@ -1,27 +1,27 @@
 {
-  "name": "206 Partial Content",
-  "description": "Tests 206 status code for range requests",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_responses.py",
-    "test_function": "test_partial_content"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/files/document.pdf",
-    "headers": {
-      "Range": "bytes=0-1023"
-    }
-  },
-  "expected_response": {
-    "status_code": 206,
-    "headers": {
-      "Content-Range": "bytes 0-1023/5000",
-      "Content-Length": "1024",
-      "Content-Type": "application/pdf",
-      "Accept-Ranges": "bytes"
-    },
-    "body": "binary_data_1024_bytes"
-  },
-  "notes": "206 Partial Content for range requests, useful for resuming downloads"
+	"name": "206 Partial Content",
+	"description": "Tests 206 status code for range requests",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_responses.py",
+		"test_function": "test_partial_content"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/files/document.pdf",
+		"headers": {
+			"Range": "bytes=0-1023"
+		}
+	},
+	"expected_response": {
+		"status_code": 206,
+		"headers": {
+			"Content-Range": "bytes 0-1023/5000",
+			"Content-Length": "1024",
+			"Content-Type": "application/pdf",
+			"Accept-Ranges": "bytes"
+		},
+		"body": "binary_data_1024_bytes"
+	},
+	"notes": "206 Partial Content for range requests, useful for resuming downloads"
 }

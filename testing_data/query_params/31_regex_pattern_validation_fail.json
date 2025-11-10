@@ -1,53 +1,50 @@
 {
-  "name": "String query param with regex pattern - fail",
-  "description": "Tests string query parameter with regex pattern validation failure",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_query.py",
-    "test_function": "test_query_param_pattern"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/query/pattern",
-    "query_params": {
-      "code": "abc123"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "string_pattern_mismatch",
-          "loc": [
-            "query",
-            "code"
-          ],
-          "msg": "String should match pattern '^[0-9]{3,}$'",
-          "input": "abc123",
-          "ctx": {
-            "pattern": "^[0-9]{3,}$"
-          }
-        }
-      ]
-    }
-  },
-  "notes": "Pattern requires at least 3 digits only, 'abc123' contains letters",
-  "handler": {
-    "route": "/query/pattern",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "code": {
-          "type": "string",
-          "annotation": "str",
-          "pattern": "^[0-9]{3,}$"
-        }
-      }
-    }
-  }
+	"name": "String query param with regex pattern - fail",
+	"description": "Tests string query parameter with regex pattern validation failure",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_query.py",
+		"test_function": "test_query_param_pattern"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/query/pattern",
+		"query_params": {
+			"code": "abc123"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "string_pattern_mismatch",
+					"loc": ["query", "code"],
+					"msg": "String should match pattern '^[0-9]{3,}$'",
+					"input": "abc123",
+					"ctx": {
+						"pattern": "^[0-9]{3,}$"
+					}
+				}
+			]
+		}
+	},
+	"notes": "Pattern requires at least 3 digits only, 'abc123' contains letters",
+	"handler": {
+		"route": "/query/pattern",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"code": {
+					"type": "string",
+					"annotation": "str",
+					"pattern": "^[0-9]{3,}$"
+				}
+			}
+		}
+	}
 }

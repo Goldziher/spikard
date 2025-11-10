@@ -1,61 +1,51 @@
 {
-  "name": "32_bearer_token_missing_prefix",
-  "description": "Authorization header without Bearer prefix should fail validation",
-  "category": "headers",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "nestjs",
-    "test_case": "Bearer token missing prefix"
-  },
-  "handler": {
-    "route": "/protected",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "Authorization": {
-          "type": "string",
-          "pattern": "^Bearer [A-Za-z0-9-._~+/]+=*$",
-          "required": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/protected",
-    "headers": {
-      "Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "validation_error",
-          "loc": [
-            "headers",
-            "authorization"
-          ],
-          "msg": "Invalid Bearer token format",
-          "ctx": {
-            "pattern": "^Bearer [A-Za-z0-9-._~+/]+=*$",
-            "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "headers",
-    "authorization",
-    "bearer_token",
-    "security",
-    "validation",
-    "error"
-  ]
+	"name": "32_bearer_token_missing_prefix",
+	"description": "Authorization header without Bearer prefix should fail validation",
+	"category": "headers",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "nestjs",
+		"test_case": "Bearer token missing prefix"
+	},
+	"handler": {
+		"route": "/protected",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Authorization": {
+					"type": "string",
+					"pattern": "^Bearer [A-Za-z0-9-._~+/]+=*$",
+					"required": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/protected",
+		"headers": {
+			"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "validation_error",
+					"loc": ["headers", "authorization"],
+					"msg": "Invalid Bearer token format",
+					"ctx": {
+						"pattern": "^Bearer [A-Za-z0-9-._~+/]+=*$",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+					}
+				}
+			]
+		}
+	},
+	"tags": ["headers", "authorization", "bearer_token", "security", "validation", "error"]
 }

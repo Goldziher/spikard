@@ -147,6 +147,7 @@ async fn test_start_server_framework_not_found() {
         framework: "nonexistent-framework".to_string(),
         port: 9999,
         app_dir: PathBuf::from("/tmp"),
+        variant: None,
     };
 
     let result = benchmark_harness::server::start_server(config).await;
@@ -164,6 +165,7 @@ async fn test_start_server_process_spawn_failure() {
         framework: "fastapi".to_string(),
         port: 9999,
         app_dir: PathBuf::from("/nonexistent/directory/that/does/not/exist"),
+        variant: None,
     };
 
     let result = benchmark_harness::server::start_server(config).await;
@@ -176,6 +178,7 @@ fn test_server_config_creation() {
         framework: "spikard-python".to_string(),
         port: 8000,
         app_dir: PathBuf::from("/tmp/app"),
+        variant: None,
     };
 
     assert_eq!(config.framework, "spikard-python");
@@ -228,6 +231,7 @@ if __name__ == '__main__':
         framework: "fastapi".to_string(), // Will use python server.py <port>
         port,
         app_dir: temp_dir.path().to_path_buf(),
+        variant: None,
     };
 
     // Start the server

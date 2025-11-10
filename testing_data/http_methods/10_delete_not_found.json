@@ -1,29 +1,29 @@
 {
-  "name": "DELETE - Resource not found",
-  "description": "Tests DELETE on non-existent resource returns 404",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_methods.py",
-    "test_function": "test_delete_not_found"
-  },
-  "handler": {
-    "route": "/items/{id}",
-    "method": "DELETE",
-    "parameters": {
-      "path": {
-        "id": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "DELETE",
-    "path": "/items/999"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {}
-  },
-  "notes": "DELETE on non-existent resource returns 200 (test mock doesn't validate existence)"
+	"name": "DELETE - Resource not found",
+	"description": "Tests DELETE on non-existent resource returns 404",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_methods.py",
+		"test_function": "test_delete_not_found"
+	},
+	"handler": {
+		"route": "/items/{id}",
+		"method": "DELETE",
+		"parameters": {
+			"path": {
+				"id": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "DELETE",
+		"path": "/items/999"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {}
+	},
+	"notes": "DELETE on non-existent resource returns 200 (test mock doesn't validate existence)"
 }

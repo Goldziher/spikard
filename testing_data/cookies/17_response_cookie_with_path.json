@@ -1,43 +1,43 @@
 {
-  "name": "Response cookie with path attribute",
-  "description": "Tests setting cookie with specific path",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_responses.py",
-    "test_function": "test_set_cookie_with_path"
-  },
-  "handler": {
-    "route": "/cookies/set-with-path",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "value": {
-          "type": "string"
-        }
-      },
-      "required": ["value"],
-      "additionalProperties": false
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/cookies/set-with-path",
-    "body": {
-      "value": "path_test"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "message": "Cookie set with path"
-    },
-    "cookies": {
-      "session": {
-        "value": "path_test",
-        "path": "/api"
-      }
-    }
-  },
-  "notes": "Cookie with path attribute restricts to /api"
+	"name": "Response cookie with path attribute",
+	"description": "Tests setting cookie with specific path",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_responses.py",
+		"test_function": "test_set_cookie_with_path"
+	},
+	"handler": {
+		"route": "/cookies/set-with-path",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"value": {
+					"type": "string"
+				}
+			},
+			"required": ["value"],
+			"additionalProperties": false
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/cookies/set-with-path",
+		"body": {
+			"value": "path_test"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Cookie set with path"
+		},
+		"cookies": {
+			"session": {
+				"value": "path_test",
+				"path": "/api"
+			}
+		}
+	},
+	"notes": "Cookie with path attribute restricts to /api"
 }

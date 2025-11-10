@@ -1,29 +1,29 @@
 {
-  "name": "DELETE - Remove resource",
-  "description": "Tests DELETE method to remove a resource",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_methods.py",
-    "test_function": "test_delete_resource"
-  },
-  "handler": {
-    "route": "/items/{id}",
-    "method": "DELETE",
-    "parameters": {
-      "path": {
-        "id": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "DELETE",
-    "path": "/items/1"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {}
-  },
-  "notes": "DELETE returns 200 OK on successful deletion"
+	"name": "DELETE - Remove resource",
+	"description": "Tests DELETE method to remove a resource",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_methods.py",
+		"test_function": "test_delete_resource"
+	},
+	"handler": {
+		"route": "/items/{id}",
+		"method": "DELETE",
+		"parameters": {
+			"path": {
+				"id": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "DELETE",
+		"path": "/items/1"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {}
+	},
+	"notes": "DELETE returns 200 OK on successful deletion"
 }

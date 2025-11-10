@@ -1,65 +1,59 @@
 {
-  "name": "String min_length validation - fail",
-  "description": "Tests string field with min_length constraint failure",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_body_fields/test_tutorial001.py",
-    "test_function": "test_string_too_short"
-  },
-  "handler": {
-    "route": "/items/validated",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string",
-          "minLength": 3
-        },
-        "price": {
-          "type": "number"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "price"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/validated",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "name": "ab",
-      "price": 35.4
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "string_too_short",
-          "loc": [
-            "body",
-            "name"
-          ],
-          "msg": "String should have at least 3 characters",
-          "input": "ab",
-          "ctx": {
-            "min_length": 3
-          }
-        }
-      ]
-    }
-  },
-  "notes": "name field has min_length=3, 'ab' has only 2 characters"
+	"name": "String min_length validation - fail",
+	"description": "Tests string field with min_length constraint failure",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_body_fields/test_tutorial001.py",
+		"test_function": "test_string_too_short"
+	},
+	"handler": {
+		"route": "/items/validated",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string",
+					"minLength": 3
+				},
+				"price": {
+					"type": "number"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["name", "price"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/validated",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"name": "ab",
+			"price": 35.4
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "string_too_short",
+					"loc": ["body", "name"],
+					"msg": "String should have at least 3 characters",
+					"input": "ab",
+					"ctx": {
+						"min_length": 3
+					}
+				}
+			]
+		}
+	},
+	"notes": "name field has min_length=3, 'ab' has only 2 characters"
 }

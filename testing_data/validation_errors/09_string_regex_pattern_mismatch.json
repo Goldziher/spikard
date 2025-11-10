@@ -1,52 +1,49 @@
 {
-  "name": "String regex pattern mismatch",
-  "description": "Tests validation error when string doesn't match regex pattern",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_query_params_str_validations/test_tutorial006.py",
-    "test_function": "test_query_params_str_regex"
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "q": {
-          "type": "string",
-          "pattern": "^[a-zA-Z0-9_-]+$"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items/?q=invalid!",
-    "headers": {
-      "x-token": "test-token"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "string_pattern_mismatch",
-          "loc": [
-            "query",
-            "q"
-          ],
-          "msg": "String should match pattern '^[a-zA-Z0-9_-]+$'",
-          "input": "invalid!",
-          "ctx": {
-            "pattern": "^[a-zA-Z0-9_-]+$"
-          }
-        }
-      ]
-    }
-  },
-  "notes": "Regex pattern validation for string format enforcement"
+	"name": "String regex pattern mismatch",
+	"description": "Tests validation error when string doesn't match regex pattern",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_query_params_str_validations/test_tutorial006.py",
+		"test_function": "test_query_params_str_regex"
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"q": {
+					"type": "string",
+					"pattern": "^[a-zA-Z0-9_-]+$"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items/?q=invalid!",
+		"headers": {
+			"x-token": "test-token"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "string_pattern_mismatch",
+					"loc": ["query", "q"],
+					"msg": "String should match pattern '^[a-zA-Z0-9_-]+$'",
+					"input": "invalid!",
+					"ctx": {
+						"pattern": "^[a-zA-Z0-9_-]+$"
+					}
+				}
+			]
+		}
+	},
+	"notes": "Regex pattern validation for string format enforcement"
 }

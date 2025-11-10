@@ -1,50 +1,47 @@
 {
-  "name": "Optional fields - omitted",
-  "description": "Tests object with optional fields omitted",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
-    "test_function": "test_post_body_optional_omitted"
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "price": {
-          "type": "number"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "price"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "name": "Foo",
-      "price": 35.4
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "name": "Foo",
-      "price": 35.4,
-      "description": null,
-      "tax": null
-    }
-  },
-  "notes": "Optional fields 'description' and 'tax' omitted, defaults to null"
+	"name": "Optional fields - omitted",
+	"description": "Tests object with optional fields omitted",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
+		"test_function": "test_post_body_optional_omitted"
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"price": {
+					"type": "number"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["name", "price"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"name": "Foo",
+			"price": 35.4
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"name": "Foo",
+			"price": 35.4,
+			"description": null,
+			"tax": null
+		}
+	},
+	"notes": "Optional fields 'description' and 'tax' omitted, defaults to null"
 }

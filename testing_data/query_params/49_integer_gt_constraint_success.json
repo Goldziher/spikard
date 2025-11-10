@@ -1,36 +1,36 @@
 {
-  "name": "49_integer_gt_constraint_success",
-  "description": "Integer query parameter greater than exclusive minimum should succeed",
-  "category": "query_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "litestar",
-    "test_case": "Parameter gt (greater than) validation"
-  },
-  "handler": {
-    "route": "/items",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "limit": {
-          "type": "integer",
-          "exclusiveMinimum": 0
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items",
-    "query_params": {
-      "limit": "5"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "limit": 5
-    }
-  },
-  "tags": ["query_params", "integer", "gt", "exclusiveMinimum", "validation", "success"]
+	"name": "49_integer_gt_constraint_success",
+	"description": "Integer query parameter greater than exclusive minimum should succeed",
+	"category": "query_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "litestar",
+		"test_case": "Parameter gt (greater than) validation"
+	},
+	"handler": {
+		"route": "/items",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"limit": {
+					"type": "integer",
+					"exclusiveMinimum": 0
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items",
+		"query_params": {
+			"limit": "5"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"limit": 5
+		}
+	},
+	"tags": ["query_params", "integer", "gt", "exclusiveMinimum", "validation", "success"]
 }

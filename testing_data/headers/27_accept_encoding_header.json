@@ -1,35 +1,35 @@
 {
-  "name": "Accept-Encoding header",
-  "description": "Tests Accept-Encoding header for compression negotiation",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_responses.py",
-    "test_function": "test_response_headers"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/headers/accept-encoding",
-    "headers": {
-      "Accept-Encoding": "gzip, deflate, br"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "accept_encoding": "gzip, deflate, br"
-    }
-  },
-  "notes": "Accept-Encoding for compression (gzip, deflate, brotli)",
-  "handler": {
-    "route": "/headers/accept-encoding",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "Accept-Encoding": {
-          "type": "string",
-          "annotation": "str"
-        }
-      }
-    }
-  }
+	"name": "Accept-Encoding header",
+	"description": "Tests Accept-Encoding header for compression negotiation",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_responses.py",
+		"test_function": "test_response_headers"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/headers/accept-encoding",
+		"headers": {
+			"Accept-Encoding": "gzip, deflate, br"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"accept_encoding": "gzip, deflate, br"
+		}
+	},
+	"notes": "Accept-Encoding for compression (gzip, deflate, brotli)",
+	"handler": {
+		"route": "/headers/accept-encoding",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Accept-Encoding": {
+					"type": "string",
+					"annotation": "str"
+				}
+			}
+		}
+	}
 }

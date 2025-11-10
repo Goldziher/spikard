@@ -1,66 +1,60 @@
 {
-  "name": "Empty array validation - fail",
-  "description": "Tests array field with min_items constraint failure",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_body_nested_models/test_tutorial009.py",
-    "test_function": "test_empty_array"
-  },
-  "handler": {
-    "route": "/items/list-validated",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "tags": {
-          "type": "array",
-          "items": {},
-          "minItems": 1
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "tags"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/list-validated",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "name": "Product",
-      "tags": []
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "too_short",
-          "loc": [
-            "body",
-            "tags"
-          ],
-          "msg": "List should have at least 1 item after validation",
-          "input": [],
-          "ctx": {
-            "min_length": 1
-          }
-        }
-      ]
-    }
-  },
-  "notes": "tags array requires at least 1 item (min_items=1)"
+	"name": "Empty array validation - fail",
+	"description": "Tests array field with min_items constraint failure",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_body_nested_models/test_tutorial009.py",
+		"test_function": "test_empty_array"
+	},
+	"handler": {
+		"route": "/items/list-validated",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"tags": {
+					"type": "array",
+					"items": {},
+					"minItems": 1
+				}
+			},
+			"additionalProperties": false,
+			"required": ["name", "tags"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/list-validated",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"name": "Product",
+			"tags": []
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "too_short",
+					"loc": ["body", "tags"],
+					"msg": "List should have at least 1 item after validation",
+					"input": [],
+					"ctx": {
+						"min_length": 1
+					}
+				}
+			]
+		}
+	},
+	"notes": "tags array requires at least 1 item (min_items=1)"
 }

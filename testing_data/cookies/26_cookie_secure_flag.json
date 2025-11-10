@@ -1,39 +1,39 @@
 {
-  "name": "26_cookie_secure_flag",
-  "description": "Cookie with Secure flag should be validated for HTTPS",
-  "category": "cookies",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "nestjs",
-    "test_case": "Cookie Secure flag validation"
-  },
-  "handler": {
-    "route": "/secure",
-    "method": "GET",
-    "parameters": {
-      "cookies": {
-        "auth_token": {
-          "type": "string",
-          "required": true,
-          "secure": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/secure",
-    "cookies": {
-      "auth_token": "secure_token_xyz"
-    },
-    "cookie_attributes": {
-      "auth_token": {
-        "Secure": true
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 200
-  },
-  "tags": ["cookies", "secure", "security", "validation", "success"]
+	"name": "26_cookie_secure_flag",
+	"description": "Cookie with Secure flag should be validated for HTTPS",
+	"category": "cookies",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "nestjs",
+		"test_case": "Cookie Secure flag validation"
+	},
+	"handler": {
+		"route": "/secure",
+		"method": "GET",
+		"parameters": {
+			"cookies": {
+				"auth_token": {
+					"type": "string",
+					"required": true,
+					"secure": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/secure",
+		"cookies": {
+			"auth_token": "secure_token_xyz"
+		},
+		"cookie_attributes": {
+			"auth_token": {
+				"Secure": true
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 200
+	},
+	"tags": ["cookies", "secure", "security", "validation", "success"]
 }

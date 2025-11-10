@@ -1,36 +1,36 @@
 {
-  "name": "58_format_email_success",
-  "description": "Query parameter with valid email format should be accepted",
-  "category": "query_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "Format validator email"
-  },
-  "handler": {
-    "route": "/subscribe",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "email": {
-          "type": "string",
-          "format": "email"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/subscribe",
-    "query_params": {
-      "email": "user@example.com"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "email": "user@example.com"
-    }
-  },
-  "tags": ["query_params", "format", "email", "validation", "success"]
+	"name": "58_format_email_success",
+	"description": "Query parameter with valid email format should be accepted",
+	"category": "query_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "Format validator email"
+	},
+	"handler": {
+		"route": "/subscribe",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"email": {
+					"type": "string",
+					"format": "email"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/subscribe",
+		"query_params": {
+			"email": "user@example.com"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"email": "user@example.com"
+		}
+	},
+	"tags": ["query_params", "format", "email", "validation", "success"]
 }

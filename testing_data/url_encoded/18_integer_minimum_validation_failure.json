@@ -1,64 +1,54 @@
 {
-  "name": "18_integer_minimum_validation_failure",
-  "description": "URL-encoded integer field below minimum should fail",
-  "category": "url_encoded",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "Minimum constraint on numeric fields"
-  },
-  "handler": {
-    "route": "/products",
-    "method": "POST",
-    "content_type": "application/x-www-form-urlencoded",
-    "body_schema": {
-      "type": "object",
-      "required": [
-        "quantity"
-      ],
-      "properties": {
-        "quantity": {
-          "type": "integer",
-          "minimum": 1
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/products",
-    "headers": {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    "body": "quantity=0"
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "validation_error",
-          "loc": [
-            "body",
-            "quantity"
-          ],
-          "msg": "Value must be at least 1",
-          "ctx": {
-            "minimum": 1,
-            "actual_value": 0
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "url_encoded",
-    "minimum",
-    "validation",
-    "error"
-  ]
+	"name": "18_integer_minimum_validation_failure",
+	"description": "URL-encoded integer field below minimum should fail",
+	"category": "url_encoded",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "Minimum constraint on numeric fields"
+	},
+	"handler": {
+		"route": "/products",
+		"method": "POST",
+		"content_type": "application/x-www-form-urlencoded",
+		"body_schema": {
+			"type": "object",
+			"required": ["quantity"],
+			"properties": {
+				"quantity": {
+					"type": "integer",
+					"minimum": 1
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/products",
+		"headers": {
+			"Content-Type": "application/x-www-form-urlencoded"
+		},
+		"body": "quantity=0"
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "validation_error",
+					"loc": ["body", "quantity"],
+					"msg": "Value must be at least 1",
+					"ctx": {
+						"minimum": 1,
+						"actual_value": 0
+					}
+				}
+			]
+		}
+	},
+	"tags": ["url_encoded", "minimum", "validation", "error"]
 }

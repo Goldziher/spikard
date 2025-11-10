@@ -1,8 +1,8 @@
 //! Generated test application
 //! This is a minimal Axum app that echoes back validated parameters
 
-use axum::{routing::get, Json, Router};
-use serde_json::{json, Value};
+use axum::{Json, Router, routing::get};
+use serde_json::{Value, json};
 use std::net::SocketAddr;
 
 pub use spikard_e2e_app::*;

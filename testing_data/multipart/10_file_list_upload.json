@@ -1,58 +1,53 @@
 {
-  "name": "File list upload (array of files)",
-  "description": "Tests uploading multiple files as a list parameter",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_request_files/test_tutorial002.py",
-    "test_function": "test_upload_file_list"
-  },
-  "handler": {
-    "route": "/files/list",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "files": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "format": "binary"
-          }
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "files"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/files/list",
-    "files": [
-      {
-        "field_name": "files",
-        "filename": "file1.txt",
-        "content": "content of file 1",
-        "content_type": "text/plain"
-      },
-      {
-        "field_name": "files",
-        "filename": "file2.txt",
-        "content": "content of file 2",
-        "content_type": "text/plain"
-      }
-    ]
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "filenames": [
-        "file1.txt",
-        "file2.txt"
-      ],
-      "total_size": 35
-    }
-  },
-  "notes": "Multiple files with same field name treated as array"
+	"name": "File list upload (array of files)",
+	"description": "Tests uploading multiple files as a list parameter",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_request_files/test_tutorial002.py",
+		"test_function": "test_upload_file_list"
+	},
+	"handler": {
+		"route": "/files/list",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"files": {
+					"type": "array",
+					"items": {
+						"type": "string",
+						"format": "binary"
+					}
+				}
+			},
+			"additionalProperties": false,
+			"required": ["files"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/files/list",
+		"files": [
+			{
+				"field_name": "files",
+				"filename": "file1.txt",
+				"content": "content of file 1",
+				"content_type": "text/plain"
+			},
+			{
+				"field_name": "files",
+				"filename": "file2.txt",
+				"content": "content of file 2",
+				"content_type": "text/plain"
+			}
+		]
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"filenames": ["file1.txt", "file2.txt"],
+			"total_size": 35
+		}
+	},
+	"notes": "Multiple files with same field name treated as array"
 }

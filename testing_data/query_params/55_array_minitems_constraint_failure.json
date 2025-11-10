@@ -1,65 +1,54 @@
 {
-  "name": "55_array_minitems_constraint_failure",
-  "description": "Array query parameter below minItems constraint should fail validation",
-  "category": "query_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "litestar",
-    "test_case": "Parameter minItems validation failure"
-  },
-  "handler": {
-    "route": "/items",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "ids": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          },
-          "minItems": 2,
-          "required": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items",
-    "query_params": {
-      "ids": [
-        "1"
-      ]
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "validation_error",
-          "loc": [
-            "query",
-            "ids"
-          ],
-          "msg": "Array must contain at least 2 items",
-          "ctx": {
-            "min_items": 2,
-            "actual_items": 1
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "query_params",
-    "array",
-    "minItems",
-    "validation",
-    "error"
-  ]
+	"name": "55_array_minitems_constraint_failure",
+	"description": "Array query parameter below minItems constraint should fail validation",
+	"category": "query_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "litestar",
+		"test_case": "Parameter minItems validation failure"
+	},
+	"handler": {
+		"route": "/items",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"ids": {
+					"type": "array",
+					"items": {
+						"type": "integer"
+					},
+					"minItems": 2,
+					"required": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items",
+		"query_params": {
+			"ids": ["1"]
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "validation_error",
+					"loc": ["query", "ids"],
+					"msg": "Array must contain at least 2 items",
+					"ctx": {
+						"min_items": 2,
+						"actual_items": 1
+					}
+				}
+			]
+		}
+	},
+	"tags": ["query_params", "array", "minItems", "validation", "error"]
 }
