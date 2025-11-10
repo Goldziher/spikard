@@ -3,7 +3,7 @@
 use crate::parameters::ParameterValidator;
 use crate::schema_registry::SchemaRegistry;
 use crate::validation::SchemaValidator;
-use crate::{Method, RouteMetadata};
+use crate::{CorsConfig, Method, RouteMetadata};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -25,6 +25,7 @@ pub struct Route {
     pub parameter_validator: Option<ParameterValidator>,
     pub file_params: Option<Value>, // File parameter schema for validation
     pub is_async: bool,
+    pub cors: Option<CorsConfig>,
 }
 
 impl Route {
@@ -85,6 +86,7 @@ impl Route {
             parameter_validator,
             file_params: metadata.file_params,
             is_async: metadata.is_async,
+            cors: metadata.cors,
         })
     }
 }
