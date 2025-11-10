@@ -1,35 +1,32 @@
 {
-  "name": "test_dependency_batch_with_exception_002",
-  "description": "Extracted from Litestar: test_dependency_batch_with_exception case 2",
-  "category": "query_params",
-  "source": {
-    "framework": "litestar",
-    "test_file": "tests/unit/test_kwargs/test_dependency_batches.py",
-    "test_function": "test_dependency_batch_with_exception",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "c": {
-          "type": "string",
-          "annotation": "None"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {}
-  },
-  "tags": [
-    "success",
-    "query"
-  ]
+	"name": "test_dependency_batch_with_exception_002",
+	"description": "Extracted from Litestar: test_dependency_batch_with_exception case 2",
+	"category": "query_params",
+	"source": {
+		"framework": "litestar",
+		"test_file": "tests/unit/test_kwargs/test_dependency_batches.py",
+		"test_function": "test_dependency_batch_with_exception",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"c": {
+					"type": "string",
+					"annotation": "None"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {}
+	},
+	"tags": ["success", "query"]
 }

@@ -1,22 +1,22 @@
 {
-  "name": "PDF response - application/pdf",
-  "description": "Tests PDF file response",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_responses.py",
-    "test_function": "test_pdf_response"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/download/document.pdf"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "headers": {
-      "content-type": "application/pdf",
-      "content-disposition": "attachment; filename=document.pdf"
-    },
-    "body": "pdf_binary_data"
-  },
-  "notes": "PDF file download with application/pdf content type"
+	"name": "PDF response - application/pdf",
+	"description": "Tests PDF file response",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_responses.py",
+		"test_function": "test_pdf_response"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/download/document.pdf"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"content-type": "application/pdf",
+			"content-disposition": "attachment; filename=document.pdf"
+		},
+		"body": "pdf_binary_data"
+	},
+	"notes": "PDF file download with application/pdf content type"
 }

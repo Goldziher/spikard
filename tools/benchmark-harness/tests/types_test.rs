@@ -35,15 +35,15 @@ fn test_route_type_serialization() {
 fn test_latency_metrics_from_oha_output() {
     let oha_output = OhaOutput {
         summary: OhaSummary {
-            success_rate: 1.0,
+            success_rate: Some(1.0),
             total: Some(10.0),    // seconds
             slowest: Some(0.5),   // 500ms
             fastest: Some(0.001), // 1ms
             average: Some(0.05),  // 50ms
-            requests_per_sec: 100.0,
+            requests_per_sec: Some(100.0),
             total_data: Some(10000.0),
             size_per_request: Some(100.0),
-            size_per_sec: 10000.0,
+            size_per_sec: Some(10000.0),
         },
         latency_percentiles: LatencyPercentiles {
             p10: Some(0.01),
@@ -74,15 +74,15 @@ fn test_latency_metrics_from_oha_output() {
 fn test_latency_metrics_from_oha_output_with_none_values() {
     let oha_output = OhaOutput {
         summary: OhaSummary {
-            success_rate: 0.5,
+            success_rate: Some(0.5),
             total: Some(5.0),
             slowest: None,
             fastest: None,
             average: None,
-            requests_per_sec: 50.0,
+            requests_per_sec: Some(50.0),
             total_data: Some(5000.0),
             size_per_request: None,
-            size_per_sec: 5000.0,
+            size_per_sec: Some(5000.0),
         },
         latency_percentiles: LatencyPercentiles {
             p10: None,
@@ -115,6 +115,7 @@ fn test_benchmark_result_serialization_full() {
     let result = BenchmarkResult {
         framework: "test-framework".to_string(),
         workload: "test-workload".to_string(),
+        variant: None,
         timestamp: Utc::now(),
         duration_secs: 30,
         concurrency: 100,
@@ -208,6 +209,7 @@ fn test_benchmark_result_serialization_minimal() {
     let result = BenchmarkResult {
         framework: "test-framework".to_string(),
         workload: "test-workload".to_string(),
+        variant: None,
         timestamp: Utc::now(),
         duration_secs: 30,
         concurrency: 100,
@@ -306,8 +308,8 @@ fn test_oha_output_deserialization() {
     });
 
     let oha_output: OhaOutput = serde_json::from_value(json).unwrap();
-    assert_eq!(oha_output.summary.success_rate, 0.99);
-    assert_eq!(oha_output.summary.requests_per_sec, 100.0);
+    assert_eq!(oha_output.summary.success_rate, Some(0.99));
+    assert_eq!(oha_output.summary.requests_per_sec, Some(100.0));
     assert_eq!(oha_output.latency_percentiles.p50, Some(0.03));
     assert_eq!(oha_output.latency_percentiles.p99, Some(0.2));
 }

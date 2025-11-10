@@ -1,46 +1,44 @@
 {
-  "name": "Empty file upload",
-  "description": "Tests uploading a file with zero bytes",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_request_files/test_tutorial001.py",
-    "test_function": "test_empty_file"
-  },
-  "handler": {
-    "route": "/files/upload",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "file": {
-          "type": "string",
-          "format": "binary"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "file"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/files/upload",
-    "files": [
-      {
-        "field_name": "file",
-        "filename": "empty.txt",
-        "content": "",
-        "content_type": "text/plain"
-      }
-    ]
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "filename": "empty.txt",
-      "size": 0
-    }
-  },
-  "notes": "Empty file (0 bytes) is valid upload"
+	"name": "Empty file upload",
+	"description": "Tests uploading a file with zero bytes",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_request_files/test_tutorial001.py",
+		"test_function": "test_empty_file"
+	},
+	"handler": {
+		"route": "/files/upload",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"file": {
+					"type": "string",
+					"format": "binary"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["file"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/files/upload",
+		"files": [
+			{
+				"field_name": "file",
+				"filename": "empty.txt",
+				"content": "",
+				"content_type": "text/plain"
+			}
+		]
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"filename": "empty.txt",
+			"size": 0
+		}
+	},
+	"notes": "Empty file (0 bytes) is valid upload"
 }

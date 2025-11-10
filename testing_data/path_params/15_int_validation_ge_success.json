@@ -1,32 +1,32 @@
 {
-  "name": "Integer path parameter with ge constraint - success",
-  "description": "Tests integer path parameter with ge (greater than or equal) validation at boundary",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_path.py",
-    "test_function": "test_path_param_ge_3"
-  },
-  "handler": {
-    "route": "/path/param-ge/{item_id}",
-    "method": "GET",
-    "parameters": {
-      "path": {
-        "item_id": {
-          "type": "integer",
-          "minimum": 3
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/path/param-ge/3"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "item_id": 3
-    }
-  },
-  "notes": "Path param with ge=3 constraint, value 3 is valid (boundary test)"
+	"name": "Integer path parameter with ge constraint - success",
+	"description": "Tests integer path parameter with ge (greater than or equal) validation at boundary",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_path.py",
+		"test_function": "test_path_param_ge_3"
+	},
+	"handler": {
+		"route": "/path/param-ge/{item_id}",
+		"method": "GET",
+		"parameters": {
+			"path": {
+				"item_id": {
+					"type": "integer",
+					"minimum": 3
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/path/param-ge/3"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"item_id": 3
+		}
+	},
+	"notes": "Path param with ge=3 constraint, value 3 is valid (boundary test)"
 }

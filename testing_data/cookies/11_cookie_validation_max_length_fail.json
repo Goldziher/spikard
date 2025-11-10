@@ -1,52 +1,49 @@
 {
-  "name": "Cookie validation - max_length constraint fail",
-  "description": "Tests cookie validation with max_length constraint failure",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_cookie_params/test_tutorial001.py",
-    "test_function": "test_cookie_max_length"
-  },
-  "handler": {
-    "route": "/cookies/validated",
-    "method": "GET",
-    "parameters": {
-      "cookies": {
-        "session_id": {
-          "type": "string",
-          "maxLength": 20
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/cookies/validated",
-    "cookies": {
-      "session_id": "this_cookie_value_is_way_too_long"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "string_too_long",
-          "loc": [
-            "cookie",
-            "session_id"
-          ],
-          "msg": "String should have at most 20 characters",
-          "input": "this_cookie_value_is_way_too_long",
-          "ctx": {
-            "max_length": 20
-          }
-        }
-      ]
-    }
-  },
-  "notes": "max_length=20 constraint on cookie value"
+	"name": "Cookie validation - max_length constraint fail",
+	"description": "Tests cookie validation with max_length constraint failure",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_cookie_params/test_tutorial001.py",
+		"test_function": "test_cookie_max_length"
+	},
+	"handler": {
+		"route": "/cookies/validated",
+		"method": "GET",
+		"parameters": {
+			"cookies": {
+				"session_id": {
+					"type": "string",
+					"maxLength": 20
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/cookies/validated",
+		"cookies": {
+			"session_id": "this_cookie_value_is_way_too_long"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "string_too_long",
+					"loc": ["cookie", "session_id"],
+					"msg": "String should have at most 20 characters",
+					"input": "this_cookie_value_is_way_too_long",
+					"ctx": {
+						"max_length": 20
+					}
+				}
+			]
+		}
+	},
+	"notes": "max_length=20 constraint on cookie value"
 }

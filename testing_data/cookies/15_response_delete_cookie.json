@@ -1,41 +1,41 @@
 {
-  "name": "Response - delete cookie",
-  "description": "Tests deleting a cookie by setting max_age to 0",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_responses.py",
-    "test_function": "test_delete_cookie"
-  },
-  "handler": {
-    "route": "/cookies/delete",
-    "method": "POST",
-    "parameters": {
-      "cookies": {
-        "session": {
-          "type": "string",
-          "optional": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/cookies/delete",
-    "cookies": {
-      "session": "old_session_123"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "message": "Cookie deleted"
-    },
-    "cookies": {
-      "session": {
-        "value": "",
-        "max_age": 0
-      }
-    }
-  },
-  "notes": "Delete cookie by setting value to empty and max_age to 0"
+	"name": "Response - delete cookie",
+	"description": "Tests deleting a cookie by setting max_age to 0",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_responses.py",
+		"test_function": "test_delete_cookie"
+	},
+	"handler": {
+		"route": "/cookies/delete",
+		"method": "POST",
+		"parameters": {
+			"cookies": {
+				"session": {
+					"type": "string",
+					"optional": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/cookies/delete",
+		"cookies": {
+			"session": "old_session_123"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Cookie deleted"
+		},
+		"cookies": {
+			"session": {
+				"value": "",
+				"max_age": 0
+			}
+		}
+	},
+	"notes": "Delete cookie by setting value to empty and max_age to 0"
 }

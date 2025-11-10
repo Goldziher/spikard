@@ -1,46 +1,44 @@
 {
-  "name": "File upload without filename",
-  "description": "Upload file content without providing a filename",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_formparsers.py",
-    "test_function": "test_multipart_request_multiple_files_with_headers"
-  },
-  "handler": {
-    "route": "/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "test1": {
-          "type": "string",
-          "format": "binary"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "test1"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/",
-    "content_type": "multipart/form-data",
-    "files": [
-      {
-        "field_name": "test1",
-        "filename": null,
-        "content": "<file1 content>",
-        "content_encoding": "text",
-        "content_type": null
-      }
-    ]
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "test1": "<file1 content>"
-    }
-  }
+	"name": "File upload without filename",
+	"description": "Upload file content without providing a filename",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_formparsers.py",
+		"test_function": "test_multipart_request_multiple_files_with_headers"
+	},
+	"handler": {
+		"route": "/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"test1": {
+					"type": "string",
+					"format": "binary"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["test1"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/",
+		"content_type": "multipart/form-data",
+		"files": [
+			{
+				"field_name": "test1",
+				"filename": null,
+				"content": "<file1 content>",
+				"content_encoding": "text",
+				"content_type": null
+			}
+		]
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"test1": "<file1 content>"
+		}
+	}
 }

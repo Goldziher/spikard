@@ -1,35 +1,35 @@
 {
-  "name": "Accept-Language header",
-  "description": "Tests Accept-Language header for locale/i18n",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_requests.py",
-    "test_function": "test_request_headers"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/headers/accept-language",
-    "headers": {
-      "Accept-Language": "en-US,en;q=0.9"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "accept_language": "en-US,en;q=0.9"
-    }
-  },
-  "notes": "Accept-Language header with quality values",
-  "handler": {
-    "route": "/headers/accept-language",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "Accept-Language": {
-          "type": "string",
-          "annotation": "str"
-        }
-      }
-    }
-  }
+	"name": "Accept-Language header",
+	"description": "Tests Accept-Language header for locale/i18n",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_requests.py",
+		"test_function": "test_request_headers"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/headers/accept-language",
+		"headers": {
+			"Accept-Language": "en-US,en;q=0.9"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"accept_language": "en-US,en;q=0.9"
+		}
+	},
+	"notes": "Accept-Language header with quality values",
+	"handler": {
+		"route": "/headers/accept-language",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Accept-Language": {
+					"type": "string",
+					"annotation": "str"
+				}
+			}
+		}
+	}
 }

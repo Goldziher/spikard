@@ -1,34 +1,34 @@
 {
-  "name": "30_bearer_token_format_valid",
-  "description": "Authorization header with valid Bearer token format should be accepted",
-  "category": "headers",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "nestjs",
-    "test_case": "Bearer token format validation"
-  },
-  "handler": {
-    "route": "/protected",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "Authorization": {
-          "type": "string",
-          "pattern": "^Bearer [A-Za-z0-9-._~+/]+=*$",
-          "required": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/protected",
-    "headers": {
-      "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U"
-    }
-  },
-  "expected_response": {
-    "status_code": 200
-  },
-  "tags": ["headers", "authorization", "bearer_token", "security", "validation", "success"]
+	"name": "30_bearer_token_format_valid",
+	"description": "Authorization header with valid Bearer token format should be accepted",
+	"category": "headers",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "nestjs",
+		"test_case": "Bearer token format validation"
+	},
+	"handler": {
+		"route": "/protected",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Authorization": {
+					"type": "string",
+					"pattern": "^Bearer [A-Za-z0-9-._~+/]+=*$",
+					"required": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/protected",
+		"headers": {
+			"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U"
+		}
+	},
+	"expected_response": {
+		"status_code": 200
+	},
+	"tags": ["headers", "authorization", "bearer_token", "security", "validation", "success"]
 }

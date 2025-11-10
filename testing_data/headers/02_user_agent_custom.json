@@ -1,34 +1,34 @@
 {
-  "name": "User-Agent header - custom value",
-  "description": "Tests User-Agent header with custom value",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_header_params/test_tutorial001.py",
-    "test_function": "test_user_agent"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items/",
-    "headers": {
-      "User-Agent": "Mozilla/5.0 Custom Browser"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "User-Agent": "Mozilla/5.0 Custom Browser"
-    }
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "User-Agent": {
-          "type": "string",
-          "annotation": "str"
-        }
-      }
-    }
-  }
+	"name": "User-Agent header - custom value",
+	"description": "Tests User-Agent header with custom value",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_header_params/test_tutorial001.py",
+		"test_function": "test_user_agent"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items/",
+		"headers": {
+			"User-Agent": "Mozilla/5.0 Custom Browser"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"User-Agent": "Mozilla/5.0 Custom Browser"
+		}
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"User-Agent": {
+					"type": "string",
+					"annotation": "str"
+				}
+			}
+		}
+	}
 }

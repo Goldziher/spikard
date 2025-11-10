@@ -1,18 +1,18 @@
 {
-  "name": "@spikard/wasm",
-  "version": "0.1.0",
-  "description": "WebAssembly bindings for spikard",
-  "main": "dist/spikard_wasm.js",
-  "types": "dist/spikard_wasm.d.ts",
-  "license": "MIT",
-  "scripts": {
-    "build": "pnpm run build:web && pnpm run build:node",
-    "build:web": "wasm-pack build --target web --out-dir dist-web --release",
-    "build:node": "wasm-pack build --target nodejs --out-dir dist-node --release",
-    "build:all": "pnpm run build:web && pnpm run build:node",
-    "test": "wasm-pack test --node"
-  },
-  "devDependencies": {
-    "wasm-pack": "^0.13.1"
-  }
+	"name": "@spikard/wasm",
+	"version": "0.1.0",
+	"description": "WebAssembly bindings for spikard",
+	"main": "dist/spikard_wasm.js",
+	"types": "dist/spikard_wasm.d.ts",
+	"license": "MIT",
+	"scripts": {
+		"build": "pnpm run build:web && pnpm run build:node",
+		"build:web": "wasm-pack build --target web --out-dir dist-web --release",
+		"build:node": "wasm-pack build --target nodejs --out-dir dist-node --release",
+		"build:all": "pnpm run build:web && pnpm run build:node",
+		"test": "wasm-pack test --node"
+	},
+	"devDependencies": {
+		"wasm-pack": "^0.13.1"
+	}
 }

@@ -1,57 +1,48 @@
 {
-  "name": "34_string_pattern_path_failure",
-  "description": "Path parameter not matching regex pattern should fail",
-  "category": "path_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "litestar",
-    "test_case": "String pattern validation failure in path"
-  },
-  "handler": {
-    "route": "/repos/{owner}",
-    "method": "GET",
-    "parameters": {
-      "path": {
-        "owner": {
-          "type": "string",
-          "pattern": "^[a-zA-Z0-9-]+$",
-          "required": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/repos/invalid@owner"
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "validation_error",
-          "loc": [
-            "path",
-            "owner"
-          ],
-          "msg": "String does not match pattern",
-          "ctx": {
-            "pattern": "^[a-zA-Z0-9-]+$",
-            "value": "invalid@owner"
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "path_params",
-    "string",
-    "pattern",
-    "validation",
-    "error"
-  ]
+	"name": "34_string_pattern_path_failure",
+	"description": "Path parameter not matching regex pattern should fail",
+	"category": "path_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "litestar",
+		"test_case": "String pattern validation failure in path"
+	},
+	"handler": {
+		"route": "/repos/{owner}",
+		"method": "GET",
+		"parameters": {
+			"path": {
+				"owner": {
+					"type": "string",
+					"pattern": "^[a-zA-Z0-9-]+$",
+					"required": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/repos/invalid@owner"
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "validation_error",
+					"loc": ["path", "owner"],
+					"msg": "String does not match pattern",
+					"ctx": {
+						"pattern": "^[a-zA-Z0-9-]+$",
+						"value": "invalid@owner"
+					}
+				}
+			]
+		}
+	},
+	"tags": ["path_params", "string", "pattern", "validation", "error"]
 }

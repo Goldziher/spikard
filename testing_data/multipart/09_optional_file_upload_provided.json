@@ -1,47 +1,45 @@
 {
-  "name": "Optional file upload - provided",
-  "description": "Tests optional file parameter when file is provided",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_request_files/test_tutorial001.py",
-    "test_function": "test_optional_file_provided"
-  },
-  "handler": {
-    "route": "/files/optional",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "file": {
-          "type": "string",
-          "format": "binary"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "file"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/files/optional",
-    "files": [
-      {
-        "field_name": "file",
-        "filename": "optional.txt",
-        "content": "optional file content",
-        "content_type": "text/plain"
-      }
-    ]
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "filename": "optional.txt",
-      "content_type": "text/plain",
-      "size": 21
-    }
-  },
-  "notes": "Optional file parameter processes file when provided"
+	"name": "Optional file upload - provided",
+	"description": "Tests optional file parameter when file is provided",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_request_files/test_tutorial001.py",
+		"test_function": "test_optional_file_provided"
+	},
+	"handler": {
+		"route": "/files/optional",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"file": {
+					"type": "string",
+					"format": "binary"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["file"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/files/optional",
+		"files": [
+			{
+				"field_name": "file",
+				"filename": "optional.txt",
+				"content": "optional file content",
+				"content_type": "text/plain"
+			}
+		]
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"filename": "optional.txt",
+			"content_type": "text/plain",
+			"size": 21
+		}
+	},
+	"notes": "Optional file parameter processes file when provided"
 }

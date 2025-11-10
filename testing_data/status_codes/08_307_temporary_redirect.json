@@ -1,34 +1,34 @@
 {
-  "name": "307 Temporary Redirect - Method preserved",
-  "description": "Tests 307 temporary redirect with method preservation",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_responses.py",
-    "test_function": "test_redirect_307"
-  },
-  "handler": {
-    "route": "/redirect-post",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {},
-      "additionalProperties": false
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/redirect-post",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {}
-  },
-  "expected_response": {
-    "status_code": 307,
-    "body": {},
-    "headers": {
-      "location": "/target-post"
-    }
-  },
-  "notes": "307 preserves request method (POST remains POST)"
+	"name": "307 Temporary Redirect - Method preserved",
+	"description": "Tests 307 temporary redirect with method preservation",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_responses.py",
+		"test_function": "test_redirect_307"
+	},
+	"handler": {
+		"route": "/redirect-post",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {},
+			"additionalProperties": false
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/redirect-post",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {}
+	},
+	"expected_response": {
+		"status_code": 307,
+		"body": {},
+		"headers": {
+			"location": "/target-post"
+		}
+	},
+	"notes": "307 preserves request method (POST remains POST)"
 }

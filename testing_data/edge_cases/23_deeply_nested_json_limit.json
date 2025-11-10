@@ -1,136 +1,130 @@
 {
-  "name": "23_deeply_nested_json_limit",
-  "description": "Extremely deeply nested JSON should be rejected to prevent DoS",
-  "category": "edge_cases",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "security_best_practices",
-    "test_case": "Nested depth limit enforcement"
-  },
-  "handler": {
-    "route": "/data",
-    "method": "POST",
-    "body_schema": {
-      "type": "object"
-    },
-    "max_nesting_depth": 32
-  },
-  "request": {
-    "method": "POST",
-    "path": "/data",
-    "body": {
-      "nested": {
-        "nested": {
-          "nested": {
-            "nested": {
-              "nested": {
-                "nested": {
-                  "nested": {
-                    "nested": {
-                      "nested": {
-                        "nested": {
-                          "nested": {
-                            "nested": {
-                              "nested": {
-                                "nested": {
-                                  "nested": {
-                                    "nested": {
-                                      "nested": {
-                                        "nested": {
-                                          "nested": {
-                                            "nested": {
-                                              "nested": {
-                                                "nested": {
-                                                  "nested": {
-                                                    "nested": {
-                                                      "nested": {
-                                                        "nested": {
-                                                          "nested": {
-                                                            "nested": {
-                                                              "nested": {
-                                                                "nested": {
-                                                                  "nested": {
-                                                                    "nested": {
-                                                                      "nested": {
-                                                                        "nested": {
-                                                                          "nested": {
-                                                                            "nested": {
-                                                                              "nested": {
-                                                                                "nested": {
-                                                                                  "nested": {
-                                                                                    "nested": {
-                                                                                      "nested": {
-                                                                                        "nested": {
-                                                                                          "nested": {
-                                                                                            "nested": {
-                                                                                              "nested": {
-                                                                                                "nested": {
-                                                                                                  "nested": {
-                                                                                                    "nested": {
-                                                                                                      "nested": {
-                                                                                                        "value": "deep"
-                                                                                                      }
-                                                                                                    }
-                                                                                                  }
-                                                                                                }
-                                                                                              }
-                                                                                            }
-                                                                                          }
-                                                                                        }
-                                                                                      }
-                                                                                    }
-                                                                                  }
-                                                                                }
-                                                                              }
-                                                                            }
-                                                                          }
-                                                                        }
-                                                                      }
-                                                                    }
-                                                                  }
-                                                                }
-                                                              }
-                                                            }
-                                                          }
-                                                        }
-                                                      }
-                                                    }
-                                                  }
-                                                }
-                                              }
-                                            }
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 400,
-    "body": {
-      "error": "Request body exceeds maximum nesting depth of 32"
-    }
-  },
-  "tags": [
-    "edge_cases",
-    "security",
-    "dos_prevention",
-    "nesting_depth",
-    "error"
-  ]
+	"name": "23_deeply_nested_json_limit",
+	"description": "Extremely deeply nested JSON should be rejected to prevent DoS",
+	"category": "edge_cases",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "security_best_practices",
+		"test_case": "Nested depth limit enforcement"
+	},
+	"handler": {
+		"route": "/data",
+		"method": "POST",
+		"body_schema": {
+			"type": "object"
+		},
+		"max_nesting_depth": 32
+	},
+	"request": {
+		"method": "POST",
+		"path": "/data",
+		"body": {
+			"nested": {
+				"nested": {
+					"nested": {
+						"nested": {
+							"nested": {
+								"nested": {
+									"nested": {
+										"nested": {
+											"nested": {
+												"nested": {
+													"nested": {
+														"nested": {
+															"nested": {
+																"nested": {
+																	"nested": {
+																		"nested": {
+																			"nested": {
+																				"nested": {
+																					"nested": {
+																						"nested": {
+																							"nested": {
+																								"nested": {
+																									"nested": {
+																										"nested": {
+																											"nested": {
+																												"nested": {
+																													"nested": {
+																														"nested": {
+																															"nested": {
+																																"nested": {
+																																	"nested": {
+																																		"nested": {
+																																			"nested": {
+																																				"nested": {
+																																					"nested": {
+																																						"nested": {
+																																							"nested": {
+																																								"nested": {
+																																									"nested": {
+																																										"nested": {
+																																											"nested": {
+																																												"nested": {
+																																													"nested": {
+																																														"nested": {
+																																															"nested": {
+																																																"nested": {
+																																																	"nested": {
+																																																		"nested": {
+																																																			"nested": {
+																																																				"value": "deep"
+																																																			}
+																																																		}
+																																																	}
+																																																}
+																																															}
+																																														}
+																																													}
+																																												}
+																																											}
+																																										}
+																																									}
+																																								}
+																																							}
+																																						}
+																																					}
+																																				}
+																																			}
+																																		}
+																																	}
+																																}
+																															}
+																														}
+																													}
+																												}
+																											}
+																										}
+																									}
+																								}
+																							}
+																						}
+																					}
+																				}
+																			}
+																		}
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 400,
+		"body": {
+			"error": "Request body exceeds maximum nesting depth of 32"
+		}
+	},
+	"tags": ["edge_cases", "security", "dos_prevention", "nesting_depth", "error"]
 }

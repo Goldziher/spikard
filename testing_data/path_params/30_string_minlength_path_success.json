@@ -1,33 +1,33 @@
 {
-  "name": "30_string_minlength_path_success",
-  "description": "Path parameter with string meeting minLength constraint should succeed",
-  "category": "path_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "litestar",
-    "test_case": "String minLength in path parameter"
-  },
-  "handler": {
-    "route": "/users/{username}",
-    "method": "GET",
-    "parameters": {
-      "path": {
-        "username": {
-          "type": "string",
-          "minLength": 3
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/users/alice"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "username": "alice"
-    }
-  },
-  "tags": ["path_params", "string", "minLength", "validation", "success"]
+	"name": "30_string_minlength_path_success",
+	"description": "Path parameter with string meeting minLength constraint should succeed",
+	"category": "path_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "litestar",
+		"test_case": "String minLength in path parameter"
+	},
+	"handler": {
+		"route": "/users/{username}",
+		"method": "GET",
+		"parameters": {
+			"path": {
+				"username": {
+					"type": "string",
+					"minLength": 3
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/users/alice"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"username": "alice"
+		}
+	},
+	"tags": ["path_params", "string", "minLength", "validation", "success"]
 }

@@ -1,60 +1,51 @@
 {
-  "name": "64_format_uri_failure",
-  "description": "Query parameter with invalid URI should fail validation",
-  "category": "query_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "Format validator uri failure"
-  },
-  "handler": {
-    "route": "/redirect",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "url": {
-          "type": "string",
-          "format": "uri",
-          "required": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/redirect",
-    "query_params": {
-      "url": "not a uri"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "validation_error",
-          "loc": [
-            "query",
-            "url"
-          ],
-          "msg": "Invalid URI format",
-          "ctx": {
-            "format": "uri",
-            "value": "not a uri"
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "query_params",
-    "format",
-    "uri",
-    "validation",
-    "error"
-  ]
+	"name": "64_format_uri_failure",
+	"description": "Query parameter with invalid URI should fail validation",
+	"category": "query_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "Format validator uri failure"
+	},
+	"handler": {
+		"route": "/redirect",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"url": {
+					"type": "string",
+					"format": "uri",
+					"required": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/redirect",
+		"query_params": {
+			"url": "not a uri"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "validation_error",
+					"loc": ["query", "url"],
+					"msg": "Invalid URI format",
+					"ctx": {
+						"format": "uri",
+						"value": "not a uri"
+					}
+				}
+			]
+		}
+	},
+	"tags": ["query_params", "format", "uri", "validation", "error"]
 }

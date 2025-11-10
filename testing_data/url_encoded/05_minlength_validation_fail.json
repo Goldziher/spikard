@@ -1,59 +1,54 @@
 {
-  "name": "String min_length validation - fail",
-  "description": "Tests form field with min_length constraint failure",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_request_form_models/test_tutorial001.py",
-    "test_function": "test_form_minlength_fail"
-  },
-  "handler": {
-    "route": "/form/validated",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "required": [
-        "username"
-      ],
-      "properties": {
-        "username": {
-          "type": "string",
-          "minLength": 3
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/form/validated",
-    "headers": {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    "form_data": {
-      "username": "ab"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "string_too_short",
-          "loc": [
-            "body",
-            "username"
-          ],
-          "msg": "String should have at least 3 characters",
-          "input": "ab",
-          "ctx": {
-            "min_length": 3
-          }
-        }
-      ]
-    }
-  },
-  "notes": "username field has min_length=3, 'ab' has only 2 characters"
+	"name": "String min_length validation - fail",
+	"description": "Tests form field with min_length constraint failure",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_request_form_models/test_tutorial001.py",
+		"test_function": "test_form_minlength_fail"
+	},
+	"handler": {
+		"route": "/form/validated",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"required": ["username"],
+			"properties": {
+				"username": {
+					"type": "string",
+					"minLength": 3
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/form/validated",
+		"headers": {
+			"Content-Type": "application/x-www-form-urlencoded"
+		},
+		"form_data": {
+			"username": "ab"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "string_too_short",
+					"loc": ["body", "username"],
+					"msg": "String should have at least 3 characters",
+					"input": "ab",
+					"ctx": {
+						"min_length": 3
+					}
+				}
+			]
+		}
+	},
+	"notes": "username field has min_length=3, 'ab' has only 2 characters"
 }

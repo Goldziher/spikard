@@ -1,136 +1,133 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Validation Error Test Fixture",
-  "description": "Test fixture for validation error scenarios (422 responses)",
-  "type": "object",
-  "required": ["name", "description", "source", "request", "expected_response"],
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "Human-readable name for this test case"
-    },
-    "description": {
-      "type": "string",
-      "description": "What this test validates"
-    },
-    "source": {
-      "type": "object",
-      "description": "Source framework and test location",
-      "required": ["framework", "test_file", "test_function"],
-      "properties": {
-        "framework": {
-          "type": "string",
-          "enum": ["fastapi", "starlette", "litestar"]
-        },
-        "test_file": {
-          "type": "string",
-          "description": "Path to original test file"
-        },
-        "test_function": {
-          "type": "string",
-          "description": "Name of test function"
-        }
-      }
-    },
-    "request": {
-      "type": "object",
-      "description": "HTTP request details",
-      "required": ["method", "path"],
-      "properties": {
-        "method": {
-          "type": "string",
-          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
-        },
-        "path": {
-          "type": "string",
-          "description": "Request path"
-        },
-        "headers": {
-          "type": "object",
-          "description": "Request headers",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "query_params": {
-          "type": "object",
-          "description": "Query parameters",
-          "additionalProperties": true
-        },
-        "body": {
-          "description": "Request body (any type)",
-          "additionalProperties": true
-        },
-        "form_data": {
-          "type": "object",
-          "description": "URL-encoded form data",
-          "additionalProperties": true
-        }
-      }
-    },
-    "expected_response": {
-      "type": "object",
-      "description": "Expected HTTP response",
-      "required": ["status_code"],
-      "properties": {
-        "status_code": {
-          "type": "integer",
-          "description": "HTTP status code (typically 422 for validation errors)",
-          "enum": [422, 400]
-        },
-        "body": {
-          "type": "object",
-          "description": "Response body containing validation error details",
-          "properties": {
-            "detail": {
-              "description": "Error detail - can be string or array of validation errors",
-              "oneOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "type": {
-                        "type": "string"
-                      },
-                      "loc": {
-                        "type": "array",
-                        "items": {
-                          "oneOf": [
-                            {"type": "string"},
-                            {"type": "integer"}
-                          ]
-                        }
-                      },
-                      "msg": {
-                        "type": "string"
-                      },
-                      "input": true,
-                      "ctx": {
-                        "type": "object"
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        },
-        "headers": {
-          "type": "object",
-          "description": "Expected response headers",
-          "additionalProperties": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "notes": {
-      "type": "string",
-      "description": "Additional notes or context"
-    }
-  }
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Validation Error Test Fixture",
+	"description": "Test fixture for validation error scenarios (422 responses)",
+	"type": "object",
+	"required": ["name", "description", "source", "request", "expected_response"],
+	"properties": {
+		"name": {
+			"type": "string",
+			"description": "Human-readable name for this test case"
+		},
+		"description": {
+			"type": "string",
+			"description": "What this test validates"
+		},
+		"source": {
+			"type": "object",
+			"description": "Source framework and test location",
+			"required": ["framework", "test_file", "test_function"],
+			"properties": {
+				"framework": {
+					"type": "string",
+					"enum": ["fastapi", "starlette", "litestar"]
+				},
+				"test_file": {
+					"type": "string",
+					"description": "Path to original test file"
+				},
+				"test_function": {
+					"type": "string",
+					"description": "Name of test function"
+				}
+			}
+		},
+		"request": {
+			"type": "object",
+			"description": "HTTP request details",
+			"required": ["method", "path"],
+			"properties": {
+				"method": {
+					"type": "string",
+					"enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+				},
+				"path": {
+					"type": "string",
+					"description": "Request path"
+				},
+				"headers": {
+					"type": "object",
+					"description": "Request headers",
+					"additionalProperties": {
+						"type": "string"
+					}
+				},
+				"query_params": {
+					"type": "object",
+					"description": "Query parameters",
+					"additionalProperties": true
+				},
+				"body": {
+					"description": "Request body (any type)",
+					"additionalProperties": true
+				},
+				"form_data": {
+					"type": "object",
+					"description": "URL-encoded form data",
+					"additionalProperties": true
+				}
+			}
+		},
+		"expected_response": {
+			"type": "object",
+			"description": "Expected HTTP response",
+			"required": ["status_code"],
+			"properties": {
+				"status_code": {
+					"type": "integer",
+					"description": "HTTP status code (typically 422 for validation errors)",
+					"enum": [422, 400]
+				},
+				"body": {
+					"type": "object",
+					"description": "Response body containing validation error details",
+					"properties": {
+						"detail": {
+							"description": "Error detail - can be string or array of validation errors",
+							"oneOf": [
+								{
+									"type": "string"
+								},
+								{
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"type": {
+												"type": "string"
+											},
+											"loc": {
+												"type": "array",
+												"items": {
+													"oneOf": [{ "type": "string" }, { "type": "integer" }]
+												}
+											},
+											"msg": {
+												"type": "string"
+											},
+											"input": true,
+											"ctx": {
+												"type": "object"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				},
+				"headers": {
+					"type": "object",
+					"description": "Expected response headers",
+					"additionalProperties": {
+						"type": "string"
+					}
+				}
+			}
+		},
+		"notes": {
+			"type": "string",
+			"description": "Additional notes or context"
+		}
+	}
 }

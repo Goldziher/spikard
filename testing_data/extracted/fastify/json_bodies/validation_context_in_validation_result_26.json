@@ -1,27 +1,24 @@
 {
-  "name": "validation_context_in_validation_result_26",
-  "description": "Extracted from Fastify: Validation context in validation result",
-  "category": "json_bodies",
-  "source": {
-    "framework": "fastify",
-    "test_file": "test/schema-feature.test.js",
-    "test_function": "Validation context in validation result",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/",
-    "method": "POST",
-    "parameters": {}
-  },
-  "request": {
-    "method": "POST",
-    "path": "/"
-  },
-  "expected_response": {
-    "status_code": 200
-  },
-  "tags": [
-    "success",
-    "body"
-  ]
+	"name": "validation_context_in_validation_result_26",
+	"description": "Extracted from Fastify: Validation context in validation result",
+	"category": "json_bodies",
+	"source": {
+		"framework": "fastify",
+		"test_file": "test/schema-feature.test.js",
+		"test_function": "Validation context in validation result",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/",
+		"method": "POST",
+		"parameters": {}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/"
+	},
+	"expected_response": {
+		"status_code": 200
+	},
+	"tags": ["success", "body"]
 }

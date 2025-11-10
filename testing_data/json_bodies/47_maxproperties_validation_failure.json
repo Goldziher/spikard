@@ -1,56 +1,49 @@
 {
-  "name": "47_maxproperties_validation_failure",
-  "description": "Object with more properties than maxProperties should fail",
-  "category": "json_bodies",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "maxProperties constraint validation failure"
-  },
-  "handler": {
-    "route": "/config",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "maxProperties": 3
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/config",
-    "body": {
-      "host": "localhost",
-      "port": 8080,
-      "ssl": true,
-      "debug": false
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "validation_error",
-          "loc": [
-            "body"
-          ],
-          "msg": "Object must have at most 3 properties",
-          "ctx": {
-            "max_properties": 3,
-            "actual_properties": 4
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "json_bodies",
-    "maxProperties",
-    "validation",
-    "error"
-  ]
+	"name": "47_maxproperties_validation_failure",
+	"description": "Object with more properties than maxProperties should fail",
+	"category": "json_bodies",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "maxProperties constraint validation failure"
+	},
+	"handler": {
+		"route": "/config",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"maxProperties": 3
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/config",
+		"body": {
+			"host": "localhost",
+			"port": 8080,
+			"ssl": true,
+			"debug": false
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "validation_error",
+					"loc": ["body"],
+					"msg": "Object must have at most 3 properties",
+					"ctx": {
+						"max_properties": 3,
+						"actual_properties": 4
+					}
+				}
+			]
+		}
+	},
+	"tags": ["json_bodies", "maxProperties", "validation", "error"]
 }

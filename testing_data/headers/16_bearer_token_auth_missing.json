@@ -1,46 +1,46 @@
 {
-  "name": "Bearer token authentication - missing",
-  "description": "Tests missing Bearer token returns 401 Unauthorized",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_security_oauth2.py",
-    "test_function": "test_security_oauth2_no_token"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/headers/bearer-auth",
-    "headers": {}
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "missing",
-          "loc": ["headers", "authorization"],
-          "msg": "Field required",
-          "input": null
-        }
-      ]
-    }
-  },
-  "notes": "Missing Authorization header returns 401",
-  "handler": {
-    "route": "/headers/bearer-auth",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "Authorization": {
-          "type": "string",
-          "annotation": "str",
-          "required": true,
-          "pattern": "^Bearer .+"
-        }
-      }
-    }
-  }
+	"name": "Bearer token authentication - missing",
+	"description": "Tests missing Bearer token returns 401 Unauthorized",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_security_oauth2.py",
+		"test_function": "test_security_oauth2_no_token"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/headers/bearer-auth",
+		"headers": {}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "missing",
+					"loc": ["headers", "authorization"],
+					"msg": "Field required",
+					"input": null
+				}
+			]
+		}
+	},
+	"notes": "Missing Authorization header returns 401",
+	"handler": {
+		"route": "/headers/bearer-auth",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Authorization": {
+					"type": "string",
+					"annotation": "str",
+					"required": true,
+					"pattern": "^Bearer .+"
+				}
+			}
+		}
+	}
 }

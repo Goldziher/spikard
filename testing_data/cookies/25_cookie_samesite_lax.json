@@ -1,39 +1,39 @@
 {
-  "name": "25_cookie_samesite_lax",
-  "description": "Cookie with SameSite=Lax attribute should be validated",
-  "category": "cookies",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "nestjs",
-    "test_case": "Cookie SameSite=Lax validation"
-  },
-  "handler": {
-    "route": "/data",
-    "method": "GET",
-    "parameters": {
-      "cookies": {
-        "tracking": {
-          "type": "string",
-          "required": true,
-          "samesite": "Lax"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/data",
-    "cookies": {
-      "tracking": "track123"
-    },
-    "cookie_attributes": {
-      "tracking": {
-        "SameSite": "Lax"
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 200
-  },
-  "tags": ["cookies", "samesite", "lax", "security", "validation", "success"]
+	"name": "25_cookie_samesite_lax",
+	"description": "Cookie with SameSite=Lax attribute should be validated",
+	"category": "cookies",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "nestjs",
+		"test_case": "Cookie SameSite=Lax validation"
+	},
+	"handler": {
+		"route": "/data",
+		"method": "GET",
+		"parameters": {
+			"cookies": {
+				"tracking": {
+					"type": "string",
+					"required": true,
+					"samesite": "Lax"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/data",
+		"cookies": {
+			"tracking": "track123"
+		},
+		"cookie_attributes": {
+			"tracking": {
+				"SameSite": "Lax"
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 200
+	},
+	"tags": ["cookies", "samesite", "lax", "security", "validation", "success"]
 }

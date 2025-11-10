@@ -1,61 +1,55 @@
 {
-  "name": "Body field type error - string for float",
-  "description": "Tests validation error when body field has wrong type",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
-    "test_function": "test_post_body_invalid_type"
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "price": {
-          "type": "number"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "price"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "name": "Item",
-      "price": "not_a_float"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "float_parsing",
-          "loc": [
-            "body",
-            "price"
-          ],
-          "msg": "Input should be a valid number, unable to parse string as a number",
-          "input": "not_a_float"
-        }
-      ]
-    }
-  },
-  "notes": "Body field type validation follows Pydantic rules"
+	"name": "Body field type error - string for float",
+	"description": "Tests validation error when body field has wrong type",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
+		"test_function": "test_post_body_invalid_type"
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"price": {
+					"type": "number"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["name", "price"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"name": "Item",
+			"price": "not_a_float"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "float_parsing",
+					"loc": ["body", "price"],
+					"msg": "Input should be a valid number, unable to parse string as a number",
+					"input": "not_a_float"
+				}
+			]
+		}
+	},
+	"notes": "Body field type validation follows Pydantic rules"
 }

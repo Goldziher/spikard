@@ -1,35 +1,35 @@
 {
-  "name": "Authorization header - success",
-  "description": "Tests Authorization header with valid Digest scheme",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_security_http_digest.py",
-    "test_function": "test_security_http_digest"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/users/me",
-    "headers": {
-      "Authorization": "Digest foobar"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "scheme": "Digest",
-      "credentials": "foobar"
-    }
-  },
-  "handler": {
-    "route": "/users/me",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "Authorization": {
-          "type": "string",
-          "annotation": "str"
-        }
-      }
-    }
-  }
+	"name": "Authorization header - success",
+	"description": "Tests Authorization header with valid Digest scheme",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_security_http_digest.py",
+		"test_function": "test_security_http_digest"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/users/me",
+		"headers": {
+			"Authorization": "Digest foobar"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"scheme": "Digest",
+			"credentials": "foobar"
+		}
+	},
+	"handler": {
+		"route": "/users/me",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Authorization": {
+					"type": "string",
+					"annotation": "str"
+				}
+			}
+		}
+	}
 }

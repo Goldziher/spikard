@@ -1,36 +1,36 @@
 {
-  "name": "62_format_ipv6_success",
-  "description": "Query parameter with valid IPv6 address should be accepted",
-  "category": "query_params",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "Format validator ipv6"
-  },
-  "handler": {
-    "route": "/network/ipv6",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "ip": {
-          "type": "string",
-          "format": "ipv6"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/network/ipv6",
-    "query_params": {
-      "ip": "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "ip": "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
-    }
-  },
-  "tags": ["query_params", "format", "ipv6", "validation", "success"]
+	"name": "62_format_ipv6_success",
+	"description": "Query parameter with valid IPv6 address should be accepted",
+	"category": "query_params",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "Format validator ipv6"
+	},
+	"handler": {
+		"route": "/network/ipv6",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"ip": {
+					"type": "string",
+					"format": "ipv6"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/network/ipv6",
+		"query_params": {
+			"ip": "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"ip": "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+		}
+	},
+	"tags": ["query_params", "format", "ipv6", "validation", "success"]
 }

@@ -1,48 +1,45 @@
 {
-  "name": "String pattern validation - success",
-  "description": "Tests string field with regex pattern constraint success",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_body_fields/test_tutorial001.py",
-    "test_function": "test_pattern_success"
-  },
-  "handler": {
-    "route": "/items/validated",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "sku": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "sku"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/validated",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "name": "Item",
-      "sku": "ABC1234"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "name": "Item",
-      "sku": "ABC1234"
-    }
-  },
-  "notes": "SKU matches pattern ^[A-Z]{3}[0-9]{4}$"
+	"name": "String pattern validation - success",
+	"description": "Tests string field with regex pattern constraint success",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_body_fields/test_tutorial001.py",
+		"test_function": "test_pattern_success"
+	},
+	"handler": {
+		"route": "/items/validated",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"sku": {
+					"type": "string"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["name", "sku"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/validated",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"name": "Item",
+			"sku": "ABC1234"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"name": "Item",
+			"sku": "ABC1234"
+		}
+	},
+	"notes": "SKU matches pattern ^[A-Z]{3}[0-9]{4}$"
 }

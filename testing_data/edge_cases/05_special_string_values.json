@@ -1,78 +1,78 @@
 {
-  "name": "Special string values and escaping",
-  "description": "Tests handling of special characters, null bytes, and escape sequences",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_special_chars.py",
-    "test_function": "test_special_strings"
-  },
-  "handler": {
-    "route": "/strings/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "empty_string": {
-          "type": "string"
-        },
-        "whitespace": {
-          "type": "string"
-        },
-        "tabs_newlines": {
-          "type": "string"
-        },
-        "quotes": {
-          "type": "string"
-        },
-        "backslashes": {
-          "type": "string"
-        },
-        "unicode_escapes": {
-          "type": "string"
-        },
-        "special_chars": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "empty_string",
-        "whitespace",
-        "tabs_newlines",
-        "quotes",
-        "backslashes",
-        "unicode_escapes",
-        "special_chars"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/strings/",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "empty_string": "",
-      "whitespace": "   ",
-      "tabs_newlines": "line1\n\tline2\r\nline3",
-      "quotes": "He said \"hello\" and 'goodbye'",
-      "backslashes": "C:\\\\Users\\\\Path",
-      "unicode_escapes": "\\u0048\\u0065\\u006c\\u006c\\u006f",
-      "special_chars": "!@#$%^&*()_+-=[]{}|;':\",./<>?"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "empty_string": "",
-      "whitespace": "   ",
-      "tabs_newlines": "line1\n\tline2\r\nline3",
-      "quotes": "He said \"hello\" and 'goodbye'",
-      "backslashes": "C:\\\\Users\\\\Path",
-      "unicode_escapes": "Hello",
-      "special_chars": "!@#$%^&*()_+-=[]{}|;':\",./<>?"
-    }
-  },
-  "notes": "Tests proper escaping and handling of special characters in strings"
+	"name": "Special string values and escaping",
+	"description": "Tests handling of special characters, null bytes, and escape sequences",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_special_chars.py",
+		"test_function": "test_special_strings"
+	},
+	"handler": {
+		"route": "/strings/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"empty_string": {
+					"type": "string"
+				},
+				"whitespace": {
+					"type": "string"
+				},
+				"tabs_newlines": {
+					"type": "string"
+				},
+				"quotes": {
+					"type": "string"
+				},
+				"backslashes": {
+					"type": "string"
+				},
+				"unicode_escapes": {
+					"type": "string"
+				},
+				"special_chars": {
+					"type": "string"
+				}
+			},
+			"additionalProperties": false,
+			"required": [
+				"empty_string",
+				"whitespace",
+				"tabs_newlines",
+				"quotes",
+				"backslashes",
+				"unicode_escapes",
+				"special_chars"
+			]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/strings/",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"empty_string": "",
+			"whitespace": "   ",
+			"tabs_newlines": "line1\n\tline2\r\nline3",
+			"quotes": "He said \"hello\" and 'goodbye'",
+			"backslashes": "C:\\\\Users\\\\Path",
+			"unicode_escapes": "\\u0048\\u0065\\u006c\\u006c\\u006f",
+			"special_chars": "!@#$%^&*()_+-=[]{}|;':\",./<>?"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"empty_string": "",
+			"whitespace": "   ",
+			"tabs_newlines": "line1\n\tline2\r\nline3",
+			"quotes": "He said \"hello\" and 'goodbye'",
+			"backslashes": "C:\\\\Users\\\\Path",
+			"unicode_escapes": "Hello",
+			"special_chars": "!@#$%^&*()_+-=[]{}|;':\",./<>?"
+		}
+	},
+	"notes": "Tests proper escaping and handling of special characters in strings"
 }

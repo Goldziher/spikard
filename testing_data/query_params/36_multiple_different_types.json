@@ -1,53 +1,53 @@
 {
-  "name": "Multiple query parameters with different types",
-  "description": "Tests multiple query parameters of different types in single request",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_query.py",
-    "test_function": "test_query_param_multiple_types"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/query/multi-type",
-    "query_params": {
-      "name": "john",
-      "age": "30",
-      "active": "true",
-      "score": "95.5"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "name": "john",
-      "age": 30,
-      "active": true,
-      "score": 95.5
-    }
-  },
-  "notes": "Multiple query params: str, int, bool, float - all properly typed",
-  "handler": {
-    "route": "/query/multi-type",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "name": {
-          "type": "string",
-          "annotation": "str"
-        },
-        "age": {
-          "type": "integer",
-          "annotation": "int"
-        },
-        "active": {
-          "type": "boolean",
-          "annotation": "bool"
-        },
-        "score": {
-          "type": "number",
-          "annotation": "float"
-        }
-      }
-    }
-  }
+	"name": "Multiple query parameters with different types",
+	"description": "Tests multiple query parameters of different types in single request",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_query.py",
+		"test_function": "test_query_param_multiple_types"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/query/multi-type",
+		"query_params": {
+			"name": "john",
+			"age": "30",
+			"active": "true",
+			"score": "95.5"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"name": "john",
+			"age": 30,
+			"active": true,
+			"score": 95.5
+		}
+	},
+	"notes": "Multiple query params: str, int, bool, float - all properly typed",
+	"handler": {
+		"route": "/query/multi-type",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"name": {
+					"type": "string",
+					"annotation": "str"
+				},
+				"age": {
+					"type": "integer",
+					"annotation": "int"
+				},
+				"active": {
+					"type": "boolean",
+					"annotation": "bool"
+				},
+				"score": {
+					"type": "number",
+					"annotation": "float"
+				}
+			}
+		}
+	}
 }

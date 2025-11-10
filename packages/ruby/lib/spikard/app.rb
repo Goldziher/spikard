@@ -41,6 +41,27 @@ module Spikard
       map
     end
 
+    def run(host: '0.0.0.0', port: 8000)
+      require 'json'
+
+      # Convert route metadata to JSON
+      routes_json = JSON.generate(route_metadata)
+
+      # Get handler map
+      handlers = handler_map
+
+      # Call the Rust extension's run_server function
+      Spikard::Native.run_server(routes_json, handlers, host, port)
+
+      # Keep Ruby process alive while server runs
+      sleep
+    rescue LoadError => e
+      raise 'Failed to load Spikard extension. ' \
+            "Build it with: task build:ruby\n#{e.message}"
+    end
+
+    private
+
     def normalize_path(path)
       # Preserve trailing slash for consistent routing
       has_trailing_slash = path.end_with?('/')

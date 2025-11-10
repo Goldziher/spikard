@@ -1,36 +1,36 @@
 {
-  "name": "Array query parameter - empty array",
-  "description": "Tests array query parameter when no values are provided",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_query.py",
-    "test_function": "test_query_param_list_empty"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/query/list-default",
-    "query_params": {}
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": []
-  },
-  "notes": "Optional array query parameter with default [], no values provided returns empty array",
-  "handler": {
-    "route": "/query/list-default",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "tags": {
-          "type": "array",
-          "annotation": "list[str]",
-          "items": {
-            "type": "string"
-          },
-          "optional": true,
-          "default": []
-        }
-      }
-    }
-  }
+	"name": "Array query parameter - empty array",
+	"description": "Tests array query parameter when no values are provided",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_query.py",
+		"test_function": "test_query_param_list_empty"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/query/list-default",
+		"query_params": {}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": []
+	},
+	"notes": "Optional array query parameter with default [], no values provided returns empty array",
+	"handler": {
+		"route": "/query/list-default",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"tags": {
+					"type": "array",
+					"annotation": "list[str]",
+					"items": {
+						"type": "string"
+					},
+					"optional": true,
+					"default": []
+				}
+			}
+		}
+	}
 }

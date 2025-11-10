@@ -1,33 +1,33 @@
 {
-  "name": "Optional string query parameter - provided",
-  "description": "Tests optional string parameter with value provided",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_query.py",
-    "test_function": "test_query_optional_query_baz"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/query/optional",
-    "query_params": {
-      "query": "baz"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": "foo bar baz"
-  },
-  "handler": {
-    "route": "/query/optional",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "query": {
-          "type": "string",
-          "annotation": "str",
-          "optional": true
-        }
-      }
-    }
-  }
+	"name": "Optional string query parameter - provided",
+	"description": "Tests optional string parameter with value provided",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_query.py",
+		"test_function": "test_query_optional_query_baz"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/query/optional",
+		"query_params": {
+			"query": "baz"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": "foo bar baz"
+	},
+	"handler": {
+		"route": "/query/optional",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"query": {
+					"type": "string",
+					"annotation": "str",
+					"optional": true
+				}
+			}
+		}
+	}
 }

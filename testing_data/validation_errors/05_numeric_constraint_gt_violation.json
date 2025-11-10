@@ -1,55 +1,52 @@
 {
-  "name": "Numeric constraint violation - gt (greater than)",
-  "description": "Tests validation error when value violates gt constraint",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_query_params_str_validations/test_tutorial011.py",
-    "test_function": "test_query_params_gt"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items/?q=test&price=0",
-    "headers": {
-      "x-token": "test-token"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "greater_than",
-          "loc": [
-            "query",
-            "price"
-          ],
-          "msg": "Input should be greater than 0",
-          "input": "0",
-          "ctx": {
-            "gt": 0
-          }
-        }
-      ]
-    }
-  },
-  "notes": "gt (greater than) constraint requires value > threshold, not >=",
-  "handler": {
-    "route": "/items/",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "q": {
-          "type": "string"
-        },
-        "price": {
-          "type": "number",
-          "exclusiveMinimum": 0
-        }
-      }
-    }
-  }
+	"name": "Numeric constraint violation - gt (greater than)",
+	"description": "Tests validation error when value violates gt constraint",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_query_params_str_validations/test_tutorial011.py",
+		"test_function": "test_query_params_gt"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items/?q=test&price=0",
+		"headers": {
+			"x-token": "test-token"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "greater_than",
+					"loc": ["query", "price"],
+					"msg": "Input should be greater than 0",
+					"input": "0",
+					"ctx": {
+						"gt": 0
+					}
+				}
+			]
+		}
+	},
+	"notes": "gt (greater than) constraint requires value > threshold, not >=",
+	"handler": {
+		"route": "/items/",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"q": {
+					"type": "string"
+				},
+				"price": {
+					"type": "number",
+					"exclusiveMinimum": 0
+				}
+			}
+		}
+	}
 }

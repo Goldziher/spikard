@@ -1,65 +1,54 @@
 {
-  "name": "20_format_email_validation_failure",
-  "description": "URL-encoded form with invalid email format should fail",
-  "category": "url_encoded",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "litestar",
-    "test_case": "Email format validation in forms"
-  },
-  "handler": {
-    "route": "/subscribe",
-    "method": "POST",
-    "content_type": "application/x-www-form-urlencoded",
-    "body_schema": {
-      "type": "object",
-      "required": [
-        "email"
-      ],
-      "properties": {
-        "email": {
-          "type": "string",
-          "format": "email"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/subscribe",
-    "headers": {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    "body": "email=not-an-email"
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "validation_error",
-          "loc": [
-            "body",
-            "email"
-          ],
-          "msg": "Invalid email format",
-          "ctx": {
-            "format": "email",
-            "value": "not-an-email"
-          }
-        }
-      ]
-    }
-  },
-  "tags": [
-    "url_encoded",
-    "format",
-    "email",
-    "validation",
-    "error"
-  ]
+	"name": "20_format_email_validation_failure",
+	"description": "URL-encoded form with invalid email format should fail",
+	"category": "url_encoded",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "litestar",
+		"test_case": "Email format validation in forms"
+	},
+	"handler": {
+		"route": "/subscribe",
+		"method": "POST",
+		"content_type": "application/x-www-form-urlencoded",
+		"body_schema": {
+			"type": "object",
+			"required": ["email"],
+			"properties": {
+				"email": {
+					"type": "string",
+					"format": "email"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/subscribe",
+		"headers": {
+			"Content-Type": "application/x-www-form-urlencoded"
+		},
+		"body": "email=not-an-email"
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "validation_error",
+					"loc": ["body", "email"],
+					"msg": "Invalid email format",
+					"ctx": {
+						"format": "email",
+						"value": "not-an-email"
+					}
+				}
+			]
+		}
+	},
+	"tags": ["url_encoded", "format", "email", "validation", "error"]
 }

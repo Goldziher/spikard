@@ -1,54 +1,50 @@
 {
-  "name": "Boolean field - success",
-  "description": "Tests JSON object with boolean field",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
-    "test_function": "test_boolean_field"
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "price": {
-          "type": "number"
-        },
-        "in_stock": {
-          "type": "boolean"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "price",
-        "in_stock"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "name": "Item",
-      "price": 42.0,
-      "in_stock": true
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "name": "Item",
-      "price": 42.0,
-      "in_stock": true
-    }
-  },
-  "notes": "Boolean field 'in_stock' set to true"
+	"name": "Boolean field - success",
+	"description": "Tests JSON object with boolean field",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
+		"test_function": "test_boolean_field"
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"price": {
+					"type": "number"
+				},
+				"in_stock": {
+					"type": "boolean"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["name", "price", "in_stock"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"name": "Item",
+			"price": 42.0,
+			"in_stock": true
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"name": "Item",
+			"price": 42.0,
+			"in_stock": true
+		}
+	},
+	"notes": "Boolean field 'in_stock' set to true"
 }

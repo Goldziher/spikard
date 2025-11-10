@@ -1,35 +1,35 @@
 {
-  "name": "Accept header - JSON",
-  "description": "Tests Accept header for content negotiation",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_response_model/test_tutorial004.py",
-    "test_function": "test_get_portal"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/headers/accept",
-    "headers": {
-      "Accept": "application/json"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "accept": "application/json"
-    }
-  },
-  "notes": "Accept header for content negotiation",
-  "handler": {
-    "route": "/headers/accept",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "Accept": {
-          "type": "string",
-          "annotation": "str"
-        }
-      }
-    }
-  }
+	"name": "Accept header - JSON",
+	"description": "Tests Accept header for content negotiation",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_response_model/test_tutorial004.py",
+		"test_function": "test_get_portal"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/headers/accept",
+		"headers": {
+			"Accept": "application/json"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"accept": "application/json"
+		}
+	},
+	"notes": "Accept header for content negotiation",
+	"handler": {
+		"route": "/headers/accept",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Accept": {
+					"type": "string",
+					"annotation": "str"
+				}
+			}
+		}
+	}
 }

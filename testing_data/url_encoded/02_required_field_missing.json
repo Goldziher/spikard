@@ -1,59 +1,53 @@
 {
-  "name": "Required field missing - validation error",
-  "description": "Tests validation error when required form field is missing",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_request_forms/test_tutorial001.py",
-    "test_function": "test_post_form_missing_required"
-  },
-  "handler": {
-    "route": "/login/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "required": [
-        "username",
-        "password"
-      ],
-      "properties": {
-        "username": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/login/",
-    "headers": {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    "form_data": {
-      "password": "secret"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "missing",
-          "loc": [
-            "body",
-            "username"
-          ],
-          "msg": "Field required",
-          "input": ""
-        }
-      ]
-    }
-  },
-  "notes": "Required 'username' field is missing"
+	"name": "Required field missing - validation error",
+	"description": "Tests validation error when required form field is missing",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_request_forms/test_tutorial001.py",
+		"test_function": "test_post_form_missing_required"
+	},
+	"handler": {
+		"route": "/login/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"required": ["username", "password"],
+			"properties": {
+				"username": {
+					"type": "string"
+				},
+				"password": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/login/",
+		"headers": {
+			"Content-Type": "application/x-www-form-urlencoded"
+		},
+		"form_data": {
+			"password": "secret"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "missing",
+					"loc": ["body", "username"],
+					"msg": "Field required",
+					"input": ""
+				}
+			]
+		}
+	},
+	"notes": "Required 'username' field is missing"
 }

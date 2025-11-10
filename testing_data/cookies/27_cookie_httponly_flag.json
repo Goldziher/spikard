@@ -1,39 +1,39 @@
 {
-  "name": "27_cookie_httponly_flag",
-  "description": "Cookie with HttpOnly flag should prevent JavaScript access",
-  "category": "cookies",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "nestjs",
-    "test_case": "Cookie HttpOnly flag validation"
-  },
-  "handler": {
-    "route": "/secure",
-    "method": "GET",
-    "parameters": {
-      "cookies": {
-        "session": {
-          "type": "string",
-          "required": true,
-          "httponly": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/secure",
-    "cookies": {
-      "session": "session_abc123"
-    },
-    "cookie_attributes": {
-      "session": {
-        "HttpOnly": true
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 200
-  },
-  "tags": ["cookies", "httponly", "security", "xss_protection", "validation", "success"]
+	"name": "27_cookie_httponly_flag",
+	"description": "Cookie with HttpOnly flag should prevent JavaScript access",
+	"category": "cookies",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "nestjs",
+		"test_case": "Cookie HttpOnly flag validation"
+	},
+	"handler": {
+		"route": "/secure",
+		"method": "GET",
+		"parameters": {
+			"cookies": {
+				"session": {
+					"type": "string",
+					"required": true,
+					"httponly": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/secure",
+		"cookies": {
+			"session": "session_abc123"
+		},
+		"cookie_attributes": {
+			"session": {
+				"HttpOnly": true
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 200
+	},
+	"tags": ["cookies", "httponly", "security", "xss_protection", "validation", "success"]
 }

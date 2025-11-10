@@ -1,48 +1,45 @@
 {
-  "name": "Required integer query parameter - invalid type",
-  "description": "Tests integer query parameter with non-numeric string, should return 422",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_query.py",
-    "test_function": "test_query_int_query_baz"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/query/int",
-    "query_params": {
-      "query": "baz"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "int_parsing",
-          "loc": [
-            "query",
-            "query"
-          ],
-          "msg": "Input should be a valid integer, unable to parse string as an integer",
-          "input": "baz"
-        }
-      ]
-    }
-  },
-  "handler": {
-    "route": "/query/int",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "query": {
-          "type": "integer",
-          "annotation": "int"
-        }
-      }
-    }
-  }
+	"name": "Required integer query parameter - invalid type",
+	"description": "Tests integer query parameter with non-numeric string, should return 422",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_query.py",
+		"test_function": "test_query_int_query_baz"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/query/int",
+		"query_params": {
+			"query": "baz"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "int_parsing",
+					"loc": ["query", "query"],
+					"msg": "Input should be a valid integer, unable to parse string as an integer",
+					"input": "baz"
+				}
+			]
+		}
+	},
+	"handler": {
+		"route": "/query/int",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"query": {
+					"type": "integer",
+					"annotation": "int"
+				}
+			}
+		}
+	}
 }

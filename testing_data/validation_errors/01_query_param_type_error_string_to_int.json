@@ -1,51 +1,48 @@
 {
-  "name": "Query param type error - string provided for int",
-  "description": "Tests validation error when string is provided for integer query param",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_query_params/test_tutorial001.py",
-    "test_function": "test_query_params_invalid"
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "q": {
-          "type": "string"
-        },
-        "skip": {
-          "type": "integer"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items/?q=test&skip=not_a_number",
-    "headers": {
-      "x-token": "test-token"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "int_parsing",
-          "loc": [
-            "query",
-            "skip"
-          ],
-          "msg": "Input should be a valid integer, unable to parse string as an integer",
-          "input": "not_a_number"
-        }
-      ]
-    }
-  },
-  "notes": "Pydantic v2 returns int_parsing error when string cannot be parsed as integer"
+	"name": "Query param type error - string provided for int",
+	"description": "Tests validation error when string is provided for integer query param",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_query_params/test_tutorial001.py",
+		"test_function": "test_query_params_invalid"
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"q": {
+					"type": "string"
+				},
+				"skip": {
+					"type": "integer"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items/?q=test&skip=not_a_number",
+		"headers": {
+			"x-token": "test-token"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "int_parsing",
+					"loc": ["query", "skip"],
+					"msg": "Input should be a valid integer, unable to parse string as an integer",
+					"input": "not_a_number"
+				}
+			]
+		}
+	},
+	"notes": "Pydantic v2 returns int_parsing error when string cannot be parsed as integer"
 }

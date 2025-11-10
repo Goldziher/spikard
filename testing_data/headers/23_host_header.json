@@ -1,35 +1,35 @@
 {
-  "name": "Host header",
-  "description": "Tests Host header (standard HTTP header)",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_requests.py",
-    "test_function": "test_request_headers"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/headers/host",
-    "headers": {
-      "Host": "example.com:8080"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "host": "example.com:8080"
-    }
-  },
-  "notes": "Host header with port number",
-  "handler": {
-    "route": "/headers/host",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "Host": {
-          "type": "string",
-          "annotation": "str"
-        }
-      }
-    }
-  }
+	"name": "Host header",
+	"description": "Tests Host header (standard HTTP header)",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_requests.py",
+		"test_function": "test_request_headers"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/headers/host",
+		"headers": {
+			"Host": "example.com:8080"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"host": "example.com:8080"
+		}
+	},
+	"notes": "Host header with port number",
+	"handler": {
+		"route": "/headers/host",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Host": {
+					"type": "string",
+					"annotation": "str"
+				}
+			}
+		}
+	}
 }

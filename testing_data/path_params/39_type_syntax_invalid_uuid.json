@@ -1,39 +1,36 @@
 {
-  "name": "Path parameter type syntax - invalid UUID",
-  "description": "Tests that :uuid type syntax auto-generates validation that rejects invalid UUIDs",
-  "category": "path_params",
-  "source": {
-    "framework": "spikard",
-    "test_file": "type_syntax_demo",
-    "test_function": "test_type_syntax_invalid_uuid"
-  },
-  "handler": {
-    "route": "/type-syntax/items/{id:uuid}",
-    "method": "GET"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/type-syntax/items/not-a-uuid"
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "uuid_parsing",
-          "loc": [
-            "path",
-            "id"
-          ],
-          "msg": "Input should be a valid UUID",
-          "input": "not-a-uuid"
-        }
-      ]
-    }
-  },
-  "notes": "Type syntax :uuid automatically generates UUID validation in Spikard core that rejects invalid values"
+	"name": "Path parameter type syntax - invalid UUID",
+	"description": "Tests that :uuid type syntax auto-generates validation that rejects invalid UUIDs",
+	"category": "path_params",
+	"source": {
+		"framework": "spikard",
+		"test_file": "type_syntax_demo",
+		"test_function": "test_type_syntax_invalid_uuid"
+	},
+	"handler": {
+		"route": "/type-syntax/items/{id:uuid}",
+		"method": "GET"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/type-syntax/items/not-a-uuid"
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "uuid_parsing",
+					"loc": ["path", "id"],
+					"msg": "Input should be a valid UUID",
+					"input": "not-a-uuid"
+				}
+			]
+		}
+	},
+	"notes": "Type syntax :uuid automatically generates UUID validation in Spikard core that rejects invalid values"
 }

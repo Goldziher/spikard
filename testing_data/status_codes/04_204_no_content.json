@@ -1,28 +1,28 @@
 {
-  "name": "204 No Content - Success with no body",
-  "description": "Tests 204 No Content response for successful DELETE",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_response_model/test_tutorial001.py",
-    "test_function": "test_delete_item"
-  },
-  "handler": {
-    "route": "/status-test/{code}",
-    "method": "DELETE",
-    "parameters": {
-      "path": {
-        "code": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "DELETE",
-    "path": "/status-test/204"
-  },
-  "expected_response": {
-    "status_code": 204
-  },
-  "notes": "204 No Content - successful deletion with no response body"
+	"name": "204 No Content - Success with no body",
+	"description": "Tests 204 No Content response for successful DELETE",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_response_model/test_tutorial001.py",
+		"test_function": "test_delete_item"
+	},
+	"handler": {
+		"route": "/status-test/{code}",
+		"method": "DELETE",
+		"parameters": {
+			"path": {
+				"code": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "DELETE",
+		"path": "/status-test/204"
+	},
+	"expected_response": {
+		"status_code": 204
+	},
+	"notes": "204 No Content - successful deletion with no response body"
 }

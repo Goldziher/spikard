@@ -1,77 +1,77 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "HTTP Methods Test Fixture",
-  "description": "Test fixture for various HTTP methods (PUT, PATCH, DELETE, OPTIONS, HEAD)",
-  "type": "object",
-  "required": ["name", "description", "source", "request", "expected_response"],
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "Human-readable name for this test case"
-    },
-    "description": {
-      "type": "string",
-      "description": "What this test validates"
-    },
-    "source": {
-      "type": "object",
-      "description": "Source framework and test location",
-      "required": ["framework", "test_file", "test_function"],
-      "properties": {
-        "framework": {
-          "type": "string",
-          "enum": ["fastapi", "starlette", "litestar"]
-        },
-        "test_file": {
-          "type": "string"
-        },
-        "test_function": {
-          "type": "string"
-        }
-      }
-    },
-    "request": {
-      "type": "object",
-      "required": ["method", "path"],
-      "properties": {
-        "method": {
-          "type": "string",
-          "enum": ["PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"]
-        },
-        "path": {
-          "type": "string"
-        },
-        "headers": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "body": {
-          "description": "Request body"
-        }
-      }
-    },
-    "expected_response": {
-      "type": "object",
-      "required": ["status_code"],
-      "properties": {
-        "status_code": {
-          "type": "integer"
-        },
-        "body": {
-          "description": "Response body"
-        },
-        "headers": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "notes": {
-      "type": "string"
-    }
-  }
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "HTTP Methods Test Fixture",
+	"description": "Test fixture for various HTTP methods (PUT, PATCH, DELETE, OPTIONS, HEAD)",
+	"type": "object",
+	"required": ["name", "description", "source", "request", "expected_response"],
+	"properties": {
+		"name": {
+			"type": "string",
+			"description": "Human-readable name for this test case"
+		},
+		"description": {
+			"type": "string",
+			"description": "What this test validates"
+		},
+		"source": {
+			"type": "object",
+			"description": "Source framework and test location",
+			"required": ["framework", "test_file", "test_function"],
+			"properties": {
+				"framework": {
+					"type": "string",
+					"enum": ["fastapi", "starlette", "litestar"]
+				},
+				"test_file": {
+					"type": "string"
+				},
+				"test_function": {
+					"type": "string"
+				}
+			}
+		},
+		"request": {
+			"type": "object",
+			"required": ["method", "path"],
+			"properties": {
+				"method": {
+					"type": "string",
+					"enum": ["PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"]
+				},
+				"path": {
+					"type": "string"
+				},
+				"headers": {
+					"type": "object",
+					"additionalProperties": {
+						"type": "string"
+					}
+				},
+				"body": {
+					"description": "Request body"
+				}
+			}
+		},
+		"expected_response": {
+			"type": "object",
+			"required": ["status_code"],
+			"properties": {
+				"status_code": {
+					"type": "integer"
+				},
+				"body": {
+					"description": "Response body"
+				},
+				"headers": {
+					"type": "object",
+					"additionalProperties": {
+						"type": "string"
+					}
+				}
+			}
+		},
+		"notes": {
+			"type": "string"
+		}
+	}
 }

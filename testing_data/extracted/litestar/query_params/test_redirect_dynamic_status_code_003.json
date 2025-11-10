@@ -1,28 +1,25 @@
 {
-  "name": "test_redirect_dynamic_status_code_003",
-  "description": "Extracted from Litestar: test_redirect_dynamic_status_code case 3",
-  "category": "query_params",
-  "source": {
-    "framework": "litestar",
-    "test_file": "tests/unit/test_response/test_redirect_response.py",
-    "test_function": "test_redirect_dynamic_status_code",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/",
-    "method": "GET",
-    "parameters": {}
-  },
-  "request": {
-    "method": "GET",
-    "path": "/"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {}
-  },
-  "tags": [
-    "success",
-    "query"
-  ]
+	"name": "test_redirect_dynamic_status_code_003",
+	"description": "Extracted from Litestar: test_redirect_dynamic_status_code case 3",
+	"category": "query_params",
+	"source": {
+		"framework": "litestar",
+		"test_file": "tests/unit/test_response/test_redirect_response.py",
+		"test_function": "test_redirect_dynamic_status_code",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/",
+		"method": "GET",
+		"parameters": {}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {}
+	},
+	"tags": ["success", "query"]
 }

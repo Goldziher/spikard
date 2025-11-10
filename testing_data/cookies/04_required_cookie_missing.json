@@ -1,52 +1,49 @@
 {
-  "name": "Required cookie - missing",
-  "description": "Tests validation error when required cookie is missing",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_cookie_param_models/test_tutorial001.py",
-    "test_function": "test_cookie_param_model_invalid"
-  },
-  "handler": {
-    "route": "/items/cookies",
-    "method": "GET",
-    "parameters": {
-      "cookies": {
-        "session_id": {
-          "type": "string"
-        },
-        "fatebook_tracker": {
-          "type": "string",
-          "optional": true
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items/cookies",
-    "cookies": {
-      "fatebook_tracker": "tracker456"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "missing",
-          "loc": [
-            "cookie",
-            "session_id"
-          ],
-          "msg": "Field required",
-          "input": ""
-        }
-      ]
-    }
-  },
-  "notes": "Missing required cookie returns 422 validation error"
+	"name": "Required cookie - missing",
+	"description": "Tests validation error when required cookie is missing",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_cookie_param_models/test_tutorial001.py",
+		"test_function": "test_cookie_param_model_invalid"
+	},
+	"handler": {
+		"route": "/items/cookies",
+		"method": "GET",
+		"parameters": {
+			"cookies": {
+				"session_id": {
+					"type": "string"
+				},
+				"fatebook_tracker": {
+					"type": "string",
+					"optional": true
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items/cookies",
+		"cookies": {
+			"fatebook_tracker": "tracker456"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "missing",
+					"loc": ["cookie", "session_id"],
+					"msg": "Field required",
+					"input": ""
+				}
+			]
+		}
+	},
+	"notes": "Missing required cookie returns 422 validation error"
 }

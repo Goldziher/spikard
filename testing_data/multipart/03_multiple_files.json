@@ -1,69 +1,66 @@
 {
-  "name": "Multiple file uploads",
-  "description": "Upload multiple files in a single multipart request",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_formparsers.py",
-    "test_function": "test_multipart_request_multiple_files"
-  },
-  "handler": {
-    "route": "/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "test1": {
-          "type": "string",
-          "format": "binary"
-        },
-        "test2": {
-          "type": "string",
-          "format": "binary"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "test1",
-        "test2"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/",
-    "content_type": "multipart/form-data",
-    "files": [
-      {
-        "field_name": "test1",
-        "filename": "test1.txt",
-        "content": "<file1 content>",
-        "content_encoding": "text",
-        "content_type": "text/plain"
-      },
-      {
-        "field_name": "test2",
-        "filename": "test2.txt",
-        "content": "<file2 content>",
-        "content_encoding": "text",
-        "content_type": "text/plain"
-      }
-    ]
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "test1": {
-        "filename": "test1.txt",
-        "size": 15,
-        "content": "<file1 content>",
-        "content_type": "text/plain"
-      },
-      "test2": {
-        "filename": "test2.txt",
-        "size": 15,
-        "content": "<file2 content>",
-        "content_type": "text/plain"
-      }
-    }
-  }
+	"name": "Multiple file uploads",
+	"description": "Upload multiple files in a single multipart request",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_formparsers.py",
+		"test_function": "test_multipart_request_multiple_files"
+	},
+	"handler": {
+		"route": "/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"test1": {
+					"type": "string",
+					"format": "binary"
+				},
+				"test2": {
+					"type": "string",
+					"format": "binary"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["test1", "test2"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/",
+		"content_type": "multipart/form-data",
+		"files": [
+			{
+				"field_name": "test1",
+				"filename": "test1.txt",
+				"content": "<file1 content>",
+				"content_encoding": "text",
+				"content_type": "text/plain"
+			},
+			{
+				"field_name": "test2",
+				"filename": "test2.txt",
+				"content": "<file2 content>",
+				"content_encoding": "text",
+				"content_type": "text/plain"
+			}
+		]
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"test1": {
+				"filename": "test1.txt",
+				"size": 15,
+				"content": "<file1 content>",
+				"content_type": "text/plain"
+			},
+			"test2": {
+				"filename": "test2.txt",
+				"size": 15,
+				"content": "<file2 content>",
+				"content_type": "text/plain"
+			}
+		}
+	}
 }

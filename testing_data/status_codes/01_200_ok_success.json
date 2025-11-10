@@ -1,32 +1,32 @@
 {
-  "name": "200 OK - Success",
-  "description": "Tests standard 200 OK response for successful GET request",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_response_model/test_tutorial001.py",
-    "test_function": "test_get_item"
-  },
-  "handler": {
-    "route": "/status-test/{code}",
-    "method": "GET",
-    "parameters": {
-      "path": {
-        "code": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/status-test/200"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "id": 1,
-      "name": "Item 1"
-    }
-  },
-  "notes": "Standard 200 OK success response"
+	"name": "200 OK - Success",
+	"description": "Tests standard 200 OK response for successful GET request",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_response_model/test_tutorial001.py",
+		"test_function": "test_get_item"
+	},
+	"handler": {
+		"route": "/status-test/{code}",
+		"method": "GET",
+		"parameters": {
+			"path": {
+				"code": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/status-test/200"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"id": 1,
+			"name": "Item 1"
+		}
+	},
+	"notes": "Standard 200 OK success response"
 }

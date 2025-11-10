@@ -1,67 +1,60 @@
 {
-  "name": "Invalid datetime format",
-  "description": "Tests validation error when datetime format is invalid",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_datetime/test_tutorial001.py",
-    "test_function": "test_datetime_invalid"
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "price": {
-          "type": "number"
-        },
-        "created_at": {
-          "type": "string",
-          "format": "date-time"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "price",
-        "created_at"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "name": "Item",
-      "price": 10.0,
-      "created_at": "not-a-datetime"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "datetime_parsing",
-          "loc": [
-            "body",
-            "created_at"
-          ],
-          "msg": "Input should be a valid datetime",
-          "input": "not-a-datetime"
-        }
-      ]
-    }
-  },
-  "notes": "Datetime validation expects ISO 8601 format"
+	"name": "Invalid datetime format",
+	"description": "Tests validation error when datetime format is invalid",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_datetime/test_tutorial001.py",
+		"test_function": "test_datetime_invalid"
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"price": {
+					"type": "number"
+				},
+				"created_at": {
+					"type": "string",
+					"format": "date-time"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["name", "price", "created_at"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"name": "Item",
+			"price": 10.0,
+			"created_at": "not-a-datetime"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "datetime_parsing",
+					"loc": ["body", "created_at"],
+					"msg": "Input should be a valid datetime",
+					"input": "not-a-datetime"
+				}
+			]
+		}
+	},
+	"notes": "Datetime validation expects ISO 8601 format"
 }

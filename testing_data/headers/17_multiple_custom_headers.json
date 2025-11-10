@@ -1,47 +1,47 @@
 {
-  "name": "Multiple custom headers",
-  "description": "Tests multiple custom headers in single request",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_header_params/test_tutorial001.py",
-    "test_function": "test_get_headers"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/headers/multiple",
-    "headers": {
-      "X-Request-Id": "req-12345",
-      "X-Client-Version": "1.2.3",
-      "X-Trace-Id": "trace-abc"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "x_request_id": "req-12345",
-      "x_client_version": "1.2.3",
-      "x_trace_id": "trace-abc"
-    }
-  },
-  "notes": "Multiple custom headers with underscore conversion",
-  "handler": {
-    "route": "/headers/multiple",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "X-Request-Id": {
-          "type": "string",
-          "annotation": "str"
-        },
-        "X-Client-Version": {
-          "type": "string",
-          "annotation": "str"
-        },
-        "X-Trace-Id": {
-          "type": "string",
-          "annotation": "str"
-        }
-      }
-    }
-  }
+	"name": "Multiple custom headers",
+	"description": "Tests multiple custom headers in single request",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_header_params/test_tutorial001.py",
+		"test_function": "test_get_headers"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/headers/multiple",
+		"headers": {
+			"X-Request-Id": "req-12345",
+			"X-Client-Version": "1.2.3",
+			"X-Trace-Id": "trace-abc"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"x_request_id": "req-12345",
+			"x_client_version": "1.2.3",
+			"x_trace_id": "trace-abc"
+		}
+	},
+	"notes": "Multiple custom headers with underscore conversion",
+	"handler": {
+		"route": "/headers/multiple",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"X-Request-Id": {
+					"type": "string",
+					"annotation": "str"
+				},
+				"X-Client-Version": {
+					"type": "string",
+					"annotation": "str"
+				},
+				"X-Trace-Id": {
+					"type": "string",
+					"annotation": "str"
+				}
+			}
+		}
+	}
 }

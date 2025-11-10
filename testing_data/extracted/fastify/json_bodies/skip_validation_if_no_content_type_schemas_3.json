@@ -1,27 +1,24 @@
 {
-  "name": "skip_validation_if_no_content_type_schemas_3",
-  "description": "Extracted from Fastify: Skip validation if no content type schemas",
-  "category": "json_bodies",
-  "source": {
-    "framework": "fastify",
-    "test_file": "test/schema-validation.test.js",
-    "test_function": "Skip validation if no content type schemas",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/",
-    "method": "POST",
-    "parameters": {}
-  },
-  "request": {
-    "method": "POST",
-    "path": "/"
-  },
-  "expected_response": {
-    "status_code": 200
-  },
-  "tags": [
-    "success",
-    "body"
-  ]
+	"name": "skip_validation_if_no_content_type_schemas_3",
+	"description": "Extracted from Fastify: Skip validation if no content type schemas",
+	"category": "json_bodies",
+	"source": {
+		"framework": "fastify",
+		"test_file": "test/schema-validation.test.js",
+		"test_function": "Skip validation if no content type schemas",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/",
+		"method": "POST",
+		"parameters": {}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/"
+	},
+	"expected_response": {
+		"status_code": 200
+	},
+	"tags": ["success", "body"]
 }

@@ -1,65 +1,59 @@
 {
-  "name": "String pattern validation - fail",
-  "description": "Tests string field with regex pattern constraint failure",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_body_fields/test_tutorial001.py",
-    "test_function": "test_pattern_fail"
-  },
-  "handler": {
-    "route": "/items/validated",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "sku": {
-          "type": "string",
-          "pattern": "^[A-Z]{3}[0-9]{4}$"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "sku"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/validated",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "name": "Item",
-      "sku": "ABC-123"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "string_pattern_mismatch",
-          "loc": [
-            "body",
-            "sku"
-          ],
-          "msg": "String should match pattern '^[A-Z]{3}[0-9]{4}$'",
-          "input": "ABC-123",
-          "ctx": {
-            "pattern": "^[A-Z]{3}[0-9]{4}$"
-          }
-        }
-      ]
-    }
-  },
-  "notes": "SKU pattern requires 3 uppercase letters + 4 digits (no hyphen)"
+	"name": "String pattern validation - fail",
+	"description": "Tests string field with regex pattern constraint failure",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_body_fields/test_tutorial001.py",
+		"test_function": "test_pattern_fail"
+	},
+	"handler": {
+		"route": "/items/validated",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"sku": {
+					"type": "string",
+					"pattern": "^[A-Z]{3}[0-9]{4}$"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["name", "sku"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/validated",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"name": "Item",
+			"sku": "ABC-123"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "string_pattern_mismatch",
+					"loc": ["body", "sku"],
+					"msg": "String should match pattern '^[A-Z]{3}[0-9]{4}$'",
+					"input": "ABC-123",
+					"ctx": {
+						"pattern": "^[A-Z]{3}[0-9]{4}$"
+					}
+				}
+			]
+		}
+	},
+	"notes": "SKU pattern requires 3 uppercase letters + 4 digits (no hyphen)"
 }

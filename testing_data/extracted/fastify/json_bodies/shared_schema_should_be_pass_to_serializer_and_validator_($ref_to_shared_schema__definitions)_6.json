@@ -1,28 +1,24 @@
 {
-  "name": "shared_schema_should_be_pass_to_serializer_and_validator_($ref_to_shared_schema__definitions)_6",
-  "description": "Extracted from Fastify: Shared schema should be pass to serializer and validator ($ref to shared schema /definitions)",
-  "category": "json_bodies",
-  "source": {
-    "framework": "fastify",
-    "test_file": "test/schema-serialization.test.js",
-    "test_function": "Shared schema should be pass to serializer and validator ($ref to shared schema /definitions)",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/",
-    "method": "POST",
-    "parameters": {}
-  },
-  "request": {
-    "method": "POST",
-    "path": "/"
-  },
-  "expected_response": {
-    "status_code": 400
-  },
-  "tags": [
-    "error",
-    "validation",
-    "body"
-  ]
+	"name": "shared_schema_should_be_pass_to_serializer_and_validator_($ref_to_shared_schema__definitions)_6",
+	"description": "Extracted from Fastify: Shared schema should be pass to serializer and validator ($ref to shared schema /definitions)",
+	"category": "json_bodies",
+	"source": {
+		"framework": "fastify",
+		"test_file": "test/schema-serialization.test.js",
+		"test_function": "Shared schema should be pass to serializer and validator ($ref to shared schema /definitions)",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/",
+		"method": "POST",
+		"parameters": {}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/"
+	},
+	"expected_response": {
+		"status_code": 400
+	},
+	"tags": ["error", "validation", "body"]
 }

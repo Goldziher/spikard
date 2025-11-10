@@ -1,59 +1,54 @@
 {
-  "name": "String max_length validation - fail",
-  "description": "Tests form field with max_length constraint failure",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_request_form_models/test_tutorial001.py",
-    "test_function": "test_form_maxlength_fail"
-  },
-  "handler": {
-    "route": "/form/validated",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "required": [
-        "username"
-      ],
-      "properties": {
-        "username": {
-          "type": "string",
-          "maxLength": 20
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/form/validated",
-    "headers": {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    "form_data": {
-      "username": "this_is_a_very_long_username_that_exceeds_limit"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "string_too_long",
-          "loc": [
-            "body",
-            "username"
-          ],
-          "msg": "String should have at most 20 characters",
-          "input": "this_is_a_very_long_username_that_exceeds_limit",
-          "ctx": {
-            "max_length": 20
-          }
-        }
-      ]
-    }
-  },
-  "notes": "username field has max_length=20, input has 47 characters"
+	"name": "String max_length validation - fail",
+	"description": "Tests form field with max_length constraint failure",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_request_form_models/test_tutorial001.py",
+		"test_function": "test_form_maxlength_fail"
+	},
+	"handler": {
+		"route": "/form/validated",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"required": ["username"],
+			"properties": {
+				"username": {
+					"type": "string",
+					"maxLength": 20
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/form/validated",
+		"headers": {
+			"Content-Type": "application/x-www-form-urlencoded"
+		},
+		"form_data": {
+			"username": "this_is_a_very_long_username_that_exceeds_limit"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "string_too_long",
+					"loc": ["body", "username"],
+					"msg": "String should have at most 20 characters",
+					"input": "this_is_a_very_long_username_that_exceeds_limit",
+					"ctx": {
+						"max_length": 20
+					}
+				}
+			]
+		}
+	},
+	"notes": "username field has max_length=20, input has 47 characters"
 }

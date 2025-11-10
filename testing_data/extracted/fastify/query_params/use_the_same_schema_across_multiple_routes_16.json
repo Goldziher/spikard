@@ -1,27 +1,24 @@
 {
-  "name": "use_the_same_schema_across_multiple_routes_16",
-  "description": "Extracted from Fastify: Use the same schema across multiple routes",
-  "category": "query_params",
-  "source": {
-    "framework": "fastify",
-    "test_file": "test/schema-feature.test.js",
-    "test_function": "Use the same schema across multiple routes",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/second/:id",
-    "method": "GET",
-    "parameters": {}
-  },
-  "request": {
-    "method": "GET",
-    "path": "/second/123"
-  },
-  "expected_response": {
-    "status_code": 200
-  },
-  "tags": [
-    "success",
-    "query"
-  ]
+	"name": "use_the_same_schema_across_multiple_routes_16",
+	"description": "Extracted from Fastify: Use the same schema across multiple routes",
+	"category": "query_params",
+	"source": {
+		"framework": "fastify",
+		"test_file": "test/schema-feature.test.js",
+		"test_function": "Use the same schema across multiple routes",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/second/:id",
+		"method": "GET",
+		"parameters": {}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/second/123"
+	},
+	"expected_response": {
+		"status_code": 200
+	},
+	"tags": ["success", "query"]
 }

@@ -1,74 +1,62 @@
 {
-  "name": "Array item validation error",
-  "description": "Tests validation error for invalid item within array",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_union_body.py",
-    "test_function": "test_array_item_validation"
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "price": {
-          "type": "number"
-        },
-        "tags": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "price",
-        "tags"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "name": "Item",
-      "price": 10.0,
-      "tags": [
-        "tag1",
-        "tag2",
-        123
-      ]
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "type_error",
-          "loc": [
-            "body",
-            "tags",
-            "2"
-          ],
-          "msg": "Input should be a valid unknown",
-          "input": 123
-        }
-      ]
-    }
-  },
-  "notes": "Array item validation includes item index in loc path"
+	"name": "Array item validation error",
+	"description": "Tests validation error for invalid item within array",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_union_body.py",
+		"test_function": "test_array_item_validation"
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"price": {
+					"type": "number"
+				},
+				"tags": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				}
+			},
+			"additionalProperties": false,
+			"required": ["name", "price", "tags"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"name": "Item",
+			"price": 10.0,
+			"tags": ["tag1", "tag2", 123]
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "type_error",
+					"loc": ["body", "tags", "2"],
+					"msg": "Input should be a valid unknown",
+					"input": 123
+				}
+			]
+		}
+	},
+	"notes": "Array item validation includes item index in loc path"
 }

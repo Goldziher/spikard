@@ -1,66 +1,66 @@
 {
-  "name": "50_deep_nesting_4_levels",
-  "description": "Deeply nested object with 4+ levels should validate correctly",
-  "category": "json_bodies",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "litestar",
-    "test_case": "Deep nesting validation"
-  },
-  "handler": {
-    "route": "/data",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "required": ["user"],
-      "properties": {
-        "user": {
-          "type": "object",
-          "required": ["profile"],
-          "properties": {
-            "profile": {
-              "type": "object",
-              "required": ["contact"],
-              "properties": {
-                "contact": {
-                  "type": "object",
-                  "required": ["address"],
-                  "properties": {
-                    "address": {
-                      "type": "object",
-                      "required": ["street"],
-                      "properties": {
-                        "street": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/data",
-    "body": {
-      "user": {
-        "profile": {
-          "contact": {
-            "address": {
-              "street": "123 Main St"
-            }
-          }
-        }
-      }
-    }
-  },
-  "expected_response": {
-    "status_code": 201
-  },
-  "tags": ["json_bodies", "nested", "deep_nesting", "validation", "success"]
+	"name": "50_deep_nesting_4_levels",
+	"description": "Deeply nested object with 4+ levels should validate correctly",
+	"category": "json_bodies",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "litestar",
+		"test_case": "Deep nesting validation"
+	},
+	"handler": {
+		"route": "/data",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"required": ["user"],
+			"properties": {
+				"user": {
+					"type": "object",
+					"required": ["profile"],
+					"properties": {
+						"profile": {
+							"type": "object",
+							"required": ["contact"],
+							"properties": {
+								"contact": {
+									"type": "object",
+									"required": ["address"],
+									"properties": {
+										"address": {
+											"type": "object",
+											"required": ["street"],
+											"properties": {
+												"street": {
+													"type": "string"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/data",
+		"body": {
+			"user": {
+				"profile": {
+					"contact": {
+						"address": {
+							"street": "123 Main St"
+						}
+					}
+				}
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 201
+	},
+	"tags": ["json_bodies", "nested", "deep_nesting", "validation", "success"]
 }

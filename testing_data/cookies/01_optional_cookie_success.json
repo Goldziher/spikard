@@ -1,35 +1,35 @@
 {
-  "name": "Optional cookie parameter - success",
-  "description": "Tests optional cookie parameter with value provided",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_cookie_params/test_tutorial001.py",
-    "test_function": "test"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items/",
-    "cookies": {
-      "ads_id": "abc123"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "ads_id": "abc123"
-    }
-  },
-  "notes": "Optional cookie returns value when provided",
-  "handler": {
-    "route": "/items/",
-    "method": "GET",
-    "parameters": {
-      "cookies": {
-        "ads_id": {
-          "type": "string",
-          "optional": true
-        }
-      }
-    }
-  }
+	"name": "Optional cookie parameter - success",
+	"description": "Tests optional cookie parameter with value provided",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_cookie_params/test_tutorial001.py",
+		"test_function": "test"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items/",
+		"cookies": {
+			"ads_id": "abc123"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"ads_id": "abc123"
+		}
+	},
+	"notes": "Optional cookie returns value when provided",
+	"handler": {
+		"route": "/items/",
+		"method": "GET",
+		"parameters": {
+			"cookies": {
+				"ads_id": {
+					"type": "string",
+					"optional": true
+				}
+			}
+		}
+	}
 }

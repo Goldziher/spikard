@@ -1,20 +1,20 @@
 {
-  "name": "302 Found - Temporary redirect",
-  "description": "Tests 302 temporary redirect response",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_responses.py",
-    "test_function": "test_redirect_302"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/temp-redirect"
-  },
-  "expected_response": {
-    "status_code": 302,
-    "headers": {
-      "location": "/target-path"
-    }
-  },
-  "notes": "302 Found - temporary redirect"
+	"name": "302 Found - Temporary redirect",
+	"description": "Tests 302 temporary redirect response",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_responses.py",
+		"test_function": "test_redirect_302"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/temp-redirect"
+	},
+	"expected_response": {
+		"status_code": 302,
+		"headers": {
+			"location": "/target-path"
+		}
+	},
+	"notes": "302 Found - temporary redirect"
 }

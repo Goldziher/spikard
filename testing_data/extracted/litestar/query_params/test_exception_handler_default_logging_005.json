@@ -1,28 +1,25 @@
 {
-  "name": "test_exception_handler_default_logging_005",
-  "description": "Extracted from Litestar: test_exception_handler_default_logging case 5",
-  "category": "query_params",
-  "source": {
-    "framework": "litestar",
-    "test_file": "tests/unit/test_middleware/test_exception_handler_middleware.py",
-    "test_function": "test_exception_handler_default_logging",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/test",
-    "method": "GET",
-    "parameters": {}
-  },
-  "request": {
-    "method": "GET",
-    "path": "/test"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {}
-  },
-  "tags": [
-    "success",
-    "query"
-  ]
+	"name": "test_exception_handler_default_logging_005",
+	"description": "Extracted from Litestar: test_exception_handler_default_logging case 5",
+	"category": "query_params",
+	"source": {
+		"framework": "litestar",
+		"test_file": "tests/unit/test_middleware/test_exception_handler_middleware.py",
+		"test_function": "test_exception_handler_default_logging",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/test",
+		"method": "GET",
+		"parameters": {}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/test"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {}
+	},
+	"tags": ["success", "query"]
 }

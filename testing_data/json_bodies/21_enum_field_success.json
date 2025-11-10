@@ -1,48 +1,45 @@
 {
-  "name": "Enum field - success",
-  "description": "Tests enum field with valid enum value",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
-    "test_function": "test_enum_field"
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "category": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "category"
-      ]
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/items/",
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "body": {
-      "name": "Item",
-      "category": "electronics"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "name": "Item",
-      "category": "electronics"
-    }
-  },
-  "notes": "Enum values: electronics, clothing, books"
+	"name": "Enum field - success",
+	"description": "Tests enum field with valid enum value",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_body/test_tutorial001.py",
+		"test_function": "test_enum_field"
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"category": {
+					"type": "string"
+				}
+			},
+			"additionalProperties": false,
+			"required": ["name", "category"]
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/items/",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"name": "Item",
+			"category": "electronics"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"name": "Item",
+			"category": "electronics"
+		}
+	},
+	"notes": "Enum values: electronics, clothing, books"
 }

@@ -1,35 +1,32 @@
 {
-  "name": "test_query_param_arrays_000",
-  "description": "Extracted from Litestar: test_query_param_arrays case 0",
-  "category": "query_params",
-  "source": {
-    "framework": "litestar",
-    "test_file": "tests/unit/test_kwargs/test_query_params.py",
-    "test_function": "test_query_param_arrays",
-    "adapted": true
-  },
-  "handler": {
-    "route": "/",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "param": {
-          "type": "string",
-          "annotation": "Any"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/"
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {}
-  },
-  "tags": [
-    "success",
-    "query"
-  ]
+	"name": "test_query_param_arrays_000",
+	"description": "Extracted from Litestar: test_query_param_arrays case 0",
+	"category": "query_params",
+	"source": {
+		"framework": "litestar",
+		"test_file": "tests/unit/test_kwargs/test_query_params.py",
+		"test_function": "test_query_param_arrays",
+		"adapted": true
+	},
+	"handler": {
+		"route": "/",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"param": {
+					"type": "string",
+					"annotation": "Any"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {}
+	},
+	"tags": ["success", "query"]
 }

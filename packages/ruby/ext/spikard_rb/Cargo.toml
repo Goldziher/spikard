@@ -13,4 +13,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 magnus = { git = "https://github.com/matsadler/magnus", rev = "f6db11769efb517427bf7f121f9c32e18b059b38", features = ["rb-sys"] }
-spikard-rb = { path = "../../../../crates/spikard-rb" }
+spikard_rb_core = { package = "spikard-rb", path = "../../../../crates/spikard-rb" }

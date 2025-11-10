@@ -1,43 +1,43 @@
 {
-  "name": "Response cookie with SameSite=Lax",
-  "description": "Tests setting cookie with SameSite lax attribute",
-  "source": {
-    "framework": "starlette",
-    "test_file": "tests/test_responses.py",
-    "test_function": "test_set_cookie_samesite_lax"
-  },
-  "handler": {
-    "route": "/cookies/samesite-lax",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "properties": {
-        "value": {
-          "type": "string"
-        }
-      },
-      "required": ["value"],
-      "additionalProperties": false
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/cookies/samesite-lax",
-    "body": {
-      "value": "lax_cookie"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "message": "Cookie set with SameSite=Lax"
-    },
-    "cookies": {
-      "session": {
-        "value": "lax_cookie",
-        "samesite": "lax"
-      }
-    }
-  },
-  "notes": "SameSite=Lax allows cookie in top-level navigation"
+	"name": "Response cookie with SameSite=Lax",
+	"description": "Tests setting cookie with SameSite lax attribute",
+	"source": {
+		"framework": "starlette",
+		"test_file": "tests/test_responses.py",
+		"test_function": "test_set_cookie_samesite_lax"
+	},
+	"handler": {
+		"route": "/cookies/samesite-lax",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"value": {
+					"type": "string"
+				}
+			},
+			"required": ["value"],
+			"additionalProperties": false
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/cookies/samesite-lax",
+		"body": {
+			"value": "lax_cookie"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Cookie set with SameSite=Lax"
+		},
+		"cookies": {
+			"session": {
+				"value": "lax_cookie",
+				"samesite": "lax"
+			}
+		}
+	},
+	"notes": "SameSite=Lax allows cookie in top-level navigation"
 }

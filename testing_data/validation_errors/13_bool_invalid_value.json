@@ -1,51 +1,48 @@
 {
-  "name": "Invalid boolean value",
-  "description": "Tests validation error when boolean value is invalid",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_tutorial/test_query_params/test_tutorial003.py",
-    "test_function": "test_query_params_bool_invalid"
-  },
-  "handler": {
-    "route": "/items/",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "q": {
-          "type": "string"
-        },
-        "is_active": {
-          "type": "boolean"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "GET",
-    "path": "/items/?q=test&is_active=maybe",
-    "headers": {
-      "x-token": "test-token"
-    }
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "bool_parsing",
-          "loc": [
-            "query",
-            "is_active"
-          ],
-          "msg": "Input should be a valid boolean, unable to interpret input",
-          "input": "maybe"
-        }
-      ]
-    }
-  },
-  "notes": "Boolean accepts: true/false, 1/0, yes/no, on/off (case insensitive)"
+	"name": "Invalid boolean value",
+	"description": "Tests validation error when boolean value is invalid",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_tutorial/test_query_params/test_tutorial003.py",
+		"test_function": "test_query_params_bool_invalid"
+	},
+	"handler": {
+		"route": "/items/",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"q": {
+					"type": "string"
+				},
+				"is_active": {
+					"type": "boolean"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/items/?q=test&is_active=maybe",
+		"headers": {
+			"x-token": "test-token"
+		}
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "bool_parsing",
+					"loc": ["query", "is_active"],
+					"msg": "Input should be a valid boolean, unable to interpret input",
+					"input": "maybe"
+				}
+			]
+		}
+	},
+	"notes": "Boolean accepts: true/false, 1/0, yes/no, on/off (case insensitive)"
 }

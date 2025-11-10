@@ -1,39 +1,39 @@
 {
-  "name": "43_const_validation_success",
-  "description": "Field with const constraint matching exact value should succeed",
-  "category": "json_bodies",
-  "source": {
-    "framework": "spikard",
-    "inspired_by": "fastify",
-    "test_case": "const constraint validation"
-  },
-  "handler": {
-    "route": "/api/v1/data",
-    "method": "POST",
-    "body_schema": {
-      "type": "object",
-      "required": ["version", "data"],
-      "properties": {
-        "version": {
-          "type": "string",
-          "const": "1.0"
-        },
-        "data": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "request": {
-    "method": "POST",
-    "path": "/api/v1/data",
-    "body": {
-      "version": "1.0",
-      "data": "test"
-    }
-  },
-  "expected_response": {
-    "status_code": 201
-  },
-  "tags": ["json_bodies", "const", "validation", "success"]
+	"name": "43_const_validation_success",
+	"description": "Field with const constraint matching exact value should succeed",
+	"category": "json_bodies",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "fastify",
+		"test_case": "const constraint validation"
+	},
+	"handler": {
+		"route": "/api/v1/data",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"required": ["version", "data"],
+			"properties": {
+				"version": {
+					"type": "string",
+					"const": "1.0"
+				},
+				"data": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/api/v1/data",
+		"body": {
+			"version": "1.0",
+			"data": "test"
+		}
+	},
+	"expected_response": {
+		"status_code": 201
+	},
+	"tags": ["json_bodies", "const", "validation", "success"]
 }

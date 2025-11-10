@@ -1,35 +1,35 @@
 {
-  "name": "X-API-Key required header - success",
-  "description": "Tests required X-API-Key header with valid value",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_security_api_key_header.py",
-    "test_function": "test_security_api_key"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/users/me",
-    "headers": {
-      "key": "secret"
-    }
-  },
-  "expected_response": {
-    "status_code": 200,
-    "body": {
-      "username": "secret"
-    }
-  },
-  "handler": {
-    "route": "/users/me",
-    "method": "GET",
-    "parameters": {
-      "headers": {
-        "key": {
-          "type": "string",
-          "annotation": "str",
-          "required": true
-        }
-      }
-    }
-  }
+	"name": "X-API-Key required header - success",
+	"description": "Tests required X-API-Key header with valid value",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_security_api_key_header.py",
+		"test_function": "test_security_api_key"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/users/me",
+		"headers": {
+			"key": "secret"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"username": "secret"
+		}
+	},
+	"handler": {
+		"route": "/users/me",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"key": {
+					"type": "string",
+					"annotation": "str",
+					"required": true
+				}
+			}
+		}
+	}
 }

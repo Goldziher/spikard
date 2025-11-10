@@ -1,45 +1,42 @@
 {
-  "name": "Required string query parameter - missing",
-  "description": "Tests a required string query parameter without providing value, should return 422",
-  "source": {
-    "framework": "fastapi",
-    "test_file": "tests/test_query.py",
-    "test_function": "test_query"
-  },
-  "request": {
-    "method": "GET",
-    "path": "/query"
-  },
-  "expected_response": {
-    "status_code": 422,
-    "body": {
-      "type": "https://spikard.dev/errors/validation-error",
-      "title": "Request Validation Failed",
-      "status": 422,
-      "detail": "1 validation error in request",
-      "errors": [
-        {
-          "type": "missing",
-          "loc": [
-            "query",
-            "query"
-          ],
-          "msg": "Field required",
-          "input": null
-        }
-      ]
-    }
-  },
-  "handler": {
-    "route": "/query",
-    "method": "GET",
-    "parameters": {
-      "query": {
-        "query": {
-          "type": "string",
-          "annotation": "str"
-        }
-      }
-    }
-  }
+	"name": "Required string query parameter - missing",
+	"description": "Tests a required string query parameter without providing value, should return 422",
+	"source": {
+		"framework": "fastapi",
+		"test_file": "tests/test_query.py",
+		"test_function": "test_query"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/query"
+	},
+	"expected_response": {
+		"status_code": 422,
+		"body": {
+			"type": "https://spikard.dev/errors/validation-error",
+			"title": "Request Validation Failed",
+			"status": 422,
+			"detail": "1 validation error in request",
+			"errors": [
+				{
+					"type": "missing",
+					"loc": ["query", "query"],
+					"msg": "Field required",
+					"input": null
+				}
+			]
+		}
+	},
+	"handler": {
+		"route": "/query",
+		"method": "GET",
+		"parameters": {
+			"query": {
+				"query": {
+					"type": "string",
+					"annotation": "str"
+				}
+			}
+		}
+	}
 }

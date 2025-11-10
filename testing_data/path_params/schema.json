@@ -1,99 +1,99 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Path Parameter Test Fixture",
-  "description": "Schema for path parameter test fixtures",
-  "type": "object",
-  "required": ["name", "description", "source", "request", "expected_response"],
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "Human-readable name for this test case"
-    },
-    "description": {
-      "type": "string",
-      "description": "What this test validates"
-    },
-    "source": {
-      "type": "object",
-      "description": "Origin of this test case",
-      "required": ["framework", "test_file", "test_function"],
-      "properties": {
-        "framework": {
-          "type": "string",
-          "enum": ["fastapi", "starlette", "litestar"],
-          "description": "Source framework"
-        },
-        "test_file": {
-          "type": "string",
-          "description": "Path to original test file"
-        },
-        "test_function": {
-          "type": "string",
-          "description": "Name of original test function"
-        }
-      }
-    },
-    "request": {
-      "type": "object",
-      "description": "HTTP request details",
-      "required": ["method", "path"],
-      "properties": {
-        "method": {
-          "type": "string",
-          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
-          "description": "HTTP method"
-        },
-        "path": {
-          "type": "string",
-          "description": "Request path with actual values (not template)"
-        },
-        "headers": {
-          "type": "object",
-          "description": "Request headers if needed"
-        },
-        "body": {
-          "description": "Request body if needed"
-        }
-      }
-    },
-    "expected_response": {
-      "type": "object",
-      "description": "Expected HTTP response",
-      "required": ["status_code"],
-      "properties": {
-        "status_code": {
-          "type": "integer",
-          "description": "Expected HTTP status code"
-        },
-        "body": {
-          "description": "Expected response body"
-        },
-        "validation_errors": {
-          "type": "array",
-          "description": "Expected validation errors (for 422 responses)",
-          "items": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string"
-              },
-              "loc": {
-                "type": "array",
-                "items": {
-                  "type": ["string", "integer"]
-                }
-              },
-              "msg": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
-    },
-    "notes": {
-      "type": "string",
-      "description": "Additional notes about this test case"
-    }
-  }
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Path Parameter Test Fixture",
+	"description": "Schema for path parameter test fixtures",
+	"type": "object",
+	"required": ["name", "description", "source", "request", "expected_response"],
+	"properties": {
+		"name": {
+			"type": "string",
+			"description": "Human-readable name for this test case"
+		},
+		"description": {
+			"type": "string",
+			"description": "What this test validates"
+		},
+		"source": {
+			"type": "object",
+			"description": "Origin of this test case",
+			"required": ["framework", "test_file", "test_function"],
+			"properties": {
+				"framework": {
+					"type": "string",
+					"enum": ["fastapi", "starlette", "litestar"],
+					"description": "Source framework"
+				},
+				"test_file": {
+					"type": "string",
+					"description": "Path to original test file"
+				},
+				"test_function": {
+					"type": "string",
+					"description": "Name of original test function"
+				}
+			}
+		},
+		"request": {
+			"type": "object",
+			"description": "HTTP request details",
+			"required": ["method", "path"],
+			"properties": {
+				"method": {
+					"type": "string",
+					"enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
+					"description": "HTTP method"
+				},
+				"path": {
+					"type": "string",
+					"description": "Request path with actual values (not template)"
+				},
+				"headers": {
+					"type": "object",
+					"description": "Request headers if needed"
+				},
+				"body": {
+					"description": "Request body if needed"
+				}
+			}
+		},
+		"expected_response": {
+			"type": "object",
+			"description": "Expected HTTP response",
+			"required": ["status_code"],
+			"properties": {
+				"status_code": {
+					"type": "integer",
+					"description": "Expected HTTP status code"
+				},
+				"body": {
+					"description": "Expected response body"
+				},
+				"validation_errors": {
+					"type": "array",
+					"description": "Expected validation errors (for 422 responses)",
+					"items": {
+						"type": "object",
+						"properties": {
+							"type": {
+								"type": "string"
+							},
+							"loc": {
+								"type": "array",
+								"items": {
+									"type": ["string", "integer"]
+								}
+							},
+							"msg": {
+								"type": "string"
+							}
+						}
+					}
+				}
+			}
+		},
+		"notes": {
+			"type": "string",
+			"description": "Additional notes about this test case"
+		}
+	}
 }
