@@ -12485,3 +12485,127 @@ def create_app_status_codes_206_partial_content() -> Spikard:
 # - create_app_status_codes_429_too_many_requests() for status_codes / 429 Too Many Requests
 # - create_app_status_codes_200_ok_success() for status_codes / 200 OK - Success
 # - create_app_status_codes_206_partial_content() for status_codes / 206 Partial Content
+
+
+# Auth fixtures
+def create_app_auth_jwt_authentication_valid_token():
+    """Create app for JWT authentication with valid token."""
+    from spikard.config import ServerConfig, JwtConfig
+
+    config = ServerConfig(
+        jwt_auth=JwtConfig(
+            secret="test-secret-key-do-not-use-in-production",
+            algorithm="HS256",
+            audience=["https://api.example.com"],
+            issuer="https://auth.example.com",
+        )
+    )
+    app = Spikard(config=config)
+
+    @get("/protected/user")
+    def protected_route():
+        return {"message": "Access granted", "user_id": "user123"}
+
+    return app
+
+
+def create_app_auth_jwt_authentication_expired_token():
+    """Create app for JWT authentication with expired token."""
+    from spikard.config import ServerConfig, JwtConfig
+
+    config = ServerConfig(jwt_auth=JwtConfig(secret="test-secret-key-do-not-use-in-production", algorithm="HS256"))
+    app = Spikard(config=config)
+
+    @get("/protected/user")
+    def protected_route():
+        return {"message": "Access granted", "user_id": "user123"}
+
+    return app
+
+
+def create_app_auth_jwt_authentication_invalid_signature():
+    """Create app for JWT authentication with invalid signature."""
+    from spikard.config import ServerConfig, JwtConfig
+
+    config = ServerConfig(jwt_auth=JwtConfig(secret="test-secret-key-do-not-use-in-production", algorithm="HS256"))
+    app = Spikard(config=config)
+
+    @get("/protected/user")
+    def protected_route():
+        return {"message": "Access granted", "user_id": "user123"}
+
+    return app
+
+
+def create_app_auth_jwt_authentication_missing_authorization_header():
+    """Create app for JWT authentication with missing authorization header."""
+    from spikard.config import ServerConfig, JwtConfig
+
+    config = ServerConfig(jwt_auth=JwtConfig(secret="test-secret-key-do-not-use-in-production", algorithm="HS256"))
+    app = Spikard(config=config)
+
+    @get("/protected/user")
+    def protected_route():
+        return {"message": "Access granted", "user_id": "user123"}
+
+    return app
+
+
+def create_app_auth_jwt_authentication_invalid_audience():
+    """Create app for JWT authentication with invalid audience."""
+    from spikard.config import ServerConfig, JwtConfig
+
+    config = ServerConfig(
+        jwt_auth=JwtConfig(
+            secret="test-secret-key-do-not-use-in-production", algorithm="HS256", audience=["https://api.example.com"]
+        )
+    )
+    app = Spikard(config=config)
+
+    @get("/protected/user")
+    def protected_route():
+        return {"message": "Access granted", "user_id": "user123"}
+
+    return app
+
+
+def create_app_auth_api_key_authentication_valid_key():
+    """Create app for API key authentication with valid key."""
+    from spikard.config import ServerConfig, ApiKeyConfig
+
+    config = ServerConfig(api_key_auth=ApiKeyConfig(keys=["sk_test_123456", "sk_test_789012"], header_name="X-API-Key"))
+    app = Spikard(config=config)
+
+    @get("/api/data")
+    def api_route():
+        return {"message": "Access granted", "data": "sensitive information"}
+
+    return app
+
+
+def create_app_auth_api_key_authentication_invalid_key():
+    """Create app for API key authentication with invalid key."""
+    from spikard.config import ServerConfig, ApiKeyConfig
+
+    config = ServerConfig(api_key_auth=ApiKeyConfig(keys=["sk_test_123456"], header_name="X-API-Key"))
+    app = Spikard(config=config)
+
+    @get("/api/data")
+    def api_route():
+        return {"message": "Access granted", "data": "sensitive information"}
+
+    return app
+
+
+def create_app_auth_api_key_authentication_missing_header():
+    """Create app for API key authentication with missing header."""
+    from spikard.config import ServerConfig, ApiKeyConfig
+
+    config = ServerConfig(api_key_auth=ApiKeyConfig(keys=["sk_test_123456", "sk_test_789012"], header_name="X-API-Key"))
+    app = Spikard(config=config)
+
+    @get("/api/data")
+    def api_route():
+        return {"message": "Access granted", "data": "sensitive information"}
+
+    return app

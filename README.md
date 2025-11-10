@@ -24,9 +24,8 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - [x] Static file serving (with cache-control) with `StaticFilesConfig`
 - [x] Sensitive header hiding (Authorization, Cookie)
 - [x] Comprehensive `ServerConfig` with all middleware settings
-- [x] `JwtConfig` and `ApiKeyConfig` (Rust implementation pending)
-- [ ] JWT authentication middleware (config ready, Rust impl pending)
-- [ ] API Key authentication middleware (config ready, Rust impl pending)
+- [x] JWT authentication middleware with `JwtConfig` (HS/RS/ES/PS algorithms)
+- [x] API Key authentication middleware with `ApiKeyConfig`
 
 ### Advanced Features
 - [ ] OpenAPI 3.1.0 generation
@@ -155,15 +154,15 @@ config = ServerConfig(
         ip_based=True
     ),
 
-    # JWT authentication (coming soon)
+    # JWT authentication
     jwt_auth=JwtConfig(
         secret="your-secret-key",
-        algorithm="HS256",
+        algorithm="HS256",  # Supports HS256/384/512, RS256/384/512, ES256/384/512, PS256/384/512
         audience=["https://api.example.com"],
         issuer="https://auth.example.com"
     ),
 
-    # API key authentication (coming soon)
+    # API key authentication
     api_key_auth=ApiKeyConfig(
         keys=["secret-key-1", "secret-key-2"],
         header_name="X-API-Key"
