@@ -55,12 +55,12 @@ tower-http = { version = "0.6", features = [
 
 # Middleware and auth
 tower_governor = "0.8"
-jsonwebtoken = "9.3"
+jsonwebtoken = { version = "10.2", features = ["use_pem", "rust_crypto"] }
 
 # OpenAPI
 utoipa = { version = "5", features = ["axum_extras", "chrono", "uuid"] }
-utoipa-swagger-ui = { version = "8", features = ["axum"] }
-utoipa-redoc = { version = "5", features = ["axum"] }
+utoipa-swagger-ui = { version = "9", features = ["axum"] }
+utoipa-redoc = { version = "6", features = ["axum"] }
 
 # Utilities
 thiserror = "2.0"
