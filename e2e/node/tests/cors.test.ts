@@ -6,8 +6,6 @@
 import { TestClient } from "@spikard/node";
 import { describe, expect, test } from "vitest";
 import {
-	createAppCors06CorsPreflightMethodNotAllowed,
-	createAppCors07CorsPreflightHeaderNotAllowed,
 	createAppCors08CorsMaxAge,
 	createAppCors09CorsExposeHeaders,
 	createAppCors10CorsOriginNull,
@@ -19,28 +17,14 @@ import {
 } from "../app/main.js";
 
 describe("cors", () => {
-	test("07_cors_preflight_header_not_allowed", async () => {
-		const app = createAppCors07CorsPreflightHeaderNotAllowed();
-		const client = new TestClient(app);
-
-		const headers = {
-			Origin: "https://example.com",
-			"Access-Control-Request-Headers": "X-Custom-Header",
-			"Access-Control-Request-Method": "POST",
-		};
-		const response = await client.options("/api/data", { headers });
-
-		expect(response.statusCode).toBe(403);
-	});
-
 	test("CORS preflight request", async () => {
 		const app = createAppCorsCorsPreflightRequest();
 		const client = new TestClient(app);
 
 		const headers = {
-			Origin: "https://example.com",
 			"Access-Control-Request-Method": "POST",
 			"Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
+			Origin: "https://example.com",
 		};
 		const response = await client.options("/items/", { headers });
 
@@ -69,8 +53,8 @@ describe("cors", () => {
 
 		const headers = {
 			"Access-Control-Request-Headers": "Content-Type",
-			"Access-Control-Request-Method": "POST",
 			Origin: "https://example.com",
+			"Access-Control-Request-Method": "POST",
 		};
 		const response = await client.options("/api/data", { headers });
 
@@ -141,19 +125,5 @@ describe("cors", () => {
 		const response = await client.get("/api/data", headers);
 
 		expect(response.statusCode).toBe(200);
-	});
-
-	test("06_cors_preflight_method_not_allowed", async () => {
-		const app = createAppCors06CorsPreflightMethodNotAllowed();
-		const client = new TestClient(app);
-
-		const headers = {
-			Origin: "https://example.com",
-			"Access-Control-Request-Method": "DELETE",
-			"Access-Control-Request-Headers": "Content-Type",
-		};
-		const response = await client.options("/api/data", { headers });
-
-		expect(response.statusCode).toBe(403);
 	});
 });

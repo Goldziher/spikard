@@ -26,8 +26,8 @@ describe("http_methods", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Access-Control-Request-Method": "POST",
 			"Access-Control-Request-Headers": "Content-Type",
+			"Access-Control-Request-Method": "POST",
 			Origin: "https://example.com",
 		};
 		const response = await client.options("/items/", { headers });
