@@ -4,7 +4,7 @@ All configuration uses dataclasses with msgspec for high-performance serializati
 """
 
 from dataclasses import dataclass, field, replace
-from typing import Any
+from typing import Any, cast
 
 import msgspec
 
@@ -346,7 +346,7 @@ class ServerConfig:
 
         Uses msgspec for fast, efficient serialization.
         """
-        return msgspec.to_builtins(self)  # type: ignore[no-any-return]
+        return cast("dict[str, Any]", msgspec.to_builtins(self))
 
     def copy(self, **updates: Any) -> "ServerConfig":
         """Create a copy of the config with updates applied.
