@@ -3,7 +3,7 @@
 /** Test client for making HTTP requests to a Spikard application */
 export declare class TestClient {
   /** Create a new test client from routes and handlers */
-  constructor(routesJson: string, handlersMap: object)
+  constructor(routesJson: string, handlersMap: object, config?: object | undefined | null)
   get(path: string, headers?: any | undefined | null): Promise<TestResponse>
   post(path: string, headers?: any | undefined | null, json?: any | undefined | null): Promise<TestResponse>
   put(path: string, headers?: any | undefined | null, json?: any | undefined | null): Promise<TestResponse>
@@ -28,8 +28,48 @@ export declare class TestResponse {
   bytes(): Buffer
 }
 
-/** Process using spikard (legacy function) */
-export declare function process(): void
-
-/** Run Spikard server from Node.js */
-export declare function runServer(app: object, host?: string | undefined | null, port?: number | undefined | null): void
+/**
+ * Start the Spikard HTTP server from Node.js
+ *
+ * Creates an Axum HTTP server in a dedicated background thread with its own Tokio runtime.
+ * This ensures the Node.js event loop remains free to process ThreadsafeFunction calls.
+ *
+ * # Arguments
+ *
+ * * `app` - Application object containing routes and handler functions
+ * * `config` - Optional ServerConfig with all middleware settings
+ *
+ * # Returns
+ *
+ * Returns `Ok(())` after the server thread is spawned. Note that this function
+ * returns immediately - the server runs in the background.
+ *
+ * # Errors
+ *
+ * Returns an error if:
+ * - Route metadata is invalid or missing required fields
+ * - Handler functions cannot be converted to ThreadsafeFunctions
+ * - Socket address is invalid
+ * - Route creation fails
+ *
+ * # Example
+ *
+ * ```typescript
+ * import { Spikard, ServerConfig } from '@spikard/node';
+ *
+ * const config: ServerConfig = {
+ *   host: '0.0.0.0',
+ *   port: 8000,
+ *   compression: { quality: 9 },
+ *   openapi: {
+ *     enabled: true,
+ *     title: 'My API',
+ *     version: '1.0.0'
+ *   }
+ * };
+ *
+ * const app = new Spikard();
+ * app.run(config);
+ * ```
+ */
+export declare function runServer(app: object, config?: object | undefined | null): void

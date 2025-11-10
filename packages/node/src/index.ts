@@ -101,4 +101,6 @@ export interface SpikardApp {
 	routes: RouteMetadata[];
 	/** Handler functions mapped by handler_name */
 	handlers: Record<string, HandlerFunction>;
+	/** Optional server configuration (for middleware, auth, etc.) */
+	config?: import("./config").ServerConfig;
 }
