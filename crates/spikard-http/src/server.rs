@@ -2,7 +2,7 @@
 
 use crate::handler_trait::{Handler, RequestData};
 use crate::query_parser::parse_query_string_to_json;
-use crate::{Router, ServerConfig};
+use crate::{CorsConfig, Router, ServerConfig};
 use axum::Router as AxumRouter;
 use axum::body::Body;
 use axum::extract::Path;
@@ -163,6 +163,15 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
             handlers_by_method.insert(route.method.clone(), (route, handler));
         }
 
+        // Check if any route on this path has CORS config
+        let cors_config: Option<CorsConfig> = handlers_by_method
+            .values()
+            .find_map(|(route, _)| route.cors.as_ref())
+            .cloned();
+
+        // Check if there's an explicit OPTIONS handler
+        let has_options_handler = handlers_by_method.keys().any(|m| m.as_str() == "OPTIONS");
+
         let mut combined_router: Option<MethodRouter> = None;
         let has_path_params = path.contains('{');
 
@@ -250,7 +259,13 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
                     }
                 }
                 "OPTIONS" => {
-                    if has_path_params {
+                    // If this route has CORS config, use CORS preflight logic instead of handler
+                    if let Some(ref cors_cfg) = route.cors {
+                        let cors_config = cors_cfg.clone();
+                        axum::routing::options(move |req: axum::extract::Request| async move {
+                            crate::cors::handle_preflight(req.headers(), &cors_config)
+                        })
+                    } else if has_path_params {
                         let handler = handler.clone();
                         axum::routing::options(
                             move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
@@ -375,6 +390,23 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
             });
 
             tracing::info!("Registered route: {} {}", route.method.as_str(), path);
+        }
+
+        // If CORS config exists but no explicit OPTIONS handler, auto-generate one
+        if let Some(ref cors_cfg) = cors_config
+            && !has_options_handler
+        {
+            let cors_config_clone: CorsConfig = cors_cfg.clone();
+            let options_router = axum::routing::options(move |req: axum::extract::Request| async move {
+                crate::cors::handle_preflight(req.headers(), &cors_config_clone)
+            });
+
+            combined_router = Some(match combined_router {
+                None => options_router,
+                Some(existing) => existing.merge(options_router),
+            });
+
+            tracing::info!("Auto-generated OPTIONS handler for CORS preflight: {}", path);
         }
 
         if let Some(router) = combined_router {
