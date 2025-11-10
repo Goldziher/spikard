@@ -21,7 +21,7 @@ use std::collections::HashMap;
 ///
 /// # Content-Type
 /// Responses using this struct should set:
-/// ```
+/// ```text
 /// Content-Type: application/problem+json
 /// ```
 ///
