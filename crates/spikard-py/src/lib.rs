@@ -569,41 +569,47 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
         );
     }
 
-    // GIL is released when py goes out of scope at end of function
-    // Run server in Tokio runtime
-    tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()
-        .map_err(|e| {
-            pyo3::Python::attach(|_py| {
-                PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to create Tokio runtime: {}", e))
+    // Release the GIL before starting the Tokio runtime so that spawn_blocking tasks
+    // can acquire it when needed (e.g., for SSE producers, WebSocket handlers)
+    py.detach(|| {
+        // Run server in Tokio runtime
+        tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .map_err(|e| {
+                pyo3::Python::attach(|_py| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to create Tokio runtime: {}", e))
+                })
+            })?
+            .block_on(async {
+                let addr = format!("{}:{}", config.host, config.port);
+                let socket_addr: std::net::SocketAddr = addr.parse().map_err(|e| {
+                    pyo3::Python::attach(|_py| {
+                        PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                            "Invalid socket address {}: {}",
+                            addr, e
+                        ))
+                    })
+                })?;
+
+                let listener = tokio::net::TcpListener::bind(socket_addr).await.map_err(|e| {
+                    pyo3::Python::attach(|_py| {
+                        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+                            "Failed to bind to {}:{}: {}",
+                            config.host, config.port, e
+                        ))
+                    })
+                })?;
+
+                eprintln!("[spikard] Server listening on {}", socket_addr);
+
+                axum::serve(listener, app_router).await.map_err(|e| {
+                    pyo3::Python::attach(|_py| {
+                        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Server error: {}", e))
+                    })
+                })
             })
-        })?
-        .block_on(async {
-            let addr = format!("{}:{}", config.host, config.port);
-            let socket_addr: std::net::SocketAddr = addr.parse().map_err(|e| {
-                pyo3::Python::attach(|_py| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid socket address {}: {}", addr, e))
-                })
-            })?;
-
-            let listener = tokio::net::TcpListener::bind(socket_addr).await.map_err(|e| {
-                pyo3::Python::attach(|_py| {
-                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
-                        "Failed to bind to {}:{}: {}",
-                        config.host, config.port, e
-                    ))
-                })
-            })?;
-
-            eprintln!("[spikard] Server listening on {}", socket_addr);
-
-            axum::serve(listener, app_router).await.map_err(|e| {
-                pyo3::Python::attach(|_py| {
-                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Server error: {}", e))
-                })
-            })
-        })
+    })
 }
 
 /// Python module for spikard
