@@ -1,0 +1,44 @@
+{
+	"description": "Test fixture for systemAlert message",
+	"examples": [
+		{
+			"level": "example_level",
+			"message": "example_message",
+			"source": "example_source",
+			"timestamp": "2024-01-15T10:30:00Z",
+			"type": "system_alert"
+		}
+	],
+	"name": "systemAlert",
+	"schema": {
+		"properties": {
+			"level": {
+				"description": "Alert severity level",
+				"enum": ["info", "warning", "error", "critical"],
+				"type": "string"
+			},
+			"message": {
+				"description": "Alert message content",
+				"maxLength": 500,
+				"minLength": 1,
+				"type": "string"
+			},
+			"source": {
+				"description": "Source system or component",
+				"type": "string"
+			},
+			"timestamp": {
+				"description": "ISO 8601 timestamp",
+				"format": "date-time",
+				"type": "string"
+			},
+			"type": {
+				"const": "system_alert",
+				"description": "Message type identifier",
+				"type": "string"
+			}
+		},
+		"required": ["type", "level", "message", "timestamp"],
+		"type": "object"
+	}
+}

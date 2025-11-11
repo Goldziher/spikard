@@ -1,0 +1,184 @@
+asyncapi: '3.0.0'
+
+info:
+  title: Notifications SSE API
+  version: '1.0.0'
+  description: |
+    Server-Sent Events API for real-time notifications.
+    Clients subscribe to receive updates about system events.
+
+servers:
+  production:
+    host: api.example.com
+    protocol: sse
+    description: Production SSE endpoint
+
+channels:
+  /notifications:
+    address: /notifications
+    messages:
+      systemAlert:
+        $ref: '#/components/messages/systemAlert'
+      userNotification:
+        $ref: '#/components/messages/userNotification'
+      statusUpdate:
+        $ref: '#/components/messages/statusUpdate'
+    description: |
+      Subscribe to this channel to receive real-time notifications.
+      Events are sent as Server-Sent Events (SSE).
+
+operations:
+  subscribeNotifications:
+    action: receive
+    channel:
+      $ref: '#/channels/~1notifications'
+    summary: Subscribe to notifications
+    description: |
+      Connect to this endpoint to receive real-time notifications
+      as Server-Sent Events.
+
+components:
+  messages:
+    systemAlert:
+      name: systemAlert
+      title: System Alert
+      summary: Critical system alert notification
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: system_alert
+            description: Message type identifier
+          level:
+            type: string
+            enum: [info, warning, error, critical]
+            description: Alert severity level
+          message:
+            type: string
+            minLength: 1
+            maxLength: 500
+            description: Alert message content
+          timestamp:
+            type: string
+            format: date-time
+            description: ISO 8601 timestamp
+          source:
+            type: string
+            description: Source system or component
+        required:
+          - type
+          - level
+          - message
+          - timestamp
+      examples:
+        - summary: Critical database alert
+          payload:
+            type: system_alert
+            level: critical
+            message: Database connection pool exhausted
+            timestamp: '2024-01-15T10:30:00Z'
+            source: database-service
+
+    userNotification:
+      name: userNotification
+      title: User Notification
+      summary: User-specific notification
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: user_notification
+            description: Message type identifier
+          userId:
+            type: string
+            minLength: 1
+            maxLength: 50
+            description: Target user ID
+          title:
+            type: string
+            minLength: 1
+            maxLength: 100
+            description: Notification title
+          body:
+            type: string
+            minLength: 1
+            maxLength: 500
+            description: Notification body text
+          timestamp:
+            type: string
+            format: date-time
+            description: ISO 8601 timestamp
+          priority:
+            type: string
+            enum: [low, normal, high, urgent]
+            default: normal
+            description: Notification priority
+        required:
+          - type
+          - userId
+          - title
+          - body
+          - timestamp
+      examples:
+        - summary: High priority user notification
+          payload:
+            type: user_notification
+            userId: user_12345
+            title: New message from John
+            body: You have received a new direct message
+            timestamp: '2024-01-15T10:30:00Z'
+            priority: high
+
+    statusUpdate:
+      name: statusUpdate
+      title: Status Update
+      summary: System or service status update
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: status_update
+            description: Message type identifier
+          service:
+            type: string
+            minLength: 1
+            maxLength: 100
+            description: Service or component name
+          status:
+            type: string
+            enum: [operational, degraded, outage, maintenance]
+            description: Current service status
+          message:
+            type: string
+            maxLength: 500
+            description: Status message or description
+          timestamp:
+            type: string
+            format: date-time
+            description: ISO 8601 timestamp
+          metadata:
+            type: object
+            description: Additional status metadata
+            additionalProperties: true
+        required:
+          - type
+          - service
+          - status
+          - timestamp
+      examples:
+        - summary: Service operational status
+          payload:
+            type: status_update
+            service: payment-gateway
+            status: operational
+            message: All systems operational
+            timestamp: '2024-01-15T10:30:00Z'
+            metadata:
+              uptime: 99.99
+              region: us-east-1

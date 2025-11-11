@@ -1,0 +1,29 @@
+{
+	"description": "Test fixture for userJoined message",
+	"examples": [
+		{
+			"timestamp": "2024-01-15T10:30:00Z",
+			"type": "userJoined",
+			"user": "example_user"
+		}
+	],
+	"name": "userJoined",
+	"schema": {
+		"properties": {
+			"timestamp": {
+				"format": "date-time",
+				"type": "string"
+			},
+			"type": {
+				"const": "userJoined",
+				"type": "string"
+			},
+			"user": {
+				"description": "Username of the user who joined",
+				"type": "string"
+			}
+		},
+		"required": ["type", "user", "timestamp"],
+		"type": "object"
+	}
+}
