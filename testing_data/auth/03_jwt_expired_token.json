@@ -39,7 +39,7 @@
 			"type": "https://spikard.dev/errors/unauthorized",
 			"title": "JWT validation failed",
 			"status": 401,
-			"detail": "Token validation failed"
+			"detail": "Token has expired"
 		}
 	},
 	"tags": ["auth", "jwt", "bearer", "security", "middleware", "error", "unauthorized", "expired"],

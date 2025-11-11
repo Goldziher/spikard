@@ -257,46 +257,84 @@ impl PythonHandler {
             ResponseResult::Json(json_value) => (json_value, 200, HashMap::new()),
         };
 
-        // Validate response in Rust if validator is present
-        #[allow(clippy::collapsible_if)]
-        if let Some(validator) = &response_validator {
-            if let Err(errors) = validator.validate(&json_value) {
-                let error_msg = if is_debug_mode() {
-                    json!({
-                        "error": "Response validation failed",
-                        "validation_errors": format!("{:?}", errors),
-                        "response_body": json_value,
-                        "request_data": {
-                            "path_params": &*request_data_for_error.path_params,
-                            "query_params": request_data_for_error.query_params,
-                            "body": request_data_for_error.body,
-                        }
-                    })
-                    .to_string()
-                } else {
-                    "Internal server error".to_string()
-                };
-                return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
-            }
-        }
+        // Check if there's a custom content-type header
+        let content_type = headers
+            .get("content-type")
+            .or_else(|| headers.get("Content-Type"))
+            .map(|s| s.as_str())
+            .unwrap_or("application/json");
 
-        let json_bytes = serde_json::to_vec(&json_value).map_err(|e| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to serialize response: {}", e),
-            )
-        })?;
+        // Determine response body based on content-type
+        let body_bytes = if content_type.starts_with("text/") || content_type.starts_with("application/json") {
+            // For text/* and application/json, handle string content specially
+            if let Value::String(s) = &json_value {
+                // If it's a plain string and non-JSON content-type, use it directly without JSON encoding
+                if !content_type.starts_with("application/json") {
+                    s.as_bytes().to_vec()
+                } else {
+                    // For JSON content-type, serialize properly
+                    serde_json::to_vec(&json_value).map_err(|e| {
+                        (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            format!("Failed to serialize response: {}", e),
+                        )
+                    })?
+                }
+            } else {
+                // For non-string content with application/json, validate and serialize
+                if content_type.starts_with("application/json") {
+                    // Validate response in Rust if validator is present
+                    #[allow(clippy::collapsible_if)]
+                    if let Some(validator) = &response_validator {
+                        if let Err(errors) = validator.validate(&json_value) {
+                            let error_msg = if is_debug_mode() {
+                                json!({
+                                    "error": "Response validation failed",
+                                    "validation_errors": format!("{:?}", errors),
+                                    "response_body": json_value,
+                                    "request_data": {
+                                        "path_params": &*request_data_for_error.path_params,
+                                        "query_params": request_data_for_error.query_params,
+                                        "body": request_data_for_error.body,
+                                    }
+                                })
+                                .to_string()
+                            } else {
+                                "Internal server error".to_string()
+                            };
+                            return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
+                        }
+                    }
+                }
+                serde_json::to_vec(&json_value).map_err(|e| {
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        format!("Failed to serialize response: {}", e),
+                    )
+                })?
+            }
+        } else {
+            // For other content types, try to serialize as JSON
+            serde_json::to_vec(&json_value).map_err(|e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Failed to serialize response: {}", e),
+                )
+            })?
+        };
 
         let mut response_builder = Response::builder()
             .status(StatusCode::from_u16(status_code).unwrap_or(StatusCode::OK))
-            .header("content-type", "application/json");
+            .header("content-type", content_type);
 
-        // Add custom headers
+        // Add custom headers (skip content-type since we already added it)
         for (key, value) in headers {
-            response_builder = response_builder.header(key, value);
+            if key.to_lowercase() != "content-type" {
+                response_builder = response_builder.header(key, value);
+            }
         }
 
-        response_builder.body(Body::from(json_bytes)).map_err(|e| {
+        response_builder.body(Body::from(body_bytes)).map_err(|e| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 format!("Failed to build response: {}", e),

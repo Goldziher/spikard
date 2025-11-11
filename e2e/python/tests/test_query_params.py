@@ -788,10 +788,10 @@ async def test_multiple_query_parameters_with_different_types() -> None:
     client = TestClient(app)
 
     params = {
-        "age": "30",
         "name": "john",
-        "active": "true",
+        "age": "30",
         "score": "95.5",
+        "active": "true",
     }
     response = await client.get("/query/multi-type", query_params=params)
 
