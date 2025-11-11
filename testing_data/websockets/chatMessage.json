@@ -1,0 +1,40 @@
+{
+	"description": "Test fixture for chatMessage message",
+	"examples": [
+		{
+			"text": "example_text",
+			"timestamp": "2024-01-15T10:30:00Z",
+			"type": "message",
+			"user": "example_user"
+		}
+	],
+	"name": "chatMessage",
+	"schema": {
+		"properties": {
+			"text": {
+				"description": "Message content",
+				"maxLength": 500,
+				"minLength": 1,
+				"type": "string"
+			},
+			"timestamp": {
+				"description": "ISO 8601 timestamp",
+				"format": "date-time",
+				"type": "string"
+			},
+			"type": {
+				"const": "message",
+				"description": "Message type identifier",
+				"type": "string"
+			},
+			"user": {
+				"description": "Username of the sender",
+				"maxLength": 50,
+				"minLength": 1,
+				"type": "string"
+			}
+		},
+		"required": ["type", "user", "text", "timestamp"],
+		"type": "object"
+	}
+}

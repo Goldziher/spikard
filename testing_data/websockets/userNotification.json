@@ -1,0 +1,54 @@
+{
+	"description": "Test fixture for userNotification message",
+	"examples": [
+		{
+			"body": "example_body",
+			"priority": "example_priority",
+			"timestamp": "2024-01-15T10:30:00Z",
+			"title": "example_title",
+			"type": "user_notification",
+			"userId": "example_userId"
+		}
+	],
+	"name": "userNotification",
+	"schema": {
+		"properties": {
+			"body": {
+				"description": "Notification body text",
+				"maxLength": 500,
+				"minLength": 1,
+				"type": "string"
+			},
+			"priority": {
+				"default": "normal",
+				"description": "Notification priority",
+				"enum": ["low", "normal", "high", "urgent"],
+				"type": "string"
+			},
+			"timestamp": {
+				"description": "ISO 8601 timestamp",
+				"format": "date-time",
+				"type": "string"
+			},
+			"title": {
+				"description": "Notification title",
+				"maxLength": 100,
+				"minLength": 1,
+				"type": "string"
+			},
+			"type": {
+				"const": "user_notification",
+				"description": "Message type identifier",
+				"type": "string"
+			},
+			"userId": {
+				"description": "Target user ID",
+				"maxLength": 50,
+				"minLength": 1,
+				"type": "string"
+			}
+		},
+		"required": ["type", "userId", "title", "body", "timestamp"],
+		"type": "object"
+	}
+}

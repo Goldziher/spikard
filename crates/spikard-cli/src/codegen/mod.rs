@@ -1,5 +1,6 @@
-//! Code generation from OpenAPI schemas
+//! Code generation from OpenAPI and AsyncAPI schemas
 
+mod asyncapi;
 mod openapi;
 mod php;
 mod python;
@@ -7,6 +8,10 @@ mod ruby;
 mod rust;
 mod typescript;
 
+pub use asyncapi::{
+    detect_primary_protocol, generate_fixtures, generate_nodejs_test_app, generate_python_test_app,
+    generate_ruby_test_app, parse_asyncapi_schema,
+};
 pub use openapi::parse_openapi_schema;
 pub use php::PhpGenerator;
 pub use python::PythonGenerator;
