@@ -3,13 +3,17 @@
 import functools
 import inspect
 from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from spikard.config import ServerConfig
 from spikard.introspection import extract_parameter_schema
 from spikard.params import ParamBase
 from spikard.schema import extract_schemas
 from spikard.types import Route
+
+if TYPE_CHECKING:
+    from spikard.sse import SseEventProducer
+    from spikard.websocket import WebSocketHandler
 
 
 class Spikard:
@@ -25,6 +29,8 @@ class Spikard:
                    You can also pass configuration to the run() method.
         """
         self._routes: list[Route] = []
+        self._websocket_handlers: dict[str, Callable[[], WebSocketHandler]] = {}
+        self._sse_producers: dict[str, Callable[[], SseEventProducer]] = {}
         self._config = config
         self._lifecycle_hooks: dict[str, list[Callable[..., Any]]] = {
             "on_request": [],
@@ -331,3 +337,77 @@ class Spikard:
             Dictionary of hook lists by type
         """
         return {hook_type: hooks.copy() for hook_type, hooks in self._lifecycle_hooks.items()}
+
+    def websocket(self, path: str) -> Callable[[Callable[[], "WebSocketHandler"]], Callable[[], "WebSocketHandler"]]:
+        """Register a WebSocket endpoint.
+
+        Args:
+            path: URL path for the WebSocket endpoint
+
+        Returns:
+            Decorator function
+
+        Example:
+            ```python
+            from spikard import Spikard
+            from spikard.websocket import WebSocketHandler
+
+            app = Spikard()
+
+
+            @app.websocket("/chat")
+            def chat_endpoint():
+                return ChatHandler()
+            ```
+        """
+
+        def decorator(factory: Callable[[], "WebSocketHandler"]) -> Callable[[], "WebSocketHandler"]:
+            self._websocket_handlers[path] = factory
+            return factory
+
+        return decorator
+
+    def sse(self, path: str) -> Callable[[Callable[[], "SseEventProducer"]], Callable[[], "SseEventProducer"]]:
+        """Register a Server-Sent Events endpoint.
+
+        Args:
+            path: URL path for the SSE endpoint
+
+        Returns:
+            Decorator function
+
+        Example:
+            ```python
+            from spikard import Spikard
+            from spikard.sse import SseEventProducer, SseEvent
+
+            app = Spikard()
+
+
+            @app.sse("/notifications")
+            def notifications_endpoint():
+                return NotificationProducer()
+            ```
+        """
+
+        def decorator(factory: Callable[[], "SseEventProducer"]) -> Callable[[], "SseEventProducer"]:
+            self._sse_producers[path] = factory
+            return factory
+
+        return decorator
+
+    def get_websocket_handlers(self) -> dict[str, Callable[[], "WebSocketHandler"]]:
+        """Get all registered WebSocket handlers.
+
+        Returns:
+            Dictionary mapping paths to handler factory functions
+        """
+        return self._websocket_handlers.copy()
+
+    def get_sse_producers(self) -> dict[str, Callable[[], "SseEventProducer"]]:
+        """Get all registered SSE producers.
+
+        Returns:
+            Dictionary mapping paths to producer factory functions
+        """
+        return self._sse_producers.copy()
