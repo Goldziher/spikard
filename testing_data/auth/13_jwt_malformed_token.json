@@ -1,0 +1,48 @@
+{
+	"name": "JWT malformed token format",
+	"description": "Tests JWT rejection when token doesn't have the required 3-part structure (header.payload.signature)",
+	"category": "auth",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "jsonwebtoken",
+		"test_case": "malformed token validation"
+	},
+	"handler": {
+		"route": "/api/protected",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Authorization": {
+					"type": "string",
+					"required": true,
+					"description": "JWT token in Bearer format"
+				}
+			}
+		},
+		"middleware": {
+			"jwt_auth": {
+				"enabled": true,
+				"algorithm": "HS256",
+				"secret": "test-secret-key-do-not-use-in-production"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/protected",
+		"headers": {
+			"Authorization": "Bearer invalid.token"
+		}
+	},
+	"expected_response": {
+		"status_code": 401,
+		"body": {
+			"type": "https://spikard.dev/errors/unauthorized",
+			"title": "Unauthorized",
+			"status": 401,
+			"detail": "Malformed JWT token: expected 3 parts separated by dots, found 2"
+		}
+	},
+	"tags": ["auth", "jwt", "malformed", "format", "validation", "401", "security"],
+	"notes": "Tests basic JWT format validation. Valid JWTs must have exactly 3 base64url-encoded parts separated by dots."
+}

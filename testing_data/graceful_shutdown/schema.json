@@ -1,0 +1,214 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Graceful Shutdown Test Fixture Schema",
+	"description": "Schema for graceful shutdown integration test fixtures that validate server behavior during shutdown lifecycle",
+	"type": "object",
+	"required": ["name", "description", "category", "source", "handler", "test_scenario", "tags"],
+	"properties": {
+		"name": {
+			"type": "string",
+			"description": "Human-readable test case name",
+			"minLength": 1
+		},
+		"description": {
+			"type": "string",
+			"description": "Detailed description of what this test validates",
+			"minLength": 1
+		},
+		"category": {
+			"type": "string",
+			"enum": ["graceful_shutdown"],
+			"description": "Test category - must be graceful_shutdown"
+		},
+		"source": {
+			"type": "object",
+			"description": "Test case origin and references",
+			"required": ["framework", "inspired_by", "test_case"],
+			"properties": {
+				"framework": {
+					"type": "string",
+					"description": "Framework being tested"
+				},
+				"inspired_by": {
+					"type": "string",
+					"description": "Reference implementation or specification"
+				},
+				"test_case": {
+					"type": "string",
+					"description": "Specific test case or scenario identifier"
+				}
+			}
+		},
+		"handler": {
+			"type": "object",
+			"description": "Handler configuration for the test endpoint",
+			"required": ["route", "method"],
+			"properties": {
+				"route": {
+					"type": "string",
+					"description": "HTTP route path",
+					"pattern": "^/"
+				},
+				"method": {
+					"type": "string",
+					"enum": ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"],
+					"description": "HTTP method"
+				},
+				"middleware": {
+					"type": "object",
+					"description": "Middleware configuration",
+					"properties": {
+						"graceful_shutdown": {
+							"type": "object",
+							"description": "Graceful shutdown middleware configuration",
+							"required": ["enabled"],
+							"properties": {
+								"enabled": {
+									"type": "boolean",
+									"description": "Whether graceful shutdown is enabled"
+								},
+								"grace_period_seconds": {
+									"type": "number",
+									"description": "Time to wait for in-flight requests to complete",
+									"minimum": 0
+								},
+								"force_timeout_seconds": {
+									"type": "number",
+									"description": "Maximum time before forcefully terminating",
+									"minimum": 0
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"test_scenario": {
+			"type": "object",
+			"description": "Multi-phase test scenario definition",
+			"required": ["phases"],
+			"properties": {
+				"phases": {
+					"type": "array",
+					"description": "Ordered sequence of test phases",
+					"minItems": 1,
+					"items": {
+						"type": "object",
+						"required": ["phase", "actions"],
+						"properties": {
+							"phase": {
+								"type": "string",
+								"description": "Phase identifier (pre_shutdown, trigger_shutdown, during_shutdown, post_shutdown, etc.)",
+								"minLength": 1
+							},
+							"description": {
+								"type": "string",
+								"description": "Human-readable phase description"
+							},
+							"delay_ms": {
+								"type": "number",
+								"description": "Delay before executing this phase (milliseconds)",
+								"minimum": 0
+							},
+							"actions": {
+								"type": "array",
+								"description": "Actions to execute in this phase",
+								"minItems": 1,
+								"items": {
+									"type": "object",
+									"required": ["type"],
+									"properties": {
+										"type": {
+											"type": "string",
+											"enum": ["request", "signal", "wait_for_response", "verify_connection_state"],
+											"description": "Action type"
+										},
+										"request": {
+											"type": "object",
+											"description": "HTTP request details (for type=request)",
+											"properties": {
+												"method": {
+													"type": "string",
+													"enum": ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
+												},
+												"path": {
+													"type": "string",
+													"pattern": "^/"
+												},
+												"headers": {
+													"type": "object",
+													"additionalProperties": {
+														"type": "string"
+													}
+												},
+												"body": {
+													"description": "Request body (JSON object or string)"
+												},
+												"simulated_duration_ms": {
+													"type": "number",
+													"description": "Simulated handler processing duration",
+													"minimum": 0
+												}
+											}
+										},
+										"signal": {
+											"type": "string",
+											"enum": ["SIGTERM", "SIGINT"],
+											"description": "Shutdown signal to send (for type=signal)"
+										},
+										"expect_async": {
+											"type": "boolean",
+											"description": "Whether to expect async response completion"
+										},
+										"expected_response": {
+											"type": "object",
+											"description": "Expected HTTP response",
+											"properties": {
+												"status_code": {
+													"type": "integer",
+													"minimum": 100,
+													"maximum": 599
+												},
+												"headers": {
+													"type": "object",
+													"additionalProperties": {
+														"type": "string"
+													}
+												},
+												"body": {
+													"description": "Expected response body"
+												}
+											}
+										},
+										"expected_result": {
+											"type": "string",
+											"enum": ["connection_refused", "timeout", "success"],
+											"description": "Expected connection result"
+										},
+										"timeout_ms": {
+											"type": "number",
+											"description": "Action timeout in milliseconds",
+											"minimum": 0
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"tags": {
+			"type": "array",
+			"description": "Test categorization tags",
+			"items": {
+				"type": "string"
+			},
+			"minItems": 1
+		},
+		"notes": {
+			"type": "string",
+			"description": "Additional notes or implementation guidance"
+		}
+	}
+}

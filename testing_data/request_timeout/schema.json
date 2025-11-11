@@ -1,0 +1,161 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Request Timeout Test Fixture",
+	"description": "Schema for request timeout test fixtures covering tower-http timeout middleware with configurable timeouts, 504 Gateway Timeout responses, and simulated delays",
+	"type": "object",
+	"required": ["name", "description", "category", "source", "request", "expected_response", "handler"],
+	"properties": {
+		"name": {
+			"type": "string",
+			"description": "Human-readable test case name",
+			"minLength": 1
+		},
+		"description": {
+			"type": "string",
+			"description": "What this test validates",
+			"minLength": 1
+		},
+		"category": {
+			"type": "string",
+			"enum": ["request_timeout"],
+			"description": "Test category"
+		},
+		"source": {
+			"type": "object",
+			"description": "Source framework and test location",
+			"required": ["framework"],
+			"properties": {
+				"framework": {
+					"type": "string",
+					"description": "Source framework"
+				},
+				"inspired_by": {
+					"type": "string",
+					"description": "Framework or RFC that inspired this test"
+				},
+				"test_case": {
+					"type": "string",
+					"description": "Test case description"
+				}
+			}
+		},
+		"handler": {
+			"type": "object",
+			"description": "Handler configuration including middleware and simulated delay",
+			"required": ["route", "method"],
+			"properties": {
+				"route": {
+					"type": "string",
+					"description": "API route path"
+				},
+				"method": {
+					"type": "string",
+					"enum": ["GET", "POST", "PUT", "PATCH", "DELETE"],
+					"description": "HTTP method"
+				},
+				"middleware": {
+					"type": "object",
+					"description": "Middleware configuration",
+					"properties": {
+						"request_timeout": {
+							"type": "object",
+							"description": "Request timeout middleware config using tower-http TimeoutLayer",
+							"properties": {
+								"timeout_seconds": {
+									"type": "number",
+									"description": "Global timeout in seconds (null/0 disables timeout)",
+									"minimum": 0
+								},
+								"route_timeouts": {
+									"type": "object",
+									"description": "Per-route timeout overrides in seconds",
+									"additionalProperties": {
+										"type": "number",
+										"minimum": 0
+									}
+								}
+							}
+						}
+					}
+				},
+				"simulated_delay_ms": {
+					"type": "integer",
+					"description": "Simulated delay in milliseconds to test timeout behavior",
+					"minimum": 0
+				},
+				"response_type": {
+					"type": "string",
+					"enum": ["immediate", "streaming", "chunked"],
+					"description": "Type of response (for testing different timeout scenarios)"
+				}
+			}
+		},
+		"request": {
+			"type": "object",
+			"description": "HTTP request details",
+			"required": ["method", "path"],
+			"properties": {
+				"method": {
+					"type": "string",
+					"enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
+					"description": "HTTP method"
+				},
+				"path": {
+					"type": "string",
+					"description": "Request path",
+					"minLength": 1
+				},
+				"headers": {
+					"type": "object",
+					"description": "Request headers as key-value pairs",
+					"additionalProperties": { "type": "string" }
+				},
+				"body": {
+					"description": "Request body (any JSON type)"
+				},
+				"client_ip": {
+					"type": "string",
+					"description": "Simulated client IP"
+				}
+			}
+		},
+		"expected_response": {
+			"type": "object",
+			"description": "Expected HTTP response",
+			"required": ["status_code"],
+			"properties": {
+				"status_code": {
+					"type": "integer",
+					"description": "Expected HTTP status code (200 for success, 504 for timeout)",
+					"enum": [200, 504]
+				},
+				"body": {
+					"description": "Expected response body. For 504 responses, follows RFC 9457 Problem Details format with type, title, status, and detail fields."
+				},
+				"headers": {
+					"type": "object",
+					"description": "Expected response headers",
+					"additionalProperties": { "type": "string" }
+				},
+				"partial": {
+					"type": "boolean",
+					"description": "Whether the response body may be partial (for streaming timeout scenarios)"
+				}
+			}
+		},
+		"tags": {
+			"type": "array",
+			"description": "Tags for categorizing and filtering tests",
+			"items": { "type": "string" }
+		},
+		"notes": {
+			"type": "string",
+			"description": "Additional notes or implementation details"
+		},
+		"concurrent_requests": {
+			"type": "integer",
+			"description": "Number of concurrent requests to simulate (for concurrent timeout tests)",
+			"minimum": 1
+		}
+	}
+}

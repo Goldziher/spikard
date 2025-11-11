@@ -1,0 +1,31 @@
+{
+	"name": "CORS safelisted headers without preflight",
+	"description": "Tests that safelisted headers (Content-Type: text/plain, Accept, Accept-Language) don't require preflight",
+	"source": {
+		"framework": "spikard",
+		"test_file": "cors_tests.rs",
+		"test_function": "test_cors_safelisted_headers"
+	},
+	"request": {
+		"method": "POST",
+		"path": "/api/form",
+		"headers": {
+			"Origin": "https://app.example.com",
+			"Content-Type": "text/plain",
+			"Accept": "application/json",
+			"Accept-Language": "en-US"
+		},
+		"body": "plain text data"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Access-Control-Allow-Origin": "https://app.example.com",
+			"Vary": "Origin"
+		},
+		"body": {
+			"received": "plain text data"
+		}
+	},
+	"notes": "CORS-safelisted headers (Accept, Accept-Language, Content-Language, Content-Type: application/x-www-form-urlencoded|multipart/form-data|text/plain) don't trigger preflight. Other Content-Type values like application/json DO require preflight"
+}

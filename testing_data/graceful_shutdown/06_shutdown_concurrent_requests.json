@@ -1,0 +1,147 @@
+{
+	"name": "Multiple concurrent requests complete during shutdown",
+	"description": "Tests that all in-flight concurrent requests are allowed to complete during graceful shutdown",
+	"category": "graceful_shutdown",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "axum_graceful_shutdown",
+		"test_case": "concurrent requests during shutdown"
+	},
+	"handler": {
+		"route": "/api/process",
+		"method": "POST",
+		"middleware": {
+			"graceful_shutdown": {
+				"enabled": true,
+				"grace_period_seconds": 20,
+				"force_timeout_seconds": 40
+			}
+		}
+	},
+	"test_scenario": {
+		"phases": [
+			{
+				"phase": "initiate_concurrent_requests",
+				"description": "Start 5 concurrent requests with varying durations",
+				"actions": [
+					{
+						"type": "request",
+						"request": {
+							"method": "POST",
+							"path": "/api/process",
+							"headers": {
+								"Content-Type": "application/json",
+								"X-Request-ID": "req-1"
+							},
+							"body": {
+								"task_id": 1,
+								"duration_seconds": 3
+							},
+							"simulated_duration_ms": 3000
+						},
+						"expect_async": true
+					},
+					{
+						"type": "request",
+						"request": {
+							"method": "POST",
+							"path": "/api/process",
+							"headers": {
+								"Content-Type": "application/json",
+								"X-Request-ID": "req-2"
+							},
+							"body": {
+								"task_id": 2,
+								"duration_seconds": 5
+							},
+							"simulated_duration_ms": 5000
+						},
+						"expect_async": true
+					},
+					{
+						"type": "request",
+						"request": {
+							"method": "POST",
+							"path": "/api/process",
+							"headers": {
+								"Content-Type": "application/json",
+								"X-Request-ID": "req-3"
+							},
+							"body": {
+								"task_id": 3,
+								"duration_seconds": 7
+							},
+							"simulated_duration_ms": 7000
+						},
+						"expect_async": true
+					},
+					{
+						"type": "request",
+						"request": {
+							"method": "POST",
+							"path": "/api/process",
+							"headers": {
+								"Content-Type": "application/json",
+								"X-Request-ID": "req-4"
+							},
+							"body": {
+								"task_id": 4,
+								"duration_seconds": 4
+							},
+							"simulated_duration_ms": 4000
+						},
+						"expect_async": true
+					},
+					{
+						"type": "request",
+						"request": {
+							"method": "POST",
+							"path": "/api/process",
+							"headers": {
+								"Content-Type": "application/json",
+								"X-Request-ID": "req-5"
+							},
+							"body": {
+								"task_id": 5,
+								"duration_seconds": 6
+							},
+							"simulated_duration_ms": 6000
+						},
+						"expect_async": true
+					}
+				]
+			},
+			{
+				"phase": "trigger_shutdown",
+				"description": "Send shutdown signal while all requests are in flight",
+				"delay_ms": 2000,
+				"actions": [
+					{
+						"type": "signal",
+						"signal": "SIGTERM"
+					}
+				]
+			},
+			{
+				"phase": "verify_all_complete",
+				"description": "Verify all 5 requests complete successfully",
+				"actions": [
+					{
+						"type": "wait_for_response",
+						"expected_response": {
+							"status_code": 200,
+							"body": {
+								"message": "All 5 concurrent requests completed",
+								"completed_count": 5,
+								"failed_count": 0
+							}
+						},
+						"timeout_ms": 15000
+					}
+				]
+			}
+		]
+	},
+	"tags": ["graceful_shutdown", "integration", "lifecycle", "concurrent", "multiple-requests"],
+	"notes": "All concurrent in-flight requests should complete during grace period. Grace period of 20s is sufficient for all requests (longest is 7s)."
+}

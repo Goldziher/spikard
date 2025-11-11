@@ -1,0 +1,48 @@
+{
+	"name": "Compression - multiple acceptable encodings",
+	"description": "Tests that server selects best available algorithm when client accepts multiple encodings",
+	"category": "compression",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "tower_http::compression::CompressionLayer",
+		"test_case": "Multiple acceptable encodings with equal priority"
+	},
+	"handler": {
+		"route": "/api/data",
+		"method": "GET",
+		"middleware": {
+			"compression": {
+				"enabled": true,
+				"algorithms": ["gzip", "br", "deflate"],
+				"level": 6,
+				"min_size_bytes": 1024
+			}
+		},
+		"response_body_size": 5000
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/data",
+		"headers": {
+			"Accept-Encoding": "gzip, deflate, br"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Content-Encoding": "br",
+			"Vary": "Accept-Encoding"
+		},
+		"body": {
+			"message": "Success",
+			"data": "Large payload compressed with best algorithm"
+		},
+		"compression_metrics": {
+			"uncompressed_size_bytes": 5000,
+			"compressed_size_bytes": 1100,
+			"compression_ratio": 4.55
+		}
+	},
+	"tags": ["compression", "middleware", "brotli", "content-negotiation", "algorithm-selection", "tower-http"],
+	"notes": "When client accepts multiple encodings with equal quality, server selects based on server preference order. Brotli typically offers best compression."
+}

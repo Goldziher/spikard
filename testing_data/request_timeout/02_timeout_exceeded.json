@@ -1,0 +1,36 @@
+{
+	"name": "Request exceeds timeout",
+	"description": "Tests 504 response when request processing exceeds configured timeout",
+	"category": "request_timeout",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "RFC 9457",
+		"test_case": "Slow request times out with 504"
+	},
+	"handler": {
+		"route": "/api/slow",
+		"method": "GET",
+		"middleware": {
+			"request_timeout": {
+				"timeout_seconds": 2
+			}
+		},
+		"simulated_delay_ms": 5000,
+		"response_type": "immediate"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/slow"
+	},
+	"expected_response": {
+		"status_code": 504,
+		"body": {
+			"type": "https://spikard.dev/errors/request-timeout",
+			"title": "Gateway Timeout",
+			"status": 504,
+			"detail": "Request processing exceeded the configured timeout of 2 seconds"
+		}
+	},
+	"tags": ["timeout", "middleware", "504", "rfc9457", "error"],
+	"notes": "Request takes 5 seconds with 2 second timeout - should return 504"
+}

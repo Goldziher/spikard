@@ -1,0 +1,23 @@
+{
+	"name": "CORS origin case sensitivity",
+	"description": "Tests that CORS origin matching is case-sensitive for the domain part",
+	"source": {
+		"framework": "spikard",
+		"test_file": "cors_tests.rs",
+		"test_function": "test_cors_origin_case_sensitivity"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/data",
+		"headers": {
+			"Origin": "https://EXAMPLE.COM"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Vary": "Origin"
+		}
+	},
+	"notes": "Origin https://EXAMPLE.COM should not match configured origin https://example.com due to case sensitivity in domain matching per RFC 6454"
+}

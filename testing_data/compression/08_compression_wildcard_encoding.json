@@ -1,0 +1,48 @@
+{
+	"name": "Compression - wildcard encoding",
+	"description": "Tests that server applies compression when client sends Accept-Encoding: * (any encoding acceptable)",
+	"category": "compression",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "tower_http::compression::CompressionLayer",
+		"test_case": "Wildcard accept encoding"
+	},
+	"handler": {
+		"route": "/api/data",
+		"method": "GET",
+		"middleware": {
+			"compression": {
+				"enabled": true,
+				"algorithms": ["gzip", "br"],
+				"level": 6,
+				"min_size_bytes": 1024
+			}
+		},
+		"response_body_size": 5000
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/data",
+		"headers": {
+			"Accept-Encoding": "*"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Content-Encoding": "br",
+			"Vary": "Accept-Encoding"
+		},
+		"body": {
+			"message": "Success",
+			"data": "Large payload compressed with server's preferred algorithm"
+		},
+		"compression_metrics": {
+			"uncompressed_size_bytes": 5000,
+			"compressed_size_bytes": 1100,
+			"compression_ratio": 4.55
+		}
+	},
+	"tags": ["compression", "middleware", "wildcard", "content-negotiation", "tower-http"],
+	"notes": "Wildcard (*) means client accepts any encoding. Server chooses its most efficient algorithm. RFC 7231 section 5.3.4."
+}

@@ -1,0 +1,28 @@
+{
+	"name": "Rate limit - disabled",
+	"description": "Tests that endpoints without rate_limit middleware succeed without rate limit headers",
+	"category": "rate_limit",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "tower_governor",
+		"test_case": "Endpoint without rate limiting"
+	},
+	"handler": {
+		"route": "/api/rate-limited",
+		"method": "GET",
+		"middleware": {}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/rate-limited",
+		"client_ip": "192.168.1.10"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Success"
+		}
+	},
+	"tags": ["rate_limit", "disabled", "success"],
+	"notes": "No rate limiting applied, no RateLimit headers expected in response"
+}

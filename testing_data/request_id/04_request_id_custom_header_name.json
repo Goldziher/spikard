@@ -1,0 +1,41 @@
+{
+	"name": "Custom header name (X-Correlation-ID)",
+	"description": "Tests request ID generation with custom header name X-Correlation-ID instead of default X-Request-ID",
+	"category": "request_id",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "tower-http request-id",
+		"test_case": "Support custom header names for different tracing conventions"
+	},
+	"handler": {
+		"route": "/api/correlated",
+		"method": "GET",
+		"middleware": {
+			"request_id": {
+				"enabled": true,
+				"header_name": "X-Correlation-ID",
+				"format": "uuid_v4",
+				"propagate_to_response": true
+			}
+		},
+		"response_type": "success"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/correlated",
+		"headers": {
+			"X-Correlation-ID": "correlation-xyz-789"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "success"
+		},
+		"headers": {
+			"X-Correlation-ID": "correlation-xyz-789"
+		}
+	},
+	"tags": ["request_id", "middleware", "correlation", "custom-header"],
+	"notes": "Some organizations use X-Correlation-ID instead of X-Request-ID for distributed tracing"
+}

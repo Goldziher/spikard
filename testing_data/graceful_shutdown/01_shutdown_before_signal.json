@@ -1,0 +1,53 @@
+{
+	"name": "Server accepts requests before shutdown",
+	"description": "Tests that server handles requests normally before shutdown signal is sent",
+	"category": "graceful_shutdown",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "axum_graceful_shutdown",
+		"test_case": "pre-shutdown behavior"
+	},
+	"handler": {
+		"route": "/api/data",
+		"method": "GET",
+		"middleware": {
+			"graceful_shutdown": {
+				"enabled": true,
+				"grace_period_seconds": 30,
+				"force_timeout_seconds": 60
+			}
+		}
+	},
+	"test_scenario": {
+		"phases": [
+			{
+				"phase": "pre_shutdown",
+				"description": "Server running normally, no shutdown signal sent",
+				"actions": [
+					{
+						"type": "request",
+						"request": {
+							"method": "GET",
+							"path": "/api/data",
+							"headers": {
+								"Accept": "application/json"
+							}
+						},
+						"expected_response": {
+							"status_code": 200,
+							"headers": {
+								"Content-Type": "application/json"
+							},
+							"body": {
+								"message": "Request processed successfully",
+								"status": "ok"
+							}
+						}
+					}
+				]
+			}
+		]
+	},
+	"tags": ["graceful_shutdown", "integration", "lifecycle", "pre-shutdown"],
+	"notes": "Before shutdown signal, server operates normally and accepts all requests. This establishes baseline behavior."
+}

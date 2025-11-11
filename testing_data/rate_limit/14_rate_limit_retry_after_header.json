@@ -1,0 +1,42 @@
+{
+	"name": "Rate limit - Retry-After header",
+	"description": "Validates that 429 responses include Retry-After header with correct value",
+	"category": "rate_limit",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "RFC 6585",
+		"test_case": "Retry-After header in 429 response"
+	},
+	"handler": {
+		"route": "/api/rate-limited",
+		"method": "GET",
+		"middleware": {
+			"rate_limit": {
+				"per_second": 1,
+				"burst": 0,
+				"ip_based": true
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/rate-limited",
+		"client_ip": "192.168.1.14"
+	},
+	"expected_response": {
+		"status_code": 429,
+		"body": {
+			"type": "https://spikard.dev/errors/rate-limit-exceeded",
+			"title": "Too Many Requests",
+			"status": 429,
+			"detail": "Rate limit exceeded. Please retry after the specified time."
+		},
+		"headers": {
+			"RateLimit-Limit": "1",
+			"RateLimit-Remaining": "0",
+			"Retry-After": "1"
+		}
+	},
+	"tags": ["rate_limit", "retry-after", "429", "headers", "rfc6585"],
+	"notes": "Retry-After header tells client how many seconds to wait before retrying"
+}

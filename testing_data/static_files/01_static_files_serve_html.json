@@ -1,0 +1,36 @@
+{
+	"name": "Serve HTML file",
+	"description": "Tests serving static HTML file with correct Content-Type and caching headers",
+	"category": "static_files",
+	"handler": {
+		"route": "/*filepath",
+		"method": "GET",
+		"middleware": {
+			"static_files": {
+				"root_dir": "./public",
+				"index_file": "index.html",
+				"precompressed": true,
+				"cache_control": "public, max-age=3600"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/about.html"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Content-Type": "text/html; charset=utf-8",
+			"Cache-Control": "public, max-age=3600",
+			"ETag": "\"abc123\"",
+			"Accept-Ranges": "bytes"
+		},
+		"body": {
+			"simulated_file": "about.html",
+			"simulated_size_bytes": 2048
+		}
+	},
+	"tags": ["static_files", "middleware", "html", "mime_types", "caching"],
+	"notes": "Uses tower_http::services::ServeDir for directory serving with automatic MIME type detection based on file extension"
+}

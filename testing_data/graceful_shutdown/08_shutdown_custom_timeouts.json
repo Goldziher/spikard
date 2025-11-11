@@ -1,0 +1,95 @@
+{
+	"name": "Custom grace period and force timeout configuration",
+	"description": "Tests that custom graceful shutdown timeouts are respected (short grace period, longer force timeout)",
+	"category": "graceful_shutdown",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "axum_graceful_shutdown",
+		"test_case": "custom timeout configuration"
+	},
+	"handler": {
+		"route": "/api/task",
+		"method": "POST",
+		"middleware": {
+			"graceful_shutdown": {
+				"enabled": true,
+				"grace_period_seconds": 3,
+				"force_timeout_seconds": 10
+			}
+		}
+	},
+	"test_scenario": {
+		"phases": [
+			{
+				"phase": "initiate_request",
+				"description": "Start a request that takes 5 seconds (exceeds 3s grace period)",
+				"actions": [
+					{
+						"type": "request",
+						"request": {
+							"method": "POST",
+							"path": "/api/task",
+							"headers": {
+								"Content-Type": "application/json",
+								"Accept": "application/json"
+							},
+							"body": {
+								"operation": "batch_update",
+								"duration_seconds": 5
+							},
+							"simulated_duration_ms": 5000
+						},
+						"expect_async": true
+					}
+				]
+			},
+			{
+				"phase": "trigger_shutdown",
+				"description": "Send shutdown signal immediately",
+				"delay_ms": 500,
+				"actions": [
+					{
+						"type": "signal",
+						"signal": "SIGTERM"
+					}
+				]
+			},
+			{
+				"phase": "verify_grace_period_termination",
+				"description": "Verify request is terminated after 3s grace period (not 10s force timeout)",
+				"actions": [
+					{
+						"type": "wait_for_response",
+						"expected_response": {
+							"status_code": 503,
+							"headers": {
+								"Content-Type": "application/json"
+							},
+							"body": {
+								"error": "Service shutting down",
+								"message": "Request terminated due to shutdown grace period expiration",
+								"grace_period_seconds": 3,
+								"force_timeout_seconds": 10,
+								"terminated_at": "grace_period"
+							}
+						},
+						"timeout_ms": 5000
+					}
+				]
+			},
+			{
+				"phase": "verify_server_shutdown",
+				"description": "Verify server fully shuts down before force timeout",
+				"delay_ms": 1000,
+				"actions": [
+					{
+						"type": "verify_connection_state",
+						"expected_result": "connection_refused"
+					}
+				]
+			}
+		]
+	},
+	"tags": ["graceful_shutdown", "integration", "lifecycle", "configuration", "custom-timeouts"],
+	"notes": "Custom timeout configuration allows fine-tuning shutdown behavior. Grace period controls request termination, force timeout is absolute maximum for complete shutdown."
+}

@@ -1,0 +1,36 @@
+{
+	"name": "Small limit for text endpoint",
+	"description": "Small 1KB limit appropriate for text-only endpoints",
+	"category": "body_size_limit",
+	"handler": {
+		"route": "/api/text",
+		"method": "POST",
+		"middleware": {
+			"body_size_limit": {
+				"max_body_size_bytes": 1024
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/api/text",
+		"headers": {
+			"Content-Type": "application/json",
+			"Content-Length": "2048"
+		},
+		"body": {
+			"simulated_size_bytes": 2048
+		}
+	},
+	"expected_response": {
+		"status_code": 413,
+		"body": {
+			"type": "https://spikard.dev/errors/payload-too-large",
+			"title": "Payload Too Large",
+			"status": 413,
+			"detail": "Request body size (2048 bytes) exceeds maximum allowed size (1024 bytes)"
+		}
+	},
+	"tags": ["body_size_limit", "middleware", "413", "text", "small-limit"],
+	"notes": "Text endpoints often need smaller limits (1KB) to prevent abuse"
+}

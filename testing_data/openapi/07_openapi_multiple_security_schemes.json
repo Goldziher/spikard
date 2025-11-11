@@ -1,0 +1,105 @@
+{
+	"name": "OpenAPI with multiple security schemes",
+	"description": "Tests OpenAPI spec generation with both JWT and API key security schemes simultaneously",
+	"category": "openapi",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "utoipa",
+		"test_case": "multiple security schemes"
+	},
+	"handler": {
+		"route": "/protected/multi-auth",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Authorization": {
+					"type": "string",
+					"required": false,
+					"description": "JWT token in Bearer format"
+				},
+				"X-API-Key": {
+					"type": "string",
+					"required": false,
+					"description": "API key for authentication"
+				}
+			}
+		},
+		"response_schema": {
+			"type": "object",
+			"properties": {
+				"message": {
+					"type": "string"
+				},
+				"auth_method": {
+					"type": "string",
+					"enum": ["jwt", "api_key"]
+				}
+			},
+			"required": ["message", "auth_method"]
+		},
+		"middleware": {
+			"openapi": {
+				"enabled": true,
+				"title": "Multi-Auth API",
+				"version": "1.0.0",
+				"description": "API supporting multiple authentication methods",
+				"openapi_json_path": "/openapi.json"
+			},
+			"jwt_auth": {
+				"enabled": true,
+				"algorithm": "HS256",
+				"secret": "jwt-secret"
+			},
+			"api_key_auth": {
+				"enabled": true,
+				"keys": ["test-api-key"],
+				"header_name": "X-API-Key"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/openapi.json",
+		"headers": {
+			"accept": "application/json"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"content-type": "application/json"
+		},
+		"body_partial": {
+			"openapi": "3.1.0",
+			"info": {
+				"title": "Multi-Auth API",
+				"version": "1.0.0",
+				"description": "API supporting multiple authentication methods"
+			},
+			"components": {
+				"securitySchemes": {
+					"bearerAuth": {
+						"type": "http",
+						"scheme": "bearer",
+						"bearerFormat": "JWT"
+					},
+					"apiKeyAuth": {
+						"type": "apiKey",
+						"in": "header",
+						"name": "X-API-Key"
+					}
+				}
+			},
+			"security": [
+				{
+					"bearerAuth": []
+				},
+				{
+					"apiKeyAuth": []
+				}
+			]
+		}
+	},
+	"tags": ["openapi", "security", "jwt", "api_key", "authentication", "middleware"],
+	"notes": "Multiple security schemes allow clients to choose authentication method. The security array uses OR logic."
+}

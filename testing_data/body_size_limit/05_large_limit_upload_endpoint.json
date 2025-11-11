@@ -1,0 +1,37 @@
+{
+	"name": "Large limit for file upload endpoint",
+	"description": "Large 100MB limit appropriate for file upload endpoints",
+	"category": "body_size_limit",
+	"handler": {
+		"route": "/api/upload",
+		"method": "POST",
+		"middleware": {
+			"body_size_limit": {
+				"max_body_size_bytes": 104857600
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/api/upload",
+		"headers": {
+			"Content-Type": "multipart/form-data; boundary=----WebKitFormBoundary",
+			"Content-Length": "52428800"
+		},
+		"body": {
+			"simulated_size_bytes": 52428800,
+			"content": {
+				"file": "large_file.bin"
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "File uploaded successfully",
+			"bytes_received": 52428800
+		}
+	},
+	"tags": ["body_size_limit", "middleware", "200", "upload", "large-limit"],
+	"notes": "50MB file with 100MB limit should succeed for upload endpoints"
+}

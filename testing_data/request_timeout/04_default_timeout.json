@@ -1,0 +1,34 @@
+{
+	"name": "Default timeout behavior",
+	"description": "Tests default 30 second timeout when no timeout is explicitly configured",
+	"category": "request_timeout",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "tower-http TimeoutLayer",
+		"test_case": "Default timeout applied"
+	},
+	"handler": {
+		"route": "/api/default",
+		"method": "GET",
+		"middleware": {
+			"request_timeout": {
+				"timeout_seconds": 30
+			}
+		},
+		"simulated_delay_ms": 2000,
+		"response_type": "immediate"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/default"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "success",
+			"delay_ms": 2000
+		}
+	},
+	"tags": ["timeout", "middleware", "default", "200"],
+	"notes": "Tests default 30s timeout - 2s request should succeed"
+}

@@ -1,0 +1,47 @@
+{
+	"name": "Compression - identity encoding",
+	"description": "Tests that no compression is applied when client explicitly requests identity encoding",
+	"category": "compression",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "tower_http::compression::CompressionLayer",
+		"test_case": "Identity encoding explicitly requested"
+	},
+	"handler": {
+		"route": "/api/data",
+		"method": "GET",
+		"middleware": {
+			"compression": {
+				"enabled": true,
+				"algorithms": ["gzip", "br"],
+				"level": 6,
+				"min_size_bytes": 1024
+			}
+		},
+		"response_body_size": 5000
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/data",
+		"headers": {
+			"Accept-Encoding": "identity"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Content-Encoding": null
+		},
+		"body": {
+			"message": "Success",
+			"data": "Large payload sent uncompressed"
+		},
+		"compression_metrics": {
+			"uncompressed_size_bytes": 5000,
+			"compressed_size_bytes": 5000,
+			"compression_ratio": 1.0
+		}
+	},
+	"tags": ["compression", "middleware", "identity", "content-negotiation", "tower-http"],
+	"notes": "Identity encoding means no transformation. Client explicitly opts out of compression even when server supports it."
+}
