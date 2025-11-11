@@ -20,6 +20,7 @@ pub mod response;
 pub mod router;
 pub mod schema_registry;
 pub mod server;
+pub mod sse;
 pub mod type_hints;
 pub mod validation;
 pub mod websocket;
@@ -37,6 +38,7 @@ pub use response::Response;
 pub use router::{Route, RouteHandler, Router};
 pub use schema_registry::SchemaRegistry;
 pub use server::Server;
+pub use sse::{SseEvent, SseEventProducer, SseState, sse_handler};
 pub use validation::SchemaValidator;
 pub use websocket::{WebSocketHandler, WebSocketState, websocket_handler};
 
