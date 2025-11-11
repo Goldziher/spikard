@@ -37,7 +37,9 @@
 mod handler;
 mod lifecycle;
 mod response;
+mod sse;
 mod test_client;
+mod websocket;
 
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
