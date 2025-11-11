@@ -298,18 +298,18 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
 
     if status_code == 200 {
         // Success case - verify response matches expected
-        // Check if response is HTML (Swagger UI, Redoc, etc.) - don't parse as JSON
-        let is_html_response = fixture
+        // Check if response is text (HTML, plain text, CSV, etc.) - don't parse as JSON
+        let is_text_response = fixture
             .expected_response
             .headers
             .as_ref()
             .and_then(|h| h.get("content-type"))
-            .map(|ct| ct.contains("text/html"))
+            .map(|ct| ct.starts_with("text/"))
             .unwrap_or(false);
 
         // Skip parsing JSON for HEAD requests without expected body (HEAD has no response body)
-        // Also skip for HTML responses
-        let should_parse_json = !is_html_response && (method != "HEAD" || fixture.expected_response.body.is_some());
+        // Also skip for text responses
+        let should_parse_json = !is_text_response && (method != "HEAD" || fixture.expected_response.body.is_some());
 
         if should_parse_json {
             code.push_str("    response_data = response.json()\n");
@@ -317,7 +317,15 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
 
         // If fixture has expected response body, assert against that (handles type conversion)
         if let Some(ref expected_body) = fixture.expected_response.body {
-            generate_body_assertions(&mut code, expected_body, "response_data");
+            // For text responses (HTML, plain text, CSV, etc.), assert against response.text() directly
+            if is_text_response && expected_body.is_string() {
+                code.push_str(&format!(
+                    "    assert response.text() == {}\n",
+                    json_to_python(expected_body)
+                ));
+            } else {
+                generate_body_assertions(&mut code, expected_body, "response_data");
+            }
         } else if should_parse_json {
             // Fallback: verify echoed parameters match what we sent
             // (This path is for fixtures without expected_response.body)
