@@ -1,0 +1,38 @@
+{
+	"name": "onResponse - Response Timing",
+	"description": "Test onResponse hook that adds timing information to response headers",
+	"category": "lifecycle_hooks",
+	"handler": {
+		"route": "/api/test-timing",
+		"method": "GET",
+		"middleware": {
+			"lifecycle_hooks": {
+				"on_request": [
+					{
+						"name": "start_timer",
+						"handler": "record_start_time"
+					}
+				],
+				"on_response": [
+					{
+						"name": "response_timer",
+						"handler": "add_response_time"
+					}
+				]
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/test-timing"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Response with timing info"
+		},
+		"headers": {
+			"X-Response-Time": ".*ms"
+		}
+	}
+}

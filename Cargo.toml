@@ -14,6 +14,7 @@ members = [
 ]
 exclude = [
     "e2e/*",
+    "examples/*",
 ]
 
 [workspace.package]

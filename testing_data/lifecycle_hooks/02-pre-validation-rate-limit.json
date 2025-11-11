@@ -1,0 +1,49 @@
+{
+	"name": "preValidation - Rate Limiting",
+	"description": "Test preValidation hook that implements rate limiting before validation",
+	"category": "lifecycle_hooks",
+	"handler": {
+		"route": "/api/test-rate-limit",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"data": {
+					"type": "string"
+				}
+			},
+			"required": ["data"]
+		},
+		"middleware": {
+			"lifecycle_hooks": {
+				"pre_validation": [
+					{
+						"name": "rate_limiter",
+						"handler": "check_rate_limit",
+						"config": {
+							"max_requests": 10,
+							"window_seconds": 60
+						}
+					}
+				]
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/api/test-rate-limit",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"data": "test"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Request accepted",
+			"rate_limit_checked": true
+		}
+	}
+}

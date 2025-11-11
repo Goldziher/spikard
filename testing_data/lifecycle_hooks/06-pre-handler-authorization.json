@@ -1,0 +1,38 @@
+{
+	"name": "preHandler - Authorization Check",
+	"description": "Test preHandler hook for role-based authorization after authentication",
+	"category": "lifecycle_hooks",
+	"handler": {
+		"route": "/api/admin-only",
+		"method": "GET",
+		"middleware": {
+			"lifecycle_hooks": {
+				"pre_handler": [
+					{
+						"name": "authenticator",
+						"handler": "validate_auth_token"
+					},
+					{
+						"name": "authorizer",
+						"handler": "check_admin_role"
+					}
+				]
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/admin-only",
+		"headers": {
+			"Authorization": "Bearer admin-token-67890"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Admin access granted",
+			"user_id": "admin-456",
+			"role": "admin"
+		}
+	}
+}

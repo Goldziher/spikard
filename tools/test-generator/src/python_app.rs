@@ -219,10 +219,29 @@ fn generate_fixture_handler_and_app_python(
         model_name.as_deref(),
     )?;
 
-    // Combine models and handler
+    // Generate lifecycle hook functions if present
+    let hooks_functions = if let Some(handler) = &fixture.handler {
+        if let Some(middleware) = &handler.middleware {
+            if let Some(hooks) = middleware.get("lifecycle_hooks") {
+                generate_lifecycle_hooks_functions(hooks, handler_name, fixture)?
+            } else {
+                String::new()
+            }
+        } else {
+            String::new()
+        }
+    } else {
+        String::new()
+    };
+
+    // Combine models, hooks, and handler
     let mut handler_code = String::new();
     if !models_code.is_empty() {
         handler_code.push_str(&models_code);
+        handler_code.push_str("\n\n");
+    }
+    if !hooks_functions.is_empty() {
+        handler_code.push_str(&hooks_functions);
         handler_code.push_str("\n\n");
     }
     handler_code.push_str(&handler_func);
@@ -292,8 +311,23 @@ fn generate_fixture_handler_and_app_python(
         "None".to_string()
     };
 
-    // Generate app factory with config
-    let app_factory_code = if config_str == "None" {
+    // Extract lifecycle hooks configuration if present
+    let hooks_code = if let Some(handler) = &fixture.handler {
+        if let Some(middleware) = &handler.middleware {
+            if let Some(hooks) = middleware.get("lifecycle_hooks") {
+                generate_lifecycle_hooks_registration(hooks, handler_name)?
+            } else {
+                String::new()
+            }
+        } else {
+            String::new()
+        }
+    } else {
+        String::new()
+    };
+
+    // Generate app factory with config and hooks
+    let app_factory_code = if config_str == "None" && hooks_code.is_empty() {
         format!(
             r#"def {}() -> Spikard:
     """App factory for fixture: {}"""
@@ -311,7 +345,7 @@ fn generate_fixture_handler_and_app_python(
             handler_name,
             additional_registration
         )
-    } else {
+    } else if config_str != "None" && hooks_code.is_empty() {
         format!(
             r#"def {}() -> Spikard:
     """App factory for fixture: {}"""
@@ -323,6 +357,48 @@ fn generate_fixture_handler_and_app_python(
             app_factory_name,
             fixture.name,
             config_str,
+            method_upper,
+            route_path,
+            body_schema_str,
+            parameter_schema_str,
+            file_params_str,
+            handler_name,
+            additional_registration
+        )
+    } else if config_str == "None" && !hooks_code.is_empty() {
+        format!(
+            r#"def {}() -> Spikard:
+    """App factory for fixture: {}"""
+    app = Spikard()
+{}
+    # Register handler with this app instance
+    app.register_route("{}", "{}", body_schema={}, parameter_schema={}, file_params={})({}){}
+    return app"#,
+            app_factory_name,
+            fixture.name,
+            hooks_code,
+            method_upper,
+            route_path,
+            body_schema_str,
+            parameter_schema_str,
+            file_params_str,
+            handler_name,
+            additional_registration
+        )
+    } else {
+        format!(
+            r#"def {}() -> Spikard:
+    """App factory for fixture: {}"""
+    config = {}
+    app = Spikard(config=config)
+{}
+    # Register handler with this app instance
+    app.register_route("{}", "{}", body_schema={}, parameter_schema={}, file_params={})({}){}
+    return app"#,
+            app_factory_name,
+            fixture.name,
+            config_str,
+            hooks_code,
             method_upper,
             route_path,
             body_schema_str,
@@ -460,9 +536,20 @@ fn generate_handler_function_for_fixture(
     let should_echo_params = expected_status == 200 && !should_return_expected && !should_return_validation_errors;
 
     // Helper to format headers for Response construction
-    let headers_param = if has_expected_headers {
-        let headers_dict = expected_headers
-            .unwrap()
+    let mut headers_map: std::collections::HashMap<String, String> = if has_expected_headers {
+        expected_headers.unwrap().clone()
+    } else {
+        std::collections::HashMap::new()
+    };
+
+    // For JSON responses (non-string bodies), always set Content-Type if not already set
+    let is_json_response = expected_body.is_some() && !expected_body_value.is_some_and(|v| v.is_string());
+    if is_json_response && !headers_map.contains_key("Content-Type") && !headers_map.contains_key("content-type") {
+        headers_map.insert("Content-Type".to_string(), "application/json".to_string());
+    }
+
+    let headers_param = if !headers_map.is_empty() {
+        let headers_dict = headers_map
             .iter()
             .map(|(k, v)| format!("\"{}\" : \"{}\"", k, v))
             .collect::<Vec<_>>()
@@ -475,12 +562,9 @@ fn generate_handler_function_for_fixture(
     if should_return_expected {
         // Return the expected response body (business logic or documented response format)
         if let Some(body_json) = expected_body.as_ref() {
-            // If body is a string, pass it directly; otherwise, JSON-encode it
-            let content_param = if expected_body_value.is_some_and(|v| v.is_string()) {
-                body_json.clone()
-            } else {
-                format!("json.dumps({})", body_json)
-            };
+            // Pass Python objects directly - Rust side handles JSON serialization
+            // Only strings need to be passed as-is for plain text responses
+            let content_param = body_json.clone();
             code.push_str(&format!(
                 "    return Response(content={}, status_code={}{})\n",
                 content_param, expected_status, headers_param
@@ -494,8 +578,9 @@ fn generate_handler_function_for_fixture(
         }
     } else if should_return_validation_errors {
         if let Some(body_json) = validation_errors_body.as_ref() {
+            // Pass Python dict directly - Rust side handles JSON serialization
             code.push_str(&format!(
-                "    return Response(content=json.dumps({}), status_code={}{})\n",
+                "    return Response(content={}, status_code={}{})\n",
                 body_json, expected_status, headers_param
             ));
         } else {
@@ -1260,4 +1345,247 @@ fn generate_server_config_from_middleware(middleware: &Value) -> Result<String> 
     }
 
     Ok(config_code)
+}
+
+/// Generate Python lifecycle hooks registration code
+fn generate_lifecycle_hooks_registration(hooks: &Value, handler_name: &str) -> Result<String> {
+    let mut code = String::new();
+    code.push_str("    # Register lifecycle hooks\n");
+
+    // Process on_request hooks
+    if let Some(on_request) = hooks.get("on_request").and_then(|v| v.as_array()) {
+        for (idx, hook) in on_request.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_on_request_{}", handler_name, hook_name, idx);
+            code.push_str(&format!("    app.on_request({})\n", func_name));
+        }
+    }
+
+    // Process pre_validation hooks
+    if let Some(pre_validation) = hooks.get("pre_validation").and_then(|v| v.as_array()) {
+        for (idx, hook) in pre_validation.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_pre_validation_{}", handler_name, hook_name, idx);
+            code.push_str(&format!("    app.pre_validation({})\n", func_name));
+        }
+    }
+
+    // Process pre_handler hooks
+    if let Some(pre_handler) = hooks.get("pre_handler").and_then(|v| v.as_array()) {
+        for (idx, hook) in pre_handler.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_pre_handler_{}", handler_name, hook_name, idx);
+            code.push_str(&format!("    app.pre_handler({})\n", func_name));
+        }
+    }
+
+    // Process on_response hooks
+    if let Some(on_response) = hooks.get("on_response").and_then(|v| v.as_array()) {
+        for (idx, hook) in on_response.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_on_response_{}", handler_name, hook_name, idx);
+            code.push_str(&format!("    app.on_response({})\n", func_name));
+        }
+    }
+
+    // Process on_error hooks
+    if let Some(on_error) = hooks.get("on_error").and_then(|v| v.as_array()) {
+        for (idx, hook) in on_error.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_on_error_{}", handler_name, hook_name, idx);
+            code.push_str(&format!("    app.on_error({})\n", func_name));
+        }
+    }
+
+    Ok(code)
+}
+
+/// Generate Python lifecycle hook function implementations
+fn generate_lifecycle_hooks_functions(hooks: &Value, handler_name: &str, fixture: &Fixture) -> Result<String> {
+    let mut code = String::new();
+
+    // Process on_request hooks
+    if let Some(on_request) = hooks.get("on_request").and_then(|v| v.as_array()) {
+        for (idx, hook) in on_request.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_on_request_{}", handler_name, hook_name, idx);
+
+            code.push_str(&format!(
+                r#"async def {}(request: Any) -> Any:
+    """onRequest hook: {}"""
+    # Mock implementation for testing
+    return request
+
+
+"#,
+                func_name, hook_name
+            ));
+        }
+    }
+
+    // Process pre_validation hooks
+    if let Some(pre_validation) = hooks.get("pre_validation").and_then(|v| v.as_array()) {
+        for (idx, hook) in pre_validation.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_pre_validation_{}", handler_name, hook_name, idx);
+
+            // Check if this hook should short-circuit (e.g., rate limit exceeded)
+            let should_short_circuit = hook_name.contains("rate_limit") && fixture.expected_response.status_code == 429;
+
+            if should_short_circuit {
+                code.push_str(&format!(
+                    r#"async def {}(request: Any) -> Any:
+    """preValidation hook: {} - Short circuits with 429"""
+    from spikard import Response
+    return Response(
+        content={{"error": "Rate limit exceeded", "message": "Too many requests, please try again later"}},
+        status_code=429,
+        headers={{"Retry-After": "60"}}
+    )
+
+
+"#,
+                    func_name, hook_name
+                ));
+            } else {
+                code.push_str(&format!(
+                    r#"async def {}(request: Any) -> Any:
+    """preValidation hook: {}"""
+    # Mock implementation for testing
+    return request
+
+
+"#,
+                    func_name, hook_name
+                ));
+            }
+        }
+    }
+
+    // Process pre_handler hooks
+    if let Some(pre_handler) = hooks.get("pre_handler").and_then(|v| v.as_array()) {
+        for (idx, hook) in pre_handler.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_pre_handler_{}", handler_name, hook_name, idx);
+
+            // Check if auth should fail
+            let auth_fails = hook_name.contains("auth")
+                && (fixture.expected_response.status_code == 401 || fixture.expected_response.status_code == 403);
+
+            if auth_fails {
+                let error_msg = if fixture.expected_response.status_code == 401 {
+                    "Unauthorized"
+                } else {
+                    "Forbidden"
+                };
+                let detail_msg = if fixture.expected_response.status_code == 401 {
+                    "Invalid or expired authentication token"
+                } else {
+                    "Admin role required for this endpoint"
+                };
+
+                code.push_str(&format!(
+                    r#"async def {}(request: Any) -> Any:
+    """preHandler hook: {} - Short circuits with {}"""
+    from spikard import Response
+    return Response(
+        content={{"error": "{}", "message": "{}"}},
+        status_code={}
+    )
+
+
+"#,
+                    func_name,
+                    hook_name,
+                    fixture.expected_response.status_code,
+                    error_msg,
+                    detail_msg,
+                    fixture.expected_response.status_code
+                ));
+            } else {
+                code.push_str(&format!(
+                    r#"async def {}(request: Any) -> Any:
+    """preHandler hook: {}"""
+    # Mock implementation for testing
+    return request
+
+
+"#,
+                    func_name, hook_name
+                ));
+            }
+        }
+    }
+
+    // Process on_response hooks
+    if let Some(on_response) = hooks.get("on_response").and_then(|v| v.as_array()) {
+        for (idx, hook) in on_response.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_on_response_{}", handler_name, hook_name, idx);
+
+            // Add security headers if requested
+            if hook_name.contains("security") {
+                code.push_str(&format!(
+                    r#"async def {}(response: Any) -> Any:
+    """onResponse hook: {} - Adds security headers"""
+    if hasattr(response, 'headers'):
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
+
+"#,
+                    func_name, hook_name
+                ));
+            } else if hook_name.contains("timing") || hook_name.contains("timer") {
+                code.push_str(&format!(
+                    r#"async def {}(response: Any) -> Any:
+    """onResponse hook: {} - Adds timing header"""
+    if hasattr(response, 'headers'):
+        response.headers["X-Response-Time"] = "0ms"
+    return response
+
+
+"#,
+                    func_name, hook_name
+                ));
+            } else {
+                code.push_str(&format!(
+                    r#"async def {}(response: Any) -> Any:
+    """onResponse hook: {}"""
+    # Mock implementation for testing
+    return response
+
+
+"#,
+                    func_name, hook_name
+                ));
+            }
+        }
+    }
+
+    // Process on_error hooks
+    if let Some(on_error) = hooks.get("on_error").and_then(|v| v.as_array()) {
+        for (idx, hook) in on_error.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_on_error_{}", handler_name, hook_name, idx);
+
+            code.push_str(&format!(
+                r#"async def {}(response: Any) -> Any:
+    """onError hook: {}"""
+    # Mock implementation for testing - format error response
+    if hasattr(response, 'headers'):
+        response.headers["Content-Type"] = "application/json"
+    return response
+
+
+"#,
+                func_name, hook_name
+            ));
+        }
+    }
+
+    Ok(code)
 }

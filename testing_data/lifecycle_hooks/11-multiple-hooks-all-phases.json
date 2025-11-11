@@ -1,0 +1,102 @@
+{
+	"name": "Multiple Hooks - All Phases",
+	"description": "Test multiple lifecycle hooks across all five phases for a complete request lifecycle",
+	"category": "lifecycle_hooks",
+	"handler": {
+		"route": "/api/full-lifecycle",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"user_id": {
+					"type": "string"
+				},
+				"action": {
+					"type": "string"
+				}
+			},
+			"required": ["user_id", "action"]
+		},
+		"middleware": {
+			"lifecycle_hooks": {
+				"on_request": [
+					{
+						"name": "request_logger",
+						"handler": "log_request"
+					},
+					{
+						"name": "request_id_generator",
+						"handler": "add_request_id"
+					}
+				],
+				"pre_validation": [
+					{
+						"name": "rate_limiter",
+						"handler": "check_rate_limit",
+						"config": {
+							"max_requests": 100,
+							"window_seconds": 60
+						}
+					}
+				],
+				"pre_handler": [
+					{
+						"name": "authenticator",
+						"handler": "validate_auth_token"
+					},
+					{
+						"name": "authorizer",
+						"handler": "check_user_permissions"
+					}
+				],
+				"on_response": [
+					{
+						"name": "security_headers",
+						"handler": "add_security_headers"
+					},
+					{
+						"name": "response_timer",
+						"handler": "add_response_time"
+					},
+					{
+						"name": "audit_logger",
+						"handler": "log_successful_action"
+					}
+				],
+				"on_error": [
+					{
+						"name": "error_logger",
+						"handler": "log_error"
+					}
+				]
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/api/full-lifecycle",
+		"headers": {
+			"Content-Type": "application/json",
+			"Authorization": "Bearer valid-token-12345"
+		},
+		"body": {
+			"user_id": "user-123",
+			"action": "update_profile"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Action completed successfully",
+			"user_id": "user-123",
+			"action": "update_profile",
+			"request_id": ".*"
+		},
+		"headers": {
+			"X-Request-ID": ".*",
+			"X-Response-Time": ".*ms",
+			"X-Content-Type-Options": "nosniff",
+			"X-Frame-Options": "DENY"
+		}
+	}
+}

@@ -184,8 +184,114 @@ async fn create_request_data_with_body(
     })
 }
 
+/// Execute a handler with lifecycle hooks
+///
+/// This wraps the handler execution with lifecycle hooks at appropriate points:
+/// 1. preValidation hooks (before handler, which does validation)
+/// 2. preHandler hooks (after validation, before handler)
+/// 3. Handler execution
+/// 4. onResponse hooks (after successful handler execution)
+/// 5. onError hooks (if handler or any hook fails)
+async fn execute_with_lifecycle_hooks(
+    req: axum::http::Request<Body>,
+    request_data: RequestData,
+    handler: Arc<dyn Handler>,
+    hooks: Option<Arc<crate::LifecycleHooks>>,
+) -> Result<axum::http::Response<Body>, (axum::http::StatusCode, String)> {
+    use crate::lifecycle::HookResult;
+    use axum::http::StatusCode;
+
+    // If no hooks registered, fast path
+    let Some(hooks) = hooks else {
+        return handler.call(req, request_data).await;
+    };
+
+    // Fast path: if hooks are empty, skip hook execution
+    if hooks.is_empty() {
+        return handler.call(req, request_data).await;
+    }
+
+    // 1. preValidation hooks (before validation)
+    let req = match hooks.execute_pre_validation(req).await {
+        Ok(HookResult::Continue(r)) => r,
+        Ok(HookResult::ShortCircuit(response)) => return Ok(response),
+        Err(e) => {
+            let error_response = axum::http::Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body(Body::from(format!(
+                    "{{\"error\":\"preValidation hook failed: {}\"}}",
+                    e
+                )))
+                .unwrap();
+
+            // Execute onError hooks
+            return match hooks.execute_on_error(error_response).await {
+                Ok(resp) => Ok(resp),
+                Err(_) => Ok(axum::http::Response::builder()
+                    .status(StatusCode::INTERNAL_SERVER_ERROR)
+                    .body(Body::from("{\"error\":\"Hook execution failed\"}"))
+                    .unwrap()),
+            };
+        }
+    };
+
+    // 2. preHandler hooks (after validation, before handler)
+    // Note: Validation happens inside handler.call()
+    let req = match hooks.execute_pre_handler(req).await {
+        Ok(HookResult::Continue(r)) => r,
+        Ok(HookResult::ShortCircuit(response)) => return Ok(response),
+        Err(e) => {
+            let error_response = axum::http::Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body(Body::from(format!("{{\"error\":\"preHandler hook failed: {}\"}}", e)))
+                .unwrap();
+
+            // Execute onError hooks
+            return match hooks.execute_on_error(error_response).await {
+                Ok(resp) => Ok(resp),
+                Err(_) => Ok(axum::http::Response::builder()
+                    .status(StatusCode::INTERNAL_SERVER_ERROR)
+                    .body(Body::from("{\"error\":\"Hook execution failed\"}"))
+                    .unwrap()),
+            };
+        }
+    };
+
+    // 3. Execute handler
+    let response = match handler.call(req, request_data).await {
+        Ok(resp) => resp,
+        Err((status, message)) => {
+            // Handler failed - create error response and run onError hooks
+            let error_response = axum::http::Response::builder()
+                .status(status)
+                .body(Body::from(message))
+                .unwrap();
+
+            return match hooks.execute_on_error(error_response).await {
+                Ok(resp) => Ok(resp),
+                Err(e) => Ok(axum::http::Response::builder()
+                    .status(StatusCode::INTERNAL_SERVER_ERROR)
+                    .body(Body::from(format!("{{\"error\":\"onError hook failed: {}\"}}", e)))
+                    .unwrap()),
+            };
+        }
+    };
+
+    // 4. onResponse hooks (after successful handler execution)
+    match hooks.execute_on_response(response).await {
+        Ok(resp) => Ok(resp),
+        Err(e) => Ok(axum::http::Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .body(Body::from(format!("{{\"error\":\"onResponse hook failed: {}\"}}", e)))
+            .unwrap()),
+    }
+}
+
 /// Build an Axum router from routes and foreign handlers
-pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>) -> Result<AxumRouter, String> {
+pub fn build_router_with_handlers(
+    routes: Vec<(crate::Route, Arc<dyn Handler>)>,
+    hooks: Option<Arc<crate::LifecycleHooks>>,
+) -> Result<AxumRouter, String> {
     let mut app = AxumRouter::new();
 
     // Build route registry for middleware lookup
@@ -245,6 +351,7 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
                 "GET" => {
                     if has_path_params {
                         let handler = handler.clone();
+                        let hooks = hooks.clone();
                         axum::routing::get(
                             move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                                 let request_data = create_request_data_without_body(
@@ -253,11 +360,12 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
                                     req.headers(),
                                     path_params.0,
                                 );
-                                handler.call(req, request_data).await
+                                execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
                             },
                         )
                     } else {
                         let handler = handler.clone();
+                        let hooks = hooks.clone();
                         axum::routing::get(move |req: axum::extract::Request| async move {
                             let request_data = create_request_data_without_body(
                                 req.uri(),
@@ -265,13 +373,14 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
                                 req.headers(),
                                 HashMap::new(),
                             );
-                            handler.call(req, request_data).await
+                            execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
                         })
                     }
                 }
                 "DELETE" => {
                     if has_path_params {
                         let handler = handler.clone();
+                        let hooks = hooks.clone();
                         axum::routing::delete(
                             move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                                 let request_data = create_request_data_without_body(
@@ -280,11 +389,12 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
                                     req.headers(),
                                     path_params.0,
                                 );
-                                handler.call(req, request_data).await
+                                execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
                             },
                         )
                     } else {
                         let handler = handler.clone();
+                        let hooks = hooks.clone();
                         axum::routing::delete(move |req: axum::extract::Request| async move {
                             let request_data = create_request_data_without_body(
                                 req.uri(),
@@ -292,13 +402,14 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
                                 req.headers(),
                                 HashMap::new(),
                             );
-                            handler.call(req, request_data).await
+                            execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
                         })
                     }
                 }
                 "HEAD" => {
                     if has_path_params {
                         let handler = handler.clone();
+                        let hooks = hooks.clone();
                         axum::routing::head(
                             move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                                 let request_data = create_request_data_without_body(
@@ -307,11 +418,12 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
                                     req.headers(),
                                     path_params.0,
                                 );
-                                handler.call(req, request_data).await
+                                execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
                             },
                         )
                     } else {
                         let handler = handler.clone();
+                        let hooks = hooks.clone();
                         axum::routing::head(move |req: axum::extract::Request| async move {
                             let request_data = create_request_data_without_body(
                                 req.uri(),
@@ -319,7 +431,7 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
                                 req.headers(),
                                 HashMap::new(),
                             );
-                            handler.call(req, request_data).await
+                            execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
                         })
                     }
                 }
@@ -332,6 +444,7 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
                         })
                     } else if has_path_params {
                         let handler = handler.clone();
+                        let hooks = hooks.clone();
                         axum::routing::options(
                             move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                                 let request_data = create_request_data_without_body(
@@ -340,11 +453,12 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
                                     req.headers(),
                                     path_params.0,
                                 );
-                                handler.call(req, request_data).await
+                                execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
                             },
                         )
                     } else {
                         let handler = handler.clone();
+                        let hooks = hooks.clone();
                         axum::routing::options(move |req: axum::extract::Request| async move {
                             let request_data = create_request_data_without_body(
                                 req.uri(),
@@ -352,13 +466,14 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
                                 req.headers(),
                                 HashMap::new(),
                             );
-                            handler.call(req, request_data).await
+                            execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
                         })
                     }
                 }
                 "TRACE" => {
                     if has_path_params {
                         let handler = handler.clone();
+                        let hooks = hooks.clone();
                         axum::routing::trace(
                             move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                                 let request_data = create_request_data_without_body(
@@ -367,11 +482,12 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
                                     req.headers(),
                                     path_params.0,
                                 );
-                                handler.call(req, request_data).await
+                                execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
                             },
                         )
                     } else {
                         let handler = handler.clone();
+                        let hooks = hooks.clone();
                         axum::routing::trace(move |req: axum::extract::Request| async move {
                             let request_data = create_request_data_without_body(
                                 req.uri(),
@@ -379,70 +495,76 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
                                 req.headers(),
                                 HashMap::new(),
                             );
-                            handler.call(req, request_data).await
+                            execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
                         })
                     }
                 }
                 "POST" => {
                     if has_path_params {
                         let handler = handler.clone();
+                        let hooks = hooks.clone();
                         axum::routing::post(
                             move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                                 let (parts, body) = req.into_parts();
                                 let request_data = create_request_data_with_body(&parts, path_params.0, body).await?;
                                 let req = axum::extract::Request::from_parts(parts, Body::empty());
-                                handler.call(req, request_data).await
+                                execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
                             },
                         )
                     } else {
                         let handler = handler.clone();
+                        let hooks = hooks.clone();
                         axum::routing::post(move |req: axum::extract::Request| async move {
                             let (parts, body) = req.into_parts();
                             let request_data = create_request_data_with_body(&parts, HashMap::new(), body).await?;
                             let req = axum::extract::Request::from_parts(parts, Body::empty());
-                            handler.call(req, request_data).await
+                            execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
                         })
                     }
                 }
                 "PUT" => {
                     if has_path_params {
                         let handler = handler.clone();
+                        let hooks = hooks.clone();
                         axum::routing::put(
                             move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                                 let (parts, body) = req.into_parts();
                                 let request_data = create_request_data_with_body(&parts, path_params.0, body).await?;
                                 let req = axum::extract::Request::from_parts(parts, Body::empty());
-                                handler.call(req, request_data).await
+                                execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
                             },
                         )
                     } else {
                         let handler = handler.clone();
+                        let hooks = hooks.clone();
                         axum::routing::put(move |req: axum::extract::Request| async move {
                             let (parts, body) = req.into_parts();
                             let request_data = create_request_data_with_body(&parts, HashMap::new(), body).await?;
                             let req = axum::extract::Request::from_parts(parts, Body::empty());
-                            handler.call(req, request_data).await
+                            execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
                         })
                     }
                 }
                 "PATCH" => {
                     if has_path_params {
                         let handler = handler.clone();
+                        let hooks = hooks.clone();
                         axum::routing::patch(
                             move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
                                 let (parts, body) = req.into_parts();
                                 let request_data = create_request_data_with_body(&parts, path_params.0, body).await?;
                                 let req = axum::extract::Request::from_parts(parts, Body::empty());
-                                handler.call(req, request_data).await
+                                execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
                             },
                         )
                     } else {
                         let handler = handler.clone();
+                        let hooks = hooks.clone();
                         axum::routing::patch(move |req: axum::extract::Request| async move {
                             let (parts, body) = req.into_parts();
                             let request_data = create_request_data_with_body(&parts, HashMap::new(), body).await?;
                             let req = axum::extract::Request::from_parts(parts, Body::empty());
-                            handler.call(req, request_data).await
+                            execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
                         })
                     }
                 }
@@ -502,8 +624,11 @@ pub fn build_router_with_handlers_and_config(
     config: ServerConfig,
     route_metadata: Vec<crate::RouteMetadata>,
 ) -> Result<AxumRouter, String> {
+    // Extract lifecycle hooks from config
+    let hooks = config.lifecycle_hooks.clone().map(Arc::new);
+
     // Start with the basic router
-    let mut app = build_router_with_handlers(routes)?;
+    let mut app = build_router_with_handlers(routes, hooks)?;
 
     // Apply middleware layers directly (they're applied in reverse order)
     // Layer order: last added = first executed

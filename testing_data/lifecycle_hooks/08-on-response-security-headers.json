@@ -1,0 +1,35 @@
+{
+	"name": "onResponse - Security Headers",
+	"description": "Test onResponse hook that adds security headers to all responses",
+	"category": "lifecycle_hooks",
+	"handler": {
+		"route": "/api/test-security-headers",
+		"method": "GET",
+		"middleware": {
+			"lifecycle_hooks": {
+				"on_response": [
+					{
+						"name": "security_headers",
+						"handler": "add_security_headers"
+					}
+				]
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/test-security-headers"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Response with security headers"
+		},
+		"headers": {
+			"X-Content-Type-Options": "nosniff",
+			"X-Frame-Options": "DENY",
+			"X-XSS-Protection": "1; mode=block",
+			"Strict-Transport-Security": "max-age=31536000; includeSubDomains"
+		}
+	}
+}

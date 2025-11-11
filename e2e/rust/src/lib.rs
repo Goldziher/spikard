@@ -1943,6 +1943,315 @@ pub fn create_app_json_bodies_UUID_field___success() -> Router {
         ))
 }
 
+/// App for fixture: Hook Execution Order
+pub fn create_app_lifecycle_hooks_Hook_Execution_Order() -> Router {
+    use spikard_http::{HookResult, LifecycleHooks, request_hook, response_hook};
+
+    let hooks = LifecycleHooks::builder()
+        .on_request(request_hook(
+            "first_hook",
+            lifecycle_hooks_Hook_Execution_Order_first_hook_on_request_0,
+        ))
+        .on_request(request_hook(
+            "second_hook",
+            lifecycle_hooks_Hook_Execution_Order_second_hook_on_request_1,
+        ))
+        .on_request(request_hook(
+            "third_hook",
+            lifecycle_hooks_Hook_Execution_Order_third_hook_on_request_2,
+        ))
+        .build();
+
+    Router::new()
+        .route(
+            "/api/test-hook-order",
+            get(lifecycle_hooks_Hook_Execution_Order_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Multiple Hooks - All Phases
+pub fn create_app_lifecycle_hooks_Multiple_Hooks___All_Phases() -> Router {
+    use spikard_http::{HookResult, LifecycleHooks, request_hook, response_hook};
+
+    let hooks = LifecycleHooks::builder()
+        .on_request(request_hook(
+            "request_logger",
+            lifecycle_hooks_Multiple_Hooks___All_Phases_request_logger_on_request_0,
+        ))
+        .on_request(request_hook(
+            "request_id_generator",
+            lifecycle_hooks_Multiple_Hooks___All_Phases_request_id_generator_on_request_1,
+        ))
+        .pre_validation(request_hook(
+            "rate_limiter",
+            lifecycle_hooks_Multiple_Hooks___All_Phases_rate_limiter_pre_validation_0,
+        ))
+        .pre_handler(request_hook(
+            "authenticator",
+            lifecycle_hooks_Multiple_Hooks___All_Phases_authenticator_pre_handler_0,
+        ))
+        .pre_handler(request_hook(
+            "authorizer",
+            lifecycle_hooks_Multiple_Hooks___All_Phases_authorizer_pre_handler_1,
+        ))
+        .on_response(response_hook(
+            "security_headers",
+            lifecycle_hooks_Multiple_Hooks___All_Phases_security_headers_on_response_0,
+        ))
+        .on_response(response_hook(
+            "response_timer",
+            lifecycle_hooks_Multiple_Hooks___All_Phases_response_timer_on_response_1,
+        ))
+        .on_response(response_hook(
+            "audit_logger",
+            lifecycle_hooks_Multiple_Hooks___All_Phases_audit_logger_on_response_2,
+        ))
+        .on_error(response_hook(
+            "error_logger",
+            lifecycle_hooks_Multiple_Hooks___All_Phases_error_logger_on_error_0,
+        ))
+        .build();
+
+    Router::new()
+        .route(
+            "/api/full-lifecycle",
+            post(lifecycle_hooks_Multiple_Hooks___All_Phases_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: onError - Error Logging
+pub fn create_app_lifecycle_hooks_onError___Error_Logging() -> Router {
+    use spikard_http::{HookResult, LifecycleHooks, request_hook, response_hook};
+
+    let hooks = LifecycleHooks::builder()
+        .on_error(response_hook(
+            "error_logger",
+            lifecycle_hooks_onError___Error_Logging_error_logger_on_error_0,
+        ))
+        .on_error(response_hook(
+            "error_formatter",
+            lifecycle_hooks_onError___Error_Logging_error_formatter_on_error_1,
+        ))
+        .build();
+
+    Router::new()
+        .route("/api/test-error", get(lifecycle_hooks_onError___Error_Logging_handler))
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: onRequest - Request Logging
+pub fn create_app_lifecycle_hooks_onRequest___Request_Logging() -> Router {
+    use spikard_http::{HookResult, LifecycleHooks, request_hook, response_hook};
+
+    let hooks = LifecycleHooks::builder()
+        .on_request(request_hook(
+            "request_logger",
+            lifecycle_hooks_onRequest___Request_Logging_request_logger_on_request_0,
+        ))
+        .on_request(request_hook(
+            "request_id_generator",
+            lifecycle_hooks_onRequest___Request_Logging_request_id_generator_on_request_1,
+        ))
+        .build();
+
+    Router::new()
+        .route(
+            "/api/test-on-request",
+            get(lifecycle_hooks_onRequest___Request_Logging_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: onResponse - Response Timing
+pub fn create_app_lifecycle_hooks_onResponse___Response_Timing() -> Router {
+    use spikard_http::{HookResult, LifecycleHooks, request_hook, response_hook};
+
+    let hooks = LifecycleHooks::builder()
+        .on_request(request_hook(
+            "start_timer",
+            lifecycle_hooks_onResponse___Response_Timing_start_timer_on_request_0,
+        ))
+        .on_response(response_hook(
+            "response_timer",
+            lifecycle_hooks_onResponse___Response_Timing_response_timer_on_response_0,
+        ))
+        .build();
+
+    Router::new()
+        .route(
+            "/api/test-timing",
+            get(lifecycle_hooks_onResponse___Response_Timing_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: onResponse - Security Headers
+pub fn create_app_lifecycle_hooks_onResponse___Security_Headers() -> Router {
+    use spikard_http::{HookResult, LifecycleHooks, request_hook, response_hook};
+
+    let hooks = LifecycleHooks::builder()
+        .on_response(response_hook(
+            "security_headers",
+            lifecycle_hooks_onResponse___Security_Headers_security_headers_on_response_0,
+        ))
+        .build();
+
+    Router::new()
+        .route(
+            "/api/test-security-headers",
+            get(lifecycle_hooks_onResponse___Security_Headers_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: preHandler - Authentication Failed (Short Circuit)
+pub fn create_app_lifecycle_hooks_preHandler___Authentication_Failed__Short_Circuit() -> Router {
+    use spikard_http::{HookResult, LifecycleHooks, request_hook, response_hook};
+
+    let hooks = LifecycleHooks::builder()
+        .pre_handler(request_hook(
+            "authenticator",
+            lifecycle_hooks_preHandler___Authentication_Failed__Short_Circuit_authenticator_pre_handler_0,
+        ))
+        .build();
+
+    Router::new()
+        .route(
+            "/api/protected-resource-fail",
+            get(lifecycle_hooks_preHandler___Authentication_Failed__Short_Circuit_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: preHandler - Authentication Success
+pub fn create_app_lifecycle_hooks_preHandler___Authentication_Success() -> Router {
+    use spikard_http::{HookResult, LifecycleHooks, request_hook, response_hook};
+
+    let hooks = LifecycleHooks::builder()
+        .pre_handler(request_hook(
+            "authenticator",
+            lifecycle_hooks_preHandler___Authentication_Success_authenticator_pre_handler_0,
+        ))
+        .build();
+
+    Router::new()
+        .route(
+            "/api/protected-resource",
+            get(lifecycle_hooks_preHandler___Authentication_Success_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: preHandler - Authorization Check
+pub fn create_app_lifecycle_hooks_preHandler___Authorization_Check() -> Router {
+    use spikard_http::{HookResult, LifecycleHooks, request_hook, response_hook};
+
+    let hooks = LifecycleHooks::builder()
+        .pre_handler(request_hook(
+            "authenticator",
+            lifecycle_hooks_preHandler___Authorization_Check_authenticator_pre_handler_0,
+        ))
+        .pre_handler(request_hook(
+            "authorizer",
+            lifecycle_hooks_preHandler___Authorization_Check_authorizer_pre_handler_1,
+        ))
+        .build();
+
+    Router::new()
+        .route(
+            "/api/admin-only",
+            get(lifecycle_hooks_preHandler___Authorization_Check_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: preHandler - Authorization Forbidden (Short Circuit)
+pub fn create_app_lifecycle_hooks_preHandler___Authorization_Forbidden__Short_Circuit() -> Router {
+    use spikard_http::{HookResult, LifecycleHooks, request_hook, response_hook};
+
+    let hooks = LifecycleHooks::builder()
+        .pre_handler(request_hook(
+            "authenticator",
+            lifecycle_hooks_preHandler___Authorization_Forbidden__Short_Circuit_authenticator_pre_handler_0,
+        ))
+        .pre_handler(request_hook(
+            "authorizer",
+            lifecycle_hooks_preHandler___Authorization_Forbidden__Short_Circuit_authorizer_pre_handler_1,
+        ))
+        .build();
+
+    Router::new()
+        .route(
+            "/api/admin-only-forbidden",
+            get(lifecycle_hooks_preHandler___Authorization_Forbidden__Short_Circuit_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: preValidation - Rate Limit Exceeded (Short Circuit)
+pub fn create_app_lifecycle_hooks_preValidation___Rate_Limit_Exceeded__Short_Circuit() -> Router {
+    use spikard_http::{HookResult, LifecycleHooks, request_hook, response_hook};
+
+    let hooks = LifecycleHooks::builder()
+        .pre_validation(request_hook(
+            "rate_limiter",
+            lifecycle_hooks_preValidation___Rate_Limit_Exceeded__Short_Circuit_rate_limiter_pre_validation_0,
+        ))
+        .build();
+
+    Router::new()
+        .route(
+            "/api/test-rate-limit-exceeded",
+            post(lifecycle_hooks_preValidation___Rate_Limit_Exceeded__Short_Circuit_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: preValidation - Rate Limiting
+pub fn create_app_lifecycle_hooks_preValidation___Rate_Limiting() -> Router {
+    use spikard_http::{HookResult, LifecycleHooks, request_hook, response_hook};
+
+    let hooks = LifecycleHooks::builder()
+        .pre_validation(request_hook(
+            "rate_limiter",
+            lifecycle_hooks_preValidation___Rate_Limiting_rate_limiter_pre_validation_0,
+        ))
+        .build();
+
+    Router::new()
+        .route(
+            "/api/test-rate-limit",
+            post(lifecycle_hooks_preValidation___Rate_Limiting_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
 /// App for fixture: 17_file_magic_number_png_success
 pub fn create_app_multipart_17_file_magic_number_png_success() -> Router {
     Router::new()
@@ -4056,7 +4365,7 @@ async fn auth_API_key_authentication___invalid_key_handler() -> impl axum::respo
 }
 
 async fn auth_API_key_authentication___missing_header_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Expected 'X-API-Key' header with valid API key\",\"status\":401,\"title\":\"Missing API key\",\"type\":\"https://spikard.dev/errors/unauthorized\"}").unwrap();
+    let expected_body: Value = serde_json::from_str("{\"detail\":\"Expected 'X-API-Key' header or 'api_key' query parameter with valid API key\",\"status\":401,\"title\":\"Missing API key\",\"type\":\"https://spikard.dev/errors/unauthorized\"}").unwrap();
     (axum::http::StatusCode::from_u16(401).unwrap(), Json(expected_body))
 }
 
@@ -4295,7 +4604,7 @@ async fn auth_API_key_with_custom_header_name_handler(
 }
 
 async fn auth_Bearer_token_without_prefix_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Authorization header must use Bearer scheme: 'Bearer <token>'\",\"status\":401,\"title\":\"Unauthorized\",\"type\":\"https://spikard.dev/errors/unauthorized\"}").unwrap();
+    let expected_body: Value = serde_json::from_str("{\"detail\":\"Authorization header must use Bearer scheme: 'Bearer <token>'\",\"status\":401,\"title\":\"Invalid Authorization header format\",\"type\":\"https://spikard.dev/errors/unauthorized\"}").unwrap();
     (axum::http::StatusCode::from_u16(401).unwrap(), Json(expected_body))
 }
 
@@ -4396,12 +4705,12 @@ async fn auth_JWT_authentication___valid_token_handler(
 }
 
 async fn auth_JWT_invalid_issuer_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"JWT issuer 'https://evil.com' does not match expected issuer 'https://auth.example.com'\",\"status\":401,\"title\":\"Unauthorized\",\"type\":\"https://spikard.dev/errors/unauthorized\"}").unwrap();
+    let expected_body: Value = serde_json::from_str("{\"detail\":\"Token issuer is invalid, expected 'https://auth.example.com'\",\"status\":401,\"title\":\"JWT validation failed\",\"type\":\"https://spikard.dev/errors/unauthorized\"}").unwrap();
     (axum::http::StatusCode::from_u16(401).unwrap(), Json(expected_body))
 }
 
 async fn auth_JWT_malformed_token_format_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Malformed JWT token: expected 3 parts separated by dots, found 2\",\"status\":401,\"title\":\"Unauthorized\",\"type\":\"https://spikard.dev/errors/unauthorized\"}").unwrap();
+    let expected_body: Value = serde_json::from_str("{\"detail\":\"Malformed JWT token: expected 3 parts separated by dots, found 2\",\"status\":401,\"title\":\"Malformed JWT token\",\"type\":\"https://spikard.dev/errors/unauthorized\"}").unwrap();
     (axum::http::StatusCode::from_u16(401).unwrap(), Json(expected_body))
 }
 
@@ -4411,7 +4720,7 @@ async fn auth_JWT_missing_required_custom_claims_handler() -> impl axum::respons
 }
 
 async fn auth_JWT_not_before_claim_in_future_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"JWT not valid yet, not before claim is in the future\",\"status\":401,\"title\":\"Unauthorized\",\"type\":\"https://spikard.dev/errors/unauthorized\"}").unwrap();
+    let expected_body: Value = serde_json::from_str("{\"detail\":\"JWT not valid yet, not before claim is in the future\",\"status\":401,\"title\":\"JWT validation failed\",\"type\":\"https://spikard.dev/errors/unauthorized\"}").unwrap();
     (axum::http::StatusCode::from_u16(401).unwrap(), Json(expected_body))
 }
 
@@ -6519,7 +6828,7 @@ async fn cors_CORS_request_blocked_handler() -> impl axum::response::IntoRespons
 }
 
 async fn cors_CORS_safelisted_headers_without_preflight_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"received\":\"plain text data\"}").unwrap();
+    let expected_body: Value = serde_json::from_str("{\"message\":\"Success\"}").unwrap();
     (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
 }
 
@@ -11920,6 +12229,382 @@ async fn json_bodies_UUID_field___success_handler(
             let expected_body: Value =
                 serde_json::from_str("{\"item_id\":\"c892496f-b1fd-4b91-bdb8-b46f92df1716\",\"name\":\"Item\"}")
                     .unwrap();
+            (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
+        }
+        Err(err) => {
+            let error_response = serde_json::json!({
+                "detail": err.errors
+            });
+            (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))
+        }
+    }
+}
+
+async fn lifecycle_hooks_Hook_Execution_Order_first_hook_on_request_0(
+    req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // Mock onRequest hook: first_hook
+    Ok(spikard_http::HookResult::Continue(req))
+}
+
+async fn lifecycle_hooks_Hook_Execution_Order_second_hook_on_request_1(
+    req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // Mock onRequest hook: second_hook
+    Ok(spikard_http::HookResult::Continue(req))
+}
+
+async fn lifecycle_hooks_Hook_Execution_Order_third_hook_on_request_2(
+    req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // Mock onRequest hook: third_hook
+    Ok(spikard_http::HookResult::Continue(req))
+}
+
+async fn lifecycle_hooks_Hook_Execution_Order_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str(
+        "{\"execution_order\":[\"first_hook\",\"second_hook\",\"third_hook\"],\"message\":\"Hooks executed in order\"}",
+    )
+    .unwrap();
+    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
+}
+
+async fn lifecycle_hooks_Multiple_Hooks___All_Phases_request_logger_on_request_0(
+    req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // Mock onRequest hook: request_logger
+    Ok(spikard_http::HookResult::Continue(req))
+}
+
+async fn lifecycle_hooks_Multiple_Hooks___All_Phases_request_id_generator_on_request_1(
+    req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // Mock onRequest hook: request_id_generator
+    Ok(spikard_http::HookResult::Continue(req))
+}
+
+async fn lifecycle_hooks_Multiple_Hooks___All_Phases_rate_limiter_pre_validation_0(
+    req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // Mock preValidation hook: rate_limiter
+    Ok(spikard_http::HookResult::Continue(req))
+}
+
+async fn lifecycle_hooks_Multiple_Hooks___All_Phases_authenticator_pre_handler_0(
+    req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // Mock preHandler hook: authenticator
+    Ok(spikard_http::HookResult::Continue(req))
+}
+
+async fn lifecycle_hooks_Multiple_Hooks___All_Phases_authorizer_pre_handler_1(
+    req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // Mock preHandler hook: authorizer
+    Ok(spikard_http::HookResult::Continue(req))
+}
+
+async fn lifecycle_hooks_Multiple_Hooks___All_Phases_security_headers_on_response_0(
+    mut resp: axum::http::Response<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Response<axum::body::Body>>, String> {
+    // onResponse hook: security_headers - Adds security headers
+    resp.headers_mut()
+        .insert("X-Content-Type-Options", "nosniff".parse().unwrap());
+    resp.headers_mut().insert("X-Frame-Options", "DENY".parse().unwrap());
+    resp.headers_mut()
+        .insert("X-XSS-Protection", "1; mode=block".parse().unwrap());
+    resp.headers_mut().insert(
+        "Strict-Transport-Security",
+        "max-age=31536000; includeSubDomains".parse().unwrap(),
+    );
+    Ok(spikard_http::HookResult::Continue(resp))
+}
+
+async fn lifecycle_hooks_Multiple_Hooks___All_Phases_response_timer_on_response_1(
+    mut resp: axum::http::Response<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Response<axum::body::Body>>, String> {
+    // onResponse hook: response_timer - Adds timing header
+    resp.headers_mut().insert("X-Response-Time", "0ms".parse().unwrap());
+    Ok(spikard_http::HookResult::Continue(resp))
+}
+
+async fn lifecycle_hooks_Multiple_Hooks___All_Phases_audit_logger_on_response_2(
+    resp: axum::http::Response<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Response<axum::body::Body>>, String> {
+    // Mock onResponse hook: audit_logger
+    Ok(spikard_http::HookResult::Continue(resp))
+}
+
+async fn lifecycle_hooks_Multiple_Hooks___All_Phases_error_logger_on_error_0(
+    mut resp: axum::http::Response<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Response<axum::body::Body>>, String> {
+    // onError hook: error_logger - Format error response
+    resp.headers_mut()
+        .insert("Content-Type", "application/json".parse().unwrap());
+    Ok(spikard_http::HookResult::Continue(resp))
+}
+
+async fn lifecycle_hooks_Multiple_Hooks___All_Phases_handler(
+    axum::extract::Json(body): axum::extract::Json<Value>,
+) -> impl axum::response::IntoResponse {
+    use spikard_http::validation::SchemaValidator;
+
+    // Parse body schema and create validator
+    let body_schema: Value = serde_json::from_str("{\"properties\":{\"action\":{\"type\":\"string\"},\"user_id\":{\"type\":\"string\"}},\"required\":[\"user_id\",\"action\"],\"type\":\"object\"}").unwrap();
+    let validator = SchemaValidator::new(body_schema).unwrap();
+
+    // Validate request body
+    match validator.validate(&body) {
+        Ok(_) => {
+            let expected_body: Value = serde_json::from_str("{\"action\":\"update_profile\",\"message\":\"Action completed successfully\",\"request_id\":\".*\",\"user_id\":\"user-123\"}").unwrap();
+            (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
+        }
+        Err(err) => {
+            let error_response = serde_json::json!({
+                "detail": err.errors
+            });
+            (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))
+        }
+    }
+}
+
+async fn lifecycle_hooks_onError___Error_Logging_error_logger_on_error_0(
+    mut resp: axum::http::Response<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Response<axum::body::Body>>, String> {
+    // onError hook: error_logger - Format error response
+    resp.headers_mut()
+        .insert("Content-Type", "application/json".parse().unwrap());
+    Ok(spikard_http::HookResult::Continue(resp))
+}
+
+async fn lifecycle_hooks_onError___Error_Logging_error_formatter_on_error_1(
+    mut resp: axum::http::Response<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Response<axum::body::Body>>, String> {
+    // onError hook: error_formatter - Format error response
+    resp.headers_mut()
+        .insert("Content-Type", "application/json".parse().unwrap());
+    Ok(spikard_http::HookResult::Continue(resp))
+}
+
+async fn lifecycle_hooks_onError___Error_Logging_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str(
+        "{\"error\":\"Internal Server Error\",\"error_id\":\".*\",\"message\":\"An unexpected error occurred\"}",
+    )
+    .unwrap();
+    (axum::http::StatusCode::from_u16(500).unwrap(), Json(expected_body))
+}
+
+async fn lifecycle_hooks_onRequest___Request_Logging_request_logger_on_request_0(
+    req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // Mock onRequest hook: request_logger
+    Ok(spikard_http::HookResult::Continue(req))
+}
+
+async fn lifecycle_hooks_onRequest___Request_Logging_request_id_generator_on_request_1(
+    req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // Mock onRequest hook: request_id_generator
+    Ok(spikard_http::HookResult::Continue(req))
+}
+
+async fn lifecycle_hooks_onRequest___Request_Logging_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str(
+        "{\"has_request_id\":true,\"message\":\"onRequest hooks executed\",\"request_logged\":true}",
+    )
+    .unwrap();
+    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
+}
+
+async fn lifecycle_hooks_onResponse___Response_Timing_start_timer_on_request_0(
+    req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // Mock onRequest hook: start_timer
+    Ok(spikard_http::HookResult::Continue(req))
+}
+
+async fn lifecycle_hooks_onResponse___Response_Timing_response_timer_on_response_0(
+    mut resp: axum::http::Response<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Response<axum::body::Body>>, String> {
+    // onResponse hook: response_timer - Adds timing header
+    resp.headers_mut().insert("X-Response-Time", "0ms".parse().unwrap());
+    Ok(spikard_http::HookResult::Continue(resp))
+}
+
+async fn lifecycle_hooks_onResponse___Response_Timing_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str("{\"message\":\"Response with timing info\"}").unwrap();
+    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
+}
+
+async fn lifecycle_hooks_onResponse___Security_Headers_security_headers_on_response_0(
+    mut resp: axum::http::Response<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Response<axum::body::Body>>, String> {
+    // onResponse hook: security_headers - Adds security headers
+    resp.headers_mut()
+        .insert("X-Content-Type-Options", "nosniff".parse().unwrap());
+    resp.headers_mut().insert("X-Frame-Options", "DENY".parse().unwrap());
+    resp.headers_mut()
+        .insert("X-XSS-Protection", "1; mode=block".parse().unwrap());
+    resp.headers_mut().insert(
+        "Strict-Transport-Security",
+        "max-age=31536000; includeSubDomains".parse().unwrap(),
+    );
+    Ok(spikard_http::HookResult::Continue(resp))
+}
+
+async fn lifecycle_hooks_onResponse___Security_Headers_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str("{\"message\":\"Response with security headers\"}").unwrap();
+    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
+}
+
+async fn lifecycle_hooks_preHandler___Authentication_Failed__Short_Circuit_authenticator_pre_handler_0(
+    _req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // preHandler hook: authenticator - Short circuits with 401
+    use axum::response::IntoResponse;
+    let response = (
+        axum::http::StatusCode::UNAUTHORIZED,
+        axum::Json(serde_json::json!({
+            "error": "Unauthorized",
+            "message": "Invalid or expired authentication token"
+        })),
+    )
+        .into_response();
+    Ok(spikard_http::HookResult::ShortCircuit(response))
+}
+
+async fn lifecycle_hooks_preHandler___Authentication_Failed__Short_Circuit_handler() -> impl axum::response::IntoResponse
+{
+    let expected_body: Value =
+        serde_json::from_str("{\"error\":\"Unauthorized\",\"message\":\"Invalid or expired authentication token\"}")
+            .unwrap();
+    (axum::http::StatusCode::from_u16(401).unwrap(), Json(expected_body))
+}
+
+async fn lifecycle_hooks_preHandler___Authentication_Success_authenticator_pre_handler_0(
+    req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // Mock preHandler hook: authenticator
+    Ok(spikard_http::HookResult::Continue(req))
+}
+
+async fn lifecycle_hooks_preHandler___Authentication_Success_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value =
+        serde_json::from_str("{\"authenticated\":true,\"message\":\"Access granted\",\"user_id\":\"user-123\"}")
+            .unwrap();
+    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
+}
+
+async fn lifecycle_hooks_preHandler___Authorization_Check_authenticator_pre_handler_0(
+    req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // Mock preHandler hook: authenticator
+    Ok(spikard_http::HookResult::Continue(req))
+}
+
+async fn lifecycle_hooks_preHandler___Authorization_Check_authorizer_pre_handler_1(
+    req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // Mock preHandler hook: authorizer
+    Ok(spikard_http::HookResult::Continue(req))
+}
+
+async fn lifecycle_hooks_preHandler___Authorization_Check_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value =
+        serde_json::from_str("{\"message\":\"Admin access granted\",\"role\":\"admin\",\"user_id\":\"admin-456\"}")
+            .unwrap();
+    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
+}
+
+async fn lifecycle_hooks_preHandler___Authorization_Forbidden__Short_Circuit_authenticator_pre_handler_0(
+    _req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // preHandler hook: authenticator - Short circuits with 403
+    use axum::response::IntoResponse;
+    let response = (
+        axum::http::StatusCode::FORBIDDEN,
+        axum::Json(serde_json::json!({
+            "error": "Forbidden",
+            "message": "Admin role required for this endpoint"
+        })),
+    )
+        .into_response();
+    Ok(spikard_http::HookResult::ShortCircuit(response))
+}
+
+async fn lifecycle_hooks_preHandler___Authorization_Forbidden__Short_Circuit_authorizer_pre_handler_1(
+    _req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // preHandler hook: authorizer - Short circuits with 403
+    use axum::response::IntoResponse;
+    let response = (
+        axum::http::StatusCode::FORBIDDEN,
+        axum::Json(serde_json::json!({
+            "error": "Forbidden",
+            "message": "Admin role required for this endpoint"
+        })),
+    )
+        .into_response();
+    Ok(spikard_http::HookResult::ShortCircuit(response))
+}
+
+async fn lifecycle_hooks_preHandler___Authorization_Forbidden__Short_Circuit_handler()
+-> impl axum::response::IntoResponse {
+    let expected_body: Value =
+        serde_json::from_str("{\"error\":\"Forbidden\",\"message\":\"Admin role required for this endpoint\"}")
+            .unwrap();
+    (axum::http::StatusCode::from_u16(403).unwrap(), Json(expected_body))
+}
+
+async fn lifecycle_hooks_preValidation___Rate_Limit_Exceeded__Short_Circuit_rate_limiter_pre_validation_0(
+    _req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // preValidation hook: rate_limiter - Short circuits with 429
+    use axum::response::IntoResponse;
+    let response = (
+        axum::http::StatusCode::TOO_MANY_REQUESTS,
+        axum::Json(serde_json::json!({
+            "error": "Rate limit exceeded",
+            "message": "Too many requests, please try again later"
+        })),
+    )
+        .into_response();
+    Ok(spikard_http::HookResult::ShortCircuit(response))
+}
+
+async fn lifecycle_hooks_preValidation___Rate_Limit_Exceeded__Short_Circuit_handler()
+-> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str(
+        "{\"error\":\"Rate limit exceeded\",\"message\":\"Too many requests, please try again later\"}",
+    )
+    .unwrap();
+    (axum::http::StatusCode::from_u16(429).unwrap(), Json(expected_body))
+}
+
+async fn lifecycle_hooks_preValidation___Rate_Limiting_rate_limiter_pre_validation_0(
+    req: axum::http::Request<axum::body::Body>,
+) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {
+    // Mock preValidation hook: rate_limiter
+    Ok(spikard_http::HookResult::Continue(req))
+}
+
+async fn lifecycle_hooks_preValidation___Rate_Limiting_handler(
+    axum::extract::Json(body): axum::extract::Json<Value>,
+) -> impl axum::response::IntoResponse {
+    use spikard_http::validation::SchemaValidator;
+
+    // Parse body schema and create validator
+    let body_schema: Value = serde_json::from_str(
+        "{\"properties\":{\"data\":{\"type\":\"string\"}},\"required\":[\"data\"],\"type\":\"object\"}",
+    )
+    .unwrap();
+    let validator = SchemaValidator::new(body_schema).unwrap();
+
+    // Validate request body
+    match validator.validate(&body) {
+        Ok(_) => {
+            let expected_body: Value =
+                serde_json::from_str("{\"message\":\"Request accepted\",\"rate_limit_checked\":true}").unwrap();
             (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
         }
         Err(err) => {

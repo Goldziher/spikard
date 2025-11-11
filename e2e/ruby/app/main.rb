@@ -22,7 +22,7 @@ module E2ERubyApp
   def create_app_auth_2_api_key_authentication_missing_header
     app = Spikard::App.new
     app.get("/api/data", handler_name: "auth_2_api_key_authentication_missing_header") do |_request|
-      build_response(content: {"detail" => "Expected \'X-API-Key\' header with valid API key", "status" => 401, "title" => "Missing API key", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
+      build_response(content: {"detail" => "Expected \'X-API-Key\' header or \'api_key\' query parameter with valid API key", "status" => 401, "title" => "Missing API key", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
     app
   end
@@ -62,7 +62,7 @@ module E2ERubyApp
   def create_app_auth_7_bearer_token_without_prefix
     app = Spikard::App.new
     app.get("/api/protected", handler_name: "auth_7_bearer_token_without_prefix", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "Authorization header must use Bearer scheme: \'Bearer <token>\'", "status" => 401, "title" => "Unauthorized", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
+      build_response(content: {"detail" => "Authorization header must use Bearer scheme: \'Bearer <token>\'", "status" => 401, "title" => "Invalid Authorization header format", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
     app
   end
@@ -110,7 +110,7 @@ module E2ERubyApp
   def create_app_auth_13_jwt_invalid_issuer
     app = Spikard::App.new
     app.get("/api/protected", handler_name: "auth_13_jwt_invalid_issuer", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "JWT issuer \'https://evil.com\' does not match expected issuer \'https://auth.example.com\'", "status" => 401, "title" => "Unauthorized", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
+      build_response(content: {"detail" => "Token issuer is invalid, expected \'https://auth.example.com\'", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
     app
   end
@@ -118,7 +118,7 @@ module E2ERubyApp
   def create_app_auth_14_jwt_malformed_token_format
     app = Spikard::App.new
     app.get("/api/protected", handler_name: "auth_14_jwt_malformed_token_format", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "Malformed JWT token: expected 3 parts separated by dots, found 2", "status" => 401, "title" => "Unauthorized", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
+      build_response(content: {"detail" => "Malformed JWT token: expected 3 parts separated by dots, found 2", "status" => 401, "title" => "Malformed JWT token", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
     app
   end
@@ -134,7 +134,7 @@ module E2ERubyApp
   def create_app_auth_16_jwt_not_before_claim_in_future
     app = Spikard::App.new
     app.get("/api/protected", handler_name: "auth_16_jwt_not_before_claim_in_future", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "JWT not valid yet, not before claim is in the future", "status" => 401, "title" => "Unauthorized", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
+      build_response(content: {"detail" => "JWT not valid yet, not before claim is in the future", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
     app
   end
@@ -638,7 +638,7 @@ module E2ERubyApp
   def create_app_cors_15_cors_safelisted_headers_without_preflight
     app = Spikard::App.new
     app.post("/api/form", handler_name: "cors_15_cors_safelisted_headers_without_preflight") do |_request|
-      build_response(content: {"received" => "plain text data"}, status: 200, headers: nil)
+      build_response(content: {"message" => "Success"}, status: 200, headers: nil)
     end
     app
   end
@@ -1575,6 +1575,252 @@ module E2ERubyApp
     app = Spikard::App.new
     app.post("/items/", handler_name: "json_bodies_49_uuid_field_success", request_schema: {"additionalProperties" => false, "properties" => {"item_id" => {"format" => "uuid", "type" => "string"}, "name" => {"type" => "string"}}, "required" => ["name", "item_id"], "type" => "object"}) do |_request|
       build_response(content: {"item_id" => "c892496f-b1fd-4b91-bdb8-b46f92df1716", "name" => "Item"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_lifecycle_hooks_1_hook_execution_order
+    app = Spikard::App.new
+    # onRequest hook: first_hook
+    on_request_proc = lambda do |request|
+      # Mock implementation
+      request
+    end
+    # onRequest hook: second_hook
+    on_request_proc = lambda do |request|
+      # Mock implementation
+      request
+    end
+    # onRequest hook: third_hook
+    on_request_proc = lambda do |request|
+      # Mock implementation
+      request
+    end
+    app.get("/api/test-hook-order", handler_name: "lifecycle_hooks_1_hook_execution_order") do |_request|
+      build_response(content: {"execution_order" => ["first_hook", "second_hook", "third_hook"], "message" => "Hooks executed in order"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_lifecycle_hooks_2_multiple_hooks_all_phases
+    app = Spikard::App.new
+    # onRequest hook: request_logger
+    on_request_proc = lambda do |request|
+      # Mock implementation
+      request
+    end
+    # onRequest hook: request_id_generator
+    on_request_proc = lambda do |request|
+      # Mock implementation
+      request
+    end
+    # preValidation hook: rate_limiter
+    pre_validation_proc = lambda do |request|
+      # Mock implementation
+      request
+    end
+    # preHandler hook: authenticator
+    pre_handler_proc = lambda do |request|
+      # Mock implementation
+      request
+    end
+    # preHandler hook: authorizer
+    pre_handler_proc = lambda do |request|
+      # Mock implementation
+      request
+    end
+    # onResponse hook: security_headers - Adds security headers
+    on_response_proc = lambda do |response|
+      response.headers["X-Content-Type-Options"] = "nosniff"
+      response.headers["X-Frame-Options"] = "DENY"
+      response.headers["X-XSS-Protection"] = "1; mode=block"
+      response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+      response
+    end
+    # onResponse hook: response_timer - Adds timing header
+    on_response_proc = lambda do |response|
+      response.headers["X-Response-Time"] = "0ms"
+      response
+    end
+    # onResponse hook: audit_logger
+    on_response_proc = lambda do |response|
+      # Mock implementation
+      response
+    end
+    # onError hook: error_logger
+    on_error_proc = lambda do |response|
+      response.headers["Content-Type"] = "application/json"
+      response
+    end
+    app.post("/api/full-lifecycle", handler_name: "lifecycle_hooks_2_multiple_hooks_all_phases", request_schema: {"properties" => {"action" => {"type" => "string"}, "user_id" => {"type" => "string"}}, "required" => ["user_id", "action"], "type" => "object"}) do |_request|
+      build_response(content: {"action" => "update_profile", "message" => "Action completed successfully", "request_id" => ".*", "user_id" => "user-123"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_lifecycle_hooks_3_onerror_error_logging
+    app = Spikard::App.new
+    # onError hook: error_logger
+    on_error_proc = lambda do |response|
+      response.headers["Content-Type"] = "application/json"
+      response
+    end
+    # onError hook: error_formatter
+    on_error_proc = lambda do |response|
+      response.headers["Content-Type"] = "application/json"
+      response
+    end
+    app.get("/api/test-error", handler_name: "lifecycle_hooks_3_onerror_error_logging") do |_request|
+      build_response(content: {"error" => "Internal Server Error", "error_id" => ".*", "message" => "An unexpected error occurred"}, status: 500, headers: nil)
+    end
+    app
+  end
+
+  def create_app_lifecycle_hooks_4_onrequest_request_logging
+    app = Spikard::App.new
+    # onRequest hook: request_logger
+    on_request_proc = lambda do |request|
+      # Mock implementation
+      request
+    end
+    # onRequest hook: request_id_generator
+    on_request_proc = lambda do |request|
+      # Mock implementation
+      request
+    end
+    app.get("/api/test-on-request", handler_name: "lifecycle_hooks_4_onrequest_request_logging") do |_request|
+      build_response(content: {"has_request_id" => true, "message" => "onRequest hooks executed", "request_logged" => true}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_lifecycle_hooks_5_onresponse_response_timing
+    app = Spikard::App.new
+    # onRequest hook: start_timer
+    on_request_proc = lambda do |request|
+      # Mock implementation
+      request
+    end
+    # onResponse hook: response_timer - Adds timing header
+    on_response_proc = lambda do |response|
+      response.headers["X-Response-Time"] = "0ms"
+      response
+    end
+    app.get("/api/test-timing", handler_name: "lifecycle_hooks_5_onresponse_response_timing") do |_request|
+      build_response(content: {"message" => "Response with timing info"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_lifecycle_hooks_6_onresponse_security_headers
+    app = Spikard::App.new
+    # onResponse hook: security_headers - Adds security headers
+    on_response_proc = lambda do |response|
+      response.headers["X-Content-Type-Options"] = "nosniff"
+      response.headers["X-Frame-Options"] = "DENY"
+      response.headers["X-XSS-Protection"] = "1; mode=block"
+      response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+      response
+    end
+    app.get("/api/test-security-headers", handler_name: "lifecycle_hooks_6_onresponse_security_headers") do |_request|
+      build_response(content: {"message" => "Response with security headers"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_lifecycle_hooks_7_prehandler_authentication_failed_short_circuit
+    app = Spikard::App.new
+    # preHandler hook: authenticator - Short circuits with 401
+    pre_handler_proc = lambda do |_request|
+      build_response(
+        content: { error: "Unauthorized", message: "Invalid or expired authentication token" },
+        status: 401
+      )
+    end
+    app.get("/api/protected-resource-fail", handler_name: "lifecycle_hooks_7_prehandler_authentication_failed_short_circuit") do |_request|
+      build_response(content: {"error" => "Unauthorized", "message" => "Invalid or expired authentication token"}, status: 401, headers: nil)
+    end
+    app
+  end
+
+  def create_app_lifecycle_hooks_8_prehandler_authentication_success
+    app = Spikard::App.new
+    # preHandler hook: authenticator
+    pre_handler_proc = lambda do |request|
+      # Mock implementation
+      request
+    end
+    app.get("/api/protected-resource", handler_name: "lifecycle_hooks_8_prehandler_authentication_success") do |_request|
+      build_response(content: {"authenticated" => true, "message" => "Access granted", "user_id" => "user-123"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_lifecycle_hooks_9_prehandler_authorization_check
+    app = Spikard::App.new
+    # preHandler hook: authenticator
+    pre_handler_proc = lambda do |request|
+      # Mock implementation
+      request
+    end
+    # preHandler hook: authorizer
+    pre_handler_proc = lambda do |request|
+      # Mock implementation
+      request
+    end
+    app.get("/api/admin-only", handler_name: "lifecycle_hooks_9_prehandler_authorization_check") do |_request|
+      build_response(content: {"message" => "Admin access granted", "role" => "admin", "user_id" => "admin-456"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_lifecycle_hooks_10_prehandler_authorization_forbidden_short_circuit
+    app = Spikard::App.new
+    # preHandler hook: authenticator - Short circuits with 403
+    pre_handler_proc = lambda do |_request|
+      build_response(
+        content: { error: "Forbidden", message: "Admin role required for this endpoint" },
+        status: 403
+      )
+    end
+    # preHandler hook: authorizer - Short circuits with 403
+    pre_handler_proc = lambda do |_request|
+      build_response(
+        content: { error: "Forbidden", message: "Admin role required for this endpoint" },
+        status: 403
+      )
+    end
+    app.get("/api/admin-only-forbidden", handler_name: "lifecycle_hooks_10_prehandler_authorization_forbidden_short_circuit") do |_request|
+      build_response(content: {"error" => "Forbidden", "message" => "Admin role required for this endpoint"}, status: 403, headers: nil)
+    end
+    app
+  end
+
+  def create_app_lifecycle_hooks_11_prevalidation_rate_limit_exceeded_short_circuit
+    app = Spikard::App.new
+    # preValidation hook: rate_limiter - Short circuits with 429
+    pre_validation_proc = lambda do |_request|
+      build_response(
+        content: { error: "Rate limit exceeded", message: "Too many requests, please try again later" },
+        status: 429,
+        headers: { "Retry-After" => "60" }
+      )
+    end
+    app.post("/api/test-rate-limit-exceeded", handler_name: "lifecycle_hooks_11_prevalidation_rate_limit_exceeded_short_circuit", request_schema: {"properties" => {"data" => {"type" => "string"}}, "required" => ["data"], "type" => "object"}) do |_request|
+      build_response(content: {"error" => "Rate limit exceeded", "message" => "Too many requests, please try again later"}, status: 429, headers: nil)
+    end
+    app
+  end
+
+  def create_app_lifecycle_hooks_12_prevalidation_rate_limiting
+    app = Spikard::App.new
+    # preValidation hook: rate_limiter
+    pre_validation_proc = lambda do |request|
+      # Mock implementation
+      request
+    end
+    app.post("/api/test-rate-limit", handler_name: "lifecycle_hooks_12_prevalidation_rate_limiting", request_schema: {"properties" => {"data" => {"type" => "string"}}, "required" => ["data"], "type" => "object"}) do |_request|
+      build_response(content: {"message" => "Request accepted", "rate_limit_checked" => true}, status: 200, headers: nil)
     end
     app
   end

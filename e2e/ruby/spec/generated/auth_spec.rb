@@ -30,7 +30,7 @@ RSpec.describe "auth" do
     client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/api/data")
     expect(response.status_code).to eq(401)
-    expect(response.json).to eq({"detail" => "Expected \'X-API-Key\' header with valid API key", "status" => 401, "title" => "Missing API key", "type" => "https://spikard.dev/errors/unauthorized"})
+    expect(response.json).to eq({"detail" => "Expected \'X-API-Key\' header or \'api_key\' query parameter with valid API key", "status" => 401, "title" => "Missing API key", "type" => "https://spikard.dev/errors/unauthorized"})
     client.close
   end
 
@@ -105,7 +105,7 @@ RSpec.describe "auth" do
     client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/api/protected", headers: {"Authorization" => "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.8yXqZ9jKCR0BwqJc7pN_QvD3mYLxHfWzUeIaGkTnOsA"})
     expect(response.status_code).to eq(401)
-    expect(response.json).to eq({"detail" => "Authorization header must use Bearer scheme: \'Bearer <token>\'", "status" => 401, "title" => "Unauthorized", "type" => "https://spikard.dev/errors/unauthorized"})
+    expect(response.json).to eq({"detail" => "Authorization header must use Bearer scheme: \'Bearer <token>\'", "status" => 401, "title" => "Invalid Authorization header format", "type" => "https://spikard.dev/errors/unauthorized"})
     client.close
   end
 
@@ -197,9 +197,9 @@ RSpec.describe "auth" do
       issuer: "https://auth.example.com"
     )
     client = Spikard::Testing.create_test_client(app, config: config)
-    response = client.get("/api/protected", headers: {"Authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImlzcyI6Imh0dHBzOi8vZXZpbC5jb20ifQ.O3gVwqYHqJQPL2PtgWmBN0sQd5_HvYKKjZGhPkXqM_w"})
+    response = client.get("/api/protected", headers: {"Authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2V2aWwuY29tIn0.mbL5L04_hpaaiz0SPABap6ZWfBLu18aiexBjzwQ1nnA"})
     expect(response.status_code).to eq(401)
-    expect(response.json).to eq({"detail" => "JWT issuer \'https://evil.com\' does not match expected issuer \'https://auth.example.com\'", "status" => 401, "title" => "Unauthorized", "type" => "https://spikard.dev/errors/unauthorized"})
+    expect(response.json).to eq({"detail" => "Token issuer is invalid, expected \'https://auth.example.com\'", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"})
     client.close
   end
 
@@ -214,7 +214,7 @@ RSpec.describe "auth" do
     client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/api/protected", headers: {"Authorization" => "Bearer invalid.token"})
     expect(response.status_code).to eq(401)
-    expect(response.json).to eq({"detail" => "Malformed JWT token: expected 3 parts separated by dots, found 2", "status" => 401, "title" => "Unauthorized", "type" => "https://spikard.dev/errors/unauthorized"})
+    expect(response.json).to eq({"detail" => "Malformed JWT token: expected 3 parts separated by dots, found 2", "status" => 401, "title" => "Malformed JWT token", "type" => "https://spikard.dev/errors/unauthorized"})
     client.close
   end
 
@@ -244,9 +244,9 @@ RSpec.describe "auth" do
       secret: "test-secret-key-do-not-use-in-production"
     )
     client = Spikard::Testing.create_test_client(app, config: config)
-    response = client.get("/api/protected", headers: {"Authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsIm5iZiI6MjYyNjc4Mzk0Nn0.8yXqZ9jKCR0BwqJc7pN_QvD3mYLxHfWzUeIaGkTnOsA"})
+    response = client.get("/api/protected", headers: {"Authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsIm5iZiI6MjYyNjc4Mzk0NiwiYXVkIjpbImh0dHBzOi8vYXBpLmV4YW1wbGUuY29tIl0sImlzcyI6Imh0dHBzOi8vYXV0aC5leGFtcGxlLmNvbSJ9.hG4I76_3kJfsbJ_jmxoP1NSYnkcqdyBFcPpdo-jYU4E"})
     expect(response.status_code).to eq(401)
-    expect(response.json).to eq({"detail" => "JWT not valid yet, not before claim is in the future", "status" => 401, "title" => "Unauthorized", "type" => "https://spikard.dev/errors/unauthorized"})
+    expect(response.json).to eq({"detail" => "JWT not valid yet, not before claim is in the future", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"})
     client.close
   end
 
@@ -261,7 +261,7 @@ RSpec.describe "auth" do
       issuer: "https://auth.example.com"
     )
     client = Spikard::Testing.create_test_client(app, config: config)
-    response = client.get("/api/protected", headers: {"Authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSIsImh0dHBzOi8vYWRtaW4uZXhhbXBsZS5jb20iXSwiaXNzIjoiaHR0cHM6Ly9hdXRoLmV4YW1wbGUuY29tIn0.qVfBpQYPcX9wWZJhULmN7KR8vT3DxGbH2jSaIoFnYwE"})
+    response = client.get("/api/protected", headers: {"Authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSIsImh0dHBzOi8vYWRtaW4uZXhhbXBsZS5jb20iXSwiaXNzIjoiaHR0cHM6Ly9hdXRoLmV4YW1wbGUuY29tIn0.9MBL_XccGXfu9cDUnCpQruDMOl2hHYydzeGn-20dQOs"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"message" => "Access granted", "user_id" => "user123"})
     client.close

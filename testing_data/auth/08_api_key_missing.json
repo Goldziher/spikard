@@ -29,7 +29,7 @@
 			"type": "https://spikard.dev/errors/unauthorized",
 			"title": "Missing API key",
 			"status": 401,
-			"detail": "Expected 'X-API-Key' header with valid API key"
+			"detail": "Expected 'X-API-Key' header or 'api_key' query parameter with valid API key"
 		}
 	},
 	"tags": ["auth", "api_key", "security", "middleware", "error", "unauthorized", "missing"]
