@@ -1,0 +1,27 @@
+{
+	"name": "CORS multiple allowed origins",
+	"description": "Tests CORS when multiple origins are allowed and request origin matches one",
+	"source": {
+		"framework": "spikard",
+		"test_file": "cors_tests.rs",
+		"test_function": "test_cors_multiple_origins"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/data",
+		"headers": {
+			"Origin": "https://admin.example.com"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Access-Control-Allow-Origin": "https://admin.example.com",
+			"Vary": "Origin"
+		},
+		"body": {
+			"data": "resource data"
+		}
+	},
+	"notes": "When multiple origins are configured (https://app.example.com, https://admin.example.com, https://mobile.example.com), response should echo the matching request origin"
+}

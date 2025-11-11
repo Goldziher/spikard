@@ -1,0 +1,31 @@
+{
+	"name": "ETag validation with If-None-Match",
+	"description": "Tests 304 Not Modified response when ETag matches If-None-Match header",
+	"category": "static_files",
+	"handler": {
+		"route": "/*filepath",
+		"method": "GET",
+		"middleware": {
+			"static_files": {
+				"root_dir": "./public",
+				"cache_control": "public, max-age=3600"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/about.html",
+		"headers": {
+			"If-None-Match": "\"abc123\""
+		}
+	},
+	"expected_response": {
+		"status_code": 304,
+		"headers": {
+			"ETag": "\"abc123\"",
+			"Cache-Control": "public, max-age=3600"
+		}
+	},
+	"tags": ["static_files", "middleware", "etag", "cache_validation", "304"],
+	"notes": "tower-http automatically handles ETag validation. No body is sent with 304 responses per RFC 7232"
+}

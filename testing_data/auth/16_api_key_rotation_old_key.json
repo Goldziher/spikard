@@ -1,0 +1,49 @@
+{
+	"name": "API key rotation - old key still valid",
+	"description": "Tests API key authentication during rotation period when old key remains valid alongside new key",
+	"category": "auth",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "stripe api",
+		"test_case": "API key rotation grace period"
+	},
+	"handler": {
+		"route": "/api/data",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"X-API-Key": {
+					"type": "string",
+					"required": true,
+					"description": "API key for authentication"
+				}
+			}
+		},
+		"middleware": {
+			"api_key_auth": {
+				"enabled": true,
+				"keys": ["sk_test_old_123456", "sk_test_new_789012"],
+				"header_name": "X-API-Key"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/data",
+		"headers": {
+			"X-API-Key": "sk_test_old_123456"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Access granted",
+			"data": "sensitive information"
+		},
+		"headers": {
+			"X-API-Key-Deprecated": "true"
+		}
+	},
+	"tags": ["auth", "api_key", "rotation", "deprecation", "security", "middleware", "success"],
+	"notes": "Tests graceful API key rotation. Old key remains valid during transition period but response indicates deprecation via custom header."
+}

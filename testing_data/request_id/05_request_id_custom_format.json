@@ -1,0 +1,42 @@
+{
+	"name": "Custom request ID format with prefix",
+	"description": "Tests custom request ID generation with application-specific prefix pattern",
+	"category": "request_id",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "tower-http request-id",
+		"test_case": "Support custom ID formats for organization-specific patterns"
+	},
+	"handler": {
+		"route": "/api/custom",
+		"method": "GET",
+		"middleware": {
+			"request_id": {
+				"enabled": true,
+				"header_name": "X-Request-ID",
+				"format": "custom",
+				"make_request_id": "req_${timestamp}_${random}",
+				"propagate_to_response": true
+			}
+		},
+		"response_type": "success"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/custom"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "success"
+		},
+		"headers": {
+			"X-Request-ID": {
+				"pattern": "^req_[0-9]+_[a-zA-Z0-9]+$",
+				"description": "Custom format: req_${timestamp}_${random}"
+			}
+		}
+	},
+	"tags": ["request_id", "middleware", "custom-format", "prefix"],
+	"notes": "Custom formats allow integration with organization-specific ID schemes (e.g., Stripe-style req_ prefix)"
+}

@@ -1,0 +1,38 @@
+{
+	"name": "Rate limit - under limit",
+	"description": "Tests that requests under the rate limit succeed with proper RateLimit headers",
+	"category": "rate_limit",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "tower_governor",
+		"test_case": "Request within rate limit succeeds"
+	},
+	"handler": {
+		"route": "/api/rate-limited",
+		"method": "GET",
+		"middleware": {
+			"rate_limit": {
+				"per_second": 10,
+				"burst": 5,
+				"ip_based": true
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/rate-limited",
+		"client_ip": "192.168.1.1"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Success"
+		},
+		"headers": {
+			"RateLimit-Limit": "10",
+			"RateLimit-Remaining": "9"
+		}
+	},
+	"tags": ["rate_limit", "success", "headers", "gcra"],
+	"notes": "First request should succeed with full remaining capacity minus one"
+}

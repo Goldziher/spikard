@@ -1,0 +1,33 @@
+{
+	"name": "403 Forbidden for path traversal attempt",
+	"description": "Tests security protection against path traversal attacks using ../ sequences",
+	"category": "static_files",
+	"handler": {
+		"route": "/*filepath",
+		"method": "GET",
+		"middleware": {
+			"static_files": {
+				"root_dir": "./public",
+				"cache_control": "public, max-age=3600"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/../../../etc/passwd"
+	},
+	"expected_response": {
+		"status_code": 403,
+		"headers": {
+			"Content-Type": "application/problem+json"
+		},
+		"body": {
+			"type": "https://spikard.dev/errors/forbidden",
+			"title": "Forbidden",
+			"status": 403,
+			"detail": "Path traversal is not allowed"
+		}
+	},
+	"tags": ["static_files", "middleware", "403", "forbidden", "security", "path_traversal"],
+	"notes": "tower-http automatically sanitizes paths and prevents escaping the root_dir. Critical security feature"
+}

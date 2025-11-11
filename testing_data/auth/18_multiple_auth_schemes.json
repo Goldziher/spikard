@@ -1,0 +1,60 @@
+{
+	"name": "Multiple authentication schemes - JWT precedence",
+	"description": "Tests authentication when both JWT and API key are provided, JWT takes precedence",
+	"category": "auth",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "aws api gateway",
+		"test_case": "multiple auth schemes precedence"
+	},
+	"handler": {
+		"route": "/api/data",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Authorization": {
+					"type": "string",
+					"required": false,
+					"description": "JWT token in Bearer format"
+				},
+				"X-API-Key": {
+					"type": "string",
+					"required": false,
+					"description": "API key for authentication"
+				}
+			}
+		},
+		"middleware": {
+			"jwt_auth": {
+				"enabled": true,
+				"algorithm": "HS256",
+				"secret": "test-secret-key-do-not-use-in-production",
+				"audience": ["https://api.example.com"],
+				"issuer": "https://auth.example.com"
+			},
+			"api_key_auth": {
+				"enabled": true,
+				"keys": ["sk_test_123456", "sk_test_789012"],
+				"header_name": "X-API-Key"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/data",
+		"headers": {
+			"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg",
+			"X-API-Key": "sk_test_123456"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Access granted",
+			"user_id": "user123",
+			"auth_method": "jwt"
+		}
+	},
+	"tags": ["auth", "jwt", "api_key", "multiple_schemes", "precedence", "security", "middleware", "success"],
+	"notes": "When both auth schemes are configured and both credentials provided, JWT takes precedence. This allows for flexible authentication while maintaining clear precedence rules."
+}

@@ -1,0 +1,50 @@
+{
+	"name": "JWT invalid issuer",
+	"description": "Tests JWT rejection when issuer claim doesn't match expected value",
+	"category": "auth",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "jsonwebtoken",
+		"test_case": "issuer validation"
+	},
+	"handler": {
+		"route": "/api/protected",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Authorization": {
+					"type": "string",
+					"required": true,
+					"description": "JWT token in Bearer format"
+				}
+			}
+		},
+		"middleware": {
+			"jwt_auth": {
+				"enabled": true,
+				"algorithm": "HS256",
+				"secret": "test-secret-key-do-not-use-in-production",
+				"issuer": "https://auth.example.com",
+				"leeway": 0
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/protected",
+		"headers": {
+			"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImlzcyI6Imh0dHBzOi8vZXZpbC5jb20ifQ.O3gVwqYHqJQPL2PtgWmBN0sQd5_HvYKKjZGhPkXqM_w"
+		}
+	},
+	"expected_response": {
+		"status_code": 401,
+		"body": {
+			"type": "https://spikard.dev/errors/unauthorized",
+			"title": "Unauthorized",
+			"status": 401,
+			"detail": "JWT issuer 'https://evil.com' does not match expected issuer 'https://auth.example.com'"
+		}
+	},
+	"tags": ["auth", "jwt", "issuer", "validation", "401", "security"],
+	"notes": "Tests JWT issuer claim validation as specified in RFC 7519 section 4.1.1"
+}

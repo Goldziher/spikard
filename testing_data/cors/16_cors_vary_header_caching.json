@@ -1,0 +1,29 @@
+{
+	"name": "CORS Vary header for proper caching",
+	"description": "Tests that Vary: Origin header is present for correct cache behavior",
+	"source": {
+		"framework": "spikard",
+		"test_file": "cors_tests.rs",
+		"test_function": "test_cors_vary_header_caching"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/cached-resource",
+		"headers": {
+			"Origin": "https://app.example.com",
+			"Cache-Control": "max-age=3600"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Access-Control-Allow-Origin": "https://app.example.com",
+			"Vary": "Origin",
+			"Cache-Control": "public, max-age=3600"
+		},
+		"body": {
+			"data": "cacheable resource"
+		}
+	},
+	"notes": "Vary: Origin header is critical for preventing cross-origin cache poisoning. Without it, browsers may serve cached responses with wrong Access-Control-Allow-Origin headers to different origins"
+}

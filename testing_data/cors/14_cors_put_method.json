@@ -1,0 +1,29 @@
+{
+	"name": "CORS preflight for PUT method",
+	"description": "Tests OPTIONS preflight request for PUT method with custom headers",
+	"source": {
+		"framework": "spikard",
+		"test_file": "cors_tests.rs",
+		"test_function": "test_cors_put_method"
+	},
+	"request": {
+		"method": "OPTIONS",
+		"path": "/api/resource/123",
+		"headers": {
+			"Origin": "https://app.example.com",
+			"Access-Control-Request-Method": "PUT",
+			"Access-Control-Request-Headers": "Content-Type, X-Custom-Header"
+		}
+	},
+	"expected_response": {
+		"status_code": 204,
+		"headers": {
+			"Access-Control-Allow-Origin": "https://app.example.com",
+			"Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE",
+			"Access-Control-Allow-Headers": "Content-Type, X-Custom-Header",
+			"Access-Control-Max-Age": "3600",
+			"Vary": "Origin"
+		}
+	},
+	"notes": "PUT requests require preflight when custom headers are present. Server must explicitly allow PUT in Access-Control-Allow-Methods"
+}

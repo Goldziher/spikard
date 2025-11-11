@@ -1,0 +1,33 @@
+{
+	"name": "304 Not Modified with complete cache headers",
+	"description": "Tests complete 304 response with ETag, Last-Modified, and Cache-Control headers",
+	"category": "static_files",
+	"handler": {
+		"route": "/*filepath",
+		"method": "GET",
+		"middleware": {
+			"static_files": {
+				"root_dir": "./public",
+				"cache_control": "public, max-age=7200"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/images/banner.jpg",
+		"headers": {
+			"If-None-Match": "\"bcd890\"",
+			"If-Modified-Since": "Mon, 15 Oct 2025 10:00:00 GMT"
+		}
+	},
+	"expected_response": {
+		"status_code": 304,
+		"headers": {
+			"ETag": "\"bcd890\"",
+			"Last-Modified": "Mon, 15 Oct 2025 10:00:00 GMT",
+			"Cache-Control": "public, max-age=7200"
+		}
+	},
+	"tags": ["static_files", "middleware", "etag", "last_modified", "cache_validation", "304"],
+	"notes": "When both ETag and Last-Modified match, return 304 with both headers per RFC 7232"
+}

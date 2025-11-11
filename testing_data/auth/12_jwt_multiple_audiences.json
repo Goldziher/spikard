@@ -1,0 +1,48 @@
+{
+	"name": "JWT with multiple audiences",
+	"description": "Tests JWT validation when token has multiple audiences and one must match",
+	"category": "auth",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "jsonwebtoken",
+		"test_case": "multiple audience validation"
+	},
+	"handler": {
+		"route": "/api/protected",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Authorization": {
+					"type": "string",
+					"required": true,
+					"description": "JWT token in Bearer format"
+				}
+			}
+		},
+		"middleware": {
+			"jwt_auth": {
+				"enabled": true,
+				"algorithm": "HS256",
+				"secret": "test-secret-key-do-not-use-in-production",
+				"audience": ["https://api.example.com"],
+				"issuer": "https://auth.example.com"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/protected",
+		"headers": {
+			"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSIsImh0dHBzOi8vYWRtaW4uZXhhbXBsZS5jb20iXSwiaXNzIjoiaHR0cHM6Ly9hdXRoLmV4YW1wbGUuY29tIn0.qVfBpQYPcX9wWZJhULmN7KR8vT3DxGbH2jSaIoFnYwE"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Access granted",
+			"user_id": "user123"
+		}
+	},
+	"tags": ["auth", "jwt", "audience", "multiple_audiences", "validation", "success"],
+	"notes": "Tests JWT audience claim validation when token contains multiple audiences. As per RFC 7519 section 4.1.3, at least one audience must match."
+}

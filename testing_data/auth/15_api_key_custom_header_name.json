@@ -1,0 +1,46 @@
+{
+	"name": "API key with custom header name",
+	"description": "Tests API key authentication with a custom header name (X-API-Token instead of X-API-Key)",
+	"category": "auth",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "github api",
+		"test_case": "custom header API key"
+	},
+	"handler": {
+		"route": "/api/data",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"X-API-Token": {
+					"type": "string",
+					"required": true,
+					"description": "API token for authentication"
+				}
+			}
+		},
+		"middleware": {
+			"api_key_auth": {
+				"enabled": true,
+				"keys": ["sk_test_123456", "sk_test_789012"],
+				"header_name": "X-API-Token"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/data",
+		"headers": {
+			"X-API-Token": "sk_test_123456"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Access granted",
+			"data": "sensitive information"
+		}
+	},
+	"tags": ["auth", "api_key", "custom_header", "security", "middleware", "success"],
+	"notes": "Tests API key validation from custom header name. Demonstrates flexibility in header naming conventions."
+}

@@ -1,0 +1,35 @@
+{
+	"name": "Custom index file name",
+	"description": "Tests serving custom index file (home.html) instead of default index.html",
+	"category": "static_files",
+	"handler": {
+		"route": "/*filepath",
+		"method": "GET",
+		"middleware": {
+			"static_files": {
+				"root_dir": "./public",
+				"index_file": "home.html",
+				"cache_control": "no-cache"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Content-Type": "text/html; charset=utf-8",
+			"Cache-Control": "no-cache",
+			"ETag": "\"vwx234\"",
+			"Accept-Ranges": "bytes"
+		},
+		"body": {
+			"simulated_file": "home.html",
+			"simulated_size_bytes": 2560
+		}
+	},
+	"tags": ["static_files", "middleware", "custom_index", "configuration"],
+	"notes": "Custom index file names support non-standard directory entry points"
+}

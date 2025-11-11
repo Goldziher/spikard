@@ -1,0 +1,49 @@
+{
+	"name": "JWT not before claim in future",
+	"description": "Tests JWT rejection when nbf (not before) claim is in the future",
+	"category": "auth",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "jsonwebtoken",
+		"test_case": "not before validation"
+	},
+	"handler": {
+		"route": "/api/protected",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Authorization": {
+					"type": "string",
+					"required": true,
+					"description": "JWT token in Bearer format"
+				}
+			}
+		},
+		"middleware": {
+			"jwt_auth": {
+				"enabled": true,
+				"algorithm": "HS256",
+				"secret": "test-secret-key-do-not-use-in-production",
+				"leeway": 0
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/protected",
+		"headers": {
+			"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsIm5iZiI6MjYyNjc4Mzk0Nn0.8yXqZ9jKCR0BwqJc7pN_QvD3mYLxHfWzUeIaGkTnOsA"
+		}
+	},
+	"expected_response": {
+		"status_code": 401,
+		"body": {
+			"type": "https://spikard.dev/errors/unauthorized",
+			"title": "Unauthorized",
+			"status": 401,
+			"detail": "JWT not valid yet, not before claim is in the future"
+		}
+	},
+	"tags": ["auth", "jwt", "nbf", "not_before", "validation", "401", "security"],
+	"notes": "Tests JWT nbf (not before) claim validation as specified in RFC 7519 section 4.1.5. Token is valid from year 2050."
+}

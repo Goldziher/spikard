@@ -1,0 +1,83 @@
+{
+	"name": "Long-running request completes within grace period",
+	"description": "Tests that long-running requests are allowed to complete as long as they finish within the configured grace period",
+	"category": "graceful_shutdown",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "axum_graceful_shutdown",
+		"test_case": "long request within grace period"
+	},
+	"handler": {
+		"route": "/api/long-task",
+		"method": "POST",
+		"middleware": {
+			"graceful_shutdown": {
+				"enabled": true,
+				"grace_period_seconds": 15,
+				"force_timeout_seconds": 30
+			}
+		}
+	},
+	"test_scenario": {
+		"phases": [
+			{
+				"phase": "initiate_long_request",
+				"description": "Start a request that takes 10 seconds (within 15s grace period)",
+				"actions": [
+					{
+						"type": "request",
+						"request": {
+							"method": "POST",
+							"path": "/api/long-task",
+							"headers": {
+								"Content-Type": "application/json",
+								"Accept": "application/json"
+							},
+							"body": {
+								"task": "data_processing",
+								"duration_seconds": 10
+							},
+							"simulated_duration_ms": 10000
+						},
+						"expect_async": true
+					}
+				]
+			},
+			{
+				"phase": "trigger_shutdown",
+				"description": "Send shutdown signal 2 seconds into request processing",
+				"delay_ms": 2000,
+				"actions": [
+					{
+						"type": "signal",
+						"signal": "SIGTERM"
+					}
+				]
+			},
+			{
+				"phase": "verify_successful_completion",
+				"description": "Verify the long request completes successfully",
+				"actions": [
+					{
+						"type": "wait_for_response",
+						"expected_response": {
+							"status_code": 200,
+							"headers": {
+								"Content-Type": "application/json"
+							},
+							"body": {
+								"message": "Task completed successfully",
+								"task": "data_processing",
+								"duration_seconds": 10,
+								"completed": true
+							}
+						},
+						"timeout_ms": 20000
+					}
+				]
+			}
+		]
+	},
+	"tags": ["graceful_shutdown", "integration", "lifecycle", "long-running", "grace-period"],
+	"notes": "Long-running requests complete if they finish within the grace period. Grace period of 15s allows 10s request to finish even with 2s already elapsed."
+}

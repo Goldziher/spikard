@@ -1,0 +1,27 @@
+{
+	"name": "CORS preflight for DELETE method",
+	"description": "Tests OPTIONS preflight request for DELETE method",
+	"source": {
+		"framework": "spikard",
+		"test_file": "cors_tests.rs",
+		"test_function": "test_cors_delete_method"
+	},
+	"request": {
+		"method": "OPTIONS",
+		"path": "/api/resource/456",
+		"headers": {
+			"Origin": "https://app.example.com",
+			"Access-Control-Request-Method": "DELETE"
+		}
+	},
+	"expected_response": {
+		"status_code": 204,
+		"headers": {
+			"Access-Control-Allow-Origin": "https://app.example.com",
+			"Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE",
+			"Access-Control-Max-Age": "3600",
+			"Vary": "Origin"
+		}
+	},
+	"notes": "DELETE is not a CORS-safelisted method and always requires preflight. Server must explicitly allow DELETE in Access-Control-Allow-Methods"
+}

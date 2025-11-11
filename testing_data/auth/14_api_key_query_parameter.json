@@ -1,0 +1,34 @@
+{
+	"name": "API key in query parameter",
+	"description": "Tests API key authentication when key is provided as query parameter instead of header",
+	"category": "auth",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "aws api gateway",
+		"test_case": "query parameter API key"
+	},
+	"handler": {
+		"route": "/api/data",
+		"method": "GET",
+		"middleware": {
+			"api_key_auth": {
+				"enabled": true,
+				"keys": ["sk_test_123456", "sk_test_789012"],
+				"header_name": "X-API-Key"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/data?api_key=sk_test_123456"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Access granted",
+			"data": "sensitive information"
+		}
+	},
+	"tags": ["auth", "api_key", "query_parameter", "security", "middleware", "success"],
+	"notes": "Tests API key validation from query string. While less secure than headers, query parameter auth is common in webhook callbacks and simplified integrations."
+}

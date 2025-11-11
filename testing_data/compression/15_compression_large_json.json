@@ -1,0 +1,49 @@
+{
+	"name": "Compression - large JSON response",
+	"description": "Tests compression of large JSON response with high compression ratio due to text redundancy",
+	"category": "compression",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "tower_http::compression::CompressionLayer",
+		"test_case": "Large JSON payload with high compression efficiency"
+	},
+	"handler": {
+		"route": "/api/records",
+		"method": "GET",
+		"middleware": {
+			"compression": {
+				"enabled": true,
+				"algorithms": ["gzip", "br"],
+				"level": 6,
+				"min_size_bytes": 1024
+			}
+		},
+		"response_body_size": 51200
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/records",
+		"headers": {
+			"Accept-Encoding": "br"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Content-Type": "application/json",
+			"Content-Encoding": "br",
+			"Vary": "Accept-Encoding"
+		},
+		"body": {
+			"records": "Array of 1000+ JSON objects with repeated structure",
+			"total": 1000
+		},
+		"compression_metrics": {
+			"uncompressed_size_bytes": 51200,
+			"compressed_size_bytes": 6400,
+			"compression_ratio": 8.0
+		}
+	},
+	"tags": ["compression", "middleware", "brotli", "json", "high-ratio", "tower-http"],
+	"notes": "JSON responses compress extremely well (often 6-10x) due to repeated structure and field names. Brotli's dictionary compression excels at this. Critical for API performance at scale."
+}
