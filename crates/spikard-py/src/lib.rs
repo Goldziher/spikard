@@ -6,7 +6,9 @@ pub mod handler;
 pub mod lifecycle;
 pub mod request;
 pub mod response;
+pub mod sse;
 mod test_client;
+pub mod websocket;
 
 use pyo3::prelude::*;
 
@@ -533,9 +535,39 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
     eprintln!("[spikard] Listening on http://{}:{}", config.host, config.port);
 
     // Build Axum router with Python handlers
-    let app_router = Server::with_handlers(config.clone(), routes).map_err(|e| {
+    let mut app_router = Server::with_handlers(config.clone(), routes).map_err(|e| {
         PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to build Axum router: {}", e))
     })?;
+
+    // Add WebSocket handlers
+    let websocket_handlers = app.call_method0("get_websocket_handlers")?;
+    let ws_dict = websocket_handlers.cast::<pyo3::types::PyDict>()?;
+    for (path, factory) in ws_dict.iter() {
+        let path_str: String = path.extract()?;
+        let ws_state = crate::websocket::create_websocket_state(&factory)?;
+        eprintln!("[spikard] Registered WebSocket endpoint: {}", path_str);
+
+        use axum::routing::get;
+        app_router = app_router.route(
+            &path_str,
+            get(spikard_http::websocket_handler::<crate::websocket::PythonWebSocketHandler>).with_state(ws_state),
+        );
+    }
+
+    // Add SSE endpoints
+    let sse_producers = app.call_method0("get_sse_producers")?;
+    let sse_dict = sse_producers.cast::<pyo3::types::PyDict>()?;
+    for (path, factory) in sse_dict.iter() {
+        let path_str: String = path.extract()?;
+        let sse_state = crate::sse::create_sse_state(&factory)?;
+        eprintln!("[spikard] Registered SSE endpoint: {}", path_str);
+
+        use axum::routing::get;
+        app_router = app_router.route(
+            &path_str,
+            get(spikard_http::sse_handler::<crate::sse::PythonSseEventProducer>).with_state(sse_state),
+        );
+    }
 
     // GIL is released when py goes out of scope at end of function
     // Run server in Tokio runtime
