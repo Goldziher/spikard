@@ -23,6 +23,7 @@ serde.workspace = true
 serde_json.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
+futures-util = "0.3"
 jsonschema = "0.33"
 serde_qs = "0.15"
 lazy_static = "1.5"
