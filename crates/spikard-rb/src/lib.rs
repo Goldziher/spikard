@@ -1,6 +1,8 @@
 #![allow(deprecated)]
 
 mod lifecycle;
+mod sse;
+mod websocket;
 
 use axum::body::Body;
 use axum::http::{HeaderName, HeaderValue, Method, StatusCode};
