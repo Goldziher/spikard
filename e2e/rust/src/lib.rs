@@ -197,213 +197,6 @@ pub fn create_app_auth_Multiple_authentication_schemes___JWT_precedence() -> Rou
         ))
 }
 
-/// App for fixture: Body size at exact boundary
-pub fn create_app_body_size_limit_Body_size_at_exact_boundary() -> Router {
-    Router::new()
-        .route("/api/data", post(body_size_limit_Body_size_at_exact_boundary_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Body size exceeds limit
-pub fn create_app_body_size_limit_Body_size_exceeds_limit() -> Router {
-    Router::new()
-        .route("/api/data", post(body_size_limit_Body_size_exceeds_limit_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Body size within limit
-pub fn create_app_body_size_limit_Body_size_within_limit() -> Router {
-    Router::new()
-        .route("/api/data", post(body_size_limit_Body_size_within_limit_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Form data exceeds limit
-pub fn create_app_body_size_limit_Form_data_exceeds_limit() -> Router {
-    Router::new()
-        .route("/api/form", post(body_size_limit_Form_data_exceeds_limit_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: JSON body exceeds limit
-pub fn create_app_body_size_limit_JSON_body_exceeds_limit() -> Router {
-    Router::new()
-        .route("/api/json", post(body_size_limit_JSON_body_exceeds_limit_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Large limit for file upload endpoint
-pub fn create_app_body_size_limit_Large_limit_for_file_upload_endpoint() -> Router {
-    Router::new()
-        .route(
-            "/api/upload",
-            post(body_size_limit_Large_limit_for_file_upload_endpoint_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Multipart file upload exceeds limit
-pub fn create_app_body_size_limit_Multipart_file_upload_exceeds_limit() -> Router {
-    Router::new()
-        .route(
-            "/api/upload/avatar",
-            post(body_size_limit_Multipart_file_upload_exceeds_limit_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Per-route limit override
-pub fn create_app_body_size_limit_Per_route_limit_override() -> Router {
-    Router::new()
-        .route("/api/upload", post(body_size_limit_Per_route_limit_override_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Small limit for text endpoint
-pub fn create_app_body_size_limit_Small_limit_for_text_endpoint() -> Router {
-    Router::new()
-        .route("/api/text", post(body_size_limit_Small_limit_for_text_endpoint_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Streaming body exceeds limit
-pub fn create_app_body_size_limit_Streaming_body_exceeds_limit() -> Router {
-    Router::new()
-        .route(
-            "/api/stream",
-            post(body_size_limit_Streaming_body_exceeds_limit_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Compression - brotli applied
-pub fn create_app_compression_Compression___brotli_applied() -> Router {
-    Router::new()
-        .route("/api/data", get(compression_Compression___brotli_applied_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Compression - client prefers brotli
-pub fn create_app_compression_Compression___client_prefers_brotli() -> Router {
-    Router::new()
-        .route(
-            "/api/data",
-            get(compression_Compression___client_prefers_brotli_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Compression - client prefers gzip
-pub fn create_app_compression_Compression___client_prefers_gzip() -> Router {
-    Router::new()
-        .route("/api/data", get(compression_Compression___client_prefers_gzip_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Compression - gzip applied
-pub fn create_app_compression_Compression___gzip_applied() -> Router {
-    Router::new()
-        .route("/api/data", get(compression_Compression___gzip_applied_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Compression - high compression level
-pub fn create_app_compression_Compression___high_compression_level() -> Router {
-    Router::new()
-        .route(
-            "/api/data",
-            get(compression_Compression___high_compression_level_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Compression - large JSON response
-pub fn create_app_compression_Compression___large_JSON_response() -> Router {
-    Router::new()
-        .route(
-            "/api/records",
-            get(compression_Compression___large_JSON_response_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Compression - low compression level
-pub fn create_app_compression_Compression___low_compression_level() -> Router {
-    Router::new()
-        .route(
-            "/api/data",
-            get(compression_Compression___low_compression_level_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Compression - minimum size threshold
-pub fn create_app_compression_Compression___minimum_size_threshold() -> Router {
-    Router::new()
-        .route(
-            "/api/data",
-            get(compression_Compression___minimum_size_threshold_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Compression - multiple acceptable encodings
-pub fn create_app_compression_Compression___multiple_acceptable_encodings() -> Router {
-    Router::new()
-        .route(
-            "/api/data",
-            get(compression_Compression___multiple_acceptable_encodings_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Compression - wildcard encoding
-pub fn create_app_compression_Compression___wildcard_encoding() -> Router {
-    Router::new()
-        .route("/api/data", get(compression_Compression___wildcard_encoding_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
 /// App for fixture: 13_json_with_charset_utf16
 pub fn create_app_content_types_13_json_with_charset_utf16() -> Router {
     Router::new()
@@ -870,6 +663,24 @@ pub fn create_app_cookies_Response_cookie_with_path_attribute() -> Router {
 pub fn create_app_cookies_Response_set_cookie___basic() -> Router {
     Router::new()
         .route("/cookie/", post(cookies_Response_set_cookie___basic_handler))
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: 06_cors_preflight_method_not_allowed
+pub fn create_app_cors_06_cors_preflight_method_not_allowed() -> Router {
+    Router::new()
+        .route("/api/data", options(cors_06_cors_preflight_method_not_allowed_handler))
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: 07_cors_preflight_header_not_allowed
+pub fn create_app_cors_07_cors_preflight_header_not_allowed() -> Router {
+    Router::new()
+        .route("/api/data", options(cors_07_cors_preflight_header_not_allowed_handler))
         .layer(middleware::from_fn(
             spikard_http::middleware::validate_content_type_middleware,
         ))
@@ -1434,6 +1245,15 @@ pub fn create_app_headers_Host_header() -> Router {
 pub fn create_app_headers_Multiple_custom_headers() -> Router {
     Router::new()
         .route("/headers/multiple", get(headers_Multiple_custom_headers_handler))
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Multiple header values - X-Token
+pub fn create_app_headers_Multiple_header_values___X_Token() -> Router {
+    Router::new()
+        .route("/items/", get(headers_Multiple_header_values___X_Token_handler))
         .layer(middleware::from_fn(
             spikard_http::middleware::validate_content_type_middleware,
         ))
@@ -2331,150 +2151,6 @@ pub fn create_app_multipart_Required_file_upload___missing() -> Router {
 pub fn create_app_multipart_Simple_file_upload() -> Router {
     Router::new()
         .route("/", post(multipart_Simple_file_upload_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: OpenAPI generation disabled
-pub fn create_app_openapi_OpenAPI_generation_disabled() -> Router {
-    Router::new()
-        .route("/api/health", get(openapi_OpenAPI_generation_disabled_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: OpenAPI spec generation - basic
-pub fn create_app_openapi_OpenAPI_spec_generation___basic() -> Router {
-    Router::new()
-        .route("/users", get(openapi_OpenAPI_spec_generation___basic_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: OpenAPI spec with API key security scheme
-pub fn create_app_openapi_OpenAPI_spec_with_API_key_security_scheme() -> Router {
-    Router::new()
-        .route(
-            "/api/data",
-            get(openapi_OpenAPI_spec_with_API_key_security_scheme_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: OpenAPI spec with JWT security scheme
-pub fn create_app_openapi_OpenAPI_spec_with_JWT_security_scheme() -> Router {
-    Router::new()
-        .route(
-            "/protected/data",
-            get(openapi_OpenAPI_spec_with_JWT_security_scheme_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: OpenAPI spec with custom metadata
-pub fn create_app_openapi_OpenAPI_spec_with_custom_metadata() -> Router {
-    Router::new()
-        .route("/info", get(openapi_OpenAPI_spec_with_custom_metadata_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: OpenAPI with OAuth2 flows
-pub fn create_app_openapi_OpenAPI_with_OAuth2_flows() -> Router {
-    Router::new()
-        .route("/oauth/users", get(openapi_OpenAPI_with_OAuth2_flows_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: OpenAPI with multiple security schemes
-pub fn create_app_openapi_OpenAPI_with_multiple_security_schemes() -> Router {
-    Router::new()
-        .route(
-            "/protected/multi-auth",
-            get(openapi_OpenAPI_with_multiple_security_schemes_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: OpenAPI with multiple server configurations
-pub fn create_app_openapi_OpenAPI_with_multiple_server_configurations() -> Router {
-    Router::new()
-        .route(
-            "/api/status",
-            get(openapi_OpenAPI_with_multiple_server_configurations_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: OpenAPI with reusable component schemas
-pub fn create_app_openapi_OpenAPI_with_reusable_component_schemas() -> Router {
-    Router::new()
-        .route(
-            "/api/posts",
-            get(openapi_OpenAPI_with_reusable_component_schemas_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: OpenAPI with tags and external documentation
-pub fn create_app_openapi_OpenAPI_with_tags_and_external_documentation() -> Router {
-    Router::new()
-        .route(
-            "/api/users",
-            get(openapi_OpenAPI_with_tags_and_external_documentation_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Redoc serving
-pub fn create_app_openapi_Redoc_serving() -> Router {
-    Router::new()
-        .route("/status", get(openapi_Redoc_serving_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Redoc with customization options
-pub fn create_app_openapi_Redoc_with_customization_options() -> Router {
-    Router::new()
-        .route("/api/products", get(openapi_Redoc_with_customization_options_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Swagger UI serving
-pub fn create_app_openapi_Swagger_UI_serving() -> Router {
-    Router::new()
-        .route("/health", get(openapi_Swagger_UI_serving_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Swagger UI with customization options
-pub fn create_app_openapi_Swagger_UI_with_customization_options() -> Router {
-    Router::new()
-        .route("/api/info", get(openapi_Swagger_UI_with_customization_options_handler))
         .layer(middleware::from_fn(
             spikard_http::middleware::validate_content_type_middleware,
         ))
@@ -3675,645 +3351,6 @@ pub fn create_app_query_params_UUID_query_parameter___invalid_format() -> Router
 pub fn create_app_query_params_UUID_query_parameter___success() -> Router {
     Router::new()
         .route("/query/uuid", get(query_params_UUID_query_parameter___success_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - IP-based limiting enabled
-pub fn create_app_rate_limit_Rate_limit___IP_based_limiting_enabled() -> Router {
-    Router::new()
-        .route(
-            "/api/rate-limited",
-            get(rate_limit_Rate_limit___IP_based_limiting_enabled_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - RFC 9457 error format
-pub fn create_app_rate_limit_Rate_limit___RFC_9457_error_format() -> Router {
-    Router::new()
-        .route(
-            "/api/rate-limited",
-            get(rate_limit_Rate_limit___RFC_9457_error_format_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - RateLimit-Limit header
-pub fn create_app_rate_limit_Rate_limit___RateLimit_Limit_header() -> Router {
-    Router::new()
-        .route(
-            "/api/rate-limited",
-            get(rate_limit_Rate_limit___RateLimit_Limit_header_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - RateLimit-Remaining decrements
-pub fn create_app_rate_limit_Rate_limit___RateLimit_Remaining_decrements() -> Router {
-    Router::new()
-        .route(
-            "/api/rate-limited",
-            get(rate_limit_Rate_limit___RateLimit_Remaining_decrements_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - Retry-After header
-pub fn create_app_rate_limit_Rate_limit___Retry_After_header() -> Router {
-    Router::new()
-        .route(
-            "/api/rate-limited",
-            get(rate_limit_Rate_limit___Retry_After_header_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - burst allowed
-pub fn create_app_rate_limit_Rate_limit___burst_allowed() -> Router {
-    Router::new()
-        .route("/api/rate-limited", get(rate_limit_Rate_limit___burst_allowed_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - burst exceeded
-pub fn create_app_rate_limit_Rate_limit___burst_exceeded() -> Router {
-    Router::new()
-        .route("/api/rate-limited", get(rate_limit_Rate_limit___burst_exceeded_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - concurrent burst requests
-pub fn create_app_rate_limit_Rate_limit___concurrent_burst_requests() -> Router {
-    Router::new()
-        .route(
-            "/api/rate-limited",
-            get(rate_limit_Rate_limit___concurrent_burst_requests_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - disabled
-pub fn create_app_rate_limit_Rate_limit___disabled() -> Router {
-    Router::new()
-        .route("/api/rate-limited", get(rate_limit_Rate_limit___disabled_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - exceeded
-pub fn create_app_rate_limit_Rate_limit___exceeded() -> Router {
-    Router::new()
-        .route("/api/rate-limited", get(rate_limit_Rate_limit___exceeded_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - headers present
-pub fn create_app_rate_limit_Rate_limit___headers_present() -> Router {
-    Router::new()
-        .route(
-            "/api/rate-limited",
-            get(rate_limit_Rate_limit___headers_present_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - high burst allowance
-pub fn create_app_rate_limit_Rate_limit___high_burst_allowance() -> Router {
-    Router::new()
-        .route(
-            "/api/rate-limited",
-            get(rate_limit_Rate_limit___high_burst_allowance_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - high limit configuration
-pub fn create_app_rate_limit_Rate_limit___high_limit_configuration() -> Router {
-    Router::new()
-        .route(
-            "/api/rate-limited",
-            get(rate_limit_Rate_limit___high_limit_configuration_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - low limit configuration
-pub fn create_app_rate_limit_Rate_limit___low_limit_configuration() -> Router {
-    Router::new()
-        .route(
-            "/api/rate-limited",
-            get(rate_limit_Rate_limit___low_limit_configuration_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - multiple endpoints with different limits
-pub fn create_app_rate_limit_Rate_limit___multiple_endpoints_with_different_limits() -> Router {
-    Router::new()
-        .route(
-            "/api/rate-limited",
-            get(rate_limit_Rate_limit___multiple_endpoints_with_different_limits_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - reset time calculation
-pub fn create_app_rate_limit_Rate_limit___reset_time_calculation() -> Router {
-    Router::new()
-        .route(
-            "/api/rate-limited",
-            get(rate_limit_Rate_limit___reset_time_calculation_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - sequential requests
-pub fn create_app_rate_limit_Rate_limit___sequential_requests() -> Router {
-    Router::new()
-        .route(
-            "/api/rate-limited",
-            get(rate_limit_Rate_limit___sequential_requests_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - token bucket refill
-pub fn create_app_rate_limit_Rate_limit___token_bucket_refill() -> Router {
-    Router::new()
-        .route(
-            "/api/rate-limited",
-            get(rate_limit_Rate_limit___token_bucket_refill_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - under limit
-pub fn create_app_rate_limit_Rate_limit___under_limit() -> Router {
-    Router::new()
-        .route("/api/rate-limited", get(rate_limit_Rate_limit___under_limit_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Rate limit - zero burst allowance
-pub fn create_app_rate_limit_Rate_limit___zero_burst_allowance() -> Router {
-    Router::new()
-        .route(
-            "/api/rate-limited",
-            get(rate_limit_Rate_limit___zero_burst_allowance_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Client-provided request ID propagated
-pub fn create_app_request_id_Client_provided_request_ID_propagated() -> Router {
-    Router::new()
-        .route(
-            "/api/data",
-            get(request_id_Client_provided_request_ID_propagated_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Custom header name (X-Correlation-ID)
-pub fn create_app_request_id_Custom_header_name__X_Correlation_ID() -> Router {
-    Router::new()
-        .route(
-            "/api/correlated",
-            get(request_id_Custom_header_name__X_Correlation_ID_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Invalid request ID format handling
-pub fn create_app_request_id_Invalid_request_ID_format_handling() -> Router {
-    Router::new()
-        .route(
-            "/api/validated",
-            get(request_id_Invalid_request_ID_format_handling_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Missing request ID when required
-pub fn create_app_request_id_Missing_request_ID_when_required() -> Router {
-    Router::new()
-        .route(
-            "/api/require-id",
-            post(request_id_Missing_request_ID_when_required_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Request ID middleware disabled
-pub fn create_app_request_id_Request_ID_middleware_disabled() -> Router {
-    Router::new()
-        .route(
-            "/api/no-tracking",
-            get(request_id_Request_ID_middleware_disabled_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Request ID present in error responses
-pub fn create_app_request_id_Request_ID_present_in_error_responses() -> Router {
-    Router::new()
-        .route(
-            "/api/error-endpoint",
-            post(request_id_Request_ID_present_in_error_responses_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Request ID present in request and response
-pub fn create_app_request_id_Request_ID_present_in_request_and_response() -> Router {
-    Router::new()
-        .route(
-            "/api/echo",
-            post(request_id_Request_ID_present_in_request_and_response_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Concurrent requests timing out
-pub fn create_app_request_timeout_Concurrent_requests_timing_out() -> Router {
-    Router::new()
-        .route(
-            "/api/slow-concurrent",
-            get(request_timeout_Concurrent_requests_timing_out_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Custom long timeout
-pub fn create_app_request_timeout_Custom_long_timeout() -> Router {
-    Router::new()
-        .route("/api/batch-process", post(request_timeout_Custom_long_timeout_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Custom short timeout
-pub fn create_app_request_timeout_Custom_short_timeout() -> Router {
-    Router::new()
-        .route("/api/fast-only", get(request_timeout_Custom_short_timeout_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Default timeout behavior
-pub fn create_app_request_timeout_Default_timeout_behavior() -> Router {
-    Router::new()
-        .route("/api/default", get(request_timeout_Default_timeout_behavior_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Disabled timeout
-pub fn create_app_request_timeout_Disabled_timeout() -> Router {
-    Router::new()
-        .route("/api/no-timeout", get(request_timeout_Disabled_timeout_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Per-route timeout override
-pub fn create_app_request_timeout_Per_route_timeout_override() -> Router {
-    Router::new()
-        .route(
-            "/api/custom-route",
-            get(request_timeout_Per_route_timeout_override_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Request at exact timeout boundary
-pub fn create_app_request_timeout_Request_at_exact_timeout_boundary() -> Router {
-    Router::new()
-        .route(
-            "/api/boundary",
-            get(request_timeout_Request_at_exact_timeout_boundary_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Request completes within timeout
-pub fn create_app_request_timeout_Request_completes_within_timeout() -> Router {
-    Router::new()
-        .route(
-            "/api/fast",
-            get(request_timeout_Request_completes_within_timeout_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Request exceeds timeout
-pub fn create_app_request_timeout_Request_exceeds_timeout() -> Router {
-    Router::new()
-        .route("/api/slow", get(request_timeout_Request_exceeds_timeout_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Streaming response timeout
-pub fn create_app_request_timeout_Streaming_response_timeout() -> Router {
-    Router::new()
-        .route("/api/stream", get(request_timeout_Streaming_response_timeout_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Timeout during slow request body read
-pub fn create_app_request_timeout_Timeout_during_slow_request_body_read() -> Router {
-    Router::new()
-        .route(
-            "/api/upload",
-            post(request_timeout_Timeout_during_slow_request_body_read_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Timeout with partial response
-pub fn create_app_request_timeout_Timeout_with_partial_response() -> Router {
-    Router::new()
-        .route(
-            "/api/partial",
-            get(request_timeout_Timeout_with_partial_response_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: 304 Not Modified with complete cache headers
-pub fn create_app_static_files_304_Not_Modified_with_complete_cache_headers() -> Router {
-    Router::new()
-        .route(
-            "/*filepath",
-            get(static_files_304_Not_Modified_with_complete_cache_headers_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: 403 Forbidden for path traversal attempt
-pub fn create_app_static_files_403_Forbidden_for_path_traversal_attempt() -> Router {
-    Router::new()
-        .route(
-            "/*filepath",
-            get(static_files_403_Forbidden_for_path_traversal_attempt_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: 404 Not Found for missing file
-pub fn create_app_static_files_404_Not_Found_for_missing_file() -> Router {
-    Router::new()
-        .route("/*filepath", get(static_files_404_Not_Found_for_missing_file_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Cache-Control with max-age for static assets
-pub fn create_app_static_files_Cache_Control_with_max_age_for_static_assets() -> Router {
-    Router::new()
-        .route(
-            "/*filepath",
-            get(static_files_Cache_Control_with_max_age_for_static_assets_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Custom index file name
-pub fn create_app_static_files_Custom_index_file_name() -> Router {
-    Router::new()
-        .route("/*filepath", get(static_files_Custom_index_file_name_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Directory request serves index.html
-pub fn create_app_static_files_Directory_request_serves_index_html() -> Router {
-    Router::new()
-        .route(
-            "/*filepath",
-            get(static_files_Directory_request_serves_index_html_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: ETag validation with If-None-Match
-pub fn create_app_static_files_ETag_validation_with_If_None_Match() -> Router {
-    Router::new()
-        .route(
-            "/*filepath",
-            get(static_files_ETag_validation_with_If_None_Match_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Last-Modified validation with If-Modified-Since
-pub fn create_app_static_files_Last_Modified_validation_with_If_Modified_Since() -> Router {
-    Router::new()
-        .route(
-            "/*filepath",
-            get(static_files_Last_Modified_validation_with_If_Modified_Since_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Multiple ranges not supported
-pub fn create_app_static_files_Multiple_ranges_not_supported() -> Router {
-    Router::new()
-        .route("/*filepath", get(static_files_Multiple_ranges_not_supported_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Partial content range request
-pub fn create_app_static_files_Partial_content_range_request() -> Router {
-    Router::new()
-        .route("/*filepath", get(static_files_Partial_content_range_request_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: SPA fallback for client-side routing
-pub fn create_app_static_files_SPA_fallback_for_client_side_routing() -> Router {
-    Router::new()
-        .route(
-            "/*filepath",
-            get(static_files_SPA_fallback_for_client_side_routing_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Serve CSS file
-pub fn create_app_static_files_Serve_CSS_file() -> Router {
-    Router::new()
-        .route("/*filepath", get(static_files_Serve_CSS_file_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Serve HTML file
-pub fn create_app_static_files_Serve_HTML_file() -> Router {
-    Router::new()
-        .route("/*filepath", get(static_files_Serve_HTML_file_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Serve JSON file
-pub fn create_app_static_files_Serve_JSON_file() -> Router {
-    Router::new()
-        .route("/*filepath", get(static_files_Serve_JSON_file_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Serve JavaScript file
-pub fn create_app_static_files_Serve_JavaScript_file() -> Router {
-    Router::new()
-        .route("/*filepath", get(static_files_Serve_JavaScript_file_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Serve PNG image
-pub fn create_app_static_files_Serve_PNG_image() -> Router {
-    Router::new()
-        .route("/*filepath", get(static_files_Serve_PNG_image_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Serve pre-compressed Brotli file
-pub fn create_app_static_files_Serve_pre_compressed_Brotli_file() -> Router {
-    Router::new()
-        .route("/*filepath", get(static_files_Serve_pre_compressed_Brotli_file_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Serve pre-compressed gzip file
-pub fn create_app_static_files_Serve_pre_compressed_gzip_file() -> Router {
-    Router::new()
-        .route("/*filepath", get(static_files_Serve_pre_compressed_gzip_file_handler))
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Static files disabled returns 404
-pub fn create_app_static_files_Static_files_disabled_returns_404() -> Router {
-    Router::new()
-        .route(
-            "/*filepath",
-            get(static_files_Static_files_disabled_returns_404_handler),
-        )
-        .layer(middleware::from_fn(
-            spikard_http::middleware::validate_content_type_middleware,
-        ))
-}
-
-/// App for fixture: Unknown MIME type fallback
-pub fn create_app_static_files_Unknown_MIME_type_fallback() -> Router {
-    Router::new()
-        .route("/*filepath", get(static_files_Unknown_MIME_type_fallback_handler))
         .layer(middleware::from_fn(
             spikard_http::middleware::validate_content_type_middleware,
         ))
@@ -5530,128 +4567,6 @@ async fn auth_Multiple_authentication_schemes___JWT_precedence_handler(
             (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))
         }
     }
-}
-
-async fn body_size_limit_Body_size_at_exact_boundary_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"bytes_received\":10240,\"message\":\"Data received successfully\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn body_size_limit_Body_size_exceeds_limit_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Request body size (20480 bytes) exceeds maximum allowed size (10240 bytes)\",\"status\":413,\"title\":\"Payload Too Large\",\"type\":\"https://spikard.dev/errors/payload-too-large\"}").unwrap();
-    (axum::http::StatusCode::from_u16(413).unwrap(), Json(expected_body))
-}
-
-async fn body_size_limit_Body_size_within_limit_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"bytes_received\":1024,\"message\":\"Data received successfully\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn body_size_limit_Form_data_exceeds_limit_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Request body size (4096 bytes) exceeds maximum allowed size (2048 bytes)\",\"status\":413,\"title\":\"Payload Too Large\",\"type\":\"https://spikard.dev/errors/payload-too-large\"}").unwrap();
-    (axum::http::StatusCode::from_u16(413).unwrap(), Json(expected_body))
-}
-
-async fn body_size_limit_JSON_body_exceeds_limit_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Request body size (10240 bytes) exceeds maximum allowed size (5120 bytes)\",\"status\":413,\"title\":\"Payload Too Large\",\"type\":\"https://spikard.dev/errors/payload-too-large\"}").unwrap();
-    (axum::http::StatusCode::from_u16(413).unwrap(), Json(expected_body))
-}
-
-async fn body_size_limit_Large_limit_for_file_upload_endpoint_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"bytes_received\":52428800,\"message\":\"File uploaded successfully\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn body_size_limit_Multipart_file_upload_exceeds_limit_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Request body size (2097152 bytes) exceeds maximum allowed size (1048576 bytes)\",\"status\":413,\"title\":\"Payload Too Large\",\"type\":\"https://spikard.dev/errors/payload-too-large\"}").unwrap();
-    (axum::http::StatusCode::from_u16(413).unwrap(), Json(expected_body))
-}
-
-async fn body_size_limit_Per_route_limit_override_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"bytes_received\":10485760,\"message\":\"File uploaded successfully\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn body_size_limit_Small_limit_for_text_endpoint_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Request body size (2048 bytes) exceeds maximum allowed size (1024 bytes)\",\"status\":413,\"title\":\"Payload Too Large\",\"type\":\"https://spikard.dev/errors/payload-too-large\"}").unwrap();
-    (axum::http::StatusCode::from_u16(413).unwrap(), Json(expected_body))
-}
-
-async fn body_size_limit_Streaming_body_exceeds_limit_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Request body size (16384 bytes) exceeds maximum allowed size (8192 bytes)\",\"status\":413,\"title\":\"Payload Too Large\",\"type\":\"https://spikard.dev/errors/payload-too-large\"}").unwrap();
-    (axum::http::StatusCode::from_u16(413).unwrap(), Json(expected_body))
-}
-
-async fn compression_Compression___brotli_applied_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"data\":\"Large payload that benefits from compression\",\"message\":\"Success\"}")
-            .unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn compression_Compression___client_prefers_brotli_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"data\":\"Large payload compressed with brotli\",\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn compression_Compression___client_prefers_gzip_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"data\":\"Large payload compressed with gzip\",\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn compression_Compression___gzip_applied_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"data\":\"Large payload that benefits from compression\",\"message\":\"Success\"}")
-            .unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn compression_Compression___high_compression_level_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"data\":\"Large payload compressed at maximum level\",\"message\":\"Success\"}")
-            .unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn compression_Compression___large_JSON_response_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"records\":\"Array of 1000+ JSON objects with repeated structure\",\"total\":1000}")
-            .unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn compression_Compression___low_compression_level_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"data\":\"Large payload compressed at low level\",\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn compression_Compression___minimum_size_threshold_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"data\":\"Large payload exceeding minimum threshold\",\"message\":\"Success\"}")
-            .unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn compression_Compression___multiple_acceptable_encodings_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"data\":\"Large payload compressed with best algorithm\",\"message\":\"Success\"}")
-            .unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn compression_Compression___wildcard_encoding_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str(
-        "{\"data\":\"Large payload compressed with server's preferred algorithm\",\"message\":\"Success\"}",
-    )
-    .unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
 }
 
 async fn content_types_13_json_with_charset_utf16_handler() -> impl axum::response::IntoResponse {
@@ -7388,17 +6303,89 @@ async fn cookies_Response_set_cookie___basic_handler() -> impl axum::response::I
     (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
 }
 
+async fn cors_06_cors_preflight_method_not_allowed_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str("null").unwrap();
+    (axum::http::StatusCode::from_u16(403).unwrap(), Json(expected_body))
+}
+
+async fn cors_07_cors_preflight_header_not_allowed_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str("null").unwrap();
+    (axum::http::StatusCode::from_u16(403).unwrap(), Json(expected_body))
+}
+
 async fn cors_08_cors_max_age_handler(
     headers: axum::http::HeaderMap,
-) -> axum::response::Result<axum::response::Response<axum::body::Body>, axum::response::Response<axum::body::Body>> {
-    use spikard_http::CorsConfig;
-    use spikard_http::cors::handle_preflight;
+    uri: axum::http::Uri,
+) -> impl axum::response::IntoResponse {
+    use spikard_http::parameters::ParameterValidator;
+    use spikard_http::query_parser::parse_query_string_to_json;
+    use std::collections::HashMap;
 
-    // Parse CORS configuration
-    let cors_config: CorsConfig = serde_json::from_str("{\"allowed_headers\":[\"Content-Type\"],\"allowed_methods\":[\"POST\"],\"allowed_origins\":[\"https://example.com\"],\"max_age\":3600}").unwrap();
+    // Parse parameter schema and create validator
+    let schema: Value = serde_json::from_str("{\"properties\":{\"Access-Control-Request-Headers\":{\"source\":\"header\",\"type\":\"string\"},\"Access-Control-Request-Method\":{\"source\":\"header\",\"type\":\"string\"},\"Origin\":{\"source\":\"header\",\"type\":\"string\"}},\"required\":[],\"type\":\"object\"}").unwrap();
+    let validator = ParameterValidator::new(schema).unwrap();
 
-    // Handle the preflight request
-    handle_preflight(&headers, &cors_config)
+    // Parse query string using Spikard's parser (auto-converts types)
+    let query_params = if let Some(query_str) = uri.query() {
+        parse_query_string_to_json(query_str.as_bytes(), true)
+    } else {
+        Value::Object(serde_json::Map::new())
+    };
+
+    // Also extract raw query params as HashMap<String, String> for error reporting
+    let mut raw_query_params = HashMap::new();
+    if let Some(query_str) = uri.query() {
+        for (key, value) in form_urlencoded::parse(query_str.as_bytes()) {
+            raw_query_params.insert(key.to_string(), value.to_string());
+        }
+    }
+
+    // Extract headers from HeaderMap (excluding Cookie which is handled separately)
+    let mut headers_map = HashMap::new();
+    for (name, value) in headers.iter() {
+        if name != axum::http::header::COOKIE {
+            if let Ok(value_str) = value.to_str() {
+                headers_map.insert(name.to_string(), value_str.to_string());
+            }
+        }
+    }
+
+    // Extract cookies from Cookie header using the cookie crate for RFC 6265 compliance
+    let mut cookies = HashMap::new();
+    if let Some(cookie_header) = headers.get(axum::http::header::COOKIE) {
+        if let Ok(cookie_str) = cookie_header.to_str() {
+            for result in cookie::Cookie::split_parse(cookie_str) {
+                if let Ok(cookie) = result {
+                    cookies.insert(cookie.name().to_string(), cookie.value().to_string());
+                }
+            }
+        }
+    }
+
+    // Validate parameters
+    match validator.validate_and_extract(
+        &query_params,
+        &raw_query_params,
+        &HashMap::new(), //path_params,
+        &headers_map,
+        &cookies,
+    ) {
+        Ok(validated) => {
+            let status_code = 204;
+
+            let expected_body: Value = serde_json::from_str("null").unwrap();
+            (
+                axum::http::StatusCode::from_u16(status_code).unwrap(),
+                Json(expected_body),
+            )
+        }
+        Err(err) => {
+            let error_response = serde_json::json!({
+                "detail": err.errors
+            });
+            (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))
+        }
+    }
 }
 
 async fn cors_09_cors_expose_headers_handler(
@@ -7409,17 +6396,6 @@ async fn cors_09_cors_expose_headers_handler(
     use spikard_http::query_parser::parse_query_string_to_json;
     use std::collections::HashMap;
 
-    // CORS validation
-    use spikard_http::CorsConfig;
-    use spikard_http::cors::{add_cors_headers, validate_cors_request};
-
-    let cors_config: CorsConfig = serde_json::from_str("{\"allowed_methods\":[\"GET\"],\"allowed_origins\":[\"https://example.com\"],\"expose_headers\":[\"X-Total-Count\",\"X-Request-Id\"]}").unwrap();
-    let origin = headers.get("origin").and_then(|v| v.to_str().ok());
-
-    // Validate CORS request - returns 403 if origin not allowed
-    if let Err(err_response) = validate_cors_request(origin, &cors_config) {
-        return err_response;
-    }
     // Parse parameter schema and create validator
     let schema: Value = serde_json::from_str(
         "{\"properties\":{\"Origin\":{\"source\":\"header\",\"type\":\"string\"}},\"required\":[],\"type\":\"object\"}",
@@ -7475,44 +6451,24 @@ async fn cors_09_cors_expose_headers_handler(
         Ok(validated) => {
             let status_code = 200;
 
-            // Add CORS headers to response
             let expected_body: Value = serde_json::from_str("null").unwrap();
-            let mut response = (
+            (
                 axum::http::StatusCode::from_u16(status_code).unwrap(),
                 Json(expected_body),
             )
-                .into_response();
-            response = add_cors_headers(response, origin, &cors_config);
-            response
         }
         Err(err) => {
             let error_response = serde_json::json!({
                 "detail": err.errors
             });
-            (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response)).into_response()
+            (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))
         }
     }
 }
 
-async fn cors_10_cors_origin_null_handler(headers: axum::http::HeaderMap) -> impl axum::response::IntoResponse {
-    // CORS validation
-    use spikard_http::CorsConfig;
-    use spikard_http::cors::{add_cors_headers, validate_cors_request};
-
-    let cors_config: CorsConfig =
-        serde_json::from_str("{\"allowed_methods\":[\"GET\"],\"allowed_origins\":[\"https://example.com\"]}").unwrap();
-    let origin = headers.get("origin").and_then(|v| v.to_str().ok());
-
-    // Validate CORS request - returns 403 if origin not allowed
-    if let Err(err_response) = validate_cors_request(origin, &cors_config) {
-        return err_response;
-    }
-
-    // Add CORS headers to response
+async fn cors_10_cors_origin_null_handler() -> impl axum::response::IntoResponse {
     let expected_body: Value = serde_json::from_str("{\"error\":\"Origin 'null' is not allowed\"}").unwrap();
-    let mut response = (axum::http::StatusCode::from_u16(403).unwrap(), Json(expected_body)).into_response();
-    response = add_cors_headers(response, origin, &cors_config);
-    response
+    (axum::http::StatusCode::from_u16(403).unwrap(), Json(expected_body))
 }
 
 async fn cors_CORS_Private_Network_Access_handler() -> impl axum::response::IntoResponse {
@@ -7555,26 +6511,11 @@ async fn cors_CORS_regex_pattern_matching_for_origins_handler() -> impl axum::re
     (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
 }
 
-async fn cors_CORS_request_blocked_handler(headers: axum::http::HeaderMap) -> impl axum::response::IntoResponse {
-    // CORS validation
-    use spikard_http::CorsConfig;
-    use spikard_http::cors::{add_cors_headers, validate_cors_request};
-
-    let cors_config: CorsConfig = serde_json::from_str("{\"allowed_headers\":[\"Content-Type\"],\"allowed_methods\":[\"GET\",\"POST\"],\"allowed_origins\":[\"https://example.com\"]}").unwrap();
-    let origin = headers.get("origin").and_then(|v| v.to_str().ok());
-
-    // Validate CORS request - returns 403 if origin not allowed
-    if let Err(err_response) = validate_cors_request(origin, &cors_config) {
-        return err_response;
-    }
-
-    // Add CORS headers to response
+async fn cors_CORS_request_blocked_handler() -> impl axum::response::IntoResponse {
     let expected_body: Value =
         serde_json::from_str("{\"detail\":\"CORS request from origin 'https://malicious-site.com' not allowed\"}")
             .unwrap();
-    let mut response = (axum::http::StatusCode::from_u16(403).unwrap(), Json(expected_body)).into_response();
-    response = add_cors_headers(response, origin, &cors_config);
-    response
+    (axum::http::StatusCode::from_u16(403).unwrap(), Json(expected_body))
 }
 
 async fn cors_CORS_safelisted_headers_without_preflight_handler() -> impl axum::response::IntoResponse {
@@ -9994,6 +8935,81 @@ async fn headers_Multiple_custom_headers_handler(
                 "{\"x_client_version\":\"1.2.3\",\"x_request_id\":\"req-12345\",\"x_trace_id\":\"trace-abc\"}",
             )
             .unwrap();
+            (
+                axum::http::StatusCode::from_u16(status_code).unwrap(),
+                Json(expected_body),
+            )
+        }
+        Err(err) => {
+            let error_response = serde_json::json!({
+                "detail": err.errors
+            });
+            (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))
+        }
+    }
+}
+
+async fn headers_Multiple_header_values___X_Token_handler(
+    headers: axum::http::HeaderMap,
+    uri: axum::http::Uri,
+) -> impl axum::response::IntoResponse {
+    use spikard_http::parameters::ParameterValidator;
+    use spikard_http::query_parser::parse_query_string_to_json;
+    use std::collections::HashMap;
+
+    // Parse parameter schema and create validator
+    let schema: Value = serde_json::from_str("{\"properties\":{\"x-token\":{\"source\":\"header\",\"type\":\"string\"}},\"required\":[\"x-token\"],\"type\":\"object\"}").unwrap();
+    let validator = ParameterValidator::new(schema).unwrap();
+
+    // Parse query string using Spikard's parser (auto-converts types)
+    let query_params = if let Some(query_str) = uri.query() {
+        parse_query_string_to_json(query_str.as_bytes(), true)
+    } else {
+        Value::Object(serde_json::Map::new())
+    };
+
+    // Also extract raw query params as HashMap<String, String> for error reporting
+    let mut raw_query_params = HashMap::new();
+    if let Some(query_str) = uri.query() {
+        for (key, value) in form_urlencoded::parse(query_str.as_bytes()) {
+            raw_query_params.insert(key.to_string(), value.to_string());
+        }
+    }
+
+    // Extract headers from HeaderMap (excluding Cookie which is handled separately)
+    let mut headers_map = HashMap::new();
+    for (name, value) in headers.iter() {
+        if name != axum::http::header::COOKIE {
+            if let Ok(value_str) = value.to_str() {
+                headers_map.insert(name.to_string(), value_str.to_string());
+            }
+        }
+    }
+
+    // Extract cookies from Cookie header using the cookie crate for RFC 6265 compliance
+    let mut cookies = HashMap::new();
+    if let Some(cookie_header) = headers.get(axum::http::header::COOKIE) {
+        if let Ok(cookie_str) = cookie_header.to_str() {
+            for result in cookie::Cookie::split_parse(cookie_str) {
+                if let Ok(cookie) = result {
+                    cookies.insert(cookie.name().to_string(), cookie.value().to_string());
+                }
+            }
+        }
+    }
+
+    // Validate parameters
+    match validator.validate_and_extract(
+        &query_params,
+        &raw_query_params,
+        &HashMap::new(), //path_params,
+        &headers_map,
+        &cookies,
+    ) {
+        Ok(validated) => {
+            let status_code = 200;
+
+            let expected_body: Value = serde_json::from_str("{\"X-Token values\":[\"foo\",\"bar\"]}").unwrap();
             (
                 axum::http::StatusCode::from_u16(status_code).unwrap(),
                 Json(expected_body),
@@ -13808,426 +12824,6 @@ async fn multipart_Simple_file_upload_handler(
             (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))
         }
     }
-}
-
-async fn openapi_OpenAPI_generation_disabled_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"OpenAPI documentation is not enabled\",\"status\":404,\"title\":\"Not Found\",\"type\":\"https://spikard.dev/errors/not-found\"}").unwrap();
-    (axum::http::StatusCode::from_u16(404).unwrap(), Json(expected_body))
-}
-
-async fn openapi_OpenAPI_spec_generation___basic_handler(
-    headers: axum::http::HeaderMap,
-    uri: axum::http::Uri,
-) -> impl axum::response::IntoResponse {
-    use spikard_http::parameters::ParameterValidator;
-    use spikard_http::query_parser::parse_query_string_to_json;
-    use std::collections::HashMap;
-
-    // Parse parameter schema and create validator
-    let schema: Value = serde_json::from_str("{\"properties\":{\"limit\":{\"default\":10,\"description\":\"Number of items to return\",\"maximum\":100,\"minimum\":1,\"source\":\"query\",\"type\":\"integer\"}},\"required\":[],\"type\":\"object\"}").unwrap();
-    let validator = ParameterValidator::new(schema).unwrap();
-
-    // Parse query string using Spikard's parser (auto-converts types)
-    let query_params = if let Some(query_str) = uri.query() {
-        parse_query_string_to_json(query_str.as_bytes(), true)
-    } else {
-        Value::Object(serde_json::Map::new())
-    };
-
-    // Also extract raw query params as HashMap<String, String> for error reporting
-    let mut raw_query_params = HashMap::new();
-    if let Some(query_str) = uri.query() {
-        for (key, value) in form_urlencoded::parse(query_str.as_bytes()) {
-            raw_query_params.insert(key.to_string(), value.to_string());
-        }
-    }
-
-    // Extract headers from HeaderMap (excluding Cookie which is handled separately)
-    let mut headers_map = HashMap::new();
-    for (name, value) in headers.iter() {
-        if name != axum::http::header::COOKIE {
-            if let Ok(value_str) = value.to_str() {
-                headers_map.insert(name.to_string(), value_str.to_string());
-            }
-        }
-    }
-
-    // Extract cookies from Cookie header using the cookie crate for RFC 6265 compliance
-    let mut cookies = HashMap::new();
-    if let Some(cookie_header) = headers.get(axum::http::header::COOKIE) {
-        if let Ok(cookie_str) = cookie_header.to_str() {
-            for result in cookie::Cookie::split_parse(cookie_str) {
-                if let Ok(cookie) = result {
-                    cookies.insert(cookie.name().to_string(), cookie.value().to_string());
-                }
-            }
-        }
-    }
-
-    // Validate parameters
-    match validator.validate_and_extract(
-        &query_params,
-        &raw_query_params,
-        &HashMap::new(), //path_params,
-        &headers_map,
-        &cookies,
-    ) {
-        Ok(validated) => {
-            let status_code = 200;
-
-            let expected_body: Value = serde_json::from_str("null").unwrap();
-            (
-                axum::http::StatusCode::from_u16(status_code).unwrap(),
-                Json(expected_body),
-            )
-        }
-        Err(err) => {
-            let error_response = serde_json::json!({
-                "detail": err.errors
-            });
-            (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))
-        }
-    }
-}
-
-async fn openapi_OpenAPI_spec_with_API_key_security_scheme_handler(
-    headers: axum::http::HeaderMap,
-    uri: axum::http::Uri,
-) -> impl axum::response::IntoResponse {
-    use spikard_http::parameters::ParameterValidator;
-    use spikard_http::query_parser::parse_query_string_to_json;
-    use std::collections::HashMap;
-
-    // Parse parameter schema and create validator
-    let schema: Value = serde_json::from_str("{\"properties\":{\"X-API-Key\":{\"description\":\"API key for authentication\",\"source\":\"header\",\"type\":\"string\"}},\"required\":[\"X-API-Key\"],\"type\":\"object\"}").unwrap();
-    let validator = ParameterValidator::new(schema).unwrap();
-
-    // Parse query string using Spikard's parser (auto-converts types)
-    let query_params = if let Some(query_str) = uri.query() {
-        parse_query_string_to_json(query_str.as_bytes(), true)
-    } else {
-        Value::Object(serde_json::Map::new())
-    };
-
-    // Also extract raw query params as HashMap<String, String> for error reporting
-    let mut raw_query_params = HashMap::new();
-    if let Some(query_str) = uri.query() {
-        for (key, value) in form_urlencoded::parse(query_str.as_bytes()) {
-            raw_query_params.insert(key.to_string(), value.to_string());
-        }
-    }
-
-    // Extract headers from HeaderMap (excluding Cookie which is handled separately)
-    let mut headers_map = HashMap::new();
-    for (name, value) in headers.iter() {
-        if name != axum::http::header::COOKIE {
-            if let Ok(value_str) = value.to_str() {
-                headers_map.insert(name.to_string(), value_str.to_string());
-            }
-        }
-    }
-
-    // Extract cookies from Cookie header using the cookie crate for RFC 6265 compliance
-    let mut cookies = HashMap::new();
-    if let Some(cookie_header) = headers.get(axum::http::header::COOKIE) {
-        if let Ok(cookie_str) = cookie_header.to_str() {
-            for result in cookie::Cookie::split_parse(cookie_str) {
-                if let Ok(cookie) = result {
-                    cookies.insert(cookie.name().to_string(), cookie.value().to_string());
-                }
-            }
-        }
-    }
-
-    // Validate parameters
-    match validator.validate_and_extract(
-        &query_params,
-        &raw_query_params,
-        &HashMap::new(), //path_params,
-        &headers_map,
-        &cookies,
-    ) {
-        Ok(validated) => {
-            let status_code = 200;
-
-            let expected_body: Value = serde_json::from_str("null").unwrap();
-            (
-                axum::http::StatusCode::from_u16(status_code).unwrap(),
-                Json(expected_body),
-            )
-        }
-        Err(err) => {
-            let error_response = serde_json::json!({
-                "detail": err.errors
-            });
-            (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))
-        }
-    }
-}
-
-async fn openapi_OpenAPI_spec_with_JWT_security_scheme_handler(
-    headers: axum::http::HeaderMap,
-    uri: axum::http::Uri,
-) -> impl axum::response::IntoResponse {
-    use spikard_http::parameters::ParameterValidator;
-    use spikard_http::query_parser::parse_query_string_to_json;
-    use std::collections::HashMap;
-
-    // Parse parameter schema and create validator
-    let schema: Value = serde_json::from_str("{\"properties\":{\"Authorization\":{\"description\":\"JWT token in Bearer format\",\"source\":\"header\",\"type\":\"string\"}},\"required\":[\"Authorization\"],\"type\":\"object\"}").unwrap();
-    let validator = ParameterValidator::new(schema).unwrap();
-
-    // Parse query string using Spikard's parser (auto-converts types)
-    let query_params = if let Some(query_str) = uri.query() {
-        parse_query_string_to_json(query_str.as_bytes(), true)
-    } else {
-        Value::Object(serde_json::Map::new())
-    };
-
-    // Also extract raw query params as HashMap<String, String> for error reporting
-    let mut raw_query_params = HashMap::new();
-    if let Some(query_str) = uri.query() {
-        for (key, value) in form_urlencoded::parse(query_str.as_bytes()) {
-            raw_query_params.insert(key.to_string(), value.to_string());
-        }
-    }
-
-    // Extract headers from HeaderMap (excluding Cookie which is handled separately)
-    let mut headers_map = HashMap::new();
-    for (name, value) in headers.iter() {
-        if name != axum::http::header::COOKIE {
-            if let Ok(value_str) = value.to_str() {
-                headers_map.insert(name.to_string(), value_str.to_string());
-            }
-        }
-    }
-
-    // Extract cookies from Cookie header using the cookie crate for RFC 6265 compliance
-    let mut cookies = HashMap::new();
-    if let Some(cookie_header) = headers.get(axum::http::header::COOKIE) {
-        if let Ok(cookie_str) = cookie_header.to_str() {
-            for result in cookie::Cookie::split_parse(cookie_str) {
-                if let Ok(cookie) = result {
-                    cookies.insert(cookie.name().to_string(), cookie.value().to_string());
-                }
-            }
-        }
-    }
-
-    // Validate parameters
-    match validator.validate_and_extract(
-        &query_params,
-        &raw_query_params,
-        &HashMap::new(), //path_params,
-        &headers_map,
-        &cookies,
-    ) {
-        Ok(validated) => {
-            let status_code = 200;
-
-            let expected_body: Value = serde_json::from_str("null").unwrap();
-            (
-                axum::http::StatusCode::from_u16(status_code).unwrap(),
-                Json(expected_body),
-            )
-        }
-        Err(err) => {
-            let error_response = serde_json::json!({
-                "detail": err.errors
-            });
-            (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))
-        }
-    }
-}
-
-async fn openapi_OpenAPI_spec_with_custom_metadata_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("null").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn openapi_OpenAPI_with_OAuth2_flows_handler(
-    headers: axum::http::HeaderMap,
-    uri: axum::http::Uri,
-) -> impl axum::response::IntoResponse {
-    use spikard_http::parameters::ParameterValidator;
-    use spikard_http::query_parser::parse_query_string_to_json;
-    use std::collections::HashMap;
-
-    // Parse parameter schema and create validator
-    let schema: Value = serde_json::from_str("{\"properties\":{\"Authorization\":{\"description\":\"OAuth2 access token in Bearer format\",\"source\":\"header\",\"type\":\"string\"}},\"required\":[\"Authorization\"],\"type\":\"object\"}").unwrap();
-    let validator = ParameterValidator::new(schema).unwrap();
-
-    // Parse query string using Spikard's parser (auto-converts types)
-    let query_params = if let Some(query_str) = uri.query() {
-        parse_query_string_to_json(query_str.as_bytes(), true)
-    } else {
-        Value::Object(serde_json::Map::new())
-    };
-
-    // Also extract raw query params as HashMap<String, String> for error reporting
-    let mut raw_query_params = HashMap::new();
-    if let Some(query_str) = uri.query() {
-        for (key, value) in form_urlencoded::parse(query_str.as_bytes()) {
-            raw_query_params.insert(key.to_string(), value.to_string());
-        }
-    }
-
-    // Extract headers from HeaderMap (excluding Cookie which is handled separately)
-    let mut headers_map = HashMap::new();
-    for (name, value) in headers.iter() {
-        if name != axum::http::header::COOKIE {
-            if let Ok(value_str) = value.to_str() {
-                headers_map.insert(name.to_string(), value_str.to_string());
-            }
-        }
-    }
-
-    // Extract cookies from Cookie header using the cookie crate for RFC 6265 compliance
-    let mut cookies = HashMap::new();
-    if let Some(cookie_header) = headers.get(axum::http::header::COOKIE) {
-        if let Ok(cookie_str) = cookie_header.to_str() {
-            for result in cookie::Cookie::split_parse(cookie_str) {
-                if let Ok(cookie) = result {
-                    cookies.insert(cookie.name().to_string(), cookie.value().to_string());
-                }
-            }
-        }
-    }
-
-    // Validate parameters
-    match validator.validate_and_extract(
-        &query_params,
-        &raw_query_params,
-        &HashMap::new(), //path_params,
-        &headers_map,
-        &cookies,
-    ) {
-        Ok(validated) => {
-            let status_code = 200;
-
-            let expected_body: Value = serde_json::from_str("null").unwrap();
-            (
-                axum::http::StatusCode::from_u16(status_code).unwrap(),
-                Json(expected_body),
-            )
-        }
-        Err(err) => {
-            let error_response = serde_json::json!({
-                "detail": err.errors
-            });
-            (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))
-        }
-    }
-}
-
-async fn openapi_OpenAPI_with_multiple_security_schemes_handler(
-    headers: axum::http::HeaderMap,
-    uri: axum::http::Uri,
-) -> impl axum::response::IntoResponse {
-    use spikard_http::parameters::ParameterValidator;
-    use spikard_http::query_parser::parse_query_string_to_json;
-    use std::collections::HashMap;
-
-    // Parse parameter schema and create validator
-    let schema: Value = serde_json::from_str("{\"properties\":{\"Authorization\":{\"description\":\"JWT token in Bearer format\",\"source\":\"header\",\"type\":\"string\"},\"X-API-Key\":{\"description\":\"API key for authentication\",\"source\":\"header\",\"type\":\"string\"}},\"required\":[\"Authorization\",\"X-API-Key\"],\"type\":\"object\"}").unwrap();
-    let validator = ParameterValidator::new(schema).unwrap();
-
-    // Parse query string using Spikard's parser (auto-converts types)
-    let query_params = if let Some(query_str) = uri.query() {
-        parse_query_string_to_json(query_str.as_bytes(), true)
-    } else {
-        Value::Object(serde_json::Map::new())
-    };
-
-    // Also extract raw query params as HashMap<String, String> for error reporting
-    let mut raw_query_params = HashMap::new();
-    if let Some(query_str) = uri.query() {
-        for (key, value) in form_urlencoded::parse(query_str.as_bytes()) {
-            raw_query_params.insert(key.to_string(), value.to_string());
-        }
-    }
-
-    // Extract headers from HeaderMap (excluding Cookie which is handled separately)
-    let mut headers_map = HashMap::new();
-    for (name, value) in headers.iter() {
-        if name != axum::http::header::COOKIE {
-            if let Ok(value_str) = value.to_str() {
-                headers_map.insert(name.to_string(), value_str.to_string());
-            }
-        }
-    }
-
-    // Extract cookies from Cookie header using the cookie crate for RFC 6265 compliance
-    let mut cookies = HashMap::new();
-    if let Some(cookie_header) = headers.get(axum::http::header::COOKIE) {
-        if let Ok(cookie_str) = cookie_header.to_str() {
-            for result in cookie::Cookie::split_parse(cookie_str) {
-                if let Ok(cookie) = result {
-                    cookies.insert(cookie.name().to_string(), cookie.value().to_string());
-                }
-            }
-        }
-    }
-
-    // Validate parameters
-    match validator.validate_and_extract(
-        &query_params,
-        &raw_query_params,
-        &HashMap::new(), //path_params,
-        &headers_map,
-        &cookies,
-    ) {
-        Ok(validated) => {
-            let status_code = 200;
-
-            let expected_body: Value = serde_json::from_str("null").unwrap();
-            (
-                axum::http::StatusCode::from_u16(status_code).unwrap(),
-                Json(expected_body),
-            )
-        }
-        Err(err) => {
-            let error_response = serde_json::json!({
-                "detail": err.errors
-            });
-            (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))
-        }
-    }
-}
-
-async fn openapi_OpenAPI_with_multiple_server_configurations_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("null").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn openapi_OpenAPI_with_reusable_component_schemas_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("null").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn openapi_OpenAPI_with_tags_and_external_documentation_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("null").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn openapi_Redoc_serving_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("null").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn openapi_Redoc_with_customization_options_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("null").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn openapi_Swagger_UI_serving_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("null").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn openapi_Swagger_UI_with_customization_options_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("null").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
 }
 
 async fn path_params_20_uuid_v3_path_param_success_handler(
@@ -21966,317 +20562,6 @@ async fn query_params_UUID_query_parameter___success_handler(
             (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))
         }
     }
-}
-
-async fn rate_limit_Rate_limit___IP_based_limiting_enabled_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___RFC_9457_error_format_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Rate limit exceeded. Please retry after the specified time.\",\"status\":429,\"title\":\"Too Many Requests\",\"type\":\"https://spikard.dev/errors/rate-limit-exceeded\"}").unwrap();
-    (axum::http::StatusCode::from_u16(429).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___RateLimit_Limit_header_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___RateLimit_Remaining_decrements_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___Retry_After_header_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Rate limit exceeded. Please retry after the specified time.\",\"status\":429,\"title\":\"Too Many Requests\",\"type\":\"https://spikard.dev/errors/rate-limit-exceeded\"}").unwrap();
-    (axum::http::StatusCode::from_u16(429).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___burst_allowed_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___burst_exceeded_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Rate limit exceeded. Please retry after the specified time.\",\"status\":429,\"title\":\"Too Many Requests\",\"type\":\"https://spikard.dev/errors/rate-limit-exceeded\"}").unwrap();
-    (axum::http::StatusCode::from_u16(429).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___concurrent_burst_requests_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___disabled_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___exceeded_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Rate limit exceeded. Please retry after the specified time.\",\"status\":429,\"title\":\"Too Many Requests\",\"type\":\"https://spikard.dev/errors/rate-limit-exceeded\"}").unwrap();
-    (axum::http::StatusCode::from_u16(429).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___headers_present_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___high_burst_allowance_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___high_limit_configuration_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___low_limit_configuration_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___multiple_endpoints_with_different_limits_handler() -> impl axum::response::IntoResponse
-{
-    let expected_body: Value = serde_json::from_str("{\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___reset_time_calculation_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___sequential_requests_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___token_bucket_refill_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___under_limit_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn rate_limit_Rate_limit___zero_burst_allowance_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"message\":\"Success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn request_id_Client_provided_request_ID_propagated_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"message\":\"success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn request_id_Custom_header_name__X_Correlation_ID_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"message\":\"success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn request_id_Invalid_request_ID_format_handling_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Invalid request ID format: expected UUID v4\",\"status\":400,\"title\":\"Bad Request\",\"type\":\"about:blank\"}").unwrap();
-    (axum::http::StatusCode::from_u16(400).unwrap(), Json(expected_body))
-}
-
-async fn request_id_Missing_request_ID_when_required_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Missing required header: X-Request-ID\",\"status\":400,\"title\":\"Bad Request\",\"type\":\"about:blank\"}").unwrap();
-    (axum::http::StatusCode::from_u16(400).unwrap(), Json(expected_body))
-}
-
-async fn request_id_Request_ID_middleware_disabled_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"message\":\"success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn request_id_Request_ID_present_in_error_responses_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Validation failed\",\"errors\":[{\"loc\":[\"body\",\"required_field\"],\"msg\":\"field required\",\"type\":\"value_error.missing\"}],\"status\":422,\"title\":\"Unprocessable Entity\",\"type\":\"about:blank\"}").unwrap();
-    (axum::http::StatusCode::from_u16(422).unwrap(), Json(expected_body))
-}
-
-async fn request_id_Request_ID_present_in_request_and_response_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"message\":\"echoed\",\"received\":{\"data\":\"test\"}}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn request_timeout_Concurrent_requests_timing_out_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Request processing exceeded the configured timeout of 2 seconds\",\"status\":504,\"title\":\"Gateway Timeout\",\"type\":\"https://spikard.dev/errors/request-timeout\"}").unwrap();
-    (axum::http::StatusCode::from_u16(504).unwrap(), Json(expected_body))
-}
-
-async fn request_timeout_Custom_long_timeout_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"delay_ms\":45000,\"items_processed\":3,\"message\":\"batch processed\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn request_timeout_Custom_short_timeout_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Request processing exceeded the configured timeout of 1 seconds\",\"status\":504,\"title\":\"Gateway Timeout\",\"type\":\"https://spikard.dev/errors/request-timeout\"}").unwrap();
-    (axum::http::StatusCode::from_u16(504).unwrap(), Json(expected_body))
-}
-
-async fn request_timeout_Default_timeout_behavior_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"delay_ms\":2000,\"message\":\"success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn request_timeout_Disabled_timeout_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"delay_ms\":120000,\"message\":\"completed without timeout\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn request_timeout_Per_route_timeout_override_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Request processing exceeded the configured timeout of 5 seconds\",\"status\":504,\"title\":\"Gateway Timeout\",\"type\":\"https://spikard.dev/errors/request-timeout\"}").unwrap();
-    (axum::http::StatusCode::from_u16(504).unwrap(), Json(expected_body))
-}
-
-async fn request_timeout_Request_at_exact_timeout_boundary_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Request processing exceeded the configured timeout of 3 seconds\",\"status\":504,\"title\":\"Gateway Timeout\",\"type\":\"https://spikard.dev/errors/request-timeout\"}").unwrap();
-    (axum::http::StatusCode::from_u16(504).unwrap(), Json(expected_body))
-}
-
-async fn request_timeout_Request_completes_within_timeout_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"delay_ms\":1000,\"message\":\"success\"}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn request_timeout_Request_exceeds_timeout_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Request processing exceeded the configured timeout of 2 seconds\",\"status\":504,\"title\":\"Gateway Timeout\",\"type\":\"https://spikard.dev/errors/request-timeout\"}").unwrap();
-    (axum::http::StatusCode::from_u16(504).unwrap(), Json(expected_body))
-}
-
-async fn request_timeout_Streaming_response_timeout_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Request processing exceeded the configured timeout of 3 seconds\",\"status\":504,\"title\":\"Gateway Timeout\",\"type\":\"https://spikard.dev/errors/request-timeout\"}").unwrap();
-    (axum::http::StatusCode::from_u16(504).unwrap(), Json(expected_body))
-}
-
-async fn request_timeout_Timeout_during_slow_request_body_read_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Request processing exceeded the configured timeout of 5 seconds\",\"status\":504,\"title\":\"Gateway Timeout\",\"type\":\"https://spikard.dev/errors/request-timeout\"}").unwrap();
-    (axum::http::StatusCode::from_u16(504).unwrap(), Json(expected_body))
-}
-
-async fn request_timeout_Timeout_with_partial_response_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Request processing exceeded the configured timeout of 2 seconds\",\"status\":504,\"title\":\"Gateway Timeout\",\"type\":\"https://spikard.dev/errors/request-timeout\"}").unwrap();
-    (axum::http::StatusCode::from_u16(504).unwrap(), Json(expected_body))
-}
-
-async fn static_files_304_Not_Modified_with_complete_cache_headers_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("null").unwrap();
-    (axum::http::StatusCode::from_u16(304).unwrap(), Json(expected_body))
-}
-
-async fn static_files_403_Forbidden_for_path_traversal_attempt_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"Path traversal is not allowed\",\"status\":403,\"title\":\"Forbidden\",\"type\":\"https://spikard.dev/errors/forbidden\"}").unwrap();
-    (axum::http::StatusCode::from_u16(403).unwrap(), Json(expected_body))
-}
-
-async fn static_files_404_Not_Found_for_missing_file_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"The requested file '/missing.html' was not found\",\"status\":404,\"title\":\"Not Found\",\"type\":\"https://spikard.dev/errors/not-found\"}").unwrap();
-    (axum::http::StatusCode::from_u16(404).unwrap(), Json(expected_body))
-}
-
-async fn static_files_Cache_Control_with_max_age_for_static_assets_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"simulated_file\":\"assets/bundle-v1.2.3.js\",\"simulated_size_bytes\":102400}")
-            .unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn static_files_Custom_index_file_name_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"simulated_file\":\"home.html\",\"simulated_size_bytes\":2560}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn static_files_Directory_request_serves_index_html_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"simulated_file\":\"index.html\",\"simulated_size_bytes\":3072}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn static_files_ETag_validation_with_If_None_Match_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("null").unwrap();
-    (axum::http::StatusCode::from_u16(304).unwrap(), Json(expected_body))
-}
-
-async fn static_files_Last_Modified_validation_with_If_Modified_Since_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("null").unwrap();
-    (axum::http::StatusCode::from_u16(304).unwrap(), Json(expected_body))
-}
-
-async fn static_files_Multiple_ranges_not_supported_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"simulated_file\":\"documents/manual.pdf\",\"simulated_size_bytes\":524288}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn static_files_Partial_content_range_request_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"simulated_file\":\"videos/demo.mp4\",\"simulated_size_bytes\":1024}").unwrap();
-    (axum::http::StatusCode::from_u16(206).unwrap(), Json(expected_body))
-}
-
-async fn static_files_SPA_fallback_for_client_side_routing_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"simulated_file\":\"index.html\",\"simulated_size_bytes\":3072}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn static_files_Serve_CSS_file_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"simulated_content_sample\":\"body { font-family: sans-serif; }\",\"simulated_file\":\"styles/main.css\",\"simulated_size_bytes\":4096}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn static_files_Serve_HTML_file_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"simulated_file\":\"about.html\",\"simulated_size_bytes\":2048}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn static_files_Serve_JSON_file_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"simulated_content_sample\":\"{\\\"version\\\": \\\"1.0.0\\\"}\",\"simulated_file\":\"data/config.json\",\"simulated_size_bytes\":1024}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn static_files_Serve_JavaScript_file_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"simulated_content_sample\":\"console.log('Hello, world!');\",\"simulated_file\":\"js/app.js\",\"simulated_size_bytes\":8192}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn static_files_Serve_PNG_image_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"simulated_file\":\"images/logo.png\",\"simulated_size_bytes\":15360}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn static_files_Serve_pre_compressed_Brotli_file_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"simulated_file\":\"js/app.js.br\",\"simulated_size_bytes\":1536}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn static_files_Serve_pre_compressed_gzip_file_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"simulated_file\":\"js/app.js.gz\",\"simulated_size_bytes\":2048}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
-}
-
-async fn static_files_Static_files_disabled_returns_404_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value = serde_json::from_str("{\"detail\":\"No route matched the request path\",\"status\":404,\"title\":\"Not Found\",\"type\":\"https://spikard.dev/errors/not-found\"}").unwrap();
-    (axum::http::StatusCode::from_u16(404).unwrap(), Json(expected_body))
-}
-
-async fn static_files_Unknown_MIME_type_fallback_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"simulated_file\":\"files/data.xyz\",\"simulated_size_bytes\":4096}").unwrap();
-    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
 }
 
 async fn status_codes_19_413_payload_too_large_handler() -> impl axum::response::IntoResponse {
