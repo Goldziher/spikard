@@ -7,7 +7,7 @@
 use axum::{
     body::Body,
     extract::Request,
-    http::{HeaderMap, StatusCode},
+    http::{HeaderMap, StatusCode, Uri},
     middleware::Next,
     response::{IntoResponse, Response},
 };
@@ -50,10 +50,9 @@ pub async fn jwt_auth_middleware(
     next: Next,
 ) -> Result<Response, Response> {
     // Extract token from Authorization header
-    let token = headers
+    let auth_header = headers
         .get("authorization")
         .and_then(|v| v.to_str().ok())
-        .and_then(|v| v.strip_prefix("Bearer "))
         .ok_or_else(|| {
             let problem = ProblemDetails::new(
                 TYPE_AUTH_ERROR,
@@ -63,6 +62,28 @@ pub async fn jwt_auth_middleware(
             .with_detail("Expected 'Authorization: Bearer <token>'");
             (StatusCode::UNAUTHORIZED, axum::Json(problem)).into_response()
         })?;
+
+    // Check for Bearer prefix
+    let token = auth_header.strip_prefix("Bearer ").ok_or_else(|| {
+        let problem = ProblemDetails::new(
+            TYPE_AUTH_ERROR,
+            "Invalid Authorization header format",
+            StatusCode::UNAUTHORIZED,
+        )
+        .with_detail("Authorization header must use Bearer scheme: 'Bearer <token>'");
+        (StatusCode::UNAUTHORIZED, axum::Json(problem)).into_response()
+    })?;
+
+    // Validate JWT format (should have 3 parts: header.payload.signature)
+    let parts: Vec<&str> = token.split('.').collect();
+    if parts.len() != 3 {
+        let problem = ProblemDetails::new(TYPE_AUTH_ERROR, "Malformed JWT token", StatusCode::UNAUTHORIZED)
+            .with_detail(format!(
+                "Malformed JWT token: expected 3 parts separated by dots, found {}",
+                parts.len()
+            ));
+        return Err((StatusCode::UNAUTHORIZED, axum::Json(problem)).into_response());
+    }
 
     // Parse algorithm
     let algorithm = parse_algorithm(&config.algorithm).map_err(|_| {
@@ -84,18 +105,29 @@ pub async fn jwt_auth_middleware(
         validation.set_issuer(std::slice::from_ref(iss));
     }
     validation.leeway = config.leeway;
+    validation.validate_nbf = true; // Validate not-before claim
 
     // Decode and validate token
     let decoding_key = DecodingKey::from_secret(config.secret.as_bytes());
     let _token_data = decode::<Claims>(token, &decoding_key, &validation).map_err(|e| {
         let detail = match e.kind() {
-            jsonwebtoken::errors::ErrorKind::ExpiredSignature => "Token has expired",
-            jsonwebtoken::errors::ErrorKind::InvalidToken => "Token is invalid",
-            jsonwebtoken::errors::ErrorKind::InvalidSignature => "Token signature is invalid",
-            jsonwebtoken::errors::ErrorKind::Base64(_) => "Token signature is invalid",
-            jsonwebtoken::errors::ErrorKind::InvalidAudience => "Token audience is invalid",
-            jsonwebtoken::errors::ErrorKind::InvalidIssuer => "Token issuer is invalid",
-            _ => "Token validation failed",
+            jsonwebtoken::errors::ErrorKind::ExpiredSignature => "Token has expired".to_string(),
+            jsonwebtoken::errors::ErrorKind::InvalidToken => "Token is invalid".to_string(),
+            jsonwebtoken::errors::ErrorKind::InvalidSignature => "Token signature is invalid".to_string(),
+            jsonwebtoken::errors::ErrorKind::Base64(_) => "Token signature is invalid".to_string(),
+            jsonwebtoken::errors::ErrorKind::InvalidAudience => "Token audience is invalid".to_string(),
+            jsonwebtoken::errors::ErrorKind::InvalidIssuer => {
+                // Try to extract actual issuer from token for better error message
+                if let Some(ref expected_iss) = config.issuer {
+                    format!("Token issuer is invalid, expected '{}'", expected_iss)
+                } else {
+                    "Token issuer is invalid".to_string()
+                }
+            }
+            jsonwebtoken::errors::ErrorKind::ImmatureSignature => {
+                "JWT not valid yet, not before claim is in the future".to_string()
+            }
+            _ => format!("Token validation failed: {}", e),
         };
 
         let problem =
@@ -128,7 +160,8 @@ fn parse_algorithm(alg: &str) -> Result<Algorithm, String> {
 
 /// API Key authentication middleware
 ///
-/// Validates API keys from a custom header (default: X-API-Key).
+/// Validates API keys from a custom header (default: X-API-Key) or query parameter.
+/// Checks header first, then query parameter as fallback.
 /// On success, the request proceeds to the next handler.
 /// On failure, returns 401 Unauthorized with RFC 9457 Problem Details.
 pub async fn api_key_auth_middleware(
@@ -140,15 +173,27 @@ pub async fn api_key_auth_middleware(
     // Build HashSet for O(1) lookup
     let valid_keys: HashSet<String> = config.keys.into_iter().collect();
 
-    // Extract API key from configured header
-    let api_key = headers
-        .get(&config.header_name)
-        .and_then(|v| v.to_str().ok())
-        .ok_or_else(|| {
-            let problem = ProblemDetails::new(TYPE_AUTH_ERROR, "Missing API key", StatusCode::UNAUTHORIZED)
-                .with_detail(format!("Expected '{}' header with valid API key", config.header_name));
-            (StatusCode::UNAUTHORIZED, axum::Json(problem)).into_response()
-        })?;
+    // Extract URI to check query parameters
+    let uri = request.uri().clone();
+
+    // Try header first
+    let api_key_from_header = headers.get(&config.header_name).and_then(|v| v.to_str().ok());
+
+    // If not in header, try query parameter (common parameter names: api_key, apiKey, key)
+    let api_key = if let Some(key) = api_key_from_header {
+        Some(key)
+    } else {
+        extract_api_key_from_query(&uri)
+    };
+
+    let api_key = api_key.ok_or_else(|| {
+        let problem =
+            ProblemDetails::new(TYPE_AUTH_ERROR, "Missing API key", StatusCode::UNAUTHORIZED).with_detail(format!(
+                "Expected '{}' header or 'api_key' query parameter with valid API key",
+                config.header_name
+            ));
+        (StatusCode::UNAUTHORIZED, axum::Json(problem)).into_response()
+    })?;
 
     // Validate API key
     if !valid_keys.contains(api_key) {
@@ -159,6 +204,25 @@ pub async fn api_key_auth_middleware(
 
     // API key is valid - pass to next middleware/handler
     Ok(next.run(request).await)
+}
+
+/// Extract API key from query parameters
+///
+/// Checks for common API key parameter names: api_key, apiKey, key
+fn extract_api_key_from_query(uri: &Uri) -> Option<&str> {
+    let query = uri.query()?;
+
+    // Parse query string manually to avoid dependencies
+    for param in query.split('&') {
+        if let Some((key, value)) = param.split_once('=') {
+            // Check common API key parameter names
+            if key == "api_key" || key == "apiKey" || key == "key" {
+                return Some(value);
+            }
+        }
+    }
+
+    None
 }
 
 #[cfg(test)]

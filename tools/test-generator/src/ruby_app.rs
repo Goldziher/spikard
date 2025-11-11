@@ -143,6 +143,23 @@ fn build_fixture_function(category: &str, index: usize, fixture: &Fixture) -> St
 ",
     );
 
+    // Generate lifecycle hooks if present
+    let hooks = fixture
+        .handler
+        .as_ref()
+        .and_then(|h| h.middleware.as_ref())
+        .and_then(|m| m.get("lifecycle_hooks"));
+
+    if let Some(hooks) = hooks {
+        let hook_procs = generate_lifecycle_hooks_ruby(hooks, fixture);
+        for hook_code in hook_procs {
+            function.push_str(&format!("{}\n", hook_code));
+        }
+        // TODO: Register hooks with app when Ruby API is implemented
+        // function.push_str("    app.on_request(on_request_proc)\n");
+        // etc.
+    }
+
     let args_joined = args.join(", ");
     function.push_str(&format!(
         "    app.{}({}, {}) do |_request|
@@ -297,4 +314,152 @@ fn build_response_expression(expected: &FixtureExpectedResponse) -> String {
     };
 
     "build_response(content: ".to_string() + &body_code + &format!(", status: {}, headers: nil)", status)
+}
+
+/// Generate Ruby lifecycle hook procs
+fn generate_lifecycle_hooks_ruby(hooks: &Value, fixture: &Fixture) -> Vec<String> {
+    let mut hook_code = Vec::new();
+
+    // Process on_request hooks
+    if let Some(on_request) = hooks.get("on_request").and_then(|v| v.as_array()) {
+        for hook in on_request {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+
+            hook_code.push(format!(
+                r#"    # onRequest hook: {}
+    on_request_proc = lambda do |request|
+      # Mock implementation
+      request
+    end"#,
+                hook_name
+            ));
+        }
+    }
+
+    // Process pre_validation hooks
+    if let Some(pre_validation) = hooks.get("pre_validation").and_then(|v| v.as_array()) {
+        for hook in pre_validation {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+
+            let should_short_circuit = hook_name.contains("rate_limit") && fixture.expected_response.status_code == 429;
+
+            if should_short_circuit {
+                hook_code.push(format!(
+                    r#"    # preValidation hook: {} - Short circuits with 429
+    pre_validation_proc = lambda do |_request|
+      build_response(
+        content: {{ error: "Rate limit exceeded", message: "Too many requests, please try again later" }},
+        status: 429,
+        headers: {{ "Retry-After" => "60" }}
+      )
+    end"#,
+                    hook_name
+                ));
+            } else {
+                hook_code.push(format!(
+                    r#"    # preValidation hook: {}
+    pre_validation_proc = lambda do |request|
+      # Mock implementation
+      request
+    end"#,
+                    hook_name
+                ));
+            }
+        }
+    }
+
+    // Process pre_handler hooks
+    if let Some(pre_handler) = hooks.get("pre_handler").and_then(|v| v.as_array()) {
+        for hook in pre_handler {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+
+            let auth_fails = hook_name.contains("auth")
+                && (fixture.expected_response.status_code == 401 || fixture.expected_response.status_code == 403);
+
+            if auth_fails {
+                let (status_code, error_msg, detail_msg) = if fixture.expected_response.status_code == 401 {
+                    (401, "Unauthorized", "Invalid or expired authentication token")
+                } else {
+                    (403, "Forbidden", "Admin role required for this endpoint")
+                };
+
+                hook_code.push(format!(
+                    r#"    # preHandler hook: {} - Short circuits with {}
+    pre_handler_proc = lambda do |_request|
+      build_response(
+        content: {{ error: "{}", message: "{}" }},
+        status: {}
+      )
+    end"#,
+                    hook_name, status_code, error_msg, detail_msg, status_code
+                ));
+            } else {
+                hook_code.push(format!(
+                    r#"    # preHandler hook: {}
+    pre_handler_proc = lambda do |request|
+      # Mock implementation
+      request
+    end"#,
+                    hook_name
+                ));
+            }
+        }
+    }
+
+    // Process on_response hooks
+    if let Some(on_response) = hooks.get("on_response").and_then(|v| v.as_array()) {
+        for hook in on_response {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+
+            if hook_name.contains("security") {
+                hook_code.push(format!(
+                    r#"    # onResponse hook: {} - Adds security headers
+    on_response_proc = lambda do |response|
+      response.headers["X-Content-Type-Options"] = "nosniff"
+      response.headers["X-Frame-Options"] = "DENY"
+      response.headers["X-XSS-Protection"] = "1; mode=block"
+      response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+      response
+    end"#,
+                    hook_name
+                ));
+            } else if hook_name.contains("timing") || hook_name.contains("timer") {
+                hook_code.push(format!(
+                    r#"    # onResponse hook: {} - Adds timing header
+    on_response_proc = lambda do |response|
+      response.headers["X-Response-Time"] = "0ms"
+      response
+    end"#,
+                    hook_name
+                ));
+            } else {
+                hook_code.push(format!(
+                    r#"    # onResponse hook: {}
+    on_response_proc = lambda do |response|
+      # Mock implementation
+      response
+    end"#,
+                    hook_name
+                ));
+            }
+        }
+    }
+
+    // Process on_error hooks
+    if let Some(on_error) = hooks.get("on_error").and_then(|v| v.as_array()) {
+        for hook in on_error {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+
+            hook_code.push(format!(
+                r#"    # onError hook: {}
+    on_error_proc = lambda do |response|
+      response.headers["Content-Type"] = "application/json"
+      response
+    end"#,
+                hook_name
+            ));
+        }
+    }
+
+    hook_code
 }

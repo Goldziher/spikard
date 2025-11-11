@@ -26,6 +26,13 @@ class Spikard:
         """
         self._routes: list[Route] = []
         self._config = config
+        self._lifecycle_hooks: dict[str, list[Callable[..., Any]]] = {
+            "on_request": [],
+            "pre_validation": [],
+            "pre_handler": [],
+            "on_response": [],
+            "on_error": [],
+        }
         Spikard.current_instance = self
 
     def register_route(
@@ -198,3 +205,129 @@ class Spikard:
             List of routes
         """
         return self._routes.copy()
+
+    def on_request(self, hook: Callable[..., Any]) -> Callable[..., Any]:
+        """Register an onRequest lifecycle hook.
+
+        Runs before routing. Can inspect/modify the request or short-circuit with a response.
+
+        Args:
+            hook: Async function that receives a request and returns either:
+                  - The (possibly modified) request to continue processing
+                  - A Response object to short-circuit the request pipeline
+
+        Returns:
+            The hook function (for decorator usage)
+
+        Example:
+            ```python
+            @app.on_request
+            async def log_request(request):
+                print(f"Request: {request.method} {request.path}")
+                return request
+            ```
+        """
+        self._lifecycle_hooks["on_request"].append(hook)
+        return hook
+
+    def pre_validation(self, hook: Callable[..., Any]) -> Callable[..., Any]:
+        """Register a preValidation lifecycle hook.
+
+        Runs after routing but before validation. Useful for rate limiting.
+
+        Args:
+            hook: Async function that receives a request and returns either:
+                  - The (possibly modified) request to continue processing
+                  - A Response object to short-circuit the request pipeline
+
+        Returns:
+            The hook function (for decorator usage)
+
+        Example:
+            ```python
+            @app.pre_validation
+            async def rate_limit(request):
+                if too_many_requests():
+                    return Response({"error": "Rate limit exceeded"}, status_code=429)
+                return request
+            ```
+        """
+        self._lifecycle_hooks["pre_validation"].append(hook)
+        return hook
+
+    def pre_handler(self, hook: Callable[..., Any]) -> Callable[..., Any]:
+        """Register a preHandler lifecycle hook.
+
+        Runs after validation but before the handler. Ideal for authentication/authorization.
+
+        Args:
+            hook: Async function that receives a request and returns either:
+                  - The (possibly modified) request to continue processing
+                  - A Response object to short-circuit the request pipeline
+
+        Returns:
+            The hook function (for decorator usage)
+
+        Example:
+            ```python
+            @app.pre_handler
+            async def authenticate(request):
+                if not valid_token(request.headers.get("Authorization")):
+                    return Response({"error": "Unauthorized"}, status_code=401)
+                return request
+            ```
+        """
+        self._lifecycle_hooks["pre_handler"].append(hook)
+        return hook
+
+    def on_response(self, hook: Callable[..., Any]) -> Callable[..., Any]:
+        """Register an onResponse lifecycle hook.
+
+        Runs after the handler executes. Can modify the response.
+
+        Args:
+            hook: Async function that receives a response and returns the (possibly modified) response
+
+        Returns:
+            The hook function (for decorator usage)
+
+        Example:
+            ```python
+            @app.on_response
+            async def add_security_headers(response):
+                response.headers["X-Frame-Options"] = "DENY"
+                return response
+            ```
+        """
+        self._lifecycle_hooks["on_response"].append(hook)
+        return hook
+
+    def on_error(self, hook: Callable[..., Any]) -> Callable[..., Any]:
+        """Register an onError lifecycle hook.
+
+        Runs when an error occurs. Can customize error responses.
+
+        Args:
+            hook: Async function that receives an error response and returns a (possibly modified) response
+
+        Returns:
+            The hook function (for decorator usage)
+
+        Example:
+            ```python
+            @app.on_error
+            async def format_error(response):
+                response.headers["Content-Type"] = "application/json"
+                return response
+            ```
+        """
+        self._lifecycle_hooks["on_error"].append(hook)
+        return hook
+
+    def get_lifecycle_hooks(self) -> dict[str, list[Callable[..., Any]]]:
+        """Get all registered lifecycle hooks.
+
+        Returns:
+            Dictionary of hook lists by type
+        """
+        return {hook_type: hooks.copy() for hook_type, hooks in self._lifecycle_hooks.items()}

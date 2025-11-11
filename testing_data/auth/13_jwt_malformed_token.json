@@ -38,7 +38,7 @@
 		"status_code": 401,
 		"body": {
 			"type": "https://spikard.dev/errors/unauthorized",
-			"title": "Unauthorized",
+			"title": "Malformed JWT token",
 			"status": 401,
 			"detail": "Malformed JWT token: expected 3 parts separated by dots, found 2"
 		}

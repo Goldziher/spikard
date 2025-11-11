@@ -1,0 +1,52 @@
+{
+	"name": "preValidation - Rate Limit Exceeded (Short Circuit)",
+	"description": "Test preValidation hook that short-circuits when rate limit is exceeded",
+	"category": "lifecycle_hooks",
+	"handler": {
+		"route": "/api/test-rate-limit-exceeded",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"data": {
+					"type": "string"
+				}
+			},
+			"required": ["data"]
+		},
+		"middleware": {
+			"lifecycle_hooks": {
+				"pre_validation": [
+					{
+						"name": "rate_limiter",
+						"handler": "check_rate_limit",
+						"config": {
+							"max_requests": 0,
+							"window_seconds": 60
+						}
+					}
+				]
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/api/test-rate-limit-exceeded",
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"body": {
+			"data": "test"
+		}
+	},
+	"expected_response": {
+		"status_code": 429,
+		"body": {
+			"error": "Rate limit exceeded",
+			"message": "Too many requests, please try again later"
+		},
+		"headers": {
+			"Retry-After": "60"
+		}
+	}
+}

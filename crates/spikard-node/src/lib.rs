@@ -35,6 +35,7 @@
 #![warn(missing_docs)]
 
 mod handler;
+mod lifecycle;
 mod response;
 mod test_client;
 
@@ -245,6 +246,7 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
         graceful_shutdown,
         shutdown_timeout,
         openapi,
+        lifecycle_hooks: None, // Will be set later in run_server
     })
 }
 
@@ -371,7 +373,67 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
         );
     }
 
-    // Use the extracted config
+    // Extract lifecycle hooks from app if they exist
+    let lifecycle_hooks = if let Ok(hooks_obj) = app.get_named_property::<Object>("lifecycleHooks") {
+        let mut hooks = spikard_http::LifecycleHooks::new();
+
+        // Helper function to extract and wrap hook functions
+        let extract_hooks = |hooks_obj: &Object, hook_type: &str| -> Result<Vec<lifecycle::NodeLifecycleHook>> {
+            let hook_array: Result<Object> = hooks_obj.get_named_property(hook_type);
+            if let Ok(arr) = hook_array {
+                let length = arr.get_array_length()?;
+                let mut result = Vec::new();
+
+                for i in 0..length {
+                    let js_fn: Function<String, Promise<String>> = arr.get_element(i)?;
+                    let name = format!("{}_{}", hook_type, i);
+
+                    // Build ThreadsafeFunction for the hook
+                    let tsfn = js_fn
+                        .build_threadsafe_function()
+                        .build_callback(|ctx| Ok(vec![ctx.value]))
+                        .map_err(|e| {
+                            Error::from_reason(format!("Failed to build ThreadsafeFunction for hook '{}': {}", name, e))
+                        })?;
+
+                    result.push(lifecycle::NodeLifecycleHook::new(name, tsfn));
+                }
+
+                Ok(result)
+            } else {
+                Ok(Vec::new())
+            }
+        };
+
+        // Extract each hook type
+        for hook in extract_hooks(&hooks_obj, "onRequest")? {
+            hooks.add_on_request(std::sync::Arc::new(hook));
+        }
+
+        for hook in extract_hooks(&hooks_obj, "preValidation")? {
+            hooks.add_pre_validation(std::sync::Arc::new(hook));
+        }
+
+        for hook in extract_hooks(&hooks_obj, "preHandler")? {
+            hooks.add_pre_handler(std::sync::Arc::new(hook));
+        }
+
+        for hook in extract_hooks(&hooks_obj, "onResponse")? {
+            hooks.add_on_response(std::sync::Arc::new(hook));
+        }
+
+        for hook in extract_hooks(&hooks_obj, "onError")? {
+            hooks.add_on_error(std::sync::Arc::new(hook));
+        }
+
+        Some(hooks)
+    } else {
+        None
+    };
+
+    // Use the extracted config and set lifecycle hooks
+    let mut server_config = server_config;
+    server_config.lifecycle_hooks = lifecycle_hooks;
 
     // Create schema registry for validator deduplication
     let schema_registry = spikard_http::SchemaRegistry::new();

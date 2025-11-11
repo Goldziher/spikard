@@ -219,6 +219,35 @@ fn generate_fixture_handler_and_app_node(fixture: &Fixture, handler_name: &str) 
     // Generate handler function
     let handler_func = generate_handler_function(fixture, route_path, method, handler_name)?;
 
+    // Check for lifecycle hooks and generate if present
+    let hooks_code = if let Some(handler) = &fixture.handler {
+        if let Some(middleware) = &handler.middleware {
+            if let Some(hooks) = middleware.get("lifecycle_hooks") {
+                generate_lifecycle_hooks_ts(handler_name, hooks, fixture)
+            } else {
+                String::new()
+            }
+        } else {
+            String::new()
+        }
+    } else {
+        String::new()
+    };
+
+    let hooks_registration = if let Some(handler) = &fixture.handler {
+        if let Some(middleware) = &handler.middleware {
+            if let Some(hooks) = middleware.get("lifecycle_hooks") {
+                generate_lifecycle_hooks_registration_ts(handler_name, hooks)
+            } else {
+                String::new()
+            }
+        } else {
+            String::new()
+        }
+    } else {
+        String::new()
+    };
+
     // Generate app factory function
     let app_factory_name = format!("createApp{}", to_pascal_case(handler_name));
 
@@ -265,7 +294,7 @@ fn generate_fixture_handler_and_app_node(fixture: &Fixture, handler_name: &str) 
     };
 
     // Generate app factory
-    let app_factory_code = if config_code.is_empty() {
+    let app_factory_code = if config_code.is_empty() && hooks_registration.is_empty() {
         format!(
             r#"export function {}(): SpikardApp {{
 	const route: RouteMetadata = {{
@@ -296,7 +325,7 @@ fn generate_fixture_handler_and_app_node(fixture: &Fixture, handler_name: &str) 
             handler_name,
             to_camel_case(handler_name)
         )
-    } else {
+    } else if hooks_registration.is_empty() {
         format!(
             r#"export function {}(): SpikardApp {{
 {}
@@ -331,9 +360,84 @@ fn generate_fixture_handler_and_app_node(fixture: &Fixture, handler_name: &str) 
             handler_name,
             to_camel_case(handler_name)
         )
+    } else if config_code.is_empty() {
+        format!(
+            r#"export function {}(): SpikardApp {{
+	const route: RouteMetadata = {{
+		method: "{}",
+		path: "{}",
+		handler_name: "{}",
+		request_schema: {},
+		response_schema: undefined,
+		parameter_schema: {},
+		file_params: {},
+		is_async: true,
+	}};
+
+	return {{
+		routes: [route],
+		handlers: {{
+			{}: {},
+		}},
+{}	}};
+}}"#,
+            app_factory_name,
+            method.to_uppercase(),
+            route_path,
+            handler_name,
+            body_schema_str,
+            parameter_schema_str,
+            file_params_str,
+            handler_name,
+            to_camel_case(handler_name),
+            hooks_registration
+        )
+    } else {
+        format!(
+            r#"export function {}(): SpikardApp {{
+{}
+
+	const route: RouteMetadata = {{
+		method: "{}",
+		path: "{}",
+		handler_name: "{}",
+		request_schema: {},
+		response_schema: undefined,
+		parameter_schema: {},
+		file_params: {},
+		is_async: true,
+	}};
+
+	return {{
+		routes: [route],
+		handlers: {{
+			{}: {},
+		}},
+{}		config,
+	}};
+}}"#,
+            app_factory_name,
+            config_code,
+            method.to_uppercase(),
+            route_path,
+            handler_name,
+            body_schema_str,
+            parameter_schema_str,
+            file_params_str,
+            handler_name,
+            to_camel_case(handler_name),
+            hooks_registration
+        )
     };
 
-    Ok((handler_func, app_factory_code))
+    // Combine handler and hooks code
+    let full_handler_code = if hooks_code.is_empty() {
+        handler_func
+    } else {
+        format!("{}\n{}", hooks_code, handler_func)
+    };
+
+    Ok((full_handler_code, app_factory_code))
 }
 
 /// Generate handler function for a fixture
@@ -901,5 +1005,262 @@ fn make_unique_name(base_name: &str, used_names: &mut HashMap<String, usize>) ->
         base_name.to_string()
     } else {
         format!("{}_{}", base_name, *count - 1)
+    }
+}
+
+/// Generate TypeScript lifecycle hook function implementations
+fn generate_lifecycle_hooks_ts(fixture_id: &str, hooks: &Value, fixture: &Fixture) -> String {
+    let mut code = String::new();
+
+    // Process on_request hooks
+    if let Some(on_request) = hooks.get("on_request").and_then(|v| v.as_array()) {
+        for (idx, hook) in on_request.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = to_camel_case(&format!("{}_{}_on_request_{}", fixture_id, hook_name, idx));
+
+            code.push_str(&format!(
+                r#"async function {}(request: any): Promise<any> {{
+	// Mock onRequest hook: {}
+	return request;
+}}
+
+"#,
+                func_name, hook_name
+            ));
+        }
+    }
+
+    // Process pre_validation hooks
+    if let Some(pre_validation) = hooks.get("pre_validation").and_then(|v| v.as_array()) {
+        for (idx, hook) in pre_validation.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = to_camel_case(&format!("{}_{}_pre_validation_{}", fixture_id, hook_name, idx));
+
+            // Check if this hook should short-circuit
+            let should_short_circuit = hook_name.contains("rate_limit") && fixture.expected_response.status_code == 429;
+
+            if should_short_circuit {
+                code.push_str(&format!(
+                    r#"async function {}(_request: any): Promise<any> {{
+	// preValidation hook: {} - Short circuits with 429
+	return {{
+		statusCode: 429,
+		body: {{
+			error: "Rate limit exceeded",
+			message: "Too many requests, please try again later"
+		}},
+		headers: {{
+			"Retry-After": "60"
+		}}
+	}};
+}}
+
+"#,
+                    func_name, hook_name
+                ));
+            } else {
+                code.push_str(&format!(
+                    r#"async function {}(request: any): Promise<any> {{
+	// Mock preValidation hook: {}
+	return request;
+}}
+
+"#,
+                    func_name, hook_name
+                ));
+            }
+        }
+    }
+
+    // Process pre_handler hooks
+    if let Some(pre_handler) = hooks.get("pre_handler").and_then(|v| v.as_array()) {
+        for (idx, hook) in pre_handler.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = to_camel_case(&format!("{}_{}_pre_handler_{}", fixture_id, hook_name, idx));
+
+            // Check if auth should fail
+            let auth_fails = hook_name.contains("auth")
+                && (fixture.expected_response.status_code == 401 || fixture.expected_response.status_code == 403);
+
+            if auth_fails {
+                let (status_code, error_msg, detail_msg) = if fixture.expected_response.status_code == 401 {
+                    (401, "Unauthorized", "Invalid or expired authentication token")
+                } else {
+                    (403, "Forbidden", "Admin role required for this endpoint")
+                };
+
+                code.push_str(&format!(
+                    r#"async function {}(_request: any): Promise<any> {{
+	// preHandler hook: {} - Short circuits with {}
+	return {{
+		statusCode: {},
+		body: {{
+			error: "{}",
+			message: "{}"
+		}}
+	}};
+}}
+
+"#,
+                    func_name, hook_name, status_code, status_code, error_msg, detail_msg
+                ));
+            } else {
+                code.push_str(&format!(
+                    r#"async function {}(request: any): Promise<any> {{
+	// Mock preHandler hook: {}
+	return request;
+}}
+
+"#,
+                    func_name, hook_name
+                ));
+            }
+        }
+    }
+
+    // Process on_response hooks
+    if let Some(on_response) = hooks.get("on_response").and_then(|v| v.as_array()) {
+        for (idx, hook) in on_response.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = to_camel_case(&format!("{}_{}_on_response_{}", fixture_id, hook_name, idx));
+
+            // Add security headers if requested
+            if hook_name.contains("security") {
+                code.push_str(&format!(
+                    r#"async function {}(response: any): Promise<any> {{
+	// onResponse hook: {} - Adds security headers
+	if (!response.headers) response.headers = {{}};
+	response.headers["X-Content-Type-Options"] = "nosniff";
+	response.headers["X-Frame-Options"] = "DENY";
+	response.headers["X-XSS-Protection"] = "1; mode=block";
+	response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+	return response;
+}}
+
+"#,
+                    func_name, hook_name
+                ));
+            } else if hook_name.contains("timing") || hook_name.contains("timer") {
+                code.push_str(&format!(
+                    r#"async function {}(response: any): Promise<any> {{
+	// onResponse hook: {} - Adds timing header
+	if (!response.headers) response.headers = {{}};
+	response.headers["X-Response-Time"] = "0ms";
+	return response;
+}}
+
+"#,
+                    func_name, hook_name
+                ));
+            } else {
+                code.push_str(&format!(
+                    r#"async function {}(response: any): Promise<any> {{
+	// Mock onResponse hook: {}
+	return response;
+}}
+
+"#,
+                    func_name, hook_name
+                ));
+            }
+        }
+    }
+
+    // Process on_error hooks
+    if let Some(on_error) = hooks.get("on_error").and_then(|v| v.as_array()) {
+        for (idx, hook) in on_error.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = to_camel_case(&format!("{}_{}_on_error_{}", fixture_id, hook_name, idx));
+
+            code.push_str(&format!(
+                r#"async function {}(response: any): Promise<any> {{
+	// onError hook: {} - Format error response
+	if (!response.headers) response.headers = {{}};
+	response.headers["Content-Type"] = "application/json";
+	return response;
+}}
+
+"#,
+                func_name, hook_name
+            ));
+        }
+    }
+
+    code
+}
+
+/// Generate lifecycle hooks registration code for TypeScript
+fn generate_lifecycle_hooks_registration_ts(fixture_id: &str, hooks: &Value) -> String {
+    let mut registrations = Vec::new();
+
+    // Process on_request hooks
+    if let Some(on_request) = hooks.get("on_request").and_then(|v| v.as_array()) {
+        let mut hook_funcs = Vec::new();
+        for (idx, hook) in on_request.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = to_camel_case(&format!("{}_{}_on_request_{}", fixture_id, hook_name, idx));
+            hook_funcs.push(func_name);
+        }
+        if !hook_funcs.is_empty() {
+            registrations.push(format!("\t\tonRequest: [{}]", hook_funcs.join(", ")));
+        }
+    }
+
+    // Process pre_validation hooks
+    if let Some(pre_validation) = hooks.get("pre_validation").and_then(|v| v.as_array()) {
+        let mut hook_funcs = Vec::new();
+        for (idx, hook) in pre_validation.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = to_camel_case(&format!("{}_{}_pre_validation_{}", fixture_id, hook_name, idx));
+            hook_funcs.push(func_name);
+        }
+        if !hook_funcs.is_empty() {
+            registrations.push(format!("\t\tpreValidation: [{}]", hook_funcs.join(", ")));
+        }
+    }
+
+    // Process pre_handler hooks
+    if let Some(pre_handler) = hooks.get("pre_handler").and_then(|v| v.as_array()) {
+        let mut hook_funcs = Vec::new();
+        for (idx, hook) in pre_handler.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = to_camel_case(&format!("{}_{}_pre_handler_{}", fixture_id, hook_name, idx));
+            hook_funcs.push(func_name);
+        }
+        if !hook_funcs.is_empty() {
+            registrations.push(format!("\t\tpreHandler: [{}]", hook_funcs.join(", ")));
+        }
+    }
+
+    // Process on_response hooks
+    if let Some(on_response) = hooks.get("on_response").and_then(|v| v.as_array()) {
+        let mut hook_funcs = Vec::new();
+        for (idx, hook) in on_response.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = to_camel_case(&format!("{}_{}_on_response_{}", fixture_id, hook_name, idx));
+            hook_funcs.push(func_name);
+        }
+        if !hook_funcs.is_empty() {
+            registrations.push(format!("\t\tonResponse: [{}]", hook_funcs.join(", ")));
+        }
+    }
+
+    // Process on_error hooks
+    if let Some(on_error) = hooks.get("on_error").and_then(|v| v.as_array()) {
+        let mut hook_funcs = Vec::new();
+        for (idx, hook) in on_error.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = to_camel_case(&format!("{}_{}_on_error_{}", fixture_id, hook_name, idx));
+            hook_funcs.push(func_name);
+        }
+        if !hook_funcs.is_empty() {
+            registrations.push(format!("\t\tonError: [{}]", hook_funcs.join(", ")));
+        }
+    }
+
+    if registrations.is_empty() {
+        String::new()
+    } else {
+        format!("\tlifecycleHooks: {{\n{}\n\t}},\n", registrations.join(",\n"))
     }
 }

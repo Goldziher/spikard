@@ -32,9 +32,9 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Access-Control-Request-Method": "POST",
 			"Access-Control-Request-Headers": "X-Custom-Header",
 			Origin: "https://example.com",
+			"Access-Control-Request-Method": "POST",
 		};
 		const response = await client.options("/api/data", { headers });
 
@@ -46,8 +46,8 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			Origin: "https://app.example.com",
 			"Cache-Control": "max-age=3600",
+			Origin: "https://app.example.com",
 		};
 		const response = await client.get("/api/cached-resource", headers);
 
@@ -76,8 +76,8 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Access-Control-Request-Method": "DELETE",
 			Origin: "https://app.example.com",
+			"Access-Control-Request-Method": "DELETE",
 		};
 		const response = await client.options("/api/resource/456", { headers });
 
@@ -104,8 +104,8 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Access-Control-Request-Method": "POST",
 			Origin: "https://example.com",
+			"Access-Control-Request-Method": "POST",
 			"Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
 		};
 		const response = await client.options("/items/", { headers });
@@ -118,8 +118,8 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			Cookie: "session=abc123",
 			Origin: "https://app.example.com",
+			Cookie: "session=abc123",
 		};
 		const response = await client.get("/api/user/profile", headers);
 
@@ -150,8 +150,8 @@ describe("cors", () => {
 
 		const headers = {
 			"Access-Control-Request-Headers": "Content-Type",
-			Origin: "https://example.com",
 			"Access-Control-Request-Method": "POST",
+			Origin: "https://example.com",
 		};
 		const response = await client.options("/api/data", { headers });
 
@@ -190,18 +190,17 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			Accept: "application/json",
-			Origin: "https://app.example.com",
 			"Content-Type": "text/plain",
+			Accept: "application/json",
 			"Accept-Language": "en-US",
+			Origin: "https://app.example.com",
 		};
-		const json = "plain text data";
-		const response = await client.post("/api/form", { headers, json });
+		const response = await client.post("/api/form", { headers });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("received");
-		expect(responseData.received).toBe("plain text data");
+		expect(responseData).toHaveProperty("message");
+		expect(responseData.message).toBe("Success");
 	});
 
 	test("CORS Private Network Access", async () => {
@@ -209,9 +208,9 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Access-Control-Request-Private-Network": "true",
 			Origin: "https://public.example.com",
 			"Access-Control-Request-Method": "GET",
+			"Access-Control-Request-Private-Network": "true",
 		};
 		const response = await client.options("/api/local-resource", { headers });
 

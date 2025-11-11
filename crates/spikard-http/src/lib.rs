@@ -10,6 +10,7 @@ pub mod auth;
 pub mod cors;
 pub mod debug;
 pub mod handler_trait;
+pub mod lifecycle;
 pub mod middleware;
 pub mod openapi;
 pub mod parameters;
@@ -27,6 +28,7 @@ mod handler_trait_tests;
 
 pub use auth::{Claims, api_key_auth_middleware, jwt_auth_middleware};
 pub use handler_trait::{Handler, HandlerResult, RequestData, ValidatedParams};
+pub use lifecycle::{HookResult, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, request_hook, response_hook};
 pub use openapi::{ContactInfo, LicenseInfo, OpenApiConfig, SecuritySchemeInfo, ServerInfo};
 pub use parameters::ParameterValidator;
 pub use problem::{CONTENT_TYPE_PROBLEM_JSON, ProblemDetails};
@@ -262,6 +264,8 @@ pub struct ServerConfig {
     pub shutdown_timeout: u64,
     /// OpenAPI documentation configuration
     pub openapi: Option<crate::openapi::OpenApiConfig>,
+    /// Lifecycle hooks for request/response processing
+    pub lifecycle_hooks: Option<LifecycleHooks>,
 }
 
 impl Default for ServerConfig {
@@ -281,6 +285,7 @@ impl Default for ServerConfig {
             graceful_shutdown: true,
             shutdown_timeout: 30,
             openapi: None,
+            lifecycle_hooks: None, // No hooks by default
         }
     }
 }

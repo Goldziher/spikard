@@ -33,16 +33,16 @@
 		"method": "GET",
 		"path": "/api/protected",
 		"headers": {
-			"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImlzcyI6Imh0dHBzOi8vZXZpbC5jb20ifQ.O3gVwqYHqJQPL2PtgWmBN0sQd5_HvYKKjZGhPkXqM_w"
+			"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2V2aWwuY29tIn0.mbL5L04_hpaaiz0SPABap6ZWfBLu18aiexBjzwQ1nnA"
 		}
 	},
 	"expected_response": {
 		"status_code": 401,
 		"body": {
 			"type": "https://spikard.dev/errors/unauthorized",
-			"title": "Unauthorized",
+			"title": "JWT validation failed",
 			"status": 401,
-			"detail": "JWT issuer 'https://evil.com' does not match expected issuer 'https://auth.example.com'"
+			"detail": "Token issuer is invalid, expected 'https://auth.example.com'"
 		}
 	},
 	"tags": ["auth", "jwt", "issuer", "validation", "401", "security"],
