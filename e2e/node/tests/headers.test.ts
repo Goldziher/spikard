@@ -29,6 +29,7 @@ import {
 	createAppHeadersHeaderWithUnderscoreConversionExplicit,
 	createAppHeadersHostHeader,
 	createAppHeadersMultipleCustomHeaders,
+	createAppHeadersMultipleHeaderValuesXToken,
 	createAppHeadersOptionalHeaderWithNoneDefaultMissing,
 	createAppHeadersOriginHeader,
 	createAppHeadersRefererHeader,
@@ -353,6 +354,23 @@ describe("headers", () => {
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("msg");
 		expect(responseData.msg).toBe("Hello World");
+	});
+
+	test("Multiple header values - X-Token", async () => {
+		const app = createAppHeadersMultipleHeaderValuesXToken();
+		const client = new TestClient(app);
+
+		const headers = {
+			"x-token": "foo, bar",
+		};
+		const response = await client.get("/items/", headers);
+
+		expect(response.statusCode).toBe(200);
+		const responseData = response.json();
+		expect(responseData).toHaveProperty("X-Token values");
+		expect(responseData["X-Token values"].length).toBe(2);
+		expect(responseData["X-Token values"][0]).toBe("foo");
+		expect(responseData["X-Token values"][1]).toBe("bar");
 	});
 
 	test("Multiple custom headers", async () => {

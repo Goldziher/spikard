@@ -27,8 +27,8 @@ describe("http_methods", () => {
 
 		const headers = {
 			"Access-Control-Request-Headers": "Content-Type",
-			"Access-Control-Request-Method": "POST",
 			Origin: "https://example.com",
+			"Access-Control-Request-Method": "POST",
 		};
 		const response = await client.options("/items/", { headers });
 
