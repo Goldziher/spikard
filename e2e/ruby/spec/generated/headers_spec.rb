@@ -317,8 +317,19 @@ RSpec.describe "headers" do
     client.close
   end
 
+  it "Multiple header values - X-Token" do
+    app = E2ERubyApp.create_app_headers_24_multiple_header_values_x_token
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
+    response = client.get("/items/", headers: {"x-token" => "foo, bar"})
+    expect(response.status_code).to eq(200)
+    expect(response.json).to eq({"X-Token values" => ["foo", "bar"]})
+    client.close
+  end
+
   it "Optional header with None default - missing" do
-    app = E2ERubyApp.create_app_headers_24_optional_header_with_none_default_missing
+    app = E2ERubyApp.create_app_headers_25_optional_header_with_none_default_missing
     config = Spikard::ServerConfig.new
     config.compression = nil
     client = Spikard::Testing.create_test_client(app, config: config)
@@ -329,7 +340,7 @@ RSpec.describe "headers" do
   end
 
   it "Origin header" do
-    app = E2ERubyApp.create_app_headers_25_origin_header
+    app = E2ERubyApp.create_app_headers_26_origin_header
     config = Spikard::ServerConfig.new
     config.compression = nil
     client = Spikard::Testing.create_test_client(app, config: config)
@@ -340,7 +351,7 @@ RSpec.describe "headers" do
   end
 
   it "Referer header" do
-    app = E2ERubyApp.create_app_headers_26_referer_header
+    app = E2ERubyApp.create_app_headers_27_referer_header
     config = Spikard::ServerConfig.new
     config.compression = nil
     client = Spikard::Testing.create_test_client(app, config: config)
@@ -351,7 +362,7 @@ RSpec.describe "headers" do
   end
 
   it "User-Agent header - custom value" do
-    app = E2ERubyApp.create_app_headers_27_user_agent_header_custom_value
+    app = E2ERubyApp.create_app_headers_28_user_agent_header_custom_value
     config = Spikard::ServerConfig.new
     config.compression = nil
     client = Spikard::Testing.create_test_client(app, config: config)
@@ -362,7 +373,7 @@ RSpec.describe "headers" do
   end
 
   it "User-Agent header - default value" do
-    app = E2ERubyApp.create_app_headers_28_user_agent_header_default_value
+    app = E2ERubyApp.create_app_headers_29_user_agent_header_default_value
     config = Spikard::ServerConfig.new
     config.compression = nil
     client = Spikard::Testing.create_test_client(app, config: config)
@@ -373,7 +384,7 @@ RSpec.describe "headers" do
   end
 
   it "X-API-Key optional header - missing" do
-    app = E2ERubyApp.create_app_headers_29_x_api_key_optional_header_missing
+    app = E2ERubyApp.create_app_headers_30_x_api_key_optional_header_missing
     config = Spikard::ServerConfig.new
     config.compression = nil
     client = Spikard::Testing.create_test_client(app, config: config)
@@ -384,7 +395,7 @@ RSpec.describe "headers" do
   end
 
   it "X-API-Key optional header - success" do
-    app = E2ERubyApp.create_app_headers_30_x_api_key_optional_header_success
+    app = E2ERubyApp.create_app_headers_31_x_api_key_optional_header_success
     config = Spikard::ServerConfig.new
     config.compression = nil
     client = Spikard::Testing.create_test_client(app, config: config)
@@ -395,7 +406,7 @@ RSpec.describe "headers" do
   end
 
   it "X-API-Key required header - missing" do
-    app = E2ERubyApp.create_app_headers_31_x_api_key_required_header_missing
+    app = E2ERubyApp.create_app_headers_32_x_api_key_required_header_missing
     config = Spikard::ServerConfig.new
     config.compression = nil
     client = Spikard::Testing.create_test_client(app, config: config)
@@ -413,7 +424,7 @@ RSpec.describe "headers" do
   end
 
   it "X-API-Key required header - success" do
-    app = E2ERubyApp.create_app_headers_32_x_api_key_required_header_success
+    app = E2ERubyApp.create_app_headers_33_x_api_key_required_header_success
     config = Spikard::ServerConfig.new
     config.compression = nil
     client = Spikard::Testing.create_test_client(app, config: config)

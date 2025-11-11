@@ -35,42 +35,122 @@ module E2ERubyApp
     app
   end
 
-  def create_app_auth_4_jwt_authentication_expired_token
+  def create_app_auth_4_api_key_in_query_parameter
     app = Spikard::App.new
-    app.get("/protected/user", handler_name: "auth_4_jwt_authentication_expired_token", parameter_schema: {"properties" => {"Authorization" => {"source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
+    app.get("/api/data", handler_name: "auth_4_api_key_in_query_parameter") do |_request|
+      build_response(content: {"data" => "sensitive information", "message" => "Access granted"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_auth_5_api_key_rotation_old_key_still_valid
+    app = Spikard::App.new
+    app.get("/api/data", handler_name: "auth_5_api_key_rotation_old_key_still_valid", parameter_schema: {"properties" => {"X-API-Key" => {"description" => "API key for authentication", "source" => "header", "type" => "string"}}, "required" => ["X-API-Key"], "type" => "object"}) do |_request|
+      build_response(content: {"data" => "sensitive information", "message" => "Access granted"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_auth_6_api_key_with_custom_header_name
+    app = Spikard::App.new
+    app.get("/api/data", handler_name: "auth_6_api_key_with_custom_header_name", parameter_schema: {"properties" => {"X-API-Token" => {"description" => "API token for authentication", "source" => "header", "type" => "string"}}, "required" => ["X-API-Token"], "type" => "object"}) do |_request|
+      build_response(content: {"data" => "sensitive information", "message" => "Access granted"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_auth_7_bearer_token_without_prefix
+    app = Spikard::App.new
+    app.get("/api/protected", handler_name: "auth_7_bearer_token_without_prefix", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
+      build_response(content: {"detail" => "Authorization header must use Bearer scheme: \'Bearer <token>\'", "status" => 401, "title" => "Unauthorized", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
+    end
+    app
+  end
+
+  def create_app_auth_8_jwt_authentication_expired_token
+    app = Spikard::App.new
+    app.get("/protected/user", handler_name: "auth_8_jwt_authentication_expired_token", parameter_schema: {"properties" => {"Authorization" => {"source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "Token has expired", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
     app
   end
 
-  def create_app_auth_5_jwt_authentication_invalid_audience
+  def create_app_auth_9_jwt_authentication_invalid_audience
     app = Spikard::App.new
-    app.get("/protected/user", handler_name: "auth_5_jwt_authentication_invalid_audience", parameter_schema: {"properties" => {"Authorization" => {"source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
+    app.get("/protected/user", handler_name: "auth_9_jwt_authentication_invalid_audience", parameter_schema: {"properties" => {"Authorization" => {"source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "Token audience is invalid", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
     app
   end
 
-  def create_app_auth_6_jwt_authentication_invalid_signature
+  def create_app_auth_10_jwt_authentication_invalid_signature
     app = Spikard::App.new
-    app.get("/protected/user", handler_name: "auth_6_jwt_authentication_invalid_signature", parameter_schema: {"properties" => {"Authorization" => {"source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
+    app.get("/protected/user", handler_name: "auth_10_jwt_authentication_invalid_signature", parameter_schema: {"properties" => {"Authorization" => {"source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "Token signature is invalid", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
     app
   end
 
-  def create_app_auth_7_jwt_authentication_missing_authorization_header
+  def create_app_auth_11_jwt_authentication_missing_authorization_header
     app = Spikard::App.new
-    app.get("/protected/user", handler_name: "auth_7_jwt_authentication_missing_authorization_header") do |_request|
+    app.get("/protected/user", handler_name: "auth_11_jwt_authentication_missing_authorization_header") do |_request|
       build_response(content: {"detail" => "Expected \'Authorization: Bearer <token>\'", "status" => 401, "title" => "Missing or invalid Authorization header", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
     app
   end
 
-  def create_app_auth_8_jwt_authentication_valid_token
+  def create_app_auth_12_jwt_authentication_valid_token
     app = Spikard::App.new
-    app.get("/protected/user", handler_name: "auth_8_jwt_authentication_valid_token", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
+    app.get("/protected/user", handler_name: "auth_12_jwt_authentication_valid_token", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
       build_response(content: {"message" => "Access granted", "user_id" => "user123"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_auth_13_jwt_invalid_issuer
+    app = Spikard::App.new
+    app.get("/api/protected", handler_name: "auth_13_jwt_invalid_issuer", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
+      build_response(content: {"detail" => "JWT issuer \'https://evil.com\' does not match expected issuer \'https://auth.example.com\'", "status" => 401, "title" => "Unauthorized", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
+    end
+    app
+  end
+
+  def create_app_auth_14_jwt_malformed_token_format
+    app = Spikard::App.new
+    app.get("/api/protected", handler_name: "auth_14_jwt_malformed_token_format", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
+      build_response(content: {"detail" => "Malformed JWT token: expected 3 parts separated by dots, found 2", "status" => 401, "title" => "Unauthorized", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
+    end
+    app
+  end
+
+  def create_app_auth_15_jwt_missing_required_custom_claims
+    app = Spikard::App.new
+    app.get("/api/admin", handler_name: "auth_15_jwt_missing_required_custom_claims", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
+      build_response(content: {"detail" => "Required claims \'role\' and \'permissions\' missing from JWT", "status" => 403, "title" => "Forbidden", "type" => "https://spikard.dev/errors/forbidden"}, status: 403, headers: nil)
+    end
+    app
+  end
+
+  def create_app_auth_16_jwt_not_before_claim_in_future
+    app = Spikard::App.new
+    app.get("/api/protected", handler_name: "auth_16_jwt_not_before_claim_in_future", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
+      build_response(content: {"detail" => "JWT not valid yet, not before claim is in the future", "status" => 401, "title" => "Unauthorized", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
+    end
+    app
+  end
+
+  def create_app_auth_17_jwt_with_multiple_audiences
+    app = Spikard::App.new
+    app.get("/api/protected", handler_name: "auth_17_jwt_with_multiple_audiences", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
+      build_response(content: {"message" => "Access granted", "user_id" => "user123"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_auth_18_multiple_authentication_schemes_jwt_precedence
+    app = Spikard::App.new
+    app.get("/api/data", handler_name: "auth_18_multiple_authentication_schemes_jwt_precedence", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}, "X-API-Key" => {"description" => "API key for authentication", "source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
+      build_response(content: {"auth_method" => "jwt", "message" => "Access granted", "user_id" => "user123"}, status: 200, headers: nil)
     end
     app
   end
@@ -443,65 +523,145 @@ module E2ERubyApp
     app
   end
 
-  def create_app_cors_1_08_cors_max_age
+  def create_app_cors_1_06_cors_preflight_method_not_allowed
     app = Spikard::App.new
-    app.post("/api/data", handler_name: "cors_1_08_cors_max_age", parameter_schema: {"properties" => {"Access-Control-Request-Headers" => {"source" => "header", "type" => "string"}, "Access-Control-Request-Method" => {"source" => "header", "type" => "string"}, "Origin" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, cors: {"allowed_headers" => ["Content-Type"], "allowed_methods" => ["POST"], "allowed_origins" => ["https://example.com"], "max_age" => 3600}) do |_request|
+    app.get("/api/data", handler_name: "cors_1_06_cors_preflight_method_not_allowed", parameter_schema: {"properties" => {"Access-Control-Request-Headers" => {"source" => "header", "type" => "string"}, "Access-Control-Request-Method" => {"source" => "header", "type" => "string"}, "Origin" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, cors: {"allowed_headers" => ["Content-Type"], "allowed_methods" => ["GET", "POST"], "allowed_origins" => ["https://example.com"]}) do |_request|
+      build_response(content: nil, status: 403, headers: nil)
+    end
+    app
+  end
+
+  def create_app_cors_2_07_cors_preflight_header_not_allowed
+    app = Spikard::App.new
+    app.post("/api/data", handler_name: "cors_2_07_cors_preflight_header_not_allowed", parameter_schema: {"properties" => {"Access-Control-Request-Headers" => {"source" => "header", "type" => "string"}, "Access-Control-Request-Method" => {"source" => "header", "type" => "string"}, "Origin" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, cors: {"allowed_headers" => ["Content-Type"], "allowed_methods" => ["POST"], "allowed_origins" => ["https://example.com"]}) do |_request|
+      build_response(content: nil, status: 403, headers: nil)
+    end
+    app
+  end
+
+  def create_app_cors_3_08_cors_max_age
+    app = Spikard::App.new
+    app.post("/api/data", handler_name: "cors_3_08_cors_max_age", parameter_schema: {"properties" => {"Access-Control-Request-Headers" => {"source" => "header", "type" => "string"}, "Access-Control-Request-Method" => {"source" => "header", "type" => "string"}, "Origin" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, cors: {"allowed_headers" => ["Content-Type"], "allowed_methods" => ["POST"], "allowed_origins" => ["https://example.com"], "max_age" => 3600}) do |_request|
       build_response(content: nil, status: 204, headers: nil)
     end
     app
   end
 
-  def create_app_cors_2_09_cors_expose_headers
+  def create_app_cors_4_09_cors_expose_headers
     app = Spikard::App.new
-    app.get("/api/data", handler_name: "cors_2_09_cors_expose_headers", parameter_schema: {"properties" => {"Origin" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, cors: {"allowed_methods" => ["GET"], "allowed_origins" => ["https://example.com"], "expose_headers" => ["X-Total-Count", "X-Request-Id"]}) do |_request|
+    app.get("/api/data", handler_name: "cors_4_09_cors_expose_headers", parameter_schema: {"properties" => {"Origin" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, cors: {"allowed_methods" => ["GET"], "allowed_origins" => ["https://example.com"], "expose_headers" => ["X-Total-Count", "X-Request-Id"]}) do |_request|
       build_response(content: nil, status: 200, headers: nil)
     end
     app
   end
 
-  def create_app_cors_3_10_cors_origin_null
+  def create_app_cors_5_10_cors_origin_null
     app = Spikard::App.new
-    app.get("/api/data", handler_name: "cors_3_10_cors_origin_null", parameter_schema: {"properties" => {"Origin" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, cors: {"allowed_methods" => ["GET"], "allowed_origins" => ["https://example.com"]}) do |_request|
+    app.get("/api/data", handler_name: "cors_5_10_cors_origin_null", parameter_schema: {"properties" => {"Origin" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, cors: {"allowed_methods" => ["GET"], "allowed_origins" => ["https://example.com"]}) do |_request|
       build_response(content: {"error" => "Origin \'null\' is not allowed"}, status: 403, headers: nil)
     end
     app
   end
 
-  def create_app_cors_4_cors_preflight_request
+  def create_app_cors_6_cors_private_network_access
     app = Spikard::App.new
-    app.options("/items/", handler_name: "cors_4_cors_preflight_request") do |_request|
+    app.options("/api/local-resource", handler_name: "cors_6_cors_private_network_access") do |_request|
+      build_response(content: nil, status: 204, headers: nil)
+    end
+    app
+  end
+
+  def create_app_cors_7_cors_vary_header_for_proper_caching
+    app = Spikard::App.new
+    app.get("/api/cached-resource", handler_name: "cors_7_cors_vary_header_for_proper_caching") do |_request|
+      build_response(content: {"data" => "cacheable resource"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_cors_8_cors_multiple_allowed_origins
+    app = Spikard::App.new
+    app.get("/api/data", handler_name: "cors_8_cors_multiple_allowed_origins") do |_request|
+      build_response(content: {"data" => "resource data"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_cors_9_cors_origin_case_sensitivity
+    app = Spikard::App.new
+    app.get("/api/data", handler_name: "cors_9_cors_origin_case_sensitivity") do |_request|
       build_response(content: nil, status: 200, headers: nil)
     end
     app
   end
 
-  def create_app_cors_5_cors_request_blocked
+  def create_app_cors_10_cors_preflight_for_delete_method
     app = Spikard::App.new
-    app.get("/items/", handler_name: "cors_5_cors_request_blocked", parameter_schema: {"properties" => {"Origin" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, cors: {"allowed_headers" => ["Content-Type"], "allowed_methods" => ["GET", "POST"], "allowed_origins" => ["https://example.com"]}) do |_request|
+    app.options("/api/resource/456", handler_name: "cors_10_cors_preflight_for_delete_method") do |_request|
+      build_response(content: nil, status: 204, headers: nil)
+    end
+    app
+  end
+
+  def create_app_cors_11_cors_preflight_for_put_method
+    app = Spikard::App.new
+    app.options("/api/resource/123", handler_name: "cors_11_cors_preflight_for_put_method") do |_request|
+      build_response(content: nil, status: 204, headers: nil)
+    end
+    app
+  end
+
+  def create_app_cors_12_cors_preflight_request
+    app = Spikard::App.new
+    app.options("/items/", handler_name: "cors_12_cors_preflight_request") do |_request|
+      build_response(content: nil, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_cors_13_cors_regex_pattern_matching_for_origins
+    app = Spikard::App.new
+    app.get("/api/data", handler_name: "cors_13_cors_regex_pattern_matching_for_origins") do |_request|
+      build_response(content: {"data" => "resource data"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_cors_14_cors_request_blocked
+    app = Spikard::App.new
+    app.get("/items/", handler_name: "cors_14_cors_request_blocked", parameter_schema: {"properties" => {"Origin" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, cors: {"allowed_headers" => ["Content-Type"], "allowed_methods" => ["GET", "POST"], "allowed_origins" => ["https://example.com"]}) do |_request|
       build_response(content: {"detail" => "CORS request from origin \'https://malicious-site.com\' not allowed"}, status: 403, headers: nil)
     end
     app
   end
 
-  def create_app_cors_6_cors_wildcard_origin
+  def create_app_cors_15_cors_safelisted_headers_without_preflight
     app = Spikard::App.new
-    app.get("/public/data", handler_name: "cors_6_cors_wildcard_origin") do |_request|
+    app.post("/api/form", handler_name: "cors_15_cors_safelisted_headers_without_preflight") do |_request|
+      build_response(content: {"received" => "plain text data"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_cors_16_cors_wildcard_origin
+    app = Spikard::App.new
+    app.get("/public/data", handler_name: "cors_16_cors_wildcard_origin") do |_request|
       build_response(content: {"data" => "public"}, status: 200, headers: nil)
     end
     app
   end
 
-  def create_app_cors_7_cors_with_credentials
+  def create_app_cors_17_cors_with_credentials
     app = Spikard::App.new
-    app.get("/api/user/profile", handler_name: "cors_7_cors_with_credentials") do |_request|
+    app.get("/api/user/profile", handler_name: "cors_17_cors_with_credentials") do |_request|
       build_response(content: {"username" => "john"}, status: 200, headers: nil)
     end
     app
   end
 
-  def create_app_cors_8_simple_cors_request
+  def create_app_cors_18_simple_cors_request
     app = Spikard::App.new
-    app.get("/items/", handler_name: "cors_8_simple_cors_request") do |_request|
+    app.get("/items/", handler_name: "cors_18_simple_cors_request") do |_request|
       build_response(content: {"items" => []}, status: 200, headers: nil)
     end
     app
@@ -851,73 +1011,81 @@ module E2ERubyApp
     app
   end
 
-  def create_app_headers_24_optional_header_with_none_default_missing
+  def create_app_headers_24_multiple_header_values_x_token
     app = Spikard::App.new
-    app.get("/items/", handler_name: "headers_24_optional_header_with_none_default_missing", parameter_schema: {"properties" => {"strange-header" => {"annotation" => "str", "default" => nil, "source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
+    app.get("/items/", handler_name: "headers_24_multiple_header_values_x_token", parameter_schema: {"properties" => {"x-token" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => ["x-token"], "type" => "object"}) do |_request|
+      build_response(content: {"X-Token values" => ["foo", "bar"]}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_headers_25_optional_header_with_none_default_missing
+    app = Spikard::App.new
+    app.get("/items/", handler_name: "headers_25_optional_header_with_none_default_missing", parameter_schema: {"properties" => {"strange-header" => {"annotation" => "str", "default" => nil, "source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"strange_header" => nil}, status: 200, headers: nil)
     end
     app
   end
 
-  def create_app_headers_25_origin_header
+  def create_app_headers_26_origin_header
     app = Spikard::App.new
-    app.get("/headers/origin", handler_name: "headers_25_origin_header", parameter_schema: {"properties" => {"Origin" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => ["Origin"], "type" => "object"}) do |_request|
+    app.get("/headers/origin", handler_name: "headers_26_origin_header", parameter_schema: {"properties" => {"Origin" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => ["Origin"], "type" => "object"}) do |_request|
       build_response(content: {"origin" => "https://example.com"}, status: 200, headers: nil)
     end
     app
   end
 
-  def create_app_headers_26_referer_header
+  def create_app_headers_27_referer_header
     app = Spikard::App.new
-    app.get("/headers/referer", handler_name: "headers_26_referer_header", parameter_schema: {"properties" => {"Referer" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => ["Referer"], "type" => "object"}) do |_request|
+    app.get("/headers/referer", handler_name: "headers_27_referer_header", parameter_schema: {"properties" => {"Referer" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => ["Referer"], "type" => "object"}) do |_request|
       build_response(content: {"referer" => "https://example.com/page"}, status: 200, headers: nil)
     end
     app
   end
 
-  def create_app_headers_27_user_agent_header_custom_value
+  def create_app_headers_28_user_agent_header_custom_value
     app = Spikard::App.new
-    app.get("/items/", handler_name: "headers_27_user_agent_header_custom_value", parameter_schema: {"properties" => {"User-Agent" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => ["User-Agent"], "type" => "object"}) do |_request|
+    app.get("/items/", handler_name: "headers_28_user_agent_header_custom_value", parameter_schema: {"properties" => {"User-Agent" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => ["User-Agent"], "type" => "object"}) do |_request|
       build_response(content: {"User-Agent" => "Mozilla/5.0 Custom Browser"}, status: 200, headers: nil)
     end
     app
   end
 
-  def create_app_headers_28_user_agent_header_default_value
+  def create_app_headers_29_user_agent_header_default_value
     app = Spikard::App.new
-    app.get("/items/", handler_name: "headers_28_user_agent_header_default_value", parameter_schema: {"properties" => {"User-Agent" => {"annotation" => "str", "default" => "testclient", "source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
+    app.get("/items/", handler_name: "headers_29_user_agent_header_default_value", parameter_schema: {"properties" => {"User-Agent" => {"annotation" => "str", "default" => "testclient", "source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"User-Agent" => "testclient"}, status: 200, headers: nil)
     end
     app
   end
 
-  def create_app_headers_29_x_api_key_optional_header_missing
+  def create_app_headers_30_x_api_key_optional_header_missing
     app = Spikard::App.new
-    app.get("/users/me", handler_name: "headers_29_x_api_key_optional_header_missing", parameter_schema: {"properties" => {"key" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
+    app.get("/users/me", handler_name: "headers_30_x_api_key_optional_header_missing", parameter_schema: {"properties" => {"key" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"msg" => "Hello World"}, status: 200, headers: nil)
     end
     app
   end
 
-  def create_app_headers_30_x_api_key_optional_header_success
+  def create_app_headers_31_x_api_key_optional_header_success
     app = Spikard::App.new
-    app.get("/users/me", handler_name: "headers_30_x_api_key_optional_header_success", parameter_schema: {"properties" => {"key" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
+    app.get("/users/me", handler_name: "headers_31_x_api_key_optional_header_success", parameter_schema: {"properties" => {"key" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"msg" => "Hello secret"}, status: 200, headers: nil)
     end
     app
   end
 
-  def create_app_headers_31_x_api_key_required_header_missing
+  def create_app_headers_32_x_api_key_required_header_missing
     app = Spikard::App.new
-    app.get("/users/me", handler_name: "headers_31_x_api_key_required_header_missing", parameter_schema: {"properties" => {"X-API-Key" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => ["X-API-Key"], "type" => "object"}) do |_request|
+    app.get("/users/me", handler_name: "headers_32_x_api_key_required_header_missing", parameter_schema: {"properties" => {"X-API-Key" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => ["X-API-Key"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => nil, "loc" => ["headers", "x-api-key"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
 
-  def create_app_headers_32_x_api_key_required_header_success
+  def create_app_headers_33_x_api_key_required_header_success
     app = Spikard::App.new
-    app.get("/users/me", handler_name: "headers_32_x_api_key_required_header_success", parameter_schema: {"properties" => {"key" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => ["key"], "type" => "object"}) do |_request|
+    app.get("/users/me", handler_name: "headers_33_x_api_key_required_header_success", parameter_schema: {"properties" => {"key" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => ["key"], "type" => "object"}) do |_request|
       build_response(content: {"username" => "secret"}, status: 200, headers: nil)
     end
     app
@@ -1583,54 +1751,6 @@ module E2ERubyApp
     app = Spikard::App.new
     app.post("/", handler_name: "multipart_22_simple_file_upload", request_schema: {"additionalProperties" => false, "properties" => {"test" => {"format" => "binary", "type" => "string"}}, "required" => ["test"], "type" => "object"}) do |_request|
       build_response(content: {"test" => {"content" => "<file content>", "content_type" => "text/plain", "filename" => "test.txt", "size" => 14}}, status: 200, headers: nil)
-    end
-    app
-  end
-
-  def create_app_openapi_1_openapi_spec_generation_basic
-    app = Spikard::App.new
-    app.get("/users", handler_name: "openapi_1_openapi_spec_generation_basic", parameter_schema: {"properties" => {"limit" => {"default" => 10, "description" => "Number of items to return", "maximum" => 100, "minimum" => 1, "source" => "query", "type" => "integer"}}, "required" => ["limit"], "type" => "object"}) do |_request|
-      build_response(content: nil, status: 200, headers: nil)
-    end
-    app
-  end
-
-  def create_app_openapi_2_openapi_spec_with_api_key_security_scheme
-    app = Spikard::App.new
-    app.get("/api/data", handler_name: "openapi_2_openapi_spec_with_api_key_security_scheme", parameter_schema: {"properties" => {"X-API-Key" => {"description" => "API key for authentication", "source" => "header", "type" => "string"}}, "required" => ["X-API-Key"], "type" => "object"}) do |_request|
-      build_response(content: nil, status: 200, headers: nil)
-    end
-    app
-  end
-
-  def create_app_openapi_3_openapi_spec_with_jwt_security_scheme
-    app = Spikard::App.new
-    app.get("/protected/data", handler_name: "openapi_3_openapi_spec_with_jwt_security_scheme", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
-      build_response(content: nil, status: 200, headers: nil)
-    end
-    app
-  end
-
-  def create_app_openapi_4_openapi_spec_with_custom_metadata
-    app = Spikard::App.new
-    app.get("/info", handler_name: "openapi_4_openapi_spec_with_custom_metadata") do |_request|
-      build_response(content: nil, status: 200, headers: nil)
-    end
-    app
-  end
-
-  def create_app_openapi_5_redoc_serving
-    app = Spikard::App.new
-    app.get("/status", handler_name: "openapi_5_redoc_serving") do |_request|
-      build_response(content: nil, status: 200, headers: nil)
-    end
-    app
-  end
-
-  def create_app_openapi_6_swagger_ui_serving
-    app = Spikard::App.new
-    app.get("/health", handler_name: "openapi_6_swagger_ui_serving") do |_request|
-      build_response(content: nil, status: 200, headers: nil)
     end
     app
   end
