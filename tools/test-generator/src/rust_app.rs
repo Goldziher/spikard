@@ -1001,13 +1001,9 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
 /// Extract CORS configuration from fixtures if present
 /// Returns the CORS config from the first fixture that has one
 fn extract_cors_config(fixtures: &[&Fixture]) -> Option<Value> {
-    for fixture in fixtures {
-        if let Some(handler) = &fixture.handler
-            && let Some(cors) = &handler.cors
-        {
-            return Some(cors.clone());
-        }
-    }
+    // CORS handling is done at the middleware level, not in individual handlers
+    // Disable CORS code generation in test handlers
+    let _ = fixtures;
     None
 }
 
