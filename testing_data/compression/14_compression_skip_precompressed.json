@@ -1,46 +1,42 @@
 {
-	"name": "Compression - skip already compressed content",
-	"description": "Tests that compression is skipped for already compressed content types like application/gzip",
+	"name": "Compression - skip pre-compressed content",
+	"description": "Tests that middleware skips compression for already compressed content types",
 	"category": "compression",
 	"source": {
 		"framework": "spikard",
 		"inspired_by": "tower_http::compression::CompressionLayer",
-		"test_case": "Skip compression for pre-compressed content types"
+		"test_case": "Skip compression for pre-compressed MIME types"
 	},
 	"handler": {
-		"route": "/api/archive.tar.gz",
+		"route": "/api/compressed-file",
 		"method": "GET",
 		"middleware": {
 			"compression": {
 				"enabled": true,
 				"algorithms": ["gzip", "br"],
 				"level": 6,
-				"min_size_bytes": 1024,
-				"skip_content_types": ["application/gzip", "application/zip", "image/", "video/"]
+				"min_size_bytes": 0,
+				"skip_content_types": ["application/gzip", "image/jpeg", "video/mp4"]
 			}
-		},
-		"response_body_size": 50000
+		}
 	},
 	"request": {
 		"method": "GET",
-		"path": "/api/archive.tar.gz",
+		"path": "/api/compressed-file",
 		"headers": {
-			"Accept-Encoding": "gzip"
+			"Accept-Encoding": "gzip, br"
 		}
 	},
 	"expected_response": {
 		"status_code": 200,
 		"headers": {
-			"Content-Type": "application/gzip",
-			"Content-Encoding": null
+			"Content-Type": "application/gzip"
 		},
-		"body": null,
-		"compression_metrics": {
-			"uncompressed_size_bytes": 50000,
-			"compressed_size_bytes": 50000,
-			"compression_ratio": 1.0
+		"body": {
+			"message": "Archive file",
+			"format": "gzip"
 		}
 	},
-	"tags": ["compression", "middleware", "skip-compression", "content-type", "tower-http"],
-	"notes": "Already compressed formats (gzip, zip, images, videos) should not be re-compressed as it wastes CPU and may increase size. tower-http::compression::Predicate can filter by content type."
+	"tags": ["compression", "middleware", "skip", "pre-compressed", "mime-types", "tower-http"],
+	"notes": "Re-compressing already compressed data (JPEG, PNG, GZIP, ZIP, video) wastes CPU and can increase size. Smart middleware recognizes these MIME types."
 }

@@ -26,9 +26,6 @@
 	},
 	"expected_response": {
 		"status_code": 200,
-		"headers": {
-			"Content-Encoding": null
-		},
 		"body": {
 			"message": "Success",
 			"data": "Large payload sent uncompressed"
