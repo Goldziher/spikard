@@ -46,7 +46,7 @@ async def test_jwt_authentication_expired_token() -> None:
     assert response.status_code == 401
     response_data = response.json()
     assert "detail" in response_data
-    assert response_data["detail"] == "Token validation failed"
+    assert response_data["detail"] == "Token has expired"
     assert "status" in response_data
     assert response_data["status"] == 401
     assert "title" in response_data
@@ -167,7 +167,7 @@ async def test_jwt_authentication_invalid_audience() -> None:
     client = TestClient(app)
 
     headers = {
-        "Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNTM0MDIzMDA3OTksImlhdCI6MTczMTI1MjAwMCwiYXVkIjpbImh0dHBzOi8vd3Jvbmctc2VydmljZS5jb20iXX0.xxxxxx",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNTM0MDIzMDA3OTk5LCJpYXQiOjE3MzEyNTIwMDAsImF1ZCI6WyJodHRwczovL3dyb25nLXNlcnZpY2UuY29tIl19.YR2a9fSJjhen7ksYFI2djSBSC7Pc29FDCloBGhkj3kU",
     }
     response = await client.get("/protected/user", headers=headers)
 

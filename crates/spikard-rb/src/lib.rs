@@ -12,7 +12,6 @@ use once_cell::sync::Lazy;
 use serde_json::{Map as JsonMap, Value as JsonValue};
 use spikard_http::ParameterValidator;
 use spikard_http::problem::ProblemDetails;
-use spikard_http::server::build_router_with_handlers;
 use spikard_http::{Handler, HandlerResult, RequestData};
 use spikard_http::{Route, RouteMetadata, SchemaValidator};
 use std::cell::RefCell;
@@ -98,7 +97,13 @@ struct TestResponseData {
 struct NativeRequestError(String);
 
 impl NativeTestClient {
-    fn initialize(ruby: &Ruby, this: &Self, routes_json: String, handlers: Value) -> Result<(), Error> {
+    fn initialize(
+        ruby: &Ruby,
+        this: &Self,
+        routes_json: String,
+        handlers: Value,
+        config_value: Value,
+    ) -> Result<(), Error> {
         let metadata: Vec<RouteMetadata> = serde_json::from_str(&routes_json)
             .map_err(|err| Error::new(ruby.exception_arg_error(), format!("Invalid routes JSON: {err}")))?;
 
@@ -114,22 +119,32 @@ impl NativeTestClient {
             .const_get("JSON")
             .map_err(|_| Error::new(ruby.exception_runtime_error(), "JSON module not available"))?;
 
+        // Extract ServerConfig from Ruby
+        let server_config = extract_server_config(ruby, config_value)?;
+
         let schema_registry = spikard_http::SchemaRegistry::new();
         let mut prepared_routes = Vec::with_capacity(metadata.len());
         let mut handler_refs = Vec::with_capacity(metadata.len());
+        let mut route_metadata_vec = Vec::with_capacity(metadata.len());
 
-        for meta in metadata {
+        for meta in metadata.clone() {
             let handler_value = fetch_handler(ruby, &handlers_hash, &meta.handler_name)?;
-            let route = Route::from_metadata(meta, &schema_registry)
+            let route = Route::from_metadata(meta.clone(), &schema_registry)
                 .map_err(|err| Error::new(ruby.exception_runtime_error(), format!("Failed to build route: {err}")))?;
 
             let handler = RubyHandler::new(&route, handler_value, json_module)?;
             prepared_routes.push((route, Arc::new(handler.clone()) as Arc<dyn spikard_http::Handler>));
             handler_refs.push(handler);
+            route_metadata_vec.push(meta);
         }
 
-        let router = build_router_with_handlers(prepared_routes)
-            .map_err(|err| Error::new(ruby.exception_runtime_error(), format!("Failed to build router: {err}")))?;
+        // Use build_router_with_handlers_and_config to support OpenAPI and middleware
+        let router = spikard_http::server::build_router_with_handlers_and_config(
+            prepared_routes,
+            server_config,
+            route_metadata_vec,
+        )
+        .map_err(|err| Error::new(ruby.exception_runtime_error(), format!("Failed to build router: {err}")))?;
 
         let server = TestServer::new(router).map_err(|err| {
             Error::new(
@@ -830,10 +845,28 @@ fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
-/// Extract files from Ruby hash for multipart upload
-/// Expects:
-/// - Single file: {"field_name" => ["filename", content_bytes, "content_type" (optional)], ...}
-/// - Multiple files: {"field_name" => [["file1", content1, "type1"], ["file2", content2, "type2"]], ...}
+/// Helper to extract an optional string from a Ruby Hash
+fn get_optional_string_from_hash(hash: RHash, key: &str) -> Result<Option<String>, Error> {
+    match hash.get(String::from(key)) {
+        Some(v) if !v.is_nil() => Ok(Some(String::try_convert(v)?)),
+        _ => Ok(None),
+    }
+}
+
+/// Helper to extract a required string from a Ruby Hash
+fn get_required_string_from_hash(hash: RHash, key: &str, ruby: &Ruby) -> Result<String, Error> {
+    let value = hash
+        .get(String::from(key))
+        .ok_or_else(|| Error::new(ruby.exception_arg_error(), format!("missing required key '{}'", key)))?;
+    if value.is_nil() {
+        return Err(Error::new(
+            ruby.exception_arg_error(),
+            format!("key '{}' cannot be nil", key),
+        ));
+    }
+    String::try_convert(value)
+}
+
 fn extract_files(ruby: &Ruby, files_value: Value) -> Result<Vec<FileData>, Error> {
     let files_hash = RHash::try_convert(files_value)?;
 
@@ -1127,11 +1160,18 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
         let redoc_path: String = openapi_value.funcall("redoc_path", ())?;
         let openapi_json_path: String = openapi_value.funcall("openapi_json_path", ())?;
 
-        // Extract contact (can be nil)
+        // Extract contact (can be nil or Hash)
         let contact_value: Value = openapi_value.funcall("contact", ())?;
         let contact = if contact_value.is_nil() {
             None
+        } else if let Some(contact_hash) = RHash::from_value(contact_value) {
+            // Handle Hash case (from tests)
+            let name = get_optional_string_from_hash(contact_hash, "name")?;
+            let email = get_optional_string_from_hash(contact_hash, "email")?;
+            let url = get_optional_string_from_hash(contact_hash, "url")?;
+            Some(ContactInfo { name, email, url })
         } else {
+            // Handle object case (from normal usage)
             let name_value: Value = contact_value.funcall("name", ())?;
             let email_value: Value = contact_value.funcall("email", ())?;
             let url_value: Value = contact_value.funcall("url", ())?;
@@ -1154,11 +1194,17 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
             })
         };
 
-        // Extract license (can be nil)
+        // Extract license (can be nil or Hash)
         let license_value: Value = openapi_value.funcall("license", ())?;
         let license = if license_value.is_nil() {
             None
+        } else if let Some(license_hash) = RHash::from_value(license_value) {
+            // Handle Hash case (from tests)
+            let name = get_required_string_from_hash(license_hash, "name", ruby)?;
+            let url = get_optional_string_from_hash(license_hash, "url")?;
+            Some(LicenseInfo { name, url })
         } else {
+            // Handle object case (from normal usage)
             let name: String = license_value.funcall("name", ())?;
             let url_value: Value = license_value.funcall("url", ())?;
             let url = if url_value.is_nil() {
@@ -1169,7 +1215,7 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
             Some(LicenseInfo { name, url })
         };
 
-        // Extract servers (array)
+        // Extract servers (array of Hashes or objects)
         let servers_value: Value = openapi_value.funcall("servers", ())?;
         let servers_array = RArray::from_value(servers_value)
             .ok_or_else(|| Error::new(ruby.exception_type_error(), "servers must be an Array"))?;
@@ -1177,13 +1223,24 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
         let mut servers = Vec::new();
         for i in 0..servers_array.len() {
             let server_value = servers_array.entry::<Value>(i as isize)?;
-            let url: String = server_value.funcall("url", ())?;
-            let description_value: Value = server_value.funcall("description", ())?;
-            let description = if description_value.is_nil() {
-                None
+
+            let (url, description) = if let Some(server_hash) = RHash::from_value(server_value) {
+                // Handle Hash case (from tests)
+                let url = get_required_string_from_hash(server_hash, "url", ruby)?;
+                let description = get_optional_string_from_hash(server_hash, "description")?;
+                (url, description)
             } else {
-                Some(String::try_convert(description_value)?)
+                // Handle object case (from normal usage)
+                let url: String = server_value.funcall("url", ())?;
+                let description_value: Value = server_value.funcall("description", ())?;
+                let description = if description_value.is_nil() {
+                    None
+                } else {
+                    Some(String::try_convert(description_value)?)
+                };
+                (url, description)
             };
+
             servers.push(ServerInfo { url, description });
         }
 
@@ -1358,7 +1415,7 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     // Register TestClient class
     let class = native.define_class("TestClient", ruby.class_object())?;
     class.define_alloc_func::<NativeTestClient>();
-    class.define_method("initialize", method!(NativeTestClient::initialize, 2))?;
+    class.define_method("initialize", method!(NativeTestClient::initialize, 3))?;
     class.define_method("request", method!(NativeTestClient::request, 3))?;
     class.define_method("close", method!(NativeTestClient::close, 0))?;
 

@@ -20,9 +20,9 @@ async def test_cors_preflight_request() -> None:
     client = TestClient(app)
 
     headers = {
+        "Access-Control-Request-Method": "POST",
         "Origin": "https://example.com",
         "Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
-        "Access-Control-Request-Method": "POST",
     }
     response = await client.options("/items/", headers=headers)
 
@@ -37,8 +37,8 @@ async def test_cors_with_credentials() -> None:
     client = TestClient(app)
 
     headers = {
-        "Origin": "https://app.example.com",
         "Cookie": "session=abc123",
+        "Origin": "https://app.example.com",
     }
     response = await client.get("/api/user/profile", headers=headers)
 
@@ -55,9 +55,9 @@ async def test_08_cors_max_age() -> None:
     client = TestClient(app)
 
     headers = {
-        "Access-Control-Request-Method": "POST",
         "Access-Control-Request-Headers": "Content-Type",
         "Origin": "https://example.com",
+        "Access-Control-Request-Method": "POST",
     }
     response = await client.options("/api/data", headers=headers)
 

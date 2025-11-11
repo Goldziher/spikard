@@ -28,23 +28,23 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - [x] API Key authentication middleware with `ApiKeyConfig`
 
 ### Advanced Features
-- [ ] OpenAPI 3.1.0 generation
-- [ ] Swagger UI integration
-- [ ] Redoc integration
+- [x] OpenAPI 3.1.0 generation (auto-detects security schemes)
+- [x] Swagger UI integration
+- [x] Redoc integration
+- [x] Test client (Python, Node.js, Ruby)
 - [ ] WebSocket support
 - [ ] Server-Sent Events (SSE)
 - [ ] Streaming responses
 - [ ] Background tasks
-- [ ] Test client
 
 ### Language Bindings
 - [x] Python (PyO3) - Full support with `ServerConfig`
-- [x] Node.js (napi-rs) - Full support
-- [x] Ruby (Magnus) - Full support
+- [x] Node.js (napi-rs) - Full support with `ServerConfig`
+- [x] Ruby (Magnus) - Full support with `ServerConfig`
 - [x] WebAssembly (wasm-bindgen) - Basic support
 - [x] Python: Typed config forwarding with dataclasses + msgspec
-- [ ] Node.js: Typed config forwarding
-- [ ] Ruby: Typed config forwarding
+- [x] Node.js: Typed config forwarding with TypeScript
+- [x] Ruby: Typed config forwarding with Magnus FFI
 
 ### CLI & Code Generation
 - [x] OpenAPI to handler generation
@@ -53,12 +53,12 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - [ ] AsyncAPI support (WebSocket generation)
 
 ### Testing & Benchmarking
-- [x] Fixture-driven integration tests
-- [x] Python e2e tests
-- [x] Node.js e2e tests
-- [x] Ruby e2e tests
+- [x] Fixture-driven integration tests (381 fixtures)
+- [x] Python e2e tests (381/381 passing - 100%)
+- [x] Node.js e2e tests (381/381 passing - 100%)
+- [x] Ruby e2e tests (381/381 passing - 100%)
 - [x] Benchmark harness
-- [x] Performance benchmarks (Python, Node, Ruby)
+- [x] Performance benchmarks (Python, Node, Ruby, Rust)
 - [ ] WebSocket benchmarks
 - [ ] SSE benchmarks
 
@@ -182,6 +182,43 @@ config = ServerConfig(
     shutdown_timeout=30
 )
 ```
+
+### OpenAPI Documentation
+
+Spikard automatically generates OpenAPI 3.1.0 specifications with security scheme auto-detection:
+
+```python
+from spikard.config import OpenApiConfig
+
+config = ServerConfig(
+    openapi=OpenApiConfig(
+        enabled=True,
+        title="My API",
+        version="1.0.0",
+        description="API documentation",
+        swagger_ui_path="/docs",      # Swagger UI at /docs
+        redoc_path="/redoc",           # Redoc at /redoc
+        openapi_json_path="/openapi.json",
+        # Optional metadata
+        contact={"name": "API Team", "email": "api@example.com"},
+        license={"name": "MIT"},
+        servers=[
+            {"url": "https://api.example.com", "description": "Production"},
+            {"url": "http://localhost:8000", "description": "Development"}
+        ]
+    ),
+    # Security schemes are auto-detected from middleware configuration
+    jwt_auth=JwtConfig(...),    # Automatically adds bearerAuth scheme
+    api_key_auth=ApiKeyConfig(...)  # Automatically adds apiKeyAuth scheme
+)
+```
+
+Features:
+- Auto-generates OpenAPI spec from route definitions
+- Auto-detects JWT and API key security schemes
+- Swagger UI and Redoc integration
+- JSON Schema validation for all routes
+- Parameter and response documentation
 
 ### Backwards Compatibility
 

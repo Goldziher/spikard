@@ -5,14 +5,17 @@ module Spikard
   module Testing
     module_function
 
-    def create_test_client(app)
+    def create_test_client(app, config: nil)
       unless defined?(Spikard::Native::TestClient)
         raise LoadError, 'Spikard native test client is not available. Build the native extension before running tests.'
       end
 
+      # Use default config if none provided
+      config ||= Spikard::ServerConfig.new
+
       routes_json = JSON.generate(app.route_metadata)
       handlers = app.handler_map.transform_keys(&:to_sym)
-      native = Spikard::Native::TestClient.new(routes_json, handlers)
+      native = Spikard::Native::TestClient.new(routes_json, handlers, config)
       TestClient.new(native)
     end
 

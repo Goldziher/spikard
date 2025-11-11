@@ -127,11 +127,12 @@ pub enum SecuritySchemeInfo {
     },
 }
 
-/// Generate OpenAPI specification from routes
+/// Generate OpenAPI specification from routes with auto-detection of security schemes
 pub fn generate_openapi_spec(
     routes: &[RouteMetadata],
     config: &OpenApiConfig,
     _schema_registry: &SchemaRegistry,
+    server_config: Option<&crate::ServerConfig>,
 ) -> Result<OpenApi, String> {
     // Build Info section
     let mut info = Info::new(&config.title, &config.version);
@@ -187,8 +188,40 @@ pub fn generate_openapi_spec(
 
     // Build components (schemas + security schemes)
     let mut components = Components::new();
+    let mut global_security = Vec::new();
 
-    // Add security schemes
+    // Auto-detect security schemes from ServerConfig
+    if let Some(server_cfg) = server_config {
+        // Detect JWT authentication
+        if let Some(_jwt_cfg) = &server_cfg.jwt_auth {
+            let jwt_scheme = SecurityScheme::Http(
+                utoipa::openapi::security::HttpBuilder::new()
+                    .scheme(utoipa::openapi::security::HttpAuthScheme::Bearer)
+                    .bearer_format("JWT")
+                    .build(),
+            );
+            components.add_security_scheme("bearerAuth", jwt_scheme);
+
+            // Add to global security requirements
+            let security_req = utoipa::openapi::security::SecurityRequirement::new("bearerAuth", Vec::<String>::new());
+            global_security.push(security_req);
+        }
+
+        // Detect API key authentication
+        if let Some(api_key_cfg) = &server_cfg.api_key_auth {
+            use utoipa::openapi::security::ApiKey;
+            let api_key_scheme = SecurityScheme::ApiKey(ApiKey::Header(utoipa::openapi::security::ApiKeyValue::new(
+                &api_key_cfg.header_name,
+            )));
+            components.add_security_scheme("apiKeyAuth", api_key_scheme);
+
+            // Add to global security requirements
+            let security_req = utoipa::openapi::security::SecurityRequirement::new("apiKeyAuth", Vec::<String>::new());
+            global_security.push(security_req);
+        }
+    }
+
+    // Also add any manually configured security schemes
     if !config.security_schemes.is_empty() {
         for (name, scheme_info) in &config.security_schemes {
             let scheme = security_scheme_info_to_openapi(scheme_info);
@@ -205,6 +238,11 @@ pub fn generate_openapi_spec(
 
     if let Some(servers) = servers {
         openapi.servers = Some(servers);
+    }
+
+    // Add global security requirements if any were detected
+    if !global_security.is_empty() {
+        openapi.security = Some(global_security);
     }
 
     Ok(openapi)
@@ -522,7 +560,7 @@ mod tests {
         let routes = vec![];
         let registry = SchemaRegistry::new();
 
-        let spec = generate_openapi_spec(&routes, &config, &registry).unwrap();
+        let spec = generate_openapi_spec(&routes, &config, &registry, None).unwrap();
         assert_eq!(spec.info.title, "Test API");
         assert_eq!(spec.info.version, "1.0.0");
     }
@@ -544,7 +582,7 @@ mod tests {
         let routes = vec![];
         let registry = SchemaRegistry::new();
 
-        let spec = generate_openapi_spec(&routes, &config, &registry).unwrap();
+        let spec = generate_openapi_spec(&routes, &config, &registry, None).unwrap();
         assert!(spec.info.contact.is_some());
         let contact = spec.info.contact.unwrap();
         assert_eq!(contact.name, Some("API Team".to_string()));
@@ -567,7 +605,7 @@ mod tests {
         let routes = vec![];
         let registry = SchemaRegistry::new();
 
-        let spec = generate_openapi_spec(&routes, &config, &registry).unwrap();
+        let spec = generate_openapi_spec(&routes, &config, &registry, None).unwrap();
         assert!(spec.info.license.is_some());
         let license = spec.info.license.unwrap();
         assert_eq!(license.name, "MIT");
@@ -595,7 +633,7 @@ mod tests {
         let routes = vec![];
         let registry = SchemaRegistry::new();
 
-        let spec = generate_openapi_spec(&routes, &config, &registry).unwrap();
+        let spec = generate_openapi_spec(&routes, &config, &registry, None).unwrap();
         assert!(spec.servers.is_some());
         let servers = spec.servers.unwrap();
         assert_eq!(servers.len(), 2);

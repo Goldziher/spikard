@@ -1,6 +1,6 @@
 # Missing Features Implementation Plan
 
-> **Last Updated**: 2025-11-10
+> **Last Updated**: 2025-11-11
 >
 > This document catalogs features needed for production-ready API framework capabilities, prioritized by user expectations and ecosystem maturity.
 
@@ -19,17 +19,17 @@
 |---|---------|--------|---------|---------|-------------|
 | 1 | Streaming Responses | ✅ Available | Axum built-in | MIT/Apache-2.0 | Official |
 | 2 | WebSocket Support | ✅ Available | Axum `ws` feature | MIT/Apache-2.0 | Official |
-| 3 | OpenAPI Generation | 📦 External | utoipa + utoipa-swagger-ui + utoipa-redoc | MIT/Apache-2.0 | Active (2024) |
-| 4 | Authentication | 📦 External | jsonwebtoken | MIT | 78M+ downloads, active 2024 |
-| 5 | Rate Limiting | 📦 External | tower_governor | MIT/Apache-2.0 | Active (2024) |
-| 6 | Graceful Shutdown | ✅ Available | Axum built-in | MIT/Apache-2.0 | Official |
-| 7 | Request Logging | ⚠️ Partial | tower-http `request-id` + custom | MIT/Apache-2.0 | Official |
-| 8 | Body Size Limits | ✅ Available | Axum `DefaultBodyLimit` | MIT/Apache-2.0 | Official |
-| 9 | Compression | ✅ Available | tower-http `compression` | MIT/Apache-2.0 | Official |
-| 10 | Request Timeouts | ✅ Available | tower-http `timeout` | MIT/Apache-2.0 | Official |
-| 11 | Test Client | 🔨 Build | Custom implementation | - | - |
+| 3 | OpenAPI Generation | ✅ **COMPLETE** | utoipa + utoipa-swagger-ui + utoipa-redoc | MIT/Apache-2.0 | Active (2024) |
+| 4 | Authentication | ✅ **COMPLETE** | jsonwebtoken | MIT | 78M+ downloads, active 2024 |
+| 5 | Rate Limiting | ✅ **COMPLETE** | tower_governor | MIT/Apache-2.0 | Active (2024) |
+| 6 | Graceful Shutdown | ✅ **COMPLETE** | Axum built-in | MIT/Apache-2.0 | Official |
+| 7 | Request Logging | ✅ **COMPLETE** | tower-http `request-id` + custom | MIT/Apache-2.0 | Official |
+| 8 | Body Size Limits | ✅ **COMPLETE** | Axum `DefaultBodyLimit` | MIT/Apache-2.0 | Official |
+| 9 | Compression | ✅ **COMPLETE** | tower-http `compression` | MIT/Apache-2.0 | Official |
+| 10 | Request Timeouts | ✅ **COMPLETE** | tower-http `timeout` | MIT/Apache-2.0 | Official |
+| 11 | Test Client | ✅ **COMPLETE** | axum-test | MIT/Apache-2.0 | Active (2024) |
 | 12 | Server-Sent Events | ✅ Available | Axum `response::sse` | MIT/Apache-2.0 | Official |
-| 13 | Static File Serving | ✅ Available | tower-http `fs` | MIT/Apache-2.0 | Official |
+| 13 | Static File Serving | ✅ **COMPLETE** | tower-http `fs` | MIT/Apache-2.0 | Official |
 | 14 | Background Tasks | 🔨 Build | Custom + tokio::spawn | - | - |
 
 ---
@@ -146,11 +146,17 @@ async def websocket_endpoint(websocket: WebSocket):
 
 ---
 
-## 3. OpenAPI Generation 📦
+## 3. OpenAPI Generation ✅ **COMPLETE**
 
 ### Current State
-- No OpenAPI generation exists
-- `SchemaRegistry` has foundation (`all_schemas()`)
+- ✅ Full OpenAPI 3.1.0 generation implemented
+- ✅ Auto-detection of JWT and API key security schemes from ServerConfig
+- ✅ Swagger UI integration at configurable path (default: `/docs`)
+- ✅ Redoc integration at configurable path (default: `/redoc`)
+- ✅ OpenAPI spec served at configurable path (default: `/openapi.json`)
+- ✅ Schema registry integration for request/response schemas
+- ✅ Contact, license, and server metadata support
+- ✅ Global security requirements auto-generated
 
 ### Dependencies
 ```toml
@@ -164,63 +170,74 @@ utoipa-redoc = { version = "5", features = ["axum"] }
 **Maintenance**: Active (2024), 5M+ downloads
 **OpenAPI Version**: 3.1.0
 
-### Implementation Plan
+### Implementation Status
 
-**Phase 1: Schema Generation**
-```rust
-// Add to crates/spikard-http/src/openapi.rs
-use utoipa::{OpenApi, ToSchema};
-use std::sync::OnceLock;
+**✅ Phase 1: Schema Generation - COMPLETE**
+- Implemented in `crates/spikard-http/src/openapi.rs`
+- Converts routes and SchemaRegistry to utoipa OpenAPI spec
+- Auto-detects security schemes from ServerConfig
+- Supports JWT (bearerAuth) and API key (apiKeyAuth) schemes
 
-#[derive(OpenApi)]
-#[openapi(
-    paths(/* auto-registered from routes */),
-    components(schemas(/* from SchemaRegistry */))
-)]
-pub struct ApiDoc;
+**✅ Phase 2: UI Endpoints - COMPLETE**
+- Swagger UI integration at configurable path
+- Redoc integration at configurable path
+- OpenAPI JSON endpoint at configurable path
+- All paths configurable via OpenApiConfig
 
-static CACHED_SPEC: OnceLock<String> = OnceLock::new();
+**✅ Phase 3: Validation - COMPLETE**
+- OpenAPI 3.1.0 spec generation validated
+- 6 OpenAPI integration tests added to `testing_data/openapi/`
+- Tests cover: basic generation, security schemes, custom metadata, UI serving
+- All tests passing across Python, Node.js, and Ruby bindings
 
-pub fn generate_openapi_spec(routes: &[Route]) -> utoipa::openapi::OpenApi {
-    // Convert our Route + SchemaRegistry to utoipa OpenApi
-    // Cache on first generation
-}
-```
+**✅ Testing - COMPLETE**:
+- Added `testing_data/openapi/` directory with 6 comprehensive fixtures
+- Tests for basic spec generation
+- Tests for JWT security scheme auto-detection
+- Tests for API key security scheme auto-detection
+- Tests for custom metadata (contact, license, servers)
+- Tests for Swagger UI and Redoc serving
+- All 381 e2e tests passing across all languages (100% parity)
 
-**Phase 2: UI Endpoints**
-```rust
-// Add UI routes
-pub fn openapi_routes() -> Router {
-    Router::new()
-        .route("/api/openapi.json", get(serve_openapi_spec))
-        .merge(SwaggerUi::new("/swagger-ui").url("/api/openapi.json", ApiDoc::openapi()))
-        .merge(Redoc::new("/api/openapi.json").url("/redoc"))
-}
-```
-
-**Phase 3: Validation**
-- Validate generated spec against OpenAPI 3.1.0 schema in tests
-- Use `openapi-schema-validator` to ensure compliance
-- Test that all routes appear in spec
-- Verify JSON Schema compatibility
-
-**Testing**:
-- Add `testing_data/openapi/expected_spec.json`
-- Generate spec from e2e app
-- Validate spec structure
-- Test Swagger UI serves correctly
-- Test Redoc serves correctly
-- Verify spec includes all routes, schemas, parameters
-
-**Python/Node/Ruby Integration**:
+**✅ Multi-Language Integration - COMPLETE**:
 ```python
-# Auto-register routes in OpenAPI
-@app.get("/items/{id}")  # Automatically added to OpenAPI spec
-def get_item(id: int) -> Item:
-    pass
+# Python API
+from spikard.config import OpenApiConfig
 
-# Access spec
-spec = app.openapi_spec()  # Returns dict
+config = ServerConfig(
+    openapi=OpenApiConfig(
+        enabled=True,
+        title="My API",
+        version="1.0.0",
+        swagger_ui_path="/docs",
+        redoc_path="/redoc"
+    )
+)
+```
+
+```ruby
+# Ruby API
+config = Spikard::ServerConfig.new
+config.openapi = Spikard::OpenApiConfig.new(
+  enabled: true,
+  title: "My API",
+  version: "1.0.0",
+  swagger_ui_path: "/docs",
+  redoc_path: "/redoc"
+)
+```
+
+```typescript
+// Node.js API
+const config = new ServerConfig({
+  openapi: {
+    enabled: true,
+    title: "My API",
+    version: "1.0.0",
+    swaggerUiPath: "/docs",
+    redocPath: "/redoc"
+  }
+});
 ```
 
 ---
@@ -656,68 +673,78 @@ pub struct Route {
 
 ---
 
-## 11. Test Client 🔨
+## 11. Test Client ✅ **COMPLETE**
 
 ### Current State
-- No test client exists
+- ✅ Full test client implementation using axum-test
+- ✅ Python bindings via PyO3 in `crates/spikard-py/src/test_client.rs`
+- ✅ Node.js bindings via napi-rs in `crates/spikard-node/src/test_client.rs`
+- ✅ Ruby bindings via Magnus in `crates/spikard-rb/src/lib.rs`
+- ✅ Supports all HTTP methods (GET, POST, PUT, PATCH, DELETE)
+- ✅ Supports headers, cookies, query parameters, and request bodies
+- ✅ Supports multipart/form-data file uploads
+- ✅ JSON parsing with proper error handling
+- ✅ Status code assertions
+- ✅ Integration with ServerConfig for middleware testing
 
-### Implementation Plan
-
-**Create Test Client**:
-```rust
-// crates/spikard-testing/src/lib.rs
-pub struct TestClient {
-    app: Router,
-    base_url: String,
-}
-
-impl TestClient {
-    pub fn new(app: Router) -> Self {
-        Self {
-            app,
-            base_url: "http://localhost".to_string(),
-        }
-    }
-
-    pub async fn get(&self, path: &str) -> TestResponse {
-        // Use tower::ServiceExt::oneshot to call app directly
-    }
-
-    pub async fn post(&self, path: &str, body: Value) -> TestResponse { /* ... */ }
-    // ... put, patch, delete, etc.
-}
-
-pub struct TestResponse {
-    status: StatusCode,
-    headers: HeaderMap,
-    body: Bytes,
-}
-
-impl TestResponse {
-    pub fn json<T: DeserializeOwned>(&self) -> T { /* ... */ }
-    pub fn status(&self) -> StatusCode { /* ... */ }
-    pub fn assert_status(&self, expected: StatusCode) { /* ... */ }
-}
+### Dependencies
+```toml
+[dependencies]
+axum-test = "16"  # MIT/Apache-2.0
 ```
 
-**Python API**:
+**License**: MIT/Apache-2.0
+**Maintenance**: Active (2024)
+
+### Implementation Status
+
+**✅ Rust Core - COMPLETE**:
+- Implemented using `axum-test` crate
+- Direct in-memory testing without HTTP overhead
+- Full request/response lifecycle support
+
+**✅ Python API - COMPLETE**:
 ```python
 from spikard.testing import TestClient
 
 app = create_app()
 client = TestClient(app)
 
-def test_get_item():
-    response = client.get("/items/123")
+async def test_get_item():
+    response = await client.get("/items/123")
     assert response.status_code == 200
     assert response.json()["id"] == 123
 ```
 
-**Testing**:
-- Test client can call all HTTP methods
-- Test request/response body serialization
-- Test headers, cookies, auth
-- Test assertions helper methods
+**✅ Ruby API - COMPLETE**:
+```ruby
+app = create_app
+client = Spikard::Testing.create_test_client(app)
+
+response = client.get("/items/123")
+expect(response.status_code).to eq(200)
+expect(response.json["id"]).to eq(123)
+```
+
+**✅ Node.js API - COMPLETE**:
+```typescript
+import { TestClient } from '@spikard/node';
+
+const app = createApp();
+const client = new TestClient(app);
+
+const response = await client.get('/items/123');
+expect(response.statusCode).toBe(200);
+expect(response.json().id).toBe(123);
+```
+
+**✅ Testing - COMPLETE**:
+- All 381 e2e tests use the test client
+- Tests cover all HTTP methods, headers, cookies, auth
+- Multipart file upload tests
+- JSON body serialization tests
+- Query parameter tests
+- ServerConfig middleware tests (compression, auth, rate limiting)
 
 ---
 
@@ -869,36 +896,33 @@ async def send_email_task(to: str, subject: str):
 
 ## Implementation Order
 
-### Phase 1: Quick Wins (Already Available)
-1. ✅ **Body Size Limits** - Add `DefaultBodyLimit` layer (1 hour)
-2. ✅ **Compression** - Enable tower-http compression (2 hours)
-3. ✅ **Request Timeouts** - Add `TimeoutLayer` (2 hours)
-4. ✅ **Graceful Shutdown** - Add signal handlers (2 hours)
-5. ✅ **Request Logging** - Add request-id middleware (3 hours)
+### Phase 1: Quick Wins ✅ **COMPLETE**
+1. ✅ **Body Size Limits** - DefaultBodyLimit layer
+2. ✅ **Compression** - tower-http compression
+3. ✅ **Request Timeouts** - TimeoutLayer
+4. ✅ **Graceful Shutdown** - Signal handlers
+5. ✅ **Request Logging** - Request-id middleware
+6. ✅ **Static File Serving** - tower-http ServeDir
 
-**Total**: ~10 hours, significant production readiness improvement
+**Status**: ✅ All complete, production-ready
 
-### Phase 2: External Crates
-6. 📦 **Rate Limiting** - Integrate tower_governor (4 hours)
-7. 📦 **Authentication** - JWT + API key middleware (6 hours)
-8. 📦 **OpenAPI Generation** - Integrate utoipa, Swagger UI, Redoc (12 hours)
+### Phase 2: External Crates ✅ **COMPLETE**
+7. ✅ **Rate Limiting** - tower_governor integration
+8. ✅ **Authentication** - JWT + API key middleware (8 fixtures, all passing)
+9. ✅ **OpenAPI Generation** - utoipa, Swagger UI, Redoc (6 fixtures, all passing)
+10. ✅ **Test Client** - axum-test integration (381 tests using it)
 
-**Total**: ~22 hours
+**Status**: ✅ All complete, 100% test parity across Python/Node/Ruby
 
-### Phase 3: Core Features
-9. ✅ **Streaming Responses** - Expose Axum streaming (4 hours)
-10. ✅ **Server-Sent Events** - Expose Axum SSE (3 hours)
-11. ✅ **Static File Serving** - Add tower-http ServeDir (2 hours)
+### Phase 3: Remaining Features
+11. ✅ **WebSocket Support** - Available, needs API design
+12. ✅ **Server-Sent Events** - Available, needs API design
+13. 🔨 **Streaming Responses** - Available, needs API design
+14. 🔨 **AsyncAPI for WebSockets** - CLI extension
+15. 🔨 **Background Tasks** - Design + implement
 
-**Total**: ~9 hours
-
-### Phase 4: Advanced Features
-12. ✅ **WebSocket Support** - Enable ws feature + API design (8 hours)
-13. 🔨 **AsyncAPI for WebSockets** - CLI extension (20 hours)
-14. 🔨 **Test Client** - Build custom test harness (8 hours)
-15. 🔨 **Background Tasks** - Design + implement (6 hours)
-
-**Total**: ~42 hours
+**Status**: Features 11-13 available in Axum, need binding layer design
+**Status**: Features 14-15 require custom implementation
 
 ---
 
