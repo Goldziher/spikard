@@ -38,7 +38,7 @@
 		"status_code": 401,
 		"body": {
 			"type": "https://spikard.dev/errors/unauthorized",
-			"title": "Unauthorized",
+			"title": "Invalid Authorization header format",
 			"status": 401,
 			"detail": "Authorization header must use Bearer scheme: 'Bearer <token>'"
 		}

@@ -1,5 +1,7 @@
 #![allow(deprecated)]
 
+mod lifecycle;
+
 use axum::body::Body;
 use axum::http::{HeaderName, HeaderValue, Method, StatusCode};
 use axum_test::TestServer;
@@ -1278,6 +1280,7 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
         graceful_shutdown,
         shutdown_timeout,
         openapi,
+        lifecycle_hooks: None, // Will be set in run_server
     })
 }
 
@@ -1297,12 +1300,18 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
 /// config = Spikard::ServerConfig.new(host: '0.0.0.0', port: 8000)
 /// Spikard::Native.run_server(routes_json, handlers, config)
 /// ```
-fn run_server(ruby: &Ruby, routes_json: String, handlers: Value, config_value: Value) -> Result<(), Error> {
+fn run_server(
+    ruby: &Ruby,
+    routes_json: String,
+    handlers: Value,
+    config_value: Value,
+    hooks_value: Value,
+) -> Result<(), Error> {
     use spikard_http::{SchemaRegistry, Server};
     use tracing::{error, info};
 
     // Extract ServerConfig from Ruby object
-    let config = extract_server_config(ruby, config_value)?;
+    let mut config = extract_server_config(ruby, config_value)?;
 
     let host = config.host.clone();
     let port = config.port;
@@ -1362,6 +1371,64 @@ fn run_server(ruby: &Ruby, routes_json: String, handlers: Value, config_value: V
         routes_with_handlers.push((route, Arc::new(ruby_handler) as Arc<dyn spikard_http::Handler>));
     }
 
+    // Extract lifecycle hooks from Ruby hash
+    let lifecycle_hooks = if !hooks_value.is_nil() {
+        let hooks_hash = RHash::from_value(hooks_value)
+            .ok_or_else(|| Error::new(ruby.exception_arg_error(), "lifecycle_hooks parameter must be a Hash"))?;
+
+        let mut hooks = spikard_http::LifecycleHooks::new();
+
+        // Helper to extract hooks from an array
+        let extract_hooks = |key: &str| -> Result<Vec<Arc<dyn spikard_http::lifecycle::LifecycleHook>>, Error> {
+            let key_sym = ruby.to_symbol(key);
+            if let Some(hooks_array) = hooks_hash.get(key_sym)
+                && !hooks_array.is_nil()
+            {
+                let array = RArray::from_value(hooks_array)
+                    .ok_or_else(|| Error::new(ruby.exception_type_error(), format!("{} must be an Array", key)))?;
+
+                let mut result = Vec::new();
+                let len = array.len();
+                for i in 0..len {
+                    let hook_value: Value = array.entry(i as isize)?;
+                    let name = format!("{}_{}", key, i);
+                    let ruby_hook = lifecycle::RubyLifecycleHook::new(name, hook_value);
+                    result.push(Arc::new(ruby_hook) as Arc<dyn spikard_http::lifecycle::LifecycleHook>);
+                }
+                return Ok(result);
+            }
+            Ok(Vec::new())
+        };
+
+        // Extract each hook type
+        for hook in extract_hooks("on_request")? {
+            hooks.add_on_request(hook);
+        }
+
+        for hook in extract_hooks("pre_validation")? {
+            hooks.add_pre_validation(hook);
+        }
+
+        for hook in extract_hooks("pre_handler")? {
+            hooks.add_pre_handler(hook);
+        }
+
+        for hook in extract_hooks("on_response")? {
+            hooks.add_on_response(hook);
+        }
+
+        for hook in extract_hooks("on_error")? {
+            hooks.add_on_error(hook);
+        }
+
+        Some(hooks)
+    } else {
+        None
+    };
+
+    // Set lifecycle hooks in config
+    config.lifecycle_hooks = lifecycle_hooks;
+
     // Initialize logging
     Server::init_logging();
 
@@ -1410,7 +1477,7 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     };
 
     // Register run_server function (now takes 3 args: routes_json, handlers, config)
-    native.define_singleton_method("run_server", function!(run_server, 3))?;
+    native.define_singleton_method("run_server", function!(run_server, 4))?;
 
     // Register TestClient class
     let class = native.define_class("TestClient", ruby.class_object())?;

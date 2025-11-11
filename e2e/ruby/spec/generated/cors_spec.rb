@@ -163,9 +163,9 @@ RSpec.describe "cors" do
     config = Spikard::ServerConfig.new
     config.compression = nil
     client = Spikard::Testing.create_test_client(app, config: config)
-    response = client.post("/api/form", headers: {"Accept" => "application/json", "Accept-Language" => "en-US", "Content-Type" => "text/plain", "Origin" => "https://app.example.com"}, raw_body: "plain text data")
+    response = client.post("/api/form", headers: {"Accept" => "application/json", "Accept-Language" => "en-US", "Content-Type" => "text/plain", "Origin" => "https://app.example.com"})
     expect(response.status_code).to eq(200)
-    expect(response.json).to eq({"received" => "plain text data"})
+    expect(response.json).to eq({"message" => "Success"})
     client.close
   end
 

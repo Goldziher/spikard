@@ -1,0 +1,33 @@
+{
+	"name": "preHandler - Authentication Failed (Short Circuit)",
+	"description": "Test preHandler hook that short-circuits on invalid authentication",
+	"category": "lifecycle_hooks",
+	"handler": {
+		"route": "/api/protected-resource-fail",
+		"method": "GET",
+		"middleware": {
+			"lifecycle_hooks": {
+				"pre_handler": [
+					{
+						"name": "authenticator",
+						"handler": "validate_auth_token"
+					}
+				]
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/protected-resource-fail",
+		"headers": {
+			"Authorization": "Bearer invalid-token"
+		}
+	},
+	"expected_response": {
+		"status_code": 401,
+		"body": {
+			"error": "Unauthorized",
+			"message": "Invalid or expired authentication token"
+		}
+	}
+}

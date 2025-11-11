@@ -3,6 +3,19 @@
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
+/// Manual Clone implementation for Response
+/// PyO3's Py<T> requires clone_ref(py) but we can clone the struct outside of GIL context
+/// by using Python::attach temporarily
+impl Clone for Response {
+    fn clone(&self) -> Self {
+        Python::attach(|py| Self {
+            content: self.content.as_ref().map(|c| c.clone_ref(py)),
+            status_code: self.status_code,
+            headers: self.headers.clone_ref(py),
+        })
+    }
+}
+
 /// HTTP Response with custom status code, headers, and content
 ///
 /// Use this to return custom responses from route handlers with specific
@@ -136,5 +149,65 @@ impl Response {
 
     fn __repr__(&self) -> String {
         format!("<Response status_code={}>", self.status_code)
+    }
+}
+
+impl Response {
+    /// Convert an Axum Response to PyResponse
+    ///
+    /// This extracts response data and makes it accessible to Python.
+    pub fn from_response(resp: axum::http::Response<axum::body::Body>, py: Python<'_>) -> PyResult<Self> {
+        let (parts, _body) = resp.into_parts();
+
+        let status_code = parts.status.as_u16();
+
+        // Extract headers
+        let headers_dict = PyDict::new(py);
+        for (name, value) in parts.headers.iter() {
+            if let Ok(value_str) = value.to_str() {
+                headers_dict.set_item(name.as_str(), value_str)?;
+            }
+        }
+
+        // For now, content is None (body is consumed)
+        // In a full implementation, we'd need to buffer the body
+        Ok(Self {
+            content: None,
+            status_code,
+            headers: headers_dict.into(),
+        })
+    }
+
+    /// Convert PyResponse to Axum Response
+    ///
+    /// This reconstructs an Axum response from the Python response data.
+    pub fn to_response(&self, py: Python<'_>) -> PyResult<axum::http::Response<axum::body::Body>> {
+        let status = axum::http::StatusCode::from_u16(self.status_code).unwrap_or(axum::http::StatusCode::OK);
+
+        let mut resp_builder = axum::http::Response::builder().status(status);
+
+        // Add headers from Python dict
+        let headers_dict = self.headers.bind(py);
+        for (key, value) in headers_dict.iter() {
+            let key_str: String = key.extract()?;
+            let value_str: String = value.extract()?;
+            resp_builder = resp_builder.header(key_str, value_str);
+        }
+
+        // Convert content to body
+        let body = if let Some(ref content) = self.content {
+            // Convert Python object to JSON
+            let json_str = py
+                .import("json")?
+                .call_method1("dumps", (content,))?
+                .extract::<String>()?;
+            axum::body::Body::from(json_str)
+        } else {
+            axum::body::Body::empty()
+        };
+
+        resp_builder
+            .body(body)
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to build response: {}", e)))
     }
 }

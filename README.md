@@ -32,6 +32,7 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - [x] Swagger UI integration
 - [x] Redoc integration
 - [x] Test client (Python, Node.js, Ruby)
+- [x] Lifecycle hooks (onRequest, preValidation, preHandler, onResponse, onError)
 - [ ] WebSocket support
 - [ ] Server-Sent Events (SSE)
 - [ ] Streaming responses
@@ -182,6 +183,70 @@ config = ServerConfig(
     shutdown_timeout=30
 )
 ```
+
+### Lifecycle Hooks
+
+Spikard supports Fastify-inspired lifecycle hooks for executing custom logic at specific points in the request/response lifecycle:
+
+```python
+from spikard import Spikard, get, Request, Response
+
+app = Spikard()
+
+# onRequest: Runs before routing
+@app.on_request
+async def add_request_id(request: Request) -> Request:
+    request.headers["x-request-id"] = str(uuid.uuid4())
+    return request
+
+# preValidation: Runs after routing, before validation
+@app.pre_validation
+async def log_request(request: Request) -> Request:
+    logger.info(f"{request.method} {request.path}")
+    return request
+
+# preHandler: Runs after validation, before handler (ideal for auth)
+@app.pre_handler
+async def check_auth(request: Request) -> Request | Response:
+    token = request.headers.get("authorization")
+    if not token:
+        return Response(status_code=401, content={"error": "Unauthorized"})
+
+    user = await validate_token(token)
+    request.state["user"] = user
+    return request
+
+# onResponse: Runs after handler (can modify response)
+@app.on_response
+async def add_security_headers(response: Response) -> Response:
+    response.headers["x-content-type-options"] = "nosniff"
+    response.headers["x-frame-options"] = "DENY"
+    return response
+
+# onError: Runs when an error occurs
+@app.on_error
+async def log_errors(response: Response) -> Response:
+    if response.status_code >= 500:
+        logger.error(f"Server error: {response.status_code}")
+    return response
+
+@get("/protected")
+async def protected_route(request: Request):
+    user = request.state["user"]
+    return {"message": f"Hello, {user.name}!"}
+```
+
+**Available hooks:**
+- `onRequest` - Before routing, can modify request or short-circuit with response
+- `preValidation` - After routing, before validation
+- `preHandler` - After validation, before handler (ideal for authentication)
+- `onResponse` - After handler, can modify response
+- `onError` - When an error occurs, can customize error response
+
+**Cross-language support:**
+- **Python:** Async/await with PyO3 and pyo3-async-runtimes
+- **Node.js:** Promise-based with napi-rs ThreadsafeFunction
+- **Ruby:** Proc-based with magnus Opaque wrapper for thread safety
 
 ### OpenAPI Documentation
 

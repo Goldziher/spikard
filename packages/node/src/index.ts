@@ -5,7 +5,7 @@
  */
 
 // Application
-export { Spikard } from "./app";
+export { type LifecycleHookFunction, type LifecycleHooks, Spikard } from "./app";
 // Configuration types
 export type {
 	ApiKeyConfig,
@@ -103,4 +103,6 @@ export interface SpikardApp {
 	handlers: Record<string, HandlerFunction>;
 	/** Optional server configuration (for middleware, auth, etc.) */
 	config?: import("./config").ServerConfig;
+	/** Optional lifecycle hooks */
+	lifecycleHooks?: Partial<import("./app").LifecycleHooks>;
 }

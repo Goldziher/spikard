@@ -3,7 +3,9 @@
 //! This crate provides Python bindings using PyO3
 
 pub mod handler;
-mod response;
+pub mod lifecycle;
+pub mod request;
+pub mod response;
 mod test_client;
 
 use pyo3::prelude::*;
@@ -174,7 +176,8 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
     );
 
     // Extract server config from Python app if available
-    let config = if let Ok(py_config) = app.getattr("_config") {
+    // For test clients, disable compression to avoid needing decompression
+    let mut config = if let Ok(py_config) = app.getattr("_config") {
         if !py_config.is_none() {
             extract_server_config(py, &py_config)?
         } else {
@@ -183,6 +186,8 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
     } else {
         spikard_http::ServerConfig::default()
     };
+    // Disable compression for test clients
+    config.compression = None;
 
     // Build Axum router with Python handlers
     eprintln!(
@@ -430,6 +435,7 @@ fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyRes
         graceful_shutdown,
         shutdown_timeout,
         openapi: openapi_config,
+        lifecycle_hooks: None, // Lifecycle hooks not yet exposed to Python
     })
 }
 
@@ -468,7 +474,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
     use std::sync::Arc;
 
     // Extract server config from Python object
-    let config = extract_server_config(py, config)?;
+    let mut config = extract_server_config(py, config)?;
 
     if config.workers > 1 {
         eprintln!("⚠️  Multi-worker mode not yet implemented, using single worker");
@@ -479,6 +485,13 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
 
     // Extract routes from the Python app
     let routes_with_handlers = extract_routes_from_app(py, app)?;
+
+    // Extract lifecycle hooks from the Python app
+    let hooks_dict = app.call_method0("get_lifecycle_hooks")?;
+    let lifecycle_hooks = crate::lifecycle::build_lifecycle_hooks(py, &hooks_dict)?;
+
+    // Set lifecycle hooks in config
+    config.lifecycle_hooks = Some(lifecycle_hooks);
 
     // Create schema registry for deduplication across all routes
     let schema_registry = spikard_http::SchemaRegistry::new();
@@ -564,6 +577,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
 /// Python module for spikard
 #[pymodule]
 fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<request::PyRequest>()?;
     m.add_class::<response::Response>()?;
     m.add_class::<test_client::TestClient>()?;
     m.add_class::<test_client::TestResponse>()?;

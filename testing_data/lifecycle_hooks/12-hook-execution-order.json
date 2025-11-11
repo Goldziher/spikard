@@ -1,0 +1,41 @@
+{
+	"name": "Hook Execution Order",
+	"description": "Test that multiple hooks of the same type execute in registration order",
+	"category": "lifecycle_hooks",
+	"handler": {
+		"route": "/api/test-hook-order",
+		"method": "GET",
+		"middleware": {
+			"lifecycle_hooks": {
+				"on_request": [
+					{
+						"name": "first_hook",
+						"handler": "append_first",
+						"order": 1
+					},
+					{
+						"name": "second_hook",
+						"handler": "append_second",
+						"order": 2
+					},
+					{
+						"name": "third_hook",
+						"handler": "append_third",
+						"order": 3
+					}
+				]
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/test-hook-order"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Hooks executed in order",
+			"execution_order": ["first_hook", "second_hook", "third_hook"]
+		}
+	}
+}

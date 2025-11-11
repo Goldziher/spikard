@@ -1,0 +1,38 @@
+{
+	"name": "onRequest - Request Logging",
+	"description": "Test onRequest hook that logs incoming requests and adds a request ID",
+	"category": "lifecycle_hooks",
+	"handler": {
+		"route": "/api/test-on-request",
+		"method": "GET",
+		"middleware": {
+			"lifecycle_hooks": {
+				"on_request": [
+					{
+						"name": "request_logger",
+						"handler": "log_request"
+					},
+					{
+						"name": "request_id_generator",
+						"handler": "add_request_id"
+					}
+				]
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/test-on-request"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "onRequest hooks executed",
+			"request_logged": true,
+			"has_request_id": true
+		},
+		"headers": {
+			"X-Request-ID": ".*"
+		}
+	}
+}

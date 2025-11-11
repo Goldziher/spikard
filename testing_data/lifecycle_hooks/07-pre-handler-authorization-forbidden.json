@@ -1,0 +1,37 @@
+{
+	"name": "preHandler - Authorization Forbidden (Short Circuit)",
+	"description": "Test preHandler hook that denies access for insufficient permissions",
+	"category": "lifecycle_hooks",
+	"handler": {
+		"route": "/api/admin-only-forbidden",
+		"method": "GET",
+		"middleware": {
+			"lifecycle_hooks": {
+				"pre_handler": [
+					{
+						"name": "authenticator",
+						"handler": "validate_auth_token"
+					},
+					{
+						"name": "authorizer",
+						"handler": "check_admin_role"
+					}
+				]
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/admin-only-forbidden",
+		"headers": {
+			"Authorization": "Bearer user-token-11111"
+		}
+	},
+	"expected_response": {
+		"status_code": 403,
+		"body": {
+			"error": "Forbidden",
+			"message": "Admin role required for this endpoint"
+		}
+	}
+}

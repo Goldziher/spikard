@@ -252,18 +252,71 @@ fn generate_fixture_handler_and_app(category: &str, fixture: &Fixture) -> (Strin
     // Generate handler code
     let handler_code = generate_single_handler(fixture, &handler_name);
 
-    // Generate app function
-    let app_fn_code = format!(
-        r#"/// App for fixture: {}
+    // Check for lifecycle hooks in middleware
+    let hooks_code = if let Some(handler) = &fixture.handler {
+        if let Some(middleware) = &handler.middleware {
+            if let Some(hooks) = middleware.get("lifecycle_hooks") {
+                generate_lifecycle_hooks_rust(&fixture_id, hooks, fixture)
+            } else {
+                String::new()
+            }
+        } else {
+            String::new()
+        }
+    } else {
+        String::new()
+    };
+
+    // Generate app function with hooks registration
+    let app_fn_code = if hooks_code.is_empty() {
+        format!(
+            r#"/// App for fixture: {}
 pub fn {}() -> Router {{
     Router::new()
         .route("{}", {}({}))
         .layer(middleware::from_fn(spikard_http::middleware::validate_content_type_middleware))
 }}"#,
-        fixture.name, app_fn_name, axum_route, method_lower, handler_name
-    );
+            fixture.name, app_fn_name, axum_route, method_lower, handler_name
+        )
+    } else {
+        // Include lifecycle hooks
+        let hooks_registration = if let Some(handler) = &fixture.handler {
+            if let Some(middleware) = &handler.middleware {
+                if let Some(hooks) = middleware.get("lifecycle_hooks") {
+                    generate_hooks_registration_rust(&fixture_id, hooks)
+                } else {
+                    "LifecycleHooks::builder().build()".to_string()
+                }
+            } else {
+                "LifecycleHooks::builder().build()".to_string()
+            }
+        } else {
+            "LifecycleHooks::builder().build()".to_string()
+        };
 
-    (handler_code, app_fn_code)
+        format!(
+            r#"/// App for fixture: {}
+pub fn {}() -> Router {{
+    use spikard_http::{{LifecycleHooks, request_hook, response_hook, HookResult}};
+
+    let hooks = {};
+
+    Router::new()
+        .route("{}", {}({}))
+        .layer(middleware::from_fn(spikard_http::middleware::validate_content_type_middleware))
+}}"#,
+            fixture.name, app_fn_name, hooks_registration, axum_route, method_lower, handler_name
+        )
+    };
+
+    // Combine hooks and handler code
+    let combined_handler_code = if hooks_code.is_empty() {
+        handler_code
+    } else {
+        format!("{}\n\n{}", hooks_code, handler_code)
+    };
+
+    (combined_handler_code, app_fn_code)
 }
 
 /// Sanitize fixture name to valid Rust identifier
@@ -1266,4 +1319,257 @@ fn route_method_to_handler_name(route: &str, method: &str) -> String {
     } else {
         format!("{}_{}_handler", method.to_lowercase(), route_part)
     }
+}
+
+/// Generate Rust lifecycle hook function implementations
+fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixture) -> String {
+    let mut code = String::new();
+
+    // Process on_request hooks
+    if let Some(on_request) = hooks.get("on_request").and_then(|v| v.as_array()) {
+        for (idx, hook) in on_request.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_on_request_{}", fixture_id, sanitize_name(hook_name), idx);
+
+            code.push_str(&format!(
+                r#"async fn {}(req: axum::http::Request<axum::body::Body>) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {{
+    // Mock onRequest hook: {}
+    Ok(spikard_http::HookResult::Continue(req))
+}}
+
+"#,
+                func_name, hook_name
+            ));
+        }
+    }
+
+    // Process pre_validation hooks
+    if let Some(pre_validation) = hooks.get("pre_validation").and_then(|v| v.as_array()) {
+        for (idx, hook) in pre_validation.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_pre_validation_{}", fixture_id, sanitize_name(hook_name), idx);
+
+            // Check if this hook should short-circuit (e.g., rate limit exceeded)
+            let should_short_circuit = hook_name.contains("rate_limit") && fixture.expected_response.status_code == 429;
+
+            if should_short_circuit {
+                code.push_str(&format!(
+                    r#"async fn {}(_req: axum::http::Request<axum::body::Body>) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {{
+    // preValidation hook: {} - Short circuits with 429
+    use axum::response::IntoResponse;
+    let response = (
+        axum::http::StatusCode::TOO_MANY_REQUESTS,
+        axum::Json(serde_json::json!({{
+            "error": "Rate limit exceeded",
+            "message": "Too many requests, please try again later"
+        }}))
+    ).into_response();
+    Ok(spikard_http::HookResult::ShortCircuit(response))
+}}
+
+"#,
+                    func_name, hook_name
+                ));
+            } else {
+                code.push_str(&format!(
+                    r#"async fn {}(req: axum::http::Request<axum::body::Body>) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {{
+    // Mock preValidation hook: {}
+    Ok(spikard_http::HookResult::Continue(req))
+}}
+
+"#,
+                    func_name, hook_name
+                ));
+            }
+        }
+    }
+
+    // Process pre_handler hooks
+    if let Some(pre_handler) = hooks.get("pre_handler").and_then(|v| v.as_array()) {
+        for (idx, hook) in pre_handler.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_pre_handler_{}", fixture_id, sanitize_name(hook_name), idx);
+
+            // Check if auth should fail
+            let auth_fails = hook_name.contains("auth")
+                && (fixture.expected_response.status_code == 401 || fixture.expected_response.status_code == 403);
+
+            if auth_fails {
+                let (status_code, error_msg, detail_msg) = if fixture.expected_response.status_code == 401 {
+                    (
+                        "UNAUTHORIZED",
+                        "Unauthorized",
+                        "Invalid or expired authentication token",
+                    )
+                } else {
+                    ("FORBIDDEN", "Forbidden", "Admin role required for this endpoint")
+                };
+
+                code.push_str(&format!(
+                    r#"async fn {}(_req: axum::http::Request<axum::body::Body>) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {{
+    // preHandler hook: {} - Short circuits with {}
+    use axum::response::IntoResponse;
+    let response = (
+        axum::http::StatusCode::{},
+        axum::Json(serde_json::json!({{
+            "error": "{}",
+            "message": "{}"
+        }}))
+    ).into_response();
+    Ok(spikard_http::HookResult::ShortCircuit(response))
+}}
+
+"#,
+                    func_name, hook_name, fixture.expected_response.status_code,
+                    status_code, error_msg, detail_msg
+                ));
+            } else {
+                code.push_str(&format!(
+                    r#"async fn {}(req: axum::http::Request<axum::body::Body>) -> Result<spikard_http::HookResult<axum::http::Request<axum::body::Body>>, String> {{
+    // Mock preHandler hook: {}
+    Ok(spikard_http::HookResult::Continue(req))
+}}
+
+"#,
+                    func_name, hook_name
+                ));
+            }
+        }
+    }
+
+    // Process on_response hooks
+    if let Some(on_response) = hooks.get("on_response").and_then(|v| v.as_array()) {
+        for (idx, hook) in on_response.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_on_response_{}", fixture_id, sanitize_name(hook_name), idx);
+
+            // Add security headers if requested
+            if hook_name.contains("security") {
+                code.push_str(&format!(
+                    r#"async fn {}(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard_http::HookResult<axum::http::Response<axum::body::Body>>, String> {{
+    // onResponse hook: {} - Adds security headers
+    resp.headers_mut().insert("X-Content-Type-Options", "nosniff".parse().unwrap());
+    resp.headers_mut().insert("X-Frame-Options", "DENY".parse().unwrap());
+    resp.headers_mut().insert("X-XSS-Protection", "1; mode=block".parse().unwrap());
+    resp.headers_mut().insert("Strict-Transport-Security", "max-age=31536000; includeSubDomains".parse().unwrap());
+    Ok(spikard_http::HookResult::Continue(resp))
+}}
+
+"#,
+                    func_name, hook_name
+                ));
+            } else if hook_name.contains("timing") || hook_name.contains("timer") {
+                code.push_str(&format!(
+                    r#"async fn {}(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard_http::HookResult<axum::http::Response<axum::body::Body>>, String> {{
+    // onResponse hook: {} - Adds timing header
+    resp.headers_mut().insert("X-Response-Time", "0ms".parse().unwrap());
+    Ok(spikard_http::HookResult::Continue(resp))
+}}
+
+"#,
+                    func_name, hook_name
+                ));
+            } else {
+                code.push_str(&format!(
+                    r#"async fn {}(resp: axum::http::Response<axum::body::Body>) -> Result<spikard_http::HookResult<axum::http::Response<axum::body::Body>>, String> {{
+    // Mock onResponse hook: {}
+    Ok(spikard_http::HookResult::Continue(resp))
+}}
+
+"#,
+                    func_name, hook_name
+                ));
+            }
+        }
+    }
+
+    // Process on_error hooks
+    if let Some(on_error) = hooks.get("on_error").and_then(|v| v.as_array()) {
+        for (idx, hook) in on_error.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_on_error_{}", fixture_id, sanitize_name(hook_name), idx);
+
+            code.push_str(&format!(
+                r#"async fn {}(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard_http::HookResult<axum::http::Response<axum::body::Body>>, String> {{
+    // onError hook: {} - Format error response
+    resp.headers_mut().insert("Content-Type", "application/json".parse().unwrap());
+    Ok(spikard_http::HookResult::Continue(resp))
+}}
+
+"#,
+                func_name, hook_name
+            ));
+        }
+    }
+
+    code
+}
+
+/// Generate Rust lifecycle hooks registration using LifecycleHooks::builder()
+fn generate_hooks_registration_rust(fixture_id: &str, hooks: &Value) -> String {
+    let mut code = String::from("LifecycleHooks::builder()");
+
+    // Process on_request hooks
+    if let Some(on_request) = hooks.get("on_request").and_then(|v| v.as_array()) {
+        for (idx, hook) in on_request.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_on_request_{}", fixture_id, sanitize_name(hook_name), idx);
+            code.push_str(&format!(
+                "\n        .on_request(request_hook(\"{}\", {}))",
+                hook_name, func_name
+            ));
+        }
+    }
+
+    // Process pre_validation hooks
+    if let Some(pre_validation) = hooks.get("pre_validation").and_then(|v| v.as_array()) {
+        for (idx, hook) in pre_validation.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_pre_validation_{}", fixture_id, sanitize_name(hook_name), idx);
+            code.push_str(&format!(
+                "\n        .pre_validation(request_hook(\"{}\", {}))",
+                hook_name, func_name
+            ));
+        }
+    }
+
+    // Process pre_handler hooks
+    if let Some(pre_handler) = hooks.get("pre_handler").and_then(|v| v.as_array()) {
+        for (idx, hook) in pre_handler.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_pre_handler_{}", fixture_id, sanitize_name(hook_name), idx);
+            code.push_str(&format!(
+                "\n        .pre_handler(request_hook(\"{}\", {}))",
+                hook_name, func_name
+            ));
+        }
+    }
+
+    // Process on_response hooks
+    if let Some(on_response) = hooks.get("on_response").and_then(|v| v.as_array()) {
+        for (idx, hook) in on_response.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_on_response_{}", fixture_id, sanitize_name(hook_name), idx);
+            code.push_str(&format!(
+                "\n        .on_response(response_hook(\"{}\", {}))",
+                hook_name, func_name
+            ));
+        }
+    }
+
+    // Process on_error hooks
+    if let Some(on_error) = hooks.get("on_error").and_then(|v| v.as_array()) {
+        for (idx, hook) in on_error.iter().enumerate() {
+            let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
+            let func_name = format!("{}_{}_on_error_{}", fixture_id, sanitize_name(hook_name), idx);
+            code.push_str(&format!(
+                "\n        .on_error(response_hook(\"{}\", {}))",
+                hook_name, func_name
+            ));
+        }
+    }
+
+    code.push_str("\n        .build()");
+
+    code
 }

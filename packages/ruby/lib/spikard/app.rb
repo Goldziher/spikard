@@ -3,8 +3,123 @@
 module Spikard
   RouteEntry = Struct.new(:metadata, :handler)
 
+  # Lifecycle hooks support for Spikard applications
+  module LifecycleHooks
+    # Register an onRequest lifecycle hook
+    #
+    # Runs before routing. Can inspect/modify the request or short-circuit with a response.
+    #
+    # @param hook [Proc] A proc that receives a request and returns either:
+    #   - The (possibly modified) request to continue processing
+    #   - A Response object to short-circuit the request pipeline
+    # @return [Proc] The hook proc (for chaining)
+    #
+    # @example
+    #   app.on_request do |request|
+    #     puts "Request: #{request.method} #{request.path}"
+    #     request
+    #   end
+    def on_request(&hook)
+      @lifecycle_hooks[:on_request] << hook
+      hook
+    end
+
+    # Register a preValidation lifecycle hook
+    #
+    # Runs after routing but before validation. Useful for rate limiting.
+    #
+    # @param hook [Proc] A proc that receives a request and returns either:
+    #   - The (possibly modified) request to continue processing
+    #   - A Response object to short-circuit the request pipeline
+    # @return [Proc] The hook proc (for chaining)
+    #
+    # @example
+    #   app.pre_validation do |request|
+    #     if too_many_requests?
+    #       Spikard::Response.new(content: { error: "Rate limit exceeded" }, status_code: 429)
+    #     else
+    #       request
+    #     end
+    #   end
+    def pre_validation(&hook)
+      @lifecycle_hooks[:pre_validation] << hook
+      hook
+    end
+
+    # Register a preHandler lifecycle hook
+    #
+    # Runs after validation but before the handler. Ideal for authentication/authorization.
+    #
+    # @param hook [Proc] A proc that receives a request and returns either:
+    #   - The (possibly modified) request to continue processing
+    #   - A Response object to short-circuit the request pipeline
+    # @return [Proc] The hook proc (for chaining)
+    #
+    # @example
+    #   app.pre_handler do |request|
+    #     if invalid_token?(request.headers['Authorization'])
+    #       Spikard::Response.new(content: { error: "Unauthorized" }, status_code: 401)
+    #     else
+    #       request
+    #     end
+    #   end
+    def pre_handler(&hook)
+      @lifecycle_hooks[:pre_handler] << hook
+      hook
+    end
+
+    # Register an onResponse lifecycle hook
+    #
+    # Runs after the handler executes. Can modify the response.
+    #
+    # @param hook [Proc] A proc that receives a response and returns the (possibly modified) response
+    # @return [Proc] The hook proc (for chaining)
+    #
+    # @example
+    #   app.on_response do |response|
+    #     response.headers['X-Frame-Options'] = 'DENY'
+    #     response
+    #   end
+    def on_response(&hook)
+      @lifecycle_hooks[:on_response] << hook
+      hook
+    end
+
+    # Register an onError lifecycle hook
+    #
+    # Runs when an error occurs. Can customize error responses.
+    #
+    # @param hook [Proc] A proc that receives an error response and returns a (possibly modified) response
+    # @return [Proc] The hook proc (for chaining)
+    #
+    # @example
+    #   app.on_error do |response|
+    #     response.headers['Content-Type'] = 'application/json'
+    #     response
+    #   end
+    def on_error(&hook)
+      @lifecycle_hooks[:on_error] << hook
+      hook
+    end
+
+    # Get all registered lifecycle hooks
+    #
+    # @return [Hash] Dictionary of hook arrays by type
+    def lifecycle_hooks
+      {
+        on_request: @lifecycle_hooks[:on_request].dup,
+        pre_validation: @lifecycle_hooks[:pre_validation].dup,
+        pre_handler: @lifecycle_hooks[:pre_handler].dup,
+        on_response: @lifecycle_hooks[:on_response].dup,
+        on_error: @lifecycle_hooks[:on_error].dup
+      }
+    end
+  end
+
   # Collects route metadata so the Rust engine can execute handlers.
   class App
+    include LifecycleHooks
+
     HTTP_METHODS = %w[GET POST PUT PATCH DELETE OPTIONS HEAD TRACE].freeze
     SUPPORTED_OPTIONS = %i[request_schema response_schema parameter_schema file_params is_async cors].freeze
 
@@ -12,6 +127,13 @@ module Spikard
 
     def initialize
       @routes = []
+      @lifecycle_hooks = {
+        on_request: [],
+        pre_validation: [],
+        pre_handler: [],
+        on_response: [],
+        on_error: []
+      }
     end
 
     def register_route(method, path, handler_name:, **options, &block)
@@ -82,8 +204,11 @@ module Spikard
       # Get handler map
       handlers = handler_map
 
+      # Get lifecycle hooks
+      hooks = lifecycle_hooks
+
       # Call the Rust extension's run_server function
-      Spikard::Native.run_server(routes_json, handlers, config)
+      Spikard::Native.run_server(routes_json, handlers, config, hooks)
 
       # Keep Ruby process alive while server runs
       sleep

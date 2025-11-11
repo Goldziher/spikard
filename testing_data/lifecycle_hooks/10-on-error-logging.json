@@ -1,0 +1,38 @@
+{
+	"name": "onError - Error Logging",
+	"description": "Test onError hook that logs server errors and formats error responses",
+	"category": "lifecycle_hooks",
+	"handler": {
+		"route": "/api/test-error",
+		"method": "GET",
+		"middleware": {
+			"lifecycle_hooks": {
+				"on_error": [
+					{
+						"name": "error_logger",
+						"handler": "log_error"
+					},
+					{
+						"name": "error_formatter",
+						"handler": "format_error_response"
+					}
+				]
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/test-error"
+	},
+	"expected_response": {
+		"status_code": 500,
+		"body": {
+			"error": "Internal Server Error",
+			"message": "An unexpected error occurred",
+			"error_id": ".*"
+		},
+		"headers": {
+			"Content-Type": "application/json"
+		}
+	}
+}

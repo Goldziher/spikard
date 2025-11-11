@@ -41,7 +41,7 @@ async def test_jwt_malformed_token_format() -> None:
     assert "status" in response_data
     assert response_data["status"] == 401
     assert "title" in response_data
-    assert response_data["title"] == "Unauthorized"
+    assert response_data["title"] == "Malformed JWT token"
     assert "type" in response_data
     assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
 
@@ -64,7 +64,7 @@ async def test_bearer_token_without_prefix() -> None:
     assert "status" in response_data
     assert response_data["status"] == 401
     assert "title" in response_data
-    assert response_data["title"] == "Unauthorized"
+    assert response_data["title"] == "Invalid Authorization header format"
     assert "type" in response_data
     assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
 
@@ -114,21 +114,18 @@ async def test_jwt_invalid_issuer() -> None:
     client = TestClient(app)
 
     headers = {
-        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImlzcyI6Imh0dHBzOi8vZXZpbC5jb20ifQ.O3gVwqYHqJQPL2PtgWmBN0sQd5_HvYKKjZGhPkXqM_w",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2V2aWwuY29tIn0.mbL5L04_hpaaiz0SPABap6ZWfBLu18aiexBjzwQ1nnA",
     }
     response = await client.get("/api/protected", headers=headers)
 
     assert response.status_code == 401
     response_data = response.json()
     assert "detail" in response_data
-    assert (
-        response_data["detail"]
-        == "JWT issuer 'https://evil.com' does not match expected issuer 'https://auth.example.com'"
-    )
+    assert response_data["detail"] == "Token issuer is invalid, expected 'https://auth.example.com'"
     assert "status" in response_data
     assert response_data["status"] == 401
     assert "title" in response_data
-    assert response_data["title"] == "Unauthorized"
+    assert response_data["title"] == "JWT validation failed"
     assert "type" in response_data
     assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
 
@@ -140,7 +137,7 @@ async def test_jwt_with_multiple_audiences() -> None:
     client = TestClient(app)
 
     headers = {
-        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSIsImh0dHBzOi8vYWRtaW4uZXhhbXBsZS5jb20iXSwiaXNzIjoiaHR0cHM6Ly9hdXRoLmV4YW1wbGUuY29tIn0.qVfBpQYPcX9wWZJhULmN7KR8vT3DxGbH2jSaIoFnYwE",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSIsImh0dHBzOi8vYWRtaW4uZXhhbXBsZS5jb20iXSwiaXNzIjoiaHR0cHM6Ly9hdXRoLmV4YW1wbGUuY29tIn0.9MBL_XccGXfu9cDUnCpQruDMOl2hHYydzeGn-20dQOs",
     }
     response = await client.get("/api/protected", headers=headers)
 
@@ -221,7 +218,7 @@ async def test_jwt_not_before_claim_in_future() -> None:
     client = TestClient(app)
 
     headers = {
-        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsIm5iZiI6MjYyNjc4Mzk0Nn0.8yXqZ9jKCR0BwqJc7pN_QvD3mYLxHfWzUeIaGkTnOsA",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsIm5iZiI6MjYyNjc4Mzk0NiwiYXVkIjpbImh0dHBzOi8vYXBpLmV4YW1wbGUuY29tIl0sImlzcyI6Imh0dHBzOi8vYXV0aC5leGFtcGxlLmNvbSJ9.hG4I76_3kJfsbJ_jmxoP1NSYnkcqdyBFcPpdo-jYU4E",
     }
     response = await client.get("/api/protected", headers=headers)
 
@@ -232,7 +229,7 @@ async def test_jwt_not_before_claim_in_future() -> None:
     assert "status" in response_data
     assert response_data["status"] == 401
     assert "title" in response_data
-    assert response_data["title"] == "Unauthorized"
+    assert response_data["title"] == "JWT validation failed"
     assert "type" in response_data
     assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
 
@@ -244,8 +241,8 @@ async def test_multiple_authentication_schemes_jwt_precedence() -> None:
     client = TestClient(app)
 
     headers = {
-        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg",
         "X-API-Key": "sk_test_123456",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg",
     }
     response = await client.get("/api/data", headers=headers)
 
@@ -331,7 +328,7 @@ async def test_api_key_authentication_missing_header() -> None:
     assert response.status_code == 401
     response_data = response.json()
     assert "detail" in response_data
-    assert response_data["detail"] == "Expected 'X-API-Key' header with valid API key"
+    assert response_data["detail"] == "Expected 'X-API-Key' header or 'api_key' query parameter with valid API key"
     assert "status" in response_data
     assert response_data["status"] == 401
     assert "title" in response_data
