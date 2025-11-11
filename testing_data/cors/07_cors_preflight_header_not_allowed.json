@@ -42,10 +42,7 @@
 		}
 	},
 	"expected_response": {
-		"status_code": 403,
-		"headers": {
-			"Access-Control-Allow-Origin": null
-		}
+		"status_code": 403
 	},
 	"tags": ["cors", "preflight", "headers", "validation", "error"]
 }

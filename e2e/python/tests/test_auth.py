@@ -5,12 +5,68 @@ from app.main import (
     create_app_auth_api_key_authentication_invalid_key,
     create_app_auth_api_key_authentication_missing_header,
     create_app_auth_api_key_authentication_valid_key,
+    create_app_auth_api_key_in_query_parameter,
+    create_app_auth_api_key_rotation_old_key_still_valid,
+    create_app_auth_api_key_with_custom_header_name,
+    create_app_auth_bearer_token_without_prefix,
     create_app_auth_jwt_authentication_expired_token,
     create_app_auth_jwt_authentication_invalid_audience,
     create_app_auth_jwt_authentication_invalid_signature,
     create_app_auth_jwt_authentication_missing_authorization_header,
     create_app_auth_jwt_authentication_valid_token,
+    create_app_auth_jwt_invalid_issuer,
+    create_app_auth_jwt_malformed_token_format,
+    create_app_auth_jwt_missing_required_custom_claims,
+    create_app_auth_jwt_not_before_claim_in_future,
+    create_app_auth_jwt_with_multiple_audiences,
+    create_app_auth_multiple_authentication_schemes_jwt_precedence,
 )
+
+
+async def test_jwt_malformed_token_format() -> None:
+    """Tests JWT rejection when token doesn't have the required 3-part structure (header.payload.signature)."""
+
+    app = create_app_auth_jwt_malformed_token_format()
+    client = TestClient(app)
+
+    headers = {
+        "Authorization": "Bearer invalid.token",
+    }
+    response = await client.get("/api/protected", headers=headers)
+
+    assert response.status_code == 401
+    response_data = response.json()
+    assert "detail" in response_data
+    assert response_data["detail"] == "Malformed JWT token: expected 3 parts separated by dots, found 2"
+    assert "status" in response_data
+    assert response_data["status"] == 401
+    assert "title" in response_data
+    assert response_data["title"] == "Unauthorized"
+    assert "type" in response_data
+    assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
+
+
+async def test_bearer_token_without_prefix() -> None:
+    """Tests JWT rejection when token is provided without 'Bearer ' prefix in Authorization header."""
+
+    app = create_app_auth_bearer_token_without_prefix()
+    client = TestClient(app)
+
+    headers = {
+        "Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.8yXqZ9jKCR0BwqJc7pN_QvD3mYLxHfWzUeIaGkTnOsA",
+    }
+    response = await client.get("/api/protected", headers=headers)
+
+    assert response.status_code == 401
+    response_data = response.json()
+    assert "detail" in response_data
+    assert response_data["detail"] == "Authorization header must use Bearer scheme: 'Bearer <token>'"
+    assert "status" in response_data
+    assert response_data["status"] == 401
+    assert "title" in response_data
+    assert response_data["title"] == "Unauthorized"
+    assert "type" in response_data
+    assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
 
 
 async def test_jwt_authentication_valid_token() -> None:
@@ -30,6 +86,86 @@ async def test_jwt_authentication_valid_token() -> None:
     assert response_data["message"] == "Access granted"
     assert "user_id" in response_data
     assert response_data["user_id"] == "user123"
+
+
+async def test_api_key_rotation_old_key_still_valid() -> None:
+    """Tests API key authentication during rotation period when old key remains valid alongside new key."""
+
+    app = create_app_auth_api_key_rotation_old_key_still_valid()
+    client = TestClient(app)
+
+    headers = {
+        "X-API-Key": "sk_test_old_123456",
+    }
+    response = await client.get("/api/data", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert "data" in response_data
+    assert response_data["data"] == "sensitive information"
+    assert "message" in response_data
+    assert response_data["message"] == "Access granted"
+
+
+async def test_jwt_invalid_issuer() -> None:
+    """Tests JWT rejection when issuer claim doesn't match expected value."""
+
+    app = create_app_auth_jwt_invalid_issuer()
+    client = TestClient(app)
+
+    headers = {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImlzcyI6Imh0dHBzOi8vZXZpbC5jb20ifQ.O3gVwqYHqJQPL2PtgWmBN0sQd5_HvYKKjZGhPkXqM_w",
+    }
+    response = await client.get("/api/protected", headers=headers)
+
+    assert response.status_code == 401
+    response_data = response.json()
+    assert "detail" in response_data
+    assert (
+        response_data["detail"]
+        == "JWT issuer 'https://evil.com' does not match expected issuer 'https://auth.example.com'"
+    )
+    assert "status" in response_data
+    assert response_data["status"] == 401
+    assert "title" in response_data
+    assert response_data["title"] == "Unauthorized"
+    assert "type" in response_data
+    assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
+
+
+async def test_jwt_with_multiple_audiences() -> None:
+    """Tests JWT validation when token has multiple audiences and one must match."""
+
+    app = create_app_auth_jwt_with_multiple_audiences()
+    client = TestClient(app)
+
+    headers = {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSIsImh0dHBzOi8vYWRtaW4uZXhhbXBsZS5jb20iXSwiaXNzIjoiaHR0cHM6Ly9hdXRoLmV4YW1wbGUuY29tIn0.qVfBpQYPcX9wWZJhULmN7KR8vT3DxGbH2jSaIoFnYwE",
+    }
+    response = await client.get("/api/protected", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert "message" in response_data
+    assert response_data["message"] == "Access granted"
+    assert "user_id" in response_data
+    assert response_data["user_id"] == "user123"
+
+
+async def test_api_key_in_query_parameter() -> None:
+    """Tests API key authentication when key is provided as query parameter instead of header."""
+
+    app = create_app_auth_api_key_in_query_parameter()
+    client = TestClient(app)
+
+    response = await client.get("/api/data?api_key=sk_test_123456")
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert "data" in response_data
+    assert response_data["data"] == "sensitive information"
+    assert "message" in response_data
+    assert response_data["message"] == "Access granted"
 
 
 async def test_jwt_authentication_expired_token() -> None:
@@ -78,6 +214,74 @@ async def test_api_key_authentication_invalid_key() -> None:
     assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
 
 
+async def test_jwt_not_before_claim_in_future() -> None:
+    """Tests JWT rejection when nbf (not before) claim is in the future."""
+
+    app = create_app_auth_jwt_not_before_claim_in_future()
+    client = TestClient(app)
+
+    headers = {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsIm5iZiI6MjYyNjc4Mzk0Nn0.8yXqZ9jKCR0BwqJc7pN_QvD3mYLxHfWzUeIaGkTnOsA",
+    }
+    response = await client.get("/api/protected", headers=headers)
+
+    assert response.status_code == 401
+    response_data = response.json()
+    assert "detail" in response_data
+    assert response_data["detail"] == "JWT not valid yet, not before claim is in the future"
+    assert "status" in response_data
+    assert response_data["status"] == 401
+    assert "title" in response_data
+    assert response_data["title"] == "Unauthorized"
+    assert "type" in response_data
+    assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
+
+
+async def test_multiple_authentication_schemes_jwt_precedence() -> None:
+    """Tests authentication when both JWT and API key are provided, JWT takes precedence."""
+
+    app = create_app_auth_multiple_authentication_schemes_jwt_precedence()
+    client = TestClient(app)
+
+    headers = {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg",
+        "X-API-Key": "sk_test_123456",
+    }
+    response = await client.get("/api/data", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert "auth_method" in response_data
+    assert response_data["auth_method"] == "jwt"
+    assert "message" in response_data
+    assert response_data["message"] == "Access granted"
+    assert "user_id" in response_data
+    assert response_data["user_id"] == "user123"
+
+
+async def test_jwt_missing_required_custom_claims() -> None:
+    """Tests JWT rejection when required custom claims (role, permissions) are missing."""
+
+    app = create_app_auth_jwt_missing_required_custom_claims()
+    client = TestClient(app)
+
+    headers = {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg",
+    }
+    response = await client.get("/api/admin", headers=headers)
+
+    assert response.status_code == 403
+    response_data = response.json()
+    assert "detail" in response_data
+    assert response_data["detail"] == "Required claims 'role' and 'permissions' missing from JWT"
+    assert "status" in response_data
+    assert response_data["status"] == 403
+    assert "title" in response_data
+    assert response_data["title"] == "Forbidden"
+    assert "type" in response_data
+    assert response_data["type"] == "https://spikard.dev/errors/forbidden"
+
+
 async def test_api_key_authentication_valid_key() -> None:
     """Tests API key authentication with a valid API key in custom header."""
 
@@ -86,6 +290,25 @@ async def test_api_key_authentication_valid_key() -> None:
 
     headers = {
         "X-API-Key": "sk_test_123456",
+    }
+    response = await client.get("/api/data", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert "data" in response_data
+    assert response_data["data"] == "sensitive information"
+    assert "message" in response_data
+    assert response_data["message"] == "Access granted"
+
+
+async def test_api_key_with_custom_header_name() -> None:
+    """Tests API key authentication with a custom header name (X-API-Token instead of X-API-Key)."""
+
+    app = create_app_auth_api_key_with_custom_header_name()
+    client = TestClient(app)
+
+    headers = {
+        "X-API-Token": "sk_test_123456",
     }
     response = await client.get("/api/data", headers=headers)
 

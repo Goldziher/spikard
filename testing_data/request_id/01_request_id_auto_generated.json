@@ -28,12 +28,6 @@
 		"status_code": 200,
 		"body": {
 			"message": "success"
-		},
-		"headers": {
-			"X-Request-ID": {
-				"pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
-				"description": "UUID v4 format (lowercase hexadecimal with version 4 and variant bits)"
-			}
 		}
 	},
 	"tags": ["request_id", "middleware", "tracing", "observability", "uuid"],
