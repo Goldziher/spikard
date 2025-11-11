@@ -237,7 +237,7 @@ async def test_html_response_text_html() -> None:
     response = await client.get("/html")
 
     assert response.status_code == 200
-    assert response_data == "<html><body><h1>Hello</h1></body></html>"
+    assert response.text() == "<html><body><h1>Hello</h1></body></html>"
 
 
 async def test_jpeg_image_response_image_jpeg() -> None:
@@ -290,8 +290,7 @@ async def test_plain_text_response_text_plain() -> None:
     response = await client.get("/text")
 
     assert response.status_code == 200
-    response_data = response.json()
-    assert response_data == "Hello, World!"
+    assert response.text() == "Hello, World!"
 
 
 async def test_18_content_type_with_multiple_params() -> None:
@@ -321,8 +320,7 @@ async def test_csv_response_text_csv() -> None:
     response = await client.get("/export/data.csv")
 
     assert response.status_code == 200
-    response_data = response.json()
-    assert response_data == "id,name,price\n1,Item A,10.0\n2,Item B,20.0"
+    assert response.text() == "id,name,price\n1,Item A,10.0\n2,Item B,20.0"
 
 
 async def test_binary_response_application_octet_stream() -> None:
