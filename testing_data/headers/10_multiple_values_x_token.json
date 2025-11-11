@@ -10,7 +10,7 @@
 		"method": "GET",
 		"path": "/items/",
 		"headers": {
-			"x-token": ["foo", "bar"]
+			"x-token": "foo, bar"
 		}
 	},
 	"expected_response": {

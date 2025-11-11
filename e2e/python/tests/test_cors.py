@@ -5,12 +5,86 @@ from app.main import (
     create_app_cors_08_cors_max_age,
     create_app_cors_09_cors_expose_headers,
     create_app_cors_10_cors_origin_null,
+    create_app_cors_cors_multiple_allowed_origins,
+    create_app_cors_cors_origin_case_sensitivity,
+    create_app_cors_cors_preflight_for_delete_method,
+    create_app_cors_cors_preflight_for_put_method,
     create_app_cors_cors_preflight_request,
+    create_app_cors_cors_private_network_access,
+    create_app_cors_cors_regex_pattern_matching_for_origins,
     create_app_cors_cors_request_blocked,
+    create_app_cors_cors_safelisted_headers_without_preflight,
+    create_app_cors_cors_vary_header_for_proper_caching,
     create_app_cors_cors_wildcard_origin,
     create_app_cors_cors_with_credentials,
     create_app_cors_simple_cors_request,
 )
+
+
+async def test_cors_vary_header_for_proper_caching() -> None:
+    """Tests that Vary: Origin header is present for correct cache behavior."""
+
+    app = create_app_cors_cors_vary_header_for_proper_caching()
+    client = TestClient(app)
+
+    headers = {
+        "Cache-Control": "max-age=3600",
+        "Origin": "https://app.example.com",
+    }
+    response = await client.get("/api/cached-resource", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert "data" in response_data
+    assert response_data["data"] == "cacheable resource"
+
+
+async def test_cors_preflight_for_put_method() -> None:
+    """Tests OPTIONS preflight request for PUT method with custom headers."""
+
+    app = create_app_cors_cors_preflight_for_put_method()
+    client = TestClient(app)
+
+    headers = {
+        "Access-Control-Request-Method": "PUT",
+        "Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
+        "Origin": "https://app.example.com",
+    }
+    response = await client.options("/api/resource/123", headers=headers)
+
+    assert response.status_code == 204
+
+
+async def test_cors_preflight_for_delete_method() -> None:
+    """Tests OPTIONS preflight request for DELETE method."""
+
+    app = create_app_cors_cors_preflight_for_delete_method()
+    client = TestClient(app)
+
+    headers = {
+        "Origin": "https://app.example.com",
+        "Access-Control-Request-Method": "DELETE",
+    }
+    response = await client.options("/api/resource/456", headers=headers)
+
+    assert response.status_code == 204
+
+
+async def test_cors_multiple_allowed_origins() -> None:
+    """Tests CORS when multiple origins are allowed and request origin matches one."""
+
+    app = create_app_cors_cors_multiple_allowed_origins()
+    client = TestClient(app)
+
+    headers = {
+        "Origin": "https://admin.example.com",
+    }
+    response = await client.get("/api/data", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert "data" in response_data
+    assert response_data["data"] == "resource data"
 
 
 async def test_cors_preflight_request() -> None:
@@ -37,8 +111,8 @@ async def test_cors_with_credentials() -> None:
     client = TestClient(app)
 
     headers = {
-        "Cookie": "session=abc123",
         "Origin": "https://app.example.com",
+        "Cookie": "session=abc123",
     }
     response = await client.get("/api/user/profile", headers=headers)
 
@@ -46,6 +120,23 @@ async def test_cors_with_credentials() -> None:
     response_data = response.json()
     assert "username" in response_data
     assert response_data["username"] == "john"
+
+
+async def test_cors_regex_pattern_matching_for_origins() -> None:
+    """Tests CORS with regex pattern matching for subdomain wildcards."""
+
+    app = create_app_cors_cors_regex_pattern_matching_for_origins()
+    client = TestClient(app)
+
+    headers = {
+        "Origin": "https://subdomain.example.com",
+    }
+    response = await client.get("/api/data", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert "data" in response_data
+    assert response_data["data"] == "resource data"
 
 
 async def test_08_cors_max_age() -> None:
@@ -96,6 +187,58 @@ async def test_cors_wildcard_origin() -> None:
     response_data = response.json()
     assert "data" in response_data
     assert response_data["data"] == "public"
+
+
+async def test_cors_safelisted_headers_without_preflight() -> None:
+    """Tests that safelisted headers (Content-Type: text/plain, Accept, Accept-Language) don't require preflight."""
+
+    app = create_app_cors_cors_safelisted_headers_without_preflight()
+    client = TestClient(app)
+
+    headers = {
+        "Content-Type": "text/plain",
+        "Accept-Language": "en-US",
+        "Accept": "application/json",
+        "Origin": "https://app.example.com",
+    }
+    raw_body = "plain text data"
+    response = await client.post("/api/form", headers=headers, data=raw_body)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert "received" in response_data
+    assert response_data["received"] == "plain text data"
+
+
+async def test_cors_private_network_access() -> None:
+    """Tests Private Network Access (RFC 1918) preflight with Access-Control-Request-Private-Network."""
+
+    app = create_app_cors_cors_private_network_access()
+    client = TestClient(app)
+
+    headers = {
+        "Origin": "https://public.example.com",
+        "Access-Control-Request-Private-Network": "true",
+        "Access-Control-Request-Method": "GET",
+    }
+    response = await client.options("/api/local-resource", headers=headers)
+
+    assert response.status_code == 204
+
+
+async def test_cors_origin_case_sensitivity() -> None:
+    """Tests that CORS origin matching is case-sensitive for the domain part."""
+
+    app = create_app_cors_cors_origin_case_sensitivity()
+    client = TestClient(app)
+
+    headers = {
+        "Origin": "https://EXAMPLE.COM",
+    }
+    response = await client.get("/api/data", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
 
 
 async def test_cors_request_blocked() -> None:
