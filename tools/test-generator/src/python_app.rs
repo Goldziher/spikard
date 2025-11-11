@@ -115,6 +115,7 @@ fn generate_app_file_per_fixture(fixtures_by_category: &HashMap<String, Vec<Fixt
     code.push_str("from enum import Enum\n");
     code.push_str("from typing import Any, NamedTuple, TypedDict\n");
     code.push_str("from uuid import UUID\n\n");
+    code.push_str("import json\n");
     code.push_str("import msgspec\n");
     code.push_str("from pydantic import BaseModel\n\n");
     code.push_str("from spikard import Response, Spikard, delete, get, head, options, patch, post, put\n");
@@ -389,11 +390,16 @@ fn generate_handler_function_for_fixture(
         None
     };
 
-    // Get expected response status code and body
+    // Get expected response status code, body, and headers
     let expected_status = fixture.expected_response.status_code;
     let expected_body_value = fixture.expected_response.body.as_ref();
     let expected_body = expected_body_value.map(json_to_python);
     let expected_body_is_empty = expected_body_value.is_some_and(is_value_effectively_empty);
+
+    // Extract expected headers from fixture
+    let expected_headers = fixture.expected_response.headers.as_ref();
+    let has_expected_headers = expected_headers.is_some_and(|h| !h.is_empty());
+
     let validation_errors_body = if let Some(errors) = fixture.expected_response.validation_errors.as_ref() {
         if errors.is_empty() {
             None
@@ -453,25 +459,50 @@ fn generate_handler_function_for_fixture(
     let should_return_validation_errors = validation_errors_body.is_some() && !should_return_expected;
     let should_echo_params = expected_status == 200 && !should_return_expected && !should_return_validation_errors;
 
+    // Helper to format headers for Response construction
+    let headers_param = if has_expected_headers {
+        let headers_dict = expected_headers
+            .unwrap()
+            .iter()
+            .map(|(k, v)| format!("\"{}\" : \"{}\"", k, v))
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!(", headers={{{}}}", headers_dict)
+    } else {
+        String::new()
+    };
+
     if should_return_expected {
         // Return the expected response body (business logic or documented response format)
         if let Some(body_json) = expected_body.as_ref() {
+            // If body is a string, pass it directly; otherwise, JSON-encode it
+            let content_param = if expected_body_value.is_some_and(|v| v.is_string()) {
+                body_json.clone()
+            } else {
+                format!("json.dumps({})", body_json)
+            };
             code.push_str(&format!(
-                "    return Response(content={}, status_code={})\n",
-                body_json, expected_status
+                "    return Response(content={}, status_code={}{})\n",
+                content_param, expected_status, headers_param
             ));
         } else {
             // No body, just status code (e.g., 204 No Content)
-            code.push_str(&format!("    return Response(status_code={})\n", expected_status));
+            code.push_str(&format!(
+                "    return Response(status_code={}{})\n",
+                expected_status, headers_param
+            ));
         }
     } else if should_return_validation_errors {
         if let Some(body_json) = validation_errors_body.as_ref() {
             code.push_str(&format!(
-                "    return Response(content={}, status_code={})\n",
-                body_json, expected_status
+                "    return Response(content=json.dumps({}), status_code={}{})\n",
+                body_json, expected_status, headers_param
             ));
         } else {
-            code.push_str(&format!("    return Response(status_code={})\n", expected_status));
+            code.push_str(&format!(
+                "    return Response(status_code={}{})\n",
+                expected_status, headers_param
+            ));
         }
     } else if should_echo_params {
         // Echo parameters to prove extraction/validation worked

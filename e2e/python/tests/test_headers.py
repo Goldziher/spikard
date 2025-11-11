@@ -25,6 +25,7 @@ from app.main import (
     create_app_headers_header_with_underscore_conversion_explicit,
     create_app_headers_host_header,
     create_app_headers_multiple_custom_headers,
+    create_app_headers_multiple_header_values_x_token,
     create_app_headers_optional_header_with_none_default_missing,
     create_app_headers_origin_header,
     create_app_headers_referer_header,
@@ -427,6 +428,25 @@ async def test_x_api_key_optional_header_missing() -> None:
     assert response_data["msg"] == "Hello World"
 
 
+async def test_multiple_header_values_x_token() -> None:
+    """Tests multiple values for same header name (X-Token)."""
+
+    app = create_app_headers_multiple_header_values_x_token()
+    client = TestClient(app)
+
+    headers = {
+        "x-token": "foo, bar",
+    }
+    response = await client.get("/items/", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert "X-Token values" in response_data
+    assert len(response_data["X-Token values"]) == 2
+    assert response_data["X-Token values"][0] == "foo"
+    assert response_data["X-Token values"][1] == "bar"
+
+
 async def test_multiple_custom_headers() -> None:
     """Tests multiple custom headers in single request."""
 
@@ -434,9 +454,9 @@ async def test_multiple_custom_headers() -> None:
     client = TestClient(app)
 
     headers = {
-        "X-Request-Id": "req-12345",
-        "X-Trace-Id": "trace-abc",
         "X-Client-Version": "1.2.3",
+        "X-Trace-Id": "trace-abc",
+        "X-Request-Id": "req-12345",
     }
     response = await client.get("/headers/multiple", headers=headers)
 

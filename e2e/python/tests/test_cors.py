@@ -2,6 +2,8 @@
 
 from spikard.testing import TestClient
 from app.main import (
+    create_app_cors_06_cors_preflight_method_not_allowed,
+    create_app_cors_07_cors_preflight_header_not_allowed,
     create_app_cors_08_cors_max_age,
     create_app_cors_09_cors_expose_headers,
     create_app_cors_10_cors_origin_null,
@@ -21,6 +23,22 @@ from app.main import (
 )
 
 
+async def test_07_cors_preflight_header_not_allowed() -> None:
+    """CORS preflight request with non-allowed header should be rejected."""
+
+    app = create_app_cors_07_cors_preflight_header_not_allowed()
+    client = TestClient(app)
+
+    headers = {
+        "Origin": "https://example.com",
+        "Access-Control-Request-Headers": "X-Custom-Header",
+        "Access-Control-Request-Method": "POST",
+    }
+    response = await client.options("/api/data", headers=headers)
+
+    assert response.status_code == 403
+
+
 async def test_cors_vary_header_for_proper_caching() -> None:
     """Tests that Vary: Origin header is present for correct cache behavior."""
 
@@ -28,8 +46,8 @@ async def test_cors_vary_header_for_proper_caching() -> None:
     client = TestClient(app)
 
     headers = {
-        "Cache-Control": "max-age=3600",
         "Origin": "https://app.example.com",
+        "Cache-Control": "max-age=3600",
     }
     response = await client.get("/api/cached-resource", headers=headers)
 
@@ -46,9 +64,9 @@ async def test_cors_preflight_for_put_method() -> None:
     client = TestClient(app)
 
     headers = {
+        "Origin": "https://app.example.com",
         "Access-Control-Request-Method": "PUT",
         "Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
-        "Origin": "https://app.example.com",
     }
     response = await client.options("/api/resource/123", headers=headers)
 
@@ -62,8 +80,8 @@ async def test_cors_preflight_for_delete_method() -> None:
     client = TestClient(app)
 
     headers = {
-        "Origin": "https://app.example.com",
         "Access-Control-Request-Method": "DELETE",
+        "Origin": "https://app.example.com",
     }
     response = await client.options("/api/resource/456", headers=headers)
 
@@ -94,9 +112,9 @@ async def test_cors_preflight_request() -> None:
     client = TestClient(app)
 
     headers = {
-        "Access-Control-Request-Method": "POST",
         "Origin": "https://example.com",
         "Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
+        "Access-Control-Request-Method": "POST",
     }
     response = await client.options("/items/", headers=headers)
 
@@ -111,8 +129,8 @@ async def test_cors_with_credentials() -> None:
     client = TestClient(app)
 
     headers = {
-        "Origin": "https://app.example.com",
         "Cookie": "session=abc123",
+        "Origin": "https://app.example.com",
     }
     response = await client.get("/api/user/profile", headers=headers)
 
@@ -146,8 +164,8 @@ async def test_08_cors_max_age() -> None:
     client = TestClient(app)
 
     headers = {
-        "Access-Control-Request-Headers": "Content-Type",
         "Origin": "https://example.com",
+        "Access-Control-Request-Headers": "Content-Type",
         "Access-Control-Request-Method": "POST",
     }
     response = await client.options("/api/data", headers=headers)
@@ -196,10 +214,10 @@ async def test_cors_safelisted_headers_without_preflight() -> None:
     client = TestClient(app)
 
     headers = {
-        "Content-Type": "text/plain",
-        "Accept-Language": "en-US",
         "Accept": "application/json",
         "Origin": "https://app.example.com",
+        "Content-Type": "text/plain",
+        "Accept-Language": "en-US",
     }
     raw_body = "plain text data"
     response = await client.post("/api/form", headers=headers, data=raw_body)
@@ -288,3 +306,19 @@ async def test_09_cors_expose_headers() -> None:
 
     assert response.status_code == 200
     response_data = response.json()
+
+
+async def test_06_cors_preflight_method_not_allowed() -> None:
+    """CORS preflight request for non-allowed method should be rejected."""
+
+    app = create_app_cors_06_cors_preflight_method_not_allowed()
+    client = TestClient(app)
+
+    headers = {
+        "Origin": "https://example.com",
+        "Access-Control-Request-Method": "DELETE",
+        "Access-Control-Request-Headers": "Content-Type",
+    }
+    response = await client.options("/api/data", headers=headers)
+
+    assert response.status_code == 403
