@@ -1,0 +1,37 @@
+{
+	"name": "Body size at exact boundary",
+	"description": "Request body at exact size limit should succeed with 200",
+	"category": "body_size_limit",
+	"handler": {
+		"route": "/api/data",
+		"method": "POST",
+		"middleware": {
+			"body_size_limit": {
+				"max_body_size_bytes": 10240
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/api/data",
+		"headers": {
+			"Content-Type": "application/json",
+			"Content-Length": "10240"
+		},
+		"body": {
+			"simulated_size_bytes": 10240,
+			"content": {
+				"data": "test payload at exact boundary"
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Data received successfully",
+			"bytes_received": 10240
+		}
+	},
+	"tags": ["body_size_limit", "middleware", "200", "boundary"],
+	"notes": "Body at exact 10KB limit should succeed (inclusive boundary)"
+}

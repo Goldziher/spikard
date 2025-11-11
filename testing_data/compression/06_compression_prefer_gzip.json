@@ -1,0 +1,48 @@
+{
+	"name": "Compression - client prefers gzip",
+	"description": "Tests content negotiation when client prefers gzip over brotli using quality values",
+	"category": "compression",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "tower_http::compression::CompressionLayer",
+		"test_case": "Content negotiation with quality values favoring gzip"
+	},
+	"handler": {
+		"route": "/api/data",
+		"method": "GET",
+		"middleware": {
+			"compression": {
+				"enabled": true,
+				"algorithms": ["gzip", "br"],
+				"level": 6,
+				"min_size_bytes": 1024
+			}
+		},
+		"response_body_size": 5000
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/data",
+		"headers": {
+			"Accept-Encoding": "gzip, br;q=0.8"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Content-Encoding": "gzip",
+			"Vary": "Accept-Encoding"
+		},
+		"body": {
+			"message": "Success",
+			"data": "Large payload compressed with gzip"
+		},
+		"compression_metrics": {
+			"uncompressed_size_bytes": 5000,
+			"compressed_size_bytes": 1200,
+			"compression_ratio": 4.17
+		}
+	},
+	"tags": ["compression", "middleware", "gzip", "content-negotiation", "quality-values", "tower-http"],
+	"notes": "Gzip has implicit q=1.0 while brotli has q=0.8, so gzip is selected. Useful for clients with better gzip hardware acceleration."
+}

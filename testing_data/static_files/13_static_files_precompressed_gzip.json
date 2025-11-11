@@ -1,0 +1,40 @@
+{
+	"name": "Serve pre-compressed gzip file",
+	"description": "Tests serving .gz pre-compressed file when client accepts gzip encoding",
+	"category": "static_files",
+	"handler": {
+		"route": "/*filepath",
+		"method": "GET",
+		"middleware": {
+			"static_files": {
+				"root_dir": "./public",
+				"precompressed": true,
+				"cache_control": "public, max-age=3600"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/js/app.js",
+		"headers": {
+			"Accept-Encoding": "gzip, deflate, br"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Content-Type": "application/javascript; charset=utf-8",
+			"Content-Encoding": "gzip",
+			"Cache-Control": "public, max-age=3600",
+			"ETag": "\"efg123-gzip\"",
+			"Accept-Ranges": "bytes",
+			"Vary": "Accept-Encoding"
+		},
+		"body": {
+			"simulated_file": "js/app.js.gz",
+			"simulated_size_bytes": 2048
+		}
+	},
+	"tags": ["static_files", "middleware", "compression", "gzip", "precompressed"],
+	"notes": "tower_http::services::ServeDir::precompressed_gzip() serves .gz files when available. Vary header ensures proper caching"
+}

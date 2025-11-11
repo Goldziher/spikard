@@ -1,0 +1,41 @@
+{
+	"name": "Per-route limit override",
+	"description": "Different limits per route: small for text, large for upload",
+	"category": "body_size_limit",
+	"handler": {
+		"route": "/api/upload",
+		"method": "POST",
+		"middleware": {
+			"body_size_limit": {
+				"max_body_size_bytes": 10240,
+				"per_route_limits": {
+					"/api/text": 1024,
+					"/api/upload": 52428800
+				}
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/api/upload",
+		"headers": {
+			"Content-Type": "multipart/form-data; boundary=----WebKitFormBoundary",
+			"Content-Length": "10485760"
+		},
+		"body": {
+			"simulated_size_bytes": 10485760,
+			"content": {
+				"file": "medium_file.bin"
+			}
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "File uploaded successfully",
+			"bytes_received": 10485760
+		}
+	},
+	"tags": ["body_size_limit", "middleware", "200", "per-route", "upload"],
+	"notes": "10MB file succeeds on /api/upload (50MB limit) despite global 10KB limit"
+}

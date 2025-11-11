@@ -1,0 +1,50 @@
+{
+	"name": "JWT missing required custom claims",
+	"description": "Tests JWT rejection when required custom claims (role, permissions) are missing",
+	"category": "auth",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "auth0",
+		"test_case": "custom claims validation"
+	},
+	"handler": {
+		"route": "/api/admin",
+		"method": "GET",
+		"parameters": {
+			"headers": {
+				"Authorization": {
+					"type": "string",
+					"required": true,
+					"description": "JWT token in Bearer format"
+				}
+			}
+		},
+		"middleware": {
+			"jwt_auth": {
+				"enabled": true,
+				"algorithm": "HS256",
+				"secret": "test-secret-key-do-not-use-in-production",
+				"audience": ["https://api.example.com"],
+				"issuer": "https://auth.example.com"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/admin",
+		"headers": {
+			"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg"
+		}
+	},
+	"expected_response": {
+		"status_code": 403,
+		"body": {
+			"type": "https://spikard.dev/errors/forbidden",
+			"title": "Forbidden",
+			"status": 403,
+			"detail": "Required claims 'role' and 'permissions' missing from JWT"
+		}
+	},
+	"tags": ["auth", "jwt", "custom_claims", "role", "permissions", "403", "security"],
+	"notes": "Tests custom claim validation for authorization. Token is valid but missing required custom claims for admin access."
+}

@@ -1,0 +1,38 @@
+{
+	"name": "Rate limit - multiple endpoints with different limits",
+	"description": "Tests that different endpoints can have independent rate limit configurations",
+	"category": "rate_limit",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "tower_governor",
+		"test_case": "Per-endpoint rate limiting"
+	},
+	"handler": {
+		"route": "/api/rate-limited",
+		"method": "GET",
+		"middleware": {
+			"rate_limit": {
+				"per_second": 10,
+				"burst": 5,
+				"ip_based": true
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/rate-limited",
+		"client_ip": "192.168.1.20"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Success"
+		},
+		"headers": {
+			"RateLimit-Limit": "10",
+			"RateLimit-Remaining": "9"
+		}
+	},
+	"tags": ["rate_limit", "multiple-endpoints", "configuration", "success"],
+	"notes": "Each route can have its own rate_limit config independent of other routes"
+}

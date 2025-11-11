@@ -1,0 +1,28 @@
+{
+	"name": "CORS Private Network Access",
+	"description": "Tests Private Network Access (RFC 1918) preflight with Access-Control-Request-Private-Network",
+	"source": {
+		"framework": "spikard",
+		"test_file": "cors_tests.rs",
+		"test_function": "test_cors_private_network_access"
+	},
+	"request": {
+		"method": "OPTIONS",
+		"path": "/api/local-resource",
+		"headers": {
+			"Origin": "https://public.example.com",
+			"Access-Control-Request-Method": "GET",
+			"Access-Control-Request-Private-Network": "true"
+		}
+	},
+	"expected_response": {
+		"status_code": 204,
+		"headers": {
+			"Access-Control-Allow-Origin": "https://public.example.com",
+			"Access-Control-Allow-Methods": "GET, POST",
+			"Access-Control-Allow-Private-Network": "true",
+			"Vary": "Origin"
+		}
+	},
+	"notes": "Private Network Access requires explicit opt-in when public website accesses private network (192.168.x.x, 10.x.x.x, 127.x.x.x). Server must respond with Access-Control-Allow-Private-Network: true"
+}

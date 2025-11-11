@@ -1,0 +1,33 @@
+{
+	"name": "Request ID middleware disabled",
+	"description": "Tests that no request ID is generated or propagated when middleware is disabled",
+	"category": "request_id",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "tower-http request-id",
+		"test_case": "Disable request ID middleware completely"
+	},
+	"handler": {
+		"route": "/api/no-tracking",
+		"method": "GET",
+		"middleware": {
+			"request_id": {
+				"enabled": false
+			}
+		},
+		"response_type": "success"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/no-tracking"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "success"
+		},
+		"headers": {}
+	},
+	"tags": ["request_id", "middleware", "disabled", "privacy"],
+	"notes": "Some endpoints may need to opt-out of request tracking for privacy or performance reasons"
+}

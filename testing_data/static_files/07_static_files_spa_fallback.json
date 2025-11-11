@@ -1,0 +1,36 @@
+{
+	"name": "SPA fallback for client-side routing",
+	"description": "Tests fallback to index.html for missing files to support single-page application routing",
+	"category": "static_files",
+	"handler": {
+		"route": "/*filepath",
+		"method": "GET",
+		"middleware": {
+			"static_files": {
+				"root_dir": "./public",
+				"index_file": "index.html",
+				"fallback_file": "index.html",
+				"cache_control": "no-cache"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/dashboard/settings"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Content-Type": "text/html; charset=utf-8",
+			"Cache-Control": "no-cache",
+			"ETag": "\"stu901\"",
+			"Accept-Ranges": "bytes"
+		},
+		"body": {
+			"simulated_file": "index.html",
+			"simulated_size_bytes": 3072
+		}
+	},
+	"tags": ["static_files", "middleware", "spa", "fallback", "client_routing"],
+	"notes": "tower_http::services::ServeDir::fallback enables SPA routing by serving index.html for missing paths"
+}

@@ -1,0 +1,46 @@
+{
+	"name": "Compression - skip already compressed content",
+	"description": "Tests that compression is skipped for already compressed content types like application/gzip",
+	"category": "compression",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "tower_http::compression::CompressionLayer",
+		"test_case": "Skip compression for pre-compressed content types"
+	},
+	"handler": {
+		"route": "/api/archive.tar.gz",
+		"method": "GET",
+		"middleware": {
+			"compression": {
+				"enabled": true,
+				"algorithms": ["gzip", "br"],
+				"level": 6,
+				"min_size_bytes": 1024,
+				"skip_content_types": ["application/gzip", "application/zip", "image/", "video/"]
+			}
+		},
+		"response_body_size": 50000
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/archive.tar.gz",
+		"headers": {
+			"Accept-Encoding": "gzip"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Content-Type": "application/gzip",
+			"Content-Encoding": null
+		},
+		"body": null,
+		"compression_metrics": {
+			"uncompressed_size_bytes": 50000,
+			"compressed_size_bytes": 50000,
+			"compression_ratio": 1.0
+		}
+	},
+	"tags": ["compression", "middleware", "skip-compression", "content-type", "tower-http"],
+	"notes": "Already compressed formats (gzip, zip, images, videos) should not be re-compressed as it wastes CPU and may increase size. tower-http::compression::Predicate can filter by content type."
+}

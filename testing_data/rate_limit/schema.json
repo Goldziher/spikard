@@ -1,0 +1,186 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Rate Limiting Test Fixture",
+	"description": "Schema for rate limiting test fixtures covering GCRA algorithm with per-second limits, burst allowance, and IP-based tracking using tower_governor",
+	"type": "object",
+	"required": ["name", "description", "category", "source", "request", "expected_response", "handler"],
+	"properties": {
+		"name": {
+			"type": "string",
+			"description": "Human-readable test case name",
+			"minLength": 1
+		},
+		"description": {
+			"type": "string",
+			"description": "What this test validates",
+			"minLength": 1
+		},
+		"category": {
+			"type": "string",
+			"enum": ["rate_limit"],
+			"description": "Test category"
+		},
+		"source": {
+			"type": "object",
+			"description": "Source framework and test location",
+			"required": ["framework"],
+			"properties": {
+				"framework": {
+					"type": "string",
+					"description": "Source framework"
+				},
+				"inspired_by": {
+					"type": "string",
+					"description": "Framework that inspired this test"
+				},
+				"test_case": {
+					"type": "string",
+					"description": "Test case description"
+				}
+			}
+		},
+		"handler": {
+			"type": "object",
+			"description": "Handler configuration including middleware",
+			"required": ["route", "method"],
+			"properties": {
+				"route": {
+					"type": "string",
+					"description": "API route path"
+				},
+				"method": {
+					"type": "string",
+					"enum": ["GET", "POST", "PUT", "PATCH", "DELETE"],
+					"description": "HTTP method"
+				},
+				"middleware": {
+					"type": "object",
+					"description": "Middleware configuration",
+					"properties": {
+						"rate_limit": {
+							"type": "object",
+							"description": "Rate limiting middleware config using tower_governor GCRA",
+							"properties": {
+								"per_second": {
+									"type": "integer",
+									"description": "Requests allowed per second",
+									"minimum": 0
+								},
+								"burst": {
+									"type": "integer",
+									"description": "Burst allowance (additional requests beyond per_second)",
+									"minimum": 0
+								},
+								"ip_based": {
+									"type": "boolean",
+									"description": "Whether to track rate limits per client IP address",
+									"default": true
+								}
+							},
+							"required": ["per_second"]
+						}
+					}
+				}
+			}
+		},
+		"request": {
+			"type": "object",
+			"description": "HTTP request details",
+			"required": ["method", "path"],
+			"properties": {
+				"method": {
+					"type": "string",
+					"enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
+					"description": "HTTP method"
+				},
+				"path": {
+					"type": "string",
+					"description": "Request path",
+					"minLength": 1
+				},
+				"headers": {
+					"type": "object",
+					"description": "Request headers as key-value pairs",
+					"additionalProperties": { "type": "string" }
+				},
+				"body": {
+					"description": "Request body (any JSON type)"
+				},
+				"client_ip": {
+					"type": "string",
+					"description": "Simulated client IP for rate limiting tests"
+				},
+				"delay_ms": {
+					"type": "integer",
+					"description": "Delay in milliseconds before making this request (for token bucket refill tests)",
+					"minimum": 0
+				}
+			}
+		},
+		"expected_response": {
+			"type": "object",
+			"description": "Expected HTTP response",
+			"required": ["status_code"],
+			"properties": {
+				"status_code": {
+					"type": "integer",
+					"description": "Expected HTTP status code",
+					"minimum": 100,
+					"maximum": 599
+				},
+				"body": {
+					"description": "Expected response body (any JSON type). For 429 responses, follows RFC 9457 Problem Details format."
+				},
+				"headers": {
+					"type": "object",
+					"description": "Expected response headers",
+					"additionalProperties": { "type": "string" },
+					"properties": {
+						"RateLimit-Limit": {
+							"type": "string",
+							"description": "Maximum number of requests allowed per window"
+						},
+						"RateLimit-Remaining": {
+							"type": "string",
+							"description": "Number of requests remaining in current window"
+						},
+						"RateLimit-Reset": {
+							"type": "string",
+							"description": "Unix timestamp when the rate limit resets"
+						},
+						"Retry-After": {
+							"type": "string",
+							"description": "Number of seconds to wait before retrying (present in 429 responses)"
+						}
+					}
+				}
+			}
+		},
+		"tags": {
+			"type": "array",
+			"description": "Tags for categorizing and filtering tests",
+			"items": { "type": "string" }
+		},
+		"notes": {
+			"type": "string",
+			"description": "Additional notes or implementation details"
+		},
+		"request_sequence": {
+			"type": "array",
+			"description": "For sequential request tests, array of requests to make in order",
+			"items": {
+				"type": "object",
+				"properties": {
+					"delay_ms": {
+						"type": "integer",
+						"description": "Delay before this request"
+					},
+					"expected_status": {
+						"type": "integer",
+						"description": "Expected status code for this request"
+					}
+				}
+			}
+		}
+	}
+}

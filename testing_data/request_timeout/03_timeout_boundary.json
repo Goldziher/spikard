@@ -1,0 +1,36 @@
+{
+	"name": "Request at exact timeout boundary",
+	"description": "Tests behavior when request completes at the exact timeout threshold",
+	"category": "request_timeout",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "tower-http TimeoutLayer",
+		"test_case": "Request timing equals timeout"
+	},
+	"handler": {
+		"route": "/api/boundary",
+		"method": "GET",
+		"middleware": {
+			"request_timeout": {
+				"timeout_seconds": 3
+			}
+		},
+		"simulated_delay_ms": 3000,
+		"response_type": "immediate"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/boundary"
+	},
+	"expected_response": {
+		"status_code": 504,
+		"body": {
+			"type": "https://spikard.dev/errors/request-timeout",
+			"title": "Gateway Timeout",
+			"status": 504,
+			"detail": "Request processing exceeded the configured timeout of 3 seconds"
+		}
+	},
+	"tags": ["timeout", "middleware", "504", "edge-case", "boundary"],
+	"notes": "Request takes exactly 3 seconds with 3 second timeout - implementation determines if this times out"
+}

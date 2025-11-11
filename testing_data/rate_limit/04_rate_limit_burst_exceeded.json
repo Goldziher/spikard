@@ -1,0 +1,42 @@
+{
+	"name": "Rate limit - burst exceeded",
+	"description": "Tests that requests exceeding burst allowance return 429",
+	"category": "rate_limit",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "tower_governor",
+		"test_case": "Burst capacity exhausted returns 429"
+	},
+	"handler": {
+		"route": "/api/rate-limited",
+		"method": "GET",
+		"middleware": {
+			"rate_limit": {
+				"per_second": 2,
+				"burst": 3,
+				"ip_based": true
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/rate-limited",
+		"client_ip": "192.168.1.4"
+	},
+	"expected_response": {
+		"status_code": 429,
+		"body": {
+			"type": "https://spikard.dev/errors/rate-limit-exceeded",
+			"title": "Too Many Requests",
+			"status": 429,
+			"detail": "Rate limit exceeded. Please retry after the specified time."
+		},
+		"headers": {
+			"RateLimit-Limit": "2",
+			"RateLimit-Remaining": "0",
+			"Retry-After": "1"
+		}
+	},
+	"tags": ["rate_limit", "burst", "error", "429", "gcra"],
+	"notes": "Simulates 6th request (2 per_second + 3 burst = 5 allowed, 6th fails)"
+}

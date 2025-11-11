@@ -1,0 +1,36 @@
+{
+	"name": "JSON body exceeds limit",
+	"description": "Large JSON payload exceeding limit returns 413",
+	"category": "body_size_limit",
+	"handler": {
+		"route": "/api/json",
+		"method": "POST",
+		"middleware": {
+			"body_size_limit": {
+				"max_body_size_bytes": 5120
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/api/json",
+		"headers": {
+			"Content-Type": "application/json",
+			"Content-Length": "10240"
+		},
+		"body": {
+			"simulated_size_bytes": 10240
+		}
+	},
+	"expected_response": {
+		"status_code": 413,
+		"body": {
+			"type": "https://spikard.dev/errors/payload-too-large",
+			"title": "Payload Too Large",
+			"status": 413,
+			"detail": "Request body size (10240 bytes) exceeds maximum allowed size (5120 bytes)"
+		}
+	},
+	"tags": ["body_size_limit", "middleware", "413", "json", "content-type"],
+	"notes": "JSON content type with body exceeding 5KB limit"
+}

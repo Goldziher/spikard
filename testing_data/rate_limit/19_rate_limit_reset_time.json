@@ -1,0 +1,38 @@
+{
+	"name": "Rate limit - reset time calculation",
+	"description": "Validates that rate limit reset time is calculated correctly based on GCRA",
+	"category": "rate_limit",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "tower_governor GCRA algorithm",
+		"test_case": "Reset time validation"
+	},
+	"handler": {
+		"route": "/api/rate-limited",
+		"method": "GET",
+		"middleware": {
+			"rate_limit": {
+				"per_second": 10,
+				"burst": 5,
+				"ip_based": true
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/rate-limited",
+		"client_ip": "192.168.1.19"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Success"
+		},
+		"headers": {
+			"RateLimit-Limit": "10",
+			"RateLimit-Remaining": "9"
+		}
+	},
+	"tags": ["rate_limit", "reset-time", "gcra", "headers"],
+	"notes": "With per_second=10, reset time should be ~0.1 seconds per token in GCRA"
+}

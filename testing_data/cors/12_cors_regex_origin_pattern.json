@@ -1,0 +1,27 @@
+{
+	"name": "CORS regex pattern matching for origins",
+	"description": "Tests CORS with regex pattern matching for subdomain wildcards",
+	"source": {
+		"framework": "spikard",
+		"test_file": "cors_tests.rs",
+		"test_function": "test_cors_regex_origin_pattern"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/data",
+		"headers": {
+			"Origin": "https://subdomain.example.com"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Access-Control-Allow-Origin": "https://subdomain.example.com",
+			"Vary": "Origin"
+		},
+		"body": {
+			"data": "resource data"
+		}
+	},
+	"notes": "Regex pattern ^https://.*\\.example\\.com$ enables wildcard subdomain support for *.example.com"
+}

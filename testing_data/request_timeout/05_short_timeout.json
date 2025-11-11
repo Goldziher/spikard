@@ -1,0 +1,36 @@
+{
+	"name": "Custom short timeout",
+	"description": "Tests aggressive 1 second timeout for fast endpoints",
+	"category": "request_timeout",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "tower-http TimeoutLayer",
+		"test_case": "Short 1s timeout configuration"
+	},
+	"handler": {
+		"route": "/api/fast-only",
+		"method": "GET",
+		"middleware": {
+			"request_timeout": {
+				"timeout_seconds": 1
+			}
+		},
+		"simulated_delay_ms": 1500,
+		"response_type": "immediate"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/fast-only"
+	},
+	"expected_response": {
+		"status_code": 504,
+		"body": {
+			"type": "https://spikard.dev/errors/request-timeout",
+			"title": "Gateway Timeout",
+			"status": 504,
+			"detail": "Request processing exceeded the configured timeout of 1 seconds"
+		}
+	},
+	"tags": ["timeout", "middleware", "504", "short-timeout", "configuration"],
+	"notes": "1.5s request with 1s timeout - should return 504"
+}

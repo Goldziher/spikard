@@ -1,0 +1,35 @@
+{
+	"name": "Serve JavaScript file",
+	"description": "Tests serving static JavaScript module with correct Content-Type",
+	"category": "static_files",
+	"handler": {
+		"route": "/*filepath",
+		"method": "GET",
+		"middleware": {
+			"static_files": {
+				"root_dir": "./public",
+				"cache_control": "public, max-age=31536000, immutable"
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/js/app.js"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Content-Type": "application/javascript; charset=utf-8",
+			"Cache-Control": "public, max-age=31536000, immutable",
+			"ETag": "\"ghi789\"",
+			"Accept-Ranges": "bytes"
+		},
+		"body": {
+			"simulated_file": "js/app.js",
+			"simulated_size_bytes": 8192,
+			"simulated_content_sample": "console.log('Hello, world!');"
+		}
+	},
+	"tags": ["static_files", "middleware", "javascript", "mime_types"],
+	"notes": "JavaScript files use application/javascript MIME type per RFC 9239"
+}

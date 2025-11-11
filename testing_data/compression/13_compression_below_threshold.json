@@ -1,0 +1,47 @@
+{
+	"name": "Compression - response below threshold",
+	"description": "Tests that small responses below min_size_bytes threshold are not compressed",
+	"category": "compression",
+	"source": {
+		"framework": "spikard",
+		"inspired_by": "tower_http::compression::CompressionLayer",
+		"test_case": "Small response bypasses compression"
+	},
+	"handler": {
+		"route": "/api/data",
+		"method": "GET",
+		"middleware": {
+			"compression": {
+				"enabled": true,
+				"algorithms": ["gzip", "br"],
+				"level": 6,
+				"min_size_bytes": 1024
+			}
+		},
+		"response_body_size": 512
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/data",
+		"headers": {
+			"Accept-Encoding": "gzip"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"headers": {
+			"Content-Encoding": null
+		},
+		"body": {
+			"message": "Success",
+			"data": "Small payload"
+		},
+		"compression_metrics": {
+			"uncompressed_size_bytes": 512,
+			"compressed_size_bytes": 512,
+			"compression_ratio": 1.0
+		}
+	},
+	"tags": ["compression", "middleware", "threshold", "small-response", "tower-http"],
+	"notes": "Response size (512 bytes) is below min_size_bytes (1024 bytes). Compression overhead exceeds benefit for tiny responses. Vary header may still be added."
+}
