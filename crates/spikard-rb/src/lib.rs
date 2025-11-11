@@ -11,7 +11,7 @@ use bytes::Bytes;
 use cookie::Cookie;
 use magnus::prelude::*;
 use magnus::value::{InnerValue, Opaque};
-use magnus::{Error, Module, RArray, RHash, Ruby, Value, function, gc::Marker, method};
+use magnus::{Error, Module, RArray, RHash, Ruby, Value, function, gc::Marker, method, r_hash::ForEach};
 use once_cell::sync::Lazy;
 use serde_json::{Map as JsonMap, Value as JsonValue};
 use spikard_http::ParameterValidator;
@@ -1308,6 +1308,8 @@ fn run_server(
     handlers: Value,
     config_value: Value,
     hooks_value: Value,
+    ws_handlers: Value,
+    sse_producers: Value,
 ) -> Result<(), Error> {
     use spikard_http::{SchemaRegistry, Server};
     use tracing::{error, info};
@@ -1438,8 +1440,75 @@ fn run_server(
     info!("Registered {} routes", routes_with_handlers.len());
 
     // Build Axum router with handlers
-    let app_router = Server::with_handlers(config.clone(), routes_with_handlers)
+    let mut app_router = Server::with_handlers(config.clone(), routes_with_handlers)
         .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("Failed to build router: {}", e)))?;
+
+    // Collect WebSocket handlers
+    let mut ws_endpoints = Vec::new();
+    if !ws_handlers.is_nil() {
+        let ws_hash = RHash::from_value(ws_handlers)
+            .ok_or_else(|| Error::new(ruby.exception_arg_error(), "WebSocket handlers must be a Hash"))?;
+
+        ws_hash.foreach(|path: String, factory: Value| -> Result<ForEach, Error> {
+            // Call the factory to get the handler instance
+            let handler_instance = factory.funcall::<_, _, Value>("call", ()).map_err(|e| {
+                Error::new(
+                    ruby.exception_runtime_error(),
+                    format!("Failed to create WebSocket handler: {}", e),
+                )
+            })?;
+
+            // Create WebSocket state
+            let ws_state = crate::websocket::create_websocket_state(ruby, handler_instance)?;
+
+            ws_endpoints.push((path, ws_state));
+
+            Ok(ForEach::Continue)
+        })?;
+    }
+
+    // Collect SSE producers
+    let mut sse_endpoints = Vec::new();
+    if !sse_producers.is_nil() {
+        let sse_hash = RHash::from_value(sse_producers)
+            .ok_or_else(|| Error::new(ruby.exception_arg_error(), "SSE producers must be a Hash"))?;
+
+        sse_hash.foreach(|path: String, factory: Value| -> Result<ForEach, Error> {
+            // Call the factory to get the producer instance
+            let producer_instance = factory.funcall::<_, _, Value>("call", ()).map_err(|e| {
+                Error::new(
+                    ruby.exception_runtime_error(),
+                    format!("Failed to create SSE producer: {}", e),
+                )
+            })?;
+
+            // Create SSE state
+            let sse_state = crate::sse::create_sse_state(ruby, producer_instance)?;
+
+            sse_endpoints.push((path, sse_state));
+
+            Ok(ForEach::Continue)
+        })?;
+    }
+
+    // Register WebSocket endpoints
+    use axum::routing::get;
+    for (path, ws_state) in ws_endpoints {
+        info!("Registered WebSocket endpoint: {}", path);
+        app_router = app_router.route(
+            &path,
+            get(spikard_http::websocket_handler::<crate::websocket::RubyWebSocketHandler>).with_state(ws_state),
+        );
+    }
+
+    // Register SSE endpoints
+    for (path, sse_state) in sse_endpoints {
+        info!("Registered SSE endpoint: {}", path);
+        app_router = app_router.route(
+            &path,
+            get(spikard_http::sse_handler::<crate::sse::RubySseEventProducer>).with_state(sse_state),
+        );
+    }
 
     // Start the server in a background thread with its own Tokio runtime
     let addr = format!("{}:{}", config.host, config.port);
@@ -1479,7 +1548,7 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     };
 
     // Register run_server function (now takes 3 args: routes_json, handlers, config)
-    native.define_singleton_method("run_server", function!(run_server, 4))?;
+    native.define_singleton_method("run_server", function!(run_server, 6))?;
 
     // Register TestClient class
     let class = native.define_class("TestClient", ruby.class_object())?;

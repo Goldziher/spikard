@@ -127,6 +127,8 @@ module Spikard
 
     def initialize
       @routes = []
+      @websocket_handlers = {}
+      @sse_producers = {}
       @lifecycle_hooks = {
         on_request: [],
         pre_validation: [],
@@ -161,6 +163,54 @@ module Spikard
         map[name] = entry.handler
       end
       map
+    end
+
+    # Register a WebSocket endpoint
+    #
+    # @param path [String] URL path for the WebSocket endpoint
+    # @yield Factory block that returns a WebSocketHandler instance
+    # @return [Proc] The factory block (for chaining)
+    #
+    # @example
+    #   app.websocket('/chat') do
+    #     ChatHandler.new
+    #   end
+    def websocket(path, &factory)
+      raise ArgumentError, 'block required for WebSocket handler factory' unless factory
+
+      @websocket_handlers[path] = factory
+      factory
+    end
+
+    # Register a Server-Sent Events endpoint
+    #
+    # @param path [String] URL path for the SSE endpoint
+    # @yield Factory block that returns a SseEventProducer instance
+    # @return [Proc] The factory block (for chaining)
+    #
+    # @example
+    #   app.sse('/notifications') do
+    #     NotificationProducer.new
+    #   end
+    def sse(path, &factory)
+      raise ArgumentError, 'block required for SSE producer factory' unless factory
+
+      @sse_producers[path] = factory
+      factory
+    end
+
+    # Get all registered WebSocket handlers
+    #
+    # @return [Hash] Dictionary mapping paths to handler factory blocks
+    def websocket_handlers
+      @websocket_handlers.dup
+    end
+
+    # Get all registered SSE producers
+    #
+    # @return [Hash] Dictionary mapping paths to producer factory blocks
+    def sse_producers
+      @sse_producers.dup
     end
 
     # Run the Spikard server with the given configuration
@@ -207,8 +257,12 @@ module Spikard
       # Get lifecycle hooks
       hooks = lifecycle_hooks
 
+      # Get WebSocket handlers and SSE producers
+      ws_handlers = websocket_handlers
+      sse_prods = sse_producers
+
       # Call the Rust extension's run_server function
-      Spikard::Native.run_server(routes_json, handlers, config, hooks)
+      Spikard::Native.run_server(routes_json, handlers, config, hooks, ws_handlers, sse_prods)
 
       # Keep Ruby process alive while server runs
       sleep
