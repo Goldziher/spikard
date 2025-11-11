@@ -17,6 +17,8 @@ from spikard.config import (
 from spikard.params import Body, Cookie, Header, Path, Query
 from spikard.request import Request
 from spikard.routing import delete, get, head, options, patch, post, put, route, trace
+from spikard.sse import SseEvent, SseEventProducer
+from spikard.websocket import WebSocketHandler
 
 __all__ = [
     "ApiKeyConfig",
@@ -32,7 +34,10 @@ __all__ = [
     "Response",
     "ServerConfig",
     "Spikard",
+    "SseEvent",
+    "SseEventProducer",
     "StaticFilesConfig",
+    "WebSocketHandler",
     "delete",
     "get",
     "head",
