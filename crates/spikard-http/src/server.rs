@@ -497,7 +497,7 @@ pub fn build_router_with_handlers(routes: Vec<(crate::Route, Arc<dyn Handler>)>)
 }
 
 /// Build router with handlers and apply middleware based on config
-fn build_router_with_handlers_and_config(
+pub fn build_router_with_handlers_and_config(
     routes: Vec<RouteHandlerPair>,
     config: ServerConfig,
     route_metadata: Vec<crate::RouteMetadata>,
@@ -515,7 +515,7 @@ fn build_router_with_handlers_and_config(
     ]));
 
     // 2. Compression (should compress final responses)
-    if let Some(compression) = config.compression {
+    if let Some(ref compression) = config.compression {
         let mut compression_layer = CompressionLayer::new();
         if !compression.gzip {
             compression_layer = compression_layer.gzip(false);
@@ -527,7 +527,7 @@ fn build_router_with_handlers_and_config(
     }
 
     // 3. Rate limiting (before other processing to reject early)
-    if let Some(rate_limit) = config.rate_limit {
+    if let Some(ref rate_limit) = config.rate_limit {
         let governor_conf = Arc::new(
             GovernorConfigBuilder::default()
                 .per_second(rate_limit.per_second)
@@ -539,16 +539,18 @@ fn build_router_with_handlers_and_config(
     }
 
     // 3a. JWT authentication (after rate limiting, before business logic)
-    if let Some(jwt_config) = config.jwt_auth {
+    if let Some(ref jwt_config) = config.jwt_auth {
+        let jwt_config_clone = jwt_config.clone();
         app = app.layer(axum::middleware::from_fn(move |headers, req, next| {
-            crate::auth::jwt_auth_middleware(jwt_config.clone(), headers, req, next)
+            crate::auth::jwt_auth_middleware(jwt_config_clone.clone(), headers, req, next)
         }));
     }
 
     // 3b. API key authentication (after rate limiting, before business logic)
-    if let Some(api_key_config) = config.api_key_auth {
+    if let Some(ref api_key_config) = config.api_key_auth {
+        let api_key_config_clone = api_key_config.clone();
         app = app.layer(axum::middleware::from_fn(move |headers, req, next| {
-            crate::auth::api_key_auth_middleware(api_key_config.clone(), headers, req, next)
+            crate::auth::api_key_auth_middleware(api_key_config_clone.clone(), headers, req, next)
         }));
     }
 
@@ -573,20 +575,20 @@ fn build_router_with_handlers_and_config(
     }
 
     // 7. Add static file serving routes
-    for static_config in config.static_files {
+    for static_config in &config.static_files {
         let mut serve_dir = ServeDir::new(&static_config.directory);
         if static_config.index_file {
             serve_dir = serve_dir.append_index_html_on_directories(true);
         }
 
         // Optionally add cache-control header by wrapping in a Router
-        if let Some(cache_control) = static_config.cache_control {
+        if let Some(ref cache_control) = static_config.cache_control {
             let static_router =
                 AxumRouter::new()
                     .nest_service("/", serve_dir)
                     .layer(SetResponseHeaderLayer::overriding(
                         axum::http::header::CACHE_CONTROL,
-                        axum::http::HeaderValue::from_str(&cache_control)
+                        axum::http::HeaderValue::from_str(cache_control)
                             .map_err(|e| format!("Invalid cache-control header: {}", e))?,
                     ));
             app = app.nest_service(&static_config.route_prefix, static_router);
@@ -602,13 +604,16 @@ fn build_router_with_handlers_and_config(
     }
 
     // 8. Add OpenAPI documentation routes (without authentication)
-    if let Some(openapi_config) = config.openapi.filter(|cfg| cfg.enabled) {
+    if let Some(ref openapi_config) = config.openapi
+        && openapi_config.enabled
+    {
         use axum::response::{Html, Json};
 
-        // Generate OpenAPI spec from routes
+        // Generate OpenAPI spec from routes with auto-detected security schemes
         let schema_registry = crate::SchemaRegistry::new();
-        let openapi_spec = crate::openapi::generate_openapi_spec(&route_metadata, &openapi_config, &schema_registry)
-            .map_err(|e| format!("Failed to generate OpenAPI spec: {}", e))?;
+        let openapi_spec =
+            crate::openapi::generate_openapi_spec(&route_metadata, openapi_config, &schema_registry, Some(&config))
+                .map_err(|e| format!("Failed to generate OpenAPI spec: {}", e))?;
 
         // Serialize to JSON once
         let spec_json =
@@ -658,7 +663,7 @@ fn build_router_with_handlers_and_config(
 </html>"#,
             openapi_json_path
         );
-        let redoc_path = openapi_config.redoc_path;
+        let redoc_path = openapi_config.redoc_path.clone();
         app = app.route(&redoc_path, get(move || async move { Html(redoc_html) }));
 
         tracing::info!("OpenAPI documentation enabled at {}", openapi_json_path);

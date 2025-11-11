@@ -6,7 +6,9 @@ require_relative '../../app/main'
 RSpec.describe "headers" do
   it "30_bearer_token_format_valid" do
     app = E2ERubyApp.create_app_headers_1_30_bearer_token_format_valid
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/protected", headers: {"Authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U"})
     expect(response.status_code).to eq(200)
     expect(response.body_text).to be_nil
@@ -15,7 +17,9 @@ RSpec.describe "headers" do
 
   it "31_bearer_token_format_invalid" do
     app = E2ERubyApp.create_app_headers_2_31_bearer_token_format_invalid
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/protected", headers: {"Authorization" => "Bearer invalid token with spaces"})
     expect(response.status_code).to eq(422)
     body = response.json
@@ -30,7 +34,9 @@ RSpec.describe "headers" do
 
   it "32_bearer_token_missing_prefix" do
     app = E2ERubyApp.create_app_headers_3_32_bearer_token_missing_prefix
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/protected", headers: {"Authorization" => "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"})
     expect(response.status_code).to eq(422)
     body = response.json
@@ -45,7 +51,9 @@ RSpec.describe "headers" do
 
   it "33_api_key_header_valid" do
     app = E2ERubyApp.create_app_headers_4_33_api_key_header_valid
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/api/data", headers: {"X-API-Key" => "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4"})
     expect(response.status_code).to eq(200)
     expect(response.body_text).to be_nil
@@ -54,7 +62,9 @@ RSpec.describe "headers" do
 
   it "34_api_key_header_invalid" do
     app = E2ERubyApp.create_app_headers_5_34_api_key_header_invalid
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/api/data", headers: {"X-API-Key" => "invalid-key"})
     expect(response.status_code).to eq(422)
     body = response.json
@@ -69,7 +79,9 @@ RSpec.describe "headers" do
 
   it "Accept header - JSON" do
     app = E2ERubyApp.create_app_headers_6_accept_header_json
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/headers/accept", headers: {"Accept" => "application/json"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"accept" => "application/json"})
@@ -78,7 +90,9 @@ RSpec.describe "headers" do
 
   it "Accept-Encoding header" do
     app = E2ERubyApp.create_app_headers_7_accept_encoding_header
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/headers/accept-encoding", headers: {"Accept-Encoding" => "gzip, deflate, br"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"accept_encoding" => "gzip, deflate, br"})
@@ -87,7 +101,9 @@ RSpec.describe "headers" do
 
   it "Accept-Language header" do
     app = E2ERubyApp.create_app_headers_8_accept_language_header
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/headers/accept-language", headers: {"Accept-Language" => "en-US,en;q=0.9"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"accept_language" => "en-US,en;q=0.9"})
@@ -96,7 +112,9 @@ RSpec.describe "headers" do
 
   it "Authorization header - missing" do
     app = E2ERubyApp.create_app_headers_9_authorization_header_missing
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/users/me")
     expect(response.status_code).to eq(422)
     body = response.json
@@ -112,7 +130,9 @@ RSpec.describe "headers" do
 
   it "Authorization header - success" do
     app = E2ERubyApp.create_app_headers_10_authorization_header_success
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/users/me", headers: {"Authorization" => "Digest foobar"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"credentials" => "foobar", "scheme" => "Digest"})
@@ -121,7 +141,9 @@ RSpec.describe "headers" do
 
   it "Authorization header - wrong scheme" do
     app = E2ERubyApp.create_app_headers_11_authorization_header_wrong_scheme
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/users/me", headers: {"Authorization" => "Other invalidauthorization"})
     expect(response.status_code).to eq(422)
     body = response.json
@@ -137,7 +159,9 @@ RSpec.describe "headers" do
 
   it "Basic authentication - success" do
     app = E2ERubyApp.create_app_headers_12_basic_authentication_success
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/headers/basic-auth", headers: {"Authorization" => "Basic dXNlcm5hbWU6cGFzc3dvcmQ="})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"password" => "password", "username" => "username"})
@@ -146,7 +170,9 @@ RSpec.describe "headers" do
 
   it "Bearer token authentication - missing" do
     app = E2ERubyApp.create_app_headers_13_bearer_token_authentication_missing
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/headers/bearer-auth", headers: {})
     expect(response.status_code).to eq(422)
     body = response.json
@@ -162,7 +188,9 @@ RSpec.describe "headers" do
 
   it "Bearer token authentication - success" do
     app = E2ERubyApp.create_app_headers_14_bearer_token_authentication_success
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/headers/bearer-auth", headers: {"Authorization" => "Bearer valid_token_123"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"token" => "valid_token_123"})
@@ -171,7 +199,9 @@ RSpec.describe "headers" do
 
   it "Content-Type header - application/json" do
     app = E2ERubyApp.create_app_headers_15_content_type_header_application_json
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/headers/content-type", headers: {"Content-Type" => "application/json"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"content_type" => "application/json"})
@@ -180,7 +210,9 @@ RSpec.describe "headers" do
 
   it "Header case insensitivity - access" do
     app = E2ERubyApp.create_app_headers_16_header_case_insensitivity_access
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.post("/echo", headers: {"content-type" => "application/json"}, json: {"test" => "data"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"content_type_lower" => "application/json", "content_type_mixed" => "application/json", "content_type_upper" => "application/json"})
@@ -189,7 +221,9 @@ RSpec.describe "headers" do
 
   it "Header regex validation - fail" do
     app = E2ERubyApp.create_app_headers_17_header_regex_validation_fail
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/headers/pattern", headers: {"X-Request-Id" => "invalid-format"})
     expect(response.status_code).to eq(422)
     body = response.json
@@ -205,7 +239,9 @@ RSpec.describe "headers" do
 
   it "Header regex validation - success" do
     app = E2ERubyApp.create_app_headers_18_header_regex_validation_success
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/headers/pattern", headers: {"X-Request-Id" => "12345"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"x_request_id" => "12345"})
@@ -214,7 +250,9 @@ RSpec.describe "headers" do
 
   it "Header validation - max_length constraint fail" do
     app = E2ERubyApp.create_app_headers_19_header_validation_max_length_constraint_fail
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/headers/max-length", headers: {"X-Session-Id" => "this_is_way_too_long_for_validation"})
     expect(response.status_code).to eq(422)
     body = response.json
@@ -230,7 +268,9 @@ RSpec.describe "headers" do
 
   it "Header validation - min_length constraint" do
     app = E2ERubyApp.create_app_headers_20_header_validation_min_length_constraint
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/headers/validated", headers: {"X-Token" => "ab"})
     expect(response.status_code).to eq(422)
     body = response.json
@@ -246,7 +286,9 @@ RSpec.describe "headers" do
 
   it "Header with underscore conversion - explicit" do
     app = E2ERubyApp.create_app_headers_21_header_with_underscore_conversion_explicit
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/headers/underscore", headers: {"X-Token" => "secret123"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"x_token" => "secret123"})
@@ -255,7 +297,9 @@ RSpec.describe "headers" do
 
   it "Host header" do
     app = E2ERubyApp.create_app_headers_22_host_header
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/headers/host", headers: {"Host" => "example.com:8080"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"host" => "example.com:8080"})
@@ -264,7 +308,9 @@ RSpec.describe "headers" do
 
   it "Multiple custom headers" do
     app = E2ERubyApp.create_app_headers_23_multiple_custom_headers
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/headers/multiple", headers: {"X-Client-Version" => "1.2.3", "X-Request-Id" => "req-12345", "X-Trace-Id" => "trace-abc"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"x_client_version" => "1.2.3", "x_request_id" => "req-12345", "x_trace_id" => "trace-abc"})
@@ -273,7 +319,9 @@ RSpec.describe "headers" do
 
   it "Optional header with None default - missing" do
     app = E2ERubyApp.create_app_headers_24_optional_header_with_none_default_missing
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/items/")
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"strange_header" => nil})
@@ -282,7 +330,9 @@ RSpec.describe "headers" do
 
   it "Origin header" do
     app = E2ERubyApp.create_app_headers_25_origin_header
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/headers/origin", headers: {"Origin" => "https://example.com"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"origin" => "https://example.com"})
@@ -291,7 +341,9 @@ RSpec.describe "headers" do
 
   it "Referer header" do
     app = E2ERubyApp.create_app_headers_26_referer_header
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/headers/referer", headers: {"Referer" => "https://example.com/page"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"referer" => "https://example.com/page"})
@@ -300,7 +352,9 @@ RSpec.describe "headers" do
 
   it "User-Agent header - custom value" do
     app = E2ERubyApp.create_app_headers_27_user_agent_header_custom_value
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/items/", headers: {"User-Agent" => "Mozilla/5.0 Custom Browser"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"User-Agent" => "Mozilla/5.0 Custom Browser"})
@@ -309,7 +363,9 @@ RSpec.describe "headers" do
 
   it "User-Agent header - default value" do
     app = E2ERubyApp.create_app_headers_28_user_agent_header_default_value
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/items/")
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"User-Agent" => "testclient"})
@@ -318,7 +374,9 @@ RSpec.describe "headers" do
 
   it "X-API-Key optional header - missing" do
     app = E2ERubyApp.create_app_headers_29_x_api_key_optional_header_missing
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/users/me")
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"msg" => "Hello World"})
@@ -327,7 +385,9 @@ RSpec.describe "headers" do
 
   it "X-API-Key optional header - success" do
     app = E2ERubyApp.create_app_headers_30_x_api_key_optional_header_success
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/users/me", headers: {"key" => "secret"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"msg" => "Hello secret"})
@@ -336,7 +396,9 @@ RSpec.describe "headers" do
 
   it "X-API-Key required header - missing" do
     app = E2ERubyApp.create_app_headers_31_x_api_key_required_header_missing
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/users/me")
     expect(response.status_code).to eq(422)
     body = response.json
@@ -352,7 +414,9 @@ RSpec.describe "headers" do
 
   it "X-API-Key required header - success" do
     app = E2ERubyApp.create_app_headers_32_x_api_key_required_header_success
-    client = Spikard::Testing.create_test_client(app)
+    config = Spikard::ServerConfig.new
+    config.compression = nil
+    client = Spikard::Testing.create_test_client(app, config: config)
     response = client.get("/users/me", headers: {"key" => "secret"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"username" => "secret"})

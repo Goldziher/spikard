@@ -92,6 +92,7 @@ pub async fn jwt_auth_middleware(
             jsonwebtoken::errors::ErrorKind::ExpiredSignature => "Token has expired",
             jsonwebtoken::errors::ErrorKind::InvalidToken => "Token is invalid",
             jsonwebtoken::errors::ErrorKind::InvalidSignature => "Token signature is invalid",
+            jsonwebtoken::errors::ErrorKind::Base64(_) => "Token signature is invalid",
             jsonwebtoken::errors::ErrorKind::InvalidAudience => "Token audience is invalid",
             jsonwebtoken::errors::ErrorKind::InvalidIssuer => "Token issuer is invalid",
             _ => "Token validation failed",
