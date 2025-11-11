@@ -1,0 +1,29 @@
+{
+	"description": "Test fixture for userLeft message",
+	"examples": [
+		{
+			"timestamp": "2024-01-15T10:30:00Z",
+			"type": "userLeft",
+			"user": "example_user"
+		}
+	],
+	"name": "userLeft",
+	"schema": {
+		"properties": {
+			"timestamp": {
+				"format": "date-time",
+				"type": "string"
+			},
+			"type": {
+				"const": "userLeft",
+				"type": "string"
+			},
+			"user": {
+				"description": "Username of the user who left",
+				"type": "string"
+			}
+		},
+		"required": ["type", "user", "timestamp"],
+		"type": "object"
+	}
+}

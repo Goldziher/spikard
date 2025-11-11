@@ -1,0 +1,51 @@
+{
+	"description": "Test fixture for statusUpdate message",
+	"examples": [
+		{
+			"message": "example_message",
+			"metadata": {},
+			"service": "example_service",
+			"status": "example_status",
+			"timestamp": "2024-01-15T10:30:00Z",
+			"type": "status_update"
+		}
+	],
+	"name": "statusUpdate",
+	"schema": {
+		"properties": {
+			"message": {
+				"description": "Status message or description",
+				"maxLength": 500,
+				"type": "string"
+			},
+			"metadata": {
+				"additionalProperties": true,
+				"description": "Additional status metadata",
+				"type": "object"
+			},
+			"service": {
+				"description": "Service or component name",
+				"maxLength": 100,
+				"minLength": 1,
+				"type": "string"
+			},
+			"status": {
+				"description": "Current service status",
+				"enum": ["operational", "degraded", "outage", "maintenance"],
+				"type": "string"
+			},
+			"timestamp": {
+				"description": "ISO 8601 timestamp",
+				"format": "date-time",
+				"type": "string"
+			},
+			"type": {
+				"const": "status_update",
+				"description": "Message type identifier",
+				"type": "string"
+			}
+		},
+		"required": ["type", "service", "status", "timestamp"],
+		"type": "object"
+	}
+}

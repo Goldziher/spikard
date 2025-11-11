@@ -1,0 +1,156 @@
+asyncapi: '3.0.0'
+info:
+  title: Chat WebSocket API
+  version: '1.0.0'
+  description: |
+    A simple WebSocket-based chat API for real-time messaging.
+    Clients can send messages and receive messages from other participants.
+
+servers:
+  production:
+    host: api.example.com
+    protocol: wss
+    description: Production WebSocket server
+
+  development:
+    host: localhost:8000
+    protocol: ws
+    description: Local development server
+
+channels:
+  /chat:
+    address: /chat
+    messages:
+      chatMessage:
+        $ref: '#/components/messages/chatMessage'
+      userJoined:
+        $ref: '#/components/messages/userJoined'
+      userLeft:
+        $ref: '#/components/messages/userLeft'
+
+operations:
+  sendMessage:
+    action: send
+    channel:
+      $ref: '#/channels/~1chat'
+    messages:
+      - $ref: '#/components/messages/chatMessage'
+    description: Send a chat message to all connected clients
+
+  receiveMessage:
+    action: receive
+    channel:
+      $ref: '#/channels/~1chat'
+    messages:
+      - $ref: '#/components/messages/chatMessage'
+      - $ref: '#/components/messages/userJoined'
+      - $ref: '#/components/messages/userLeft'
+    description: Receive chat messages and user events
+
+components:
+  messages:
+    chatMessage:
+      name: chatMessage
+      title: Chat Message
+      summary: A message sent by a user in the chat
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: message
+            description: Message type identifier
+          user:
+            type: string
+            description: Username of the sender
+            minLength: 1
+            maxLength: 50
+          text:
+            type: string
+            description: Message content
+            minLength: 1
+            maxLength: 500
+          timestamp:
+            type: string
+            format: date-time
+            description: ISO 8601 timestamp
+        required:
+          - type
+          - user
+          - text
+          - timestamp
+      examples:
+        - payload:
+            type: message
+            user: alice
+            text: Hello, everyone!
+            timestamp: '2024-01-15T10:30:00Z'
+
+    userJoined:
+      name: userJoined
+      title: User Joined
+      summary: Notification when a user joins the chat
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: userJoined
+          user:
+            type: string
+            description: Username of the user who joined
+          timestamp:
+            type: string
+            format: date-time
+        required:
+          - type
+          - user
+          - timestamp
+      examples:
+        - payload:
+            type: userJoined
+            user: bob
+            timestamp: '2024-01-15T10:29:55Z'
+
+    userLeft:
+      name: userLeft
+      title: User Left
+      summary: Notification when a user leaves the chat
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: userLeft
+          user:
+            type: string
+            description: Username of the user who left
+          timestamp:
+            type: string
+            format: date-time
+        required:
+          - type
+          - user
+          - timestamp
+      examples:
+        - payload:
+            type: userLeft
+            user: charlie
+            timestamp: '2024-01-15T10:35:00Z'
+
+  schemas:
+    username:
+      type: string
+      minLength: 1
+      maxLength: 50
+      pattern: '^[a-zA-Z0-9_-]+$'
+      description: Valid username (alphanumeric, dash, underscore)
+
+    messageText:
+      type: string
+      minLength: 1
+      maxLength: 500
+      description: Chat message content
