@@ -112,3 +112,21 @@ pub fn string_literal(value: &str) -> String {
     let escaped: String = value.escape_default().collect();
     format!("\"{}\"", escaped)
 }
+
+/// Create a Ruby string literal from arbitrary bytes.
+pub fn bytes_to_ruby_string(bytes: &[u8]) -> String {
+    let mut literal = String::from("\"");
+    for &byte in bytes {
+        match byte {
+            b'\\' => literal.push_str("\\\\"),
+            b'"' => literal.push_str("\\\""),
+            b'\n' => literal.push_str("\\n"),
+            b'\r' => literal.push_str("\\r"),
+            b'\t' => literal.push_str("\\t"),
+            0x20..=0x7e => literal.push(byte as char),
+            _ => literal.push_str(&format!("\\x{:02x}", byte)),
+        }
+    }
+    literal.push('"');
+    literal
+}

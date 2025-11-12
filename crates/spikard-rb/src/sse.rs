@@ -63,87 +63,85 @@ impl SseEventProducer for RubySseEventProducer {
     async fn next_event(&self) -> Option<SseEvent> {
         debug!("Ruby SSE producer '{}': next_event", self.name);
 
-        let next_event_proc = self.next_event_proc;
-        let name = self.name.clone();
+        match magnus::Ruby::get()
+            .map_err(|e| format!("Failed to get Ruby: {}", e))
+            .and_then(|ruby| {
+                debug!("Ruby SSE producer: acquired Ruby VM");
 
-        // Run Ruby code in a blocking task
-        let result = tokio::task::spawn_blocking(move || {
-            magnus::Ruby::get()
-                .map_err(|e| format!("Failed to get Ruby: {}", e))
-                .and_then(|ruby| {
-                    debug!("Ruby SSE producer: acquired Ruby VM");
+                // Call the Ruby function
+                let proc_value = ruby.get_inner(self.next_event_proc);
+                let result: Value = proc_value
+                    .funcall("call", ())
+                    .map_err(|e| format!("Producer '{}' call failed: {}", self.name, e))?;
 
-                    // Call the Ruby function
-                    let proc_value = ruby.get_inner(next_event_proc);
-                    let result: Value = proc_value
-                        .funcall("call", ())
-                        .map_err(|e| format!("Producer '{}' call failed: {}", name, e))?;
+                debug!("Ruby SSE producer: called next_event proc");
 
-                    debug!("Ruby SSE producer: called next_event proc");
+                // Check if result is None (end of stream)
+                if result.is_nil() {
+                    debug!("Ruby SSE producer: received nil, ending stream");
+                    return Ok(None);
+                }
 
-                    // Check if result is None (end of stream)
-                    if result.is_nil() {
-                        debug!("Ruby SSE producer: received nil, ending stream");
-                        return Ok(None);
-                    }
-
-                    // Extract SseEvent from Ruby hash
-                    let result_hash = RHash::from_value(result).ok_or_else(|| {
-                        format!("next_event must return a Hash or nil, got {}", unsafe {
-                            result.classname()
-                        })
+                // Extract SseEvent from Ruby hash
+                let result_hash = if let Some(hash) = RHash::from_value(result) {
+                    hash
+                } else {
+                    let hash_value: Value = result.funcall("to_h", ()).map_err(|e| {
+                        format!(
+                            "next_event must return a Hash/SseEvent convertible via to_h ({}): {}",
+                            unsafe { result.classname() },
+                            e
+                        )
                     })?;
+                    RHash::from_value(hash_value).ok_or_else(|| {
+                        format!("next_event to_h must return a Hash, got {}", unsafe {
+                            hash_value.classname()
+                        })
+                    })?
+                };
 
-                    // Extract data field (required)
-                    let data_value = result_hash
-                        .get(ruby.to_symbol("data"))
-                        .ok_or_else(|| "next_event Hash must have :data key".to_string())?;
+                // Extract data field (required)
+                let data_value = result_hash
+                    .get(ruby.to_symbol("data"))
+                    .ok_or_else(|| "next_event Hash must have :data key".to_string())?;
 
-                    let data_json = Self::ruby_to_json(&ruby, data_value)?;
+                let data_json = Self::ruby_to_json(&ruby, data_value)?;
 
-                    // Extract optional event_type field
-                    let event_type: Option<String> = result_hash
-                        .get(ruby.to_symbol("event_type"))
-                        .and_then(|v| if v.is_nil() { None } else { String::try_convert(v).ok() });
+                // Extract optional event_type field
+                let event_type: Option<String> = result_hash
+                    .get(ruby.to_symbol("event_type"))
+                    .and_then(|v| if v.is_nil() { None } else { String::try_convert(v).ok() });
 
-                    // Extract optional id field
-                    let id: Option<String> = result_hash
-                        .get(ruby.to_symbol("id"))
-                        .and_then(|v| if v.is_nil() { None } else { String::try_convert(v).ok() });
+                // Extract optional id field
+                let id: Option<String> = result_hash
+                    .get(ruby.to_symbol("id"))
+                    .and_then(|v| if v.is_nil() { None } else { String::try_convert(v).ok() });
 
-                    // Extract optional retry field
-                    let retry: Option<u64> = result_hash
-                        .get(ruby.to_symbol("retry"))
-                        .and_then(|v| if v.is_nil() { None } else { u64::try_convert(v).ok() });
+                // Extract optional retry field
+                let retry: Option<u64> = result_hash
+                    .get(ruby.to_symbol("retry"))
+                    .and_then(|v| if v.is_nil() { None } else { u64::try_convert(v).ok() });
 
-                    // Create Rust SseEvent
-                    let mut event = if let Some(et) = event_type {
-                        SseEvent::with_type(et, data_json)
-                    } else {
-                        SseEvent::new(data_json)
-                    };
+                // Create Rust SseEvent
+                let mut event = if let Some(et) = event_type {
+                    SseEvent::with_type(et, data_json)
+                } else {
+                    SseEvent::new(data_json)
+                };
 
-                    if let Some(id_str) = id {
-                        event = event.with_id(id_str);
-                    }
+                if let Some(id_str) = id {
+                    event = event.with_id(id_str);
+                }
 
-                    if let Some(retry_ms) = retry {
-                        event = event.with_retry(retry_ms);
-                    }
+                if let Some(retry_ms) = retry {
+                    event = event.with_retry(retry_ms);
+                }
 
-                    Ok(Some(event))
-                })
-        })
-        .await;
-
-        match result {
-            Ok(Ok(event)) => event,
-            Ok(Err(e)) => {
-                error!("Ruby error in next_event: {}", e);
-                None
-            }
+                Ok(Some(event))
+            }) {
+            Ok(event) => event,
             Err(e) => {
-                error!("Tokio error in next_event: {}", e);
+                error!("Ruby error in next_event: {}", e);
                 None
             }
         }
@@ -152,55 +150,39 @@ impl SseEventProducer for RubySseEventProducer {
     async fn on_connect(&self) {
         debug!("Ruby SSE producer '{}': on_connect", self.name);
 
-        if let Some(on_connect_proc) = self.on_connect_proc {
-            let name = self.name.clone();
-
-            let _ = tokio::task::spawn_blocking(move || {
-                let result = magnus::Ruby::get()
-                    .map_err(|e| format!("Failed to get Ruby: {}", e))
-                    .and_then(|ruby| {
-                        debug!("Ruby SSE producer: on_connect acquired Ruby VM");
-                        let proc_value = ruby.get_inner(on_connect_proc);
-                        proc_value
-                            .funcall::<_, _, Value>("call", ())
-                            .map_err(|e| format!("on_connect '{}' call failed: {}", name, e))?;
-                        debug!("Ruby SSE producer: on_connect completed");
-                        Ok(())
-                    });
-
-                // Don't return the Result - just log errors
-                if let Err(e) = result {
-                    error!("on_connect error: {}", e);
-                }
-            })
-            .await;
+        if let Some(on_connect_proc) = self.on_connect_proc
+            && let Err(e) = magnus::Ruby::get()
+                .map_err(|e| format!("Failed to get Ruby: {}", e))
+                .and_then(|ruby| {
+                    debug!("Ruby SSE producer: on_connect acquired Ruby VM");
+                    let proc_value = ruby.get_inner(on_connect_proc);
+                    proc_value
+                        .funcall::<_, _, Value>("call", ())
+                        .map_err(|e| format!("on_connect '{}' call failed: {}", self.name, e))?;
+                    debug!("Ruby SSE producer: on_connect completed");
+                    Ok(())
+                })
+        {
+            error!("on_connect error: {}", e);
         }
     }
 
     async fn on_disconnect(&self) {
         debug!("Ruby SSE producer '{}': on_disconnect", self.name);
 
-        if let Some(on_disconnect_proc) = self.on_disconnect_proc {
-            let name = self.name.clone();
-
-            let _ = tokio::task::spawn_blocking(move || {
-                let result = magnus::Ruby::get()
-                    .map_err(|e| format!("Failed to get Ruby: {}", e))
-                    .and_then(|ruby| {
-                        let proc_value = ruby.get_inner(on_disconnect_proc);
-                        proc_value
-                            .funcall::<_, _, Value>("call", ())
-                            .map_err(|e| format!("on_disconnect '{}' call failed: {}", name, e))?;
-                        debug!("Ruby SSE producer: on_disconnect completed");
-                        Ok(())
-                    });
-
-                // Don't return the Result - just log errors
-                if let Err(e) = result {
-                    error!("on_disconnect error: {}", e);
-                }
-            })
-            .await;
+        if let Some(on_disconnect_proc) = self.on_disconnect_proc
+            && let Err(e) = magnus::Ruby::get()
+                .map_err(|e| format!("Failed to get Ruby: {}", e))
+                .and_then(|ruby| {
+                    let proc_value = ruby.get_inner(on_disconnect_proc);
+                    proc_value
+                        .funcall::<_, _, Value>("call", ())
+                        .map_err(|e| format!("on_disconnect '{}' call failed: {}", self.name, e))?;
+                    debug!("Ruby SSE producer: on_disconnect completed");
+                    Ok(())
+                })
+        {
+            error!("on_disconnect error: {}", e);
         }
     }
 }

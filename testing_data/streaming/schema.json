@@ -1,0 +1,58 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Streaming Response Fixture",
+	"description": "Fixtures that describe streaming HTTP responses",
+	"type": "object",
+	"allOf": [
+		{ "$ref": "../00-FIXTURE-SCHEMA.json" },
+		{
+			"type": "object",
+			"required": ["streaming", "expected_response"],
+			"properties": {
+				"expected_response": {
+					"type": "object",
+					"required": ["status_code"],
+					"properties": {
+						"status_code": { "type": "integer", "minimum": 100, "maximum": 599 },
+						"body": { "description": "Concatenated streaming payload for documentation" },
+						"headers": {
+							"type": "object",
+							"description": "Headers expected on the streaming response",
+							"additionalProperties": { "type": "string" },
+							"properties": {
+								"content-type": { "type": "string" }
+							}
+						}
+					}
+				},
+				"streaming": { "$ref": "#/definitions/streaming" }
+			}
+		}
+	],
+	"definitions": {
+		"streaming": {
+			"type": "object",
+			"required": ["chunks"],
+			"properties": {
+				"content_type": { "type": "string" },
+				"chunks": {
+					"type": "array",
+					"minItems": 1,
+					"items": {
+						"type": "object",
+						"required": ["type"],
+						"properties": {
+							"type": { "type": "string", "enum": ["text", "bytes"] },
+							"value": { "type": "string" },
+							"base64": { "type": "string" }
+						},
+						"allOf": [
+							{ "if": { "properties": { "type": { "const": "text" } } }, "then": { "required": ["value"] } },
+							{ "if": { "properties": { "type": { "const": "bytes" } } }, "then": { "required": ["base64"] } }
+						]
+					}
+				}
+			}
+		}
+	}
+}

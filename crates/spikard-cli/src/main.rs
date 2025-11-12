@@ -3,10 +3,9 @@
 //! Unified command-line interface for running Spikard applications
 //! across multiple language bindings (Rust, Python, Node.js, Ruby)
 
-mod codegen;
-
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand, ValueEnum};
+use spikard_cli::codegen;
 use std::path::PathBuf;
 
 /// Spikard - High-performance HTTP framework with Rust core

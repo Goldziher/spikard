@@ -1,7 +1,15 @@
 //! Python bindings for Response type
 
+use async_stream::stream;
+use axum::http::{HeaderName, HeaderValue, StatusCode};
+use bytes::Bytes;
+use pyo3::exceptions::{PyStopAsyncIteration, PyTypeError, PyValueError};
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::types::{PyBytes, PyDict, PyString};
+use pyo3_async_runtimes::tokio::into_future;
+use spikard_http::HandlerResponse;
+use std::io;
+use std::str::FromStr;
 
 /// Manual Clone implementation for Response
 /// PyO3's Py<T> requires clone_ref(py) but we can clone the struct outside of GIL context
@@ -210,4 +218,148 @@ impl Response {
             .body(body)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to build response: {}", e)))
     }
+}
+
+#[pyclass]
+pub struct StreamingResponse {
+    stream: Py<PyAny>,
+    #[pyo3(get, set)]
+    pub status_code: u16,
+    #[pyo3(get)]
+    pub headers: Py<PyDict>,
+}
+
+#[pymethods]
+impl StreamingResponse {
+    #[new]
+    #[pyo3(signature = (stream, *, status_code=200, headers=None))]
+    fn new(py: Python<'_>, stream: Py<PyAny>, status_code: u16, headers: Option<&Bound<'_, PyDict>>) -> PyResult<Self> {
+        let headers_dict = match headers {
+            Some(h) => h.clone().unbind(),
+            None => PyDict::new(py).unbind(),
+        };
+
+        if !stream.bind(py).hasattr("__anext__")? {
+            return Err(PyTypeError::new_err(
+                "StreamingResponse requires an async iterator that implements __anext__",
+            ));
+        }
+
+        Ok(Self {
+            stream,
+            status_code,
+            headers: headers_dict,
+        })
+    }
+
+    fn __repr__(&self) -> String {
+        format!("<StreamingResponse status_code={}>", self.status_code)
+    }
+}
+
+impl StreamingResponse {
+    pub fn to_handler_response(&self, py: Python<'_>) -> PyResult<HandlerResponse> {
+        let status = StatusCode::from_u16(self.status_code)
+            .map_err(|e| PyValueError::new_err(format!("Invalid status code: {}", e)))?;
+        let header_pairs = extract_header_pairs(py, &self.headers)?;
+        let stream_object = Python::attach(|py| self.stream.clone_ref(py));
+
+        let rust_stream = stream! {
+            loop {
+                let next_future = Python::attach(|py| -> PyResult<Option<_>> {
+                    let bound = stream_object.bind(py);
+                    match bound.call_method0("__anext__") {
+                        Ok(awaitable) => into_future(awaitable).map(Some),
+                        Err(err) => {
+                            if err.is_instance_of::<PyStopAsyncIteration>(py) {
+                                Ok(None)
+                            } else {
+                                Err(err)
+                            }
+                        }
+                    }
+                });
+
+                let fut = match next_future {
+                    Ok(Some(fut)) => fut,
+                    Ok(None) => break,
+                    Err(err) => {
+                        let message = format_pyerr(err);
+                        yield Err(Box::new(io::Error::other(message)));
+                        break;
+                    }
+                };
+
+                match fut.await {
+                    Ok(obj) => {
+                        let chunk = Python::attach(|py| {
+                            let bound = obj.bind(py);
+                            convert_chunk_to_bytes(bound)
+                        });
+                        match chunk {
+                            Ok(bytes) => yield Ok(bytes),
+                            Err(err) => {
+                                let message = format_pyerr(err);
+                                yield Err(Box::new(io::Error::other(message)));
+                                break;
+                            }
+                        }
+                    }
+                    Err(err) => {
+                        let is_stop = Python::attach(|py| err.is_instance_of::<PyStopAsyncIteration>(py));
+                        if is_stop {
+                            break;
+                        } else {
+                            let message = format_pyerr(err);
+                            yield Err(Box::new(io::Error::other(message)));
+                            break;
+                        }
+                    }
+                }
+            }
+        };
+
+        let mut response = HandlerResponse::stream(rust_stream).with_status(status);
+        for (name, value) in header_pairs {
+            response = response.with_header(name, value);
+        }
+        Ok(response)
+    }
+}
+
+fn extract_header_pairs(py: Python<'_>, headers: &Py<PyDict>) -> PyResult<Vec<(HeaderName, HeaderValue)>> {
+    let mut pairs = Vec::new();
+    let dict = headers.bind(py);
+    for (key, value) in dict.iter() {
+        let key_str: String = key.extract()?;
+        let value_str: String = value.extract()?;
+        let header_name = HeaderName::from_str(&key_str)
+            .map_err(|e| PyValueError::new_err(format!("Invalid header '{}': {}", key_str, e)))?;
+        let header_value = HeaderValue::from_str(&value_str)
+            .map_err(|e| PyValueError::new_err(format!("Invalid header value '{}': {}", value_str, e)))?;
+        pairs.push((header_name, header_value));
+    }
+    Ok(pairs)
+}
+
+fn convert_chunk_to_bytes(obj: &Bound<'_, PyAny>) -> PyResult<Bytes> {
+    if let Ok(py_bytes) = obj.cast::<PyBytes>() {
+        Ok(Bytes::copy_from_slice(py_bytes.as_bytes()))
+    } else if obj.cast::<PyString>().is_ok() {
+        let text: String = obj.extract()?;
+        Ok(Bytes::from(text.into_bytes()))
+    } else {
+        Err(PyTypeError::new_err("StreamingResponse chunks must be str or bytes"))
+    }
+}
+
+fn format_pyerr(err: PyErr) -> String {
+    Python::attach(|py| {
+        err.into_value(py)
+            .bind(py)
+            .repr()
+            .ok()
+            .and_then(|repr| repr.extract::<String>().ok())
+            .unwrap_or_else(|| "Streaming error".to_string())
+    })
 }

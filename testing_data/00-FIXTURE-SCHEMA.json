@@ -139,6 +139,52 @@
 			},
 			"additionalProperties": false
 		},
+		"streaming": {
+			"type": "object",
+			"description": "Streaming response metadata. When present, handlers should return a streaming response using these chunks.",
+			"required": ["chunks"],
+			"properties": {
+				"content_type": {
+					"type": "string",
+					"description": "Content-Type to set for the streaming response (overrides expected_response headers if provided)"
+				},
+				"chunks": {
+					"type": "array",
+					"minItems": 1,
+					"description": "Ordered list of chunks yielded by the stream",
+					"items": {
+						"type": "object",
+						"required": ["type"],
+						"properties": {
+							"type": {
+								"type": "string",
+								"enum": ["text", "bytes"],
+								"description": "Chunk payload type"
+							},
+							"value": {
+								"type": "string",
+								"description": "UTF-8 text for text chunks"
+							},
+							"base64": {
+								"type": "string",
+								"description": "Base64-encoded bytes for binary chunks"
+							}
+						},
+						"additionalProperties": false,
+						"allOf": [
+							{
+								"if": { "properties": { "type": { "const": "text" } } },
+								"then": { "required": ["value"] }
+							},
+							{
+								"if": { "properties": { "type": { "const": "bytes" } } },
+								"then": { "required": ["base64"] }
+							}
+						]
+					}
+				}
+			}
+		},
 		"request": {
 			"type": "object",
 			"description": "HTTP request details",

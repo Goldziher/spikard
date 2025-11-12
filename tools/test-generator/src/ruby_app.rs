@@ -6,11 +6,14 @@ use anyhow::{Context, Result};
 use serde_json::{Map, Value};
 use spikard_codegen::openapi::from_fixtures::FixtureExpectedResponse;
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::Path;
 
-use crate::ruby_utils::{build_handler_name, build_method_name, string_literal, value_to_ruby};
+use crate::ruby_utils::{
+    build_handler_name, build_method_name, bytes_to_ruby_string, string_literal, string_map_to_ruby, value_to_ruby,
+};
+use crate::streaming::chunk_bytes;
 
 pub fn generate_ruby_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     let app_dir = output_dir.join("app");
@@ -62,7 +65,7 @@ pub fn generate_ruby_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
 
     for (category, fixtures) in fixtures_by_category.iter() {
         for (index, fixture) in fixtures.iter().enumerate() {
-            code.push_str(&build_fixture_function(category, index, fixture));
+            code.push_str(&build_fixture_function(category, index, fixture)?);
         }
     }
 
@@ -97,7 +100,7 @@ fn load_fixtures_grouped(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<Fix
     Ok(grouped)
 }
 
-fn build_fixture_function(category: &str, index: usize, fixture: &Fixture) -> String {
+fn build_fixture_function(category: &str, index: usize, fixture: &Fixture) -> Result<String> {
     let method_name = build_method_name(category, index, &fixture.name);
     let handler_name = build_handler_name(category, index, &fixture.name);
     let route = fixture
@@ -169,12 +172,12 @@ fn build_fixture_function(category: &str, index: usize, fixture: &Fixture) -> St
         args_joined
     ));
 
-    let response_expr = build_response_expression(&fixture.expected_response);
-    function.push_str(&format!(
-        "      {}
-",
-        response_expr
-    ));
+    if fixture.streaming.is_some() {
+        function.push_str(&build_streaming_response_block(fixture)?);
+    } else {
+        let response_expr = build_response_expression(&fixture.expected_response);
+        function.push_str(&format!("      {}\n", response_expr));
+    }
     function.push_str(
         "    end
 ",
@@ -189,7 +192,7 @@ fn build_fixture_function(category: &str, index: usize, fixture: &Fixture) -> St
 ",
     );
 
-    function
+    Ok(function)
 }
 
 fn build_parameter_schema(params: &Value) -> Option<Value> {
@@ -314,6 +317,59 @@ fn build_response_expression(expected: &FixtureExpectedResponse) -> String {
     };
 
     "build_response(content: ".to_string() + &body_code + &format!(", status: {}, headers: nil)", status)
+}
+
+fn build_streaming_response_block(fixture: &Fixture) -> Result<String> {
+    let streaming = fixture
+        .streaming
+        .as_ref()
+        .expect("streaming metadata should exist when building streaming block");
+
+    let mut block = String::new();
+    block.push_str("      stream = Enumerator.new do |yielder|\n");
+    for chunk in &streaming.chunks {
+        match chunk {
+            spikard_codegen::openapi::FixtureStreamChunk::Text { value } => {
+                block.push_str(&format!("        yielder << {}\n", string_literal(value)));
+            }
+            spikard_codegen::openapi::FixtureStreamChunk::Bytes { .. } => {
+                let bytes = chunk_bytes(chunk)?;
+                block.push_str(&format!("        yielder << {}\n", bytes_to_ruby_string(&bytes)));
+            }
+        }
+    }
+    block.push_str("      end\n\n");
+
+    let headers_literal = build_streaming_headers_ruby(fixture);
+    block.push_str(&format!(
+        "      Spikard::StreamingResponse.new(\n        stream,\n        status_code: {},\n        headers: {}\n      )\n",
+        fixture.expected_response.status_code,
+        headers_literal
+    ));
+
+    Ok(block)
+}
+
+fn build_streaming_headers_ruby(fixture: &Fixture) -> String {
+    let mut headers: HashMap<String, String> = fixture.expected_response.headers.clone().unwrap_or_default();
+
+    if let Some(content_type) = fixture
+        .streaming
+        .as_ref()
+        .and_then(|streaming| streaming.content_type.as_ref())
+    {
+        headers.insert("content-type".to_string(), content_type.clone());
+    }
+
+    if !headers.contains_key("content-type") {
+        headers.insert("content-type".to_string(), "application/octet-stream".to_string());
+    }
+
+    if headers.is_empty() {
+        "nil".to_string()
+    } else {
+        string_map_to_ruby(&headers)
+    }
 }
 
 /// Generate Ruby lifecycle hook procs

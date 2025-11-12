@@ -137,8 +137,8 @@ async def test_multiple_hooks_all_phases() -> None:
     client = TestClient(app)
 
     headers = {
-        "Authorization": "Bearer valid-token-12345",
         "Content-Type": "application/json",
+        "Authorization": "Bearer valid-token-12345",
     }
     json_data = {"action": "update_profile", "user_id": "user-123"}
     response = await client.post("/api/full-lifecycle", headers=headers, json=json_data)

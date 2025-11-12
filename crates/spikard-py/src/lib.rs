@@ -617,6 +617,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
 fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<request::PyRequest>()?;
     m.add_class::<response::Response>()?;
+    m.add_class::<response::StreamingResponse>()?;
     m.add_class::<test_client::TestClient>()?;
     m.add_class::<test_client::TestResponse>()?;
     m.add_function(wrap_pyfunction!(create_test_client, m)?)?;

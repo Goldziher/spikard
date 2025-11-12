@@ -41,6 +41,7 @@ mod sse;
 mod test_client;
 mod websocket;
 
+use crate::response::HandlerReturnValue;
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use spikard_http::{RouteMetadata, Server, ServerConfig};
@@ -352,7 +353,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
 
     for route in &routes {
         // Get the JS handler function from the handlers object
-        let js_handler: Function<String, Promise<String>> = handlers_obj
+        let js_handler: Function<String, Promise<HandlerReturnValue>> = handlers_obj
             .get_named_property(&route.handler_name)
             .map_err(|e| Error::from_reason(format!("Failed to get handler '{}': {}", route.handler_name, e)))?;
 

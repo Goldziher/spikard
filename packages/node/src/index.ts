@@ -28,7 +28,7 @@ export type { Request } from "./request";
 export { del, get, patch, post, put, type RouteOptions, route } from "./routing";
 // Server
 export { runServer, type ServerOptions } from "./server";
-
+export { StreamingResponse, type StreamingResponseInit } from "./streaming";
 // Testing utilities
 export { TestClient, type TestResponse } from "./testing";
 

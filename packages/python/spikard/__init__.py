@@ -2,7 +2,7 @@
 
 # Import Response from the Rust module (_spikard)
 # This is installed as a separate package via maturin
-from _spikard import Response
+from _spikard import Response, StreamingResponse
 
 from spikard._internal.converters import register_decoder
 from spikard.app import Spikard
@@ -37,6 +37,7 @@ __all__ = [
     "SseEvent",
     "SseEventProducer",
     "StaticFilesConfig",
+    "StreamingResponse",
     "WebSocketHandler",
     "delete",
     "get",

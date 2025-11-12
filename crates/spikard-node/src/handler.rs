@@ -3,6 +3,7 @@
 //! This module implements the Handler trait using napi-rs ThreadsafeFunction
 //! to call JavaScript handlers from Rust's async HTTP server.
 
+use crate::response::HandlerReturnValue;
 use axum::{
     body::Body,
     http::{Request, Response, StatusCode},
@@ -20,13 +21,13 @@ use std::sync::Arc;
 /// Uses ThreadsafeFunction to call JavaScript handlers from Rust threads.
 /// The pattern follows kreuzberg's approach:
 /// - Input: String (JSON-serialized request data)
-/// - Return: Promise<String> (JSON-serialized response)
+/// - Return: Promise<HandlerReturnValue> (JSON-serialized response or streaming handle)
 /// - CallJsBackArgs: Vec<String> (from build_callback)
 pub struct NodeHandler {
     handler_name: String,
     // ThreadsafeFunction signature:
     // <Input, Return, CallJsBackArgs, ErrorStatus, CalleeHandled>
-    handler_fn: Arc<ThreadsafeFunction<String, Promise<String>, Vec<String>, napi::Status, false>>,
+    handler_fn: Arc<ThreadsafeFunction<String, Promise<HandlerReturnValue>, Vec<String>, napi::Status, false>>,
 }
 
 // SAFETY: ThreadsafeFunction is designed to be Send + Sync
@@ -37,7 +38,7 @@ impl NodeHandler {
     /// Create a new Node handler wrapper with a JavaScript function
     pub fn new(
         handler_name: String,
-        handler_fn: ThreadsafeFunction<String, Promise<String>, Vec<String>, napi::Status, false>,
+        handler_fn: ThreadsafeFunction<String, Promise<HandlerReturnValue>, Vec<String>, napi::Status, false>,
     ) -> Self {
         Self {
             handler_name,
@@ -73,7 +74,7 @@ impl Handler for NodeHandler {
 
             // Call JavaScript handler through ThreadsafeFunction
             // Pattern from kreuzberg: call_async().await.await
-            let json_output = self
+            let handler_output = self
                 .handler_fn
                 .call_async(json_input)
                 .await
@@ -91,8 +92,23 @@ impl Handler for NodeHandler {
                     )
                 })?;
 
+            if let HandlerReturnValue::Streaming(streaming) = handler_output {
+                let response = streaming.into_handler_response().map_err(|e| {
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        format!("Failed to create streaming response: {}", e),
+                    )
+                })?;
+                return Ok(response.into_response());
+            }
+
+            let json_body = match handler_output {
+                HandlerReturnValue::Json(json) => json,
+                HandlerReturnValue::Streaming(_) => unreachable!(),
+            };
+
             // Parse the response from JavaScript
-            let response_data: Value = serde_json::from_str(&json_output).map_err(|e| {
+            let response_data: Value = serde_json::from_str(&json_body).map_err(|e| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     format!("Failed to parse handler response: {}", e),
