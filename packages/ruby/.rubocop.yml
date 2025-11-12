@@ -4,6 +4,8 @@ AllCops:
   Exclude:
     - "ext/**"
     - "tmp/**/*"
+    - "**/Gemfile.ext"
+    - "**/Gemfile.ext.lock"
 
 Metrics/BlockLength:
   Exclude:

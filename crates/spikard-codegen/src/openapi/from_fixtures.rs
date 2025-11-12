@@ -21,11 +21,33 @@ pub struct Fixture {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub handler: Option<FixtureHandler>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub streaming: Option<FixtureStreaming>,
+
     pub request: FixtureRequest,
     pub expected_response: FixtureExpectedResponse,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tags: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FixtureStreaming {
+    /// Optional explicit content type for the stream (overrides headers)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub content_type: Option<String>,
+
+    /// Stream chunks that will be yielded sequentially
+    pub chunks: Vec<FixtureStreamChunk>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum FixtureStreamChunk {
+    /// UTF-8 text chunk
+    Text { value: String },
+    /// Arbitrary bytes encoded as base64 for portability
+    Bytes { base64: String },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

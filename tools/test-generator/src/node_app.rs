@@ -2,8 +2,9 @@
 //!
 //! Generates a Spikard Node.js/TypeScript application from fixtures for e2e testing.
 
+use crate::streaming::{StreamingFixtureData, streaming_data};
 use anyhow::{Context, Result, ensure};
-use serde_json::Value;
+use serde_json::{Map as JsonMap, Value};
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
@@ -145,7 +146,14 @@ fn generate_app_file_per_fixture(fixtures_by_category: &HashMap<String, Vec<Fixt
     code.push_str(" */\n\n");
 
     // Imports
-    code.push_str("import type { RouteMetadata, SpikardApp } from \"@spikard/node\";\n");
+    let needs_streaming_import = fixtures_by_category
+        .values()
+        .flat_map(|fixtures| fixtures.iter())
+        .any(|fixture| fixture.streaming.is_some());
+
+    if needs_streaming_import {
+        code.push_str("import { StreamingResponse } from \"@spikard/node\";\n");
+    }
 
     // Check if any fixture uses middleware - if so, import ServerConfig types
     let has_middleware = fixtures_by_category
@@ -153,17 +161,24 @@ fn generate_app_file_per_fixture(fixtures_by_category: &HashMap<String, Vec<Fixt
         .flat_map(|fixtures| fixtures.iter())
         .any(|f| f.handler.as_ref().and_then(|h| h.middleware.as_ref()).is_some());
 
+    let mut type_imports = vec!["RouteMetadata".to_string(), "SpikardApp".to_string()];
     if has_middleware {
-        code.push_str("import type {\n");
-        code.push_str("\tServerConfig,\n");
-        code.push_str("\tJwtConfig,\n");
-        code.push_str("\tApiKeyConfig,\n");
-        code.push_str("\tOpenApiConfig,\n");
-        code.push_str("\tContactInfo,\n");
-        code.push_str("\tLicenseInfo,\n");
-        code.push_str("\tServerInfo,\n");
-        code.push_str("} from \"@spikard/node\";\n");
+        type_imports.extend([
+            "ServerConfig".to_string(),
+            "JwtConfig".to_string(),
+            "ApiKeyConfig".to_string(),
+            "OpenApiConfig".to_string(),
+            "ContactInfo".to_string(),
+            "LicenseInfo".to_string(),
+            "ServerInfo".to_string(),
+        ]);
     }
+
+    code.push_str("import type {\n");
+    for name in type_imports {
+        code.push_str(&format!("\t{},\n", name));
+    }
+    code.push_str("} from \"@spikard/node\";\n");
     code.push('\n');
 
     // Track handler names for uniqueness
@@ -442,6 +457,10 @@ fn generate_fixture_handler_and_app_node(fixture: &Fixture, handler_name: &str) 
 
 /// Generate handler function for a fixture
 fn generate_handler_function(fixture: &Fixture, route: &str, method: &str, handler_name: &str) -> Result<String> {
+    if let Some(stream_info) = streaming_data(fixture)? {
+        return generate_streaming_handler(fixture, handler_name, route, method, &stream_info);
+    }
+
     // Extract handler info from fixture
     let handler_opt = fixture.handler.as_ref();
 
@@ -551,6 +570,74 @@ fn generate_handler_function(fixture: &Fixture, route: &str, method: &str, handl
     code.push('}');
 
     Ok(code)
+}
+
+fn generate_streaming_handler(
+    fixture: &Fixture,
+    handler_name: &str,
+    route: &str,
+    method: &str,
+    stream_info: &StreamingFixtureData,
+) -> Result<String> {
+    let function_name = to_camel_case(handler_name);
+    let expected_status = fixture.expected_response.status_code;
+    let headers_literal = build_streaming_headers_ts(fixture, stream_info);
+
+    let mut chunk_lines = Vec::new();
+    if let Some(streaming) = &fixture.streaming {
+        for chunk in &streaming.chunks {
+            match chunk {
+                spikard_codegen::openapi::FixtureStreamChunk::Text { value } => {
+                    let literal = serde_json::to_string(value)?;
+                    chunk_lines.push(format!("\t\tyield {};", literal));
+                }
+                spikard_codegen::openapi::FixtureStreamChunk::Bytes { base64 } => {
+                    chunk_lines.push(format!("\t\tyield Buffer.from(\"{}\", \"base64\");", base64));
+                }
+            }
+        }
+    }
+
+    let chunks_block = if chunk_lines.is_empty() {
+        "\t\t// No chunks defined\n".to_string()
+    } else {
+        format!("{}\n", chunk_lines.join("\n"))
+    };
+
+    Ok(format!(
+        "/**\n * Handler for {} {}\n */\nasync function {}(requestJson: string): Promise<any> {{\n\tconst stream = async function* () {{\n{}\t}};\n\n\treturn new StreamingResponse(stream(), {{\n\t\tstatusCode: {},\n\t\theaders: {}\n\t}});\n}}",
+        method.to_uppercase(),
+        route,
+        function_name,
+        chunks_block,
+        expected_status,
+        headers_literal
+    ))
+}
+
+fn build_streaming_headers_ts(fixture: &Fixture, stream_info: &StreamingFixtureData) -> String {
+    let mut headers: JsonMap<String, Value> = fixture
+        .expected_response
+        .headers
+        .clone()
+        .unwrap_or_default()
+        .into_iter()
+        .map(|(k, v)| (k, Value::String(v)))
+        .collect();
+
+    if let Some(content_type) = stream_info.streaming.content_type.as_ref() {
+        headers.insert("content-type".to_string(), Value::String(content_type.clone()));
+    }
+
+    if !headers.contains_key("content-type") {
+        headers.insert(
+            "content-type".to_string(),
+            Value::String("application/octet-stream".to_string()),
+        );
+    }
+
+    let literal = Value::Object(headers);
+    serde_json::to_string(&literal).unwrap_or_else(|_| "{}".to_string())
 }
 
 /// Extract parameters from parameter schema (TypeScript types)

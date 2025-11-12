@@ -32,9 +32,9 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Access-Control-Request-Headers": "X-Custom-Header",
-			Origin: "https://example.com",
 			"Access-Control-Request-Method": "POST",
+			Origin: "https://example.com",
+			"Access-Control-Request-Headers": "X-Custom-Header",
 		};
 		const response = await client.options("/api/data", { headers });
 
@@ -62,9 +62,9 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Access-Control-Request-Method": "PUT",
 			"Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
 			Origin: "https://app.example.com",
+			"Access-Control-Request-Method": "PUT",
 		};
 		const response = await client.options("/api/resource/123", { headers });
 
@@ -76,8 +76,8 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			Origin: "https://app.example.com",
 			"Access-Control-Request-Method": "DELETE",
+			Origin: "https://app.example.com",
 		};
 		const response = await client.options("/api/resource/456", { headers });
 
@@ -104,9 +104,9 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
+			"Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
 			Origin: "https://example.com",
 			"Access-Control-Request-Method": "POST",
-			"Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
 		};
 		const response = await client.options("/items/", { headers });
 
@@ -118,8 +118,8 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			Origin: "https://app.example.com",
 			Cookie: "session=abc123",
+			Origin: "https://app.example.com",
 		};
 		const response = await client.get("/api/user/profile", headers);
 
@@ -150,8 +150,8 @@ describe("cors", () => {
 
 		const headers = {
 			"Access-Control-Request-Headers": "Content-Type",
-			"Access-Control-Request-Method": "POST",
 			Origin: "https://example.com",
+			"Access-Control-Request-Method": "POST",
 		};
 		const response = await client.options("/api/data", { headers });
 
@@ -273,8 +273,8 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Access-Control-Request-Headers": "Content-Type",
 			Origin: "https://example.com",
+			"Access-Control-Request-Headers": "Content-Type",
 			"Access-Control-Request-Method": "DELETE",
 		};
 		const response = await client.options("/api/data", { headers });

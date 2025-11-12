@@ -2,6 +2,7 @@
 
 require_relative 'lib/spikard/version'
 
+# rubocop:disable Metrics/BlockLength
 Gem::Specification.new do |spec|
   spec.name          = 'spikard'
   spec.version       = Spikard::VERSION
@@ -33,3 +34,4 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
   spec.extensions = ['ext/spikard_rb/extconf.rb']
 end
+# rubocop:enable Metrics/BlockLength

@@ -2,7 +2,10 @@
 //!
 //! Generates vitest test suites from fixtures for e2e testing.
 
+use crate::streaming::streaming_data;
 use anyhow::{Context, Result, ensure};
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
 use spikard_codegen::openapi::from_fixtures::FixtureFile;
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
@@ -100,6 +103,7 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
 fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     let test_name = sanitize_test_name(&fixture.name);
     let mut code = String::new();
+    let streaming_info = streaming_data(fixture)?;
 
     // Test function header
     code.push_str(&format!("\ttest(\"{}\", async () => {{\n", test_name));
@@ -247,6 +251,20 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
             "\t\tconst response = await client.{}(\"{}\");\n\n",
             method, path_with_query
         ));
+    }
+
+    if let Some(stream_info) = streaming_info.as_ref() {
+        let expected_base64 = BASE64_STANDARD.encode(&stream_info.expected_bytes);
+        code.push_str(&format!(
+            "\t\tconst expected = Buffer.from(\"{}\", \"base64\");\n",
+            expected_base64
+        ));
+        code.push_str("\t\texpect(response.bytes()).toStrictEqual(expected);\n");
+        if stream_info.is_text_only {
+            code.push_str("\t\texpect(response.text()).toBe(expected.toString());\n");
+        }
+        code.push_str("\t});\n");
+        return Ok(code);
     }
 
     // Assert status code

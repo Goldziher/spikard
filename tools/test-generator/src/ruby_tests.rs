@@ -10,7 +10,10 @@ use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::Path;
 
-use crate::ruby_utils::{build_method_name, string_literal, string_map_to_ruby, value_map_to_ruby, value_to_ruby};
+use crate::ruby_utils::{
+    build_method_name, bytes_to_ruby_string, string_literal, string_map_to_ruby, value_map_to_ruby, value_to_ruby,
+};
+use crate::streaming::{StreamingFixtureData, streaming_data};
 use urlencoding::encode;
 
 pub fn generate_ruby_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
@@ -93,6 +96,7 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
     let mut query_suffix: Option<String> = None;
 
     let mut options = Vec::new();
+    let streaming_info = streaming_data(fixture).expect("invalid streaming fixture");
 
     if let Some(query) = fixture.request.query_params.as_ref() {
         if requires_query_string(query) {
@@ -223,7 +227,7 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
 ",
         request_method, request_path_expr, options_suffix
     ));
-    example.push_str(&build_expectations(&fixture.expected_response));
+    example.push_str(&build_expectations(&fixture.expected_response, streaming_info.as_ref()));
     example.push_str("    client.close\n");
     example.push_str(
         "  end
@@ -285,12 +289,22 @@ fn value_to_query_pairs(key: &str, value: &Value) -> Vec<String> {
     }
 }
 
-fn build_expectations(expected: &FixtureExpectedResponse) -> String {
+fn build_expectations(expected: &FixtureExpectedResponse, streaming_info: Option<&StreamingFixtureData>) -> String {
     let mut expectations = String::new();
     expectations.push_str(&format!(
         "    expect(response.status_code).to eq({})\n",
         expected.status_code
     ));
+
+    if let Some(info) = streaming_info {
+        let expected_literal = bytes_to_ruby_string(&info.expected_bytes);
+        expectations.push_str(&format!("    expected_body = {}\n", expected_literal));
+        expectations.push_str("    expect(response.body_bytes).to eq(expected_body)\n");
+        if info.is_text_only {
+            expectations.push_str("    expect(response.text).to eq(expected_body)\n");
+        }
+        return expectations;
+    }
 
     if expected.validation_errors.is_some() {
         expectations.push_str("    body = response.json\n");

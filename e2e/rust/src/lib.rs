@@ -5,10 +5,14 @@ use axum::{
     Json, Router, middleware, routing,
     routing::{delete, get, head, options, patch, post, put, trace},
 };
+use bytes::Bytes;
 use form_urlencoded;
+use futures::stream;
 use serde_json::{Value, json};
+use spikard_http::HandlerResponse;
 use spikard_http::parameters::ParameterValidator;
 use std::collections::HashMap;
+use std::str::FromStr;
 
 #[derive(Clone, Copy)]
 pub struct CorsConfig {
@@ -3906,6 +3910,33 @@ pub fn create_app_status_codes_503_Service_Unavailable___Server_overload() -> Ro
             "/health",
             get(status_codes_503_Service_Unavailable___Server_overload_handler),
         )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Binary log download
+pub fn create_app_streaming_Binary_log_download() -> Router {
+    Router::new()
+        .route("/stream/logfile", get(streaming_Binary_log_download_handler))
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Chunked CSV export
+pub fn create_app_streaming_Chunked_CSV_export() -> Router {
+    Router::new()
+        .route("/stream/csv-report", get(streaming_Chunked_CSV_export_handler))
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Stream JSON lines
+pub fn create_app_streaming_Stream_JSON_lines() -> Router {
+    Router::new()
+        .route("/stream/json-lines", get(streaming_Stream_JSON_lines_handler))
         .layer(middleware::from_fn(
             spikard_http::middleware::validate_content_type_middleware,
         ))
@@ -21551,6 +21582,72 @@ async fn status_codes_500_Internal_Server_Error___Server_error_handler() -> impl
 async fn status_codes_503_Service_Unavailable___Server_overload_handler() -> impl axum::response::IntoResponse {
     let expected_body: Value = serde_json::from_str("{\"detail\":\"Service temporarily unavailable\"}").unwrap();
     (axum::http::StatusCode::from_u16(503).unwrap(), Json(expected_body))
+}
+
+async fn streaming_Binary_log_download_handler() -> impl axum::response::IntoResponse {
+    let stream = stream::iter(vec![
+        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[0x4cu8, 0x4fu8, 0x47u8, 0x3au8])),
+        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[0x00u8, 0x01u8, 0x02u8, 0x03u8])),
+        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[0x7cu8, 0x54u8, 0x41u8, 0x49u8, 0x4cu8, 0x7cu8])),
+        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[0x07u8])),
+        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[0x5cu8, 0x6eu8])),
+    ]);
+
+    let mut response = HandlerResponse::stream(stream).with_status(axum::http::StatusCode::from_u16(200).unwrap());
+    response = response.with_header(
+        axum::http::HeaderName::from_str("content-type").unwrap(),
+        axum::http::HeaderValue::from_str("application/octet-stream").unwrap(),
+    );
+    response.into_response()
+}
+
+async fn streaming_Chunked_CSV_export_handler() -> impl axum::response::IntoResponse {
+    let stream = stream::iter(vec![
+        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[
+            0x69u8, 0x64u8, 0x2cu8, 0x6eu8, 0x61u8, 0x6du8, 0x65u8, 0x2cu8, 0x76u8, 0x61u8, 0x6cu8, 0x75u8, 0x65u8,
+            0x5cu8, 0x6eu8,
+        ])),
+        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[
+            0x31u8, 0x2cu8, 0x41u8, 0x6cu8, 0x69u8, 0x63u8, 0x65u8, 0x2cu8, 0x34u8, 0x32u8, 0x5cu8, 0x6eu8,
+        ])),
+        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[
+            0x32u8, 0x2cu8, 0x42u8, 0x6fu8, 0x62u8, 0x2cu8, 0x37u8, 0x5cu8, 0x6eu8,
+        ])),
+    ]);
+
+    let mut response = HandlerResponse::stream(stream).with_status(axum::http::StatusCode::from_u16(200).unwrap());
+    response = response.with_header(
+        axum::http::HeaderName::from_str("content-type").unwrap(),
+        axum::http::HeaderValue::from_str("text/csv").unwrap(),
+    );
+    response.into_response()
+}
+
+async fn streaming_Stream_JSON_lines_handler() -> impl axum::response::IntoResponse {
+    let stream = stream::iter(vec![
+        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[
+            0x7bu8, 0x22u8, 0x69u8, 0x6eu8, 0x64u8, 0x65u8, 0x78u8, 0x22u8, 0x3au8, 0x30u8, 0x2cu8, 0x22u8, 0x70u8,
+            0x61u8, 0x79u8, 0x6cu8, 0x6fu8, 0x61u8, 0x64u8, 0x22u8, 0x3au8, 0x22u8, 0x61u8, 0x6cu8, 0x70u8, 0x68u8,
+            0x61u8, 0x22u8, 0x7du8, 0x5cu8, 0x6eu8,
+        ])),
+        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[
+            0x7bu8, 0x22u8, 0x69u8, 0x6eu8, 0x64u8, 0x65u8, 0x78u8, 0x22u8, 0x3au8, 0x31u8, 0x2cu8, 0x22u8, 0x70u8,
+            0x61u8, 0x79u8, 0x6cu8, 0x6fu8, 0x61u8, 0x64u8, 0x22u8, 0x3au8, 0x22u8, 0x62u8, 0x65u8, 0x74u8, 0x61u8,
+            0x22u8, 0x7du8, 0x5cu8, 0x6eu8,
+        ])),
+        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[
+            0x7bu8, 0x22u8, 0x69u8, 0x6eu8, 0x64u8, 0x65u8, 0x78u8, 0x22u8, 0x3au8, 0x32u8, 0x2cu8, 0x22u8, 0x70u8,
+            0x61u8, 0x79u8, 0x6cu8, 0x6fu8, 0x61u8, 0x64u8, 0x22u8, 0x3au8, 0x22u8, 0x67u8, 0x61u8, 0x6du8, 0x6du8,
+            0x61u8, 0x22u8, 0x7du8, 0x5cu8, 0x6eu8,
+        ])),
+    ]);
+
+    let mut response = HandlerResponse::stream(stream).with_status(axum::http::StatusCode::from_u16(200).unwrap());
+    response = response.with_header(
+        axum::http::HeaderName::from_str("content-type").unwrap(),
+        axum::http::HeaderValue::from_str("application/x-ndjson").unwrap(),
+    );
+    response.into_response()
 }
 
 async fn url_encoded_13_array_field_success_handler(

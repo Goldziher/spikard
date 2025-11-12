@@ -2,6 +2,7 @@
 //!
 //! Generates pytest test suites from fixtures for e2e testing.
 
+use crate::streaming::streaming_data;
 use anyhow::{Context, Result};
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
@@ -103,6 +104,7 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
 fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     let test_name = sanitize_test_name(&fixture.name);
     let mut code = String::new();
+    let streaming_info = streaming_data(fixture)?;
 
     // No client parameter - create per-test client from app factory
     code.push_str(&format!("async def test_{}() -> None:\n", test_name));
@@ -288,6 +290,16 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         fixture.expected_response.status_code
     ));
 
+    if let Some(stream_info) = streaming_info {
+        let expected_literal = python_bytes_literal(&stream_info.expected_bytes);
+        code.push_str(&format!("    expected_bytes = {}\n", expected_literal));
+        code.push_str("    assert response.bytes() == expected_bytes\n");
+        if stream_info.is_text_only {
+            code.push_str("    assert response.text() == expected_bytes.decode()\n");
+        }
+        return Ok(code);
+    }
+
     let status_code = fixture.expected_response.status_code;
     let method = fixture.request.method.to_uppercase();
 
@@ -402,6 +414,23 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     }
 
     Ok(code)
+}
+
+fn python_bytes_literal(bytes: &[u8]) -> String {
+    let mut literal = String::from("b\"");
+    for &byte in bytes {
+        match byte {
+            b'\\' => literal.push_str("\\\\"),
+            b'"' => literal.push_str("\\\""),
+            b'\n' => literal.push_str("\\n"),
+            b'\r' => literal.push_str("\\r"),
+            b'\t' => literal.push_str("\\t"),
+            0x20..=0x7e => literal.push(byte as char),
+            _ => literal.push_str(&format!("\\x{:02x}", byte)),
+        }
+    }
+    literal.push('"');
+    literal
 }
 
 /// Generate assertions for echoed parameters (success cases)

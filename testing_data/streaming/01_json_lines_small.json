@@ -1,0 +1,28 @@
+{
+	"name": "Stream JSON lines",
+	"description": "Streams newline-delimited JSON payload in small chunks",
+	"handler": {
+		"route": "/stream/json-lines",
+		"method": "GET"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/stream/json-lines"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": "{\"index\":0,\"payload\":\"alpha\"}\\n{\"index\":1,\"payload\":\"beta\"}\\n{\"index\":2,\"payload\":\"gamma\"}\\n",
+		"headers": {
+			"content-type": "application/x-ndjson"
+		}
+	},
+	"streaming": {
+		"content_type": "application/x-ndjson",
+		"chunks": [
+			{ "type": "text", "value": "{\"index\":0,\"payload\":\"alpha\"}\\n" },
+			{ "type": "text", "value": "{\"index\":1,\"payload\":\"beta\"}\\n" },
+			{ "type": "text", "value": "{\"index\":2,\"payload\":\"gamma\"}\\n" }
+		]
+	},
+	"tags": ["streaming", "ndjson", "chunked"]
+}

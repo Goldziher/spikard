@@ -9,6 +9,7 @@ macro_rules! debug_log_module {
     };
 }
 
+use crate::response::StreamingResponse;
 use axum::{
     body::Body,
     http::{Request, Response, StatusCode},
@@ -16,7 +17,7 @@ use axum::{
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyTuple};
 use serde_json::{Value, json};
-use spikard_http::{Handler, HandlerResult, RequestData};
+use spikard_http::{Handler, HandlerResponse, HandlerResult, RequestData};
 use spikard_http::{ParameterValidator, ProblemDetails, SchemaValidator};
 use std::collections::HashMap;
 use std::future::Future;
@@ -51,7 +52,6 @@ fn is_debug_mode() -> bool {
 }
 
 /// Response result from Python handler
-#[derive(Debug)]
 pub enum ResponseResult {
     /// Custom Response object with status code and headers
     Custom {
@@ -61,6 +61,8 @@ pub enum ResponseResult {
     },
     /// Plain JSON response (defaults to 200 OK)
     Json(Value),
+    /// Streaming response backed by async iterator
+    Stream(HandlerResponse),
 }
 
 /// Python handler wrapper that implements spikard_http::Handler
@@ -249,6 +251,9 @@ impl PythonHandler {
 
         // Check if this is a ResponseData (custom Response object) or just JSON
         let (json_value, status_code, headers) = match result {
+            ResponseResult::Stream(handler_response) => {
+                return Ok(handler_response.into_response());
+            }
             ResponseResult::Custom {
                 content,
                 status_code,
@@ -359,6 +364,12 @@ impl Handler for PythonHandler {
 /// Checks if the object is a Response instance with custom status/headers,
 /// otherwise treats it as JSON data
 fn python_to_response_result(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<ResponseResult> {
+    if obj.is_instance_of::<StreamingResponse>() {
+        let streaming: Py<StreamingResponse> = obj.extract()?;
+        let handler_response = streaming.borrow(py).to_handler_response(py)?;
+        return Ok(ResponseResult::Stream(handler_response));
+    }
+
     // Check if this is a Response object from _spikard module
     // Response objects have: content, status_code, headers attributes
     if obj.hasattr("status_code")? && obj.hasattr("content")? && obj.hasattr("headers")? {

@@ -1,0 +1,30 @@
+{
+	"name": "Binary log download",
+	"description": "Streams binary log segments with control bytes",
+	"handler": {
+		"route": "/stream/logfile",
+		"method": "GET"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/stream/logfile"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": "LOG:\\u0000\\u0001\\u0002\\u0003|TAIL|\\u0007\\n",
+		"headers": {
+			"content-type": "application/octet-stream"
+		}
+	},
+	"streaming": {
+		"content_type": "application/octet-stream",
+		"chunks": [
+			{ "type": "text", "value": "LOG:" },
+			{ "type": "bytes", "base64": "AAECAw==" },
+			{ "type": "text", "value": "|TAIL|" },
+			{ "type": "bytes", "base64": "Bw==" },
+			{ "type": "text", "value": "\\n" }
+		]
+	},
+	"tags": ["streaming", "binary", "chunked"]
+}

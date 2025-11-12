@@ -1,0 +1,28 @@
+{
+	"name": "Chunked CSV export",
+	"description": "Streams CSV header and rows as discrete chunks",
+	"handler": {
+		"route": "/stream/csv-report",
+		"method": "GET"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/stream/csv-report"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": "id,name,value\\n1,Alice,42\\n2,Bob,7\\n",
+		"headers": {
+			"content-type": "text/csv"
+		}
+	},
+	"streaming": {
+		"content_type": "text/csv",
+		"chunks": [
+			{ "type": "text", "value": "id,name,value\\n" },
+			{ "type": "text", "value": "1,Alice,42\\n" },
+			{ "type": "text", "value": "2,Bob,7\\n" }
+		]
+	},
+	"tags": ["streaming", "csv"]
+}
