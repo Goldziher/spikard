@@ -31,8 +31,8 @@ async def test_07_cors_preflight_header_not_allowed() -> None:
 
     headers = {
         "Origin": "https://example.com",
-        "Access-Control-Request-Method": "POST",
         "Access-Control-Request-Headers": "X-Custom-Header",
+        "Access-Control-Request-Method": "POST",
     }
     response = await client.options("/api/data", headers=headers)
 
@@ -46,8 +46,8 @@ async def test_cors_vary_header_for_proper_caching() -> None:
     client = TestClient(app)
 
     headers = {
-        "Cache-Control": "max-age=3600",
         "Origin": "https://app.example.com",
+        "Cache-Control": "max-age=3600",
     }
     response = await client.get("/api/cached-resource", headers=headers)
 
@@ -64,9 +64,9 @@ async def test_cors_preflight_for_put_method() -> None:
     client = TestClient(app)
 
     headers = {
-        "Access-Control-Request-Method": "PUT",
-        "Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
         "Origin": "https://app.example.com",
+        "Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
+        "Access-Control-Request-Method": "PUT",
     }
     response = await client.options("/api/resource/123", headers=headers)
 
@@ -80,8 +80,8 @@ async def test_cors_preflight_for_delete_method() -> None:
     client = TestClient(app)
 
     headers = {
-        "Origin": "https://app.example.com",
         "Access-Control-Request-Method": "DELETE",
+        "Origin": "https://app.example.com",
     }
     response = await client.options("/api/resource/456", headers=headers)
 
@@ -112,9 +112,9 @@ async def test_cors_preflight_request() -> None:
     client = TestClient(app)
 
     headers = {
-        "Access-Control-Request-Method": "POST",
-        "Origin": "https://example.com",
         "Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
+        "Origin": "https://example.com",
+        "Access-Control-Request-Method": "POST",
     }
     response = await client.options("/items/", headers=headers)
 
@@ -214,10 +214,10 @@ async def test_cors_safelisted_headers_without_preflight() -> None:
     client = TestClient(app)
 
     headers = {
+        "Origin": "https://app.example.com",
+        "Content-Type": "text/plain",
         "Accept": "application/json",
         "Accept-Language": "en-US",
-        "Content-Type": "text/plain",
-        "Origin": "https://app.example.com",
     }
     response = await client.post("/api/form", headers=headers)
 
@@ -314,9 +314,9 @@ async def test_06_cors_preflight_method_not_allowed() -> None:
     client = TestClient(app)
 
     headers = {
-        "Access-Control-Request-Method": "DELETE",
-        "Origin": "https://example.com",
         "Access-Control-Request-Headers": "Content-Type",
+        "Origin": "https://example.com",
+        "Access-Control-Request-Method": "DELETE",
     }
     response = await client.options("/api/data", headers=headers)
 

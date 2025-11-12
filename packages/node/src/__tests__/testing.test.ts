@@ -11,7 +11,7 @@ vi.mock("../index.js", () => ({
 	TestClient: class MockNativeTestClient {
 		constructor(
 			public routesJson: string,
-			public handlersMap: Record<string, Function>,
+			public handlersMap: Record<string, (...args: unknown[]) => unknown>,
 		) {}
 
 		async get(path: string, headers: Record<string, string> | null) {

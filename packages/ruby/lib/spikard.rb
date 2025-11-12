@@ -13,6 +13,7 @@ end
 require_relative 'spikard/version'
 require_relative 'spikard/config'
 require_relative 'spikard/response'
+require_relative 'spikard/streaming_response'
 require_relative 'spikard/websocket'
 require_relative 'spikard/sse'
 require_relative 'spikard/app'

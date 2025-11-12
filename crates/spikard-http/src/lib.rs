@@ -9,6 +9,7 @@ use serde_json::Value;
 pub mod auth;
 pub mod cors;
 pub mod debug;
+pub mod handler_response;
 pub mod handler_trait;
 pub mod lifecycle;
 pub mod middleware;
@@ -29,6 +30,7 @@ pub mod websocket;
 mod handler_trait_tests;
 
 pub use auth::{Claims, api_key_auth_middleware, jwt_auth_middleware};
+pub use handler_response::HandlerResponse;
 pub use handler_trait::{Handler, HandlerResult, RequestData, ValidatedParams};
 pub use lifecycle::{HookResult, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, request_hook, response_hook};
 pub use openapi::{ContactInfo, LicenseInfo, OpenApiConfig, SecuritySchemeInfo, ServerInfo};

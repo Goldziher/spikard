@@ -45,6 +45,9 @@ testing_data/
 ├── http_methods/            # HTTP methods (PUT, PATCH, DELETE, OPTIONS, HEAD) fixtures ✅
 │   ├── schema.json
 │   └── *.json               # Test fixtures
+├── streaming/               # Streaming response fixtures ✅
+│   ├── schema.json
+│   └── *.json               # Test fixtures describing stream chunks
 ├── cors/                    # CORS (Cross-Origin Resource Sharing) fixtures ✅
 │   ├── schema.json
 │   └── *.json               # Test fixtures

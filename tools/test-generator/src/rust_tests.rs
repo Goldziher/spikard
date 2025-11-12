@@ -1,5 +1,6 @@
 //! Rust test generation
 
+use crate::streaming::streaming_data;
 use anyhow::{Context, Result};
 use spikard_codegen::openapi::Fixture;
 use std::collections::BTreeMap;
@@ -127,6 +128,7 @@ fn generate_category_test_file(category: &str, fixtures: &[(Fixture, String)]) -
         let app_fn_name = format!("create_app_{}", fixture_id);
 
         let fixture_path = format!("../../testing_data/{}/{}", category, filename);
+        let streaming_info = streaming_data(fixture)?;
         let method = &fixture.request.method;
         // Extract path without query string (before '?')
         let path = fixture.request.path.split('?').next().unwrap_or(&fixture.request.path);
@@ -407,6 +409,7 @@ async fn test_{category}_{case_name}() {{
         "Expected status {expected_status}, got {{:?}}",
         response.status()
     );
+{streaming_assertions}
 }}
 "#,
             category = test_name,
@@ -417,6 +420,7 @@ async fn test_{category}_{case_name}() {{
             method = method,
             path = path,
             expected_status = expected_status,
+            streaming_assertions = generate_streaming_assertions(&streaming_info),
         );
 
         test_cases.push(test_case);
@@ -449,4 +453,29 @@ pub mod fixtures {
 }
 "#
     .to_string()
+}
+
+fn generate_streaming_assertions(info: &Option<crate::streaming::StreamingFixtureData>) -> String {
+    if let Some(stream) = info {
+        let expected_literal = rust_vec_literal(&stream.expected_bytes);
+        format!(
+            "    let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();\n    let expected: Vec<u8> = {expected_literal};\n    assert_eq!(body_bytes.as_ref(), expected.as_slice());\n    return;\n",
+            expected_literal = expected_literal
+        )
+    } else {
+        String::new()
+    }
+}
+
+fn rust_vec_literal(bytes: &[u8]) -> String {
+    if bytes.is_empty() {
+        "Vec::new()".to_string()
+    } else {
+        let entries = bytes
+            .iter()
+            .map(|byte| format!("0x{:02x}u8", byte))
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!("vec![{}]", entries)
+    }
 }

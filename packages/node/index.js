@@ -574,4 +574,5 @@ if (!nativeBinding) {
 module.exports = nativeBinding
 module.exports.TestClient = nativeBinding.TestClient
 module.exports.TestResponse = nativeBinding.TestResponse
+module.exports.createStreamingHandle = nativeBinding.createStreamingHandle
 module.exports.runServer = nativeBinding.runServer

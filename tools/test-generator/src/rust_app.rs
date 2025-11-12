@@ -51,6 +51,7 @@
 //! Use fixtures to drive TDD development of Spikard's Rust engine and ensure
 //! consistent behavior across all language bindings (Rust, Python, TypeScript, Ruby).
 
+use crate::streaming::chunk_bytes;
 use anyhow::{Context, Result};
 use serde_json::Value;
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
@@ -150,6 +151,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 cookie = "0.18"
 form_urlencoded = "1.2"
 percent-encoding = "2.3"
+bytes = "1.7"
+futures = "0.3"
 "#
     .to_string()
 }
@@ -183,26 +186,38 @@ async fn main() {
 fn generate_lib_rs(categories: &BTreeMap<String, Vec<Fixture>>) -> String {
     let mut handlers = Vec::new();
     let mut app_functions = Vec::new();
+    let has_streaming = categories
+        .values()
+        .flat_map(|fixtures| fixtures.iter())
+        .any(|fixture| fixture.streaming.is_some());
 
     // Generate one handler per fixture (no grouping!)
     for (category, fixtures) in categories {
         for fixture in fixtures {
-            // Generate unique handler for this fixture
             let (handler_code, app_fn_code) = generate_fixture_handler_and_app(category, fixture);
             handlers.push(handler_code);
             app_functions.push(app_fn_code);
         }
     }
 
-    format!(
-        r#"//! Generated route handlers - one handler per fixture for complete isolation
+    let mut header = String::from("//! Generated route handlers - one handler per fixture for complete isolation\n\n");
+    header.push_str(
+        "use axum::{routing, routing::{get, post, put, patch, delete, head, options, trace}, Json, Router, middleware};\n",
+    );
+    header.push_str("use axum::response::IntoResponse;\n");
+    header.push_str("use form_urlencoded;\n");
+    header.push_str("use serde_json::{json, Value};\n");
+    header.push_str("use std::collections::HashMap;\n");
+    header.push_str("use spikard_http::parameters::ParameterValidator;\n");
+    if has_streaming {
+        header.push_str("use bytes::Bytes;\n");
+        header.push_str("use futures::stream;\n");
+        header.push_str("use spikard_http::HandlerResponse;\n");
+        header.push_str("use std::str::FromStr;\n");
+    }
 
-use axum::{{routing, routing::{{get, post, put, patch, delete, head, options, trace}}, Json, Router, middleware}};
-use axum::response::IntoResponse;
-use form_urlencoded;
-use serde_json::{{json, Value}};
-use std::collections::HashMap;
-use spikard_http::parameters::ParameterValidator;
+    format!(
+        r#"{header}
 
 #[derive(Clone, Copy)]
 pub struct CorsConfig {{
@@ -217,13 +232,14 @@ pub fn create_app() -> Router {{
 }}
 
 // Per-fixture app functions
-{}
+{app_functions}
 
 // Handler functions
-{}
+{handlers}
 "#,
-        app_functions.join("\n\n"),
-        handlers.join("\n\n"),
+        header = header,
+        app_functions = app_functions.join("\n\n"),
+        handlers = handlers.join("\n\n"),
     )
 }
 
@@ -514,6 +530,9 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
 
 fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str, has_path_params: bool) -> String {
     let has_body = method == "POST" || method == "PUT" || method == "PATCH";
+    if fixtures.first().and_then(|f| f.streaming.as_ref()).is_some() {
+        return generate_streaming_handler(fixtures[0], handler_name);
+    }
 
     // Check if this handler has CORS configuration
     let cors_config = extract_cors_config(fixtures);
@@ -1048,6 +1067,89 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
 }}"#,
             handler_sig, cors_validation_code, cors_headers_code
         )
+    }
+}
+
+fn generate_streaming_handler(fixture: &Fixture, handler_name: &str) -> String {
+    let streaming = fixture.streaming.as_ref().expect("streaming metadata required");
+
+    let mut chunk_lines = Vec::new();
+    for chunk in &streaming.chunks {
+        let bytes = chunk_bytes(chunk).expect("invalid streaming chunk");
+        let literal = rust_bytes_slice_literal(&bytes);
+        chunk_lines.push(format!(
+            "        Ok::<Bytes, std::io::Error>(Bytes::from_static({})),",
+            literal
+        ));
+    }
+    let chunk_section = if chunk_lines.is_empty() {
+        String::from("        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[]))\n")
+    } else {
+        chunk_lines.join("\n") + "\n"
+    };
+
+    let handler = format!(
+        r#"async fn {handler_name}() -> impl axum::response::IntoResponse {{
+    let stream = stream::iter(vec![
+{chunk_section}    ]);
+
+    let mut response = HandlerResponse::stream(stream)
+        .with_status(axum::http::StatusCode::from_u16({status}).unwrap());
+{headers}
+    response.into_response()
+}}"#,
+        handler_name = handler_name,
+        chunk_section = chunk_section,
+        status = fixture.expected_response.status_code,
+        headers = build_streaming_headers_rust(fixture),
+    );
+
+    handler
+}
+
+fn build_streaming_headers_rust(fixture: &Fixture) -> String {
+    let mut headers = fixture.expected_response.headers.clone().unwrap_or_default();
+
+    if let Some(content_type) = fixture
+        .streaming
+        .as_ref()
+        .and_then(|streaming| streaming.content_type.as_ref())
+    {
+        headers.insert("content-type".to_string(), content_type.clone());
+    }
+
+    if !headers.contains_key("content-type") {
+        headers.insert("content-type".to_string(), "application/octet-stream".to_string());
+    }
+
+    if headers.is_empty() {
+        return String::new();
+    }
+
+    headers
+        .into_iter()
+        .map(|(name, value)| {
+            let escaped_value = value.replace('\\', "\\\\").replace('"', "\\\"");
+            format!(
+                "    response = response.with_header(\n        axum::http::HeaderName::from_str(\"{name}\").unwrap(),\n        axum::http::HeaderValue::from_str(\"{value}\").unwrap(),\n    );",
+                name = name,
+                value = escaped_value,
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn rust_bytes_slice_literal(bytes: &[u8]) -> String {
+    if bytes.is_empty() {
+        "&[]".to_string()
+    } else {
+        let items = bytes
+            .iter()
+            .map(|byte| format!("0x{:02x}u8", byte))
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!("&[{}]", items)
     }
 }
 

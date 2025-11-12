@@ -28,6 +28,8 @@ export declare class TestResponse {
   bytes(): Buffer
 }
 
+export declare function createStreamingHandle(iterator: object, init?: StreamingResponseInit | undefined | null): number
+
 /**
  * Start the Spikard HTTP server from Node.js
  *
@@ -73,3 +75,11 @@ export declare class TestResponse {
  * ```
  */
 export declare function runServer(app: object, config?: object | undefined | null): void
+
+/** Optional configuration for a streaming response. */
+export interface StreamingResponseInit {
+  /** HTTP status code for the streaming response (default 200). */
+  statusCode?: number
+  /** Headers to attach to the streaming response. */
+  headers?: Record<string, string>
+}

@@ -33,9 +33,9 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - [x] Redoc integration
 - [x] Test client (Python, Node.js, Ruby)
 - [x] Lifecycle hooks (onRequest, preValidation, preHandler, onResponse, onError)
-- [ ] WebSocket support
-- [ ] Server-Sent Events (SSE)
-- [ ] Streaming responses
+- [x] WebSocket support
+- [x] Server-Sent Events (SSE)
+- [x] Streaming responses (Rust, Python, Node.js, Ruby)
 - [ ] Background tasks
 
 ### Language Bindings
@@ -54,10 +54,11 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - [ ] AsyncAPI support (WebSocket generation)
 
 ### Testing & Benchmarking
-- [x] Fixture-driven integration tests (381 fixtures)
-- [x] Python e2e tests (381/381 passing - 100%)
-- [x] Node.js e2e tests (381/381 passing - 100%)
-- [x] Ruby e2e tests (381/381 passing - 100%)
+- [x] Fixture-driven integration tests (408 fixtures + streaming/SSE/websocket coverage)
+- [x] Python e2e tests (408/408 passing - 100%)
+- [x] Node.js e2e tests (408/408 passing - 100%)
+- [x] Ruby e2e tests (411/411 passing - 100%)
+- [x] AsyncAPI streaming fixtures (Ruby, Python, Node.js runners)
 - [x] Benchmark harness
 - [x] Performance benchmarks (Python, Node, Ruby, Rust)
 - [ ] WebSocket benchmarks
@@ -247,6 +248,34 @@ async def protected_route(request: Request):
 - **Python:** Async/await with PyO3 and pyo3-async-runtimes
 - **Node.js:** Promise-based with napi-rs ThreadsafeFunction
 - **Ruby:** Proc-based with magnus Opaque wrapper for thread safety
+
+### Streaming Responses
+
+Download-style endpoints (CSV exports, NDJSON feeds, binary logs) can now stream bytes without buffering the entire payload. The fixture set under `testing_data/streaming/` is generated for every language and covered by the e2e suites.
+
+```python
+# Python
+from spikard import StreamingResponse
+
+@get("/stream/csv")
+async def csv_report():
+    async def rows():
+        yield "id,name,value\n"
+        yield "1,Alice,42\n"
+        yield "2,Bob,7\n"
+
+    return StreamingResponse(
+        rows(),
+        status_code=200,
+        headers={"content-type": "text/csv"},
+    )
+```
+
+- **Rust:** return `HandlerResponse::stream(stream)` (any `Stream<Item = Result<Bytes, E>>`) and optionally chain `.with_status(..)` / `.with_header(..)`.
+- **Node.js:** `new StreamingResponse(async function* () { /* yield strings, Buffers, Uint8Arrays */ }, { statusCode, headers })`.
+- **Ruby:** `Spikard::StreamingResponse.new(Enumerator.new { |y| y << chunk }, status_code: 200, headers: { "content-type" => "application/octet-stream" })`.
+
+The test clients expose `response.body_bytes`, `response.text`, and `response.json` so you can assert on the accumulated stream just like in the fixture-driven suites.
 
 ### OpenAPI Documentation
 

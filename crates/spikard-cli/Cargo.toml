@@ -12,6 +12,10 @@ description = "Command-line interface for spikard"
 name = "spikard"
 path = "src/main.rs"
 
+[lib]
+name = "spikard_cli"
+path = "src/lib.rs"
+
 [dependencies]
 spikard.workspace = true
 spikard-http = { path = "../spikard-http" }

@@ -103,41 +103,28 @@ impl WebSocketHandler for RubyWebSocketHandler {
     async fn handle_message(&self, message: JsonValue) -> Option<JsonValue> {
         debug!("Ruby WebSocket handler '{}': handle_message", self.name);
 
-        let handle_message_proc = self.handle_message_proc;
-        let name = self.name.clone();
+        match magnus::Ruby::get()
+            .map_err(|e| format!("Failed to get Ruby: {}", e))
+            .and_then(|ruby| {
+                // Convert message to Ruby value
+                let message_ruby = Self::json_to_ruby(&ruby, &message)?;
 
-        // Run Ruby code in a blocking task
-        let result = tokio::task::spawn_blocking(move || {
-            magnus::Ruby::get()
-                .map_err(|e| format!("Failed to get Ruby: {}", e))
-                .and_then(|ruby| {
-                    // Convert message to Ruby value
-                    let message_ruby = Self::json_to_ruby(&ruby, &message)?;
+                // Call the Ruby function
+                let proc_value = ruby.get_inner(self.handle_message_proc);
+                let result: Value = proc_value
+                    .funcall("call", (message_ruby,))
+                    .map_err(|e| format!("Handler '{}' call failed: {}", self.name, e))?;
 
-                    // Call the Ruby function
-                    let proc_value = ruby.get_inner(handle_message_proc);
-                    let result: Value = proc_value
-                        .funcall("call", (message_ruby,))
-                        .map_err(|e| format!("Handler '{}' call failed: {}", name, e))?;
-
-                    // Convert result back to JSON (return nil for None)
-                    if result.is_nil() {
-                        Ok(None)
-                    } else {
-                        Self::ruby_to_json(&ruby, result).map(Some)
-                    }
-                })
-        })
-        .await;
-
-        match result {
-            Ok(Ok(value)) => value,
-            Ok(Err(e)) => {
-                error!("Ruby error in handle_message: {}", e);
-                None
-            }
+                // Convert result back to JSON (return nil for None)
+                if result.is_nil() {
+                    Ok(None)
+                } else {
+                    Self::ruby_to_json(&ruby, result).map(Some)
+                }
+            }) {
+            Ok(value) => value,
             Err(e) => {
-                error!("Tokio error in handle_message: {}", e);
+                error!("Ruby error in handle_message: {}", e);
                 None
             }
         }
@@ -147,25 +134,18 @@ impl WebSocketHandler for RubyWebSocketHandler {
         debug!("Ruby WebSocket handler '{}': on_connect", self.name);
 
         if let Some(on_connect_proc) = self.on_connect_proc {
-            let name = self.name.clone();
-
-            let _ = tokio::task::spawn_blocking(move || {
-                let result = magnus::Ruby::get()
-                    .map_err(|e| format!("Failed to get Ruby: {}", e))
-                    .and_then(|ruby| {
-                        let proc_value = ruby.get_inner(on_connect_proc);
-                        proc_value
-                            .funcall::<_, _, Value>("call", ())
-                            .map_err(|e| format!("on_connect '{}' call failed: {}", name, e))?;
-                        Ok(())
-                    });
-
-                // Don't return the Result - just log errors
-                if let Err(e) = result {
-                    error!("on_connect error: {}", e);
-                }
-            })
-            .await;
+            if let Err(e) = magnus::Ruby::get()
+                .map_err(|e| format!("Failed to get Ruby: {}", e))
+                .and_then(|ruby| {
+                    let proc_value = ruby.get_inner(on_connect_proc);
+                    proc_value
+                        .funcall::<_, _, Value>("call", ())
+                        .map_err(|e| format!("on_connect '{}' call failed: {}", self.name, e))?;
+                    Ok(())
+                })
+            {
+                error!("on_connect error: {}", e);
+            }
 
             debug!("Ruby WebSocket handler '{}': on_connect completed", self.name);
         }
@@ -175,25 +155,18 @@ impl WebSocketHandler for RubyWebSocketHandler {
         debug!("Ruby WebSocket handler '{}': on_disconnect", self.name);
 
         if let Some(on_disconnect_proc) = self.on_disconnect_proc {
-            let name = self.name.clone();
-
-            let _ = tokio::task::spawn_blocking(move || {
-                let result = magnus::Ruby::get()
-                    .map_err(|e| format!("Failed to get Ruby: {}", e))
-                    .and_then(|ruby| {
-                        let proc_value = ruby.get_inner(on_disconnect_proc);
-                        proc_value
-                            .funcall::<_, _, Value>("call", ())
-                            .map_err(|e| format!("on_disconnect '{}' call failed: {}", name, e))?;
-                        Ok(())
-                    });
-
-                // Don't return the Result - just log errors
-                if let Err(e) = result {
-                    error!("on_disconnect error: {}", e);
-                }
-            })
-            .await;
+            if let Err(e) = magnus::Ruby::get()
+                .map_err(|e| format!("Failed to get Ruby: {}", e))
+                .and_then(|ruby| {
+                    let proc_value = ruby.get_inner(on_disconnect_proc);
+                    proc_value
+                        .funcall::<_, _, Value>("call", ())
+                        .map_err(|e| format!("on_disconnect '{}' call failed: {}", self.name, e))?;
+                    Ok(())
+                })
+            {
+                error!("on_disconnect error: {}", e);
+            }
 
             debug!("Ruby WebSocket handler '{}': on_disconnect completed", self.name);
         }

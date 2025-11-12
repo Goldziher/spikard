@@ -4,6 +4,7 @@ mod lifecycle;
 mod sse;
 mod websocket;
 
+use async_stream::stream;
 use axum::body::Body;
 use axum::http::{HeaderName, HeaderValue, Method, StatusCode};
 use axum_test::TestServer;
@@ -11,15 +12,18 @@ use bytes::Bytes;
 use cookie::Cookie;
 use magnus::prelude::*;
 use magnus::value::{InnerValue, Opaque};
-use magnus::{Error, Module, RArray, RHash, Ruby, Value, function, gc::Marker, method, r_hash::ForEach};
+use magnus::{
+    Error, Module, RArray, RHash, RString, Ruby, TryConvert, Value, function, gc::Marker, method, r_hash::ForEach,
+};
 use once_cell::sync::Lazy;
 use serde_json::{Map as JsonMap, Value as JsonValue};
 use spikard_http::ParameterValidator;
 use spikard_http::problem::ProblemDetails;
-use spikard_http::{Handler, HandlerResult, RequestData};
+use spikard_http::{Handler, HandlerResponse, HandlerResult, RequestData};
 use spikard_http::{Route, RouteMetadata, SchemaValidator};
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::io;
 use std::pin::Pin;
 use std::sync::Arc;
 use tokio::runtime::{Builder, Runtime};
@@ -89,6 +93,103 @@ struct HandlerResponsePayload {
     status: u16,
     headers: HashMap<String, String>,
     body: Option<JsonValue>,
+}
+
+enum RubyHandlerResult {
+    Payload(HandlerResponsePayload),
+    Streaming(StreamingResponsePayload),
+}
+
+struct StreamingResponsePayload {
+    enumerator: Arc<Opaque<Value>>,
+    status: u16,
+    headers: HashMap<String, String>,
+}
+
+impl StreamingResponsePayload {
+    fn into_response(self) -> Result<HandlerResponse, Error> {
+        let ruby = Ruby::get().map_err(|_| {
+            Error::new(
+                Ruby::get().unwrap().exception_runtime_error(),
+                "Ruby VM unavailable while building streaming response",
+            )
+        })?;
+
+        let status = StatusCode::from_u16(self.status).map_err(|err| {
+            Error::new(
+                ruby.exception_arg_error(),
+                format!("Invalid streaming status code {}: {}", self.status, err),
+            )
+        })?;
+
+        let header_pairs = self
+            .headers
+            .into_iter()
+            .map(|(name, value)| {
+                let header_name = HeaderName::from_bytes(name.as_bytes()).map_err(|err| {
+                    Error::new(
+                        ruby.exception_arg_error(),
+                        format!("Invalid header name '{name}': {err}"),
+                    )
+                })?;
+                let header_value = HeaderValue::from_str(&value).map_err(|err| {
+                    Error::new(
+                        ruby.exception_arg_error(),
+                        format!("Invalid header value for '{name}': {err}"),
+                    )
+                })?;
+                Ok((header_name, header_value))
+            })
+            .collect::<Result<Vec<_>, Error>>()?;
+
+        let enumerator = self.enumerator.clone();
+        let body_stream = stream! {
+            loop {
+                match poll_stream_chunk(&enumerator) {
+                    Ok(Some(bytes)) => yield Ok(bytes),
+                    Ok(None) => break,
+                    Err(err) => {
+                        yield Err(Box::new(err));
+                        break;
+                    }
+                }
+            }
+        };
+
+        let mut response = HandlerResponse::stream(body_stream).with_status(status);
+        for (name, value) in header_pairs {
+            response = response.with_header(name, value);
+        }
+        Ok(response)
+    }
+}
+
+fn poll_stream_chunk(enumerator: &Arc<Opaque<Value>>) -> Result<Option<Bytes>, io::Error> {
+    let ruby = Ruby::get().map_err(|err| io::Error::other(err.to_string()))?;
+    let enum_value = enumerator.get_inner_with(&ruby);
+    match enum_value.funcall::<_, _, Value>("next", ()) {
+        Ok(chunk) => ruby_value_to_bytes(chunk).map(Some),
+        Err(err) => {
+            if err.is_kind_of(ruby.exception_stop_iteration()) {
+                Ok(None)
+            } else {
+                Err(io::Error::other(err.to_string()))
+            }
+        }
+    }
+}
+
+fn ruby_value_to_bytes(value: Value) -> Result<Bytes, io::Error> {
+    if let Ok(str_value) = RString::try_convert(value) {
+        let slice = unsafe { str_value.as_slice() };
+        return Ok(Bytes::copy_from_slice(slice));
+    }
+
+    if let Ok(vec_bytes) = Vec::<u8>::try_convert(value) {
+        return Ok(Bytes::from(vec_bytes));
+    }
+
+    Err(io::Error::other("Streaming chunks must be Strings or Arrays of bytes"))
 }
 
 struct TestResponseData {
@@ -314,7 +415,7 @@ impl RubyHandler {
             }
         };
 
-        let payload = interpret_handler_response(&ruby, &self.inner, response_value).map_err(|err| {
+        let handler_result = interpret_handler_response(&ruby, &self.inner, response_value).map_err(|err| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 format!(
@@ -323,6 +424,19 @@ impl RubyHandler {
                 ),
             )
         })?;
+
+        let payload = match handler_result {
+            RubyHandlerResult::Streaming(streaming) => {
+                let response = streaming.into_response().map_err(|err| {
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        format!("Failed to build streaming response: {}", err),
+                    )
+                })?;
+                return Ok(response.into_response());
+            }
+            RubyHandlerResult::Payload(payload) => payload,
+        };
 
         if let (Some(validator), Some(body)) = (&self.inner.response_validator, payload.body.as_ref())
             && let Err(errors) = validator.validate(body)
@@ -661,13 +775,34 @@ fn interpret_handler_response(
     ruby: &Ruby,
     handler: &RubyHandlerInner,
     value: Value,
-) -> Result<HandlerResponsePayload, Error> {
+) -> Result<RubyHandlerResult, Error> {
     if value.is_nil() {
-        return Ok(HandlerResponsePayload {
+        return Ok(RubyHandlerResult::Payload(HandlerResponsePayload {
             status: 200,
             headers: HashMap::new(),
             body: None,
-        });
+        }));
+    }
+
+    if is_streaming_response(ruby, value)? {
+        let stream_value: Value = value.funcall("stream", ())?;
+        let status: i64 = value.funcall("status_code", ())?;
+        let headers_value: Value = value.funcall("headers", ())?;
+
+        let status_u16 = u16::try_from(status).map_err(|_| {
+            Error::new(
+                ruby.exception_arg_error(),
+                "StreamingResponse status_code must be between 0 and 65535",
+            )
+        })?;
+
+        let headers = value_to_string_map(ruby, headers_value)?;
+
+        return Ok(RubyHandlerResult::Streaming(StreamingResponsePayload {
+            enumerator: Arc::new(Opaque::from(stream_value)),
+            status: status_u16,
+            headers,
+        }));
     }
 
     let status_symbol = ruby.intern("status_code");
@@ -695,20 +830,39 @@ fn interpret_handler_response(
             )?)
         };
 
-        return Ok(HandlerResponsePayload {
+        return Ok(RubyHandlerResult::Payload(HandlerResponsePayload {
             status: status_u16,
             headers,
             body,
-        });
+        }));
     }
 
     let body_json = ruby_value_to_json(ruby, handler.json_module.get_inner_with(ruby), value)?;
 
-    Ok(HandlerResponsePayload {
+    Ok(RubyHandlerResult::Payload(HandlerResponsePayload {
         status: 200,
         headers: HashMap::new(),
         body: Some(body_json),
+    }))
+}
+
+fn value_to_string_map(ruby: &Ruby, value: Value) -> Result<HashMap<String, String>, Error> {
+    if value.is_nil() {
+        return Ok(HashMap::new());
+    }
+    let hash = RHash::try_convert(value)?;
+    hash.to_hash_map::<String, String>().map_err(|err| {
+        Error::new(
+            ruby.exception_arg_error(),
+            format!("Expected headers hash of strings: {}", err),
+        )
     })
+}
+
+fn is_streaming_response(ruby: &Ruby, value: Value) -> Result<bool, Error> {
+    let stream_sym = ruby.intern("stream");
+    let status_sym = ruby.intern("status_code");
+    Ok(value.respond_to(stream_sym, false)? && value.respond_to(status_sym, false)?)
 }
 
 fn response_to_ruby(ruby: &Ruby, response: TestResponseData) -> Result<Value, Error> {
@@ -1510,7 +1664,7 @@ fn run_server(
         );
     }
 
-    // Start the server in a background thread with its own Tokio runtime
+    // Start the server on the current Ruby thread using a single-threaded Tokio runtime
     let addr = format!("{}:{}", config.host, config.port);
     let socket_addr: std::net::SocketAddr = addr.parse().map_err(|e| {
         Error::new(
@@ -1519,20 +1673,26 @@ fn run_server(
         )
     })?;
 
-    std::thread::spawn(move || {
-        let runtime = tokio::runtime::Runtime::new().expect("Failed to create Tokio runtime");
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .map_err(|e| {
+            Error::new(
+                ruby.exception_runtime_error(),
+                format!("Failed to create Tokio runtime: {}", e),
+            )
+        })?;
 
-        runtime.block_on(async move {
-            let listener = tokio::net::TcpListener::bind(socket_addr)
-                .await
-                .unwrap_or_else(|_| panic!("Failed to bind to {}", socket_addr));
+    runtime.block_on(async move {
+        let listener = tokio::net::TcpListener::bind(socket_addr)
+            .await
+            .unwrap_or_else(|_| panic!("Failed to bind to {}", socket_addr));
 
-            info!("Server listening on {}", socket_addr);
+        info!("Server listening on {}", socket_addr);
 
-            if let Err(e) = axum::serve(listener, app_router).await {
-                error!("Server error: {}", e);
-            }
-        });
+        if let Err(e) = axum::serve(listener, app_router).await {
+            error!("Server error: {}", e);
+        }
     });
 
     Ok(())

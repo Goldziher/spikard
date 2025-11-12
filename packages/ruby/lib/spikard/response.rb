@@ -74,14 +74,26 @@ module Spikard
         @body_text = payload[:body_text]
       end
 
+      def body_bytes
+        @body || ''.b
+      end
+
       def body_text
         @body_text || @body&.dup&.force_encoding(Encoding::UTF_8)
+      end
+
+      def text
+        body_text
       end
 
       def json
         return nil if @body.nil? || @body.empty?
 
         JSON.parse(@body)
+      end
+
+      def bytes
+        body_bytes.bytes
       end
     end
   end

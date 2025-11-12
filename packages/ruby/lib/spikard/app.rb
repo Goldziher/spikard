@@ -117,6 +117,7 @@ module Spikard
   end
 
   # Collects route metadata so the Rust engine can execute handlers.
+  # rubocop:disable Metrics/ClassLength
   class App
     include LifecycleHooks
 
@@ -233,6 +234,7 @@ module Spikard
     #
     # @example Backward compatible (deprecated)
     #   app.run(host: '0.0.0.0', port: 8000)
+    # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
     def run(config: nil, host: nil, port: nil)
       require 'json'
 
@@ -270,6 +272,7 @@ module Spikard
       raise 'Failed to load Spikard extension. ' \
             "Build it with: task build:ruby\n#{e.message}"
     end
+    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
     private
 
@@ -314,4 +317,5 @@ module Spikard
       end
     end
   end
+  # rubocop:enable Metrics/ClassLength
 end

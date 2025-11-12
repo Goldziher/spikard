@@ -3,6 +3,7 @@
 //! Internal tool for generating test infrastructure from fixtures.
 //! Generates test applications and test suites for Rust, Python, and TypeScript.
 
+mod asyncapi;
 mod node_app;
 mod node_tests;
 mod python_app;
@@ -12,6 +13,7 @@ mod ruby_tests;
 mod ruby_utils;
 mod rust_app;
 mod rust_tests;
+mod streaming;
 
 use anyhow::{Context, Result};
 use clap::Parser;
@@ -134,6 +136,10 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
             ruby_tests::generate_ruby_tests(&fixtures, &output)?;
         }
         _ => unreachable!("Invalid language"),
+    }
+
+    if matches!(lang, "ruby" | "python" | "node") {
+        asyncapi::generate_asyncapi_tests(lang, &output)?;
     }
 
     println!("✓ {} tests generated successfully", lang);

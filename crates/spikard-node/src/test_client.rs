@@ -7,7 +7,7 @@
 
 #![allow(dead_code, unused_imports)]
 
-use crate::response::TestResponse;
+use crate::response::{HandlerReturnValue, TestResponse};
 use axum::body::Body;
 use axum::extract::Request;
 use axum::http::{HeaderMap, HeaderValue, Method, StatusCode};
@@ -138,7 +138,7 @@ fn problem_to_json(problem: &ProblemDetails) -> String {
 /// JavaScript handler wrapper that can be called from Rust async context
 #[derive(Clone)]
 struct JsHandler {
-    handler_fn: Arc<ThreadsafeFunction<String, Promise<String>, Vec<String>, napi::Status, false>>,
+    handler_fn: Arc<ThreadsafeFunction<String, Promise<HandlerReturnValue>, Vec<String>, napi::Status, false>>,
     handler_name: String,
     method: String,
     path: String,
@@ -148,7 +148,7 @@ struct JsHandler {
 }
 
 impl JsHandler {
-    fn new(js_fn: Function<String, Promise<String>>, route: &Route) -> Result<Self> {
+    fn new(js_fn: Function<String, Promise<HandlerReturnValue>>, route: &Route) -> Result<Self> {
         let tsfn = js_fn
             .build_threadsafe_function()
             .build_callback(|ctx| Ok(vec![ctx.value]))?;
@@ -208,7 +208,24 @@ impl JsHandler {
             )
         })?;
 
-        let mut handler_response = interpret_handler_response(js_result);
+        if let HandlerReturnValue::Streaming(streaming) = js_result {
+            let response = streaming
+                .into_handler_response()
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+            return Ok(response.into_response());
+        }
+
+        let json_value = match js_result {
+            HandlerReturnValue::Json(text) => serde_json::from_str(&text).map_err(|e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Failed to parse handler response: {}", e),
+                )
+            })?,
+            HandlerReturnValue::Streaming(_) => unreachable!(),
+        };
+
+        let mut handler_response = interpret_handler_response(json_value);
         let response_body_clone = handler_response.body.clone();
 
         if let (Some(validator), Some(body_value)) = (&self.response_validator, response_body_clone.as_ref())
@@ -279,11 +296,11 @@ impl JsHandler {
         })
     }
 
-    async fn call_js(&self, payload: Value) -> Result<Value> {
+    async fn call_js(&self, payload: Value) -> Result<HandlerReturnValue> {
         let request_json = serde_json::to_string(&payload)
             .map_err(|e| Error::from_reason(format!("Failed to serialize request payload: {}", e)))?;
 
-        let result_json = self
+        let result = self
             .handler_fn
             .call_async(request_json)
             .await
@@ -291,8 +308,7 @@ impl JsHandler {
             .await
             .map_err(|e| Error::from_reason(format!("Handler promise failed: {}", e)))?;
 
-        serde_json::from_str(&result_json)
-            .map_err(|e| Error::from_reason(format!("Failed to parse handler response: {}", e)))
+        Ok(result)
     }
 }
 
@@ -344,9 +360,10 @@ impl TestClient {
                 .map_err(|e| Error::from_reason(format!("Failed to build route: {}", e)))?;
 
             let handler_name = route.handler_name.clone();
-            let js_fn: Function<String, Promise<String>> = handlers_map
-                .get_named_property(&handler_name)
-                .map_err(|e| Error::from_reason(format!("Failed to get handler '{}': {}", handler_name, e)))?;
+            let js_fn: Function<String, Promise<HandlerReturnValue>> =
+                handlers_map
+                    .get_named_property(&handler_name)
+                    .map_err(|e| Error::from_reason(format!("Failed to get handler '{}': {}", handler_name, e)))?;
 
             let js_handler = JsHandler::new(js_fn, &route)?;
             prepared_routes.push((route, Arc::new(js_handler) as Arc<dyn spikard_http::Handler>));

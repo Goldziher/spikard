@@ -391,8 +391,8 @@ async def test_multiple_file_uploads() -> None:
     client = TestClient(app)
 
     files = {
-        "test1": ("test1.txt", b"<file1 content>", "text/plain"),
         "test2": ("test2.txt", b"<file2 content>", "text/plain"),
+        "test1": ("test1.txt", b"<file1 content>", "text/plain"),
     }
     response = await client.post("/", files=files)
 

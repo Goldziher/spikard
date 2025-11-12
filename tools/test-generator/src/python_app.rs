@@ -10,9 +10,10 @@
 //! - msgspec.Struct (fastest typed)
 //! - Pydantic BaseModel (popular, slower)
 
+use crate::streaming::{StreamingFixtureData, chunk_bytes, streaming_data};
 use anyhow::{Context, Result};
 use serde_json::{Value, json};
-use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
+use spikard_codegen::openapi::{Fixture, FixtureStreamChunk, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -118,7 +119,9 @@ fn generate_app_file_per_fixture(fixtures_by_category: &HashMap<String, Vec<Fixt
     code.push_str("import json\n");
     code.push_str("import msgspec\n");
     code.push_str("from pydantic import BaseModel\n\n");
-    code.push_str("from spikard import Response, Spikard, delete, get, head, options, patch, post, put\n");
+    code.push_str(
+        "from spikard import Response, Spikard, StreamingResponse, delete, get, head, options, patch, post, put\n",
+    );
     code.push_str("from spikard.config import (\n");
     code.push_str("    ServerConfig, CompressionConfig, RateLimitConfig,\n");
     code.push_str("    JwtConfig, ApiKeyConfig, StaticFilesConfig,\n");
@@ -559,6 +562,15 @@ fn generate_handler_function_for_fixture(
         String::new()
     };
 
+    if let Some(stream_info) = streaming_data(fixture)? {
+        code.push_str(&generate_streaming_handler_body_python(
+            fixture,
+            &stream_info,
+            expected_status,
+        )?);
+        return Ok(code);
+    }
+
     if should_return_expected {
         // Return the expected response body (business logic or documented response format)
         if let Some(body_json) = expected_body.as_ref() {
@@ -637,6 +649,75 @@ fn generate_handler_function_for_fixture(
     }
 
     Ok(code)
+}
+
+fn generate_streaming_handler_body_python(
+    fixture: &Fixture,
+    stream_info: &StreamingFixtureData,
+    expected_status: u16,
+) -> Result<String> {
+    let mut body = String::new();
+    body.push_str("    async def stream_chunks():\n");
+    for chunk in &stream_info.streaming.chunks {
+        match chunk {
+            FixtureStreamChunk::Text { value } => {
+                let literal = json_to_python(&Value::String(value.clone()));
+                body.push_str(&format!("        yield {}\n", literal));
+            }
+            FixtureStreamChunk::Bytes { .. } => {
+                let bytes = chunk_bytes(chunk)?;
+                let literal = python_bytes_literal(&bytes);
+                body.push_str(&format!("        yield {}\n", literal));
+            }
+        }
+    }
+    body.push('\n');
+
+    let headers_literal = build_streaming_headers_python(fixture, stream_info);
+    body.push_str(&format!(
+        "    return StreamingResponse(\n        stream_chunks(),\n        status_code={},\n        headers={}\n    )\n",
+        expected_status, headers_literal
+    ));
+    Ok(body)
+}
+
+fn build_streaming_headers_python(fixture: &Fixture, stream_info: &StreamingFixtureData) -> String {
+    let mut headers = fixture.expected_response.headers.clone().unwrap_or_default();
+
+    if let Some(content_type) = stream_info.streaming.content_type.as_ref() {
+        headers.insert("content-type".to_string(), content_type.clone());
+    }
+
+    if !headers.contains_key("content-type") {
+        headers.insert("content-type".to_string(), "application/octet-stream".to_string());
+    }
+
+    if headers.is_empty() {
+        "{}".to_string()
+    } else {
+        let mut map = serde_json::Map::new();
+        for (key, value) in headers {
+            map.insert(key, Value::String(value));
+        }
+        json_to_python(&Value::Object(map))
+    }
+}
+
+fn python_bytes_literal(bytes: &[u8]) -> String {
+    let mut literal = String::from("b\"");
+    for &byte in bytes {
+        match byte {
+            b'\\' => literal.push_str("\\\\"),
+            b'"' => literal.push_str("\\\""),
+            b'\n' => literal.push_str("\\n"),
+            b'\r' => literal.push_str("\\r"),
+            b'\t' => literal.push_str("\\t"),
+            0x20..=0x7e => literal.push(byte as char),
+            _ => literal.push_str(&format!("\\x{:02x}", byte)),
+        }
+    }
+    literal.push('"');
+    literal
 }
 
 /// Sanitize a string to be a valid Python identifier (lowercase snake_case)

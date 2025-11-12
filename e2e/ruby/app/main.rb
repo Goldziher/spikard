@@ -3049,6 +3049,62 @@ module E2ERubyApp
     app
   end
 
+  def create_app_streaming_1_binary_log_download
+    app = Spikard::App.new
+    app.get("/stream/logfile", handler_name: "streaming_1_binary_log_download") do |_request|
+      stream = Enumerator.new do |yielder|
+        yielder << "LOG:"
+        yielder << "\x00\x01\x02\x03"
+        yielder << "|TAIL|"
+        yielder << "\x07"
+        yielder << "\\n"
+      end
+
+      Spikard::StreamingResponse.new(
+        stream,
+        status_code: 200,
+        headers: {"content-type" => "application/octet-stream"}
+      )
+    end
+    app
+  end
+
+  def create_app_streaming_2_chunked_csv_export
+    app = Spikard::App.new
+    app.get("/stream/csv-report", handler_name: "streaming_2_chunked_csv_export") do |_request|
+      stream = Enumerator.new do |yielder|
+        yielder << "id,name,value\\n"
+        yielder << "1,Alice,42\\n"
+        yielder << "2,Bob,7\\n"
+      end
+
+      Spikard::StreamingResponse.new(
+        stream,
+        status_code: 200,
+        headers: {"content-type" => "text/csv"}
+      )
+    end
+    app
+  end
+
+  def create_app_streaming_3_stream_json_lines
+    app = Spikard::App.new
+    app.get("/stream/json-lines", handler_name: "streaming_3_stream_json_lines") do |_request|
+      stream = Enumerator.new do |yielder|
+        yielder << "{\"index\":0,\"payload\":\"alpha\"}\\n"
+        yielder << "{\"index\":1,\"payload\":\"beta\"}\\n"
+        yielder << "{\"index\":2,\"payload\":\"gamma\"}\\n"
+      end
+
+      Spikard::StreamingResponse.new(
+        stream,
+        status_code: 200,
+        headers: {"content-type" => "application/x-ndjson"}
+      )
+    end
+    app
+  end
+
   def create_app_url_encoded_1_13_array_field_success
     app = Spikard::App.new
     app.post("/register", handler_name: "url_encoded_1_13_array_field_success", request_schema: {"properties" => {"tags" => {"items" => {"type" => "string"}, "minItems" => 1, "type" => "array"}}, "required" => ["tags"], "type" => "object"}) do |_request|
