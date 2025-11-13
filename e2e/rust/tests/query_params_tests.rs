@@ -3,17 +3,17 @@
 
 #[cfg(test)]
 mod query_params {
+    use axum::body::Body;
+    use axum::http::Request;
+    use axum_test::TestServer;
+    use serde_json::Value;
+    use spikard_http::testing::snapshot_response;
 
     #[tokio::test]
     async fn test_query_params_42_negative_integer_query_param() {
         // Fixture: 42_negative_integer_query_param
         // Description: Query parameter with negative integer value should be parsed correctly
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -273,16 +273,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -290,11 +285,6 @@ mod query_params {
         // Fixture: 43_scientific_notation_float
         // Description: Query parameter with scientific notation float should parse correctly
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/43_scientific_notation_float.json")
@@ -553,16 +543,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -570,11 +555,6 @@ mod query_params {
         // Fixture: 44_string_minlength_validation_success
         // Description: String query parameter meeting minLength constraint should succeed
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -834,16 +814,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -851,11 +826,6 @@ mod query_params {
         // Fixture: 45_string_minlength_validation_failure
         // Description: String query parameter below minLength constraint should fail validation
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -1115,16 +1085,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1132,11 +1097,6 @@ mod query_params {
         // Fixture: 46_string_maxlength_validation_failure
         // Description: String query parameter exceeding maxLength constraint should fail validation
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -1396,16 +1356,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1413,11 +1368,6 @@ mod query_params {
         // Fixture: 47_pattern_validation_email_success
         // Description: String query parameter matching regex pattern should succeed
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -1677,16 +1627,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1694,11 +1639,6 @@ mod query_params {
         // Fixture: 48_pattern_validation_email_failure
         // Description: String query parameter not matching regex pattern should fail validation
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -1958,16 +1898,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1975,11 +1910,6 @@ mod query_params {
         // Fixture: 49_integer_gt_constraint_success
         // Description: Integer query parameter greater than exclusive minimum should succeed
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -2239,16 +2169,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2256,11 +2181,6 @@ mod query_params {
         // Fixture: 50_integer_gt_constraint_failure
         // Description: Integer query parameter equal to exclusive minimum should fail validation
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -2520,16 +2440,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2537,11 +2452,6 @@ mod query_params {
         // Fixture: 51_integer_ge_constraint_boundary
         // Description: Integer query parameter equal to minimum should succeed with ge constraint
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -2801,16 +2711,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2818,11 +2723,6 @@ mod query_params {
         // Fixture: 52_integer_le_constraint_boundary
         // Description: Integer query parameter equal to maximum should succeed with le constraint
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -3082,16 +2982,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3099,11 +2994,6 @@ mod query_params {
         // Fixture: 53_integer_le_constraint_failure
         // Description: Integer query parameter exceeding maximum should fail validation
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -3363,16 +3253,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3380,11 +3265,6 @@ mod query_params {
         // Fixture: 54_array_minitems_constraint_success
         // Description: Array query parameter meeting minItems constraint should succeed
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -3644,16 +3524,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3661,11 +3536,6 @@ mod query_params {
         // Fixture: 55_array_minitems_constraint_failure
         // Description: Array query parameter below minItems constraint should fail validation
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -3925,16 +3795,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3942,11 +3807,6 @@ mod query_params {
         // Fixture: 56_array_maxitems_constraint_failure
         // Description: Array query parameter exceeding maxItems constraint should fail validation
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -4206,16 +4066,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -4223,11 +4078,6 @@ mod query_params {
         // Fixture: 57_boolean_empty_string_coercion
         // Description: Boolean query parameter with empty string should coerce to false
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -4487,16 +4337,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -4504,11 +4349,6 @@ mod query_params {
         // Fixture: 58_format_email_success
         // Description: Query parameter with valid email format should be accepted
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/58_format_email_success.json")
@@ -4767,16 +4607,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -4784,11 +4619,6 @@ mod query_params {
         // Fixture: 59_format_email_failure
         // Description: Query parameter with invalid email format should fail validation
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/59_format_email_failure.json")
@@ -5047,16 +4877,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -5064,11 +4889,6 @@ mod query_params {
         // Fixture: 60_format_ipv4_success
         // Description: Query parameter with valid IPv4 address should be accepted
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/60_format_ipv4_success.json")
@@ -5327,16 +5147,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -5344,11 +5159,6 @@ mod query_params {
         // Fixture: 61_format_ipv4_failure
         // Description: Query parameter with invalid IPv4 address should fail validation
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/61_format_ipv4_failure.json")
@@ -5607,16 +5417,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -5624,11 +5429,6 @@ mod query_params {
         // Fixture: 62_format_ipv6_success
         // Description: Query parameter with valid IPv6 address should be accepted
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/62_format_ipv6_success.json")
@@ -5887,16 +5687,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -5904,11 +5699,6 @@ mod query_params {
         // Fixture: 63_format_uri_success
         // Description: Query parameter with valid URI should be accepted
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/63_format_uri_success.json")
@@ -6167,16 +5957,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -6184,11 +5969,6 @@ mod query_params {
         // Fixture: 64_format_uri_failure
         // Description: Query parameter with invalid URI should fail validation
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/64_format_uri_failure.json")
@@ -6447,16 +6227,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -6464,11 +6239,6 @@ mod query_params {
         // Fixture: 65_format_hostname_success
         // Description: Query parameter with valid hostname should be accepted
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/65_format_hostname_success.json")
@@ -6727,16 +6497,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -6744,11 +6509,6 @@ mod query_params {
         // Fixture: 66_multipleof_constraint_success
         // Description: Integer query parameter that is multiple of constraint should succeed
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -7008,16 +6768,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -7025,11 +6780,6 @@ mod query_params {
         // Fixture: 67_multipleof_constraint_failure
         // Description: Integer query parameter that is not multiple of constraint should fail
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -7289,16 +7039,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -7306,11 +7051,6 @@ mod query_params {
         // Fixture: 68_array_uniqueitems_success
         // Description: Array query parameter with unique items should succeed
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/68_array_uniqueitems_success.json")
@@ -7569,16 +7309,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -7586,11 +7321,6 @@ mod query_params {
         // Fixture: 69_array_uniqueitems_failure
         // Description: Array query parameter with duplicate items should fail when uniqueItems is true
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/69_array_uniqueitems_failure.json")
@@ -7849,16 +7579,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -7866,11 +7591,6 @@ mod query_params {
         // Fixture: 70_array_separator_pipe
         // Description: Array query parameter with pipe separator should parse correctly
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/70_array_separator_pipe.json")
@@ -8129,16 +7849,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -8146,11 +7861,6 @@ mod query_params {
         // Fixture: 71_array_separator_semicolon
         // Description: Array query parameter with semicolon separator should parse correctly
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/71_array_separator_semicolon.json")
@@ -8409,16 +8119,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -8426,11 +8131,6 @@ mod query_params {
         // Fixture: 72_array_separator_space
         // Description: Array query parameter with space separator should parse correctly
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/72_array_separator_space.json")
@@ -8689,16 +8389,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -8706,11 +8401,6 @@ mod query_params {
         // Fixture: Array query parameter - empty array
         // Description: Tests array query parameter when no values are provided
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/32_array_empty.json")
@@ -8969,16 +8659,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -8986,11 +8671,6 @@ mod query_params {
         // Fixture: Array query parameter - single value
         // Description: Tests array query parameter with single value
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/33_array_single_value.json")
@@ -9249,16 +8929,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -9266,11 +8941,6 @@ mod query_params {
         // Fixture: Boolean query parameter - numeric 1
         // Description: Tests boolean query parameter with '1' converts to true
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/20_bool_query_param_1.json")
@@ -9529,16 +9199,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -9546,11 +9211,6 @@ mod query_params {
         // Fixture: Boolean query parameter - true
         // Description: Tests boolean query parameter with 'true' string value
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/19_bool_query_param_true.json")
@@ -9809,16 +9469,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -9826,11 +9481,6 @@ mod query_params {
         // Fixture: Date query parameter - success
         // Description: Tests date query parameter with valid ISO date format
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/29_date_query_param_success.json")
@@ -10089,16 +9739,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -10106,11 +9751,6 @@ mod query_params {
         // Fixture: Datetime query parameter - success
         // Description: Tests datetime query parameter with valid ISO datetime format
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -10370,16 +10010,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -10387,11 +10022,6 @@ mod query_params {
         // Fixture: Enum query parameter - invalid value
         // Description: Tests enum query parameter with value not in enum
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/39_enum_query_param_invalid.json")
@@ -10650,16 +10280,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -10667,11 +10292,6 @@ mod query_params {
         // Fixture: Enum query parameter - success
         // Description: Tests enum query parameter with valid enum value
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/22_enum_query_param_success.json")
@@ -10930,16 +10550,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -10947,11 +10562,6 @@ mod query_params {
         // Fixture: Float query param with ge constraint - success
         // Description: Tests float query parameter with ge validation at boundary
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -11211,16 +10821,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -11228,11 +10833,6 @@ mod query_params {
         // Fixture: Integer query param with ge constraint - boundary
         // Description: Tests integer query parameter with ge validation at boundary value
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -11492,16 +11092,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -11509,11 +11104,6 @@ mod query_params {
         // Fixture: Integer query param with gt constraint - valid
         // Description: Tests integer query parameter with gt validation, value above limit
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -11773,16 +11363,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -11790,11 +11375,6 @@ mod query_params {
         // Fixture: Integer query param with le constraint - boundary
         // Description: Tests integer query parameter with le validation at boundary value
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -12054,16 +11634,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -12071,11 +11646,6 @@ mod query_params {
         // Fixture: Integer query param with lt constraint - valid
         // Description: Tests integer query parameter with lt validation, value below limit
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -12335,16 +11905,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -12352,11 +11917,6 @@ mod query_params {
         // Fixture: Integer with default value - not provided
         // Description: Tests integer parameter with default value when not provided
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/10_int_default_not_provided.json")
@@ -12615,16 +12175,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -12632,11 +12187,6 @@ mod query_params {
         // Fixture: Integer with default value - override
         // Description: Tests integer parameter with default value when overridden with custom value
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/11_int_default_override.json")
@@ -12895,16 +12445,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -12912,11 +12457,6 @@ mod query_params {
         // Fixture: List of integers - multiple values
         // Description: Tests list query parameter with multiple integer values using same key
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/12_list_int_multiple_values.json")
@@ -13175,16 +12715,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -13192,11 +12727,6 @@ mod query_params {
         // Fixture: List of strings - multiple values
         // Description: Tests list of string query parameters with multiple values
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -13456,16 +12986,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -13473,11 +12998,6 @@ mod query_params {
         // Fixture: List query parameter - required but missing
         // Description: Tests required list parameter without any values, should return 422
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/13_list_required_missing.json")
@@ -13736,16 +13256,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -13753,11 +13268,6 @@ mod query_params {
         // Fixture: List with default empty array - no values provided
         // Description: Tests list parameter with default=[] when no values provided, should return empty list
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/14_list_default_empty.json")
@@ -14016,16 +13526,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -14033,11 +13538,6 @@ mod query_params {
         // Fixture: Multiple query parameters with different types
         // Description: Tests multiple query parameters of different types in single request
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/36_multiple_different_types.json")
@@ -14296,16 +13796,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -14313,11 +13808,6 @@ mod query_params {
         // Fixture: Optional integer query parameter - missing
         // Description: Tests optional integer parameter without value, should not error
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/09_optional_int_missing.json")
@@ -14576,16 +14066,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -14593,11 +14078,6 @@ mod query_params {
         // Fixture: Optional query parameter with default value
         // Description: Tests optional query parameter that uses default when not provided
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/37_optional_with_default.json")
@@ -14856,16 +14336,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -14873,11 +14348,6 @@ mod query_params {
         // Fixture: Optional string query parameter - missing
         // Description: Tests optional string parameter without value, should return None/null
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/07_optional_string_missing.json")
@@ -15136,16 +14606,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -15153,11 +14618,6 @@ mod query_params {
         // Fixture: Optional string query parameter - provided
         // Description: Tests optional string parameter with value provided
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/08_optional_string_provided.json")
@@ -15416,16 +14876,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -15433,11 +14888,6 @@ mod query_params {
         // Fixture: Query parameter with URL encoded space
         // Description: Tests query parameter with URL encoded space character
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/34_url_encoded_space.json")
@@ -15696,16 +15146,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -15713,11 +15158,6 @@ mod query_params {
         // Fixture: Query parameter with URL encoded special characters
         // Description: Tests query parameter with URL encoded special characters
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/35_url_encoded_special_chars.json")
@@ -15976,16 +15416,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -15993,11 +15428,6 @@ mod query_params {
         // Fixture: Query parameter with special characters - URL encoding
         // Description: Tests query parameters with special characters that need URL encoding
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/18_special_chars_encoding.json")
@@ -16256,16 +15686,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -16273,11 +15698,6 @@ mod query_params {
         // Fixture: Required integer query parameter - float value
         // Description: Tests integer query parameter with float string value, should return 422
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/06_required_int_float_value.json")
@@ -16536,16 +15956,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -16553,11 +15968,6 @@ mod query_params {
         // Fixture: Required integer query parameter - invalid type
         // Description: Tests integer query parameter with non-numeric string, should return 422
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/05_required_int_invalid_type.json")
@@ -16816,16 +16226,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -16833,11 +16238,6 @@ mod query_params {
         // Fixture: Required integer query parameter - missing
         // Description: Tests a required integer query parameter without providing value, should return 422
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/04_required_int_missing.json")
@@ -17096,16 +16496,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -17113,11 +16508,6 @@ mod query_params {
         // Fixture: Required integer query parameter - success
         // Description: Tests a required integer query parameter with valid value
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/03_required_int_success.json")
@@ -17376,16 +16766,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -17393,11 +16778,6 @@ mod query_params {
         // Fixture: Required string query parameter - missing
         // Description: Tests a required string query parameter without providing value, should return 422
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/02_required_string_missing.json")
@@ -17656,16 +17036,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -17673,11 +17048,6 @@ mod query_params {
         // Fixture: Required string query parameter - success
         // Description: Tests a required string query parameter with valid value
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/01_required_string_success.json")
@@ -17936,16 +17306,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -17953,11 +17318,6 @@ mod query_params {
         // Fixture: String query param with max_length constraint - fail
         // Description: Tests string query parameter with max_length validation failure
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -18217,16 +17577,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -18234,11 +17589,6 @@ mod query_params {
         // Fixture: String query param with min_length constraint - fail
         // Description: Tests string query parameter with min_length validation failure
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -18498,16 +17848,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -18515,11 +17860,6 @@ mod query_params {
         // Fixture: String query param with regex pattern - fail
         // Description: Tests string query parameter with regex pattern validation failure
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -18779,16 +18119,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -18796,11 +18131,6 @@ mod query_params {
         // Fixture: String validation with regex - failure
         // Description: Tests string parameter with regex pattern validation - non-matching pattern returns 422
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/17_validation_regex_failure.json")
@@ -19059,16 +18389,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -19076,11 +18401,6 @@ mod query_params {
         // Fixture: String validation with regex - success
         // Description: Tests string parameter with regex pattern validation - matching pattern
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/16_validation_regex_success.json")
@@ -19339,16 +18659,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -19356,11 +18671,6 @@ mod query_params {
         // Fixture: UUID query parameter - invalid format
         // Description: Tests UUID query parameter with invalid UUID format
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/40_uuid_query_param_invalid.json")
@@ -19619,16 +18929,11 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -19636,11 +18941,6 @@ mod query_params {
         // Fixture: UUID query parameter - success
         // Description: Tests UUID query parameter with valid UUID format
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/query_params/21_uuid_query_param_success.json")
@@ -19899,15 +19199,10 @@ mod query_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 }

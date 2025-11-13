@@ -4,6 +4,7 @@
 # This is installed as a separate package via maturin
 from _spikard import Response, StreamingResponse
 
+from spikard import background
 from spikard._internal.converters import register_decoder
 from spikard.app import Spikard
 from spikard.config import (
@@ -39,6 +40,7 @@ __all__ = [
     "StaticFilesConfig",
     "StreamingResponse",
     "WebSocketHandler",
+    "background",
     "delete",
     "get",
     "head",

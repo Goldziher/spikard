@@ -34,7 +34,13 @@
 				"http_methods",
 				"dependency_injection",
 				"middleware",
-				"lifecycle_hooks"
+				"lifecycle_hooks",
+				"compression",
+				"rate_limit",
+				"request_timeout",
+				"request_id",
+				"body_limits",
+				"static_files"
 			],
 			"description": "Test category for organization"
 		},
@@ -135,6 +141,149 @@
 				"response_schema": {
 					"type": "object",
 					"description": "JSON Schema for response body (for documentation/validation)"
+				},
+				"middleware": {
+					"type": "object",
+					"description": "Per-route middleware configuration (compression, rate limiting, timeouts, static files, etc.). Also carries test directives for features that require multiple requests or simulated delays.",
+					"properties": {
+						"compression": {
+							"type": "object",
+							"description": "Enable tower-http compression middleware with custom settings.",
+							"properties": {
+								"gzip": { "type": "boolean", "description": "Enable gzip encoding (default true)" },
+								"brotli": { "type": "boolean", "description": "Enable brotli encoding (default true)" },
+								"min_size": {
+									"type": "integer",
+									"minimum": 0,
+									"description": "Minimum response size in bytes before compression is applied (default 1024)"
+								},
+								"quality": {
+									"type": "integer",
+									"minimum": 0,
+									"maximum": 11,
+									"description": "Compression quality (0-11, default 6)"
+								}
+							},
+							"additionalProperties": false
+						},
+						"rate_limit": {
+							"type": "object",
+							"description": "Rate limiting configuration using tower-governor. Optional warmup directives instruct the generated tests to issue multiple requests before asserting the final status.",
+							"required": ["per_second", "burst"],
+							"properties": {
+								"per_second": { "type": "integer", "minimum": 1, "description": "Allowed requests per second" },
+								"burst": { "type": "integer", "minimum": 1, "description": "Burst capacity" },
+								"ip_based": { "type": "boolean", "description": "Apply limits per IP (default true)" },
+								"warmup_requests": {
+									"type": "integer",
+									"minimum": 0,
+									"description": "How many additional requests to send before the assertion request (used to trigger 429 responses)"
+								},
+								"warmup_expect_status": {
+									"type": "integer",
+									"description": "Expected status code for warmup requests (defaults to 200)"
+								},
+								"sleep_ms_between": {
+									"type": "integer",
+									"minimum": 0,
+									"description": "Delay between warmup requests in milliseconds"
+								}
+							},
+							"additionalProperties": false
+						},
+						"request_timeout": {
+							"type": "object",
+							"description": "Request timeout configuration and simulated handler delay.",
+							"required": ["seconds"],
+							"properties": {
+								"seconds": { "type": "integer", "minimum": 1, "description": "Timeout duration in seconds" },
+								"sleep_ms": {
+									"type": "integer",
+									"minimum": 0,
+									"description": "Milliseconds that the handler should sleep to trigger the timeout"
+								}
+							},
+							"additionalProperties": false
+						},
+						"request_id": {
+							"type": "object",
+							"description": "Enable/disable automatic X-Request-ID header propagation.",
+							"properties": {
+								"enabled": { "type": "boolean", "description": "Set to false to disable request ID middleware" }
+							},
+							"additionalProperties": false
+						},
+						"body_limit": {
+							"type": "object",
+							"description": "Maximum request body size (DefaultBodyLimit).",
+							"properties": {
+								"max_bytes": {
+									"type": "integer",
+									"minimum": 0,
+									"description": "Maximum allowed bytes (0 or null disables limit)"
+								}
+							},
+							"additionalProperties": false
+						},
+						"static_files": {
+							"type": "array",
+							"description": "Static directories to serve via tower-http ServeDir. The generator will create these files under the e2e apps.",
+							"items": {
+								"type": "object",
+								"required": ["route_prefix", "files"],
+								"properties": {
+									"route_prefix": { "type": "string", "description": "Path prefix (e.g., '/public')" },
+									"directory_name": {
+										"type": "string",
+										"description": "Optional deterministic name for generated assets (defaults to fixture id)"
+									},
+									"index_file": { "type": "boolean", "description": "Append index.html for directory requests" },
+									"cache_control": {
+										"type": "string",
+										"description": "Cache-Control header to apply to all static responses"
+									},
+									"files": {
+										"type": "array",
+										"minItems": 1,
+										"items": {
+											"type": "object",
+											"required": ["path", "content"],
+											"properties": {
+												"path": { "type": "string", "description": "Relative file path within the static directory" },
+												"content": {
+													"type": "string",
+													"description": "File contents (utf-8). Use escaped sequences for HTML."
+												}
+											},
+											"additionalProperties": false
+										}
+									}
+								},
+								"additionalProperties": false
+							}
+						},
+						"jwt_auth": {
+							"type": "object",
+							"description": "JWT authentication configuration (see auth fixtures).",
+							"additionalProperties": true
+						},
+						"api_key_auth": {
+							"type": "object",
+							"description": "API key authentication configuration.",
+							"additionalProperties": true
+						},
+						"openapi": {
+							"type": "object",
+							"description": "OpenAPI configuration overrides.",
+							"additionalProperties": true
+						},
+						"lifecycle_hooks": {
+							"type": "object",
+							"description": "Lifecycle hook definitions. See lifecycle_hooks fixtures.",
+							"additionalProperties": true
+						}
+					},
+					"additionalProperties": true
 				}
 			},
 			"additionalProperties": false
@@ -182,6 +331,30 @@
 							}
 						]
 					}
+				}
+			}
+		},
+		"background": {
+			"type": "object",
+			"description": "Background task metadata. When present, handlers enqueue fire-and-forget work and tests assert against a state endpoint.",
+			"required": ["state_path", "state_key", "value_field", "expected_state"],
+			"properties": {
+				"state_path": {
+					"type": "string",
+					"description": "HTTP path that exposes accumulated background state (must be unique per fixture)"
+				},
+				"state_key": {
+					"type": "string",
+					"description": "JSON property returned by the state endpoint (e.g., 'events')"
+				},
+				"value_field": {
+					"type": "string",
+					"description": "Top-level JSON field from the request body to append to the background state"
+				},
+				"expected_state": {
+					"type": "array",
+					"description": "Ordered list of values expected at the state endpoint after the background job completes",
+					"items": {}
 				}
 			}
 		},
@@ -274,7 +447,7 @@
 				},
 				"headers": {
 					"type": "object",
-					"description": "Expected response headers (partial match)",
+					"description": "Expected response headers (partial match). Special tokens: '<<uuid>>' asserts the header is present and matches a UUID, '<<present>>' asserts presence with any value, '<<absent>>' asserts that the header must be missing.",
 					"additionalProperties": { "type": "string" }
 				},
 				"validation_errors": {

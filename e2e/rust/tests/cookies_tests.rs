@@ -3,17 +3,17 @@
 
 #[cfg(test)]
 mod cookies {
+    use axum::body::Body;
+    use axum::http::Request;
+    use axum_test::TestServer;
+    use serde_json::Value;
+    use spikard_http::testing::snapshot_response;
 
     #[tokio::test]
     async fn test_cookies_24_cookie_samesite_strict() {
         // Fixture: 24_cookie_samesite_strict
         // Description: Cookie with SameSite=Strict attribute should be validated
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/24_cookie_samesite_strict.json")
@@ -272,16 +272,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -289,11 +284,6 @@ mod cookies {
         // Fixture: 25_cookie_samesite_lax
         // Description: Cookie with SameSite=Lax attribute should be validated
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/25_cookie_samesite_lax.json")
@@ -552,16 +542,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -569,11 +554,6 @@ mod cookies {
         // Fixture: 26_cookie_secure_flag
         // Description: Cookie with Secure flag should be validated for HTTPS
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/26_cookie_secure_flag.json")
@@ -832,16 +812,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -849,11 +824,6 @@ mod cookies {
         // Fixture: 27_cookie_httponly_flag
         // Description: Cookie with HttpOnly flag should prevent JavaScript access
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/27_cookie_httponly_flag.json")
@@ -1112,16 +1082,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1129,11 +1094,6 @@ mod cookies {
         // Fixture: APIKey cookie authentication - missing
         // Description: Tests APIKeyCookie authentication returns 403 when cookie missing
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/06_apikey_cookie_auth_missing.json")
@@ -1392,16 +1352,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1409,11 +1364,6 @@ mod cookies {
         // Fixture: APIKey cookie authentication - success
         // Description: Tests APIKeyCookie authentication with valid cookie
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/05_apikey_cookie_auth_success.json")
@@ -1672,16 +1622,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1689,11 +1634,6 @@ mod cookies {
         // Fixture: Cookie regex pattern validation - fail
         // Description: Tests cookie with regex pattern validation failure
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -1953,16 +1893,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1970,11 +1905,6 @@ mod cookies {
         // Fixture: Cookie regex pattern validation - success
         // Description: Tests cookie with regex pattern validation success
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/14_cookie_regex_pattern_success.json")
@@ -2233,16 +2163,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2250,11 +2175,6 @@ mod cookies {
         // Fixture: Cookie validation - max_length constraint fail
         // Description: Tests cookie validation with max_length constraint failure
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -2514,16 +2434,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2531,11 +2446,6 @@ mod cookies {
         // Fixture: Cookie validation - min_length constraint success
         // Description: Tests cookie validation with min_length constraint at boundary
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -2795,16 +2705,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2812,11 +2717,6 @@ mod cookies {
         // Fixture: Cookie validation - min_length failure
         // Description: Tests cookie parameter with min_length constraint returns 422 when too short
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -3076,16 +2976,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3093,11 +2988,6 @@ mod cookies {
         // Fixture: Multiple cookies - success
         // Description: Tests multiple cookie parameters in a single request
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/03_multiple_cookies_success.json")
@@ -3356,16 +3246,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3373,11 +3258,6 @@ mod cookies {
         // Fixture: Optional APIKey cookie - missing
         // Description: Tests optional APIKeyCookie (auto_error=False) returns None without 403
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/07_optional_apikey_cookie_missing.json")
@@ -3636,16 +3516,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3653,11 +3528,6 @@ mod cookies {
         // Fixture: Optional cookie parameter - missing
         // Description: Tests optional cookie parameter returns None when not provided
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/02_optional_cookie_missing.json")
@@ -3916,16 +3786,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3933,11 +3798,6 @@ mod cookies {
         // Fixture: Optional cookie parameter - success
         // Description: Tests optional cookie parameter with value provided
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/01_optional_cookie_success.json")
@@ -4196,16 +4056,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -4213,11 +4068,6 @@ mod cookies {
         // Fixture: Required cookie - missing
         // Description: Tests validation error when required cookie is missing
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/04_required_cookie_missing.json")
@@ -4476,16 +4326,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -4493,11 +4338,6 @@ mod cookies {
         // Fixture: Response - delete cookie
         // Description: Tests deleting a cookie by setting max_age to 0
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/15_response_delete_cookie.json")
@@ -4756,16 +4596,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -4773,11 +4608,6 @@ mod cookies {
         // Fixture: Response - multiple cookies
         // Description: Tests setting multiple cookies in single response
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/22_response_multiple_cookies.json")
@@ -5036,16 +4866,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -5053,11 +4878,6 @@ mod cookies {
         // Fixture: Response - session cookie (no max_age)
         // Description: Tests setting session cookie without max_age (expires with browser)
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/18_response_session_cookie.json")
@@ -5316,16 +5136,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -5333,11 +5148,6 @@ mod cookies {
         // Fixture: Response cookie with SameSite=Lax
         // Description: Tests setting cookie with SameSite lax attribute
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/20_response_cookie_samesite_lax.json")
@@ -5596,16 +5406,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -5613,11 +5418,6 @@ mod cookies {
         // Fixture: Response cookie with SameSite=None
         // Description: Tests setting cookie with SameSite none (requires Secure)
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/21_response_cookie_samesite_none.json")
@@ -5876,16 +5676,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -5893,11 +5688,6 @@ mod cookies {
         // Fixture: Response cookie with SameSite=Strict
         // Description: Tests setting cookie with SameSite strict attribute
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -6157,16 +5947,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -6174,11 +5959,6 @@ mod cookies {
         // Fixture: Response cookie with attributes
         // Description: Tests setting a cookie with max_age, secure, httponly, and samesite attributes
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -6438,16 +6218,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -6455,11 +6230,6 @@ mod cookies {
         // Fixture: Response cookie with domain attribute
         // Description: Tests setting cookie with specific domain
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/16_response_cookie_with_domain.json")
@@ -6718,16 +6488,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -6735,11 +6500,6 @@ mod cookies {
         // Fixture: Response cookie with path attribute
         // Description: Tests setting cookie with specific path
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/17_response_cookie_with_path.json")
@@ -6998,16 +6758,11 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -7015,11 +6770,6 @@ mod cookies {
         // Fixture: Response set cookie - basic
         // Description: Tests setting a cookie in the response
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cookies/09_response_set_cookie.json")
@@ -7278,15 +7028,10 @@ mod cookies {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 }

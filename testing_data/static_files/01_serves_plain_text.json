@@ -1,0 +1,36 @@
+{
+	"name": "Static file server returns text file",
+	"description": "Tests serving a plain text file with Cache-Control headers.",
+	"category": "static_files",
+	"handler": {
+		"route": "/public/hello.txt",
+		"method": "GET",
+		"middleware": {
+			"static_files": [
+				{
+					"route_prefix": "/public",
+					"cache_control": "public, max-age=60",
+					"files": [
+						{
+							"path": "hello.txt",
+							"content": "Hello from static storage"
+						}
+					]
+				}
+			]
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/public/hello.txt"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": "Hello from static storage",
+		"headers": {
+			"content-type": "text/plain",
+			"cache-control": "public, max-age=60"
+		}
+	},
+	"tags": ["static_files", "serve_dir", "middleware"]
+}

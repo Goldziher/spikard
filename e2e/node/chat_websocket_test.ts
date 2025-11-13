@@ -59,15 +59,15 @@ async function handleWebSocket(uri: string): Promise<void> {
 			console.log("Sending userLeft message...");
 			ws.send(JSON.stringify(example_userLeft));
 
-			const fixture_userJoined = loadFixture("userJoined");
-			const example_userJoined = fixture_userJoined.examples[0];
-			console.log("Sending userJoined message...");
-			ws.send(JSON.stringify(example_userJoined));
-
 			const fixture_chatMessage = loadFixture("chatMessage");
 			const example_chatMessage = fixture_chatMessage.examples[0];
 			console.log("Sending chatMessage message...");
 			ws.send(JSON.stringify(example_chatMessage));
+
+			const fixture_userJoined = loadFixture("userJoined");
+			const example_userJoined = fixture_userJoined.examples[0];
+			console.log("Sending userJoined message...");
+			ws.send(JSON.stringify(example_userJoined));
 		});
 
 		ws.on("message", (data: WebSocket.Data) => {
@@ -79,11 +79,11 @@ async function handleWebSocket(uri: string): Promise<void> {
 			if (msgType === "userLeft") {
 				validateMessage(message, "userLeft");
 			}
-			if (msgType === "userJoined") {
-				validateMessage(message, "userJoined");
-			}
 			if (msgType === "chatMessage") {
 				validateMessage(message, "chatMessage");
+			}
+			if (msgType === "userJoined") {
+				validateMessage(message, "userJoined");
 			}
 		});
 

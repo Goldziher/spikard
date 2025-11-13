@@ -1,0 +1,36 @@
+{
+	"name": "Compression - gzip applied",
+	"description": "Serves a JSON payload compressed with gzip when the client advertises support.",
+	"category": "compression",
+	"handler": {
+		"route": "/compression/gzip",
+		"method": "GET",
+		"middleware": {
+			"compression": {
+				"gzip": true,
+				"brotli": false,
+				"min_size": 0,
+				"quality": 4
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/compression/gzip",
+		"headers": {
+			"Accept-Encoding": "gzip"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Compressed payload",
+			"payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		},
+		"headers": {
+			"content-encoding": "gzip",
+			"vary": "Accept-Encoding"
+		}
+	},
+	"tags": ["compression", "gzip", "middleware"]
+}

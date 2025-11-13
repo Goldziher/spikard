@@ -29,6 +29,11 @@ async def test_onresponse_security_headers() -> None:
     response_data = response.json()
     assert "message" in response_data
     assert response_data["message"] == "Response with security headers"
+    response_headers = response.headers
+    assert response_headers.get("x-frame-options") == "DENY"
+    assert response_headers.get("x-xss-protection") == "1; mode=block"
+    assert response_headers.get("x-content-type-options") == "nosniff"
+    assert response_headers.get("strict-transport-security") == "max-age=31536000; includeSubDomains"
 
 
 async def test_prehandler_authentication_failed_short_circuit() -> None:
@@ -110,6 +115,8 @@ async def test_prevalidation_rate_limit_exceeded_short_circuit() -> None:
     assert response_data["error"] == "Rate limit exceeded"
     assert "message" in response_data
     assert response_data["message"] == "Too many requests, please try again later"
+    response_headers = response.headers
+    assert response_headers.get("retry-after") == "60"
 
 
 async def test_onerror_error_logging() -> None:
@@ -128,6 +135,8 @@ async def test_onerror_error_logging() -> None:
     assert response_data["error_id"] == ".*"
     assert "message" in response_data
     assert response_data["message"] == "An unexpected error occurred"
+    response_headers = response.headers
+    assert response_headers.get("content-type") == "application/json"
 
 
 async def test_multiple_hooks_all_phases() -> None:
@@ -137,8 +146,8 @@ async def test_multiple_hooks_all_phases() -> None:
     client = TestClient(app)
 
     headers = {
-        "Content-Type": "application/json",
         "Authorization": "Bearer valid-token-12345",
+        "Content-Type": "application/json",
     }
     json_data = {"action": "update_profile", "user_id": "user-123"}
     response = await client.post("/api/full-lifecycle", headers=headers, json=json_data)
@@ -153,6 +162,11 @@ async def test_multiple_hooks_all_phases() -> None:
     assert response_data["request_id"] == ".*"
     assert "user_id" in response_data
     assert response_data["user_id"] == "user-123"
+    response_headers = response.headers
+    assert response_headers.get("x-request-id") == ".*"
+    assert response_headers.get("x-response-time") == ".*ms"
+    assert response_headers.get("x-frame-options") == "DENY"
+    assert response_headers.get("x-content-type-options") == "nosniff"
 
 
 async def test_hook_execution_order() -> None:
@@ -186,6 +200,8 @@ async def test_onresponse_response_timing() -> None:
     response_data = response.json()
     assert "message" in response_data
     assert response_data["message"] == "Response with timing info"
+    response_headers = response.headers
+    assert response_headers.get("x-response-time") == ".*ms"
 
 
 async def test_prehandler_authorization_forbidden_short_circuit() -> None:
@@ -223,6 +239,8 @@ async def test_onrequest_request_logging() -> None:
     assert response_data["message"] == "onRequest hooks executed"
     assert "request_logged" in response_data
     assert response_data["request_logged"] == True
+    response_headers = response.headers
+    assert response_headers.get("x-request-id") == ".*"
 
 
 async def test_prevalidation_rate_limiting() -> None:

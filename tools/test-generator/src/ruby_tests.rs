@@ -2,6 +2,8 @@
 //!
 //! Generates RSpec test files from fixtures.
 
+use crate::background::background_data;
+use crate::middleware::parse_middleware;
 use anyhow::{Context, Result};
 use serde_json::Value;
 use spikard_codegen::openapi::from_fixtures::FixtureExpectedResponse;
@@ -92,11 +94,14 @@ fn build_spec_file(category: &str, fixtures: &[Fixture]) -> String {
 
 fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String {
     let method_name = build_method_name(category, index, &fixture.name);
+    let background_info = background_data(fixture).expect("invalid background fixture");
     let request_method = fixture.request.method.to_ascii_lowercase();
     let mut query_suffix: Option<String> = None;
 
     let mut options = Vec::new();
     let streaming_info = streaming_data(fixture).expect("invalid streaming fixture");
+    let middleware = parse_middleware(fixture).expect("failed to parse middleware metadata");
+    let sanitized_headers = sanitized_expected_headers(&fixture.expected_response);
 
     if let Some(query) = fixture.request.query_params.as_ref() {
         if requires_query_string(query) {
@@ -197,21 +202,10 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
 ",
         method_name
     ));
-
-    // Generate ServerConfig if middleware is present
-    let config_code = generate_server_config(fixture);
-    if !config_code.is_empty() {
-        example.push_str(&config_code);
-        example.push_str(
-            "    client = Spikard::Testing.create_test_client(app, config: config)
+    example.push_str(
+        "    client = Spikard::Testing.create_test_client(app)
 ",
-        );
-    } else {
-        example.push_str(
-            "    client = Spikard::Testing.create_test_client(app)
-",
-        );
-    }
+    );
 
     // Use the actual request path from the fixture (which has path params substituted)
     // instead of the route template
@@ -222,12 +216,53 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
         format!("\"{}\"", base_path)
     };
 
+    let request_call = format!("client.{}({}{})", request_method, request_path_expr, options_suffix);
+
+    if let Some(rate_limit) = middleware.rate_limit.as_ref()
+        && rate_limit.warmup_requests > 0
+    {
+        example.push_str(&format!("    {}.times do\n", rate_limit.warmup_requests));
+        example.push_str(&format!("      warmup_response = {}\n", request_call));
+        let warmup_status = rate_limit.warmup_expect_status.unwrap_or(200);
+        example.push_str(&format!(
+            "      expect(warmup_response.status_code).to eq({})\n",
+            warmup_status
+        ));
+        if let Some(delay) = rate_limit.sleep_ms_between {
+            example.push_str(&format!("      sleep {}\n", format_sleep_seconds(delay)));
+        }
+        example.push_str("    end\n\n");
+    }
+
     example.push_str(&format!(
-        "    response = client.{}({}{})
+        "    response = {}
 ",
-        request_method, request_path_expr, options_suffix
+        request_call
     ));
-    example.push_str(&build_expectations(&fixture.expected_response, streaming_info.as_ref()));
+    example.push_str(&build_expectations(
+        &fixture.expected_response,
+        streaming_info.as_ref(),
+        &sanitized_headers,
+    ));
+    if let Some(bg) = background_info {
+        let expected_json =
+            serde_json::json!({ bg.state_key.clone(): serde_json::Value::Array(bg.expected_state.clone()) });
+        example.push_str(&format!("    expected_state = {}\n", value_to_ruby(&expected_json)));
+        example.push_str("    attempts = 0\n");
+        example.push_str("    actual_state = nil\n");
+        example.push_str("    begin\n");
+        example.push_str(&format!(
+            "      state_response = client.get({})\n",
+            string_literal(&bg.state_path)
+        ));
+        example.push_str("      expect(state_response.status_code).to eq(200)\n");
+        example.push_str("      actual_state = state_response.json\n");
+        example.push_str("      break if actual_state == expected_state\n");
+        example.push_str("      attempts += 1\n");
+        example.push_str("      sleep 0.02\n");
+        example.push_str("    end while attempts < 5\n");
+        example.push_str("    expect(actual_state).to eq(expected_state)\n");
+    }
     example.push_str("    client.close\n");
     example.push_str(
         "  end
@@ -289,7 +324,11 @@ fn value_to_query_pairs(key: &str, value: &Value) -> Vec<String> {
     }
 }
 
-fn build_expectations(expected: &FixtureExpectedResponse, streaming_info: Option<&StreamingFixtureData>) -> String {
+fn build_expectations(
+    expected: &FixtureExpectedResponse,
+    streaming_info: Option<&StreamingFixtureData>,
+    sanitized_headers: &HashMap<String, String>,
+) -> String {
     let mut expectations = String::new();
     expectations.push_str(&format!(
         "    expect(response.status_code).to eq({})\n",
@@ -303,6 +342,13 @@ fn build_expectations(expected: &FixtureExpectedResponse, streaming_info: Option
         if info.is_text_only {
             expectations.push_str("    expect(response.text).to eq(expected_body)\n");
         }
+        let mut headers = sanitized_headers.clone();
+        if let Some(content_type) = info.streaming.content_type.as_ref() {
+            headers.insert("content-type".to_string(), content_type.clone());
+        } else if !headers.contains_key("content-type") {
+            headers.insert("content-type".to_string(), "application/octet-stream".to_string());
+        }
+        append_header_expectations(&mut expectations, &headers);
         return expectations;
     }
 
@@ -310,10 +356,20 @@ fn build_expectations(expected: &FixtureExpectedResponse, streaming_info: Option
         expectations.push_str("    body = response.json\n");
         expectations.push_str("    expect(body).to be_a(Hash)\n");
         expectations.push_str("    expect(body.keys).to include('errors').or include('detail')\n");
+        append_header_expectations(&mut expectations, sanitized_headers);
         return expectations;
     }
 
     if let Some(body) = expected.body.as_ref() {
+        if let Some(text) = body.as_str() {
+            expectations.push_str(&format!(
+                "    expect(response.body_text).to eq({})\n",
+                string_literal(text)
+            ));
+            append_header_expectations(&mut expectations, sanitized_headers);
+            return expectations;
+        }
+
         if let Some(map) = body.as_object().filter(|map| map.contains_key("errors")) {
             expectations.push_str("    body = response.json\n");
             expectations.push_str("    expect(body).to be_a(Hash)\n");
@@ -356,12 +412,14 @@ fn build_expectations(expected: &FixtureExpectedResponse, streaming_info: Option
                 }
             }
 
+            append_header_expectations(&mut expectations, sanitized_headers);
             return expectations;
         }
 
         expectations.push_str("    expect(response.json).to eq(");
         expectations.push_str(&value_to_ruby(body));
         expectations.push_str(")\n");
+        append_header_expectations(&mut expectations, sanitized_headers);
         return expectations;
     }
 
@@ -380,6 +438,7 @@ fn build_expectations(expected: &FixtureExpectedResponse, streaming_info: Option
             }
         }
 
+        append_header_expectations(&mut expectations, sanitized_headers);
         return expectations;
     }
 
@@ -387,16 +446,41 @@ fn build_expectations(expected: &FixtureExpectedResponse, streaming_info: Option
     // skip the nil assertion - just check the status code
     if expected.status_code >= 200
         && expected.status_code < 300
-        && let Some(headers) = expected.headers.as_ref()
-        && let Some(content_type) = headers.get("content-type")
+        && let Some(content_type) = sanitized_headers.get("content-type")
         && (content_type.contains("text/html") || content_type.contains("application"))
     {
         // Don't assert about body_text for HTML/application responses
+        append_header_expectations(&mut expectations, sanitized_headers);
+        return expectations;
+    }
+
+    if expected.status_code >= 400 {
+        append_header_expectations(&mut expectations, sanitized_headers);
         return expectations;
     }
 
     expectations.push_str("    expect(response.body_text).to be_nil\n");
+    append_header_expectations(&mut expectations, sanitized_headers);
     expectations
+}
+
+fn append_header_expectations(expectations: &mut String, headers: &HashMap<String, String>) {
+    if headers.is_empty() {
+        return;
+    }
+    expectations.push_str("    response_headers = response.headers.transform_keys { |key| key.downcase }\n");
+    let mut sorted: BTreeMap<&String, &String> = BTreeMap::new();
+    for (key, value) in headers {
+        sorted.insert(key, value);
+    }
+    for (key, value) in sorted {
+        let normalized_key = key.to_ascii_lowercase();
+        expectations.push_str(&format!(
+            "    expect(response_headers[{}]).to eq({})\n",
+            string_literal(&normalized_key),
+            string_literal(value)
+        ));
+    }
 }
 
 /// Build Ruby hash representation of file uploads
@@ -459,180 +543,42 @@ fn build_files_hash(files: &[spikard_codegen::openapi::from_fixtures::FixtureFil
     format!("{{{}}}", entries.join(", "))
 }
 
-fn generate_server_config(fixture: &Fixture) -> String {
-    let middleware = match &fixture.handler {
-        Some(handler) => match &handler.middleware {
-            Some(m) => m,
-            None => {
-                // No middleware configured - disable default compression
-                let config_lines = [
-                    "    config = Spikard::ServerConfig.new".to_string(),
-                    "    config.compression = nil".to_string(),
-                ];
-                return config_lines.join("\n") + "\n";
+fn sanitized_expected_headers(expected: &FixtureExpectedResponse) -> HashMap<String, String> {
+    let mut headers = HashMap::new();
+    if let Some(map) = expected.headers.as_ref() {
+        for (key, value) in map {
+            if key.eq_ignore_ascii_case("content-encoding") {
+                continue;
             }
-        },
-        None => {
-            // No handler - disable default compression
-            let config_lines = [
-                "    config = Spikard::ServerConfig.new".to_string(),
-                "    config.compression = nil".to_string(),
-            ];
-            return config_lines.join("\n") + "\n";
-        }
-    };
-
-    let mut config_lines = Vec::new();
-    config_lines.push("    config = Spikard::ServerConfig.new".to_string());
-
-    // Disable default compression unless explicitly configured
-    let has_compression = middleware.get("compression").is_some();
-    if !has_compression {
-        config_lines.push("    config.compression = nil".to_string());
-    }
-
-    // Handle OpenAPI config
-    if let Some(openapi) = middleware.get("openapi").and_then(|v| v.as_object()) {
-        let mut openapi_params = Vec::new();
-
-        if let Some(enabled) = openapi.get("enabled").and_then(|v| v.as_bool()) {
-            openapi_params.push(format!("enabled: {}", enabled));
-        }
-        if let Some(title) = openapi.get("title").and_then(|v| v.as_str()) {
-            openapi_params.push(format!("title: {}", string_literal(title)));
-        }
-        if let Some(version) = openapi.get("version").and_then(|v| v.as_str()) {
-            openapi_params.push(format!("version: {}", string_literal(version)));
-        }
-        if let Some(description) = openapi.get("description").and_then(|v| v.as_str()) {
-            openapi_params.push(format!("description: {}", string_literal(description)));
-        }
-        if let Some(swagger_ui_path) = openapi.get("swagger_ui_path").and_then(|v| v.as_str()) {
-            openapi_params.push(format!("swagger_ui_path: {}", string_literal(swagger_ui_path)));
-        }
-        if let Some(redoc_path) = openapi.get("redoc_path").and_then(|v| v.as_str()) {
-            openapi_params.push(format!("redoc_path: {}", string_literal(redoc_path)));
-        }
-        if let Some(openapi_json_path) = openapi.get("openapi_json_path").and_then(|v| v.as_str()) {
-            openapi_params.push(format!("openapi_json_path: {}", string_literal(openapi_json_path)));
-        }
-
-        // Handle contact as hash
-        if let Some(contact) = openapi.get("contact").and_then(|v| v.as_object()) {
-            let contact_str = object_to_ruby_hash(contact);
-            openapi_params.push(format!("contact: {}", contact_str));
-        }
-
-        // Handle license as hash
-        if let Some(license) = openapi.get("license").and_then(|v| v.as_object()) {
-            let license_str = object_to_ruby_hash(license);
-            openapi_params.push(format!("license: {}", license_str));
-        }
-
-        // Handle servers as array of hashes
-        if let Some(servers) = openapi.get("servers").and_then(|v| v.as_array()) {
-            let servers_str = servers
-                .iter()
-                .filter_map(|s| s.as_object().map(object_to_ruby_hash))
-                .collect::<Vec<_>>()
-                .join(", ");
-            openapi_params.push(format!("servers: [{}]", servers_str));
-        }
-
-        if !openapi_params.is_empty() {
-            config_lines.push(format!(
-                "    config.openapi = Spikard::OpenApiConfig.new(\n      {}\n    )",
-                openapi_params.join(",\n      ")
-            ));
-        }
-    }
-
-    // Handle JWT auth config
-    if let Some(jwt_auth) = middleware.get("jwt_auth").and_then(|v| v.as_object()) {
-        // Check if enabled (default to true if not specified)
-        let enabled = jwt_auth.get("enabled").and_then(|v| v.as_bool()).unwrap_or(true);
-
-        if enabled {
-            let mut jwt_params = Vec::new();
-
-            if let Some(algorithm) = jwt_auth.get("algorithm").and_then(|v| v.as_str()) {
-                jwt_params.push(format!("algorithm: {}", string_literal(algorithm)));
-            }
-            if let Some(secret) = jwt_auth.get("secret").and_then(|v| v.as_str()) {
-                jwt_params.push(format!("secret: {}", string_literal(secret)));
-            }
-            if let Some(audience) = jwt_auth.get("audience").and_then(|v| v.as_array()) {
-                let aud_values: Vec<String> = audience.iter().filter_map(|v| v.as_str()).map(string_literal).collect();
-                if !aud_values.is_empty() {
-                    jwt_params.push(format!("audience: [{}]", aud_values.join(", ")));
-                }
-            }
-            if let Some(issuer) = jwt_auth.get("issuer").and_then(|v| v.as_str()) {
-                jwt_params.push(format!("issuer: {}", string_literal(issuer)));
-            }
-
-            if !jwt_params.is_empty() {
-                config_lines.push(format!(
-                    "    config.jwt_auth = Spikard::JwtConfig.new(\n      {}\n    )",
-                    jwt_params.join(",\n      ")
-                ));
+            if let Some(converted) = normalize_expected_header_value(value) {
+                headers.insert(key.clone(), converted);
             }
         }
     }
-
-    // Handle API key auth config
-    if let Some(api_key_auth) = middleware.get("api_key_auth").and_then(|v| v.as_object()) {
-        // Check if enabled (default to true if not specified)
-        let enabled = api_key_auth.get("enabled").and_then(|v| v.as_bool()).unwrap_or(true);
-
-        if enabled {
-            let mut api_key_params = Vec::new();
-
-            if let Some(header_name) = api_key_auth.get("header_name").and_then(|v| v.as_str()) {
-                api_key_params.push(format!("header_name: {}", string_literal(header_name)));
-            }
-            if let Some(keys) = api_key_auth.get("keys").and_then(|v| v.as_array()) {
-                let keys_str = keys
-                    .iter()
-                    .filter_map(|k| k.as_str().map(string_literal))
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                api_key_params.push(format!("keys: [{}]", keys_str));
-            }
-
-            if !api_key_params.is_empty() {
-                config_lines.push(format!(
-                    "    config.api_key_auth = Spikard::ApiKeyConfig.new(\n      {}\n    )",
-                    api_key_params.join(",\n      ")
-                ));
-            }
-        }
-    }
-
-    if config_lines.len() <= 2 {
-        // Only "config = ServerConfig.new" and possibly "config.compression = nil" were added
-        // If no other middleware, still return config to disable compression
-        if config_lines.len() == 2 && config_lines[1].contains("compression = nil") {
-            return config_lines.join("\n") + "\n";
-        }
-        return String::new();
-    }
-
-    config_lines.join("\n") + "\n"
+    headers
 }
 
-fn object_to_ruby_hash(obj: &serde_json::Map<String, Value>) -> String {
-    let entries: Vec<String> = obj
-        .iter()
-        .map(|(k, v)| {
-            let value_str = match v {
-                Value::String(s) => string_literal(s),
-                Value::Number(n) => n.to_string(),
-                Value::Bool(b) => b.to_string(),
-                _ => v.to_string(),
-            };
-            format!("{} => {}", string_literal(k), value_str)
-        })
-        .collect();
-    format!("{{{}}}", entries.join(", "))
+fn normalize_expected_header_value(raw: &str) -> Option<String> {
+    match raw {
+        "<<absent>>" => None,
+        "<<present>>" => Some("spikard-test-value".to_string()),
+        "<<uuid>>" => Some("00000000-0000-4000-8000-000000000000".to_string()),
+        _ => Some(raw.to_string()),
+    }
+}
+
+#[allow(clippy::manual_is_multiple_of)]
+fn format_sleep_seconds(ms: u64) -> String {
+    if ms % 1000 == 0 {
+        return format!("{}", ms / 1000);
+    }
+    let secs = (ms as f64) / 1000.0;
+    let mut literal = format!("{:.3}", secs);
+    while literal.contains('.') && literal.ends_with('0') {
+        literal.pop();
+    }
+    if literal.ends_with('.') {
+        literal.push('0');
+    }
+    literal
 }

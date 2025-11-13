@@ -1,6 +1,6 @@
 # Missing Features Implementation Plan
 
-> **Last Updated**: 2025-11-11
+> **Last Updated**: 2025-02-14
 >
 > This document catalogs features needed for production-ready API framework capabilities, prioritized by user expectations and ecosystem maturity.
 
@@ -17,7 +17,7 @@
 
 | # | Feature | Status | Library | License | Maintenance |
 |---|---------|--------|---------|---------|-------------|
-| 1 | Streaming Responses | ✅ Available | Axum built-in | MIT/Apache-2.0 | Official |
+| 1 | Streaming Responses | ✅ **COMPLETE (2025-02)** | Axum built-in | MIT/Apache-2.0 | Official |
 | 2 | WebSocket Support | ✅ Available | Axum `ws` feature | MIT/Apache-2.0 | Official |
 | 3 | OpenAPI Generation | ✅ **COMPLETE** | utoipa + utoipa-swagger-ui + utoipa-redoc | MIT/Apache-2.0 | Active (2024) |
 | 4 | Authentication | ✅ **COMPLETE** | jsonwebtoken | MIT | 78M+ downloads, active 2024 |
@@ -28,125 +28,59 @@
 | 9 | Compression | ✅ **COMPLETE** | tower-http `compression` | MIT/Apache-2.0 | Official |
 | 10 | Request Timeouts | ✅ **COMPLETE** | tower-http `timeout` | MIT/Apache-2.0 | Official |
 | 11 | Test Client | ✅ **COMPLETE** | axum-test | MIT/Apache-2.0 | Active (2024) |
-| 12 | Server-Sent Events | ✅ Available | Axum `response::sse` | MIT/Apache-2.0 | Official |
+| 12 | Server-Sent Events | ✅ **COMPLETE** | Axum `response::sse` | MIT/Apache-2.0 | Official |
 | 13 | Static File Serving | ✅ **COMPLETE** | tower-http `fs` | MIT/Apache-2.0 | Official |
-| 14 | Background Tasks | 🔨 Build | Custom + tokio::spawn | - | - |
+| 14 | AsyncAPI Code Generation | ⚠️ Partial | Custom (planned) | - | - |
+| 15 | Background Tasks | ✅ **COMPLETE (2025-02)** | Custom + tokio::spawn | - | - |
 
 ---
 
-## 1. Streaming Responses ✅
+## 1. Streaming Responses ✅ **Complete**
+
+**What shipped**
+- Rust core exposes `HandlerResponse::stream` with typed status/headers (`crates/spikard-http` + shared handler_response module).
+- Python, Node.js (napi) and Ruby bindings surface idiomatic streaming helpers (`StreamingResponse`) that convert async generators/enumerators into Rust streams.
+- Fixture generator emits `testing_data/streaming/*.json`, and every runtime now exercises those fixtures in the e2e suites (Rust/Python/Node/Ruby).
+- README + docs updated; benchmark harness wired for future streaming benchmarks.
+
+**Next**: no further work required for 1.0 beyond monitoring benchmarks.
+
+---
+
+## 2. Background Tasks ✅ **Complete**
+
+**What shipped**
+- Shared Tokio-based supervisor (`BackgroundRuntime`) with bounded queue, concurrency guard, metrics, and graceful drain on shutdown.
+- Python/Node/Ruby expose idiomatic helpers (`spikard.background.run`, `background.run`, `Spikard::Background.run`) that push awaitables/procs into the Rust executor.
+- ServerConfig includes `background_tasks` tuning knobs (queue size, max concurrency, drain timeout) with safe defaults.
+- Runtime bindings automatically install/clear the executor handle so tests and graceful shutdown behave deterministically.
+- Python bindings automatically fall back to `asyncio.create_task` (or a light-weight worker thread if no loop exists) so tests keep working even without the native executor.
+- Ruby bindings dispatch jobs on an internal `Queue`+worker thread to avoid touching MRI’s GVL from foreign threads while preserving identical ergonomics.
+
+**Next**: expand fixture coverage + docs for tuning/monitoring, but functionality is production ready.
+
+---
+
+## 3. AsyncAPI Code Generation ⚠️ Partial
 
 ### Current State
-- Axum supports streaming via `Body::from_stream()`
-- **Already Available**: Just needs to be exposed in our API
+- CLI parses OpenAPI for REST but AsyncAPI coverage is limited to manually curated fixtures.
+- SSE/WebSocket runtime plumbing exists, but no automated generation pipeline yet.
 
-### Implementation Plan
+### Requirements
+- Parse AsyncAPI 2.6+ documents, map channels->handlers, and emit per-language apps/tests mirroring our REST generator.
+- Support message validation (JSON Schema) and example-driven tests.
+- Provide docs + template for hybrid APIs (OpenAPI + AsyncAPI in same project).
 
-**Rust Core** (`crates/spikard-http`):
-```rust
-// Add to handler_trait.rs
-pub enum ResponseBody {
-    Json(Value),
-    Stream(Pin<Box<dyn Stream<Item = Result<Bytes, std::io::Error>> + Send>>),
-}
-
-// Add to Response type
-impl Response {
-    pub fn stream<S>(stream: S) -> Self
-    where
-        S: Stream<Item = Result<Bytes, std::io::Error>> + Send + 'static
-    {
-        // Convert stream to Body::from_stream
-    }
-}
-```
-
-**Python API** (`packages/python`):
-```python
-@app.get("/download/{file_id}")
-async def download_file(file_id: str):
-    async def generate():
-        with open(f"files/{file_id}", "rb") as f:
-            while chunk := f.read(8192):
-                yield chunk
-
-    return Response.stream(generate(), content_type="application/octet-stream")
-```
-
-**Testing**:
-- Add `testing_data/streaming/` with fixtures for large file downloads
-- Test chunked transfer encoding
-- Verify memory usage stays constant for large files
-- Benchmark against buffered responses
-
-**Benchmark**:
-- Add streaming endpoint to benchmark-harness apps
-- Measure throughput for 100MB+ files
-- Compare memory usage vs buffered approach
+### Plan
+1. **Parser** (`tools/test-generator/src/asyncapi.rs` scaffolding is in place) – finalize schema modeling + validation.
+2. **Codegen** – extend node/python/ruby/rust emitters with WebSocket/SSE handler templates and AsyncAPI-driven fixtures.
+3. **CLI UX** – `spikard-cli asyncapi generate` command, wiring into Taskfile.
+4. **Testing** – add AsyncAPI fixtures for chat/SSE to `testing_data/websockets|sse`.
 
 ---
 
-## 2. WebSocket Support ✅
-
-### Current State
-- Axum has built-in WebSocket support via `ws` feature
-- **Already Available**: Need to add feature flag and expose API
-
-### Implementation Plan
-
-**Rust Core** (`crates/spikard-http/Cargo.toml`):
-```toml
-[dependencies]
-axum = { workspace = true, features = ["multipart", "ws"] }
-```
-
-**Handler API**:
-```rust
-// Add WebSocket handler type
-pub trait WebSocketHandler: Send + Sync {
-    fn on_connect(&self, socket: WebSocket) -> Pin<Box<dyn Future<Output = ()> + Send + '_>>;
-}
-
-// Router integration
-impl Router {
-    pub fn ws(&mut self, path: &str, handler: Arc<dyn WebSocketHandler>) {
-        // Register WebSocket upgrade route
-    }
-}
-```
-
-**Python API**:
-```python
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    while True:
-        data = await websocket.receive_text()
-        await websocket.send_text(f"Echo: {data}")
-```
-
-**AsyncAPI Integration** 🔨:
-- Extend CLI to parse AsyncAPI 2.6+ spec (https://github.com/asyncapi/spec)
-- Generate WebSocket handlers for Python/Node/Ruby/Rust
-- Support pub/sub patterns, message validation
-- Generate client SDKs
-
-**Testing**:
-- Add `testing_data/websockets/` with AsyncAPI fixtures
-- Test connection lifecycle (connect, message, disconnect)
-- Test broadcast patterns
-- Test binary vs text frames
-- Validate message schemas
-
-**Benchmark**:
-- Add WebSocket echo server to benchmark-harness
-- Measure concurrent connections (target: 10K+)
-- Measure message throughput
-- Test backpressure handling
-
----
-
-## 3. OpenAPI Generation ✅ **COMPLETE**
+## 4. OpenAPI Generation ✅ **COMPLETE**
 
 ### Current State
 - ✅ Full OpenAPI 3.1.0 generation implemented

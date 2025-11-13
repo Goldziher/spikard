@@ -1,0 +1,27 @@
+{
+	"name": "Rate limit below threshold succeeds",
+	"description": "Verifies that requests below the configured rate limit are served normally.",
+	"category": "rate_limit",
+	"handler": {
+		"route": "/rate-limit/basic",
+		"method": "GET",
+		"middleware": {
+			"rate_limit": {
+				"per_second": 5,
+				"burst": 5
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/rate-limit/basic"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"status": "ok",
+			"request": "under-limit"
+		}
+	},
+	"tags": ["rate_limit", "middleware"]
+}

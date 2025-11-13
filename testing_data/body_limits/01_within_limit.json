@@ -1,0 +1,37 @@
+{
+	"name": "Body under limit succeeds",
+	"description": "Ensures requests smaller than the configured body limit are accepted.",
+	"category": "body_limits",
+	"handler": {
+		"route": "/body-limit/under",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"note": { "type": "string" }
+			},
+			"required": ["note"],
+			"additionalProperties": false
+		},
+		"middleware": {
+			"body_limit": {
+				"max_bytes": 64
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/body-limit/under",
+		"body": {
+			"note": "small"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"accepted": true,
+			"note": "small"
+		}
+	},
+	"tags": ["body_limit", "middleware"]
+}

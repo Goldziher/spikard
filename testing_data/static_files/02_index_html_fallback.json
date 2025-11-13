@@ -1,0 +1,39 @@
+{
+	"name": "Static server returns index.html for directory",
+	"description": "When index files are enabled the server should serve index.html when the directory root is requested.",
+	"category": "static_files",
+	"handler": {
+		"route": "/app",
+		"method": "GET",
+		"middleware": {
+			"static_files": [
+				{
+					"route_prefix": "/app",
+					"index_file": true,
+					"files": [
+						{
+							"path": "index.html",
+							"content": "<!doctype html><h1>Welcome</h1>"
+						},
+						{
+							"path": "styles/main.css",
+							"content": "h1 { color: #336699; }"
+						}
+					]
+				}
+			]
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/app/"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": "<!doctype html><h1>Welcome</h1>",
+		"headers": {
+			"content-type": "text/html"
+		}
+	},
+	"tags": ["static_files", "index", "middleware"]
+}

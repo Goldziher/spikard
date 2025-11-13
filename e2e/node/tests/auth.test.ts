@@ -85,6 +85,8 @@ describe("auth", () => {
 		expect(responseData.data).toBe("sensitive information");
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Access granted");
+		const responseHeaders = response.headers();
+		expect(responseHeaders["x-api-key-deprecated"]).toBe("true");
 	});
 
 	test("JWT invalid issuer", async () => {

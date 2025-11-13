@@ -54,6 +54,8 @@ async def test_xml_response_application_xml() -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert response_data == '<?xml version="1.0"?><item><name>Item</name><price>42.0</price></item>'
+    response_headers = response.headers
+    assert response_headers.get("content-type") == "application/xml"
 
 
 async def test_14_content_type_case_insensitive() -> None:
@@ -88,6 +90,8 @@ async def test_json_with_utf_8_charset() -> None:
     assert response_data["emoji"] == "☕"
     assert "name" in response_data
     assert response_data["name"] == "Café"
+    response_headers = response.headers
+    assert response_headers.get("content-type") == "application/json; charset=utf-8"
 
 
 async def test_16_text_plain_not_accepted() -> None:
@@ -119,6 +123,9 @@ async def test_pdf_response_application_pdf() -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert response_data == "pdf_binary_data"
+    response_headers = response.headers
+    assert response_headers.get("content-disposition") == "attachment; filename=document.pdf"
+    assert response_headers.get("content-type") == "application/pdf"
 
 
 async def test_20_content_length_mismatch() -> None:
@@ -190,6 +197,8 @@ async def test_json_response_application_json() -> None:
     assert response_data["name"] == "Item"
     assert "price" in response_data
     assert response_data["price"] == 42.0
+    response_headers = response.headers
+    assert response_headers.get("content-type") == "application/json"
 
 
 async def test_15_multipart_boundary_required() -> None:
@@ -226,6 +235,8 @@ async def test_content_negotiation_accept_header() -> None:
     assert response_data["id"] == 1
     assert "name" in response_data
     assert response_data["name"] == "Item"
+    response_headers = response.headers
+    assert response_headers.get("content-type") == "application/json"
 
 
 async def test_html_response_text_html() -> None:
@@ -238,6 +249,8 @@ async def test_html_response_text_html() -> None:
 
     assert response.status_code == 200
     assert response.text() == "<html><body><h1>Hello</h1></body></html>"
+    response_headers = response.headers
+    assert response_headers.get("content-type") == "text/html; charset=utf-8"
 
 
 async def test_jpeg_image_response_image_jpeg() -> None:
@@ -251,6 +264,8 @@ async def test_jpeg_image_response_image_jpeg() -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert response_data == "jpeg_binary_data"
+    response_headers = response.headers
+    assert response_headers.get("content-type") == "image/jpeg"
 
 
 async def test_19_missing_content_type_default_json() -> None:
@@ -279,6 +294,8 @@ async def test_png_image_response_image_png() -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert response_data == "png_binary_data"
+    response_headers = response.headers
+    assert response_headers.get("content-type") == "image/png"
 
 
 async def test_plain_text_response_text_plain() -> None:
@@ -291,6 +308,8 @@ async def test_plain_text_response_text_plain() -> None:
 
     assert response.status_code == 200
     assert response.text() == "Hello, World!"
+    response_headers = response.headers
+    assert response_headers.get("content-type") == "text/plain; charset=utf-8"
 
 
 async def test_18_content_type_with_multiple_params() -> None:
@@ -321,6 +340,9 @@ async def test_csv_response_text_csv() -> None:
 
     assert response.status_code == 200
     assert response.text() == "id,name,price\n1,Item A,10.0\n2,Item B,20.0"
+    response_headers = response.headers
+    assert response_headers.get("content-disposition") == "attachment; filename=data.csv"
+    assert response_headers.get("content-type") == "text/csv; charset=utf-8"
 
 
 async def test_binary_response_application_octet_stream() -> None:
@@ -334,3 +356,6 @@ async def test_binary_response_application_octet_stream() -> None:
     assert response.status_code == 200
     response_data = response.json()
     assert response_data == "binary_data_placeholder"
+    response_headers = response.headers
+    assert response_headers.get("content-type") == "application/octet-stream"
+    assert response_headers.get("content-disposition") == "attachment; filename=file.bin"

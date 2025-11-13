@@ -1,0 +1,35 @@
+{
+	"name": "Compression - payload below min_size is not compressed",
+	"description": "Ensures responses smaller than the configured min_size are sent uncompressed even when the client sends Accept-Encoding.",
+	"category": "compression",
+	"handler": {
+		"route": "/compression/skip",
+		"method": "GET",
+		"middleware": {
+			"compression": {
+				"gzip": true,
+				"brotli": false,
+				"min_size": 4096,
+				"quality": 6
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/compression/skip",
+		"headers": {
+			"Accept-Encoding": "gzip"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"message": "Small payload",
+			"payload": "tiny"
+		},
+		"headers": {
+			"content-encoding": "<<absent>>"
+		}
+	},
+	"tags": ["compression", "gzip", "min_size"]
+}

@@ -3,17 +3,17 @@
 
 #[cfg(test)]
 mod lifecycle_hooks {
+    use axum::body::Body;
+    use axum::http::Request;
+    use axum_test::TestServer;
+    use serde_json::Value;
+    use spikard_http::testing::snapshot_response;
 
     #[tokio::test]
     async fn test_lifecycle_hooks_hook_execution_order() {
         // Fixture: Hook Execution Order
         // Description: Test that multiple hooks of the same type execute in registration order
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/lifecycle_hooks/12-hook-execution-order.json")
@@ -272,16 +272,11 @@ mod lifecycle_hooks {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -289,11 +284,6 @@ mod lifecycle_hooks {
         // Fixture: Multiple Hooks - All Phases
         // Description: Test multiple lifecycle hooks across all five phases for a complete request lifecycle
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -553,16 +543,32 @@ mod lifecycle_hooks {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("x-content-type-options") {
+            assert_eq!(actual, "nosniff", "Mismatched header 'X-Content-Type-Options'");
+        } else {
+            panic!("Expected header 'X-Content-Type-Options' to be present");
+        }
+        if let Some(actual) = headers.get("x-frame-options") {
+            assert_eq!(actual, "DENY", "Mismatched header 'X-Frame-Options'");
+        } else {
+            panic!("Expected header 'X-Frame-Options' to be present");
+        }
+        if let Some(actual) = headers.get("x-response-time") {
+            assert_eq!(actual, ".*ms", "Mismatched header 'X-Response-Time'");
+        } else {
+            panic!("Expected header 'X-Response-Time' to be present");
+        }
+        if let Some(actual) = headers.get("x-request-id") {
+            assert_eq!(actual, ".*", "Mismatched header 'X-Request-ID'");
+        } else {
+            panic!("Expected header 'X-Request-ID' to be present");
+        }
     }
 
     #[tokio::test]
@@ -570,11 +576,6 @@ mod lifecycle_hooks {
         // Fixture: onError - Error Logging
         // Description: Test onError hook that logs server errors and formats error responses
         // Expected status: 500
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/lifecycle_hooks/10-on-error-logging.json")
@@ -833,16 +834,17 @@ mod lifecycle_hooks {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(500).unwrap(),
-            "Expected status 500, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 500, "Expected status 500, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-type") {
+            assert_eq!(actual, "application/json", "Mismatched header 'Content-Type'");
+        } else {
+            panic!("Expected header 'Content-Type' to be present");
+        }
     }
 
     #[tokio::test]
@@ -850,11 +852,6 @@ mod lifecycle_hooks {
         // Fixture: onRequest - Request Logging
         // Description: Test onRequest hook that logs incoming requests and adds a request ID
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/lifecycle_hooks/01-on-request-logging.json")
@@ -1113,16 +1110,17 @@ mod lifecycle_hooks {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("x-request-id") {
+            assert_eq!(actual, ".*", "Mismatched header 'X-Request-ID'");
+        } else {
+            panic!("Expected header 'X-Request-ID' to be present");
+        }
     }
 
     #[tokio::test]
@@ -1130,11 +1128,6 @@ mod lifecycle_hooks {
         // Fixture: onResponse - Response Timing
         // Description: Test onResponse hook that adds timing information to response headers
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/lifecycle_hooks/09-on-response-timing.json")
@@ -1393,16 +1386,17 @@ mod lifecycle_hooks {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("x-response-time") {
+            assert_eq!(actual, ".*ms", "Mismatched header 'X-Response-Time'");
+        } else {
+            panic!("Expected header 'X-Response-Time' to be present");
+        }
     }
 
     #[tokio::test]
@@ -1410,11 +1404,6 @@ mod lifecycle_hooks {
         // Fixture: onResponse - Security Headers
         // Description: Test onResponse hook that adds security headers to all responses
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -1674,16 +1663,35 @@ mod lifecycle_hooks {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("x-frame-options") {
+            assert_eq!(actual, "DENY", "Mismatched header 'X-Frame-Options'");
+        } else {
+            panic!("Expected header 'X-Frame-Options' to be present");
+        }
+        if let Some(actual) = headers.get("x-content-type-options") {
+            assert_eq!(actual, "nosniff", "Mismatched header 'X-Content-Type-Options'");
+        } else {
+            panic!("Expected header 'X-Content-Type-Options' to be present");
+        }
+        if let Some(actual) = headers.get("x-xss-protection") {
+            assert_eq!(actual, "1; mode=block", "Mismatched header 'X-XSS-Protection'");
+        } else {
+            panic!("Expected header 'X-XSS-Protection' to be present");
+        }
+        if let Some(actual) = headers.get("strict-transport-security") {
+            assert_eq!(
+                actual, "max-age=31536000; includeSubDomains",
+                "Mismatched header 'Strict-Transport-Security'"
+            );
+        } else {
+            panic!("Expected header 'Strict-Transport-Security' to be present");
+        }
     }
 
     #[tokio::test]
@@ -1691,11 +1699,6 @@ mod lifecycle_hooks {
         // Fixture: preHandler - Authentication Failed (Short Circuit)
         // Description: Test preHandler hook that short-circuits on invalid authentication
         // Expected status: 401
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -1955,16 +1958,11 @@ mod lifecycle_hooks {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(401).unwrap(),
-            "Expected status 401, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1972,11 +1970,6 @@ mod lifecycle_hooks {
         // Fixture: preHandler - Authentication Success
         // Description: Test preHandler hook that validates authentication tokens
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -2236,16 +2229,11 @@ mod lifecycle_hooks {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2253,11 +2241,6 @@ mod lifecycle_hooks {
         // Fixture: preHandler - Authorization Check
         // Description: Test preHandler hook for role-based authorization after authentication
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -2517,16 +2500,11 @@ mod lifecycle_hooks {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2534,11 +2512,6 @@ mod lifecycle_hooks {
         // Fixture: preHandler - Authorization Forbidden (Short Circuit)
         // Description: Test preHandler hook that denies access for insufficient permissions
         // Expected status: 403
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -2798,16 +2771,11 @@ mod lifecycle_hooks {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(403).unwrap(),
-            "Expected status 403, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 403, "Expected status 403, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2815,11 +2783,6 @@ mod lifecycle_hooks {
         // Fixture: preValidation - Rate Limit Exceeded (Short Circuit)
         // Description: Test preValidation hook that short-circuits when rate limit is exceeded
         // Expected status: 429
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -3079,16 +3042,17 @@ mod lifecycle_hooks {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(429).unwrap(),
-            "Expected status 429, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 429, "Expected status 429, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("retry-after") {
+            assert_eq!(actual, "60", "Mismatched header 'Retry-After'");
+        } else {
+            panic!("Expected header 'Retry-After' to be present");
+        }
     }
 
     #[tokio::test]
@@ -3096,11 +3060,6 @@ mod lifecycle_hooks {
         // Fixture: preValidation - Rate Limiting
         // Description: Test preValidation hook that implements rate limiting before validation
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -3360,15 +3319,10 @@ mod lifecycle_hooks {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 }

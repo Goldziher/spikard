@@ -3,17 +3,17 @@
 
 #[cfg(test)]
 mod edge_cases {
+    use axum::body::Body;
+    use axum::http::Request;
+    use axum_test::TestServer;
+    use serde_json::Value;
+    use spikard_http::testing::snapshot_response;
 
     #[tokio::test]
     async fn test_edge_cases_11_utf8_query_parameter() {
         // Fixture: 11_utf8_query_parameter
         // Description: Query parameter with UTF-8 characters should be handled correctly
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/edge_cases/11_utf8_query_parameter.json")
@@ -272,16 +272,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -289,11 +284,6 @@ mod edge_cases {
         // Fixture: 12_percent_encoded_special_chars
         // Description: Percent-encoded special characters should be decoded correctly
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -553,16 +543,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -570,11 +555,6 @@ mod edge_cases {
         // Fixture: 13_empty_string_query_param_preserved
         // Description: Empty string query parameter should be preserved, not treated as missing
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -834,16 +814,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -851,11 +826,6 @@ mod edge_cases {
         // Fixture: 14_large_integer_boundary
         // Description: Very large integer at JavaScript MAX_SAFE_INTEGER boundary should be handled
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/edge_cases/14_large_integer_boundary.json")
@@ -1114,16 +1084,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1131,11 +1096,6 @@ mod edge_cases {
         // Fixture: 15_float_precision_preservation
         // Description: High-precision floating point numbers should be preserved without loss
         // Expected status: 201
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -1395,16 +1355,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(201).unwrap(),
-            "Expected status 201, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1412,11 +1367,6 @@ mod edge_cases {
         // Fixture: 16_negative_zero_handling
         // Description: Negative zero (-0.0) should be handled correctly in numeric fields
         // Expected status: 201
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/edge_cases/16_negative_zero_handling.json")
@@ -1675,16 +1625,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(201).unwrap(),
-            "Expected status 201, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1692,11 +1637,6 @@ mod edge_cases {
         // Fixture: 17_extremely_long_string
         // Description: Very long string values should be validated against maxLength
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/edge_cases/17_extremely_long_string.json")
@@ -1955,16 +1895,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1972,11 +1907,6 @@ mod edge_cases {
         // Fixture: 18_unicode_normalization
         // Description: Unicode characters with combining diacritics should be handled correctly
         // Expected status: 201
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/edge_cases/18_unicode_normalization.json")
@@ -2235,16 +2165,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(201).unwrap(),
-            "Expected status 201, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2252,11 +2177,6 @@ mod edge_cases {
         // Fixture: 19_emoji_in_strings
         // Description: Emoji characters should be handled correctly in string fields
         // Expected status: 201
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/edge_cases/19_emoji_in_strings.json")
@@ -2515,16 +2435,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(201).unwrap(),
-            "Expected status 201, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2532,11 +2447,6 @@ mod edge_cases {
         // Fixture: 20_null_byte_in_string
         // Description: Null byte character in strings should be rejected for security
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/edge_cases/20_null_byte_in_string.json")
@@ -2795,16 +2705,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2812,11 +2717,6 @@ mod edge_cases {
         // Fixture: 21_scientific_notation_number
         // Description: Numbers in scientific notation should be parsed correctly
         // Expected status: 201
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/edge_cases/21_scientific_notation_number.json")
@@ -3075,16 +2975,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(201).unwrap(),
-            "Expected status 201, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3092,11 +2987,6 @@ mod edge_cases {
         // Fixture: 22_leading_zeros_integer
         // Description: Integer values with leading zeros should be parsed as decimal (not octal)
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/edge_cases/22_leading_zeros_integer.json")
@@ -3355,16 +3245,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3372,11 +3257,6 @@ mod edge_cases {
         // Fixture: 23_deeply_nested_json_limit
         // Description: Extremely deeply nested JSON should be rejected to prevent DoS
         // Expected status: 400
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/edge_cases/23_deeply_nested_json_limit.json")
@@ -3635,16 +3515,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(400).unwrap(),
-            "Expected status 400, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 400, "Expected status 400, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3652,11 +3527,6 @@ mod edge_cases {
         // Fixture: 24_array_with_holes
         // Description: Array indices with gaps should be rejected in form data
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/edge_cases/24_array_with_holes.json")
@@ -3915,16 +3785,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3932,11 +3797,6 @@ mod edge_cases {
         // Fixture: Deeply nested structure (10+ levels)
         // Description: Tests handling of deeply nested JSON objects
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/edge_cases/04_deeply_nested_structure.json")
@@ -4195,16 +4055,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -4212,11 +4067,6 @@ mod edge_cases {
         // Fixture: Empty and null value handling
         // Description: Tests distinction between null, empty, and missing values
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/edge_cases/06_empty_and_null_values.json")
@@ -4475,16 +4325,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -4492,11 +4337,6 @@ mod edge_cases {
         // Fixture: Float precision and rounding
         // Description: Tests floating point precision and rounding behavior
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/edge_cases/03_float_precision.json")
@@ -4755,16 +4595,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -4772,11 +4607,6 @@ mod edge_cases {
         // Fixture: Large integer boundary values
         // Description: Tests handling of very large integer values near system limits
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/edge_cases/02_large_integer_boundaries.json")
@@ -5035,16 +4865,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -5052,11 +4877,6 @@ mod edge_cases {
         // Fixture: Special string values and escaping
         // Description: Tests handling of special characters, null bytes, and escape sequences
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/edge_cases/05_special_string_values.json")
@@ -5315,16 +5135,11 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -5332,11 +5147,6 @@ mod edge_cases {
         // Fixture: Unicode and emoji handling
         // Description: Tests proper handling of Unicode characters and emojis
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/edge_cases/01_unicode_emoji_handling.json")
@@ -5595,15 +5405,10 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 }

@@ -530,9 +530,9 @@ pub fn generate_nodejs_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Re
         }
     }
 
-    code.push_str("import { readFileSync } from 'fs';\n");
-    code.push_str("import { join, dirname } from 'path';\n");
-    code.push_str("import { fileURLToPath } from 'url';\n\n");
+    code.push_str("import { readFileSync } from 'node:fs';\n");
+    code.push_str("import { join, dirname } from 'node:path';\n");
+    code.push_str("import { fileURLToPath } from 'node:url';\n\n");
 
     // Extract channels and operations
     let channels = extract_channel_info(spec)?;

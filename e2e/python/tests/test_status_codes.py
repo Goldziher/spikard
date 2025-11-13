@@ -44,6 +44,8 @@ async def test_408_request_timeout() -> None:
     response_data = response.json()
     assert "detail" in response_data
     assert response_data["detail"] == "Request timeout"
+    response_headers = response.headers
+    assert response_headers.get("connection") == "close"
 
 
 async def test_404_not_found_resource_not_found() -> None:
@@ -72,6 +74,8 @@ async def test_503_service_unavailable_server_overload() -> None:
     response_data = response.json()
     assert "detail" in response_data
     assert response_data["detail"] == "Service temporarily unavailable"
+    response_headers = response.headers
+    assert response_headers.get("retry-after") == "120"
 
 
 async def test_422_unprocessable_entity_validation_error() -> None:
@@ -101,6 +105,8 @@ async def test_302_found_temporary_redirect() -> None:
     response = await client.get("/temp-redirect")
 
     assert response.status_code == 302
+    response_headers = response.headers
+    assert response_headers.get("location") == "/target-path"
 
 
 async def test_304_not_modified_cached_content_valid() -> None:
@@ -166,6 +172,8 @@ async def test_301_moved_permanently_permanent_redirect() -> None:
     response = await client.get("/old-path")
 
     assert response.status_code == 301
+    response_headers = response.headers
+    assert response_headers.get("location") == "/new-path"
 
 
 async def test_201_created_resource_created() -> None:
@@ -222,6 +230,8 @@ async def test_307_temporary_redirect_method_preserved() -> None:
 
     assert response.status_code == 307
     response_data = response.json()
+    response_headers = response.headers
+    assert response_headers.get("location") == "/target-post"
 
 
 async def test_500_internal_server_error_server_error() -> None:
@@ -268,6 +278,8 @@ async def test_401_unauthorized_missing_authentication() -> None:
     response_data = response.json()
     assert "detail" in response_data
     assert response_data["detail"] == "Not authenticated"
+    response_headers = response.headers
+    assert response_headers.get("www-authenticate") == "Bearer"
 
 
 async def test_23_503_service_unavailable() -> None:
@@ -284,6 +296,8 @@ async def test_23_503_service_unavailable() -> None:
     assert response_data["error"] == "Service Unavailable"
     assert "message" in response_data
     assert response_data["message"] == "The service is temporarily unavailable. Please try again later."
+    response_headers = response.headers
+    assert response_headers.get("retry-after") == "60"
 
 
 async def test_19_413_payload_too_large() -> None:
@@ -351,6 +365,11 @@ async def test_429_too_many_requests() -> None:
     response_data = response.json()
     assert "detail" in response_data
     assert response_data["detail"] == "Rate limit exceeded. Try again in 60 seconds."
+    response_headers = response.headers
+    assert response_headers.get("x-ratelimit-remaining") == "0"
+    assert response_headers.get("retry-after") == "60"
+    assert response_headers.get("x-ratelimit-reset") == "1609459200"
+    assert response_headers.get("x-ratelimit-limit") == "100"
 
 
 async def test_200_ok_success() -> None:
@@ -383,3 +402,8 @@ async def test_206_partial_content() -> None:
     assert response.status_code == 206
     response_data = response.json()
     assert response_data == "binary_data_1024_bytes"
+    response_headers = response.headers
+    assert response_headers.get("content-type") == "application/pdf"
+    assert response_headers.get("accept-ranges") == "bytes"
+    assert response_headers.get("content-range") == "bytes 0-1023/5000"
+    assert response_headers.get("content-length") == "1024"

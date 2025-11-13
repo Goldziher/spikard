@@ -2,6 +2,8 @@
 //!
 //! Generates vitest test suites from fixtures for e2e testing.
 
+use crate::background::background_data;
+use crate::middleware::parse_middleware;
 use crate::streaming::streaming_data;
 use anyhow::{Context, Result, ensure};
 use base64::Engine;
@@ -42,6 +44,9 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
 
     // Generate test file for each category
     for (category, fixtures) in fixtures_by_category.iter() {
+        if category == "background" {
+            continue;
+        }
         let test_content = generate_test_file(category, fixtures)?;
         let test_file = tests_dir.join(format!("{}.test.ts", category));
         fs::write(&test_file, test_content).with_context(|| format!("Failed to write test file for {}", category))?;
@@ -104,6 +109,8 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     let test_name = sanitize_test_name(&fixture.name);
     let mut code = String::new();
     let streaming_info = streaming_data(fixture)?;
+    let background_info = background_data(fixture)?;
+    let middleware = parse_middleware(fixture)?;
 
     // Test function header
     code.push_str(&format!("\ttest(\"{}\", async () => {{\n", test_name));
@@ -217,41 +224,31 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         path.clone()
     };
 
-    let has_options = !option_fields.is_empty();
-    if method == "get" || method == "delete" {
-        if has_options {
-            if option_fields.len() == 1 && option_fields[0] == "headers" {
-                code.push_str(&format!(
-                    "\t\tconst response = await client.{}(\"{}\", headers);\n\n",
-                    method, path_with_query
-                ));
-            } else {
-                code.push_str(&format!(
-                    "\t\tconst response = await client.{}(\"{}\", {{ {} }});\n\n",
-                    method,
-                    path_with_query,
-                    option_fields.join(", ")
-                ));
-            }
-        } else {
+    let request_call = build_request_call(&method, &path_with_query, &option_fields);
+
+    if let Some(rate_limit) = middleware.rate_limit.as_ref()
+        && rate_limit.warmup_requests > 0
+    {
+        code.push_str(&format!(
+            "\t\tfor (let i = 0; i < {}; i += 1) {{\n",
+            rate_limit.warmup_requests
+        ));
+        code.push_str(&format!("\t\t\tconst warmupResponse = {};\n", request_call));
+        let warmup_status = rate_limit.warmup_expect_status.unwrap_or(200);
+        code.push_str(&format!(
+            "\t\t\texpect(warmupResponse.statusCode).toBe({});\n",
+            warmup_status
+        ));
+        if let Some(delay) = rate_limit.sleep_ms_between {
             code.push_str(&format!(
-                "\t\tconst response = await client.{}(\"{}\");\n\n",
-                method, path_with_query
+                "\t\t\tawait new Promise((resolve) => setTimeout(resolve, {}));\n",
+                delay
             ));
         }
-    } else if has_options {
-        code.push_str(&format!(
-            "\t\tconst response = await client.{}(\"{}\", {{ {} }});\n\n",
-            method,
-            path_with_query,
-            option_fields.join(", ")
-        ));
-    } else {
-        code.push_str(&format!(
-            "\t\tconst response = await client.{}(\"{}\");\n\n",
-            method, path_with_query
-        ));
+        code.push_str("\t\t}\n\n");
     }
+
+    code.push_str(&format!("\t\tconst response = {};\n\n", request_call));
 
     if let Some(stream_info) = streaming_info.as_ref() {
         let expected_base64 = BASE64_STANDARD.encode(&stream_info.expected_bytes);
@@ -274,6 +271,22 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     ));
 
     let status_code = fixture.expected_response.status_code;
+
+    if let Some(bg) = background_info.as_ref() {
+        code.push_str(&format!(
+            "\t\tconst stateResponse = await client.get(\"{}\");\n",
+            bg.state_path
+        ));
+        code.push_str("\t\texpect(stateResponse.statusCode).toBe(200);\n");
+        let expected_body =
+            serde_json::json!({ bg.state_key.clone(): serde_json::Value::Array(bg.expected_state.clone()) });
+        code.push_str(&format!(
+            "\t\texpect(stateResponse.json()).toStrictEqual({});\n",
+            json_to_typescript(&expected_body)
+        ));
+        code.push_str("\t});\n");
+        return Ok(code);
+    }
 
     // Different assertion strategies based on status code
     if status_code == 200 {
@@ -311,16 +324,34 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         let requires_response_data =
             has_expected_body || has_request_body || has_form_data || has_data_entries || has_query_params;
 
-        if requires_response_data {
+        let needs_response_text = category == "static_files"
+            && fixture
+                .expected_response
+                .body
+                .as_ref()
+                .map(|body| body.is_string())
+                .unwrap_or(false);
+        let should_parse_json = !needs_response_text && (method != "head" || fixture.expected_response.body.is_some());
+
+        if requires_response_data && should_parse_json {
             code.push_str("\t\tconst responseData = response.json();\n");
+        } else if needs_response_text {
+            code.push_str("\t\tconst responseText = response.text();\n");
         }
 
         // If fixture has expected response body, assert against that
         if let Some(ref expected_body) = fixture.expected_response.body {
             let expected_body_is_empty = is_value_effectively_empty(expected_body);
             if !expected_body_is_empty {
-                generate_body_assertions(&mut code, expected_body, "responseData", 2, status_code >= 400);
-            } else if requires_response_data {
+                if needs_response_text {
+                    code.push_str(&format!(
+                        "\t\texpect(responseText).toBe({});\n",
+                        json_to_typescript(expected_body)
+                    ));
+                } else {
+                    generate_body_assertions(&mut code, expected_body, "responseData", 2, status_code >= 400);
+                }
+            } else if requires_response_data && should_parse_json {
                 // Fallback: verify echoed parameters match what we sent
                 if let Some(ref body) = fixture.request.body {
                     generate_echo_assertions(&mut code, body, "responseData", 2);
@@ -348,7 +379,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                     }
                 }
             }
-        } else if requires_response_data {
+        } else if requires_response_data && should_parse_json {
             // Fallback: verify echoed parameters match what we sent
             if let Some(ref body) = fixture.request.body {
                 generate_echo_assertions(&mut code, body, "responseData", 2);
@@ -386,6 +417,32 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         {
             code.push_str("\t\tconst responseData = response.json();\n");
             generate_body_assertions(&mut code, body, "responseData", 2, false);
+        }
+    }
+
+    if let Some(headers) = fixture.expected_response.headers.as_ref().filter(|map| !map.is_empty()) {
+        code.push_str("\t\tconst responseHeaders = response.headers();\n");
+        for (key, value) in headers.iter() {
+            let lower_key = key.to_ascii_lowercase();
+            let header_access = format_property_access("responseHeaders", &lower_key);
+            match value.as_str() {
+                "<<uuid>>" => {
+                    code.push_str(&format!(
+                        "\t\texpect({}).toMatch(/^[0-9a-fA-F-]{{36}}$/);\n",
+                        header_access
+                    ));
+                }
+                "<<present>>" => {
+                    code.push_str(&format!("\t\texpect({}).not.toBeUndefined();\n", header_access));
+                }
+                "<<absent>>" => {
+                    code.push_str(&format!("\t\texpect({}).toBeUndefined();\n", header_access));
+                }
+                _ => {
+                    let escaped_value = escape_string(value);
+                    code.push_str(&format!("\t\texpect({}).toBe(\"{}\");\n", header_access, escaped_value));
+                }
+            }
         }
     }
 
@@ -832,5 +889,23 @@ fn capitalize(s: &str) -> String {
     match chars.next() {
         None => String::new(),
         Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+    }
+}
+fn build_request_call(method: &str, path_with_query: &str, option_fields: &[&str]) -> String {
+    let has_options = !option_fields.is_empty();
+    let joined = option_fields.join(", ");
+
+    if (method == "get" || method == "delete")
+        && has_options
+        && option_fields.len() == 1
+        && option_fields[0] == "headers"
+    {
+        return format!("await client.{}(\"{}\", headers)", method, path_with_query);
+    }
+
+    if has_options {
+        format!("await client.{}(\"{}\", {{ {} }})", method, path_with_query, joined)
+    } else {
+        format!("await client.{}(\"{}\")", method, path_with_query)
     }
 }

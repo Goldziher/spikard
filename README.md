@@ -36,7 +36,7 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - [x] WebSocket support
 - [x] Server-Sent Events (SSE)
 - [x] Streaming responses (Rust, Python, Node.js, Ruby)
-- [ ] Background tasks
+- [x] Background task runner (fire-and-forget jobs)
 
 ### Language Bindings
 - [x] Python (PyO3) - Full support with `ServerConfig`
@@ -63,6 +63,10 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - [x] Performance benchmarks (Python, Node, Ruby, Rust)
 - [ ] WebSocket benchmarks
 - [ ] SSE benchmarks
+
+### Roadmap To v1.0
+
+The last big blocker before tagging v1.0 is **AsyncAPI-first codegen** (WebSocket/SSE handlers + CLI integration). Track progress in `MISSING_FEATURES.md`.
 
 ## Structure
 
@@ -276,6 +280,42 @@ async def csv_report():
 - **Ruby:** `Spikard::StreamingResponse.new(Enumerator.new { |y| y << chunk }, status_code: 200, headers: { "content-type" => "application/octet-stream" })`.
 
 The test clients expose `response.body_bytes`, `response.text`, and `response.json` so you can assert on the accumulated stream just like in the fixture-driven suites.
+
+### Background Tasks
+
+Kick off non-blocking work from handlers without holding the request open. Tasks are queued on a per-process executor with bounded concurrency and drain automatically during shutdown.
+
+```python
+from spikard import background
+
+@app.post("/events")
+async def ingest(event: Event):
+    background.run(process_event(event))
+    return {"status": "accepted"}
+```
+
+```typescript
+import { background } from "@spikard/node";
+
+app.post("/audit", async (req) => {
+	background.run(async () => {
+		await auditStore.write(req.body);
+	});
+	return { status: "queued" };
+});
+```
+
+```ruby
+Spikard::Background.run do
+  AuditLogger.write(event)
+end
+```
+
+Each runtime shares the same semantics: tasks run concurrently (capped via `background_tasks` config), errors are logged, and a graceful shutdown waits up to `drain_timeout_secs` before cancelling remaining work.
+
+- **Python** falls back to `asyncio.create_task` (or a lightweight worker thread if no loop is running) whenever the native executor isn't installed (e.g., unit tests). On the server the Rust runtime drains tasks before shutdown.
+- **Node.js** always enqueues into the shared Rust executor; async iterators/generators are converted into Tokio futures under the hood.
+- **Ruby** enqueues work on an internal `Queue` + worker thread so procs can run without touching MRI's GVL from foreign threads; the API stays identical whether you run in tests or in production.
 
 ### OpenAPI Documentation
 

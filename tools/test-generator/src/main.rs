@@ -4,6 +4,8 @@
 //! Generates test applications and test suites for Rust, Python, and TypeScript.
 
 mod asyncapi;
+mod background;
+mod middleware;
 mod node_app;
 mod node_tests;
 mod python_app;

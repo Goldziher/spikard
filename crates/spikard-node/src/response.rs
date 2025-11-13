@@ -10,7 +10,7 @@ use napi::threadsafe_function::ThreadsafeFunction;
 use napi_derive::napi;
 use once_cell::sync::Lazy;
 use serde_json::Value;
-use spikard_http::HandlerResponse;
+use spikard_http::{HandlerResponse, testing::ResponseSnapshot};
 use std::collections::HashMap;
 use std::io;
 use std::str::FromStr;
@@ -27,10 +27,18 @@ pub struct TestResponse {
 
 #[napi]
 impl TestResponse {
-    /// Create a new response
-    #[allow(dead_code)]
-    pub(crate) fn new(status: u16, headers: serde_json::Map<String, Value>, body: Vec<u8>) -> Self {
-        Self { status, headers, body }
+    /// Construct a response from a shared snapshot.
+    pub(crate) fn from_snapshot(snapshot: ResponseSnapshot) -> Self {
+        let mut header_map = serde_json::Map::new();
+        for (key, value) in snapshot.headers {
+            header_map.insert(key, Value::String(value));
+        }
+
+        Self {
+            status: snapshot.status,
+            headers: header_map,
+            body: snapshot.body,
+        }
     }
 
     /// Get the HTTP status code

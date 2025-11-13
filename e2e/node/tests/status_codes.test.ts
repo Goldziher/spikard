@@ -43,6 +43,8 @@ describe("status_codes", () => {
 		const response = await client.post("/slow-endpoint", { headers, json });
 
 		expect(response.statusCode).toBe(408);
+		const responseHeaders = response.headers();
+		expect(responseHeaders.connection).toBe("close");
 	});
 
 	test("404 Not Found - Resource not found", async () => {
@@ -61,6 +63,8 @@ describe("status_codes", () => {
 		const response = await client.get("/health");
 
 		expect(response.statusCode).toBe(503);
+		const responseHeaders = response.headers();
+		expect(responseHeaders["retry-after"]).toBe("120");
 	});
 
 	test("422 Unprocessable Entity - Validation error", async () => {
@@ -83,6 +87,8 @@ describe("status_codes", () => {
 		const response = await client.get("/temp-redirect");
 
 		expect(response.statusCode).toBe(302);
+		const responseHeaders = response.headers();
+		expect(responseHeaders.location).toBe("/target-path");
 	});
 
 	test("304 Not Modified - Cached content valid", async () => {
@@ -135,6 +141,8 @@ describe("status_codes", () => {
 		const response = await client.get("/old-path");
 
 		expect(response.statusCode).toBe(301);
+		const responseHeaders = response.headers();
+		expect(responseHeaders.location).toBe("/new-path");
 	});
 
 	test("201 Created - Resource created", async () => {
@@ -184,6 +192,8 @@ describe("status_codes", () => {
 		const response = await client.post("/redirect-post", { headers, json });
 
 		expect(response.statusCode).toBe(307);
+		const responseHeaders = response.headers();
+		expect(responseHeaders.location).toBe("/target-post");
 	});
 
 	test("500 Internal Server Error - Server error", async () => {
@@ -211,6 +221,8 @@ describe("status_codes", () => {
 		const response = await client.get("/users/me");
 
 		expect(response.statusCode).toBe(401);
+		const responseHeaders = response.headers();
+		expect(responseHeaders["www-authenticate"]).toBe("Bearer");
 	});
 
 	test("23_503_service_unavailable", async () => {
@@ -220,6 +232,8 @@ describe("status_codes", () => {
 		const response = await client.get("/data");
 
 		expect(response.statusCode).toBe(503);
+		const responseHeaders = response.headers();
+		expect(responseHeaders["retry-after"]).toBe("60");
 	});
 
 	test("19_413_payload_too_large", async () => {
@@ -263,6 +277,11 @@ describe("status_codes", () => {
 		const response = await client.get("/api/resource");
 
 		expect(response.statusCode).toBe(429);
+		const responseHeaders = response.headers();
+		expect(responseHeaders["retry-after"]).toBe("60");
+		expect(responseHeaders["x-ratelimit-reset"]).toBe("1609459200");
+		expect(responseHeaders["x-ratelimit-remaining"]).toBe("0");
+		expect(responseHeaders["x-ratelimit-limit"]).toBe("100");
 	});
 
 	test("200 OK - Success", async () => {
@@ -291,5 +310,10 @@ describe("status_codes", () => {
 		expect(response.statusCode).toBe(206);
 		const responseData = response.json();
 		expect(responseData).toBe("binary_data_1024_bytes");
+		const responseHeaders = response.headers();
+		expect(responseHeaders["content-range"]).toBe("bytes 0-1023/5000");
+		expect(responseHeaders["content-type"]).toBe("application/pdf");
+		expect(responseHeaders["accept-ranges"]).toBe("bytes");
+		expect(responseHeaders["content-length"]).toBe("1024");
 	});
 });

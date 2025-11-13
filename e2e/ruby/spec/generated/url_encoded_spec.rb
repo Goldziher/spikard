@@ -6,9 +6,7 @@ require_relative '../../app/main'
 RSpec.describe "url_encoded" do
   it "13_array_field_success" do
     app = E2ERubyApp.create_app_url_encoded_1_13_array_field_success
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/register", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, raw_body: "tags[]=python&tags[]=rust&tags[]=typescript")
     expect(response.status_code).to eq(201)
     expect(response.json).to eq({"tags" => ["python", "rust", "typescript"]})
@@ -17,9 +15,7 @@ RSpec.describe "url_encoded" do
 
   it "14_nested_object_bracket_notation" do
     app = E2ERubyApp.create_app_url_encoded_2_14_nested_object_bracket_notation
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/profile", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, raw_body: "user[name]=John%20Doe&user[email]=john@example.com&user[age]=30")
     expect(response.status_code).to eq(201)
     expect(response.json).to eq({"user" => {"age" => 30, "email" => "john@example.com", "name" => "John Doe"}})
@@ -28,9 +24,7 @@ RSpec.describe "url_encoded" do
 
   it "15_special_characters_field_names" do
     app = E2ERubyApp.create_app_url_encoded_3_15_special_characters_field_names
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/data", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, raw_body: "user-name=JohnDoe&contact.email=john%40example.com")
     expect(response.status_code).to eq(201)
     expect(response.json).to eq({"contact.email" => "john@example.com", "user-name" => "JohnDoe"})
@@ -39,9 +33,7 @@ RSpec.describe "url_encoded" do
 
   it "16_minlength_validation_failure" do
     app = E2ERubyApp.create_app_url_encoded_4_16_minlength_validation_failure
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/users", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, raw_body: "username=ab")
     expect(response.status_code).to eq(422)
     body = response.json
@@ -56,9 +48,7 @@ RSpec.describe "url_encoded" do
 
   it "17_pattern_validation_failure" do
     app = E2ERubyApp.create_app_url_encoded_5_17_pattern_validation_failure
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/accounts", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, raw_body: "account_id=INVALID123")
     expect(response.status_code).to eq(422)
     body = response.json
@@ -73,9 +63,7 @@ RSpec.describe "url_encoded" do
 
   it "18_integer_minimum_validation_failure" do
     app = E2ERubyApp.create_app_url_encoded_6_18_integer_minimum_validation_failure
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/products", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, raw_body: "quantity=0")
     expect(response.status_code).to eq(422)
     body = response.json
@@ -90,9 +78,7 @@ RSpec.describe "url_encoded" do
 
   it "19_array_minitems_validation_failure" do
     app = E2ERubyApp.create_app_url_encoded_7_19_array_minitems_validation_failure
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/tags", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, raw_body: "tags[]=single")
     expect(response.status_code).to eq(422)
     body = response.json
@@ -107,9 +93,7 @@ RSpec.describe "url_encoded" do
 
   it "20_format_email_validation_failure" do
     app = E2ERubyApp.create_app_url_encoded_8_20_format_email_validation_failure
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/subscribe", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, raw_body: "email=not-an-email")
     expect(response.status_code).to eq(422)
     body = response.json
@@ -124,9 +108,7 @@ RSpec.describe "url_encoded" do
 
   it "21_integer_type_coercion_failure" do
     app = E2ERubyApp.create_app_url_encoded_9_21_integer_type_coercion_failure
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/products", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, raw_body: "price=not-a-number")
     expect(response.status_code).to eq(422)
     body = response.json
@@ -141,9 +123,7 @@ RSpec.describe "url_encoded" do
 
   it "22_additional_properties_strict_failure" do
     app = E2ERubyApp.create_app_url_encoded_10_22_additional_properties_strict_failure
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/settings", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, raw_body: "theme=dark&unknown_field=value")
     expect(response.status_code).to eq(422)
     body = response.json
@@ -158,9 +138,7 @@ RSpec.describe "url_encoded" do
 
   it "Boolean field conversion" do
     app = E2ERubyApp.create_app_url_encoded_11_boolean_field_conversion
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/form/", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, data: {"subscribe" => "true", "username" => "johndoe"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"subscribe" => true, "username" => "johndoe"})
@@ -169,9 +147,7 @@ RSpec.describe "url_encoded" do
 
   it "Empty string value" do
     app = E2ERubyApp.create_app_url_encoded_12_empty_string_value
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/form/", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, data: {"description" => "", "username" => "johndoe"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"description" => "", "username" => "johndoe"})
@@ -180,9 +156,7 @@ RSpec.describe "url_encoded" do
 
   it "Multiple values for same field" do
     app = E2ERubyApp.create_app_url_encoded_13_multiple_values_for_same_field
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/form/tags", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, data: {"tags" => ["python", "fastapi", "web"]})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"tags" => ["python", "fastapi", "web"]})
@@ -191,9 +165,7 @@ RSpec.describe "url_encoded" do
 
   it "Numeric field type conversion" do
     app = E2ERubyApp.create_app_url_encoded_14_numeric_field_type_conversion
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/form/", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, data: {"age" => "30", "username" => "johndoe"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"age" => 30, "username" => "johndoe"})
@@ -202,9 +174,7 @@ RSpec.describe "url_encoded" do
 
   it "OAuth2 password grant flow" do
     app = E2ERubyApp.create_app_url_encoded_15_oauth2_password_grant_flow
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/token", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, data: {"grant_type" => "password", "password" => "secret", "scope" => "", "username" => "johndoe"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"access_token" => "johndoe", "token_type" => "bearer"})
@@ -213,9 +183,7 @@ RSpec.describe "url_encoded" do
 
   it "Optional field missing - success" do
     app = E2ERubyApp.create_app_url_encoded_16_optional_field_missing_success
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/register/", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, data: {"password" => "secret", "username" => "johndoe"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"email" => nil, "username" => "johndoe"})
@@ -224,9 +192,7 @@ RSpec.describe "url_encoded" do
 
   it "Pattern validation - fail" do
     app = E2ERubyApp.create_app_url_encoded_17_pattern_validation_fail
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/form/validated", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, data: {"username" => "john doe"})
     expect(response.status_code).to eq(422)
     body = response.json
@@ -242,9 +208,7 @@ RSpec.describe "url_encoded" do
 
   it "Required field missing - validation error" do
     app = E2ERubyApp.create_app_url_encoded_18_required_field_missing_validation_error
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/login/", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, data: {"password" => "secret"})
     expect(response.status_code).to eq(422)
     body = response.json
@@ -260,9 +224,7 @@ RSpec.describe "url_encoded" do
 
   it "Simple form submission - success" do
     app = E2ERubyApp.create_app_url_encoded_19_simple_form_submission_success
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/login/", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, data: {"password" => "secret", "username" => "johndoe"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"username" => "johndoe"})
@@ -271,9 +233,7 @@ RSpec.describe "url_encoded" do
 
   it "Special characters encoding" do
     app = E2ERubyApp.create_app_url_encoded_20_special_characters_encoding
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/form/", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, data: {"description" => "Test & Development", "name" => "John Doe"})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"description" => "Test & Development", "name" => "John Doe"})
@@ -282,9 +242,7 @@ RSpec.describe "url_encoded" do
 
   it "String max_length validation - fail" do
     app = E2ERubyApp.create_app_url_encoded_21_string_max_length_validation_fail
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/form/validated", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, data: {"username" => "this_is_a_very_long_username_that_exceeds_limit"})
     expect(response.status_code).to eq(422)
     body = response.json
@@ -300,9 +258,7 @@ RSpec.describe "url_encoded" do
 
   it "String min_length validation - fail" do
     app = E2ERubyApp.create_app_url_encoded_22_string_min_length_validation_fail
-    config = Spikard::ServerConfig.new
-    config.compression = nil
-    client = Spikard::Testing.create_test_client(app, config: config)
+    client = Spikard::Testing.create_test_client(app)
     response = client.post("/form/validated", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, data: {"username" => "ab"})
     expect(response.status_code).to eq(422)
     body = response.json

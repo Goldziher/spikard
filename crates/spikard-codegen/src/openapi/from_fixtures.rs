@@ -24,6 +24,9 @@ pub struct Fixture {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub streaming: Option<FixtureStreaming>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub background: Option<FixtureBackground>,
+
     pub request: FixtureRequest,
     pub expected_response: FixtureExpectedResponse,
 
@@ -39,6 +42,14 @@ pub struct FixtureStreaming {
 
     /// Stream chunks that will be yielded sequentially
     pub chunks: Vec<FixtureStreamChunk>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FixtureBackground {
+    pub state_path: String,
+    pub state_key: String,
+    pub value_field: String,
+    pub expected_state: Vec<Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

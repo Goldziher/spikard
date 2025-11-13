@@ -34,6 +34,7 @@
 #![deny(clippy::all)]
 #![warn(missing_docs)]
 
+mod background;
 mod handler;
 mod lifecycle;
 mod response;
@@ -44,9 +45,9 @@ mod websocket;
 use crate::response::HandlerReturnValue;
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
-use spikard_http::{RouteMetadata, Server, ServerConfig};
+use spikard_http::{BackgroundRuntime, RouteMetadata, Server, ServerConfig};
 use std::sync::Arc;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 
 /// Extract ServerConfig from Node.js Object
 ///
@@ -248,6 +249,7 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
         static_files,
         graceful_shutdown,
         shutdown_timeout,
+        background_tasks: spikard_http::BackgroundTaskConfig::default(),
         openapi,
         lifecycle_hooks: None, // Will be set later in run_server
     })
@@ -467,6 +469,8 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
     let app_router = Server::with_handlers(server_config.clone(), routes_with_handlers)
         .map_err(|e| Error::from_reason(format!("Failed to build router: {}", e)))?;
 
+    let background_config = server_config.background_tasks.clone();
+
     // Start the server in a background thread with its own Tokio runtime
     // This keeps the Node.js event loop free to process ThreadsafeFunction calls
     let addr = format!("{}:{}", server_config.host, server_config.port);
@@ -484,7 +488,17 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
 
             info!("Server listening on {}", socket_addr);
 
-            if let Err(e) = axum::serve(listener, app_router).await {
+            let background_runtime = BackgroundRuntime::start(background_config.clone()).await;
+            crate::background::install_handle(background_runtime.handle());
+
+            let serve_result = axum::serve(listener, app_router).await;
+
+            crate::background::clear_handle();
+            if let Err(shutdown_err) = background_runtime.shutdown().await {
+                warn!("Failed to drain background tasks during shutdown: {:?}", shutdown_err);
+            }
+
+            if let Err(e) = serve_result {
                 error!("Server error: {}", e);
             }
         });

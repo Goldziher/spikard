@@ -1,0 +1,23 @@
+{
+	"name": "Request exceeds timeout",
+	"description": "Simulates a handler that sleeps longer than the configured timeout to ensure a 408 response.",
+	"category": "request_timeout",
+	"handler": {
+		"route": "/timeouts/slow",
+		"method": "GET",
+		"middleware": {
+			"request_timeout": {
+				"seconds": 1,
+				"sleep_ms": 1500
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/timeouts/slow"
+	},
+	"expected_response": {
+		"status_code": 408
+	},
+	"tags": ["timeouts", "middleware", "slow"]
+}
