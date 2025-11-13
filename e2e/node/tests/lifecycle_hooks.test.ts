@@ -31,6 +31,11 @@ describe("lifecycle_hooks", () => {
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Response with security headers");
+		const responseHeaders = response.headers();
+		expect(responseHeaders["x-xss-protection"]).toBe("1; mode=block");
+		expect(responseHeaders["x-frame-options"]).toBe("DENY");
+		expect(responseHeaders["x-content-type-options"]).toBe("nosniff");
+		expect(responseHeaders["strict-transport-security"]).toBe("max-age=31536000; includeSubDomains");
 	});
 
 	test("preHandler - Authentication Failed Short Circuit", async () => {
@@ -94,6 +99,8 @@ describe("lifecycle_hooks", () => {
 		const response = await client.post("/api/test-rate-limit-exceeded", { headers, json });
 
 		expect(response.statusCode).toBe(429);
+		const responseHeaders = response.headers();
+		expect(responseHeaders["retry-after"]).toBe("60");
 	});
 
 	test("onError - Error Logging", async () => {
@@ -103,6 +110,8 @@ describe("lifecycle_hooks", () => {
 		const response = await client.get("/api/test-error");
 
 		expect(response.statusCode).toBe(500);
+		const responseHeaders = response.headers();
+		expect(responseHeaders["content-type"]).toBe("application/json");
 	});
 
 	test("Multiple Hooks - All Phases", async () => {
@@ -110,8 +119,8 @@ describe("lifecycle_hooks", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Content-Type": "application/json",
 			Authorization: "Bearer valid-token-12345",
+			"Content-Type": "application/json",
 		};
 		const json = { action: "update_profile", user_id: "user-123" };
 		const response = await client.post("/api/full-lifecycle", { headers, json });
@@ -126,6 +135,11 @@ describe("lifecycle_hooks", () => {
 		expect(responseData.request_id).toBe(".*");
 		expect(responseData).toHaveProperty("user_id");
 		expect(responseData.user_id).toBe("user-123");
+		const responseHeaders = response.headers();
+		expect(responseHeaders["x-request-id"]).toBe(".*");
+		expect(responseHeaders["x-response-time"]).toBe(".*ms");
+		expect(responseHeaders["x-content-type-options"]).toBe("nosniff");
+		expect(responseHeaders["x-frame-options"]).toBe("DENY");
 	});
 
 	test("Hook Execution Order", async () => {
@@ -155,6 +169,8 @@ describe("lifecycle_hooks", () => {
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Response with timing info");
+		const responseHeaders = response.headers();
+		expect(responseHeaders["x-response-time"]).toBe(".*ms");
 	});
 
 	test("preHandler - Authorization Forbidden Short Circuit", async () => {
@@ -183,6 +199,8 @@ describe("lifecycle_hooks", () => {
 		expect(responseData.message).toBe("onRequest hooks executed");
 		expect(responseData).toHaveProperty("request_logged");
 		expect(responseData.request_logged).toBe(true);
+		const responseHeaders = response.headers();
+		expect(responseHeaders["x-request-id"]).toBe(".*");
 	});
 
 	test("preValidation - Rate Limiting", async () => {

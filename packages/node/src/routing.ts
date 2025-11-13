@@ -35,6 +35,8 @@ export interface RouteOptions {
 	cors?: CorsConfig;
 }
 
+type RouteHandler = (...args: unknown[]) => unknown;
+
 /**
  * Route decorator for defining HTTP routes
  *
@@ -62,8 +64,8 @@ export interface RouteOptions {
  * app.run();
  * ```
  */
-export function route(path: string, options: RouteOptions = {}): (handler: Function) => Function {
-	return (handler: Function) => {
+export function route(path: string, options: RouteOptions = {}): (handler: RouteHandler) => RouteHandler {
+	return (handler: RouteHandler) => {
 		// Extract methods, defaulting to GET if not specified
 		const methods = options.methods ? (Array.isArray(options.methods) ? options.methods : [options.methods]) : ["GET"];
 
@@ -103,34 +105,49 @@ export function route(path: string, options: RouteOptions = {}): (handler: Funct
  * }
  * ```
  */
-export function get(path: string, options: Omit<RouteOptions, "methods"> = {}): (handler: Function) => Function {
+export function get(
+	path: string,
+	options: Omit<RouteOptions, "methods"> = {},
+): (handler: RouteHandler) => RouteHandler {
 	return route(path, { ...options, methods: ["GET"] });
 }
 
 /**
  * POST route decorator
  */
-export function post(path: string, options: Omit<RouteOptions, "methods"> = {}): (handler: Function) => Function {
+export function post(
+	path: string,
+	options: Omit<RouteOptions, "methods"> = {},
+): (handler: RouteHandler) => RouteHandler {
 	return route(path, { ...options, methods: ["POST"] });
 }
 
 /**
  * PUT route decorator
  */
-export function put(path: string, options: Omit<RouteOptions, "methods"> = {}): (handler: Function) => Function {
+export function put(
+	path: string,
+	options: Omit<RouteOptions, "methods"> = {},
+): (handler: RouteHandler) => RouteHandler {
 	return route(path, { ...options, methods: ["PUT"] });
 }
 
 /**
  * DELETE route decorator
  */
-export function del(path: string, options: Omit<RouteOptions, "methods"> = {}): (handler: Function) => Function {
+export function del(
+	path: string,
+	options: Omit<RouteOptions, "methods"> = {},
+): (handler: RouteHandler) => RouteHandler {
 	return route(path, { ...options, methods: ["DELETE"] });
 }
 
 /**
  * PATCH route decorator
  */
-export function patch(path: string, options: Omit<RouteOptions, "methods"> = {}): (handler: Function) => Function {
+export function patch(
+	path: string,
+	options: Omit<RouteOptions, "methods"> = {},
+): (handler: RouteHandler) => RouteHandler {
 	return route(path, { ...options, methods: ["PATCH"] });
 }

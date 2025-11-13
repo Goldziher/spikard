@@ -3,17 +3,17 @@
 
 #[cfg(test)]
 mod auth {
+    use axum::body::Body;
+    use axum::http::Request;
+    use axum_test::TestServer;
+    use serde_json::Value;
+    use spikard_http::testing::snapshot_response;
 
     #[tokio::test]
     async fn test_auth_api_key_authentication_invalid_key() {
         // Fixture: API key authentication - invalid key
         // Description: Tests API key authentication failure when provided key is not in the valid keys list
         // Expected status: 401
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/auth/07_api_key_invalid.json")
@@ -272,16 +272,11 @@ mod auth {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(401).unwrap(),
-            "Expected status 401, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -289,11 +284,6 @@ mod auth {
         // Fixture: API key authentication - missing header
         // Description: Tests API key authentication failure when required header is not provided
         // Expected status: 401
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/auth/08_api_key_missing.json")
@@ -552,16 +542,11 @@ mod auth {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(401).unwrap(),
-            "Expected status 401, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -569,11 +554,6 @@ mod auth {
         // Fixture: API key authentication - valid key
         // Description: Tests API key authentication with a valid API key in custom header
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/auth/06_api_key_valid.json")
@@ -832,16 +812,11 @@ mod auth {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -849,11 +824,6 @@ mod auth {
         // Fixture: API key in query parameter
         // Description: Tests API key authentication when key is provided as query parameter instead of header
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/auth/14_api_key_query_parameter.json")
@@ -1112,16 +1082,11 @@ mod auth {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1129,11 +1094,6 @@ mod auth {
         // Fixture: API key rotation - old key still valid
         // Description: Tests API key authentication during rotation period when old key remains valid alongside new key
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/auth/16_api_key_rotation_old_key.json")
@@ -1392,16 +1352,17 @@ mod auth {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("x-api-key-deprecated") {
+            assert_eq!(actual, "true", "Mismatched header 'X-API-Key-Deprecated'");
+        } else {
+            panic!("Expected header 'X-API-Key-Deprecated' to be present");
+        }
     }
 
     #[tokio::test]
@@ -1409,11 +1370,6 @@ mod auth {
         // Fixture: API key with custom header name
         // Description: Tests API key authentication with a custom header name (X-API-Token instead of X-API-Key)
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/auth/15_api_key_custom_header_name.json")
@@ -1672,16 +1628,11 @@ mod auth {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1689,11 +1640,6 @@ mod auth {
         // Fixture: Bearer token without prefix
         // Description: Tests JWT rejection when token is provided without 'Bearer ' prefix in Authorization header
         // Expected status: 401
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/auth/17_bearer_token_without_prefix.json")
@@ -1952,16 +1898,11 @@ mod auth {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(401).unwrap(),
-            "Expected status 401, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1969,11 +1910,6 @@ mod auth {
         // Fixture: JWT authentication - expired token
         // Description: Tests JWT authentication failure when token has expired (exp claim in the past)
         // Expected status: 401
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/auth/03_jwt_expired_token.json")
@@ -2232,16 +2168,11 @@ mod auth {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(401).unwrap(),
-            "Expected status 401, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2249,11 +2180,6 @@ mod auth {
         // Fixture: JWT authentication - invalid audience
         // Description: Tests JWT authentication failure when token audience claim does not match required audience
         // Expected status: 401
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/auth/05_jwt_invalid_audience.json")
@@ -2512,16 +2438,11 @@ mod auth {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(401).unwrap(),
-            "Expected status 401, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2529,11 +2450,6 @@ mod auth {
         // Fixture: JWT authentication - invalid signature
         // Description: Tests JWT authentication failure when token signature does not match the secret
         // Expected status: 401
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/auth/04_jwt_invalid_signature.json")
@@ -2792,16 +2708,11 @@ mod auth {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(401).unwrap(),
-            "Expected status 401, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2809,11 +2720,6 @@ mod auth {
         // Fixture: JWT authentication - missing Authorization header
         // Description: Tests JWT authentication failure when Authorization header is not provided
         // Expected status: 401
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/auth/02_jwt_missing_header.json")
@@ -3072,16 +2978,11 @@ mod auth {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(401).unwrap(),
-            "Expected status 401, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3089,11 +2990,6 @@ mod auth {
         // Fixture: JWT authentication - valid token
         // Description: Tests JWT authentication with a valid token containing correct signature and claims
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/auth/01_jwt_valid_token.json")
@@ -3352,16 +3248,11 @@ mod auth {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3369,11 +3260,6 @@ mod auth {
         // Fixture: JWT invalid issuer
         // Description: Tests JWT rejection when issuer claim doesn't match expected value
         // Expected status: 401
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/auth/09_jwt_invalid_issuer.json")
@@ -3632,16 +3518,11 @@ mod auth {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(401).unwrap(),
-            "Expected status 401, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3649,11 +3530,6 @@ mod auth {
         // Fixture: JWT malformed token format
         // Description: Tests JWT rejection when token doesn't have the required 3-part structure (header.payload.signature)
         // Expected status: 401
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/auth/13_jwt_malformed_token.json")
@@ -3912,16 +3788,11 @@ mod auth {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(401).unwrap(),
-            "Expected status 401, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3929,11 +3800,6 @@ mod auth {
         // Fixture: JWT missing required custom claims
         // Description: Tests JWT rejection when required custom claims (role, permissions) are missing
         // Expected status: 403
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/auth/11_jwt_custom_claims_missing.json")
@@ -4192,16 +4058,11 @@ mod auth {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(403).unwrap(),
-            "Expected status 403, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 403, "Expected status 403, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -4209,11 +4070,6 @@ mod auth {
         // Fixture: JWT not before claim in future
         // Description: Tests JWT rejection when nbf (not before) claim is in the future
         // Expected status: 401
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/auth/10_jwt_not_before_future.json")
@@ -4472,16 +4328,11 @@ mod auth {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(401).unwrap(),
-            "Expected status 401, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -4489,11 +4340,6 @@ mod auth {
         // Fixture: JWT with multiple audiences
         // Description: Tests JWT validation when token has multiple audiences and one must match
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/auth/12_jwt_multiple_audiences.json")
@@ -4752,16 +4598,11 @@ mod auth {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -4769,11 +4610,6 @@ mod auth {
         // Fixture: Multiple authentication schemes - JWT precedence
         // Description: Tests authentication when both JWT and API key are provided, JWT takes precedence
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/auth/18_multiple_auth_schemes.json")
@@ -5032,15 +4868,10 @@ mod auth {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 }

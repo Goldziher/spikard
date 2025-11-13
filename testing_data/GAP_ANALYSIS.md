@@ -34,6 +34,7 @@ Spikard has 536 total JSON fixtures across 19 categories, with comprehensive cov
 | http_methods | 13 | ⚠️ Partial | Low |
 | cors | 11 | ⚠️ Partial | Low |
 | auth | 9 | ✅ Some coverage | Medium |
+| background | 2 | ⚠️ MVP only | Low |
 | openapi | 7 | ⚠️ Minimal | Low |
 | **MISSING** | - | ❌ **GAPS** | **Zero** |
 
@@ -47,6 +48,8 @@ Spikard has 536 total JSON fixtures across 19 categories, with comprehensive cov
 - **graceful_shutdown** - Graceful shutdown behavior
 - **body_size_limit** - Max request body size validation
 - **openapi_generation** - OpenAPI spec generation endpoints
+
+> **New coverage (2025-02):** Background fixtures landed for all runtimes (Rust/Python/Node/Ruby). Coverage is intentionally small (2 fixtures) because they rely on shared state helpers; future work should add failure scenarios and concurrency stress tests.
 
 ---
 

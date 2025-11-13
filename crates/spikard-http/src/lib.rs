@@ -7,6 +7,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 pub mod auth;
+pub mod background;
+pub mod body_metadata;
 pub mod cors;
 pub mod debug;
 pub mod handler_response;
@@ -22,6 +24,7 @@ pub mod router;
 pub mod schema_registry;
 pub mod server;
 pub mod sse;
+pub mod testing;
 pub mod type_hints;
 pub mod validation;
 pub mod websocket;
@@ -30,6 +33,11 @@ pub mod websocket;
 mod handler_trait_tests;
 
 pub use auth::{Claims, api_key_auth_middleware, jwt_auth_middleware};
+pub use background::{
+    BackgroundHandle, BackgroundJobError, BackgroundJobMetadata, BackgroundRuntime, BackgroundSpawnError,
+    BackgroundTaskConfig,
+};
+pub use body_metadata::ResponseBodySize;
 pub use handler_response::HandlerResponse;
 pub use handler_trait::{Handler, HandlerResult, RequestData, ValidatedParams};
 pub use lifecycle::{HookResult, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, request_hook, response_hook};
@@ -41,6 +49,7 @@ pub use router::{Route, RouteHandler, Router};
 pub use schema_registry::SchemaRegistry;
 pub use server::Server;
 pub use sse::{SseEvent, SseEventProducer, SseState, sse_handler};
+pub use testing::{ResponseSnapshot, SnapshotError, snapshot_response};
 pub use validation::SchemaValidator;
 pub use websocket::{WebSocketHandler, WebSocketState, websocket_handler};
 
@@ -272,6 +281,8 @@ pub struct ServerConfig {
     pub openapi: Option<crate::openapi::OpenApiConfig>,
     /// Lifecycle hooks for request/response processing
     pub lifecycle_hooks: Option<LifecycleHooks>,
+    /// Background task executor configuration
+    pub background_tasks: BackgroundTaskConfig,
 }
 
 impl Default for ServerConfig {
@@ -292,6 +303,7 @@ impl Default for ServerConfig {
             shutdown_timeout: 30,
             openapi: None,
             lifecycle_hooks: None, // No hooks by default
+            background_tasks: BackgroundTaskConfig::default(),
         }
     }
 }

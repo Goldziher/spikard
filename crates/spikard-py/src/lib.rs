@@ -2,6 +2,7 @@
 //!
 //! This crate provides Python bindings using PyO3
 
+mod background;
 pub mod handler;
 pub mod lifecycle;
 pub mod request;
@@ -178,8 +179,7 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
     );
 
     // Extract server config from Python app if available
-    // For test clients, disable compression to avoid needing decompression
-    let mut config = if let Ok(py_config) = app.getattr("_config") {
+    let config = if let Ok(py_config) = app.getattr("_config") {
         if !py_config.is_none() {
             extract_server_config(py, &py_config)?
         } else {
@@ -188,8 +188,6 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
     } else {
         spikard_http::ServerConfig::default()
     };
-    // Disable compression for test clients
-    config.compression = None;
 
     // Build Axum router with Python handlers
     eprintln!(
@@ -436,6 +434,7 @@ fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyRes
         static_files,
         graceful_shutdown,
         shutdown_timeout,
+        background_tasks: spikard_http::BackgroundTaskConfig::default(),
         openapi: openapi_config,
         lifecycle_hooks: None, // Lifecycle hooks not yet exposed to Python
     })
@@ -603,9 +602,25 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
 
                 eprintln!("[spikard] Server listening on {}", socket_addr);
 
-                axum::serve(listener, app_router).await.map_err(|e| {
+                let background_runtime = spikard_http::BackgroundRuntime::start(config.background_tasks.clone()).await;
+                crate::background::install_handle(background_runtime.handle());
+
+                let serve_result = axum::serve(listener, app_router).await;
+
+                crate::background::clear_handle();
+                let shutdown_result = background_runtime.shutdown().await;
+
+                serve_result.map_err(|e| {
                     pyo3::Python::attach(|_py| {
                         PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Server error: {}", e))
+                    })
+                })?;
+
+                shutdown_result.map_err(|_| {
+                    pyo3::Python::attach(|_py| {
+                        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+                            "Failed to drain background tasks during shutdown",
+                        )
                     })
                 })
             })
@@ -620,6 +635,7 @@ fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<response::StreamingResponse>()?;
     m.add_class::<test_client::TestClient>()?;
     m.add_class::<test_client::TestResponse>()?;
+    m.add_function(wrap_pyfunction!(background::background_run, m)?)?;
     m.add_function(wrap_pyfunction!(create_test_client, m)?)?;
     m.add_function(wrap_pyfunction!(process, m)?)?;
     m.add_function(wrap_pyfunction!(run_server, m)?)?;

@@ -12,6 +12,7 @@ description = "HTTP server for spikard"
 spikard.workspace = true
 axum = { workspace = true, features = ["multipart", "ws"] }
 tokio.workspace = true
+tokio-util = "0.7"
 tower.workspace = true
 tower-http.workspace = true
 tower_governor.workspace = true
@@ -36,10 +37,13 @@ jiff = "0.2"
 uuid = "1.18"
 bytes = "1.10"
 http-body-util = "0.1"
+http-body = "1.0"
 axum-test = "18"
 anyhow = "1.0"
 cookie = "0.18"
 base64 = "0.22.1"
+flate2 = "1.1"
+brotli = "8.0"
 
 [dev-dependencies]
 chrono = "0.4"

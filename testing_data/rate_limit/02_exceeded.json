@@ -1,0 +1,26 @@
+{
+	"name": "Rate limit exceeded returns 429",
+	"description": "Sends sequential requests until the configured limit is exceeded and validates the 429 response.",
+	"category": "rate_limit",
+	"handler": {
+		"route": "/rate-limit/exceeded",
+		"method": "GET",
+		"middleware": {
+			"rate_limit": {
+				"per_second": 1,
+				"burst": 1,
+				"warmup_requests": 1,
+				"warmup_expect_status": 200,
+				"sleep_ms_between": 0
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/rate-limit/exceeded"
+	},
+	"expected_response": {
+		"status_code": 429
+	},
+	"tags": ["rate_limit", "too_many_requests", "middleware"]
+}

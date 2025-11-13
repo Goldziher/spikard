@@ -1,6 +1,9 @@
 //! Generated route handlers - one handler per fixture for complete isolation
 
+use axum::extract::State;
+use axum::http::{HeaderName, HeaderValue};
 use axum::response::IntoResponse;
+use axum::response::Response;
 use axum::{
     Json, Router, middleware, routing,
     routing::{delete, get, head, options, patch, post, put, trace},
@@ -13,6 +16,18 @@ use spikard_http::HandlerResponse;
 use spikard_http::parameters::ParameterValidator;
 use std::collections::HashMap;
 use std::str::FromStr;
+use std::sync::Arc;
+use tokio::sync::Mutex;
+fn apply_expected_headers(mut response: Response, headers: &[(&str, &str)]) -> Response {
+    for (name, value) in headers {
+        if let Ok(header_name) = HeaderName::from_lowercase_str(name) {
+            if let Ok(header_value) = HeaderValue::from_str(value) {
+                response.headers_mut().insert(header_name, header_value);
+            }
+        }
+    }
+    response
+}
 
 #[derive(Clone, Copy)]
 pub struct CorsConfig {
@@ -195,6 +210,83 @@ pub fn create_app_auth_Multiple_authentication_schemes___JWT_precedence() -> Rou
         .route(
             "/api/data",
             get(auth_Multiple_authentication_schemes___JWT_precedence_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Background event logging
+pub fn create_app_background_Background_event_logging() -> Router {
+    let state: Arc<Mutex<Vec<Value>>> = Arc::new(Mutex::new(Vec::new()));
+
+    Router::new()
+        .route("/background/events", post(background_Background_event_logging_handler))
+        .route(
+            "/background/events",
+            get(background_Background_event_logging_handler_background_state),
+        )
+        .with_state(state)
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Background event logging - second payload
+pub fn create_app_background_Background_event_logging___second_payload() -> Router {
+    let state: Arc<Mutex<Vec<Value>>> = Arc::new(Mutex::new(Vec::new()));
+
+    Router::new()
+        .route(
+            "/background/events",
+            post(background_Background_event_logging___second_payload_handler),
+        )
+        .route(
+            "/background/events",
+            get(background_Background_event_logging___second_payload_handler_background_state),
+        )
+        .with_state(state)
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Body over limit returns 413
+pub fn create_app_body_limits_Body_over_limit_returns_413() -> Router {
+    Router::new()
+        .route(
+            "/body-limit/over",
+            post(body_limits_Body_over_limit_returns_413_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Body under limit succeeds
+pub fn create_app_body_limits_Body_under_limit_succeeds() -> Router {
+    Router::new()
+        .route("/body-limit/under", post(body_limits_Body_under_limit_succeeds_handler))
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Compression - gzip applied
+pub fn create_app_compression_Compression___gzip_applied() -> Router {
+    Router::new()
+        .route("/compression/gzip", get(compression_Compression___gzip_applied_handler))
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Compression - payload below min_size is not compressed
+pub fn create_app_compression_Compression___payload_below_min_size_is_not_compressed() -> Router {
+    Router::new()
+        .route(
+            "/compression/skip",
+            get(compression_Compression___payload_below_min_size_is_not_compressed_handler),
         )
         .layer(middleware::from_fn(
             spikard_http::middleware::validate_content_type_middleware,
@@ -3669,6 +3761,111 @@ pub fn create_app_query_params_UUID_query_parameter___success() -> Router {
         ))
 }
 
+/// App for fixture: Rate limit below threshold succeeds
+pub fn create_app_rate_limit_Rate_limit_below_threshold_succeeds() -> Router {
+    Router::new()
+        .route(
+            "/rate-limit/basic",
+            get(rate_limit_Rate_limit_below_threshold_succeeds_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Rate limit exceeded returns 429
+pub fn create_app_rate_limit_Rate_limit_exceeded_returns_429() -> Router {
+    Router::new()
+        .route(
+            "/rate-limit/exceeded",
+            get(rate_limit_Rate_limit_exceeded_returns_429_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Request ID header is preserved
+pub fn create_app_request_id_Request_ID_header_is_preserved() -> Router {
+    Router::new()
+        .route(
+            "/request-id/preserved",
+            get(request_id_Request_ID_header_is_preserved_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Request ID is generated when not provided
+pub fn create_app_request_id_Request_ID_is_generated_when_not_provided() -> Router {
+    Router::new()
+        .route(
+            "/request-id/generated",
+            get(request_id_Request_ID_is_generated_when_not_provided_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Request ID middleware can be disabled
+pub fn create_app_request_id_Request_ID_middleware_can_be_disabled() -> Router {
+    Router::new()
+        .route(
+            "/request-id/disabled",
+            get(request_id_Request_ID_middleware_can_be_disabled_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Request completes before timeout
+pub fn create_app_request_timeout_Request_completes_before_timeout() -> Router {
+    Router::new()
+        .route(
+            "/timeouts/fast",
+            get(request_timeout_Request_completes_before_timeout_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Request exceeds timeout
+pub fn create_app_request_timeout_Request_exceeds_timeout() -> Router {
+    Router::new()
+        .route("/timeouts/slow", get(request_timeout_Request_exceeds_timeout_handler))
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Static file server returns text file
+pub fn create_app_static_files_Static_file_server_returns_text_file() -> Router {
+    Router::new()
+        .route(
+            "/public/hello.txt",
+            get(static_files_Static_file_server_returns_text_file_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
+/// App for fixture: Static server returns index.html for directory
+pub fn create_app_static_files_Static_server_returns_index_html_for_directory() -> Router {
+    Router::new()
+        .route(
+            "/app",
+            get(static_files_Static_server_returns_index_html_for_directory_handler),
+        )
+        .layer(middleware::from_fn(
+            spikard_http::middleware::validate_content_type_middleware,
+        ))
+}
+
 /// App for fixture: 19_413_payload_too_large
 pub fn create_app_status_codes_19_413_payload_too_large() -> Router {
     Router::new()
@@ -4907,6 +5104,114 @@ async fn auth_Multiple_authentication_schemes___JWT_precedence_handler(
             (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))
         }
     }
+}
+
+async fn background_Background_event_logging_handler(
+    State(state): State<Arc<Mutex<Vec<Value>>>>,
+    axum::extract::Json(body): axum::extract::Json<Value>,
+) -> impl IntoResponse {
+    let value = body.get("event").cloned();
+    let value = match value {
+        Some(val) => val,
+        None => {
+            return (
+                axum::http::StatusCode::BAD_REQUEST,
+                Json(json!({"error": "missing background value"})),
+            );
+        }
+    };
+
+    let state_clone = state.clone();
+    tokio::spawn(async move {
+        let mut guard = state_clone.lock().await;
+        guard.push(value);
+    });
+
+    (axum::http::StatusCode::from_u16(202).unwrap(), Json(Value::Null))
+}
+
+async fn background_Background_event_logging_handler_background_state(
+    State(state): State<Arc<Mutex<Vec<Value>>>>,
+) -> impl IntoResponse {
+    let values = {
+        let guard = state.lock().await;
+        guard.clone()
+    };
+    Json(json!({ "events": values }))
+}
+
+async fn background_Background_event_logging___second_payload_handler(
+    State(state): State<Arc<Mutex<Vec<Value>>>>,
+    axum::extract::Json(body): axum::extract::Json<Value>,
+) -> impl IntoResponse {
+    let value = body.get("event").cloned();
+    let value = match value {
+        Some(val) => val,
+        None => {
+            return (
+                axum::http::StatusCode::BAD_REQUEST,
+                Json(json!({"error": "missing background value"})),
+            );
+        }
+    };
+
+    let state_clone = state.clone();
+    tokio::spawn(async move {
+        let mut guard = state_clone.lock().await;
+        guard.push(value);
+    });
+
+    (axum::http::StatusCode::from_u16(202).unwrap(), Json(Value::Null))
+}
+
+async fn background_Background_event_logging___second_payload_handler_background_state(
+    State(state): State<Arc<Mutex<Vec<Value>>>>,
+) -> impl IntoResponse {
+    let values = {
+        let guard = state.lock().await;
+        guard.clone()
+    };
+    Json(json!({ "events": values }))
+}
+
+async fn body_limits_Body_over_limit_returns_413_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str("null").unwrap();
+    (axum::http::StatusCode::from_u16(413).unwrap(), Json(expected_body))
+}
+
+async fn body_limits_Body_under_limit_succeeds_handler(
+    axum::extract::Json(body): axum::extract::Json<Value>,
+) -> impl axum::response::IntoResponse {
+    use spikard_http::validation::SchemaValidator;
+
+    // Parse body schema and create validator
+    let body_schema: Value = serde_json::from_str("{\"additionalProperties\":false,\"properties\":{\"note\":{\"type\":\"string\"}},\"required\":[\"note\"],\"type\":\"object\"}").unwrap();
+    let validator = SchemaValidator::new(body_schema).unwrap();
+
+    // Validate request body
+    match validator.validate(&body) {
+        Ok(_) => {
+            let expected_body: Value = serde_json::from_str("{\"accepted\":true,\"note\":\"small\"}").unwrap();
+            (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
+        }
+        Err(err) => {
+            let error_response = serde_json::json!({
+                "detail": err.errors
+            });
+            (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))
+        }
+    }
+}
+
+async fn compression_Compression___gzip_applied_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str("{\"message\":\"Compressed payload\",\"payload\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}").unwrap();
+    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
+}
+
+async fn compression_Compression___payload_below_min_size_is_not_compressed_handler()
+-> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str("{\"message\":\"Small payload\",\"payload\":\"tiny\"}").unwrap();
+    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
 }
 
 async fn content_types_13_json_with_charset_utf16_handler() -> impl axum::response::IntoResponse {
@@ -21278,6 +21583,51 @@ async fn query_params_UUID_query_parameter___success_handler(
             (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))
         }
     }
+}
+
+async fn rate_limit_Rate_limit_below_threshold_succeeds_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str("{\"request\":\"under-limit\",\"status\":\"ok\"}").unwrap();
+    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
+}
+
+async fn rate_limit_Rate_limit_exceeded_returns_429_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str("null").unwrap();
+    (axum::http::StatusCode::from_u16(429).unwrap(), Json(expected_body))
+}
+
+async fn request_id_Request_ID_header_is_preserved_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str("{\"echo\":\"trace-123\",\"status\":\"preserved\"}").unwrap();
+    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
+}
+
+async fn request_id_Request_ID_is_generated_when_not_provided_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str("{\"status\":\"generated\"}").unwrap();
+    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
+}
+
+async fn request_id_Request_ID_middleware_can_be_disabled_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str("{\"status\":\"no-request-id\"}").unwrap();
+    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
+}
+
+async fn request_timeout_Request_completes_before_timeout_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str("{\"duration\":\"fast\",\"status\":\"ok\"}").unwrap();
+    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
+}
+
+async fn request_timeout_Request_exceeds_timeout_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str("null").unwrap();
+    (axum::http::StatusCode::from_u16(408).unwrap(), Json(expected_body))
+}
+
+async fn static_files_Static_file_server_returns_text_file_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str("\"Hello from static storage\"").unwrap();
+    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
+}
+
+async fn static_files_Static_server_returns_index_html_for_directory_handler() -> impl axum::response::IntoResponse {
+    let expected_body: Value = serde_json::from_str("\"<!doctype html><h1>Welcome</h1>\"").unwrap();
+    (axum::http::StatusCode::from_u16(200).unwrap(), Json(expected_body))
 }
 
 async fn status_codes_19_413_payload_too_large_handler() -> impl axum::response::IntoResponse {

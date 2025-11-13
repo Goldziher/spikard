@@ -48,6 +48,9 @@ testing_data/
 ├── streaming/               # Streaming response fixtures ✅
 │   ├── schema.json
 │   └── *.json               # Test fixtures describing stream chunks
+├── background/              # Background task fixtures ✅
+│   ├── schema.json (TODO)
+│   └── *.json               # Fire-and-forget job fixtures
 ├── cors/                    # CORS (Cross-Origin Resource Sharing) fixtures ✅
 │   ├── schema.json
 │   └── *.json               # Test fixtures

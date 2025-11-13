@@ -1,9 +1,10 @@
 //! Rust test generation
 
+use crate::background::{BackgroundFixtureData, background_data};
 use crate::streaming::streaming_data;
 use anyhow::{Context, Result};
 use spikard_codegen::openapi::Fixture;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::Path;
 
@@ -129,6 +130,7 @@ fn generate_category_test_file(category: &str, fixtures: &[(Fixture, String)]) -
 
         let fixture_path = format!("../../testing_data/{}/{}", category, filename);
         let streaming_info = streaming_data(fixture)?;
+        let background_info = background_data(fixture)?;
         let method = &fixture.request.method;
         // Extract path without query string (before '?')
         let path = fixture.request.path.split('?').next().unwrap_or(&fixture.request.path);
@@ -141,11 +143,6 @@ async fn test_{category}_{case_name}() {{
     // Fixture: {fixture_name}
     // Description: {description}
     // Expected status: {expected_status}
-
-    use axum::body::Body;
-    use axum::http::{{Request, StatusCode}};
-    use tower::ServiceExt;
-    use serde_json::Value;
 
     // Load fixture
     let fixture_json = std::fs::read_to_string("{fixture_path}")
@@ -399,17 +396,17 @@ async fn test_{category}_{case_name}() {{
 
     let request = request_builder.body(body).unwrap();
 
-    // Send request
-    let response = app.oneshot(request).await.unwrap();
+    let server = TestServer::new(app).unwrap();
+    let response = server.call(request).await;
+    let snapshot = snapshot_response(response).await.unwrap();
 
-    // Assert status code
     assert_eq!(
-        response.status(),
-        StatusCode::from_u16({expected_status}).unwrap(),
-        "Expected status {expected_status}, got {{:?}}",
-        response.status()
+        snapshot.status,
+        {expected_status},
+        "Expected status {expected_status}, got {{}}",
+        snapshot.status
     );
-{streaming_assertions}
+{streaming_assertions}{background_assertions}{header_assertions}
 }}
 "#,
             category = test_name,
@@ -421,6 +418,8 @@ async fn test_{category}_{case_name}() {{
             path = path,
             expected_status = expected_status,
             streaming_assertions = generate_streaming_assertions(&streaming_info),
+            background_assertions = generate_background_assertions(&background_info),
+            header_assertions = generate_header_assertions(&fixture.expected_response.headers),
         );
 
         test_cases.push(test_case);
@@ -432,6 +431,12 @@ async fn test_{category}_{case_name}() {{
 
 #[cfg(test)]
 mod {test_name} {{
+use axum::body::Body;
+use axum::http::Request;
+use axum_test::TestServer;
+use serde_json::Value;
+use spikard_http::testing::snapshot_response;
+
 {test_cases}
 }}
 "#,
@@ -459,12 +464,37 @@ fn generate_streaming_assertions(info: &Option<crate::streaming::StreamingFixtur
     if let Some(stream) = info {
         let expected_literal = rust_vec_literal(&stream.expected_bytes);
         format!(
-            "    let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();\n    let expected: Vec<u8> = {expected_literal};\n    assert_eq!(body_bytes.as_ref(), expected.as_slice());\n    return;\n",
+            "    let expected: Vec<u8> = {expected_literal};\n    assert_eq!(snapshot.body, expected);\n    return;\n",
             expected_literal = expected_literal
         )
     } else {
         String::new()
     }
+}
+
+fn generate_background_assertions(background: &Option<BackgroundFixtureData>) -> String {
+    if let Some(bg) = background {
+        let expected_value =
+            serde_json::json!({ bg.state_key.clone(): serde_json::Value::Array(bg.expected_state.clone()) });
+        let expected_literal = serde_json::to_string(&expected_value).unwrap();
+        return format!(
+            r##"    let state_request = Request::builder()
+        .method("GET")
+        .uri("{state_path}")
+        .body(Body::empty())
+        .unwrap();
+    let state_response = server.call(state_request).await;
+    let state_snapshot = snapshot_response(state_response).await.unwrap();
+    assert_eq!(state_snapshot.status, 200);
+    let state_json: Value = serde_json::from_slice(&state_snapshot.body).unwrap();
+    let expected_state: Value = serde_json::from_str(r#"{expected}"#).unwrap();
+    assert_eq!(state_json, expected_state);
+"##,
+            state_path = bg.state_path,
+            expected = expected_literal
+        );
+    }
+    String::new()
 }
 
 fn rust_vec_literal(bytes: &[u8]) -> String {
@@ -478,4 +508,55 @@ fn rust_vec_literal(bytes: &[u8]) -> String {
             .join(", ");
         format!("vec![{}]", entries)
     }
+}
+
+fn generate_header_assertions(headers: &Option<HashMap<String, String>>) -> String {
+    if let Some(map) = headers {
+        if map.is_empty() {
+            return String::new();
+        }
+        let mut code = String::from("    let headers = &snapshot.headers;\n");
+        for (key, value) in map {
+            let lower_key = key.to_ascii_lowercase();
+            let escaped_key = escape_rust_string(&lower_key);
+            match value.as_str() {
+                "<<absent>>" => {
+                    code.push_str(&format!(
+                        "    assert!(\n        !headers.contains_key(\"{key}\")\n    , \"Expected header '{orig}' to be absent, got {{:?}}\", headers.get(\"{key}\"));\n",
+                        key = escaped_key,
+                        orig = escape_rust_string(key)
+                    ));
+                }
+                "<<present>>" => {
+                    code.push_str(&format!(
+                        "    assert!(headers.contains_key(\"{key}\"), \"Expected header '{orig}' to be present\");\n",
+                        key = escaped_key,
+                        orig = escape_rust_string(key)
+                    ));
+                }
+                "<<uuid>>" => {
+                    code.push_str(&format!(
+                        "    if let Some(value) = headers.get(\"{key}\") {{\n        assert!(uuid::Uuid::parse_str(value).is_ok(), \"Expected header '{orig}' to be a UUID, got {{}}\", value);\n    }} else {{\n        panic!(\"Expected header '{orig}' to be present\");\n    }}\n",
+                        key = escaped_key,
+                        orig = escape_rust_string(key)
+                    ));
+                }
+                _ => {
+                    let escaped_value = escape_rust_string(value);
+                    code.push_str(&format!(
+                        "    if let Some(actual) = headers.get(\"{key}\") {{\n        assert_eq!(actual, \"{value}\", \"Mismatched header '{orig}'\");\n    }} else {{\n        panic!(\"Expected header '{orig}' to be present\");\n    }}\n",
+                        key = escaped_key,
+                        value = escaped_value,
+                        orig = escape_rust_string(key)
+                    ));
+                }
+            }
+        }
+        return code;
+    }
+    String::new()
+}
+
+fn escape_rust_string(value: &str) -> String {
+    value.replace('\\', "\\\\").replace('\"', "\\\"")
 }

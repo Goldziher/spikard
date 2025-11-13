@@ -3,6 +3,8 @@
 require 'json'
 require 'spikard'
 
+BACKGROUND_STATE = Hash.new { |hash, key| hash[key] = [] }
+
 module E2ERubyApp
   module_function
 
@@ -12,7 +14,14 @@ module E2ERubyApp
   end
 
   def create_app_auth_1_api_key_authentication_invalid_key
+    config = Spikard::ServerConfig.new(
+      api_key_auth: Spikard::ApiKeyConfig.new(
+        header_name: "X-API-Key",
+        keys: ["sk_test_123456", "sk_test_789012"]
+      )
+    )
     app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
     app.get("/api/data", handler_name: "auth_1_api_key_authentication_invalid_key", parameter_schema: {"properties" => {"X-API-Key" => {"source" => "header", "type" => "string"}}, "required" => ["X-API-Key"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "The provided API key is not valid", "status" => 401, "title" => "Invalid API key", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
@@ -20,7 +29,14 @@ module E2ERubyApp
   end
 
   def create_app_auth_2_api_key_authentication_missing_header
+    config = Spikard::ServerConfig.new(
+      api_key_auth: Spikard::ApiKeyConfig.new(
+        header_name: "X-API-Key",
+        keys: ["sk_test_123456", "sk_test_789012"]
+      )
+    )
     app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
     app.get("/api/data", handler_name: "auth_2_api_key_authentication_missing_header") do |_request|
       build_response(content: {"detail" => "Expected \'X-API-Key\' header or \'api_key\' query parameter with valid API key", "status" => 401, "title" => "Missing API key", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
@@ -28,7 +44,14 @@ module E2ERubyApp
   end
 
   def create_app_auth_3_api_key_authentication_valid_key
+    config = Spikard::ServerConfig.new(
+      api_key_auth: Spikard::ApiKeyConfig.new(
+        header_name: "X-API-Key",
+        keys: ["sk_test_123456", "sk_test_789012"]
+      )
+    )
     app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
     app.get("/api/data", handler_name: "auth_3_api_key_authentication_valid_key", parameter_schema: {"properties" => {"X-API-Key" => {"description" => "API key for authentication", "source" => "header", "type" => "string"}}, "required" => ["X-API-Key"], "type" => "object"}) do |_request|
       build_response(content: {"data" => "sensitive information", "message" => "Access granted"}, status: 200, headers: nil)
     end
@@ -36,7 +59,14 @@ module E2ERubyApp
   end
 
   def create_app_auth_4_api_key_in_query_parameter
+    config = Spikard::ServerConfig.new(
+      api_key_auth: Spikard::ApiKeyConfig.new(
+        header_name: "X-API-Key",
+        keys: ["sk_test_123456", "sk_test_789012"]
+      )
+    )
     app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
     app.get("/api/data", handler_name: "auth_4_api_key_in_query_parameter") do |_request|
       build_response(content: {"data" => "sensitive information", "message" => "Access granted"}, status: 200, headers: nil)
     end
@@ -44,15 +74,29 @@ module E2ERubyApp
   end
 
   def create_app_auth_5_api_key_rotation_old_key_still_valid
+    config = Spikard::ServerConfig.new(
+      api_key_auth: Spikard::ApiKeyConfig.new(
+        header_name: "X-API-Key",
+        keys: ["sk_test_old_123456", "sk_test_new_789012"]
+      )
+    )
     app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
     app.get("/api/data", handler_name: "auth_5_api_key_rotation_old_key_still_valid", parameter_schema: {"properties" => {"X-API-Key" => {"description" => "API key for authentication", "source" => "header", "type" => "string"}}, "required" => ["X-API-Key"], "type" => "object"}) do |_request|
-      build_response(content: {"data" => "sensitive information", "message" => "Access granted"}, status: 200, headers: nil)
+      build_response(content: {"data" => "sensitive information", "message" => "Access granted"}, status: 200, headers: {"X-API-Key-Deprecated" => "true"})
     end
     app
   end
 
   def create_app_auth_6_api_key_with_custom_header_name
+    config = Spikard::ServerConfig.new(
+      api_key_auth: Spikard::ApiKeyConfig.new(
+        header_name: "X-API-Token",
+        keys: ["sk_test_123456", "sk_test_789012"]
+      )
+    )
     app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
     app.get("/api/data", handler_name: "auth_6_api_key_with_custom_header_name", parameter_schema: {"properties" => {"X-API-Token" => {"description" => "API token for authentication", "source" => "header", "type" => "string"}}, "required" => ["X-API-Token"], "type" => "object"}) do |_request|
       build_response(content: {"data" => "sensitive information", "message" => "Access granted"}, status: 200, headers: nil)
     end
@@ -60,7 +104,14 @@ module E2ERubyApp
   end
 
   def create_app_auth_7_bearer_token_without_prefix
+    config = Spikard::ServerConfig.new(
+      jwt_auth: Spikard::JwtConfig.new(
+        secret: "test-secret-key-do-not-use-in-production",
+        algorithm: "HS256"
+      )
+    )
     app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
     app.get("/api/protected", handler_name: "auth_7_bearer_token_without_prefix", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "Authorization header must use Bearer scheme: \'Bearer <token>\'", "status" => 401, "title" => "Invalid Authorization header format", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
@@ -68,7 +119,14 @@ module E2ERubyApp
   end
 
   def create_app_auth_8_jwt_authentication_expired_token
+    config = Spikard::ServerConfig.new(
+      jwt_auth: Spikard::JwtConfig.new(
+        secret: "test-secret-key-do-not-use-in-production",
+        algorithm: "HS256"
+      )
+    )
     app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
     app.get("/protected/user", handler_name: "auth_8_jwt_authentication_expired_token", parameter_schema: {"properties" => {"Authorization" => {"source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "Token has expired", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
@@ -76,7 +134,15 @@ module E2ERubyApp
   end
 
   def create_app_auth_9_jwt_authentication_invalid_audience
+    config = Spikard::ServerConfig.new(
+      jwt_auth: Spikard::JwtConfig.new(
+        secret: "test-secret-key-do-not-use-in-production",
+        algorithm: "HS256",
+        audience: ["https://api.example.com"]
+      )
+    )
     app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
     app.get("/protected/user", handler_name: "auth_9_jwt_authentication_invalid_audience", parameter_schema: {"properties" => {"Authorization" => {"source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "Token audience is invalid", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
@@ -84,7 +150,14 @@ module E2ERubyApp
   end
 
   def create_app_auth_10_jwt_authentication_invalid_signature
+    config = Spikard::ServerConfig.new(
+      jwt_auth: Spikard::JwtConfig.new(
+        secret: "test-secret-key-do-not-use-in-production",
+        algorithm: "HS256"
+      )
+    )
     app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
     app.get("/protected/user", handler_name: "auth_10_jwt_authentication_invalid_signature", parameter_schema: {"properties" => {"Authorization" => {"source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "Token signature is invalid", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
@@ -92,7 +165,14 @@ module E2ERubyApp
   end
 
   def create_app_auth_11_jwt_authentication_missing_authorization_header
+    config = Spikard::ServerConfig.new(
+      jwt_auth: Spikard::JwtConfig.new(
+        secret: "test-secret-key-do-not-use-in-production",
+        algorithm: "HS256"
+      )
+    )
     app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
     app.get("/protected/user", handler_name: "auth_11_jwt_authentication_missing_authorization_header") do |_request|
       build_response(content: {"detail" => "Expected \'Authorization: Bearer <token>\'", "status" => 401, "title" => "Missing or invalid Authorization header", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
@@ -100,7 +180,16 @@ module E2ERubyApp
   end
 
   def create_app_auth_12_jwt_authentication_valid_token
+    config = Spikard::ServerConfig.new(
+      jwt_auth: Spikard::JwtConfig.new(
+        secret: "test-secret-key-do-not-use-in-production",
+        algorithm: "HS256",
+        audience: ["https://api.example.com"],
+        issuer: "https://auth.example.com"
+      )
+    )
     app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
     app.get("/protected/user", handler_name: "auth_12_jwt_authentication_valid_token", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
       build_response(content: {"message" => "Access granted", "user_id" => "user123"}, status: 200, headers: nil)
     end
@@ -108,7 +197,15 @@ module E2ERubyApp
   end
 
   def create_app_auth_13_jwt_invalid_issuer
+    config = Spikard::ServerConfig.new(
+      jwt_auth: Spikard::JwtConfig.new(
+        secret: "test-secret-key-do-not-use-in-production",
+        algorithm: "HS256",
+        issuer: "https://auth.example.com"
+      )
+    )
     app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
     app.get("/api/protected", handler_name: "auth_13_jwt_invalid_issuer", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "Token issuer is invalid, expected \'https://auth.example.com\'", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
@@ -116,7 +213,14 @@ module E2ERubyApp
   end
 
   def create_app_auth_14_jwt_malformed_token_format
+    config = Spikard::ServerConfig.new(
+      jwt_auth: Spikard::JwtConfig.new(
+        secret: "test-secret-key-do-not-use-in-production",
+        algorithm: "HS256"
+      )
+    )
     app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
     app.get("/api/protected", handler_name: "auth_14_jwt_malformed_token_format", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "Malformed JWT token: expected 3 parts separated by dots, found 2", "status" => 401, "title" => "Malformed JWT token", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
@@ -124,7 +228,16 @@ module E2ERubyApp
   end
 
   def create_app_auth_15_jwt_missing_required_custom_claims
+    config = Spikard::ServerConfig.new(
+      jwt_auth: Spikard::JwtConfig.new(
+        secret: "test-secret-key-do-not-use-in-production",
+        algorithm: "HS256",
+        audience: ["https://api.example.com"],
+        issuer: "https://auth.example.com"
+      )
+    )
     app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
     app.get("/api/admin", handler_name: "auth_15_jwt_missing_required_custom_claims", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "Required claims \'role\' and \'permissions\' missing from JWT", "status" => 403, "title" => "Forbidden", "type" => "https://spikard.dev/errors/forbidden"}, status: 403, headers: nil)
     end
@@ -132,7 +245,14 @@ module E2ERubyApp
   end
 
   def create_app_auth_16_jwt_not_before_claim_in_future
+    config = Spikard::ServerConfig.new(
+      jwt_auth: Spikard::JwtConfig.new(
+        secret: "test-secret-key-do-not-use-in-production",
+        algorithm: "HS256"
+      )
+    )
     app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
     app.get("/api/protected", handler_name: "auth_16_jwt_not_before_claim_in_future", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "JWT not valid yet, not before claim is in the future", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"}, status: 401, headers: nil)
     end
@@ -140,7 +260,16 @@ module E2ERubyApp
   end
 
   def create_app_auth_17_jwt_with_multiple_audiences
+    config = Spikard::ServerConfig.new(
+      jwt_auth: Spikard::JwtConfig.new(
+        secret: "test-secret-key-do-not-use-in-production",
+        algorithm: "HS256",
+        audience: ["https://api.example.com"],
+        issuer: "https://auth.example.com"
+      )
+    )
     app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
     app.get("/api/protected", handler_name: "auth_17_jwt_with_multiple_audiences", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}}, "required" => ["Authorization"], "type" => "object"}) do |_request|
       build_response(content: {"message" => "Access granted", "user_id" => "user123"}, status: 200, headers: nil)
     end
@@ -148,9 +277,106 @@ module E2ERubyApp
   end
 
   def create_app_auth_18_multiple_authentication_schemes_jwt_precedence
+    config = Spikard::ServerConfig.new(
+      jwt_auth: Spikard::JwtConfig.new(
+        secret: "test-secret-key-do-not-use-in-production",
+        algorithm: "HS256",
+        audience: ["https://api.example.com"],
+        issuer: "https://auth.example.com"
+      ),
+      api_key_auth: Spikard::ApiKeyConfig.new(
+        header_name: "X-API-Key",
+        keys: ["sk_test_123456", "sk_test_789012"]
+      )
+    )
     app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
     app.get("/api/data", handler_name: "auth_18_multiple_authentication_schemes_jwt_precedence", parameter_schema: {"properties" => {"Authorization" => {"description" => "JWT token in Bearer format", "source" => "header", "type" => "string"}, "X-API-Key" => {"description" => "API key for authentication", "source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}) do |_request|
       build_response(content: {"auth_method" => "jwt", "message" => "Access granted", "user_id" => "user123"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_background_1_background_event_logging
+    app = Spikard::App.new
+    app.post("/background/events", handler_name: "background_1_background_event_logging", request_schema: {"additionalProperties" => false, "properties" => {"event" => {"type" => "string"}}, "required" => ["event"], "type" => "object"}) do |request|
+      body = request[:body]
+      raise ArgumentError, 'background handler requires JSON body' unless body.is_a?(Hash)
+      value = body["event"]
+      raise ArgumentError, 'background handler missing value' if value.nil?
+      Spikard::Background.run do
+        BACKGROUND_STATE["background_1_background_event_logging"] << value
+      end
+      build_response(content: nil, status: 202, headers: {"content-type" => "application/json"})
+    end
+    app.get("/background/events", handler_name: "background_1_background_event_logging_background_state") do |_req|
+      build_response(content: { "events" => BACKGROUND_STATE["background_1_background_event_logging"] }, status: 200)
+    end
+    app
+  end
+
+  def create_app_background_2_background_event_logging_second_payload
+    app = Spikard::App.new
+    app.post("/background/events", handler_name: "background_2_background_event_logging_second_payload", request_schema: {"additionalProperties" => false, "properties" => {"event" => {"type" => "string"}}, "required" => ["event"], "type" => "object"}) do |request|
+      body = request[:body]
+      raise ArgumentError, 'background handler requires JSON body' unless body.is_a?(Hash)
+      value = body["event"]
+      raise ArgumentError, 'background handler missing value' if value.nil?
+      Spikard::Background.run do
+        BACKGROUND_STATE["background_2_background_event_logging_second_payload"] << value
+      end
+      build_response(content: nil, status: 202, headers: {"content-type" => "application/json"})
+    end
+    app.get("/background/events", handler_name: "background_2_background_event_logging_second_payload_background_state") do |_req|
+      build_response(content: { "events" => BACKGROUND_STATE["background_2_background_event_logging_second_payload"] }, status: 200)
+    end
+    app
+  end
+
+  def create_app_body_limits_1_body_over_limit_returns_413
+    config = Spikard::ServerConfig.new(
+      max_body_size: 64
+    )
+    app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
+    app.post("/body-limit/over", handler_name: "body_limits_1_body_over_limit_returns_413", request_schema: {"additionalProperties" => false, "properties" => {"note" => {"type" => "string"}}, "required" => ["note"], "type" => "object"}) do |_request|
+      build_response(content: nil, status: 413, headers: nil)
+    end
+    app
+  end
+
+  def create_app_body_limits_2_body_under_limit_succeeds
+    config = Spikard::ServerConfig.new(
+      max_body_size: 64
+    )
+    app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
+    app.post("/body-limit/under", handler_name: "body_limits_2_body_under_limit_succeeds", request_schema: {"additionalProperties" => false, "properties" => {"note" => {"type" => "string"}}, "required" => ["note"], "type" => "object"}) do |_request|
+      build_response(content: {"accepted" => true, "note" => "small"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_compression_1_compression_gzip_applied
+    config = Spikard::ServerConfig.new(
+      compression: Spikard::CompressionConfig.new(gzip: true, brotli: false, min_size: 0, quality: 4)
+    )
+    app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
+    app.get("/compression/gzip", handler_name: "compression_1_compression_gzip_applied") do |_request|
+      build_response(content: {"message" => "Compressed payload", "payload" => "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, status: 200, headers: {"vary" => "Accept-Encoding"})
+    end
+    app
+  end
+
+  def create_app_compression_2_compression_payload_below_min_size_is_not_compressed
+    config = Spikard::ServerConfig.new(
+      compression: Spikard::CompressionConfig.new(gzip: true, brotli: false, min_size: 4096, quality: 6)
+    )
+    app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
+    app.get("/compression/skip", handler_name: "compression_2_compression_payload_below_min_size_is_not_compressed") do |_request|
+      build_response(content: {"message" => "Small payload", "payload" => "tiny"}, status: 200, headers: nil)
     end
     app
   end
@@ -230,7 +456,7 @@ module E2ERubyApp
   def create_app_content_types_10_binary_response_application_octet_stream
     app = Spikard::App.new
     app.get("/download/file.bin", handler_name: "content_types_10_binary_response_application_octet_stream") do |_request|
-      build_response(content: "binary_data_placeholder", status: 200, headers: nil)
+      build_response(content: "binary_data_placeholder", status: 200, headers: {"content-disposition" => "attachment; filename=file.bin", "content-type" => "application/octet-stream"})
     end
     app
   end
@@ -238,7 +464,7 @@ module E2ERubyApp
   def create_app_content_types_11_csv_response_text_csv
     app = Spikard::App.new
     app.get("/export/data.csv", handler_name: "content_types_11_csv_response_text_csv") do |_request|
-      build_response(content: "id,name,price\n1,Item A,10.0\n2,Item B,20.0", status: 200, headers: nil)
+      build_response(content: "id,name,price\n1,Item A,10.0\n2,Item B,20.0", status: 200, headers: {"content-disposition" => "attachment; filename=data.csv", "content-type" => "text/csv; charset=utf-8"})
     end
     app
   end
@@ -246,7 +472,7 @@ module E2ERubyApp
   def create_app_content_types_12_content_negotiation_accept_header
     app = Spikard::App.new
     app.get("/accept-test/{id}", handler_name: "content_types_12_content_negotiation_accept_header", parameter_schema: {"properties" => {"id" => {"source" => "path", "type" => "string"}}, "required" => ["id"], "type" => "object"}) do |_request|
-      build_response(content: {"id" => 1, "name" => "Item"}, status: 200, headers: nil)
+      build_response(content: {"id" => 1, "name" => "Item"}, status: 200, headers: {"content-type" => "application/json"})
     end
     app
   end
@@ -254,7 +480,7 @@ module E2ERubyApp
   def create_app_content_types_13_html_response_text_html
     app = Spikard::App.new
     app.get("/html", handler_name: "content_types_13_html_response_text_html") do |_request|
-      build_response(content: "<html><body><h1>Hello</h1></body></html>", status: 200, headers: nil)
+      build_response(content: "<html><body><h1>Hello</h1></body></html>", status: 200, headers: {"content-type" => "text/html; charset=utf-8"})
     end
     app
   end
@@ -262,7 +488,7 @@ module E2ERubyApp
   def create_app_content_types_14_jpeg_image_response_image_jpeg
     app = Spikard::App.new
     app.get("/images/photo.jpg", handler_name: "content_types_14_jpeg_image_response_image_jpeg") do |_request|
-      build_response(content: "jpeg_binary_data", status: 200, headers: nil)
+      build_response(content: "jpeg_binary_data", status: 200, headers: {"content-type" => "image/jpeg"})
     end
     app
   end
@@ -270,7 +496,7 @@ module E2ERubyApp
   def create_app_content_types_15_json_response_application_json
     app = Spikard::App.new
     app.get("/items/json", handler_name: "content_types_15_json_response_application_json") do |_request|
-      build_response(content: {"name" => "Item", "price" => 42.0}, status: 200, headers: nil)
+      build_response(content: {"name" => "Item", "price" => 42.0}, status: 200, headers: {"content-type" => "application/json"})
     end
     app
   end
@@ -278,7 +504,7 @@ module E2ERubyApp
   def create_app_content_types_16_json_with_utf_8_charset
     app = Spikard::App.new
     app.get("/items/unicode", handler_name: "content_types_16_json_with_utf_8_charset") do |_request|
-      build_response(content: {"emoji" => "\u{2615}", "name" => "Caf\u{e9}"}, status: 200, headers: nil)
+      build_response(content: {"emoji" => "\u{2615}", "name" => "Caf\u{e9}"}, status: 200, headers: {"content-type" => "application/json; charset=utf-8"})
     end
     app
   end
@@ -286,7 +512,7 @@ module E2ERubyApp
   def create_app_content_types_17_pdf_response_application_pdf
     app = Spikard::App.new
     app.get("/download/document.pdf", handler_name: "content_types_17_pdf_response_application_pdf") do |_request|
-      build_response(content: "pdf_binary_data", status: 200, headers: nil)
+      build_response(content: "pdf_binary_data", status: 200, headers: {"content-disposition" => "attachment; filename=document.pdf", "content-type" => "application/pdf"})
     end
     app
   end
@@ -294,7 +520,7 @@ module E2ERubyApp
   def create_app_content_types_18_png_image_response_image_png
     app = Spikard::App.new
     app.get("/images/logo.png", handler_name: "content_types_18_png_image_response_image_png") do |_request|
-      build_response(content: "png_binary_data", status: 200, headers: nil)
+      build_response(content: "png_binary_data", status: 200, headers: {"content-type" => "image/png"})
     end
     app
   end
@@ -302,7 +528,7 @@ module E2ERubyApp
   def create_app_content_types_19_plain_text_response_text_plain
     app = Spikard::App.new
     app.get("/text", handler_name: "content_types_19_plain_text_response_text_plain") do |_request|
-      build_response(content: "Hello, World!", status: 200, headers: nil)
+      build_response(content: "Hello, World!", status: 200, headers: {"content-type" => "text/plain; charset=utf-8"})
     end
     app
   end
@@ -310,7 +536,7 @@ module E2ERubyApp
   def create_app_content_types_20_xml_response_application_xml
     app = Spikard::App.new
     app.get("/xml", handler_name: "content_types_20_xml_response_application_xml") do |_request|
-      build_response(content: "<?xml version=\"1.0\"?><item><name>Item</name><price>42.0</price></item>", status: 200, headers: nil)
+      build_response(content: "<?xml version=\"1.0\"?><item><name>Item</name><price>42.0</price></item>", status: 200, headers: {"content-type" => "application/xml"})
     end
     app
   end
@@ -542,7 +768,7 @@ module E2ERubyApp
   def create_app_cors_3_08_cors_max_age
     app = Spikard::App.new
     app.post("/api/data", handler_name: "cors_3_08_cors_max_age", parameter_schema: {"properties" => {"Access-Control-Request-Headers" => {"source" => "header", "type" => "string"}, "Access-Control-Request-Method" => {"source" => "header", "type" => "string"}, "Origin" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, cors: {"allowed_headers" => ["Content-Type"], "allowed_methods" => ["POST"], "allowed_origins" => ["https://example.com"], "max_age" => 3600}) do |_request|
-      build_response(content: nil, status: 204, headers: nil)
+      build_response(content: nil, status: 204, headers: {"Access-Control-Allow-Headers" => "Content-Type", "Access-Control-Allow-Methods" => "POST", "Access-Control-Allow-Origin" => "https://example.com", "Access-Control-Max-Age" => "3600"})
     end
     app
   end
@@ -550,7 +776,7 @@ module E2ERubyApp
   def create_app_cors_4_09_cors_expose_headers
     app = Spikard::App.new
     app.get("/api/data", handler_name: "cors_4_09_cors_expose_headers", parameter_schema: {"properties" => {"Origin" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, cors: {"allowed_methods" => ["GET"], "allowed_origins" => ["https://example.com"], "expose_headers" => ["X-Total-Count", "X-Request-Id"]}) do |_request|
-      build_response(content: nil, status: 200, headers: nil)
+      build_response(content: nil, status: 200, headers: {"Access-Control-Allow-Origin" => "https://example.com", "Access-Control-Expose-Headers" => "X-Total-Count, X-Request-Id", "X-Request-Id" => "abc123", "X-Total-Count" => "42"})
     end
     app
   end
@@ -566,7 +792,7 @@ module E2ERubyApp
   def create_app_cors_6_cors_private_network_access
     app = Spikard::App.new
     app.options("/api/local-resource", handler_name: "cors_6_cors_private_network_access") do |_request|
-      build_response(content: nil, status: 204, headers: nil)
+      build_response(content: nil, status: 204, headers: {"Access-Control-Allow-Methods" => "GET, POST", "Access-Control-Allow-Origin" => "https://public.example.com", "Access-Control-Allow-Private-Network" => "true", "Vary" => "Origin"})
     end
     app
   end
@@ -574,7 +800,7 @@ module E2ERubyApp
   def create_app_cors_7_cors_vary_header_for_proper_caching
     app = Spikard::App.new
     app.get("/api/cached-resource", handler_name: "cors_7_cors_vary_header_for_proper_caching") do |_request|
-      build_response(content: {"data" => "cacheable resource"}, status: 200, headers: nil)
+      build_response(content: {"data" => "cacheable resource"}, status: 200, headers: {"Access-Control-Allow-Origin" => "https://app.example.com", "Cache-Control" => "public, max-age=3600", "Vary" => "Origin"})
     end
     app
   end
@@ -582,7 +808,7 @@ module E2ERubyApp
   def create_app_cors_8_cors_multiple_allowed_origins
     app = Spikard::App.new
     app.get("/api/data", handler_name: "cors_8_cors_multiple_allowed_origins") do |_request|
-      build_response(content: {"data" => "resource data"}, status: 200, headers: nil)
+      build_response(content: {"data" => "resource data"}, status: 200, headers: {"Access-Control-Allow-Origin" => "https://admin.example.com", "Vary" => "Origin"})
     end
     app
   end
@@ -590,7 +816,7 @@ module E2ERubyApp
   def create_app_cors_9_cors_origin_case_sensitivity
     app = Spikard::App.new
     app.get("/api/data", handler_name: "cors_9_cors_origin_case_sensitivity") do |_request|
-      build_response(content: nil, status: 200, headers: nil)
+      build_response(content: nil, status: 200, headers: {"Vary" => "Origin"})
     end
     app
   end
@@ -598,7 +824,7 @@ module E2ERubyApp
   def create_app_cors_10_cors_preflight_for_delete_method
     app = Spikard::App.new
     app.options("/api/resource/456", handler_name: "cors_10_cors_preflight_for_delete_method") do |_request|
-      build_response(content: nil, status: 204, headers: nil)
+      build_response(content: nil, status: 204, headers: {"Access-Control-Allow-Methods" => "GET, POST, PUT, PATCH, DELETE", "Access-Control-Allow-Origin" => "https://app.example.com", "Access-Control-Max-Age" => "3600", "Vary" => "Origin"})
     end
     app
   end
@@ -606,7 +832,7 @@ module E2ERubyApp
   def create_app_cors_11_cors_preflight_for_put_method
     app = Spikard::App.new
     app.options("/api/resource/123", handler_name: "cors_11_cors_preflight_for_put_method") do |_request|
-      build_response(content: nil, status: 204, headers: nil)
+      build_response(content: nil, status: 204, headers: {"Access-Control-Allow-Headers" => "Content-Type, X-Custom-Header", "Access-Control-Allow-Methods" => "GET, POST, PUT, PATCH, DELETE", "Access-Control-Allow-Origin" => "https://app.example.com", "Access-Control-Max-Age" => "3600", "Vary" => "Origin"})
     end
     app
   end
@@ -614,7 +840,7 @@ module E2ERubyApp
   def create_app_cors_12_cors_preflight_request
     app = Spikard::App.new
     app.options("/items/", handler_name: "cors_12_cors_preflight_request") do |_request|
-      build_response(content: nil, status: 200, headers: nil)
+      build_response(content: nil, status: 200, headers: {"Access-Control-Allow-Headers" => "Content-Type, X-Custom-Header", "Access-Control-Allow-Methods" => "GET, POST, PUT, DELETE, OPTIONS", "Access-Control-Allow-Origin" => "https://example.com", "Access-Control-Max-Age" => "600"})
     end
     app
   end
@@ -622,7 +848,7 @@ module E2ERubyApp
   def create_app_cors_13_cors_regex_pattern_matching_for_origins
     app = Spikard::App.new
     app.get("/api/data", handler_name: "cors_13_cors_regex_pattern_matching_for_origins") do |_request|
-      build_response(content: {"data" => "resource data"}, status: 200, headers: nil)
+      build_response(content: {"data" => "resource data"}, status: 200, headers: {"Access-Control-Allow-Origin" => "https://subdomain.example.com", "Vary" => "Origin"})
     end
     app
   end
@@ -638,7 +864,7 @@ module E2ERubyApp
   def create_app_cors_15_cors_safelisted_headers_without_preflight
     app = Spikard::App.new
     app.post("/api/form", handler_name: "cors_15_cors_safelisted_headers_without_preflight") do |_request|
-      build_response(content: {"message" => "Success"}, status: 200, headers: nil)
+      build_response(content: {"message" => "Success"}, status: 200, headers: {"Access-Control-Allow-Origin" => "https://app.example.com", "Vary" => "Origin"})
     end
     app
   end
@@ -646,7 +872,7 @@ module E2ERubyApp
   def create_app_cors_16_cors_wildcard_origin
     app = Spikard::App.new
     app.get("/public/data", handler_name: "cors_16_cors_wildcard_origin") do |_request|
-      build_response(content: {"data" => "public"}, status: 200, headers: nil)
+      build_response(content: {"data" => "public"}, status: 200, headers: {"Access-Control-Allow-Origin" => "*"})
     end
     app
   end
@@ -654,7 +880,7 @@ module E2ERubyApp
   def create_app_cors_17_cors_with_credentials
     app = Spikard::App.new
     app.get("/api/user/profile", handler_name: "cors_17_cors_with_credentials") do |_request|
-      build_response(content: {"username" => "john"}, status: 200, headers: nil)
+      build_response(content: {"username" => "john"}, status: 200, headers: {"Access-Control-Allow-Credentials" => "true", "Access-Control-Allow-Origin" => "https://app.example.com", "Vary" => "Origin"})
     end
     app
   end
@@ -662,7 +888,7 @@ module E2ERubyApp
   def create_app_cors_18_simple_cors_request
     app = Spikard::App.new
     app.get("/items/", handler_name: "cors_18_simple_cors_request") do |_request|
-      build_response(content: {"items" => []}, status: 200, headers: nil)
+      build_response(content: {"items" => []}, status: 200, headers: {"Access-Control-Allow-Origin" => "https://example.com", "Vary" => "Origin"})
     end
     app
   end
@@ -1118,7 +1344,7 @@ module E2ERubyApp
   def create_app_http_methods_4_head_get_metadata_without_body
     app = Spikard::App.new
     app.head("/items/{id}", handler_name: "http_methods_4_head_get_metadata_without_body", parameter_schema: {"properties" => {"id" => {"source" => "path", "type" => "string"}}, "required" => ["id"], "type" => "object"}) do |_request|
-      build_response(content: nil, status: 200, headers: nil)
+      build_response(content: nil, status: 200, headers: {"Content-Length" => "85", "Content-Type" => "application/json"})
     end
     app
   end
@@ -1126,7 +1352,7 @@ module E2ERubyApp
   def create_app_http_methods_5_options_cors_preflight_request
     app = Spikard::App.new
     app.options("/items/", handler_name: "http_methods_5_options_cors_preflight_request") do |_request|
-      build_response(content: nil, status: 200, headers: nil)
+      build_response(content: nil, status: 200, headers: {"Access-Control-Allow-Headers" => "Content-Type", "Access-Control-Allow-Methods" => "GET, POST, PUT, DELETE, OPTIONS", "Access-Control-Allow-Origin" => "https://example.com", "Access-Control-Max-Age" => "86400"})
     end
     app
   end
@@ -1653,7 +1879,7 @@ module E2ERubyApp
       response
     end
     app.post("/api/full-lifecycle", handler_name: "lifecycle_hooks_2_multiple_hooks_all_phases", request_schema: {"properties" => {"action" => {"type" => "string"}, "user_id" => {"type" => "string"}}, "required" => ["user_id", "action"], "type" => "object"}) do |_request|
-      build_response(content: {"action" => "update_profile", "message" => "Action completed successfully", "request_id" => ".*", "user_id" => "user-123"}, status: 200, headers: nil)
+      build_response(content: {"action" => "update_profile", "message" => "Action completed successfully", "request_id" => ".*", "user_id" => "user-123"}, status: 200, headers: {"X-Content-Type-Options" => "nosniff", "X-Frame-Options" => "DENY", "X-Request-ID" => ".*", "X-Response-Time" => ".*ms"})
     end
     app
   end
@@ -1671,7 +1897,7 @@ module E2ERubyApp
       response
     end
     app.get("/api/test-error", handler_name: "lifecycle_hooks_3_onerror_error_logging") do |_request|
-      build_response(content: {"error" => "Internal Server Error", "error_id" => ".*", "message" => "An unexpected error occurred"}, status: 500, headers: nil)
+      build_response(content: {"error" => "Internal Server Error", "error_id" => ".*", "message" => "An unexpected error occurred"}, status: 500, headers: {"Content-Type" => "application/json"})
     end
     app
   end
@@ -1689,7 +1915,7 @@ module E2ERubyApp
       request
     end
     app.get("/api/test-on-request", handler_name: "lifecycle_hooks_4_onrequest_request_logging") do |_request|
-      build_response(content: {"has_request_id" => true, "message" => "onRequest hooks executed", "request_logged" => true}, status: 200, headers: nil)
+      build_response(content: {"has_request_id" => true, "message" => "onRequest hooks executed", "request_logged" => true}, status: 200, headers: {"X-Request-ID" => ".*"})
     end
     app
   end
@@ -1707,7 +1933,7 @@ module E2ERubyApp
       response
     end
     app.get("/api/test-timing", handler_name: "lifecycle_hooks_5_onresponse_response_timing") do |_request|
-      build_response(content: {"message" => "Response with timing info"}, status: 200, headers: nil)
+      build_response(content: {"message" => "Response with timing info"}, status: 200, headers: {"X-Response-Time" => ".*ms"})
     end
     app
   end
@@ -1723,7 +1949,7 @@ module E2ERubyApp
       response
     end
     app.get("/api/test-security-headers", handler_name: "lifecycle_hooks_6_onresponse_security_headers") do |_request|
-      build_response(content: {"message" => "Response with security headers"}, status: 200, headers: nil)
+      build_response(content: {"message" => "Response with security headers"}, status: 200, headers: {"Strict-Transport-Security" => "max-age=31536000; includeSubDomains", "X-Content-Type-Options" => "nosniff", "X-Frame-Options" => "DENY", "X-XSS-Protection" => "1; mode=block"})
     end
     app
   end
@@ -1807,7 +2033,7 @@ module E2ERubyApp
       )
     end
     app.post("/api/test-rate-limit-exceeded", handler_name: "lifecycle_hooks_11_prevalidation_rate_limit_exceeded_short_circuit", request_schema: {"properties" => {"data" => {"type" => "string"}}, "required" => ["data"], "type" => "object"}) do |_request|
-      build_response(content: {"error" => "Rate limit exceeded", "message" => "Too many requests, please try again later"}, status: 429, headers: nil)
+      build_response(content: {"error" => "Rate limit exceeded", "message" => "Too many requests, please try again later"}, status: 429, headers: {"Retry-After" => "60"})
     end
     app
   end
@@ -2865,6 +3091,112 @@ module E2ERubyApp
     app
   end
 
+  def create_app_rate_limit_1_rate_limit_below_threshold_succeeds
+    config = Spikard::ServerConfig.new(
+      rate_limit: Spikard::RateLimitConfig.new(per_second: 5, burst: 5, ip_based: false)
+    )
+    app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
+    app.get("/rate-limit/basic", handler_name: "rate_limit_1_rate_limit_below_threshold_succeeds") do |_request|
+      build_response(content: {"request" => "under-limit", "status" => "ok"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_rate_limit_2_rate_limit_exceeded_returns_429
+    config = Spikard::ServerConfig.new(
+      rate_limit: Spikard::RateLimitConfig.new(per_second: 1, burst: 1, ip_based: false)
+    )
+    app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
+    app.get("/rate-limit/exceeded", handler_name: "rate_limit_2_rate_limit_exceeded_returns_429") do |_request|
+      build_response(content: nil, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_request_id_1_request_id_header_is_preserved
+    app = Spikard::App.new
+    app.get("/request-id/preserved", handler_name: "request_id_1_request_id_header_is_preserved") do |_request|
+      build_response(content: {"echo" => "trace-123", "status" => "preserved"}, status: 200, headers: {"x-request-id" => "trace-123"})
+    end
+    app
+  end
+
+  def create_app_request_id_2_request_id_is_generated_when_not_provided
+    config = Spikard::ServerConfig.new(
+      enable_request_id: true
+    )
+    app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
+    app.get("/request-id/generated", handler_name: "request_id_2_request_id_is_generated_when_not_provided") do |_request|
+      build_response(content: {"status" => "generated"}, status: 200, headers: {"x-request-id" => "00000000-0000-4000-8000-000000000000"})
+    end
+    app
+  end
+
+  def create_app_request_id_3_request_id_middleware_can_be_disabled
+    config = Spikard::ServerConfig.new(
+      enable_request_id: false
+    )
+    app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
+    app.get("/request-id/disabled", handler_name: "request_id_3_request_id_middleware_can_be_disabled") do |_request|
+      build_response(content: {"status" => "no-request-id"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_request_timeout_1_request_completes_before_timeout
+    config = Spikard::ServerConfig.new(
+      request_timeout: 2
+    )
+    app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
+    app.get("/timeouts/fast", handler_name: "request_timeout_1_request_completes_before_timeout") do |_request|
+      sleep(0.1)
+      build_response(content: {"duration" => "fast", "status" => "ok"}, status: 200, headers: nil)
+    end
+    app
+  end
+
+  def create_app_request_timeout_2_request_exceeds_timeout
+    config = Spikard::ServerConfig.new(
+      request_timeout: 1
+    )
+    app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
+    app.get("/timeouts/slow", handler_name: "request_timeout_2_request_exceeds_timeout") do |_request|
+      sleep(1.5)
+      build_response(content: nil, status: 408, headers: nil)
+    end
+    app
+  end
+
+  def create_app_static_files_1_static_file_server_returns_text_file
+    config = Spikard::ServerConfig.new(
+      static_files: [
+        Spikard::StaticFilesConfig.new(directory: File.expand_path(File.join(__dir__, "static_assets", "static_files_static_file_server_returns_text_file", "public_0")), route_prefix: "/public", cache_control: "public, max-age=60")
+      ]
+    )
+    app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
+    # Static files served via ServerConfig
+    app
+  end
+
+  def create_app_static_files_2_static_server_returns_index_html_for_directory
+    config = Spikard::ServerConfig.new(
+      static_files: [
+        Spikard::StaticFilesConfig.new(directory: File.expand_path(File.join(__dir__, "static_assets", "static_files_static_server_returns_index_html_for_directory", "app_0")), route_prefix: "/app")
+      ]
+    )
+    app = Spikard::App.new
+    app.instance_variable_set(:@__spikard_test_config, config)
+    # Static files served via ServerConfig
+    app
+  end
+
   def create_app_status_codes_1_19_413_payload_too_large
     app = Spikard::App.new
     app.post("/upload", handler_name: "status_codes_1_19_413_payload_too_large", request_schema: {"properties" => {"data" => {"type" => "string"}}, "type" => "object"}) do |_request|
@@ -2908,7 +3240,7 @@ module E2ERubyApp
   def create_app_status_codes_6_206_partial_content
     app = Spikard::App.new
     app.get("/files/document.pdf", handler_name: "status_codes_6_206_partial_content") do |_request|
-      build_response(content: "binary_data_1024_bytes", status: 206, headers: nil)
+      build_response(content: "binary_data_1024_bytes", status: 206, headers: {"Accept-Ranges" => "bytes", "Content-Length" => "1024", "Content-Range" => "bytes 0-1023/5000", "Content-Type" => "application/pdf"})
     end
     app
   end
@@ -2940,7 +3272,7 @@ module E2ERubyApp
   def create_app_status_codes_10_23_503_service_unavailable
     app = Spikard::App.new
     app.get("/data", handler_name: "status_codes_10_23_503_service_unavailable") do |_request|
-      build_response(content: {"error" => "Service Unavailable", "message" => "The service is temporarily unavailable. Please try again later."}, status: 503, headers: nil)
+      build_response(content: {"error" => "Service Unavailable", "message" => "The service is temporarily unavailable. Please try again later."}, status: 503, headers: {"Retry-After" => "60"})
     end
     app
   end
@@ -2948,7 +3280,7 @@ module E2ERubyApp
   def create_app_status_codes_11_301_moved_permanently_permanent_redirect
     app = Spikard::App.new
     app.get("/old-path", handler_name: "status_codes_11_301_moved_permanently_permanent_redirect") do |_request|
-      build_response(content: nil, status: 301, headers: nil)
+      build_response(content: nil, status: 301, headers: {"location" => "/new-path"})
     end
     app
   end
@@ -2956,7 +3288,7 @@ module E2ERubyApp
   def create_app_status_codes_12_302_found_temporary_redirect
     app = Spikard::App.new
     app.get("/temp-redirect", handler_name: "status_codes_12_302_found_temporary_redirect") do |_request|
-      build_response(content: nil, status: 302, headers: nil)
+      build_response(content: nil, status: 302, headers: {"location" => "/target-path"})
     end
     app
   end
@@ -2972,7 +3304,7 @@ module E2ERubyApp
   def create_app_status_codes_14_307_temporary_redirect_method_preserved
     app = Spikard::App.new
     app.post("/redirect-post", handler_name: "status_codes_14_307_temporary_redirect_method_preserved", request_schema: {"additionalProperties" => false, "properties" => {}, "type" => "object"}) do |_request|
-      build_response(content: {}, status: 307, headers: nil)
+      build_response(content: {}, status: 307, headers: {"location" => "/target-post"})
     end
     app
   end
@@ -2988,7 +3320,7 @@ module E2ERubyApp
   def create_app_status_codes_16_401_unauthorized_missing_authentication
     app = Spikard::App.new
     app.get("/users/me", handler_name: "status_codes_16_401_unauthorized_missing_authentication") do |_request|
-      build_response(content: {"detail" => "Not authenticated"}, status: 401, headers: nil)
+      build_response(content: {"detail" => "Not authenticated"}, status: 401, headers: {"www-authenticate" => "Bearer"})
     end
     app
   end
@@ -3012,7 +3344,7 @@ module E2ERubyApp
   def create_app_status_codes_19_408_request_timeout
     app = Spikard::App.new
     app.post("/slow-endpoint", handler_name: "status_codes_19_408_request_timeout", request_schema: {"additionalProperties" => false, "properties" => {"data" => {"type" => "string"}}, "required" => ["data"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "Request timeout"}, status: 408, headers: nil)
+      build_response(content: {"detail" => "Request timeout"}, status: 408, headers: {"Connection" => "close"})
     end
     app
   end
@@ -3028,7 +3360,7 @@ module E2ERubyApp
   def create_app_status_codes_21_429_too_many_requests
     app = Spikard::App.new
     app.get("/api/resource", handler_name: "status_codes_21_429_too_many_requests") do |_request|
-      build_response(content: {"detail" => "Rate limit exceeded. Try again in 60 seconds."}, status: 429, headers: nil)
+      build_response(content: {"detail" => "Rate limit exceeded. Try again in 60 seconds."}, status: 429, headers: {"Retry-After" => "60", "X-RateLimit-Limit" => "100", "X-RateLimit-Remaining" => "0", "X-RateLimit-Reset" => "1609459200"})
     end
     app
   end
@@ -3044,7 +3376,7 @@ module E2ERubyApp
   def create_app_status_codes_23_503_service_unavailable_server_overload
     app = Spikard::App.new
     app.get("/health", handler_name: "status_codes_23_503_service_unavailable_server_overload") do |_request|
-      build_response(content: {"detail" => "Service temporarily unavailable"}, status: 503, headers: nil)
+      build_response(content: {"detail" => "Service temporarily unavailable"}, status: 503, headers: {"retry-after" => "120"})
     end
     app
   end

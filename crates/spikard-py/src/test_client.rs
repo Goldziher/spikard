@@ -9,7 +9,7 @@ use axum_test::{TestResponse as AxumTestResponse, TestServer as AxumTestServer};
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict, PyString};
 use serde_json::Value;
-use std::collections::HashMap;
+use spikard_http::testing::{ResponseSnapshot, SnapshotError, snapshot_response};
 use std::sync::Arc;
 use urlencoding::encode;
 
@@ -54,18 +54,9 @@ impl TestClient {
         headers: Option<&Bound<'py, PyDict>>,
         cookies: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
-        // DEBUG: Log test client get() call
-        let _ = std::fs::write(
-            "/tmp/test_client_get.log",
-            format!("TestClient.get() called: path={}\n", path),
-        );
         // Extract Python data before the async block
         let path = path.to_string();
         let query_params_vec = extract_dict_to_vec(query_params)?;
-        let _ = std::fs::write(
-            "/tmp/test_client_query_params.log",
-            format!("query_params_vec: {:?}\n", query_params_vec),
-        );
         let mut headers_vec = extract_dict_to_vec(headers)?;
 
         // Convert cookies dict to Cookie header if present
@@ -82,7 +73,6 @@ impl TestClient {
         let server = Arc::clone(&self.server);
 
         let fut = async move {
-            let _ = std::fs::write("/tmp/test_client_async_start.log", "Async block started\n");
             // Build full path with query string to properly handle arrays
             let full_path = if !query_params_vec.is_empty() {
                 let query_string: Vec<String> = query_params_vec
@@ -98,12 +88,7 @@ impl TestClient {
                 path.clone()
             };
 
-            let _ = std::fs::write("/tmp/test_client_full_path.log", format!("full_path: {}\n", full_path));
             let mut request = server.get(&full_path);
-            let _ = std::fs::write(
-                "/tmp/test_client_request_created.log",
-                "Request created, about to await\n",
-            );
 
             for (key, value) in headers_vec {
                 let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
@@ -116,13 +101,7 @@ impl TestClient {
             }
 
             let response = request.await;
-            let _ = std::fs::write(
-                "/tmp/test_client_response_received.log",
-                format!("Response received, status: {}\n", response.status_code()),
-            );
-            let test_response = TestResponse::from_axum_response(response).await?;
-            let _ = std::fs::write("/tmp/test_client_conversion_done.log", "Converted to TestResponse\n");
-            Ok(test_response)
+            TestResponse::from_axum_response(response).await
         };
 
         pyo3_async_runtimes::tokio::future_into_py(py, fut)
@@ -547,32 +526,14 @@ impl TestClient {
 /// Response from a test request
 #[pyclass]
 pub struct TestResponse {
-    status_code: u16,
-    headers: HashMap<String, String>,
-    body: Vec<u8>,
+    snapshot: ResponseSnapshot,
 }
 
 impl TestResponse {
     /// Create a TestResponse from an axum-test response
     async fn from_axum_response(response: AxumTestResponse) -> PyResult<Self> {
-        let status_code = response.status_code().as_u16();
-
-        // Extract headers
-        let mut headers = HashMap::new();
-        for (name, value) in response.headers() {
-            if let Ok(value_str) = value.to_str() {
-                headers.insert(name.to_string(), value_str.to_string());
-            }
-        }
-
-        // Get body bytes
-        let body = response.into_bytes().to_vec();
-
-        Ok(Self {
-            status_code,
-            headers,
-            body,
-        })
+        let snapshot = snapshot_response(response).await.map_err(snapshot_err_to_py)?;
+        Ok(Self { snapshot })
     }
 }
 
@@ -581,14 +542,14 @@ impl TestResponse {
     /// Get the response status code
     #[getter]
     fn status_code(&self) -> u16 {
-        self.status_code
+        self.snapshot.status
     }
 
     /// Get response headers as a dict
     #[getter]
     fn headers<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let dict = PyDict::new(py);
-        for (key, value) in &self.headers {
+        for (key, value) in &self.snapshot.headers {
             dict.set_item(key, value)?;
         }
         Ok(dict)
@@ -596,18 +557,21 @@ impl TestResponse {
 
     /// Get the response body as bytes
     fn bytes(&self) -> Vec<u8> {
-        self.body.clone()
+        self.snapshot.body.clone()
     }
 
     /// Get the response body as text
     fn text(&self) -> PyResult<String> {
-        String::from_utf8(self.body.clone())
+        self.snapshot
+            .text()
             .map_err(|e| pyo3::exceptions::PyUnicodeDecodeError::new_err(format!("Invalid UTF-8: {}", e)))
     }
 
     /// Get the response body as JSON
     fn json<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        let json_value: Value = serde_json::from_slice(&self.body)
+        let json_value: Value = self
+            .snapshot
+            .json()
             .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON: {}", e)))?;
 
         json_value_to_python(py, &json_value)
@@ -615,12 +579,13 @@ impl TestResponse {
 
     /// Assert that the status code matches
     fn assert_status(&self, expected: u16) -> PyResult<()> {
-        if self.status_code == expected {
+        let actual = self.status_code();
+        if actual == expected {
             Ok(())
         } else {
             Err(pyo3::exceptions::PyAssertionError::new_err(format!(
                 "Expected status {}, got {}",
-                expected, self.status_code
+                expected, actual
             )))
         }
     }
@@ -652,7 +617,7 @@ impl TestResponse {
 
     /// Python repr
     fn __repr__(&self) -> String {
-        format!("<TestResponse status={}>", self.status_code)
+        format!("<TestResponse status={}>", self.snapshot.status)
     }
 }
 
@@ -717,6 +682,10 @@ fn json_value_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to serialize JSON: {}", e)))?;
     let result = json_module.call_method1("loads", (json_str,))?;
     Ok(result)
+}
+
+fn snapshot_err_to_py(err: SnapshotError) -> PyErr {
+    pyo3::exceptions::PyRuntimeError::new_err(err.to_string())
 }
 
 /// File data for multipart upload

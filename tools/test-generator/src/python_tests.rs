@@ -2,6 +2,8 @@
 //!
 //! Generates pytest test suites from fixtures for e2e testing.
 
+use crate::background::background_data;
+use crate::middleware::parse_middleware;
 use crate::streaming::streaming_data;
 use anyhow::{Context, Result};
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
@@ -65,6 +67,28 @@ This ensures complete test isolation and allows multiple tests for the same rout
 
 /// Generate test file for a category
 fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
+    let mut needs_asyncio_sleep = false;
+    let mut needs_uuid_import = false;
+    for fixture in fixtures {
+        let metadata = parse_middleware(fixture)?;
+        if metadata
+            .rate_limit
+            .as_ref()
+            .and_then(|cfg| cfg.sleep_ms_between)
+            .is_some()
+        {
+            needs_asyncio_sleep = true;
+        }
+        if fixture
+            .expected_response
+            .headers
+            .as_ref()
+            .is_some_and(|headers| headers.values().any(|value| value == "<<uuid>>"))
+        {
+            needs_uuid_import = true;
+        }
+    }
+
     let mut code = String::new();
 
     // Collect app factory imports so we can emit them once at the top
@@ -80,6 +104,15 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
 
     // File header and imports
     code.push_str(&format!("\"\"\"E2E tests for {}.\"\"\"\n\n", category));
+    if needs_asyncio_sleep {
+        code.push_str("import asyncio\n");
+    }
+    if needs_uuid_import {
+        code.push_str("from uuid import UUID\n");
+    }
+    if needs_asyncio_sleep || needs_uuid_import {
+        code.push('\n');
+    }
     code.push_str("from spikard.testing import TestClient\n");
     if !app_factories.is_empty() {
         code.push_str("from app.main import (\n");
@@ -105,6 +138,8 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     let test_name = sanitize_test_name(&fixture.name);
     let mut code = String::new();
     let streaming_info = streaming_data(fixture)?;
+    let background_info = background_data(fixture)?;
+    let middleware_meta = parse_middleware(fixture)?;
 
     // No client parameter - create per-test client from app factory
     code.push_str(&format!("async def test_{}() -> None:\n", test_name));
@@ -278,6 +313,24 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     } else {
         format!(", {}", request_kwargs.join(", "))
     };
+    if let Some(rate_limit) = &middleware_meta.rate_limit
+        && rate_limit.warmup_requests > 0
+    {
+        code.push_str(&format!("    for _ in range({}):\n", rate_limit.warmup_requests));
+        code.push_str(&format!(
+            "        warmup_response = await client.{}(\"{}\"{})\n",
+            method, path, kwargs_str
+        ));
+        let warmup_status = rate_limit.warmup_expect_status.unwrap_or(200);
+        code.push_str(&format!(
+            "        assert warmup_response.status_code == {}\n",
+            warmup_status
+        ));
+        if let Some(delay) = rate_limit.sleep_ms_between {
+            let sleep_literal = format_sleep_seconds(delay);
+            code.push_str(&format!("        await asyncio.sleep({})\n", sleep_literal));
+        }
+    }
 
     code.push_str(&format!(
         "    response = await client.{}(\"{}\"{})\n\n",
@@ -297,6 +350,18 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         if stream_info.is_text_only {
             code.push_str("    assert response.text() == expected_bytes.decode()\n");
         }
+        return Ok(code);
+    }
+
+    if let Some(bg) = background_info {
+        code.push_str(&format!(
+            "    state_response = await client.get(\"{}\")\n",
+            bg.state_path
+        ));
+        code.push_str("    assert state_response.status_code == 200\n");
+        let expected_state_value = serde_json::Value::Array(bg.expected_state.clone());
+        let expected_body = format!("{{\"{}\": {} }}", bg.state_key, json_to_python(&expected_state_value));
+        code.push_str(&format!("    assert state_response.json() == {}\n", expected_body));
         return Ok(code);
     }
 
@@ -413,6 +478,42 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         }
     }
 
+    if let Some(headers) = fixture.expected_response.headers.as_ref().filter(|map| !map.is_empty()) {
+        code.push_str("    response_headers = response.headers\n");
+        for (key, value) in headers.iter() {
+            let lookup_key = key.to_ascii_lowercase();
+            match value.as_str() {
+                "<<uuid>>" => {
+                    code.push_str(&format!(
+                        "    header_value = response_headers.get(\"{}\")\n",
+                        lookup_key
+                    ));
+                    code.push_str("    assert header_value is not None\n");
+                    code.push_str("    UUID(header_value)\n");
+                }
+                "<<present>>" => {
+                    code.push_str(&format!(
+                        "    assert response_headers.get(\"{}\") is not None\n",
+                        lookup_key
+                    ));
+                }
+                "<<absent>>" => {
+                    code.push_str(&format!(
+                        "    assert response_headers.get(\"{}\") is None\n",
+                        lookup_key
+                    ));
+                }
+                _ => {
+                    let expected = json_to_python(&serde_json::Value::String(value.clone()));
+                    code.push_str(&format!(
+                        "    assert response_headers.get(\"{}\") == {}\n",
+                        lookup_key, expected
+                    ));
+                }
+            }
+        }
+    }
+
     Ok(code)
 }
 
@@ -430,6 +531,22 @@ fn python_bytes_literal(bytes: &[u8]) -> String {
         }
     }
     literal.push('"');
+    literal
+}
+
+#[allow(clippy::manual_is_multiple_of)]
+fn format_sleep_seconds(ms: u64) -> String {
+    if ms % 1000 == 0 {
+        return format!("{}", ms / 1000);
+    }
+    let secs = (ms as f64) / 1000.0;
+    let mut literal = format!("{:.3}", secs);
+    while literal.contains('.') && literal.ends_with('0') {
+        literal.pop();
+    }
+    if literal.ends_with('.') {
+        literal.push('0');
+    }
     literal
 }
 

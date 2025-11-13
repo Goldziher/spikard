@@ -3,17 +3,17 @@
 
 #[cfg(test)]
 mod content_types {
+    use axum::body::Body;
+    use axum::http::Request;
+    use axum_test::TestServer;
+    use serde_json::Value;
+    use spikard_http::testing::snapshot_response;
 
     #[tokio::test]
     async fn test_content_types_13_json_with_charset_utf16() {
         // Fixture: 13_json_with_charset_utf16
         // Description: JSON with UTF-16 charset should be rejected (UTF-8 only)
         // Expected status: 415
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/content_types/13_json_with_charset_utf16.json")
@@ -272,16 +272,11 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(415).unwrap(),
-            "Expected status 415, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 415, "Expected status 415, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -289,11 +284,6 @@ mod content_types {
         // Fixture: 14_content_type_case_insensitive
         // Description: Content-Type header should be case-insensitive
         // Expected status: 201
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -553,16 +543,11 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(201).unwrap(),
-            "Expected status 201, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -570,11 +555,6 @@ mod content_types {
         // Fixture: 15_multipart_boundary_required
         // Description: Multipart content-type without boundary parameter should fail
         // Expected status: 400
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -834,16 +814,11 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(400).unwrap(),
-            "Expected status 400, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 400, "Expected status 400, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -851,11 +826,6 @@ mod content_types {
         // Fixture: 16_text_plain_not_accepted
         // Description: text/plain content-type should be rejected when JSON is expected
         // Expected status: 415
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/content_types/16_text_plain_not_accepted.json")
@@ -1114,16 +1084,11 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(415).unwrap(),
-            "Expected status 415, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 415, "Expected status 415, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1131,11 +1096,6 @@ mod content_types {
         // Fixture: 17_vendor_json_accepted
         // Description: Vendor-specific JSON content-type should be accepted
         // Expected status: 201
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/content_types/17_vendor_json_accepted.json")
@@ -1394,16 +1354,11 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(201).unwrap(),
-            "Expected status 201, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1411,11 +1366,6 @@ mod content_types {
         // Fixture: 18_content_type_with_multiple_params
         // Description: Content-Type with multiple parameters should be parsed correctly
         // Expected status: 201
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -1675,16 +1625,11 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(201).unwrap(),
-            "Expected status 201, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1692,11 +1637,6 @@ mod content_types {
         // Fixture: 19_missing_content_type_default_json
         // Description: Missing Content-Type header should default to JSON when body is present
         // Expected status: 201
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -1956,16 +1896,11 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(201).unwrap(),
-            "Expected status 201, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1973,11 +1908,6 @@ mod content_types {
         // Fixture: 20_content_length_mismatch
         // Description: Content-Length header mismatch with actual body size should fail
         // Expected status: 400
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/content_types/20_content_length_mismatch.json")
@@ -2236,16 +2166,11 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(400).unwrap(),
-            "Expected status 400, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 400, "Expected status 400, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2253,11 +2178,6 @@ mod content_types {
         // Fixture: 415 Unsupported Media Type
         // Description: Tests rejection of unsupported content type
         // Expected status: 415
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/content_types/12_unsupported_media_type.json")
@@ -2516,16 +2436,11 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(415).unwrap(),
-            "Expected status 415, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 415, "Expected status 415, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2533,11 +2448,6 @@ mod content_types {
         // Fixture: Binary response - application/octet-stream
         // Description: Tests binary data response
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/content_types/05_octet_stream_binary.json")
@@ -2796,16 +2706,25 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-disposition") {
+            assert_eq!(
+                actual, "attachment; filename=file.bin",
+                "Mismatched header 'content-disposition'"
+            );
+        } else {
+            panic!("Expected header 'content-disposition' to be present");
+        }
+        if let Some(actual) = headers.get("content-type") {
+            assert_eq!(actual, "application/octet-stream", "Mismatched header 'content-type'");
+        } else {
+            panic!("Expected header 'content-type' to be present");
+        }
     }
 
     #[tokio::test]
@@ -2813,11 +2732,6 @@ mod content_types {
         // Fixture: CSV response - text/csv
         // Description: Tests CSV file response
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/content_types/09_csv_response.json")
@@ -3076,16 +2990,25 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-disposition") {
+            assert_eq!(
+                actual, "attachment; filename=data.csv",
+                "Mismatched header 'content-disposition'"
+            );
+        } else {
+            panic!("Expected header 'content-disposition' to be present");
+        }
+        if let Some(actual) = headers.get("content-type") {
+            assert_eq!(actual, "text/csv; charset=utf-8", "Mismatched header 'content-type'");
+        } else {
+            panic!("Expected header 'content-type' to be present");
+        }
     }
 
     #[tokio::test]
@@ -3093,11 +3016,6 @@ mod content_types {
         // Fixture: Content negotiation - Accept header
         // Description: Tests content negotiation based on Accept header
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -3357,16 +3275,17 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-type") {
+            assert_eq!(actual, "application/json", "Mismatched header 'content-type'");
+        } else {
+            panic!("Expected header 'content-type' to be present");
+        }
     }
 
     #[tokio::test]
@@ -3374,11 +3293,6 @@ mod content_types {
         // Fixture: HTML response - text/html
         // Description: Tests HTML response
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/content_types/03_html_response.json")
@@ -3637,16 +3551,17 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-type") {
+            assert_eq!(actual, "text/html; charset=utf-8", "Mismatched header 'content-type'");
+        } else {
+            panic!("Expected header 'content-type' to be present");
+        }
     }
 
     #[tokio::test]
@@ -3654,11 +3569,6 @@ mod content_types {
         // Fixture: JPEG image response - image/jpeg
         // Description: Tests JPEG image response
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/content_types/07_image_jpeg_response.json")
@@ -3917,16 +3827,17 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-type") {
+            assert_eq!(actual, "image/jpeg", "Mismatched header 'content-type'");
+        } else {
+            panic!("Expected header 'content-type' to be present");
+        }
     }
 
     #[tokio::test]
@@ -3934,11 +3845,6 @@ mod content_types {
         // Fixture: JSON response - application/json
         // Description: Tests JSON response with correct Content-Type header
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/content_types/01_json_response.json")
@@ -4197,16 +4103,17 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-type") {
+            assert_eq!(actual, "application/json", "Mismatched header 'content-type'");
+        } else {
+            panic!("Expected header 'content-type' to be present");
+        }
     }
 
     #[tokio::test]
@@ -4214,11 +4121,6 @@ mod content_types {
         // Fixture: JSON with UTF-8 charset
         // Description: Tests JSON response with explicit UTF-8 charset
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/content_types/10_json_utf8_charset.json")
@@ -4477,16 +4379,20 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-type") {
+            assert_eq!(
+                actual, "application/json; charset=utf-8",
+                "Mismatched header 'content-type'"
+            );
+        } else {
+            panic!("Expected header 'content-type' to be present");
+        }
     }
 
     #[tokio::test]
@@ -4494,11 +4400,6 @@ mod content_types {
         // Fixture: PDF response - application/pdf
         // Description: Tests PDF file response
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/content_types/06_pdf_response.json")
@@ -4757,16 +4658,25 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-type") {
+            assert_eq!(actual, "application/pdf", "Mismatched header 'content-type'");
+        } else {
+            panic!("Expected header 'content-type' to be present");
+        }
+        if let Some(actual) = headers.get("content-disposition") {
+            assert_eq!(
+                actual, "attachment; filename=document.pdf",
+                "Mismatched header 'content-disposition'"
+            );
+        } else {
+            panic!("Expected header 'content-disposition' to be present");
+        }
     }
 
     #[tokio::test]
@@ -4774,11 +4684,6 @@ mod content_types {
         // Fixture: PNG image response - image/png
         // Description: Tests PNG image response
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/content_types/08_image_png_response.json")
@@ -5037,16 +4942,17 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-type") {
+            assert_eq!(actual, "image/png", "Mismatched header 'content-type'");
+        } else {
+            panic!("Expected header 'content-type' to be present");
+        }
     }
 
     #[tokio::test]
@@ -5054,11 +4960,6 @@ mod content_types {
         // Fixture: Plain text response - text/plain
         // Description: Tests plain text response
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/content_types/02_plain_text_response.json")
@@ -5317,16 +5218,17 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-type") {
+            assert_eq!(actual, "text/plain; charset=utf-8", "Mismatched header 'content-type'");
+        } else {
+            panic!("Expected header 'content-type' to be present");
+        }
     }
 
     #[tokio::test]
@@ -5334,11 +5236,6 @@ mod content_types {
         // Fixture: XML response - application/xml
         // Description: Tests XML response
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/content_types/04_xml_response.json")
@@ -5597,15 +5494,16 @@ mod content_types {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-type") {
+            assert_eq!(actual, "application/xml", "Mismatched header 'content-type'");
+        } else {
+            panic!("Expected header 'content-type' to be present");
+        }
     }
 }
