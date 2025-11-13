@@ -1,6 +1,6 @@
 use axum::body::Body;
 use axum::http::Request as AxumRequest;
-use axum_test::{TestResponse as AxumTestResponse, TestServer};
+use axum_test::{TestResponse as AxumTestResponse, TestServer, TestWebSocket, WsMessage};
 use brotli::Decompressor;
 use flate2::read::GzDecoder;
 use http_body_util::BodyExt;
@@ -137,4 +137,206 @@ fn decode_brotli(body: Vec<u8>) -> Result<Vec<u8>, SnapshotError> {
         .read_to_end(&mut decoded)
         .map_err(|e| SnapshotError::Decompression(e.to_string()))?;
     Ok(decoded)
+}
+
+/// WebSocket connection wrapper for testing.
+///
+/// Provides a simple interface for sending and receiving WebSocket messages
+/// during tests without needing a real network connection.
+pub struct WebSocketConnection {
+    inner: TestWebSocket,
+}
+
+impl WebSocketConnection {
+    /// Create a new WebSocket connection from an axum-test TestWebSocket.
+    pub fn new(inner: TestWebSocket) -> Self {
+        Self { inner }
+    }
+
+    /// Send a text message over the WebSocket.
+    pub async fn send_text(&mut self, text: impl std::fmt::Display) {
+        self.inner.send_text(text).await;
+    }
+
+    /// Send a JSON message over the WebSocket.
+    pub async fn send_json<T: serde::Serialize>(&mut self, value: &T) {
+        self.inner.send_json(value).await;
+    }
+
+    /// Send a raw WebSocket message.
+    pub async fn send_message(&mut self, msg: WsMessage) {
+        self.inner.send_message(msg).await;
+    }
+
+    /// Receive the next text message from the WebSocket.
+    pub async fn receive_text(&mut self) -> String {
+        self.inner.receive_text().await
+    }
+
+    /// Receive and parse a JSON message from the WebSocket.
+    pub async fn receive_json<T: serde::de::DeserializeOwned>(&mut self) -> T {
+        self.inner.receive_json().await
+    }
+
+    /// Receive raw bytes from the WebSocket.
+    pub async fn receive_bytes(&mut self) -> bytes::Bytes {
+        self.inner.receive_bytes().await
+    }
+
+    /// Receive the next raw message from the WebSocket.
+    pub async fn receive_message(&mut self) -> WebSocketMessage {
+        let msg = self.inner.receive_message().await;
+        WebSocketMessage::from_ws_message(msg)
+    }
+
+    /// Close the WebSocket connection.
+    pub async fn close(self) {
+        self.inner.close().await;
+    }
+}
+
+/// A WebSocket message that can be text or binary.
+#[derive(Debug, Clone)]
+pub enum WebSocketMessage {
+    /// A text message.
+    Text(String),
+    /// A binary message.
+    Binary(Vec<u8>),
+    /// A close message.
+    Close(Option<String>),
+    /// A ping message.
+    Ping(Vec<u8>),
+    /// A pong message.
+    Pong(Vec<u8>),
+}
+
+impl WebSocketMessage {
+    fn from_ws_message(msg: WsMessage) -> Self {
+        match msg {
+            WsMessage::Text(text) => WebSocketMessage::Text(text.to_string()),
+            WsMessage::Binary(data) => WebSocketMessage::Binary(data.to_vec()),
+            WsMessage::Close(frame) => WebSocketMessage::Close(frame.map(|f| f.reason.to_string())),
+            WsMessage::Ping(data) => WebSocketMessage::Ping(data.to_vec()),
+            WsMessage::Pong(data) => WebSocketMessage::Pong(data.to_vec()),
+            WsMessage::Frame(_) => {
+                // Raw frame - treat as close for simplicity
+                WebSocketMessage::Close(None)
+            }
+        }
+    }
+
+    /// Get the message as text, if it's a text message.
+    pub fn as_text(&self) -> Option<&str> {
+        match self {
+            WebSocketMessage::Text(text) => Some(text),
+            _ => None,
+        }
+    }
+
+    /// Get the message as JSON, if it's a text message containing JSON.
+    pub fn as_json(&self) -> Result<Value, String> {
+        match self {
+            WebSocketMessage::Text(text) => {
+                serde_json::from_str(text).map_err(|e| format!("Failed to parse JSON: {}", e))
+            }
+            _ => Err("Message is not text".to_string()),
+        }
+    }
+
+    /// Get the message as binary, if it's a binary message.
+    pub fn as_binary(&self) -> Option<&[u8]> {
+        match self {
+            WebSocketMessage::Binary(data) => Some(data),
+            _ => None,
+        }
+    }
+
+    /// Check if this is a close message.
+    pub fn is_close(&self) -> bool {
+        matches!(self, WebSocketMessage::Close(_))
+    }
+}
+
+/// Connect to a WebSocket endpoint on the test server.
+pub async fn connect_websocket(server: &TestServer, path: &str) -> WebSocketConnection {
+    let ws = server.get_websocket(path).await.into_websocket().await;
+    WebSocketConnection::new(ws)
+}
+
+/// Server-Sent Events (SSE) stream for testing.
+///
+/// Wraps a response body and provides methods to parse SSE events.
+#[derive(Debug)]
+pub struct SseStream {
+    body: String,
+    events: Vec<SseEvent>,
+}
+
+impl SseStream {
+    /// Create a new SSE stream from a response.
+    pub fn from_response(response: &ResponseSnapshot) -> Result<Self, String> {
+        let body = response
+            .text()
+            .map_err(|e| format!("Failed to read response body: {}", e))?;
+
+        // Parse SSE events from the body
+        let events = Self::parse_events(&body);
+
+        Ok(Self { body, events })
+    }
+
+    fn parse_events(body: &str) -> Vec<SseEvent> {
+        let mut events = Vec::new();
+        let lines: Vec<&str> = body.lines().collect();
+        let mut i = 0;
+
+        while i < lines.len() {
+            if lines[i].starts_with("data:") {
+                let data = lines[i].trim_start_matches("data:").trim().to_string();
+                events.push(SseEvent { data });
+            } else if lines[i].starts_with("data") {
+                // Handle "data" without colon (edge case)
+                let data = lines[i].trim_start_matches("data").trim().to_string();
+                if !data.is_empty() || lines[i].len() == 4 {
+                    // Include if there's data or if line is exactly "data" (empty event)
+                    events.push(SseEvent { data });
+                }
+            }
+            i += 1;
+        }
+
+        events
+    }
+
+    /// Get all events from the stream.
+    pub fn events(&self) -> &[SseEvent] {
+        &self.events
+    }
+
+    /// Get the raw body of the SSE response.
+    pub fn body(&self) -> &str {
+        &self.body
+    }
+
+    /// Get events as JSON values.
+    pub fn events_as_json(&self) -> Result<Vec<Value>, String> {
+        self.events
+            .iter()
+            .map(|event| event.as_json())
+            .collect::<Result<Vec<_>, _>>()
+    }
+}
+
+/// A single Server-Sent Event.
+#[derive(Debug, Clone)]
+pub struct SseEvent {
+    /// The data field of the event.
+    pub data: String,
+}
+
+impl SseEvent {
+    /// Parse the event data as JSON.
+    pub fn as_json(&self) -> Result<Value, String> {
+        serde_json::from_str(&self.data).map_err(|e| format!("Failed to parse JSON: {}", e))
+    }
 }

@@ -38,7 +38,7 @@ uuid = "1.18"
 bytes = "1.10"
 http-body-util = "0.1"
 http-body = "1.0"
-axum-test = "18"
+axum-test = { version = "18", features = ["ws"] }
 anyhow = "1.0"
 cookie = "0.18"
 base64 = "0.22.1"
