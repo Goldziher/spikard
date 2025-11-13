@@ -15,7 +15,9 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::net::TcpListener;
 use tower_governor::governor::GovernorConfigBuilder;
+use tower_governor::key_extractor::GlobalKeyExtractor;
 use tower_http::compression::CompressionLayer;
+use tower_http::compression::predicate::{NotForContentType, Predicate, SizeAbove};
 use tower_http::request_id::{MakeRequestId, PropagateRequestIdLayer, RequestId, SetRequestIdLayer};
 use tower_http::sensitive_headers::SetSensitiveRequestHeadersLayer;
 use tower_http::services::ServeDir;
@@ -648,19 +650,40 @@ pub fn build_router_with_handlers_and_config(
         if !compression.brotli {
             compression_layer = compression_layer.br(false);
         }
+
+        // Respect configurable minimum compression size while preserving default predicate behavior.
+        let min_threshold = compression.min_size.min(u16::MAX as usize) as u16;
+        let predicate = SizeAbove::new(min_threshold)
+            .and(NotForContentType::GRPC)
+            .and(NotForContentType::IMAGES)
+            .and(NotForContentType::SSE);
+        let compression_layer = compression_layer.compress_when(predicate);
+
         app = app.layer(compression_layer);
     }
 
     // 3. Rate limiting (before other processing to reject early)
     if let Some(ref rate_limit) = config.rate_limit {
-        let governor_conf = Arc::new(
-            GovernorConfigBuilder::default()
-                .per_second(rate_limit.per_second)
-                .burst_size(rate_limit.burst)
-                .finish()
-                .ok_or_else(|| "Failed to create rate limiter".to_string())?,
-        );
-        app = app.layer(tower_governor::GovernorLayer::new(governor_conf));
+        if rate_limit.ip_based {
+            let governor_conf = Arc::new(
+                GovernorConfigBuilder::default()
+                    .per_second(rate_limit.per_second)
+                    .burst_size(rate_limit.burst)
+                    .finish()
+                    .ok_or_else(|| "Failed to create rate limiter".to_string())?,
+            );
+            app = app.layer(tower_governor::GovernorLayer::new(governor_conf));
+        } else {
+            let governor_conf = Arc::new(
+                GovernorConfigBuilder::default()
+                    .per_second(rate_limit.per_second)
+                    .burst_size(rate_limit.burst)
+                    .key_extractor(GlobalKeyExtractor)
+                    .finish()
+                    .ok_or_else(|| "Failed to create rate limiter".to_string())?,
+            );
+            app = app.layer(tower_governor::GovernorLayer::new(governor_conf));
+        }
     }
 
     // 3a. JWT authentication (after rate limiting, before business logic)
@@ -706,20 +729,17 @@ pub fn build_router_with_handlers_and_config(
             serve_dir = serve_dir.append_index_html_on_directories(true);
         }
 
-        // Optionally add cache-control header by wrapping in a Router
+        let mut static_router = AxumRouter::new().fallback_service(serve_dir);
         if let Some(ref cache_control) = static_config.cache_control {
-            let static_router =
-                AxumRouter::new()
-                    .nest_service("/", serve_dir)
-                    .layer(SetResponseHeaderLayer::overriding(
-                        axum::http::header::CACHE_CONTROL,
-                        axum::http::HeaderValue::from_str(cache_control)
-                            .map_err(|e| format!("Invalid cache-control header: {}", e))?,
-                    ));
-            app = app.nest_service(&static_config.route_prefix, static_router);
-        } else {
-            app = app.nest_service(&static_config.route_prefix, serve_dir);
+            let header_value = axum::http::HeaderValue::from_str(cache_control)
+                .map_err(|e| format!("Invalid cache-control header: {}", e))?;
+            static_router = static_router.layer(SetResponseHeaderLayer::overriding(
+                axum::http::header::CACHE_CONTROL,
+                header_value,
+            ));
         }
+
+        app = app.nest_service(&static_config.route_prefix, static_router);
 
         tracing::info!(
             "Serving static files from '{}' at '{}'",

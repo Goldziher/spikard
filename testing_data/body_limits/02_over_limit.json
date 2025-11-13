@@ -1,0 +1,33 @@
+{
+	"name": "Body over limit returns 413",
+	"description": "Requests that exceed the configured max body size should be rejected with Payload Too Large.",
+	"category": "body_limits",
+	"handler": {
+		"route": "/body-limit/over",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"note": { "type": "string" }
+			},
+			"required": ["note"],
+			"additionalProperties": false
+		},
+		"middleware": {
+			"body_limit": {
+				"max_bytes": 64
+			}
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/body-limit/over",
+		"body": {
+			"note": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+		}
+	},
+	"expected_response": {
+		"status_code": 413
+	},
+	"tags": ["body_limit", "middleware", "payload_too_large"]
+}

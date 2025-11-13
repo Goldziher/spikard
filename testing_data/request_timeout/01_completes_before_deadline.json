@@ -1,0 +1,27 @@
+{
+	"name": "Request completes before timeout",
+	"description": "Simulated handler sleeps briefly and should complete before the timeout middleware fires.",
+	"category": "request_timeout",
+	"handler": {
+		"route": "/timeouts/fast",
+		"method": "GET",
+		"middleware": {
+			"request_timeout": {
+				"seconds": 2,
+				"sleep_ms": 100
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/timeouts/fast"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"status": "ok",
+			"duration": "fast"
+		}
+	},
+	"tags": ["timeouts", "middleware"]
+}

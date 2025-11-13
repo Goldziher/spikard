@@ -51,6 +51,8 @@ describe("content_types", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toBe('<?xml version="1.0"?><item><name>Item</name><price>42.0</price></item>');
+		const responseHeaders = response.headers();
+		expect(responseHeaders["content-type"]).toBe("application/xml");
 	});
 
 	test("14_content_type_case_insensitive", async () => {
@@ -81,6 +83,8 @@ describe("content_types", () => {
 		expect(responseData.emoji).toBe("☕");
 		expect(responseData).toHaveProperty("name");
 		expect(responseData.name).toBe("Café");
+		const responseHeaders = response.headers();
+		expect(responseHeaders["content-type"]).toBe("application/json; charset=utf-8");
 	});
 
 	test("16_text_plain_not_accepted", async () => {
@@ -105,6 +109,9 @@ describe("content_types", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toBe("pdf_binary_data");
+		const responseHeaders = response.headers();
+		expect(responseHeaders["content-type"]).toBe("application/pdf");
+		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=document.pdf");
 	});
 
 	test("20_content_length_mismatch", async () => {
@@ -162,6 +169,8 @@ describe("content_types", () => {
 		expect(responseData.name).toBe("Item");
 		expect(responseData).toHaveProperty("price");
 		expect(responseData.price).toBe(42.0);
+		const responseHeaders = response.headers();
+		expect(responseHeaders["content-type"]).toBe("application/json");
 	});
 
 	test("15_multipart_boundary_required", async () => {
@@ -191,6 +200,8 @@ describe("content_types", () => {
 		expect(responseData.id).toBe(1);
 		expect(responseData).toHaveProperty("name");
 		expect(responseData.name).toBe("Item");
+		const responseHeaders = response.headers();
+		expect(responseHeaders["content-type"]).toBe("application/json");
 	});
 
 	test("HTML response - text html", async () => {
@@ -202,6 +213,8 @@ describe("content_types", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toBe("<html><body><h1>Hello</h1></body></html>");
+		const responseHeaders = response.headers();
+		expect(responseHeaders["content-type"]).toBe("text/html; charset=utf-8");
 	});
 
 	test("JPEG image response - image jpeg", async () => {
@@ -213,6 +226,8 @@ describe("content_types", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toBe("jpeg_binary_data");
+		const responseHeaders = response.headers();
+		expect(responseHeaders["content-type"]).toBe("image/jpeg");
 	});
 
 	test("19_missing_content_type_default_json", async () => {
@@ -237,6 +252,8 @@ describe("content_types", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toBe("png_binary_data");
+		const responseHeaders = response.headers();
+		expect(responseHeaders["content-type"]).toBe("image/png");
 	});
 
 	test("Plain text response - text plain", async () => {
@@ -248,6 +265,8 @@ describe("content_types", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toBe("Hello, World!");
+		const responseHeaders = response.headers();
+		expect(responseHeaders["content-type"]).toBe("text/plain; charset=utf-8");
 	});
 
 	test("18_content_type_with_multiple_params", async () => {
@@ -275,6 +294,9 @@ describe("content_types", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toBe("id,name,price\n1,Item A,10.0\n2,Item B,20.0");
+		const responseHeaders = response.headers();
+		expect(responseHeaders["content-type"]).toBe("text/csv; charset=utf-8");
+		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=data.csv");
 	});
 
 	test("Binary response - application octet-stream", async () => {
@@ -286,5 +308,8 @@ describe("content_types", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toBe("binary_data_placeholder");
+		const responseHeaders = response.headers();
+		expect(responseHeaders["content-type"]).toBe("application/octet-stream");
+		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=file.bin");
 	});
 });

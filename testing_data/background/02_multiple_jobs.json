@@ -1,0 +1,34 @@
+{
+	"name": "Background event logging - second payload",
+	"description": "Ensures background jobs handle different payloads",
+	"handler": {
+		"route": "/background/events",
+		"method": "POST",
+		"body_schema": {
+			"type": "object",
+			"properties": {
+				"event": { "type": "string" }
+			},
+			"required": ["event"],
+			"additionalProperties": false
+		}
+	},
+	"request": {
+		"method": "POST",
+		"path": "/background/events",
+		"body": { "event": "beta" }
+	},
+	"expected_response": {
+		"status_code": 202,
+		"headers": {
+			"content-type": "application/json"
+		}
+	},
+	"background": {
+		"state_path": "/background/events",
+		"state_key": "events",
+		"value_field": "event",
+		"expected_state": ["beta"]
+	},
+	"tags": ["background", "async"]
+}

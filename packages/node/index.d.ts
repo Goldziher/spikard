@@ -28,6 +28,8 @@ export declare class TestResponse {
   bytes(): Buffer
 }
 
+export declare function backgroundRun(task: () => Promise<undefined>): void
+
 export declare function createStreamingHandle(iterator: object, init?: StreamingResponseInit | undefined | null): number
 
 /**

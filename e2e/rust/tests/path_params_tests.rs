@@ -3,17 +3,17 @@
 
 #[cfg(test)]
 mod path_params {
+    use axum::body::Body;
+    use axum::http::Request;
+    use axum_test::TestServer;
+    use serde_json::Value;
+    use spikard_http::testing::snapshot_response;
 
     #[tokio::test]
     async fn test_path_params_20_uuid_v3_path_param_success() {
         // Fixture: 20_uuid_v3_path_param_success
         // Description: Path parameter with valid UUID v3 should be accepted
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/20_uuid_v3_path_param_success.json")
@@ -272,16 +272,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -289,11 +284,6 @@ mod path_params {
         // Fixture: 21_uuid_v5_path_param_success
         // Description: Path parameter with valid UUID v5 should be accepted
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/21_uuid_v5_path_param_success.json")
@@ -552,16 +542,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -569,11 +554,6 @@ mod path_params {
         // Fixture: 24_date_format_path_param_success
         // Description: Path parameter with valid ISO date format should be accepted
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -833,16 +813,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -850,11 +825,6 @@ mod path_params {
         // Fixture: 25_date_format_invalid_failure
         // Description: Path parameter with invalid date format should fail validation
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -1114,16 +1084,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1131,11 +1096,6 @@ mod path_params {
         // Fixture: 27_datetime_format_path_param_success
         // Description: Path parameter with valid ISO 8601 datetime should be accepted
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -1395,16 +1355,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1412,11 +1367,6 @@ mod path_params {
         // Fixture: 28_duration_format_path_param_success
         // Description: Path parameter with valid ISO 8601 duration should be accepted
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -1676,16 +1626,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1693,11 +1638,6 @@ mod path_params {
         // Fixture: 29_decimal_path_param_success
         // Description: Path parameter with decimal/money value should be accepted
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/29_decimal_path_param_success.json")
@@ -1956,16 +1896,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1973,11 +1908,6 @@ mod path_params {
         // Fixture: 30_string_minlength_path_success
         // Description: Path parameter with string meeting minLength constraint should succeed
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -2237,16 +2167,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2254,11 +2179,6 @@ mod path_params {
         // Fixture: 31_string_minlength_path_failure
         // Description: Path parameter with string below minLength constraint should fail
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -2518,16 +2438,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2535,11 +2450,6 @@ mod path_params {
         // Fixture: 32_string_maxlength_path_failure
         // Description: Path parameter with string exceeding maxLength constraint should fail
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -2799,16 +2709,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2816,11 +2721,6 @@ mod path_params {
         // Fixture: 33_string_pattern_path_success
         // Description: Path parameter matching regex pattern should succeed
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -3080,16 +2980,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3097,11 +2992,6 @@ mod path_params {
         // Fixture: 34_string_pattern_path_failure
         // Description: Path parameter not matching regex pattern should fail
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -3361,16 +3251,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3378,11 +3263,6 @@ mod path_params {
         // Fixture: 35_negative_integer_path_param
         // Description: Path parameter with negative integer should be parsed correctly
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -3642,16 +3522,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3659,11 +3534,6 @@ mod path_params {
         // Fixture: Boolean path parameter - True
         // Description: Tests boolean path parameter with 'True' string value
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/13_bool_path_param_true.json")
@@ -3922,16 +3792,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3939,11 +3804,6 @@ mod path_params {
         // Fixture: Boolean path parameter - numeric 1
         // Description: Tests boolean path parameter with '1' converts to true
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/14_bool_path_param_1.json")
@@ -4202,16 +4062,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -4219,11 +4074,6 @@ mod path_params {
         // Fixture: Date path parameter - success
         // Description: Tests date path parameter with ISO format date
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/20_date_path_param_success.json")
@@ -4482,16 +4332,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -4499,11 +4344,6 @@ mod path_params {
         // Fixture: Enum path parameter - invalid value
         // Description: Tests enum path parameter with invalid enum value returns 422
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/10_enum_path_param_invalid.json")
@@ -4762,16 +4602,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -4779,11 +4614,6 @@ mod path_params {
         // Fixture: Enum path parameter - success
         // Description: Tests enum path parameter with valid enum value
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/09_enum_path_param_success.json")
@@ -5042,16 +4872,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -5059,11 +4884,6 @@ mod path_params {
         // Fixture: Float path parameter - success
         // Description: Tests float path parameter with valid value
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/04_float_path_param_success.json")
@@ -5322,16 +5142,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -5339,11 +5154,6 @@ mod path_params {
         // Fixture: Integer path parameter - invalid string
         // Description: Tests integer path parameter with non-numeric string returns 422
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/03_int_path_param_invalid.json")
@@ -5602,16 +5412,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -5619,11 +5424,6 @@ mod path_params {
         // Fixture: Integer path parameter - success
         // Description: Tests integer path parameter with valid value
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/02_int_path_param_success.json")
@@ -5882,16 +5682,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -5899,11 +5694,6 @@ mod path_params {
         // Fixture: Integer path parameter with combined lt and gt constraints - success
         // Description: Tests integer path parameter with both lt and gt validation (range check)
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -6163,16 +5953,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -6180,11 +5965,6 @@ mod path_params {
         // Fixture: Integer path parameter with ge constraint - success
         // Description: Tests integer path parameter with ge (greater than or equal) validation at boundary
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/15_int_validation_ge_success.json")
@@ -6443,16 +6223,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -6460,11 +6235,6 @@ mod path_params {
         // Fixture: Integer path parameter with gt constraint - failure
         // Description: Tests integer path parameter with gt validation fails when value too small
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/07_int_validation_gt_fail.json")
@@ -6723,16 +6493,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -6740,11 +6505,6 @@ mod path_params {
         // Fixture: Integer path parameter with gt constraint - success
         // Description: Tests integer path parameter with gt (greater than) validation succeeds
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/06_int_validation_gt_success.json")
@@ -7003,16 +6763,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -7020,11 +6775,6 @@ mod path_params {
         // Fixture: Integer path parameter with le constraint - success
         // Description: Tests integer path parameter with le (less than or equal) validation at boundary
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/16_int_validation_le_success.json")
@@ -7283,16 +7033,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -7300,11 +7045,6 @@ mod path_params {
         // Fixture: Integer path parameter with lt constraint - success
         // Description: Tests integer path parameter with lt (less than) validation
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/17_int_validation_lt_success.json")
@@ -7563,16 +7303,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -7580,11 +7315,6 @@ mod path_params {
         // Fixture: Multiple path parameters - success
         // Description: Tests multiple path parameters in single route
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/12_multiple_path_params.json")
@@ -7843,16 +7573,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -7860,11 +7585,6 @@ mod path_params {
         // Fixture: Path parameter type syntax - invalid UUID
         // Description: Tests that :uuid type syntax auto-generates validation that rejects invalid UUIDs
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/39_type_syntax_invalid_uuid.json")
@@ -8123,16 +7843,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -8140,11 +7855,6 @@ mod path_params {
         // Fixture: Path parameter type syntax with override
         // Description: Tests that explicit parameter schema merges with auto-generated type syntax schema
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/38_type_syntax_override.json")
@@ -8403,16 +8113,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -8420,11 +8125,6 @@ mod path_params {
         // Fixture: Path parameter with type syntax - UUID
         // Description: Tests path parameter with :uuid type syntax auto-generates UUID validation
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/36_type_syntax_uuid.json")
@@ -8683,16 +8383,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -8700,11 +8395,6 @@ mod path_params {
         // Fixture: Path parameter with type syntax - integer
         // Description: Tests path parameter with :int type syntax auto-generates integer type
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/37_type_syntax_int.json")
@@ -8963,16 +8653,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -8980,11 +8665,6 @@ mod path_params {
         // Fixture: Path type parameter - file path
         // Description: Tests path type parameter that captures remaining path segments
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/11_path_type_file_path.json")
@@ -9243,16 +8923,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -9260,11 +8935,6 @@ mod path_params {
         // Fixture: String path parameter - success
         // Description: Tests string path parameter with valid value
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/01_string_path_param.json")
@@ -9523,16 +9193,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -9540,11 +9205,6 @@ mod path_params {
         // Fixture: String path parameter with max_length - failure
         // Description: Tests string path parameter with max_length validation fails when too long
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -9804,16 +9464,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -9821,11 +9476,6 @@ mod path_params {
         // Fixture: String path parameter with min_length - failure
         // Description: Tests string path parameter with min_length validation fails
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -10085,16 +9735,11 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -10102,11 +9747,6 @@ mod path_params {
         // Fixture: UUID path parameter - success
         // Description: Tests UUID path parameter with valid UUID format
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/path_params/05_uuid_path_param_success.json")
@@ -10365,15 +10005,10 @@ mod path_params {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 }

@@ -51,6 +51,8 @@
 //! Use fixtures to drive TDD development of Spikard's Rust engine and ensure
 //! consistent behavior across all language bindings (Rust, Python, TypeScript, Ruby).
 
+use crate::background::{BackgroundFixtureData, background_data};
+use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::chunk_bytes;
 use anyhow::{Context, Result};
 use serde_json::Value;
@@ -86,7 +88,7 @@ pub fn generate_rust_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     println!("  ✓ Generated src/main.rs");
 
     // Generate lib.rs for reuse in tests
-    let lib_rs = generate_lib_rs(&categories);
+    let lib_rs = generate_lib_rs(&categories, output_dir)?;
     fs::write(src_dir.join("lib.rs"), lib_rs).context("Failed to write lib.rs")?;
     println!("  ✓ Generated src/lib.rs");
 
@@ -153,6 +155,8 @@ form_urlencoded = "1.2"
 percent-encoding = "2.3"
 bytes = "1.7"
 futures = "0.3"
+axum-test = "18"
+uuid = "1"
 "#
     .to_string()
 }
@@ -183,18 +187,27 @@ async fn main() {
     .to_string()
 }
 
-fn generate_lib_rs(categories: &BTreeMap<String, Vec<Fixture>>) -> String {
+fn generate_lib_rs(categories: &BTreeMap<String, Vec<Fixture>>, output_dir: &Path) -> Result<String> {
     let mut handlers = Vec::new();
     let mut app_functions = Vec::new();
     let has_streaming = categories
         .values()
         .flat_map(|fixtures| fixtures.iter())
         .any(|fixture| fixture.streaming.is_some());
+    let has_background = categories
+        .values()
+        .flat_map(|fixtures| fixtures.iter())
+        .any(|fixture| fixture.background.is_some());
 
     // Generate one handler per fixture (no grouping!)
     for (category, fixtures) in categories {
         for fixture in fixtures {
-            let (handler_code, app_fn_code) = generate_fixture_handler_and_app(category, fixture);
+            let metadata = parse_middleware(fixture)?;
+            if !metadata.static_dirs.is_empty() {
+                let fixture_slug = format!("{}_{}", category, sanitize_name(&fixture.name));
+                write_static_assets(output_dir, &fixture_slug, &metadata.static_dirs)?;
+            }
+            let (handler_code, app_fn_code) = generate_fixture_handler_and_app(category, fixture, &metadata);
             handlers.push(handler_code);
             app_functions.push(app_fn_code);
         }
@@ -204,10 +217,17 @@ fn generate_lib_rs(categories: &BTreeMap<String, Vec<Fixture>>) -> String {
     header.push_str(
         "use axum::{routing, routing::{get, post, put, patch, delete, head, options, trace}, Json, Router, middleware};\n",
     );
+    if has_background {
+        header.push_str("use axum::extract::State;\n");
+    }
     header.push_str("use axum::response::IntoResponse;\n");
     header.push_str("use form_urlencoded;\n");
     header.push_str("use serde_json::{json, Value};\n");
     header.push_str("use std::collections::HashMap;\n");
+    if has_background {
+        header.push_str("use std::sync::Arc;\n");
+        header.push_str("use tokio::sync::Mutex;\n");
+    }
     header.push_str("use spikard_http::parameters::ParameterValidator;\n");
     if has_streaming {
         header.push_str("use bytes::Bytes;\n");
@@ -215,8 +235,24 @@ fn generate_lib_rs(categories: &BTreeMap<String, Vec<Fixture>>) -> String {
         header.push_str("use spikard_http::HandlerResponse;\n");
         header.push_str("use std::str::FromStr;\n");
     }
+    header.push_str("use axum::response::Response;\n");
+    header.push_str("use axum::http::{HeaderName, HeaderValue};\n");
+    header.push_str(
+        r#"fn apply_expected_headers(mut response: Response, headers: &[(&str, &str)]) -> Response {
+    for (name, value) in headers {
+        if let Ok(header_name) = HeaderName::from_lowercase_str(name) {
+            if let Ok(header_value) = HeaderValue::from_str(value) {
+                response.headers_mut().insert(header_name, header_value);
+            }
+        }
+    }
+    response
+}
 
-    format!(
+"#,
+    );
+
+    Ok(format!(
         r#"{header}
 
 #[derive(Clone, Copy)]
@@ -240,16 +276,24 @@ pub fn create_app() -> Router {{
         header = header,
         app_functions = app_functions.join("\n\n"),
         handlers = handlers.join("\n\n"),
-    )
+    ))
 }
 
 /// Generate handler and app function for a single fixture
 /// Returns (handler_code, app_function_code)
-fn generate_fixture_handler_and_app(category: &str, fixture: &Fixture) -> (String, String) {
+fn generate_fixture_handler_and_app(
+    category: &str,
+    fixture: &Fixture,
+    _metadata: &MiddlewareMetadata,
+) -> (String, String) {
     // Create unique names based on category and fixture name
     let fixture_id = format!("{}_{}", category, sanitize_name(&fixture.name));
     let handler_name = format!("{}_handler", fixture_id);
     let app_fn_name = format!("create_app_{}", fixture_id);
+
+    if let Ok(Some(background)) = background_data(fixture) {
+        return generate_background_fixture(fixture, &fixture_id, &handler_name, &app_fn_name, background);
+    }
 
     // Get route from handler or request
     let route = if let Some(handler) = &fixture.handler {
@@ -333,6 +377,92 @@ pub fn {}() -> Router {{
     };
 
     (combined_handler_code, app_fn_code)
+}
+
+fn generate_background_fixture(
+    fixture: &Fixture,
+    _fixture_id: &str,
+    handler_name: &str,
+    app_fn_name: &str,
+    background: BackgroundFixtureData,
+) -> (String, String) {
+    let route = if let Some(handler) = &fixture.handler {
+        handler.route.clone()
+    } else {
+        fixture.request.path.clone()
+    };
+    let route_path = route.split('?').next().unwrap_or(&route).to_string();
+    let axum_route = strip_type_hints(&route_path);
+    let method = fixture.request.method.as_str();
+    let method_lower = method.to_lowercase();
+    let state_handler_name = format!("{}_background_state", handler_name);
+    let expected_status = fixture.expected_response.status_code;
+
+    let handler_code = format!(
+        r#"async fn {handler_name}(
+    State(state): State<Arc<Mutex<Vec<Value>>>>,
+    axum::extract::Json(body): axum::extract::Json<Value>,
+) -> impl IntoResponse {{
+    let value = body.get("{value_field}").cloned();
+    let value = match value {{
+        Some(val) => val,
+        None => {{
+            return (
+                axum::http::StatusCode::BAD_REQUEST,
+                Json(json!({{"error": "missing background value"}})),
+            );
+        }}
+    }};
+
+    let state_clone = state.clone();
+    tokio::spawn(async move {{
+        let mut guard = state_clone.lock().await;
+        guard.push(value);
+    }});
+
+    (
+        axum::http::StatusCode::from_u16({status}).unwrap(),
+        Json(Value::Null),
+    )
+}}
+
+async fn {state_handler_name}(
+    State(state): State<Arc<Mutex<Vec<Value>>>>,
+) -> impl IntoResponse {{
+    let values = {{
+        let guard = state.lock().await;
+        guard.clone()
+    }};
+    Json(json!({{ "{state_key}": values }}))
+}}"#,
+        handler_name = handler_name,
+        state_handler_name = state_handler_name,
+        value_field = background.value_field,
+        status = expected_status,
+        state_key = background.state_key
+    );
+
+    let app_fn_code = format!(
+        r#"/// App for fixture: {fixture_name}
+pub fn {app_fn_name}() -> Router {{
+    let state: Arc<Mutex<Vec<Value>>> = Arc::new(Mutex::new(Vec::new()));
+
+    Router::new()
+        .route("{route}", {method}({handler_name}))
+        .route("{state_path}", get({state_handler_name}))
+        .with_state(state)
+        .layer(middleware::from_fn(spikard_http::middleware::validate_content_type_middleware))
+}}"#,
+        fixture_name = fixture.name,
+        app_fn_name = app_fn_name,
+        route = axum_route,
+        method = method_lower,
+        handler_name = handler_name,
+        state_path = background.state_path,
+        state_handler_name = state_handler_name
+    );
+
+    (handler_code, app_fn_code)
 }
 
 /// Sanitize fixture name to valid Rust identifier

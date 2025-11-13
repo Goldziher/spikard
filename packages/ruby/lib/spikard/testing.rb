@@ -10,6 +10,11 @@ module Spikard
         raise LoadError, 'Spikard native test client is not available. Build the native extension before running tests.'
       end
 
+      # Allow generated apps to stash a test config
+      if config.nil? && app.instance_variable_defined?(:@__spikard_test_config)
+        config = app.instance_variable_get(:@__spikard_test_config)
+      end
+
       # Use default config if none provided
       config ||= Spikard::ServerConfig.new
 

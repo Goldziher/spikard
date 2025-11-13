@@ -3,17 +3,17 @@
 
 #[cfg(test)]
 mod streaming {
+    use axum::body::Body;
+    use axum::http::Request;
+    use axum_test::TestServer;
+    use serde_json::Value;
+    use spikard_http::testing::snapshot_response;
 
     #[tokio::test]
     async fn test_streaming_binary_log_download() {
         // Fixture: Binary log download
         // Description: Streams binary log segments with control bytes
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/streaming/03_binary_log_download.json")
@@ -272,23 +272,23 @@ mod streaming {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
-        let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let expected: Vec<u8> = vec![
             0x4cu8, 0x4fu8, 0x47u8, 0x3au8, 0x00u8, 0x01u8, 0x02u8, 0x03u8, 0x7cu8, 0x54u8, 0x41u8, 0x49u8, 0x4cu8,
             0x7cu8, 0x07u8, 0x5cu8, 0x6eu8,
         ];
-        assert_eq!(body_bytes.as_ref(), expected.as_slice());
+        assert_eq!(snapshot.body, expected);
         return;
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-type") {
+            assert_eq!(actual, "application/octet-stream", "Mismatched header 'content-type'");
+        } else {
+            panic!("Expected header 'content-type' to be present");
+        }
     }
 
     #[tokio::test]
@@ -296,11 +296,6 @@ mod streaming {
         // Fixture: Chunked CSV export
         // Description: Streams CSV header and rows as discrete chunks
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/streaming/02_chunked_csv_export.json")
@@ -559,24 +554,24 @@ mod streaming {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
-        let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let expected: Vec<u8> = vec![
             0x69u8, 0x64u8, 0x2cu8, 0x6eu8, 0x61u8, 0x6du8, 0x65u8, 0x2cu8, 0x76u8, 0x61u8, 0x6cu8, 0x75u8, 0x65u8,
             0x5cu8, 0x6eu8, 0x31u8, 0x2cu8, 0x41u8, 0x6cu8, 0x69u8, 0x63u8, 0x65u8, 0x2cu8, 0x34u8, 0x32u8, 0x5cu8,
             0x6eu8, 0x32u8, 0x2cu8, 0x42u8, 0x6fu8, 0x62u8, 0x2cu8, 0x37u8, 0x5cu8, 0x6eu8,
         ];
-        assert_eq!(body_bytes.as_ref(), expected.as_slice());
+        assert_eq!(snapshot.body, expected);
         return;
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-type") {
+            assert_eq!(actual, "text/csv", "Mismatched header 'content-type'");
+        } else {
+            panic!("Expected header 'content-type' to be present");
+        }
     }
 
     #[tokio::test]
@@ -584,11 +579,6 @@ mod streaming {
         // Fixture: Stream JSON lines
         // Description: Streams newline-delimited JSON payload in small chunks
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/streaming/01_json_lines_small.json")
@@ -847,17 +837,11 @@ mod streaming {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
-        let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let expected: Vec<u8> = vec![
             0x7bu8, 0x22u8, 0x69u8, 0x6eu8, 0x64u8, 0x65u8, 0x78u8, 0x22u8, 0x3au8, 0x30u8, 0x2cu8, 0x22u8, 0x70u8,
             0x61u8, 0x79u8, 0x6cu8, 0x6fu8, 0x61u8, 0x64u8, 0x22u8, 0x3au8, 0x22u8, 0x61u8, 0x6cu8, 0x70u8, 0x68u8,
@@ -868,7 +852,13 @@ mod streaming {
             0x61u8, 0x64u8, 0x22u8, 0x3au8, 0x22u8, 0x67u8, 0x61u8, 0x6du8, 0x6du8, 0x61u8, 0x22u8, 0x7du8, 0x5cu8,
             0x6eu8,
         ];
-        assert_eq!(body_bytes.as_ref(), expected.as_slice());
+        assert_eq!(snapshot.body, expected);
         return;
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-type") {
+            assert_eq!(actual, "application/x-ndjson", "Mismatched header 'content-type'");
+        } else {
+            panic!("Expected header 'content-type' to be present");
+        }
     }
 }

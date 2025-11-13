@@ -3,19 +3,13 @@
  */
 
 // Native module is built into this package directory; import the napi loader directly
-import { TestClient as NativeTestClient } from "../index.js";
+import { TestClient as NativeTestClient, type TestResponse as NativeTestResponse } from "../index.js";
 import type { SpikardApp } from "./index";
 
 /**
  * HTTP response from test client
  */
-export interface TestResponse {
-	statusCode: number;
-	headers(): any;
-	text(): string;
-	json(): any;
-	bytes(): Buffer;
-}
+export type TestResponse = NativeTestResponse;
 
 interface MultipartFile {
 	name: string;

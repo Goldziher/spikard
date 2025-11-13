@@ -3,17 +3,17 @@
 
 #[cfg(test)]
 mod cors {
+    use axum::body::Body;
+    use axum::http::Request;
+    use axum_test::TestServer;
+    use serde_json::Value;
+    use spikard_http::testing::snapshot_response;
 
     #[tokio::test]
     async fn test_cors_06_cors_preflight_method_not_allowed() {
         // Fixture: 06_cors_preflight_method_not_allowed
         // Description: CORS preflight request for non-allowed method should be rejected
         // Expected status: 403
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cors/06_cors_preflight_method_not_allowed.json")
@@ -272,16 +272,11 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(403).unwrap(),
-            "Expected status 403, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 403, "Expected status 403, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -289,11 +284,6 @@ mod cors {
         // Fixture: 07_cors_preflight_header_not_allowed
         // Description: CORS preflight request with non-allowed header should be rejected
         // Expected status: 403
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cors/07_cors_preflight_header_not_allowed.json")
@@ -552,16 +542,11 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(403).unwrap(),
-            "Expected status 403, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 403, "Expected status 403, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -569,11 +554,6 @@ mod cors {
         // Fixture: 08_cors_max_age
         // Description: CORS preflight response should include Access-Control-Max-Age
         // Expected status: 204
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cors/08_cors_max_age.json")
@@ -832,16 +812,38 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(204).unwrap(),
-            "Expected status 204, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 204, "Expected status 204, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("access-control-allow-methods") {
+            assert_eq!(actual, "POST", "Mismatched header 'Access-Control-Allow-Methods'");
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Methods' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-headers") {
+            assert_eq!(
+                actual, "Content-Type",
+                "Mismatched header 'Access-Control-Allow-Headers'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Headers' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-max-age") {
+            assert_eq!(actual, "3600", "Mismatched header 'Access-Control-Max-Age'");
+        } else {
+            panic!("Expected header 'Access-Control-Max-Age' to be present");
+        }
     }
 
     #[tokio::test]
@@ -849,11 +851,6 @@ mod cors {
         // Fixture: 09_cors_expose_headers
         // Description: CORS response should include Access-Control-Expose-Headers for custom headers
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cors/09_cors_expose_headers.json")
@@ -1112,16 +1109,38 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("x-total-count") {
+            assert_eq!(actual, "42", "Mismatched header 'X-Total-Count'");
+        } else {
+            panic!("Expected header 'X-Total-Count' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-expose-headers") {
+            assert_eq!(
+                actual, "X-Total-Count, X-Request-Id",
+                "Mismatched header 'Access-Control-Expose-Headers'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Expose-Headers' to be present");
+        }
+        if let Some(actual) = headers.get("x-request-id") {
+            assert_eq!(actual, "abc123", "Mismatched header 'X-Request-Id'");
+        } else {
+            panic!("Expected header 'X-Request-Id' to be present");
+        }
     }
 
     #[tokio::test]
@@ -1129,11 +1148,6 @@ mod cors {
         // Fixture: 10_cors_origin_null
         // Description: CORS request with 'null' origin should be handled according to policy
         // Expected status: 403
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cors/10_cors_origin_null.json")
@@ -1392,16 +1406,11 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(403).unwrap(),
-            "Expected status 403, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 403, "Expected status 403, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1409,11 +1418,6 @@ mod cors {
         // Fixture: CORS Private Network Access
         // Description: Tests Private Network Access (RFC 1918) preflight with Access-Control-Request-Private-Network
         // Expected status: 204
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cors/17_cors_private_network_access.json")
@@ -1672,16 +1676,38 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(204).unwrap(),
-            "Expected status 204, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 204, "Expected status 204, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("access-control-allow-methods") {
+            assert_eq!(actual, "GET, POST", "Mismatched header 'Access-Control-Allow-Methods'");
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Methods' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://public.example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-private-network") {
+            assert_eq!(
+                actual, "true",
+                "Mismatched header 'Access-Control-Allow-Private-Network'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Private-Network' to be present");
+        }
+        if let Some(actual) = headers.get("vary") {
+            assert_eq!(actual, "Origin", "Mismatched header 'Vary'");
+        } else {
+            panic!("Expected header 'Vary' to be present");
+        }
     }
 
     #[tokio::test]
@@ -1689,11 +1715,6 @@ mod cors {
         // Fixture: CORS Vary header for proper caching
         // Description: Tests that Vary: Origin header is present for correct cache behavior
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cors/16_cors_vary_header_caching.json")
@@ -1952,16 +1973,30 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://app.example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
+        if let Some(actual) = headers.get("vary") {
+            assert_eq!(actual, "Origin", "Mismatched header 'Vary'");
+        } else {
+            panic!("Expected header 'Vary' to be present");
+        }
+        if let Some(actual) = headers.get("cache-control") {
+            assert_eq!(actual, "public, max-age=3600", "Mismatched header 'Cache-Control'");
+        } else {
+            panic!("Expected header 'Cache-Control' to be present");
+        }
     }
 
     #[tokio::test]
@@ -1969,11 +2004,6 @@ mod cors {
         // Fixture: CORS multiple allowed origins
         // Description: Tests CORS when multiple origins are allowed and request origin matches one
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cors/11_cors_multiple_origins.json")
@@ -2232,16 +2262,25 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("vary") {
+            assert_eq!(actual, "Origin", "Mismatched header 'Vary'");
+        } else {
+            panic!("Expected header 'Vary' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://admin.example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
     }
 
     #[tokio::test]
@@ -2249,11 +2288,6 @@ mod cors {
         // Fixture: CORS origin case sensitivity
         // Description: Tests that CORS origin matching is case-sensitive for the domain part
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cors/13_cors_origin_case_sensitivity.json")
@@ -2512,16 +2546,17 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("vary") {
+            assert_eq!(actual, "Origin", "Mismatched header 'Vary'");
+        } else {
+            panic!("Expected header 'Vary' to be present");
+        }
     }
 
     #[tokio::test]
@@ -2529,11 +2564,6 @@ mod cors {
         // Fixture: CORS preflight for DELETE method
         // Description: Tests OPTIONS preflight request for DELETE method
         // Expected status: 204
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cors/15_cors_delete_method.json")
@@ -2792,16 +2822,38 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(204).unwrap(),
-            "Expected status 204, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 204, "Expected status 204, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("vary") {
+            assert_eq!(actual, "Origin", "Mismatched header 'Vary'");
+        } else {
+            panic!("Expected header 'Vary' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-max-age") {
+            assert_eq!(actual, "3600", "Mismatched header 'Access-Control-Max-Age'");
+        } else {
+            panic!("Expected header 'Access-Control-Max-Age' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://app.example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-methods") {
+            assert_eq!(
+                actual, "GET, POST, PUT, PATCH, DELETE",
+                "Mismatched header 'Access-Control-Allow-Methods'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Methods' to be present");
+        }
     }
 
     #[tokio::test]
@@ -2809,11 +2861,6 @@ mod cors {
         // Fixture: CORS preflight for PUT method
         // Description: Tests OPTIONS preflight request for PUT method with custom headers
         // Expected status: 204
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cors/14_cors_put_method.json")
@@ -3072,16 +3119,46 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(204).unwrap(),
-            "Expected status 204, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 204, "Expected status 204, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("access-control-max-age") {
+            assert_eq!(actual, "3600", "Mismatched header 'Access-Control-Max-Age'");
+        } else {
+            panic!("Expected header 'Access-Control-Max-Age' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://app.example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-headers") {
+            assert_eq!(
+                actual, "Content-Type, X-Custom-Header",
+                "Mismatched header 'Access-Control-Allow-Headers'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Headers' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-methods") {
+            assert_eq!(
+                actual, "GET, POST, PUT, PATCH, DELETE",
+                "Mismatched header 'Access-Control-Allow-Methods'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Methods' to be present");
+        }
+        if let Some(actual) = headers.get("vary") {
+            assert_eq!(actual, "Origin", "Mismatched header 'Vary'");
+        } else {
+            panic!("Expected header 'Vary' to be present");
+        }
     }
 
     #[tokio::test]
@@ -3089,11 +3166,6 @@ mod cors {
         // Fixture: CORS preflight request
         // Description: Tests OPTIONS preflight request for CORS
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cors/02_preflight_request.json")
@@ -3352,16 +3424,41 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-methods") {
+            assert_eq!(
+                actual, "GET, POST, PUT, DELETE, OPTIONS",
+                "Mismatched header 'Access-Control-Allow-Methods'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Methods' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-max-age") {
+            assert_eq!(actual, "600", "Mismatched header 'Access-Control-Max-Age'");
+        } else {
+            panic!("Expected header 'Access-Control-Max-Age' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-headers") {
+            assert_eq!(
+                actual, "Content-Type, X-Custom-Header",
+                "Mismatched header 'Access-Control-Allow-Headers'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Headers' to be present");
+        }
     }
 
     #[tokio::test]
@@ -3369,11 +3466,6 @@ mod cors {
         // Fixture: CORS regex pattern matching for origins
         // Description: Tests CORS with regex pattern matching for subdomain wildcards
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cors/12_cors_regex_origin_pattern.json")
@@ -3632,16 +3724,25 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("vary") {
+            assert_eq!(actual, "Origin", "Mismatched header 'Vary'");
+        } else {
+            panic!("Expected header 'Vary' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://subdomain.example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
     }
 
     #[tokio::test]
@@ -3649,11 +3750,6 @@ mod cors {
         // Fixture: CORS request blocked
         // Description: Tests CORS request from disallowed origin
         // Expected status: 403
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cors/05_cors_blocked.json")
@@ -3912,16 +4008,11 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(403).unwrap(),
-            "Expected status 403, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 403, "Expected status 403, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3929,11 +4020,6 @@ mod cors {
         // Fixture: CORS safelisted headers without preflight
         // Description: Tests that safelisted headers (Content-Type: text/plain, Accept, Accept-Language) don't require preflight
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cors/18_cors_safelisted_headers.json")
@@ -4192,16 +4278,25 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("vary") {
+            assert_eq!(actual, "Origin", "Mismatched header 'Vary'");
+        } else {
+            panic!("Expected header 'Vary' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://app.example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
     }
 
     #[tokio::test]
@@ -4209,11 +4304,6 @@ mod cors {
         // Fixture: CORS wildcard origin
         // Description: Tests CORS with wildcard allowing all origins
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cors/04_cors_wildcard.json")
@@ -4472,16 +4562,17 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(actual, "*", "Mismatched header 'Access-Control-Allow-Origin'");
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
     }
 
     #[tokio::test]
@@ -4489,11 +4580,6 @@ mod cors {
         // Fixture: CORS with credentials
         // Description: Tests CORS request with credentials (cookies, auth headers)
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cors/03_cors_with_credentials.json")
@@ -4752,16 +4838,30 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("access-control-allow-credentials") {
+            assert_eq!(actual, "true", "Mismatched header 'Access-Control-Allow-Credentials'");
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Credentials' to be present");
+        }
+        if let Some(actual) = headers.get("vary") {
+            assert_eq!(actual, "Origin", "Mismatched header 'Vary'");
+        } else {
+            panic!("Expected header 'Vary' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://app.example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
     }
 
     #[tokio::test]
@@ -4769,11 +4869,6 @@ mod cors {
         // Fixture: Simple CORS request
         // Description: Tests simple CORS request with Origin header
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/cors/01_simple_cors_request.json")
@@ -5032,15 +5127,24 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("vary") {
+            assert_eq!(actual, "Origin", "Mismatched header 'Vary'");
+        } else {
+            panic!("Expected header 'Vary' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
     }
 }

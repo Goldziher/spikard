@@ -10,7 +10,7 @@
 use crate::response::{HandlerReturnValue, TestResponse};
 use axum::body::Body;
 use axum::extract::Request;
-use axum::http::{HeaderMap, HeaderValue, Method, StatusCode};
+use axum::http::{HeaderMap, HeaderValue, Method, StatusCode, header};
 use axum_test::TestServer;
 use bytes::Bytes;
 use napi::bindgen_prelude::*;
@@ -20,7 +20,8 @@ use serde_json::{Map as JsonMap, Value, json};
 // TODO: Update to use current handler trait API
 // use spikard_http::handler::{ForeignHandler, HandlerFuture, HandlerResult, RequestData};
 use spikard_http::problem::ProblemDetails;
-use spikard_http::{HandlerResult, RequestData, Server};
+use spikard_http::testing::{SnapshotError, snapshot_response};
+use spikard_http::{HandlerResult, RequestData, ResponseBodySize, Server};
 use spikard_http::{ParameterValidator, Route, RouteMetadata, SchemaValidator};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -287,13 +288,27 @@ impl JsHandler {
         } else {
             Vec::new()
         };
+        let body_len = body_bytes.len();
 
-        response_builder.body(Body::from(body_bytes)).map_err(|e| {
+        if !response_builder
+            .headers_ref()
+            .map(|headers| headers.contains_key(header::CONTENT_LENGTH))
+            .unwrap_or(false)
+        {
+            let content_length = body_len.to_string();
+            if let Ok(header_value) = HeaderValue::from_str(&content_length) {
+                response_builder = response_builder.header(header::CONTENT_LENGTH, header_value);
+            }
+        }
+
+        let mut response = response_builder.body(Body::from(body_bytes)).map_err(|e| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 format!("Failed to build response: {}", e),
             )
-        })
+        })?;
+        response.extensions_mut().insert(ResponseBodySize(body_len));
+        Ok(response)
     }
 
     async fn call_js(&self, payload: Value) -> Result<HandlerReturnValue> {
@@ -496,19 +511,8 @@ impl TestClient {
         }
 
         let response = request.await;
-        let status = response.status_code().as_u16();
-        let headers_map_resp = response.headers();
-
-        let mut headers_json = serde_json::Map::new();
-        for (name, value) in headers_map_resp.iter() {
-            if let Ok(value_str) = value.to_str() {
-                headers_json.insert(name.to_string(), Value::String(value_str.to_string()));
-            }
-        }
-
-        let body_bytes = response.into_bytes().to_vec();
-
-        Ok(TestResponse::new(status, headers_json, body_bytes))
+        let snapshot = snapshot_response(response).await.map_err(map_snapshot_error)?;
+        Ok(TestResponse::from_snapshot(snapshot))
     }
 }
 
@@ -690,6 +694,10 @@ fn append_file(body: &mut Vec<u8>, boundary: &str, file: &Value) -> std::result:
     body.extend_from_slice(b"\r\n");
 
     Ok(())
+}
+
+fn map_snapshot_error(err: SnapshotError) -> Error {
+    Error::from_reason(err.to_string())
 }
 
 fn decode_magic_bytes(hex_str: &str) -> std::result::Result<Vec<u8>, String> {

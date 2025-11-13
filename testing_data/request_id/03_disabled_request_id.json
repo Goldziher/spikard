@@ -1,0 +1,31 @@
+{
+	"name": "Request ID middleware can be disabled",
+	"description": "When request ID generation is disabled the response should not contain X-Request-ID even if the client sends a header.",
+	"category": "request_id",
+	"handler": {
+		"route": "/request-id/disabled",
+		"method": "GET",
+		"middleware": {
+			"request_id": {
+				"enabled": false
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/request-id/disabled",
+		"headers": {
+			"X-Request-ID": "external-id"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"status": "no-request-id"
+		},
+		"headers": {
+			"x-request-id": "<<absent>>"
+		}
+	},
+	"tags": ["request_id", "disabled"]
+}

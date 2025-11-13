@@ -1,5 +1,6 @@
 #![allow(deprecated)]
 
+mod background;
 mod lifecycle;
 mod sse;
 mod websocket;
@@ -19,6 +20,7 @@ use once_cell::sync::Lazy;
 use serde_json::{Map as JsonMap, Value as JsonValue};
 use spikard_http::ParameterValidator;
 use spikard_http::problem::ProblemDetails;
+use spikard_http::testing::{SnapshotError, snapshot_response};
 use spikard_http::{Handler, HandlerResponse, HandlerResult, RequestData};
 use spikard_http::{Route, RouteMetadata, SchemaValidator};
 use std::cell::RefCell;
@@ -93,6 +95,7 @@ struct HandlerResponsePayload {
     status: u16,
     headers: HashMap<String, String>,
     body: Option<JsonValue>,
+    raw_body: Option<Vec<u8>>,
 }
 
 enum RubyHandlerResult {
@@ -445,10 +448,17 @@ impl RubyHandler {
             return Err((StatusCode::INTERNAL_SERVER_ERROR, problem_to_json(&problem)));
         }
 
-        let mut response_builder = axum::http::Response::builder().status(payload.status);
+        let HandlerResponsePayload {
+            status,
+            headers,
+            body,
+            raw_body,
+        } = payload;
+
+        let mut response_builder = axum::http::Response::builder().status(status);
         let mut has_content_type = false;
 
-        for (name, value) in payload.headers.iter() {
+        for (name, value) in headers.iter() {
             if name.eq_ignore_ascii_case("content-type") {
                 has_content_type = true;
             }
@@ -468,14 +478,16 @@ impl RubyHandler {
             response_builder = response_builder.header(header_name, header_value);
         }
 
-        if !has_content_type && payload.body.is_some() {
+        if !has_content_type && body.is_some() {
             response_builder = response_builder.header(
                 HeaderName::from_static("content-type"),
                 HeaderValue::from_static("application/json"),
             );
         }
 
-        let body_bytes = if let Some(json_value) = payload.body {
+        let body_bytes = if let Some(raw) = raw_body {
+            raw
+        } else if let Some(json_value) = body {
             serde_json::to_vec(&json_value).map_err(|err| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
@@ -562,27 +574,22 @@ async fn execute_request(
     }
 
     let response = request.await;
-    let status = response.status_code().as_u16();
-
-    let mut headers = HashMap::new();
-    for (key, value) in response.headers().iter() {
-        if let Ok(val_str) = value.to_str() {
-            headers.insert(key.as_str().to_string(), val_str.to_string());
-        }
-    }
-
-    let body_bytes = response.into_bytes();
-    let body_text = if body_bytes.is_empty() {
+    let snapshot = snapshot_response(response).await.map_err(snapshot_err_to_native)?;
+    let body_text = if snapshot.body.is_empty() {
         None
     } else {
-        Some(String::from_utf8_lossy(&body_bytes).into_owned())
+        Some(String::from_utf8_lossy(&snapshot.body).into_owned())
     };
 
     Ok(TestResponseData {
-        status,
-        headers,
+        status: snapshot.status,
+        headers: snapshot.headers,
         body_text,
     })
+}
+
+fn snapshot_err_to_native(err: SnapshotError) -> NativeRequestError {
+    NativeRequestError(err.to_string())
 }
 
 fn parse_request_config(ruby: &Ruby, options: Value) -> Result<RequestConfig, Error> {
@@ -781,6 +788,7 @@ fn interpret_handler_response(
             status: 200,
             headers: HashMap::new(),
             body: None,
+            raw_body: None,
         }));
     }
 
@@ -820,7 +828,12 @@ fn interpret_handler_response(
         };
 
         let content_value: Value = value.funcall("content", ())?;
+        let mut raw_body = None;
         let body = if content_value.is_nil() {
+            None
+        } else if let Ok(str_value) = RString::try_convert(content_value) {
+            let slice = unsafe { str_value.as_slice() };
+            raw_body = Some(slice.to_vec());
             None
         } else {
             Some(ruby_value_to_json(
@@ -834,6 +847,17 @@ fn interpret_handler_response(
             status: status_u16,
             headers,
             body,
+            raw_body,
+        }));
+    }
+
+    if let Ok(str_value) = RString::try_convert(value) {
+        let slice = unsafe { str_value.as_slice() };
+        return Ok(RubyHandlerResult::Payload(HandlerResponsePayload {
+            status: 200,
+            headers: HashMap::new(),
+            body: None,
+            raw_body: Some(slice.to_vec()),
         }));
     }
 
@@ -843,6 +867,7 @@ fn interpret_handler_response(
         status: 200,
         headers: HashMap::new(),
         body: Some(body_json),
+        raw_body: None,
     }))
 }
 
@@ -1435,6 +1460,7 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
         static_files,
         graceful_shutdown,
         shutdown_timeout,
+        background_tasks: spikard_http::BackgroundTaskConfig::default(),
         openapi,
         lifecycle_hooks: None, // Will be set in run_server
     })
@@ -1466,7 +1492,7 @@ fn run_server(
     sse_producers: Value,
 ) -> Result<(), Error> {
     use spikard_http::{SchemaRegistry, Server};
-    use tracing::{error, info};
+    use tracing::{error, info, warn};
 
     // Extract ServerConfig from Ruby object
     let mut config = extract_server_config(ruby, config_value)?;
@@ -1683,6 +1709,8 @@ fn run_server(
             )
         })?;
 
+    let background_config = config.background_tasks.clone();
+
     runtime.block_on(async move {
         let listener = tokio::net::TcpListener::bind(socket_addr)
             .await
@@ -1690,7 +1718,18 @@ fn run_server(
 
         info!("Server listening on {}", socket_addr);
 
-        if let Err(e) = axum::serve(listener, app_router).await {
+        let background_runtime = spikard_http::BackgroundRuntime::start(background_config.clone()).await;
+        crate::background::install_handle(background_runtime.handle());
+
+        let serve_result = axum::serve(listener, app_router).await;
+
+        crate::background::clear_handle();
+
+        if let Err(err) = background_runtime.shutdown().await {
+            warn!("Failed to drain background tasks during shutdown: {:?}", err);
+        }
+
+        if let Err(e) = serve_result {
             error!("Server error: {}", e);
         }
     });
@@ -1709,6 +1748,7 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
 
     // Register run_server function (now takes 3 args: routes_json, handlers, config)
     native.define_singleton_method("run_server", function!(run_server, 6))?;
+    native.define_singleton_method("background_run", function!(background::background_run, 1))?;
 
     // Register TestClient class
     let class = native.define_class("TestClient", ruby.class_object())?;

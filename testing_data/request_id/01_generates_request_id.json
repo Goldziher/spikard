@@ -1,0 +1,28 @@
+{
+	"name": "Request ID is generated when not provided",
+	"description": "Ensures the request ID middleware attaches a UUID to responses when the client does not send one.",
+	"category": "request_id",
+	"handler": {
+		"route": "/request-id/generated",
+		"method": "GET",
+		"middleware": {
+			"request_id": {
+				"enabled": true
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/request-id/generated"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"status": "generated"
+		},
+		"headers": {
+			"x-request-id": "<<uuid>>"
+		}
+	},
+	"tags": ["request_id", "middleware"]
+}

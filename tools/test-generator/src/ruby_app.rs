@@ -2,6 +2,8 @@
 //!
 //! Generates Ruby Spikard applications based on fixtures.
 
+use crate::background::{BackgroundFixtureData, background_data};
+use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use anyhow::{Context, Result};
 use serde_json::{Map, Value};
 use spikard_codegen::openapi::from_fixtures::FixtureExpectedResponse;
@@ -11,7 +13,8 @@ use std::fs;
 use std::path::Path;
 
 use crate::ruby_utils::{
-    build_handler_name, build_method_name, bytes_to_ruby_string, string_literal, string_map_to_ruby, value_to_ruby,
+    build_handler_name, build_method_name, bytes_to_ruby_string, sanitize_identifier, string_literal,
+    string_map_to_ruby, value_to_ruby,
 };
 use crate::streaming::chunk_bytes;
 
@@ -20,6 +23,15 @@ pub fn generate_ruby_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     fs::create_dir_all(&app_dir).context("Failed to create Ruby app directory")?;
 
     let fixtures_by_category = load_fixtures_grouped(fixtures_dir)?;
+    let mut needs_background = false;
+    'outer: for fixtures in fixtures_by_category.values() {
+        for fixture in fixtures {
+            if background_data(fixture)?.is_some() {
+                needs_background = true;
+                break 'outer;
+            }
+        }
+    }
 
     let mut code = String::new();
     code.push_str(
@@ -36,6 +48,9 @@ pub fn generate_ruby_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
 
 ",
     );
+    if needs_background {
+        code.push_str("BACKGROUND_STATE = Hash.new { |hash, key| hash[key] = [] }\n\n");
+    }
     code.push_str(
         "module E2ERubyApp
 ",
@@ -65,7 +80,24 @@ pub fn generate_ruby_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
 
     for (category, fixtures) in fixtures_by_category.iter() {
         for (index, fixture) in fixtures.iter().enumerate() {
-            code.push_str(&build_fixture_function(category, index, fixture)?);
+            let metadata = parse_middleware(fixture)?;
+            let fixture_dir = format!(
+                "{}_{}",
+                sanitize_identifier(category),
+                sanitize_identifier(&fixture.name)
+            );
+            if !metadata.static_dirs.is_empty() {
+                write_static_assets(&app_dir, &fixture_dir, &metadata.static_dirs)?;
+            }
+            let background_info = background_data(fixture)?;
+            code.push_str(&build_fixture_function(
+                category,
+                index,
+                fixture,
+                background_info,
+                &metadata,
+                &fixture_dir,
+            )?);
         }
     }
 
@@ -100,7 +132,14 @@ fn load_fixtures_grouped(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<Fix
     Ok(grouped)
 }
 
-fn build_fixture_function(category: &str, index: usize, fixture: &Fixture) -> Result<String> {
+fn build_fixture_function(
+    category: &str,
+    index: usize,
+    fixture: &Fixture,
+    background: Option<BackgroundFixtureData>,
+    metadata: &MiddlewareMetadata,
+    fixture_dir: &str,
+) -> Result<String> {
     let method_name = build_method_name(category, index, &fixture.name);
     let handler_name = build_handler_name(category, index, &fixture.name);
     let route = fixture
@@ -114,6 +153,13 @@ fn build_fixture_function(category: &str, index: usize, fixture: &Fixture) -> Re
         .map(|h| h.method.as_str())
         .unwrap_or_else(|| fixture.request.method.as_str());
     let method = method.to_ascii_lowercase();
+
+    let sanitized_headers = sanitized_expected_headers(&fixture.expected_response);
+    let handler_status = if metadata.rate_limit.is_some() {
+        200
+    } else {
+        fixture.expected_response.status_code
+    };
 
     let mut args = Vec::new();
     args.push(format!("handler_name: {}", string_literal(&handler_name)));
@@ -141,10 +187,14 @@ fn build_fixture_function(category: &str, index: usize, fixture: &Fixture) -> Re
 ",
         method_name
     ));
-    function.push_str(
-        "    app = Spikard::App.new
-",
-    );
+    let raw_middleware = fixture.handler.as_ref().and_then(|handler| handler.middleware.as_ref());
+    if let Some(config_literal) = build_server_config_literal(metadata, fixture_dir, raw_middleware)? {
+        function.push_str(&format!("    config = {}\n", config_literal));
+        function.push_str("    app = Spikard::App.new\n");
+        function.push_str("    app.instance_variable_set(:@__spikard_test_config, config)\n");
+    } else {
+        function.push_str("    app = Spikard::App.new\n");
+    }
 
     // Generate lifecycle hooks if present
     let hooks = fixture
@@ -164,24 +214,67 @@ fn build_fixture_function(category: &str, index: usize, fixture: &Fixture) -> Re
     }
 
     let args_joined = args.join(", ");
-    function.push_str(&format!(
-        "    app.{}({}, {}) do |_request|
+    let skip_route_registration = !metadata.static_dirs.is_empty();
+    if !skip_route_registration {
+        let request_var = if background.is_some() { "request" } else { "_request" };
+        function.push_str(&format!(
+            "    app.{}({}, {}) do |{}|
 ",
-        method,
-        string_literal(route),
-        args_joined
-    ));
+            method,
+            string_literal(route),
+            args_joined,
+            request_var
+        ));
 
-    if fixture.streaming.is_some() {
-        function.push_str(&build_streaming_response_block(fixture)?);
-    } else {
-        let response_expr = build_response_expression(&fixture.expected_response);
-        function.push_str(&format!("      {}\n", response_expr));
-    }
-    function.push_str(
-        "    end
+        if let Some(stmt) = request_timeout_sleep_statement(metadata) {
+            function.push_str(&stmt);
+        }
+
+        if let Some(bg) = &background {
+            function.push_str(&build_background_handler_block(
+                &handler_name,
+                request_var,
+                fixture,
+                bg,
+                handler_status,
+                &sanitized_headers,
+            ));
+        } else if fixture.streaming.is_some() {
+            function.push_str(&build_streaming_response_block(
+                fixture,
+                handler_status,
+                &sanitized_headers,
+            )?);
+        } else {
+            let response_expr =
+                build_response_expression(&fixture.expected_response, handler_status, &sanitized_headers);
+            function.push_str(&format!("      {}\n", response_expr));
+        }
+        function.push_str(
+            "    end
 ",
-    );
+        );
+    } else {
+        function.push_str("    # Static files served via ServerConfig\n");
+    }
+    if let Some(bg) = &background {
+        function.push_str(&format!(
+            "    app.get({}, handler_name: {}) do |_req|
+",
+            string_literal(&bg.state_path),
+            string_literal(&format!("{}_background_state", handler_name))
+        ));
+        function.push_str(&format!(
+            "      build_response(content: {{ {} => BACKGROUND_STATE[{}] }}, status: 200)
+",
+            string_literal(&bg.state_key),
+            string_literal(&handler_name)
+        ));
+        function.push_str(
+            "    end
+",
+        );
+    }
     function.push_str(
         "    app
 ",
@@ -193,6 +286,32 @@ fn build_fixture_function(category: &str, index: usize, fixture: &Fixture) -> Re
     );
 
     Ok(function)
+}
+
+fn build_background_handler_block(
+    handler_name: &str,
+    request_var: &str,
+    fixture: &Fixture,
+    background: &BackgroundFixtureData,
+    handler_status: u16,
+    sanitized_headers: &HashMap<String, String>,
+) -> String {
+    let response_expr = build_response_expression(&fixture.expected_response, handler_status, sanitized_headers);
+    format!(
+        "      body = {request_var}[:body]
+      raise ArgumentError, 'background handler requires JSON body' unless body.is_a?(Hash)
+      value = body[{value_field}]
+      raise ArgumentError, 'background handler missing value' if value.nil?
+      Spikard::Background.run do
+        BACKGROUND_STATE[{handler_key}] << value
+      end
+      {response_expr}
+",
+        request_var = request_var,
+        value_field = string_literal(&background.value_field),
+        handler_key = string_literal(handler_name),
+        response_expr = response_expr
+    )
 }
 
 fn build_parameter_schema(params: &Value) -> Option<Value> {
@@ -269,8 +388,17 @@ fn extract_file_params(params: &Value) -> Option<Value> {
     params.as_object().and_then(|obj| obj.get("files")).cloned()
 }
 
-fn build_response_expression(expected: &FixtureExpectedResponse) -> String {
-    let status = expected.status_code;
+fn build_response_expression(
+    expected: &FixtureExpectedResponse,
+    handler_status: u16,
+    sanitized_headers: &HashMap<String, String>,
+) -> String {
+    let expected_status = expected.status_code;
+    let headers_literal = if sanitized_headers.is_empty() {
+        "nil".to_string()
+    } else {
+        string_map_to_ruby(sanitized_headers)
+    };
 
     // If validation_errors is present, build a validation error response
     let body_code = if let Some(ref validation_errors) = expected.validation_errors {
@@ -297,7 +425,7 @@ fn build_response_expression(expected: &FixtureExpectedResponse) -> String {
         let mut response_map = Map::new();
         response_map.insert("detail".to_string(), Value::String(detail.to_string()));
         response_map.insert("errors".to_string(), Value::Array(errors));
-        response_map.insert("status".to_string(), Value::Number(status.into()));
+        response_map.insert("status".to_string(), Value::Number(expected_status.into()));
         response_map.insert(
             "title".to_string(),
             Value::String("Request Validation Failed".to_string()),
@@ -316,10 +444,19 @@ fn build_response_expression(expected: &FixtureExpectedResponse) -> String {
             .unwrap_or_else(|| "nil".to_string())
     };
 
-    "build_response(content: ".to_string() + &body_code + &format!(", status: {}, headers: nil)", status)
+    format!(
+        "build_response(content: {body}, status: {status}, headers: {headers})",
+        body = body_code,
+        status = handler_status,
+        headers = headers_literal
+    )
 }
 
-fn build_streaming_response_block(fixture: &Fixture) -> Result<String> {
+fn build_streaming_response_block(
+    fixture: &Fixture,
+    handler_status: u16,
+    sanitized_headers: &HashMap<String, String>,
+) -> Result<String> {
     let streaming = fixture
         .streaming
         .as_ref()
@@ -340,18 +477,18 @@ fn build_streaming_response_block(fixture: &Fixture) -> Result<String> {
     }
     block.push_str("      end\n\n");
 
-    let headers_literal = build_streaming_headers_ruby(fixture);
+    let headers_literal = build_streaming_headers_ruby(fixture, sanitized_headers);
     block.push_str(&format!(
         "      Spikard::StreamingResponse.new(\n        stream,\n        status_code: {},\n        headers: {}\n      )\n",
-        fixture.expected_response.status_code,
+        handler_status,
         headers_literal
     ));
 
     Ok(block)
 }
 
-fn build_streaming_headers_ruby(fixture: &Fixture) -> String {
-    let mut headers: HashMap<String, String> = fixture.expected_response.headers.clone().unwrap_or_default();
+fn build_streaming_headers_ruby(fixture: &Fixture, sanitized_headers: &HashMap<String, String>) -> String {
+    let mut headers = sanitized_headers.clone();
 
     if let Some(content_type) = fixture
         .streaming
@@ -365,11 +502,7 @@ fn build_streaming_headers_ruby(fixture: &Fixture) -> String {
         headers.insert("content-type".to_string(), "application/octet-stream".to_string());
     }
 
-    if headers.is_empty() {
-        "nil".to_string()
-    } else {
-        string_map_to_ruby(&headers)
-    }
+    headers_ruby_literal(&headers)
 }
 
 /// Generate Ruby lifecycle hook procs
@@ -518,4 +651,291 @@ fn generate_lifecycle_hooks_ruby(hooks: &Value, fixture: &Fixture) -> Vec<String
     }
 
     hook_code
+}
+
+fn sanitized_expected_headers(expected: &FixtureExpectedResponse) -> HashMap<String, String> {
+    let mut headers = HashMap::new();
+    if let Some(expected_headers) = expected.headers.as_ref() {
+        for (key, value) in expected_headers {
+            if key.eq_ignore_ascii_case("content-encoding") {
+                continue;
+            }
+            if let Some(converted) = normalize_expected_header_value(value) {
+                headers.insert(key.clone(), converted);
+            }
+        }
+    }
+    headers
+}
+
+fn normalize_expected_header_value(value: &str) -> Option<String> {
+    match value {
+        "<<absent>>" => None,
+        "<<present>>" => Some("spikard-test-value".to_string()),
+        "<<uuid>>" => Some("00000000-0000-4000-8000-000000000000".to_string()),
+        _ => Some(value.to_string()),
+    }
+}
+
+fn headers_ruby_literal(headers: &HashMap<String, String>) -> String {
+    if headers.is_empty() {
+        "nil".to_string()
+    } else {
+        string_map_to_ruby(headers)
+    }
+}
+
+fn build_server_config_literal(
+    metadata: &MiddlewareMetadata,
+    fixture_dir: &str,
+    raw_middleware: Option<&Value>,
+) -> Result<Option<String>> {
+    let mut args = Vec::new();
+
+    if let Some(compression) = &metadata.compression {
+        let mut parts = Vec::new();
+        if let Some(gzip) = compression.gzip {
+            parts.push(format!("gzip: {}", if gzip { "true" } else { "false" }));
+        }
+        if let Some(brotli) = compression.brotli {
+            parts.push(format!("brotli: {}", if brotli { "true" } else { "false" }));
+        }
+        if let Some(min_size) = compression.min_size {
+            parts.push(format!("min_size: {}", min_size));
+        }
+        if let Some(quality) = compression.quality {
+            parts.push(format!("quality: {}", quality));
+        }
+        let literal = if parts.is_empty() {
+            "Spikard::CompressionConfig.new".to_string()
+        } else {
+            format!("Spikard::CompressionConfig.new({})", parts.join(", "))
+        };
+        args.push(format!("      compression: {}", literal));
+    }
+
+    if let Some(rate_limit) = &metadata.rate_limit {
+        let mut parts = vec![
+            format!("per_second: {}", rate_limit.per_second),
+            format!("burst: {}", rate_limit.burst),
+        ];
+        if let Some(ip_based) = rate_limit.ip_based {
+            parts.push(format!("ip_based: {}", if ip_based { "true" } else { "false" }));
+        }
+        args.push(format!(
+            "      rate_limit: Spikard::RateLimitConfig.new({})",
+            parts.join(", ")
+        ));
+    }
+
+    if let Some(timeout) = &metadata.request_timeout {
+        args.push(format!("      request_timeout: {}", timeout.seconds));
+    }
+
+    if let Some(request_id) = &metadata.request_id
+        && let Some(enabled) = request_id.enabled
+    {
+        args.push(format!(
+            "      enable_request_id: {}",
+            if enabled { "true" } else { "false" }
+        ));
+    }
+
+    if let Some(body_limit) = &metadata.body_limit {
+        match body_limit.max_bytes {
+            Some(bytes) => args.push(format!("      max_body_size: {}", bytes)),
+            None => args.push("      max_body_size: nil".to_string()),
+        }
+    }
+
+    if !metadata.static_dirs.is_empty() {
+        let mut entries = Vec::new();
+        for dir in &metadata.static_dirs {
+            let directory_literal = format!(
+                "File.expand_path(File.join(__dir__, \"static_assets\", \"{}\", \"{}\"))",
+                fixture_dir, dir.directory_name
+            );
+            let mut parts = vec![
+                format!("directory: {}", directory_literal),
+                format!("route_prefix: {}", string_literal(&dir.route_prefix)),
+            ];
+            if !dir.index_file {
+                parts.push("index_file: false".to_string());
+            }
+            if let Some(cache) = &dir.cache_control {
+                parts.push(format!("cache_control: {}", string_literal(cache)));
+            }
+            entries.push(format!("        Spikard::StaticFilesConfig.new({})", parts.join(", ")));
+        }
+        if !entries.is_empty() {
+            let block = format!("      static_files: [\n{}\n      ]", entries.join(",\n"));
+            args.push(block);
+        }
+    }
+
+    if let Some(middleware) = raw_middleware {
+        if let Some(openapi) = middleware.get("openapi").and_then(|v| v.as_object())
+            && let Some(block) = build_openapi_config_literal(openapi)
+        {
+            args.push(block);
+        }
+        if let Some(jwt) = middleware.get("jwt_auth").and_then(|v| v.as_object())
+            && let Some(block) = build_jwt_config_literal(jwt)
+        {
+            args.push(block);
+        }
+        if let Some(api_key) = middleware.get("api_key_auth").and_then(|v| v.as_object())
+            && let Some(block) = build_api_key_config_literal(api_key)
+        {
+            args.push(block);
+        }
+    }
+
+    if args.is_empty() {
+        return Ok(None);
+    }
+
+    let mut literal = String::from("Spikard::ServerConfig.new(\n");
+    literal.push_str(&args.join(",\n"));
+    literal.push('\n');
+    literal.push_str("    )");
+    Ok(Some(literal))
+}
+
+fn build_openapi_config_literal(openapi: &serde_json::Map<String, Value>) -> Option<String> {
+    let mut parts = Vec::new();
+
+    if let Some(enabled) = openapi.get("enabled").and_then(|v| v.as_bool()) {
+        parts.push(format!("enabled: {}", if enabled { "true" } else { "false" }));
+    }
+    if let Some(title) = openapi.get("title").and_then(|v| v.as_str()) {
+        parts.push(format!("title: {}", string_literal(title)));
+    }
+    if let Some(version) = openapi.get("version").and_then(|v| v.as_str()) {
+        parts.push(format!("version: {}", string_literal(version)));
+    }
+    if let Some(description) = openapi.get("description").and_then(|v| v.as_str()) {
+        parts.push(format!("description: {}", string_literal(description)));
+    }
+    if let Some(swagger_ui) = openapi.get("swagger_ui_path").and_then(|v| v.as_str()) {
+        parts.push(format!("swagger_ui_path: {}", string_literal(swagger_ui)));
+    }
+    if let Some(redoc_path) = openapi.get("redoc_path").and_then(|v| v.as_str()) {
+        parts.push(format!("redoc_path: {}", string_literal(redoc_path)));
+    }
+    if let Some(openapi_json_path) = openapi.get("openapi_json_path").and_then(|v| v.as_str()) {
+        parts.push(format!("openapi_json_path: {}", string_literal(openapi_json_path)));
+    }
+
+    if let Some(contact) = openapi.get("contact").and_then(|v| v.as_object()) {
+        parts.push(format!(
+            "contact: Spikard::ContactInfo.new({})",
+            build_keyword_args(contact)
+        ));
+    }
+
+    if let Some(license) = openapi.get("license").and_then(|v| v.as_object()) {
+        parts.push(format!(
+            "license: Spikard::LicenseInfo.new({})",
+            build_keyword_args(license)
+        ));
+    }
+
+    if let Some(servers) = openapi.get("servers").and_then(|v| v.as_array()) {
+        let mut entries = Vec::new();
+        for server in servers {
+            if let Some(obj) = server.as_object() {
+                entries.push(format!("Spikard::ServerInfo.new({})", build_keyword_args(obj)));
+            }
+        }
+        if !entries.is_empty() {
+            parts.push(format!("servers: [{}]", entries.join(", ")));
+        }
+    }
+
+    if parts.is_empty() {
+        return None;
+    }
+
+    Some(format!(
+        "      openapi: Spikard::OpenApiConfig.new(\n        {}\n      )",
+        parts.join(",\n        ")
+    ))
+}
+
+fn build_jwt_config_literal(jwt: &serde_json::Map<String, Value>) -> Option<String> {
+    let enabled = jwt.get("enabled").and_then(|v| v.as_bool()).unwrap_or(true);
+    if !enabled {
+        return None;
+    }
+    let mut parts = Vec::new();
+    if let Some(secret) = jwt.get("secret").and_then(|v| v.as_str()) {
+        parts.push(format!("secret: {}", string_literal(secret)));
+    }
+    if let Some(algorithm) = jwt.get("algorithm").and_then(|v| v.as_str()) {
+        parts.push(format!("algorithm: {}", string_literal(algorithm)));
+    }
+    if let Some(audience) = jwt.get("audience") {
+        parts.push(format!("audience: {}", value_to_ruby(audience)));
+    }
+    if let Some(issuer) = jwt.get("issuer").and_then(|v| v.as_str()) {
+        parts.push(format!("issuer: {}", string_literal(issuer)));
+    }
+    if parts.is_empty() {
+        return None;
+    }
+    Some(format!(
+        "      jwt_auth: Spikard::JwtConfig.new(\n        {}\n      )",
+        parts.join(",\n        ")
+    ))
+}
+
+fn build_api_key_config_literal(api_key: &serde_json::Map<String, Value>) -> Option<String> {
+    let enabled = api_key.get("enabled").and_then(|v| v.as_bool()).unwrap_or(true);
+    if !enabled {
+        return None;
+    }
+    let mut parts = Vec::new();
+    if let Some(header) = api_key.get("header_name").and_then(|v| v.as_str()) {
+        parts.push(format!("header_name: {}", string_literal(header)));
+    }
+    if let Some(keys) = api_key.get("keys") {
+        parts.push(format!("keys: {}", value_to_ruby(keys)));
+    }
+    if parts.is_empty() {
+        return None;
+    }
+    Some(format!(
+        "      api_key_auth: Spikard::ApiKeyConfig.new(\n        {}\n      )",
+        parts.join(",\n        ")
+    ))
+}
+
+fn build_keyword_args(obj: &serde_json::Map<String, Value>) -> String {
+    let mut parts = Vec::new();
+    for (key, value) in obj {
+        parts.push(format!("{}: {}", key, value_to_ruby(value)));
+    }
+    parts.join(", ")
+}
+
+fn request_timeout_sleep_statement(metadata: &MiddlewareMetadata) -> Option<String> {
+    let sleep_ms = metadata.request_timeout.as_ref()?.sleep_ms?;
+    Some(format!("      sleep({})\n", format_sleep_seconds(sleep_ms)))
+}
+
+#[allow(clippy::manual_is_multiple_of)]
+fn format_sleep_seconds(ms: u64) -> String {
+    if ms % 1000 == 0 {
+        return format!("{}", ms / 1000);
+    }
+    let secs = (ms as f64) / 1000.0;
+    let mut literal = format!("{:.3}", secs);
+    while literal.contains('.') && literal.ends_with('0') {
+        literal.pop();
+    }
+    if literal.ends_with('.') {
+        literal.push('0');
+    }
+    literal
 }

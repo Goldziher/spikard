@@ -6,6 +6,7 @@
 
 // Application
 export { type LifecycleHookFunction, type LifecycleHooks, Spikard } from "./app";
+export * as background from "./background";
 // Configuration types
 export type {
 	ApiKeyConfig,

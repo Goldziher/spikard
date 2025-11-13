@@ -10,6 +10,8 @@
 //! - msgspec.Struct (fastest typed)
 //! - Pydantic BaseModel (popular, slower)
 
+use crate::background::{BackgroundFixtureData, background_data};
+use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::{StreamingFixtureData, chunk_bytes, streaming_data};
 use anyhow::{Context, Result};
 use serde_json::{Value, json};
@@ -72,6 +74,7 @@ pub fn generate_python_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
     // Create output directory structure
     let app_dir = output_dir.join("app");
     fs::create_dir_all(&app_dir).context("Failed to create app directory")?;
+    fs::create_dir_all(app_dir.join("static_assets")).context("Failed to create static assets directory")?;
 
     // Load all fixtures by category
     let mut fixtures_by_category: HashMap<String, Vec<Fixture>> = HashMap::new();
@@ -91,7 +94,7 @@ pub fn generate_python_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
     }
 
     // Generate main app file with per-fixture app factories
-    let app_content = generate_app_file_per_fixture(&fixtures_by_category)?;
+    let app_content = generate_app_file_per_fixture(&fixtures_by_category, &app_dir)?;
     fs::write(app_dir.join("main.py"), app_content).context("Failed to write main.py")?;
 
     // Generate __init__.py
@@ -103,7 +106,35 @@ pub fn generate_python_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
 }
 
 /// Generate app file with per-fixture app factory functions (matches Rust pattern)
-fn generate_app_file_per_fixture(fixtures_by_category: &HashMap<String, Vec<Fixture>>) -> Result<String> {
+fn generate_app_file_per_fixture(
+    fixtures_by_category: &HashMap<String, Vec<Fixture>>,
+    app_dir: &Path,
+) -> Result<String> {
+    let mut needs_background = false;
+    let mut needs_static_assets = false;
+    let mut needs_asyncio = false;
+
+    for fixtures in fixtures_by_category.values() {
+        for fixture in fixtures {
+            if !needs_background && background_data(fixture)?.is_some() {
+                needs_background = true;
+            }
+            let middleware_meta = parse_middleware(fixture)?;
+            if !needs_static_assets && !middleware_meta.static_dirs.is_empty() {
+                needs_static_assets = true;
+            }
+            if !needs_asyncio
+                && middleware_meta
+                    .request_timeout
+                    .as_ref()
+                    .and_then(|cfg| cfg.sleep_ms)
+                    .is_some()
+            {
+                needs_asyncio = true;
+            }
+        }
+    }
+
     let mut code = String::new();
 
     // Imports
@@ -116,17 +147,45 @@ fn generate_app_file_per_fixture(fixtures_by_category: &HashMap<String, Vec<Fixt
     code.push_str("from enum import Enum\n");
     code.push_str("from typing import Any, NamedTuple, TypedDict\n");
     code.push_str("from uuid import UUID\n\n");
+    if needs_asyncio {
+        code.push_str("import asyncio\n");
+    }
+    if needs_static_assets {
+        code.push_str("from pathlib import Path\n");
+    }
     code.push_str("import json\n");
     code.push_str("import msgspec\n");
     code.push_str("from pydantic import BaseModel\n\n");
-    code.push_str(
-        "from spikard import Response, Spikard, StreamingResponse, delete, get, head, options, patch, post, put\n",
-    );
+    if needs_background {
+        code.push_str("from collections import defaultdict\n");
+    }
+    if needs_static_assets {
+        code.push_str("BASE_DIR = Path(__file__).parent\n\n");
+    }
+    let mut spikard_imports = vec![
+        "Response",
+        "Spikard",
+        "StreamingResponse",
+        "delete",
+        "get",
+        "head",
+        "options",
+        "patch",
+        "post",
+        "put",
+    ];
+    if needs_background {
+        spikard_imports.push("background");
+    }
+    code.push_str(&format!("from spikard import {}\n", spikard_imports.join(", ")));
     code.push_str("from spikard.config import (\n");
     code.push_str("    ServerConfig, CompressionConfig, RateLimitConfig,\n");
     code.push_str("    JwtConfig, ApiKeyConfig, StaticFilesConfig,\n");
     code.push_str("    OpenApiConfig, ContactInfo, LicenseInfo, ServerInfo, SecuritySchemeInfo\n");
     code.push_str(")\n\n");
+    if needs_background {
+        code.push_str("BACKGROUND_STATE = defaultdict(list)\n\n");
+    }
 
     // Track handler names for uniqueness
     let mut handler_names = HashMap::new();
@@ -142,15 +201,21 @@ fn generate_app_file_per_fixture(fixtures_by_category: &HashMap<String, Vec<Fixt
 
             // Rotate through body types for comprehensive testing
             let body_type = BodyType::for_index(index);
+            let background_info = background_data(fixture)?;
+            let middleware_meta = parse_middleware(fixture)?;
+            if !middleware_meta.static_dirs.is_empty() {
+                write_static_assets(app_dir, &fixture_id, &middleware_meta.static_dirs)?;
+            }
 
             // Determine appropriate body type (fallback to plain dict for simple types)
-            let effective_body_type = if fixture
-                .handler
-                .as_ref()
-                .and_then(|handler| handler.body_schema.as_ref())
-                .and_then(|schema| schema.get("type").and_then(|v| v.as_str()))
-                .is_some_and(|schema_type| schema_type != "object" && schema_type != "array")
-            {
+            let requires_plain_dict = background_info.is_some()
+                || fixture
+                    .handler
+                    .as_ref()
+                    .and_then(|handler| handler.body_schema.as_ref())
+                    .and_then(|schema| schema.get("type").and_then(|v| v.as_str()))
+                    .is_some_and(|schema_type| schema_type != "object" && schema_type != "array");
+            let effective_body_type = if requires_plain_dict {
                 BodyType::PlainDict
             } else {
                 body_type
@@ -160,8 +225,11 @@ fn generate_app_file_per_fixture(fixtures_by_category: &HashMap<String, Vec<Fixt
             let (handler_code, app_factory_code) = generate_fixture_handler_and_app_python(
                 fixture,
                 &handler_name,
+                &fixture_id,
                 effective_body_type,
                 &mut handler_names,
+                background_info,
+                &middleware_meta,
             )?;
 
             code.push_str(&handler_code);
@@ -190,8 +258,11 @@ fn generate_app_file_per_fixture(fixtures_by_category: &HashMap<String, Vec<Fixt
 fn generate_fixture_handler_and_app_python(
     fixture: &Fixture,
     handler_name: &str,
+    fixture_id: &str,
     body_type: BodyType,
     handler_names: &mut HashMap<String, usize>,
+    background: Option<BackgroundFixtureData>,
+    metadata: &MiddlewareMetadata,
 ) -> Result<(String, String)> {
     // Get route from handler or request
     let route = if let Some(handler) = &fixture.handler {
@@ -199,6 +270,7 @@ fn generate_fixture_handler_and_app_python(
     } else {
         fixture.request.path.clone()
     };
+    let skip_route_registration = !metadata.static_dirs.is_empty();
 
     // Strip query string from route
     let route_path = route.split('?').next().unwrap_or(&route);
@@ -209,21 +281,33 @@ fn generate_fixture_handler_and_app_python(
         .unwrap_or_else(|| fixture.request.method.as_str());
 
     // Generate models at module level and get the model name
-    let (models_code, model_name) =
-        generate_models_for_fixture_with_name(fixture, handler_name, body_type, handler_names)?;
+    let (models_code, model_name) = if skip_route_registration {
+        (String::new(), None)
+    } else {
+        generate_models_for_fixture_with_name(fixture, handler_name, body_type, handler_names)?
+    };
 
     // Generate handler function at module level (without decorator)
-    let handler_func = generate_handler_function_for_fixture(
-        fixture,
-        route_path,
-        method,
-        handler_name,
-        body_type,
-        model_name.as_deref(),
-    )?;
+    let handler_func = if skip_route_registration {
+        String::new()
+    } else {
+        generate_handler_function_for_fixture(
+            fixture,
+            fixture_id,
+            route_path,
+            method,
+            handler_name,
+            body_type,
+            model_name.as_deref(),
+            background.as_ref(),
+            metadata,
+        )?
+    };
 
     // Generate lifecycle hook functions if present
-    let hooks_functions = if let Some(handler) = &fixture.handler {
+    let hooks_functions = if skip_route_registration {
+        String::new()
+    } else if let Some(handler) = &fixture.handler {
         if let Some(middleware) = &handler.middleware {
             if let Some(hooks) = middleware.get("lifecycle_hooks") {
                 generate_lifecycle_hooks_functions(hooks, handler_name, fixture)?
@@ -248,6 +332,10 @@ fn generate_fixture_handler_and_app_python(
         handler_code.push_str("\n\n");
     }
     handler_code.push_str(&handler_func);
+    if let Some(bg) = &background {
+        handler_code.push_str("\n\n");
+        handler_code.push_str(&generate_background_state_handler_python(handler_name, fixture_id, bg));
+    }
 
     // Generate app factory function that registers the handler
     let app_factory_name = format!("create_app_{}", handler_name);
@@ -288,31 +376,34 @@ fn generate_fixture_handler_and_app_python(
 
     let method_upper = method.to_uppercase();
     let request_method_upper = fixture.request.method.to_uppercase();
-    let additional_registration =
-        if request_method_upper != method_upper && is_supported_python_http_method(&request_method_upper) {
-            format!(
-                "\n    app.register_route(\"{}\", \"{}\", body_schema={}, parameter_schema={}, file_params={})({})",
-                request_method_upper,
-                route_path,
-                body_schema_str.clone(),
-                parameter_schema_str.clone(),
-                file_params_str.clone(),
-                handler_name
-            )
-        } else {
-            String::new()
-        };
-
-    // Extract middleware configuration if present
-    let config_str = if let Some(handler) = &fixture.handler {
-        if let Some(middleware) = &handler.middleware {
-            generate_server_config_from_middleware(middleware)?
-        } else {
-            "None".to_string()
-        }
+    let primary_registration = if skip_route_registration {
+        String::new()
     } else {
-        "None".to_string()
+        format!(
+            "    app.register_route(\"{}\", \"{}\", body_schema={}, parameter_schema={}, file_params={})({})",
+            method_upper, route_path, body_schema_str, parameter_schema_str, file_params_str, handler_name
+        )
     };
+    let additional_registration = if !skip_route_registration
+        && request_method_upper != method_upper
+        && is_supported_python_http_method(&request_method_upper)
+    {
+        format!(
+            "\n    app.register_route(\"{}\", \"{}\", body_schema={}, parameter_schema={}, file_params={})({})",
+            request_method_upper,
+            route_path,
+            body_schema_str.clone(),
+            parameter_schema_str.clone(),
+            file_params_str.clone(),
+            handler_name
+        )
+    } else {
+        String::new()
+    };
+
+    // Extract middleware configuration from metadata and raw middleware values
+    let raw_middleware = fixture.handler.as_ref().and_then(|handler| handler.middleware.as_ref());
+    let config_str = generate_server_config_from_metadata(metadata, raw_middleware, fixture_id)?;
 
     // Extract lifecycle hooks configuration if present
     let hooks_code = if let Some(handler) = &fixture.handler {
@@ -329,24 +420,49 @@ fn generate_fixture_handler_and_app_python(
         String::new()
     };
 
+    let state_route_registration = if let Some(bg) = &background {
+        format!(
+            "\n    app.register_route(\"GET\", \"{}\", body_schema=None, parameter_schema=None, file_params=None)({}_background_state)",
+            bg.state_path, handler_name
+        )
+    } else {
+        String::new()
+    };
+    let mut route_registration = String::new();
+    if !primary_registration.is_empty() {
+        route_registration.push_str(&primary_registration);
+    }
+    if !additional_registration.is_empty() {
+        route_registration.push_str(&additional_registration);
+    }
+    if !state_route_registration.is_empty() {
+        route_registration.push_str(&state_route_registration);
+    }
+    let register_comment = if route_registration.trim().is_empty() {
+        String::new()
+    } else if skip_route_registration {
+        "    # Static files served via ServerConfig\n".to_string()
+    } else {
+        "    # Register handler with this app instance\n".to_string()
+    };
+    let mut registration_block = String::new();
+    if !route_registration.trim().is_empty() {
+        registration_block.push_str(&register_comment);
+        registration_block.push_str(&route_registration);
+        if !route_registration.ends_with('\n') {
+            registration_block.push('\n');
+        }
+    }
+
     // Generate app factory with config and hooks
+
     let app_factory_code = if config_str == "None" && hooks_code.is_empty() {
         format!(
             r#"def {}() -> Spikard:
     """App factory for fixture: {}"""
     app = Spikard()
-    # Register handler with this app instance
-    app.register_route("{}", "{}", body_schema={}, parameter_schema={}, file_params={})({}){}
-    return app"#,
-            app_factory_name,
-            fixture.name,
-            method_upper,
-            route_path,
-            body_schema_str,
-            parameter_schema_str,
-            file_params_str,
-            handler_name,
-            additional_registration
+{}{}    return app"#,
+            app_factory_name, fixture.name, registration_block, hooks_code
         )
     } else if config_str != "None" && hooks_code.is_empty() {
         format!(
@@ -354,39 +470,16 @@ fn generate_fixture_handler_and_app_python(
     """App factory for fixture: {}"""
     config = {}
     app = Spikard(config=config)
-    # Register handler with this app instance
-    app.register_route("{}", "{}", body_schema={}, parameter_schema={}, file_params={})({}){}
-    return app"#,
-            app_factory_name,
-            fixture.name,
-            config_str,
-            method_upper,
-            route_path,
-            body_schema_str,
-            parameter_schema_str,
-            file_params_str,
-            handler_name,
-            additional_registration
+{}{}    return app"#,
+            app_factory_name, fixture.name, config_str, registration_block, hooks_code
         )
     } else if config_str == "None" && !hooks_code.is_empty() {
         format!(
             r#"def {}() -> Spikard:
     """App factory for fixture: {}"""
     app = Spikard()
-{}
-    # Register handler with this app instance
-    app.register_route("{}", "{}", body_schema={}, parameter_schema={}, file_params={})({}){}
-    return app"#,
-            app_factory_name,
-            fixture.name,
-            hooks_code,
-            method_upper,
-            route_path,
-            body_schema_str,
-            parameter_schema_str,
-            file_params_str,
-            handler_name,
-            additional_registration
+{}{}    return app"#,
+            app_factory_name, fixture.name, registration_block, hooks_code
         )
     } else {
         format!(
@@ -394,21 +487,8 @@ fn generate_fixture_handler_and_app_python(
     """App factory for fixture: {}"""
     config = {}
     app = Spikard(config=config)
-{}
-    # Register handler with this app instance
-    app.register_route("{}", "{}", body_schema={}, parameter_schema={}, file_params={})({}){}
-    return app"#,
-            app_factory_name,
-            fixture.name,
-            config_str,
-            hooks_code,
-            method_upper,
-            route_path,
-            body_schema_str,
-            parameter_schema_str,
-            file_params_str,
-            handler_name,
-            additional_registration
+{}{}    return app"#,
+            app_factory_name, fixture.name, config_str, registration_block, hooks_code
         )
     };
 
@@ -440,13 +520,17 @@ fn generate_models_for_fixture_with_name(
 }
 
 /// Generate handler function (without decorator, for manual registration)
+#[allow(clippy::too_many_arguments)]
 fn generate_handler_function_for_fixture(
     fixture: &Fixture,
+    fixture_id: &str,
     route: &str,
     method: &str,
     handler_name: &str,
     body_type: BodyType,
     model_name: Option<&str>,
+    background: Option<&BackgroundFixtureData>,
+    metadata: &MiddlewareMetadata,
 ) -> Result<String> {
     // Extract handler info from fixture
     let handler_opt = fixture.handler.as_ref();
@@ -476,9 +560,6 @@ fn generate_handler_function_for_fixture(
     let expected_body_is_empty = expected_body_value.is_some_and(is_value_effectively_empty);
 
     // Extract expected headers from fixture
-    let expected_headers = fixture.expected_response.headers.as_ref();
-    let has_expected_headers = expected_headers.is_some_and(|h| !h.is_empty());
-
     let validation_errors_body = if let Some(errors) = fixture.expected_response.validation_errors.as_ref() {
         if errors.is_empty() {
             None
@@ -495,7 +576,9 @@ fn generate_handler_function_for_fixture(
     let mut code = String::new();
 
     // Function signature
-    code.push_str(&format!("def {}(\n", handler_name));
+    let requires_async = metadata.request_timeout.as_ref().and_then(|cfg| cfg.sleep_ms).is_some();
+    let fn_prefix = if requires_async { "async def" } else { "def" };
+    code.push_str(&format!("{} {}(\n", fn_prefix, handler_name));
 
     // Add body parameter if present
     // IMPORTANT: All parameters must use their original names (no underscore prefix)
@@ -521,11 +604,12 @@ fn generate_handler_function_for_fixture(
     }
 
     code.push_str(") -> Any:\n");
-    code.push_str(&format!(
-        "    \"\"\"Handler for {} {}.\"\"\"\n",
-        method.to_uppercase(),
-        route
-    ));
+    let method_upper = method.to_uppercase();
+    code.push_str(&format!("    \"\"\"Handler for {} {}.\"\"\"\n", method_upper, route));
+    if let Some(sleep_ms) = metadata.request_timeout.as_ref().and_then(|cfg| cfg.sleep_ms) {
+        let sleep_literal = format_sleep_seconds(sleep_ms);
+        code.push_str(&format!("    await asyncio.sleep({})\n", sleep_literal));
+    }
 
     // Function body - handle different response scenarios
     // Strategy:
@@ -536,14 +620,21 @@ fn generate_handler_function_for_fixture(
 
     let should_return_expected = expected_body.is_some() && !expected_body_is_empty;
     let should_return_validation_errors = validation_errors_body.is_some() && !should_return_expected;
-    let should_echo_params = expected_status == 200 && !should_return_expected && !should_return_validation_errors;
-
-    // Helper to format headers for Response construction
-    let mut headers_map: std::collections::HashMap<String, String> = if has_expected_headers {
-        expected_headers.unwrap().clone()
+    let mut headers_map = sanitized_expected_headers(fixture);
+    let fixture_has_expected_headers = !headers_map.is_empty();
+    let has_request_inputs = body_schema.is_some() || !params.is_empty();
+    let handler_status = if metadata.rate_limit.is_some() {
+        200
     } else {
-        std::collections::HashMap::new()
+        expected_status
     };
+
+    let should_echo_params = handler_status == 200
+        && !should_return_expected
+        && !should_return_validation_errors
+        && has_request_inputs
+        && !fixture_has_expected_headers
+        && !matches!(method_upper.as_str(), "HEAD" | "OPTIONS");
 
     // For JSON responses (non-string bodies), always set Content-Type if not already set
     let is_json_response = expected_body.is_some() && !expected_body_value.is_some_and(|v| v.is_string());
@@ -566,8 +657,18 @@ fn generate_handler_function_for_fixture(
         code.push_str(&generate_streaming_handler_body_python(
             fixture,
             &stream_info,
-            expected_status,
+            handler_status,
         )?);
+        return Ok(code);
+    }
+
+    if let Some(bg) = background {
+        code.push_str(&generate_background_handler_body_python(
+            fixture_id,
+            bg,
+            handler_status,
+            &headers_param,
+        ));
         return Ok(code);
     }
 
@@ -579,13 +680,13 @@ fn generate_handler_function_for_fixture(
             let content_param = body_json.clone();
             code.push_str(&format!(
                 "    return Response(content={}, status_code={}{})\n",
-                content_param, expected_status, headers_param
+                content_param, handler_status, headers_param
             ));
         } else {
             // No body, just status code (e.g., 204 No Content)
             code.push_str(&format!(
                 "    return Response(status_code={}{})\n",
-                expected_status, headers_param
+                handler_status, headers_param
             ));
         }
     } else if should_return_validation_errors {
@@ -593,12 +694,12 @@ fn generate_handler_function_for_fixture(
             // Pass Python dict directly - Rust side handles JSON serialization
             code.push_str(&format!(
                 "    return Response(content={}, status_code={}{})\n",
-                body_json, expected_status, headers_param
+                body_json, handler_status, headers_param
             ));
         } else {
             code.push_str(&format!(
                 "    return Response(status_code={}{})\n",
-                expected_status, headers_param
+                handler_status, headers_param
             ));
         }
     } else if should_echo_params {
@@ -645,7 +746,10 @@ fn generate_handler_function_for_fixture(
         code.push_str("    return result\n");
     } else {
         // Fallback: Return with just status code (e.g., 204 No Content, 3xx redirects without body)
-        code.push_str(&format!("    return Response(status_code={})\n", expected_status));
+        code.push_str(&format!(
+            "    return Response(status_code={}{})\n",
+            handler_status, headers_param
+        ));
     }
 
     Ok(code)
@@ -654,7 +758,7 @@ fn generate_handler_function_for_fixture(
 fn generate_streaming_handler_body_python(
     fixture: &Fixture,
     stream_info: &StreamingFixtureData,
-    expected_status: u16,
+    handler_status: u16,
 ) -> Result<String> {
     let mut body = String::new();
     body.push_str("    async def stream_chunks():\n");
@@ -676,13 +780,73 @@ fn generate_streaming_handler_body_python(
     let headers_literal = build_streaming_headers_python(fixture, stream_info);
     body.push_str(&format!(
         "    return StreamingResponse(\n        stream_chunks(),\n        status_code={},\n        headers={}\n    )\n",
-        expected_status, headers_literal
+        handler_status, headers_literal
     ));
     Ok(body)
 }
 
+fn generate_background_handler_body_python(
+    fixture_id: &str,
+    background: &BackgroundFixtureData,
+    handler_status: u16,
+    headers_param: &str,
+) -> String {
+    let mut code = String::new();
+    code.push_str(&format!(
+        "    state = BACKGROUND_STATE.setdefault(\"{}\", [])\n",
+        fixture_id
+    ));
+    code.push_str(&format!(
+        "    value = body.get(\"{}\") if body is not None else None\n",
+        background.value_field
+    ));
+    code.push_str("    if value is None:\n");
+    code.push_str("        raise ValueError('background task requires request body value')\n");
+    code.push_str("    async def _background_task() -> None:\n");
+    code.push_str("        state.append(value)\n");
+    code.push_str("    background.run(_background_task())\n");
+    code.push_str(&format!(
+        "    return Response(status_code={}{} )\n",
+        handler_status, headers_param
+    ));
+    code
+}
+
+fn generate_background_state_handler_python(
+    handler_name: &str,
+    fixture_id: &str,
+    background: &BackgroundFixtureData,
+) -> String {
+    format!(
+        r#"def {handler_name}_background_state() -> Any:
+    """Background state endpoint."""
+    state = BACKGROUND_STATE.get("{fixture_id}", [])
+    return {{"{state_key}": state}}
+"#,
+        handler_name = handler_name,
+        fixture_id = fixture_id,
+        state_key = background.state_key
+    )
+}
+
+#[allow(clippy::manual_is_multiple_of)]
+fn format_sleep_seconds(ms: u64) -> String {
+    if ms % 1000 == 0 {
+        return format!("{}", ms / 1000);
+    }
+    let secs = (ms as f64) / 1000.0;
+    let mut literal = format!("{:.3}", secs);
+    while literal.contains('.') && literal.ends_with('0') {
+        literal.pop();
+    }
+    if literal.ends_with('.') {
+        literal.push('0');
+    }
+    literal
+}
+
 fn build_streaming_headers_python(fixture: &Fixture, stream_info: &StreamingFixtureData) -> String {
-    let mut headers = fixture.expected_response.headers.clone().unwrap_or_default();
+    let mut headers = sanitized_expected_headers(fixture);
 
     if let Some(content_type) = stream_info.streaming.content_type.as_ref() {
         headers.insert("content-type".to_string(), content_type.clone());
@@ -718,6 +882,30 @@ fn python_bytes_literal(bytes: &[u8]) -> String {
     }
     literal.push('"');
     literal
+}
+
+fn sanitized_expected_headers(fixture: &Fixture) -> HashMap<String, String> {
+    let mut headers = HashMap::new();
+    if let Some(expected) = fixture.expected_response.headers.as_ref() {
+        for (key, value) in expected {
+            if key.eq_ignore_ascii_case("content-encoding") {
+                continue;
+            }
+            if let Some(converted) = normalize_expected_header_value(value) {
+                headers.insert(key.clone(), converted);
+            }
+        }
+    }
+    headers
+}
+
+fn normalize_expected_header_value(raw: &str) -> Option<String> {
+    match raw {
+        "<<absent>>" => None,
+        "<<present>>" => Some("spikard-test-value".to_string()),
+        "<<uuid>>" => Some("00000000-0000-4000-8000-000000000000".to_string()),
+        _ => Some(raw.to_string()),
+    }
 }
 
 /// Sanitize a string to be a valid Python identifier (lowercase snake_case)
@@ -1293,139 +1481,227 @@ fn to_pascal_case(s: &str) -> String {
         .collect()
 }
 
-/// Generate Python ServerConfig code from middleware configuration
-fn generate_server_config_from_middleware(middleware: &Value) -> Result<String> {
-    let mut config_code = String::from("ServerConfig(\n");
-    let mut has_fields = false;
+/// Generate Python ServerConfig code from middleware metadata and raw middleware JSON
+fn generate_server_config_from_metadata(
+    metadata: &MiddlewareMetadata,
+    raw_middleware: Option<&Value>,
+    fixture_id: &str,
+) -> Result<String> {
+    let mut fields = Vec::new();
 
-    // OpenAPI configuration
-    if let Some(openapi) = middleware.get("openapi") {
-        has_fields = true;
-        config_code.push_str("        openapi=OpenApiConfig(\n");
+    if let Some(compression) = &metadata.compression {
+        let mut args = Vec::new();
+        if let Some(gzip) = compression.gzip {
+            args.push(format!("gzip={}", if gzip { "True" } else { "False" }));
+        }
+        if let Some(brotli) = compression.brotli {
+            args.push(format!("brotli={}", if brotli { "True" } else { "False" }));
+        }
+        if let Some(min_size) = compression.min_size {
+            args.push(format!("min_size={}", min_size));
+        }
+        if let Some(quality) = compression.quality {
+            args.push(format!("quality={}", quality));
+        }
+        if args.is_empty() {
+            fields.push("        compression=CompressionConfig()\n".to_string());
+        } else {
+            fields.push(format!("        compression=CompressionConfig({})\n", args.join(", ")));
+        }
+    }
 
-        if let Some(enabled) = openapi.get("enabled") {
-            config_code.push_str(&format!("            enabled={},\n", json_to_python(enabled)));
+    if let Some(rate_limit) = &metadata.rate_limit {
+        let mut rl_args = vec![
+            format!("per_second={}", rate_limit.per_second),
+            format!("burst={}", rate_limit.burst),
+        ];
+        if let Some(ip_based) = rate_limit.ip_based {
+            rl_args.push(format!("ip_based={}", if ip_based { "True" } else { "False" }));
         }
-        if let Some(title) = openapi.get("title") {
-            config_code.push_str(&format!("            title={},\n", json_to_python(title)));
+        fields.push(format!("        rate_limit=RateLimitConfig({})\n", rl_args.join(", ")));
+    }
+
+    if let Some(timeout) = &metadata.request_timeout {
+        fields.push(format!("        request_timeout={}\n", timeout.seconds));
+    }
+
+    if let Some(request_id) = &metadata.request_id
+        && let Some(enabled) = request_id.enabled
+    {
+        fields.push(format!(
+            "        enable_request_id={}\n",
+            if enabled { "True" } else { "False" }
+        ));
+    }
+
+    if let Some(body_limit) = &metadata.body_limit {
+        match body_limit.max_bytes {
+            Some(bytes) => fields.push(format!("        max_body_size={}\n", bytes)),
+            None => fields.push("        max_body_size=None\n".to_string()),
         }
-        if let Some(version) = openapi.get("version") {
-            config_code.push_str(&format!("            version={},\n", json_to_python(version)));
-        }
-        if let Some(description) = openapi.get("description") {
-            config_code.push_str(&format!("            description={},\n", json_to_python(description)));
-        }
-        if let Some(swagger_ui_path) = openapi.get("swagger_ui_path") {
-            config_code.push_str(&format!(
-                "            swagger_ui_path={},\n",
-                json_to_python(swagger_ui_path)
+    }
+
+    if !metadata.static_dirs.is_empty() {
+        let mut entries = Vec::new();
+        for dir in &metadata.static_dirs {
+            let mut args = vec![format!(
+                "directory=str(BASE_DIR / \"static_assets\" / \"{}\" / \"{}\")",
+                fixture_id, dir.directory_name
+            )];
+            args.push(format!(
+                "route_prefix={}",
+                json_to_python(&Value::String(dir.route_prefix.clone()))
             ));
-        }
-        if let Some(redoc_path) = openapi.get("redoc_path") {
-            config_code.push_str(&format!("            redoc_path={},\n", json_to_python(redoc_path)));
-        }
-        if let Some(openapi_json_path) = openapi.get("openapi_json_path") {
-            config_code.push_str(&format!(
-                "            openapi_json_path={},\n",
-                json_to_python(openapi_json_path)
-            ));
-        }
-
-        // Contact info
-        if let Some(contact) = openapi.get("contact") {
-            config_code.push_str("            contact=ContactInfo(\n");
-            if let Some(name) = contact.get("name") {
-                config_code.push_str(&format!("                name={},\n", json_to_python(name)));
+            if !dir.index_file {
+                args.push("index_file=False".to_string());
             }
-            if let Some(email) = contact.get("email") {
-                config_code.push_str(&format!("                email={},\n", json_to_python(email)));
+            if let Some(cache) = &dir.cache_control {
+                args.push(format!(
+                    "cache_control={}",
+                    json_to_python(&Value::String(cache.clone()))
+                ));
             }
-            if let Some(url) = contact.get("url") {
-                config_code.push_str(&format!("                url={},\n", json_to_python(url)));
-            }
-            config_code.push_str("            ),\n");
+            entries.push(format!("            StaticFilesConfig({})", args.join(", ")));
         }
-
-        // License info
-        if let Some(license) = openapi.get("license") {
-            config_code.push_str("            license=LicenseInfo(\n");
-            if let Some(name) = license.get("name") {
-                config_code.push_str(&format!("                name={},\n", json_to_python(name)));
+        if !entries.is_empty() {
+            fields.push("        static_files=[\n".to_string());
+            for entry in entries {
+                fields.push(format!("{}\n", entry));
             }
-            if let Some(url) = license.get("url") {
-                config_code.push_str(&format!("                url={},\n", json_to_python(url)));
-            }
-            config_code.push_str("            ),\n");
+            fields.push("        ]\n".to_string());
         }
-
-        // Servers
-        if let Some(servers) = openapi.get("servers").and_then(|v| v.as_array()) {
-            config_code.push_str("            servers=[\n");
-            for server in servers {
-                config_code.push_str("                ServerInfo(\n");
-                if let Some(url) = server.get("url") {
-                    config_code.push_str(&format!("                    url={},\n", json_to_python(url)));
-                }
-                if let Some(description) = server.get("description") {
-                    config_code.push_str(&format!(
-                        "                    description={},\n",
-                        json_to_python(description)
-                    ));
-                }
-                config_code.push_str("                ),\n");
-            }
-            config_code.push_str("            ],\n");
-        }
-
-        config_code.push_str("        ),\n");
     }
 
-    // JWT authentication
-    if let Some(jwt) = middleware.get("jwt_auth") {
-        has_fields = true;
-        config_code.push_str("        jwt_auth=JwtConfig(\n");
-
-        if let Some(secret) = jwt.get("secret") {
-            config_code.push_str(&format!("            secret={},\n", json_to_python(secret)));
-        }
-        if let Some(algorithm) = jwt.get("algorithm") {
-            config_code.push_str(&format!("            algorithm={},\n", json_to_python(algorithm)));
-        }
-        if let Some(audience) = jwt.get("audience") {
-            config_code.push_str(&format!("            audience={},\n", json_to_python(audience)));
-        }
-        if let Some(issuer) = jwt.get("issuer") {
-            config_code.push_str(&format!("            issuer={},\n", json_to_python(issuer)));
-        }
-        if let Some(leeway) = jwt.get("leeway") {
-            config_code.push_str(&format!("            leeway={},\n", json_to_python(leeway)));
+    if let Some(middleware) = raw_middleware {
+        if let Some(openapi) = middleware.get("openapi") {
+            fields.push(build_openapi_config_block(openapi)?);
         }
 
-        config_code.push_str("        ),\n");
+        if let Some(jwt) = middleware.get("jwt_auth") {
+            fields.push(build_jwt_config_block(jwt)?);
+        }
+
+        if let Some(api_key) = middleware.get("api_key_auth") {
+            fields.push(build_api_key_config_block(api_key)?);
+        }
     }
 
-    // API key authentication
-    if let Some(api_key) = middleware.get("api_key_auth") {
-        has_fields = true;
-        config_code.push_str("        api_key_auth=ApiKeyConfig(\n");
-
-        if let Some(keys) = api_key.get("keys") {
-            config_code.push_str(&format!("            keys={},\n", json_to_python(keys)));
-        }
-        if let Some(header_name) = api_key.get("header_name") {
-            config_code.push_str(&format!("            header_name={},\n", json_to_python(header_name)));
-        }
-
-        config_code.push_str("        ),\n");
-    }
-
-    config_code.push_str("    )");
-
-    if !has_fields {
+    if fields.is_empty() {
         return Ok("None".to_string());
     }
 
-    Ok(config_code)
+    let mut config = String::from("ServerConfig(\n");
+    for field in fields {
+        config.push_str(&field);
+    }
+    config.push_str("    )");
+    Ok(config)
+}
+
+fn build_openapi_config_block(openapi: &Value) -> Result<String> {
+    let mut block = String::from("        openapi=OpenApiConfig(\n");
+    if let Some(enabled) = openapi.get("enabled") {
+        block.push_str(&format!("            enabled={},\n", json_to_python(enabled)));
+    }
+    if let Some(title) = openapi.get("title") {
+        block.push_str(&format!("            title={},\n", json_to_python(title)));
+    }
+    if let Some(version) = openapi.get("version") {
+        block.push_str(&format!("            version={},\n", json_to_python(version)));
+    }
+    if let Some(description) = openapi.get("description") {
+        block.push_str(&format!("            description={},\n", json_to_python(description)));
+    }
+    if let Some(swagger_ui_path) = openapi.get("swagger_ui_path") {
+        block.push_str(&format!(
+            "            swagger_ui_path={},\n",
+            json_to_python(swagger_ui_path)
+        ));
+    }
+    if let Some(redoc_path) = openapi.get("redoc_path") {
+        block.push_str(&format!("            redoc_path={},\n", json_to_python(redoc_path)));
+    }
+    if let Some(openapi_json_path) = openapi.get("openapi_json_path") {
+        block.push_str(&format!(
+            "            openapi_json_path={},\n",
+            json_to_python(openapi_json_path)
+        ));
+    }
+    if let Some(contact) = openapi.get("contact") {
+        block.push_str("            contact=ContactInfo(\n");
+        if let Some(name) = contact.get("name") {
+            block.push_str(&format!("                name={},\n", json_to_python(name)));
+        }
+        if let Some(email) = contact.get("email") {
+            block.push_str(&format!("                email={},\n", json_to_python(email)));
+        }
+        if let Some(url) = contact.get("url") {
+            block.push_str(&format!("                url={},\n", json_to_python(url)));
+        }
+        block.push_str("            ),\n");
+    }
+    if let Some(license) = openapi.get("license") {
+        block.push_str("            license=LicenseInfo(\n");
+        if let Some(name) = license.get("name") {
+            block.push_str(&format!("                name={},\n", json_to_python(name)));
+        }
+        if let Some(url) = license.get("url") {
+            block.push_str(&format!("                url={},\n", json_to_python(url)));
+        }
+        block.push_str("            ),\n");
+    }
+    if let Some(servers) = openapi.get("servers").and_then(|v| v.as_array()) {
+        block.push_str("            servers=[\n");
+        for server in servers {
+            block.push_str("                ServerInfo(\n");
+            if let Some(url) = server.get("url") {
+                block.push_str(&format!("                    url={},\n", json_to_python(url)));
+            }
+            if let Some(description) = server.get("description") {
+                block.push_str(&format!(
+                    "                    description={},\n",
+                    json_to_python(description)
+                ));
+            }
+            block.push_str("                ),\n");
+        }
+        block.push_str("            ],\n");
+    }
+    block.push_str("        ),\n");
+    Ok(block)
+}
+
+fn build_jwt_config_block(jwt: &Value) -> Result<String> {
+    let mut block = String::from("        jwt_auth=JwtConfig(\n");
+    if let Some(secret) = jwt.get("secret") {
+        block.push_str(&format!("            secret={},\n", json_to_python(secret)));
+    }
+    if let Some(algorithm) = jwt.get("algorithm") {
+        block.push_str(&format!("            algorithm={},\n", json_to_python(algorithm)));
+    }
+    if let Some(audience) = jwt.get("audience") {
+        block.push_str(&format!("            audience={},\n", json_to_python(audience)));
+    }
+    if let Some(issuer) = jwt.get("issuer") {
+        block.push_str(&format!("            issuer={},\n", json_to_python(issuer)));
+    }
+    if let Some(leeway) = jwt.get("leeway") {
+        block.push_str(&format!("            leeway={},\n", json_to_python(leeway)));
+    }
+    block.push_str("        ),\n");
+    Ok(block)
+}
+
+fn build_api_key_config_block(api_key: &Value) -> Result<String> {
+    let mut block = String::from("        api_key_auth=ApiKeyConfig(\n");
+    if let Some(keys) = api_key.get("keys") {
+        block.push_str(&format!("            keys={},\n", json_to_python(keys)));
+    }
+    if let Some(header_name) = api_key.get("header_name") {
+        block.push_str(&format!("            header_name={},\n", json_to_python(header_name)));
+    }
+    block.push_str("        ),\n");
+    Ok(block)
 }
 
 /// Generate Python lifecycle hooks registration code

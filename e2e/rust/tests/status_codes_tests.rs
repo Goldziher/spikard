@@ -3,17 +3,17 @@
 
 #[cfg(test)]
 mod status_codes {
+    use axum::body::Body;
+    use axum::http::Request;
+    use axum_test::TestServer;
+    use serde_json::Value;
+    use spikard_http::testing::snapshot_response;
 
     #[tokio::test]
     async fn test_status_codes_19_413_payload_too_large() {
         // Fixture: 19_413_payload_too_large
         // Description: Request with body exceeding max size should return 413
         // Expected status: 413
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/19_413_payload_too_large.json")
@@ -272,16 +272,11 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(413).unwrap(),
-            "Expected status 413, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 413, "Expected status 413, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -289,11 +284,6 @@ mod status_codes {
         // Fixture: 200 OK - Success
         // Description: Tests standard 200 OK response for successful GET request
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/01_200_ok_success.json")
@@ -552,16 +542,11 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -569,11 +554,6 @@ mod status_codes {
         // Fixture: 201 Created - Resource created
         // Description: Tests 201 Created response for successful POST request
         // Expected status: 201
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/02_201_created.json")
@@ -832,16 +812,11 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(201).unwrap(),
-            "Expected status 201, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -849,11 +824,6 @@ mod status_codes {
         // Fixture: 202 Accepted - Request accepted for processing
         // Description: Tests 202 Accepted for async processing
         // Expected status: 202
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/03_202_accepted.json")
@@ -1112,16 +1082,11 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(202).unwrap(),
-            "Expected status 202, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 202, "Expected status 202, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1129,11 +1094,6 @@ mod status_codes {
         // Fixture: 204 No Content - Success with no body
         // Description: Tests 204 No Content response for successful DELETE
         // Expected status: 204
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/04_204_no_content.json")
@@ -1392,16 +1352,11 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(204).unwrap(),
-            "Expected status 204, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 204, "Expected status 204, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1409,11 +1364,6 @@ mod status_codes {
         // Fixture: 206 Partial Content
         // Description: Tests 206 status code for range requests
         // Expected status: 206
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/16_206_partial_content.json")
@@ -1672,16 +1622,32 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(206).unwrap(),
-            "Expected status 206, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 206, "Expected status 206, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-length") {
+            assert_eq!(actual, "1024", "Mismatched header 'Content-Length'");
+        } else {
+            panic!("Expected header 'Content-Length' to be present");
+        }
+        if let Some(actual) = headers.get("accept-ranges") {
+            assert_eq!(actual, "bytes", "Mismatched header 'Accept-Ranges'");
+        } else {
+            panic!("Expected header 'Accept-Ranges' to be present");
+        }
+        if let Some(actual) = headers.get("content-range") {
+            assert_eq!(actual, "bytes 0-1023/5000", "Mismatched header 'Content-Range'");
+        } else {
+            panic!("Expected header 'Content-Range' to be present");
+        }
+        if let Some(actual) = headers.get("content-type") {
+            assert_eq!(actual, "application/pdf", "Mismatched header 'Content-Type'");
+        } else {
+            panic!("Expected header 'Content-Type' to be present");
+        }
     }
 
     #[tokio::test]
@@ -1689,11 +1655,6 @@ mod status_codes {
         // Fixture: 20_414_uri_too_long
         // Description: Request with excessively long URI should return 414
         // Expected status: 200
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/20_414_uri_too_long.json")
@@ -1952,16 +1913,11 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(200).unwrap(),
-            "Expected status 200, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -1969,11 +1925,6 @@ mod status_codes {
         // Fixture: 21_431_request_header_fields_too_large
         // Description: Request with excessively large headers should return 431
         // Expected status: 431
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json =
@@ -2233,16 +2184,11 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(431).unwrap(),
-            "Expected status 431, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 431, "Expected status 431, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2250,11 +2196,6 @@ mod status_codes {
         // Fixture: 22_501_not_implemented
         // Description: Unsupported HTTP method should return 501
         // Expected status: 405
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/22_501_not_implemented.json")
@@ -2513,16 +2454,11 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(405).unwrap(),
-            "Expected status 405, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 405, "Expected status 405, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -2530,11 +2466,6 @@ mod status_codes {
         // Fixture: 23_503_service_unavailable
         // Description: Service temporarily unavailable should return 503 with Retry-After
         // Expected status: 503
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/23_503_service_unavailable.json")
@@ -2793,16 +2724,17 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(503).unwrap(),
-            "Expected status 503, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 503, "Expected status 503, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("retry-after") {
+            assert_eq!(actual, "60", "Mismatched header 'Retry-After'");
+        } else {
+            panic!("Expected header 'Retry-After' to be present");
+        }
     }
 
     #[tokio::test]
@@ -2810,11 +2742,6 @@ mod status_codes {
         // Fixture: 301 Moved Permanently - Permanent redirect
         // Description: Tests 301 permanent redirect response
         // Expected status: 301
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/05_301_moved_permanently.json")
@@ -3073,16 +3000,17 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(301).unwrap(),
-            "Expected status 301, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 301, "Expected status 301, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("location") {
+            assert_eq!(actual, "/new-path", "Mismatched header 'location'");
+        } else {
+            panic!("Expected header 'location' to be present");
+        }
     }
 
     #[tokio::test]
@@ -3090,11 +3018,6 @@ mod status_codes {
         // Fixture: 302 Found - Temporary redirect
         // Description: Tests 302 temporary redirect response
         // Expected status: 302
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/06_302_found_temporary.json")
@@ -3353,16 +3276,17 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(302).unwrap(),
-            "Expected status 302, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 302, "Expected status 302, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("location") {
+            assert_eq!(actual, "/target-path", "Mismatched header 'location'");
+        } else {
+            panic!("Expected header 'location' to be present");
+        }
     }
 
     #[tokio::test]
@@ -3370,11 +3294,6 @@ mod status_codes {
         // Fixture: 304 Not Modified - Cached content valid
         // Description: Tests 304 Not Modified for cached resources
         // Expected status: 304
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/07_304_not_modified.json")
@@ -3633,16 +3552,11 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(304).unwrap(),
-            "Expected status 304, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 304, "Expected status 304, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -3650,11 +3564,6 @@ mod status_codes {
         // Fixture: 307 Temporary Redirect - Method preserved
         // Description: Tests 307 temporary redirect with method preservation
         // Expected status: 307
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/08_307_temporary_redirect.json")
@@ -3913,16 +3822,17 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(307).unwrap(),
-            "Expected status 307, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 307, "Expected status 307, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("location") {
+            assert_eq!(actual, "/target-post", "Mismatched header 'location'");
+        } else {
+            panic!("Expected header 'location' to be present");
+        }
     }
 
     #[tokio::test]
@@ -3930,11 +3840,6 @@ mod status_codes {
         // Fixture: 400 Bad Request - Invalid request
         // Description: Tests 400 Bad Request for malformed request
         // Expected status: 400
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/09_400_bad_request.json")
@@ -4193,16 +4098,11 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(400).unwrap(),
-            "Expected status 400, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 400, "Expected status 400, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -4210,11 +4110,6 @@ mod status_codes {
         // Fixture: 401 Unauthorized - Missing authentication
         // Description: Tests 401 Unauthorized when authentication is missing
         // Expected status: 401
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/10_401_unauthorized.json")
@@ -4473,16 +4368,17 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(401).unwrap(),
-            "Expected status 401, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("www-authenticate") {
+            assert_eq!(actual, "Bearer", "Mismatched header 'www-authenticate'");
+        } else {
+            panic!("Expected header 'www-authenticate' to be present");
+        }
     }
 
     #[tokio::test]
@@ -4490,11 +4386,6 @@ mod status_codes {
         // Fixture: 403 Forbidden - Insufficient permissions
         // Description: Tests 403 Forbidden when user lacks permissions
         // Expected status: 403
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/11_403_forbidden.json")
@@ -4753,16 +4644,11 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(403).unwrap(),
-            "Expected status 403, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 403, "Expected status 403, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -4770,11 +4656,6 @@ mod status_codes {
         // Fixture: 404 Not Found - Resource not found
         // Description: Tests 404 Not Found for non-existent resource
         // Expected status: 404
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/12_404_not_found.json")
@@ -5033,16 +4914,11 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(404).unwrap(),
-            "Expected status 404, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 404, "Expected status 404, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -5050,11 +4926,6 @@ mod status_codes {
         // Fixture: 408 Request Timeout
         // Description: Tests 408 status code when request takes too long
         // Expected status: 408
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/17_408_request_timeout.json")
@@ -5313,16 +5184,17 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(408).unwrap(),
-            "Expected status 408, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 408, "Expected status 408, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("connection") {
+            assert_eq!(actual, "close", "Mismatched header 'Connection'");
+        } else {
+            panic!("Expected header 'Connection' to be present");
+        }
     }
 
     #[tokio::test]
@@ -5330,11 +5202,6 @@ mod status_codes {
         // Fixture: 422 Unprocessable Entity - Validation error
         // Description: Tests 422 for validation errors (Pydantic)
         // Expected status: 422
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/13_422_validation_error.json")
@@ -5593,16 +5460,11 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(422).unwrap(),
-            "Expected status 422, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -5610,11 +5472,6 @@ mod status_codes {
         // Fixture: 429 Too Many Requests
         // Description: Tests 429 status code for rate limiting
         // Expected status: 429
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/18_429_too_many_requests.json")
@@ -5873,16 +5730,32 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(429).unwrap(),
-            "Expected status 429, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 429, "Expected status 429, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("x-ratelimit-reset") {
+            assert_eq!(actual, "1609459200", "Mismatched header 'X-RateLimit-Reset'");
+        } else {
+            panic!("Expected header 'X-RateLimit-Reset' to be present");
+        }
+        if let Some(actual) = headers.get("x-ratelimit-limit") {
+            assert_eq!(actual, "100", "Mismatched header 'X-RateLimit-Limit'");
+        } else {
+            panic!("Expected header 'X-RateLimit-Limit' to be present");
+        }
+        if let Some(actual) = headers.get("x-ratelimit-remaining") {
+            assert_eq!(actual, "0", "Mismatched header 'X-RateLimit-Remaining'");
+        } else {
+            panic!("Expected header 'X-RateLimit-Remaining' to be present");
+        }
+        if let Some(actual) = headers.get("retry-after") {
+            assert_eq!(actual, "60", "Mismatched header 'Retry-After'");
+        } else {
+            panic!("Expected header 'Retry-After' to be present");
+        }
     }
 
     #[tokio::test]
@@ -5890,11 +5763,6 @@ mod status_codes {
         // Fixture: 500 Internal Server Error - Server error
         // Description: Tests 500 Internal Server Error for unhandled exceptions
         // Expected status: 500
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/14_500_internal_server_error.json")
@@ -6153,16 +6021,11 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(500).unwrap(),
-            "Expected status 500, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 500, "Expected status 500, got {}", snapshot.status);
     }
 
     #[tokio::test]
@@ -6170,11 +6033,6 @@ mod status_codes {
         // Fixture: 503 Service Unavailable - Server overload
         // Description: Tests 503 Service Unavailable during maintenance or overload
         // Expected status: 503
-
-        use axum::body::Body;
-        use axum::http::{Request, StatusCode};
-        use serde_json::Value;
-        use tower::ServiceExt;
 
         // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/status_codes/15_503_service_unavailable.json")
@@ -6433,15 +6291,16 @@ mod status_codes {
 
         let request = request_builder.body(body).unwrap();
 
-        // Send request
-        let response = app.oneshot(request).await.unwrap();
+        let server = TestServer::new(app).unwrap();
+        let response = server.call(request).await;
+        let snapshot = snapshot_response(response).await.unwrap();
 
-        // Assert status code
-        assert_eq!(
-            response.status(),
-            StatusCode::from_u16(503).unwrap(),
-            "Expected status 503, got {:?}",
-            response.status()
-        );
+        assert_eq!(snapshot.status, 503, "Expected status 503, got {}", snapshot.status);
+        let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("retry-after") {
+            assert_eq!(actual, "120", "Mismatched header 'retry-after'");
+        } else {
+            panic!("Expected header 'retry-after' to be present");
+        }
     }
 }

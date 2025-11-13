@@ -1,0 +1,27 @@
+{
+	"name": "Request ID header is preserved",
+	"description": "When the client supplies X-Request-ID the same value should appear on the response.",
+	"category": "request_id",
+	"handler": {
+		"route": "/request-id/preserved",
+		"method": "GET"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/request-id/preserved",
+		"headers": {
+			"X-Request-ID": "trace-123"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"status": "preserved",
+			"echo": "trace-123"
+		},
+		"headers": {
+			"x-request-id": "trace-123"
+		}
+	},
+	"tags": ["request_id", "propagation"]
+}

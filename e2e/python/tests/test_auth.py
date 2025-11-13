@@ -105,6 +105,8 @@ async def test_api_key_rotation_old_key_still_valid() -> None:
     assert response_data["data"] == "sensitive information"
     assert "message" in response_data
     assert response_data["message"] == "Access granted"
+    response_headers = response.headers
+    assert response_headers.get("x-api-key-deprecated") == "true"
 
 
 async def test_jwt_invalid_issuer() -> None:
@@ -241,8 +243,8 @@ async def test_multiple_authentication_schemes_jwt_precedence() -> None:
     client = TestClient(app)
 
     headers = {
-        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg",
         "X-API-Key": "sk_test_123456",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg",
     }
     response = await client.get("/api/data", headers=headers)
 
