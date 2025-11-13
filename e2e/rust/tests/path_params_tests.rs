@@ -7,7 +7,7 @@ mod path_params {
     use axum::http::Request;
     use axum_test::TestServer;
     use serde_json::Value;
-    use spikard_http::testing::snapshot_response;
+    use spikard_http::testing::{call_test_server, snapshot_response};
 
     #[tokio::test]
     async fn test_path_params_20_uuid_v3_path_param_success() {
@@ -273,7 +273,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -543,7 +543,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -814,7 +814,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1085,7 +1085,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -1356,7 +1356,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1627,7 +1627,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1897,7 +1897,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -2168,7 +2168,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -2439,7 +2439,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -2710,7 +2710,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -2981,7 +2981,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -3252,7 +3252,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -3523,7 +3523,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -3541,7 +3541,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Boolean_path_parameter___True();
+        let app = spikard_e2e_app::create_app_path_params_boolean_path_parameter_true();
 
         // Build request
         let mut uri = "/path/bool/True".to_string();
@@ -3793,7 +3793,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -3811,7 +3811,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Boolean_path_parameter___numeric_1();
+        let app = spikard_e2e_app::create_app_path_params_boolean_path_parameter_numeric_1();
 
         // Build request
         let mut uri = "/path/bool/1".to_string();
@@ -4063,7 +4063,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -4081,7 +4081,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Date_path_parameter___success();
+        let app = spikard_e2e_app::create_app_path_params_date_path_parameter_success();
 
         // Build request
         let mut uri = "/date/2023-07-15".to_string();
@@ -4333,7 +4333,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -4351,7 +4351,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Enum_path_parameter___invalid_value();
+        let app = spikard_e2e_app::create_app_path_params_enum_path_parameter_invalid_value();
 
         // Build request
         let mut uri = "/models/foo".to_string();
@@ -4603,7 +4603,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -4621,7 +4621,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Enum_path_parameter___success();
+        let app = spikard_e2e_app::create_app_path_params_enum_path_parameter_success();
 
         // Build request
         let mut uri = "/models/alexnet".to_string();
@@ -4873,7 +4873,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -4891,7 +4891,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Float_path_parameter___success();
+        let app = spikard_e2e_app::create_app_path_params_float_path_parameter_success();
 
         // Build request
         let mut uri = "/path/float/42.5".to_string();
@@ -5143,7 +5143,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -5161,7 +5161,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Integer_path_parameter___invalid_string();
+        let app = spikard_e2e_app::create_app_path_params_integer_path_parameter_invalid_string();
 
         // Build request
         let mut uri = "/path/int/foobar".to_string();
@@ -5413,7 +5413,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -5431,7 +5431,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Integer_path_parameter___success();
+        let app = spikard_e2e_app::create_app_path_params_integer_path_parameter_success();
 
         // Build request
         let mut uri = "/path/int/42".to_string();
@@ -5683,7 +5683,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -5702,7 +5702,9 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Integer_path_parameter_with_combined_lt_and_gt_constraints___success();
+        let app =
+            spikard_e2e_app::create_app_path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success(
+            );
 
         // Build request
         let mut uri = "/path/param-lt-gt/2".to_string();
@@ -5954,7 +5956,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -5972,7 +5974,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Integer_path_parameter_with_ge_constraint___success();
+        let app = spikard_e2e_app::create_app_path_params_integer_path_parameter_with_ge_constraint_success();
 
         // Build request
         let mut uri = "/path/param-ge/3".to_string();
@@ -6224,7 +6226,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -6242,7 +6244,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Integer_path_parameter_with_gt_constraint___failure();
+        let app = spikard_e2e_app::create_app_path_params_integer_path_parameter_with_gt_constraint_failure();
 
         // Build request
         let mut uri = "/path/param-gt/2".to_string();
@@ -6494,7 +6496,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -6512,7 +6514,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Integer_path_parameter_with_gt_constraint___success();
+        let app = spikard_e2e_app::create_app_path_params_integer_path_parameter_with_gt_constraint_success();
 
         // Build request
         let mut uri = "/path/param-gt/42".to_string();
@@ -6764,7 +6766,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -6782,7 +6784,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Integer_path_parameter_with_le_constraint___success();
+        let app = spikard_e2e_app::create_app_path_params_integer_path_parameter_with_le_constraint_success();
 
         // Build request
         let mut uri = "/path/param-le/3".to_string();
@@ -7034,7 +7036,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -7052,7 +7054,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Integer_path_parameter_with_lt_constraint___success();
+        let app = spikard_e2e_app::create_app_path_params_integer_path_parameter_with_lt_constraint_success();
 
         // Build request
         let mut uri = "/path/param-lt/2".to_string();
@@ -7304,7 +7306,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -7322,7 +7324,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Multiple_path_parameters___success();
+        let app = spikard_e2e_app::create_app_path_params_multiple_path_parameters_success();
 
         // Build request
         let mut uri = "/1.0/1/abc/c892496f-b1fd-4b91-bdb8-b46f92df1716".to_string();
@@ -7574,7 +7576,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -7592,7 +7594,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Path_parameter_type_syntax___invalid_UUID();
+        let app = spikard_e2e_app::create_app_path_params_path_parameter_type_syntax_invalid_uuid();
 
         // Build request
         let mut uri = "/type-syntax/items/not-a-uuid".to_string();
@@ -7844,7 +7846,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -7862,7 +7864,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Path_parameter_type_syntax_with_override();
+        let app = spikard_e2e_app::create_app_path_params_path_parameter_type_syntax_with_override();
 
         // Build request
         let mut uri = "/type-syntax/items-count/50".to_string();
@@ -8114,7 +8116,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -8132,7 +8134,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Path_parameter_with_type_syntax___UUID();
+        let app = spikard_e2e_app::create_app_path_params_path_parameter_with_type_syntax_uuid();
 
         // Build request
         let mut uri = "/type-syntax/items/550e8400-e29b-41d4-a716-446655440000".to_string();
@@ -8384,7 +8386,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -8402,7 +8404,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Path_parameter_with_type_syntax___integer();
+        let app = spikard_e2e_app::create_app_path_params_path_parameter_with_type_syntax_integer();
 
         // Build request
         let mut uri = "/type-syntax/users/42".to_string();
@@ -8654,7 +8656,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -8672,7 +8674,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_Path_type_parameter___file_path();
+        let app = spikard_e2e_app::create_app_path_params_path_type_parameter_file_path();
 
         // Build request
         let mut uri = "/files/home/johndoe/myfile.txt".to_string();
@@ -8924,7 +8926,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -8942,7 +8944,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_String_path_parameter___success();
+        let app = spikard_e2e_app::create_app_path_params_string_path_parameter_success();
 
         // Build request
         let mut uri = "/path/str/foobar".to_string();
@@ -9194,7 +9196,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -9213,7 +9215,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_String_path_parameter_with_max_length___failure();
+        let app = spikard_e2e_app::create_app_path_params_string_path_parameter_with_max_length_failure();
 
         // Build request
         let mut uri = "/path/param-maxlength/foobar".to_string();
@@ -9465,7 +9467,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -9484,7 +9486,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_String_path_parameter_with_min_length___failure();
+        let app = spikard_e2e_app::create_app_path_params_string_path_parameter_with_min_length_failure();
 
         // Build request
         let mut uri = "/path/param-minlength/fo".to_string();
@@ -9736,7 +9738,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -9754,7 +9756,7 @@ mod path_params {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_path_params_UUID_path_parameter___success();
+        let app = spikard_e2e_app::create_app_path_params_uuid_path_parameter_success();
 
         // Build request
         let mut uri = "/items/ec38df32-ceda-4cfa-9b4a-1aeb94ad551a".to_string();
@@ -10006,7 +10008,7 @@ mod path_params {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);

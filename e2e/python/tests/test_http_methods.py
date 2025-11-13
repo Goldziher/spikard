@@ -24,9 +24,9 @@ async def test_options_cors_preflight_request() -> None:
     client = TestClient(app)
 
     headers = {
+        "Access-Control-Request-Method": "POST",
         "Access-Control-Request-Headers": "Content-Type",
         "Origin": "https://example.com",
-        "Access-Control-Request-Method": "POST",
     }
     response = await client.options("/items/", headers=headers)
 
@@ -34,8 +34,8 @@ async def test_options_cors_preflight_request() -> None:
     response_data = response.json()
     response_headers = response.headers
     assert response_headers.get("access-control-allow-origin") == "https://example.com"
-    assert response_headers.get("access-control-allow-headers") == "Content-Type"
     assert response_headers.get("access-control-allow-methods") == "GET, POST, PUT, DELETE, OPTIONS"
+    assert response_headers.get("access-control-allow-headers") == "Content-Type"
     assert response_headers.get("access-control-max-age") == "86400"
 
 
@@ -125,8 +125,8 @@ async def test_head_get_metadata_without_body() -> None:
 
     assert response.status_code == 200
     response_headers = response.headers
-    assert response_headers.get("content-type") == "application/json"
     assert response_headers.get("content-length") == "85"
+    assert response_headers.get("content-type") == "application/json"
 
 
 async def test_delete_with_response_body() -> None:

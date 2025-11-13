@@ -2,6 +2,7 @@
 //!
 //! Generates RSpec test files from fixtures.
 
+use crate::asyncapi::{AsyncFixture, load_sse_fixtures};
 use crate::background::background_data;
 use crate::middleware::parse_middleware;
 use anyhow::{Context, Result};
@@ -13,7 +14,8 @@ use std::fs;
 use std::path::Path;
 
 use crate::ruby_utils::{
-    build_method_name, bytes_to_ruby_string, string_literal, string_map_to_ruby, value_map_to_ruby, value_to_ruby,
+    build_method_name, bytes_to_ruby_string, sanitize_identifier, string_literal, string_map_to_ruby,
+    value_map_to_ruby, value_to_ruby,
 };
 use crate::streaming::{StreamingFixtureData, streaming_data};
 use urlencoding::encode;
@@ -32,6 +34,12 @@ pub fn generate_ruby_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
         let file_name = format!("{}_spec.rb", category.replace(['-', ' '], "_"));
         fs::write(spec_dir.join(file_name), spec_code)
             .with_context(|| format!("Failed to write spec for category {category}"))?;
+    }
+
+    let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
+    if !sse_fixtures.is_empty() {
+        let sse_spec = build_sse_spec(&sse_fixtures)?;
+        fs::write(spec_dir.join("asyncapi_sse_spec.rb"), sse_spec).context("Failed to write asyncapi_sse_spec.rb")?;
     }
 
     Ok(())
@@ -90,6 +98,49 @@ fn build_spec_file(category: &str, fixtures: &[Fixture]) -> String {
 ",
     );
     spec
+}
+
+fn build_sse_spec(fixtures: &[AsyncFixture]) -> Result<String> {
+    use std::collections::BTreeMap;
+
+    let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
+    for fixture in fixtures {
+        if let Some(channel) = fixture.channel.as_deref() {
+            grouped.entry(channel.to_string()).or_default().push(fixture);
+        }
+    }
+
+    if grouped.is_empty() {
+        return Ok(String::new());
+    }
+
+    let mut spec = String::new();
+    spec.push_str(
+        "# frozen_string_literal: true\n\nrequire 'spec_helper'\nrequire 'json'\n\nRSpec.describe \"asyncapi_sse\" do\n",
+    );
+
+    for (channel, channel_fixtures) in grouped {
+        let channel_path = if channel.starts_with('/') {
+            channel
+        } else {
+            format!("/{}", channel)
+        };
+        let factory_name = format!(
+            "create_app_sse_{}",
+            sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"))
+        );
+        let expected_literal = build_sse_expected_literal(channel_fixtures)?;
+
+        spec.push_str(&format!(
+            "  it \"streams events for {path}\" do\n    app = E2ERubyApp.{factory}\n    client = Spikard::Testing.create_test_client(app)\n\n    response = client.get(\"{path}\")\n    expect(response.status_code).to eq(200)\n    body = response.body_text\n    events = body.gsub(\"\\r\\n\", \"\\n\")\n                 .split(\"\\n\\n\")\n                 .select {{ |chunk| chunk.start_with?(\"data:\") }}\n                 .map {{ |chunk| chunk.sub(/^data:\\s*/, \"\").strip }}\n\n    expected = {expected_literal}\n    expect(events.length).to eq(expected.length)\n    events.zip(expected).each do |payload, expected_json|\n      expect(JSON.parse(payload)).to eq(JSON.parse(expected_json))\n    end\n\n    client.close\n  end\n\n",
+            path = channel_path,
+            factory = factory_name,
+            expected_literal = expected_literal
+        ));
+    }
+
+    spec.push_str("end\n");
+    Ok(spec)
 }
 
 fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String {
@@ -481,6 +532,20 @@ fn append_header_expectations(expectations: &mut String, headers: &HashMap<Strin
             string_literal(value)
         ));
     }
+}
+
+fn build_sse_expected_literal(fixtures: Vec<&AsyncFixture>) -> Result<String> {
+    let mut entries = Vec::new();
+    for fixture in fixtures {
+        for example in &fixture.examples {
+            let json = serde_json::to_string(example)?;
+            entries.push(string_literal(&json));
+        }
+    }
+    if entries.is_empty() {
+        entries.push("\"{}\"".to_string());
+    }
+    Ok(format!("[{}]", entries.join(", ")))
 }
 
 /// Build Ruby hash representation of file uploads

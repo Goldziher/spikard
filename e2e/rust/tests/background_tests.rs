@@ -7,7 +7,7 @@ mod background {
     use axum::http::Request;
     use axum_test::TestServer;
     use serde_json::Value;
-    use spikard_http::testing::snapshot_response;
+    use spikard_http::testing::{call_test_server, snapshot_response};
 
     #[tokio::test]
     async fn test_background_background_event_logging() {
@@ -21,7 +21,7 @@ mod background {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_background_Background_event_logging();
+        let app = spikard_e2e_app::create_app_background_background_event_logging();
 
         // Build request
         let mut uri = "/background/events".to_string();
@@ -273,21 +273,28 @@ mod background {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 202, "Expected status 202, got {}", snapshot.status);
-        let state_request = Request::builder()
-            .method("GET")
-            .uri("/background/events")
-            .body(Body::empty())
-            .unwrap();
-        let state_response = server.call(state_request).await;
-        let state_snapshot = snapshot_response(state_response).await.unwrap();
-        assert_eq!(state_snapshot.status, 200);
-        let state_json: Value = serde_json::from_slice(&state_snapshot.body).unwrap();
         let expected_state: Value = serde_json::from_str(r#"{"events":["alpha"]}"#).unwrap();
-        assert_eq!(state_json, expected_state);
+        let mut actual_state = Value::Null;
+        for _attempt in 0..5 {
+            let state_request = Request::builder()
+                .method("GET")
+                .uri("/background/events")
+                .body(Body::empty())
+                .unwrap();
+            let state_response = call_test_server(&server, state_request).await;
+            let state_snapshot = snapshot_response(state_response).await.unwrap();
+            assert_eq!(state_snapshot.status, 200);
+            actual_state = serde_json::from_slice(&state_snapshot.body).unwrap();
+            if actual_state == expected_state {
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+        }
+        assert_eq!(actual_state, expected_state);
         let headers = &snapshot.headers;
         if let Some(actual) = headers.get("content-type") {
             assert_eq!(actual, "application/json", "Mismatched header 'content-type'");
@@ -308,7 +315,7 @@ mod background {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_background_Background_event_logging___second_payload();
+        let app = spikard_e2e_app::create_app_background_background_event_logging_second_payload();
 
         // Build request
         let mut uri = "/background/events".to_string();
@@ -560,21 +567,28 @@ mod background {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 202, "Expected status 202, got {}", snapshot.status);
-        let state_request = Request::builder()
-            .method("GET")
-            .uri("/background/events")
-            .body(Body::empty())
-            .unwrap();
-        let state_response = server.call(state_request).await;
-        let state_snapshot = snapshot_response(state_response).await.unwrap();
-        assert_eq!(state_snapshot.status, 200);
-        let state_json: Value = serde_json::from_slice(&state_snapshot.body).unwrap();
         let expected_state: Value = serde_json::from_str(r#"{"events":["beta"]}"#).unwrap();
-        assert_eq!(state_json, expected_state);
+        let mut actual_state = Value::Null;
+        for _attempt in 0..5 {
+            let state_request = Request::builder()
+                .method("GET")
+                .uri("/background/events")
+                .body(Body::empty())
+                .unwrap();
+            let state_response = call_test_server(&server, state_request).await;
+            let state_snapshot = snapshot_response(state_response).await.unwrap();
+            assert_eq!(state_snapshot.status, 200);
+            actual_state = serde_json::from_slice(&state_snapshot.body).unwrap();
+            if actual_state == expected_state {
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+        }
+        assert_eq!(actual_state, expected_state);
         let headers = &snapshot.headers;
         if let Some(actual) = headers.get("content-type") {
             assert_eq!(actual, "application/json", "Mismatched header 'content-type'");

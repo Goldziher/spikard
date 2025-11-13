@@ -1,4 +1,5 @@
 {
+	"channel": "/notifications",
 	"description": "Test fixture for userNotification message",
 	"examples": [
 		{
@@ -11,6 +12,7 @@
 		}
 	],
 	"name": "userNotification",
+	"protocol": "sse",
 	"schema": {
 		"properties": {
 			"body": {

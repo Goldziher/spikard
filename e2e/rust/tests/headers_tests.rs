@@ -7,7 +7,7 @@ mod headers {
     use axum::http::Request;
     use axum_test::TestServer;
     use serde_json::Value;
-    use spikard_http::testing::snapshot_response;
+    use spikard_http::testing::{call_test_server, snapshot_response};
 
     #[tokio::test]
     async fn test_headers_30_bearer_token_format_valid() {
@@ -273,7 +273,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -543,7 +543,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -813,7 +813,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -1083,7 +1083,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1353,7 +1353,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -1371,7 +1371,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Accept_header___JSON();
+        let app = spikard_e2e_app::create_app_headers_accept_header_json();
 
         // Build request
         let mut uri = "/headers/accept".to_string();
@@ -1623,7 +1623,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1641,7 +1641,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Accept_Encoding_header();
+        let app = spikard_e2e_app::create_app_headers_accept_encoding_header();
 
         // Build request
         let mut uri = "/headers/accept-encoding".to_string();
@@ -1893,7 +1893,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1911,7 +1911,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Accept_Language_header();
+        let app = spikard_e2e_app::create_app_headers_accept_language_header();
 
         // Build request
         let mut uri = "/headers/accept-language".to_string();
@@ -2163,7 +2163,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -2181,7 +2181,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Authorization_header___missing();
+        let app = spikard_e2e_app::create_app_headers_authorization_header_missing();
 
         // Build request
         let mut uri = "/users/me".to_string();
@@ -2433,7 +2433,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -2451,7 +2451,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Authorization_header___success();
+        let app = spikard_e2e_app::create_app_headers_authorization_header_success();
 
         // Build request
         let mut uri = "/users/me".to_string();
@@ -2703,7 +2703,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -2721,7 +2721,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Authorization_header___wrong_scheme();
+        let app = spikard_e2e_app::create_app_headers_authorization_header_wrong_scheme();
 
         // Build request
         let mut uri = "/users/me".to_string();
@@ -2973,7 +2973,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -2991,7 +2991,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Basic_authentication___success();
+        let app = spikard_e2e_app::create_app_headers_basic_authentication_success();
 
         // Build request
         let mut uri = "/headers/basic-auth".to_string();
@@ -3243,7 +3243,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -3261,7 +3261,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Bearer_token_authentication___missing();
+        let app = spikard_e2e_app::create_app_headers_bearer_token_authentication_missing();
 
         // Build request
         let mut uri = "/headers/bearer-auth".to_string();
@@ -3513,7 +3513,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -3531,7 +3531,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Bearer_token_authentication___success();
+        let app = spikard_e2e_app::create_app_headers_bearer_token_authentication_success();
 
         // Build request
         let mut uri = "/headers/bearer-auth".to_string();
@@ -3783,7 +3783,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -3801,7 +3801,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Content_Type_header___application_json();
+        let app = spikard_e2e_app::create_app_headers_content_type_header_application_json();
 
         // Build request
         let mut uri = "/headers/content-type".to_string();
@@ -4053,7 +4053,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -4071,7 +4071,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Header_case_insensitivity___access();
+        let app = spikard_e2e_app::create_app_headers_header_case_insensitivity_access();
 
         // Build request
         let mut uri = "/echo".to_string();
@@ -4323,7 +4323,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -4341,7 +4341,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Header_regex_validation___fail();
+        let app = spikard_e2e_app::create_app_headers_header_regex_validation_fail();
 
         // Build request
         let mut uri = "/headers/pattern".to_string();
@@ -4593,7 +4593,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -4612,7 +4612,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Header_regex_validation___success();
+        let app = spikard_e2e_app::create_app_headers_header_regex_validation_success();
 
         // Build request
         let mut uri = "/headers/pattern".to_string();
@@ -4864,7 +4864,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -4883,7 +4883,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Header_validation___max_length_constraint_fail();
+        let app = spikard_e2e_app::create_app_headers_header_validation_max_length_constraint_fail();
 
         // Build request
         let mut uri = "/headers/max-length".to_string();
@@ -5135,7 +5135,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -5153,7 +5153,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Header_validation___min_length_constraint();
+        let app = spikard_e2e_app::create_app_headers_header_validation_min_length_constraint();
 
         // Build request
         let mut uri = "/headers/validated".to_string();
@@ -5405,7 +5405,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -5423,7 +5423,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Header_with_underscore_conversion___explicit();
+        let app = spikard_e2e_app::create_app_headers_header_with_underscore_conversion_explicit();
 
         // Build request
         let mut uri = "/headers/underscore".to_string();
@@ -5675,7 +5675,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -5693,7 +5693,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Host_header();
+        let app = spikard_e2e_app::create_app_headers_host_header();
 
         // Build request
         let mut uri = "/headers/host".to_string();
@@ -5945,7 +5945,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -5963,7 +5963,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Multiple_custom_headers();
+        let app = spikard_e2e_app::create_app_headers_multiple_custom_headers();
 
         // Build request
         let mut uri = "/headers/multiple".to_string();
@@ -6215,7 +6215,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -6233,7 +6233,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Multiple_header_values___X_Token();
+        let app = spikard_e2e_app::create_app_headers_multiple_header_values_x_token();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -6485,7 +6485,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -6503,7 +6503,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Optional_header_with_None_default___missing();
+        let app = spikard_e2e_app::create_app_headers_optional_header_with_none_default_missing();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -6755,7 +6755,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -6773,7 +6773,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Origin_header();
+        let app = spikard_e2e_app::create_app_headers_origin_header();
 
         // Build request
         let mut uri = "/headers/origin".to_string();
@@ -7025,7 +7025,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -7043,7 +7043,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_Referer_header();
+        let app = spikard_e2e_app::create_app_headers_referer_header();
 
         // Build request
         let mut uri = "/headers/referer".to_string();
@@ -7295,7 +7295,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -7313,7 +7313,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_User_Agent_header___custom_value();
+        let app = spikard_e2e_app::create_app_headers_user_agent_header_custom_value();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -7565,7 +7565,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -7583,7 +7583,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_User_Agent_header___default_value();
+        let app = spikard_e2e_app::create_app_headers_user_agent_header_default_value();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -7835,7 +7835,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -7853,7 +7853,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_X_API_Key_optional_header___missing();
+        let app = spikard_e2e_app::create_app_headers_x_api_key_optional_header_missing();
 
         // Build request
         let mut uri = "/users/me".to_string();
@@ -8105,7 +8105,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -8123,7 +8123,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_X_API_Key_optional_header___success();
+        let app = spikard_e2e_app::create_app_headers_x_api_key_optional_header_success();
 
         // Build request
         let mut uri = "/users/me".to_string();
@@ -8375,7 +8375,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -8393,7 +8393,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_X_API_Key_required_header___missing();
+        let app = spikard_e2e_app::create_app_headers_x_api_key_required_header_missing();
 
         // Build request
         let mut uri = "/users/me".to_string();
@@ -8645,7 +8645,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -8663,7 +8663,7 @@ mod headers {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_headers_X_API_Key_required_header___success();
+        let app = spikard_e2e_app::create_app_headers_x_api_key_required_header_success();
 
         // Build request
         let mut uri = "/users/me".to_string();
@@ -8915,7 +8915,7 @@ mod headers {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
