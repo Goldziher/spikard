@@ -48,15 +48,15 @@ async def handle_websocket(uri: str) -> None:
         print("✓ Connected")
 
         # Send example messages
-        fixture_chatMessage = load_fixture("chatMessage")
-        example_chatMessage = fixture_chatMessage["examples"][0]
-        print(f"Sending chatMessage message...")
-        await websocket.send(json.dumps(example_chatMessage))
-
         fixture_userJoined = load_fixture("userJoined")
         example_userJoined = fixture_userJoined["examples"][0]
         print(f"Sending userJoined message...")
         await websocket.send(json.dumps(example_userJoined))
+
+        fixture_chatMessage = load_fixture("chatMessage")
+        example_chatMessage = fixture_chatMessage["examples"][0]
+        print(f"Sending chatMessage message...")
+        await websocket.send(json.dumps(example_chatMessage))
 
         fixture_userLeft = load_fixture("userLeft")
         example_userLeft = fixture_userLeft["examples"][0]
@@ -71,10 +71,10 @@ async def handle_websocket(uri: str) -> None:
                 print(f"Received message type: {msg_type}")
 
                 # Validate based on message type
-                if msg_type == "chatMessage":
-                    validate_message(data, "chatMessage")
                 if msg_type == "userJoined":
                     validate_message(data, "userJoined")
+                if msg_type == "chatMessage":
+                    validate_message(data, "chatMessage")
                 if msg_type == "userLeft":
                     validate_message(data, "userLeft")
         except websockets.exceptions.ConnectionClosed:

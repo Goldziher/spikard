@@ -2,6 +2,7 @@
 //!
 //! Generates a Spikard Node.js/TypeScript application from fixtures for e2e testing.
 
+use crate::asyncapi::{AsyncFixture, load_sse_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::{StreamingFixtureData, streaming_data};
@@ -41,8 +42,10 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
         }
     }
 
+    let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
+
     // Generate main app file with per-fixture app factories
-    let app_content = generate_app_file_per_fixture(&fixtures_by_category, &app_dir)?;
+    let app_content = generate_app_file_per_fixture(&fixtures_by_category, &app_dir, &sse_fixtures)?;
     fs::write(app_dir.join("main.ts"), app_content).context("Failed to write main.ts")?;
 
     // Generate package.json for the e2e app
@@ -142,19 +145,25 @@ export default defineConfig({
 fn generate_app_file_per_fixture(
     fixtures_by_category: &HashMap<String, Vec<Fixture>>,
     app_dir: &Path,
+    sse_fixtures: &[AsyncFixture],
 ) -> Result<String> {
     let mut needs_background = false;
     let mut needs_static_assets = false;
+    let mut needs_server_config_import = false;
+    let has_sse = !sse_fixtures.is_empty();
     for fixtures in fixtures_by_category.values() {
         for fixture in fixtures {
             if !needs_background && background_data(fixture)?.is_some() {
                 needs_background = true;
             }
-            if !needs_static_assets {
-                let metadata = parse_middleware(fixture)?;
-                if !metadata.static_dirs.is_empty() {
-                    needs_static_assets = true;
-                }
+            let metadata = parse_middleware(fixture)?;
+            if !needs_static_assets && !metadata.static_dirs.is_empty() {
+                needs_static_assets = true;
+            }
+            if !needs_server_config_import
+                && (metadata_requires_server_config(&metadata) || handler_requires_server_config(fixture))
+            {
+                needs_server_config_import = true;
             }
         }
     }
@@ -168,10 +177,13 @@ fn generate_app_file_per_fixture(
     code.push_str(" */\n\n");
 
     // Imports
-    let needs_streaming_import = fixtures_by_category
+    let mut needs_streaming_import = fixtures_by_category
         .values()
         .flat_map(|fixtures| fixtures.iter())
         .any(|fixture| fixture.streaming.is_some());
+    if has_sse {
+        needs_streaming_import = true;
+    }
     let mut value_imports = Vec::new();
     if needs_streaming_import {
         value_imports.push("StreamingResponse");
@@ -187,22 +199,9 @@ fn generate_app_file_per_fixture(
     }
 
     // Check if any fixture uses middleware - if so, import ServerConfig types
-    let has_middleware = fixtures_by_category
-        .values()
-        .flat_map(|fixtures| fixtures.iter())
-        .any(|f| f.handler.as_ref().and_then(|h| h.middleware.as_ref()).is_some());
-
     let mut type_imports = vec!["RouteMetadata".to_string(), "SpikardApp".to_string()];
-    if has_middleware {
-        type_imports.extend([
-            "ServerConfig".to_string(),
-            "JwtConfig".to_string(),
-            "ApiKeyConfig".to_string(),
-            "OpenApiConfig".to_string(),
-            "ContactInfo".to_string(),
-            "LicenseInfo".to_string(),
-            "ServerInfo".to_string(),
-        ]);
+    if needs_server_config_import {
+        type_imports.push("ServerConfig".to_string());
     }
 
     code.push_str("import type {\n");
@@ -248,6 +247,8 @@ fn generate_app_file_per_fixture(
             ));
         }
     }
+
+    append_sse_factories(&mut code, sse_fixtures, &mut all_app_factories, &mut handler_names)?;
 
     // Add a comment listing all app factories
     code.push_str("// App factory functions:\n");
@@ -715,6 +716,129 @@ fn build_streaming_headers_ts(fixture: &Fixture, stream_info: &StreamingFixtureD
 
     let literal = Value::Object(headers);
     serde_json::to_string(&literal).unwrap_or_else(|_| "{}".to_string())
+}
+
+fn append_sse_factories(
+    code: &mut String,
+    fixtures: &[AsyncFixture],
+    registry: &mut Vec<(String, String, String)>,
+    handler_names: &mut HashMap<String, usize>,
+) -> Result<()> {
+    use std::collections::BTreeMap;
+
+    if fixtures.is_empty() {
+        return Ok(());
+    }
+
+    let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
+    for fixture in fixtures {
+        if let Some(channel) = fixture.channel.as_deref() {
+            grouped.entry(channel.to_string()).or_default().push(fixture);
+        }
+    }
+
+    for (channel, channel_fixtures) in grouped {
+        let channel_path = if channel.starts_with('/') {
+            channel
+        } else {
+            format!("/{}", channel)
+        };
+        let slug = sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"));
+        let unique = make_unique_name(&format!("sse_{}", slug), handler_names);
+        let handler_fn = format!("sseHandler{}", to_pascal_case(&unique));
+        let factory_slug = format!("sse_{}", unique);
+        let factory_fn = format!("createApp{}", to_pascal_case(&factory_slug));
+        let events_literal = build_sse_events_literal(&channel_fixtures)?;
+
+        let handler_code = format!(
+            "async function {handler_fn}(requestJson: string): Promise<any> {{
+\tconst events = {events_literal};
+\tasync function* eventStream() {{
+\t\tfor (const payload of events) {{
+\t\t\tyield `data: ${{payload}}\\n\\n`;
+\t\t}}
+\t}}
+\treturn new StreamingResponse(eventStream(), {{
+\t\tstatusCode: 200,
+\t\theaders: {{
+\t\t\t\"content-type\": \"text/event-stream\",
+\t\t\t\"cache-control\": \"no-cache\",
+\t\t}},
+\t}});
+}}",
+            handler_fn = handler_fn,
+            events_literal = events_literal
+        );
+
+        let factory_code = format!(
+            "export function {factory_fn}(): SpikardApp {{
+\tconst route: RouteMetadata = {{
+\t\tmethod: \"GET\",
+\t\tpath: \"{path}\",
+\t\thandler_name: \"{handler_fn}\",
+\t\trequest_schema: undefined,
+\t\tresponse_schema: undefined,
+\t\tparameter_schema: undefined,
+\t\tfile_params: undefined,
+\t\tis_async: true,
+\t}};
+
+\treturn {{
+\t\troutes: [route],
+\t\thandlers: {{
+\t\t\t{handler_fn},
+\t\t}},
+\t}};
+}}",
+            factory_fn = factory_fn,
+            path = channel_path,
+            handler_fn = handler_fn
+        );
+
+        code.push_str("\n\n");
+        code.push_str(&handler_code);
+        code.push_str("\n\n");
+        code.push_str(&factory_code);
+        code.push('\n');
+
+        registry.push(("asyncapi_sse".to_string(), channel_path.clone(), factory_fn));
+    }
+
+    Ok(())
+}
+
+fn build_sse_events_literal(fixtures: &[&AsyncFixture]) -> Result<String> {
+    let mut entries = Vec::new();
+    for fixture in fixtures {
+        for example in &fixture.examples {
+            let json = serde_json::to_string(example)?;
+            entries.push(format!("\"{}\"", escape_ts_string(&json)));
+        }
+    }
+    if entries.is_empty() {
+        entries.push("\"{}\"".to_string());
+    }
+    Ok(format!("[{}]", entries.join(", ")))
+}
+
+fn metadata_requires_server_config(metadata: &MiddlewareMetadata) -> bool {
+    metadata.compression.is_some()
+        || metadata.rate_limit.is_some()
+        || metadata.request_timeout.is_some()
+        || metadata.request_id.is_some()
+        || metadata.body_limit.is_some()
+        || !metadata.static_dirs.is_empty()
+}
+
+fn handler_requires_server_config(fixture: &Fixture) -> bool {
+    if let Some(handler) = &fixture.handler
+        && let Some(middleware) = &handler.middleware
+    {
+        return middleware.get("openapi").is_some()
+            || middleware.get("jwt_auth").is_some()
+            || middleware.get("api_key_auth").is_some();
+    }
+    false
 }
 
 fn build_expected_headers_literal(fixture: &Fixture) -> Result<Option<String>> {
@@ -1229,6 +1353,10 @@ fn sanitize_identifier(s: &str) -> String {
     }
 
     result.trim_matches('_').to_string()
+}
+
+fn escape_ts_string(value: &str) -> String {
+    value.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
 /// Convert to camelCase

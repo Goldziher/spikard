@@ -1,6 +1,9 @@
-use axum_test::TestResponse as AxumTestResponse;
+use axum::body::Body;
+use axum::http::Request as AxumRequest;
+use axum_test::{TestResponse as AxumTestResponse, TestServer};
 use brotli::Decompressor;
 use flate2::read::GzDecoder;
+use http_body_util::BodyExt;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::io::{Cursor, Read};
@@ -52,6 +55,37 @@ impl std::fmt::Display for SnapshotError {
 }
 
 impl std::error::Error for SnapshotError {}
+
+/// Execute an HTTP request against an Axum [`TestServer`] by rehydrating it
+/// into the server's own [`axum_test::TestRequest`] builder.
+pub async fn call_test_server(server: &TestServer, request: AxumRequest<Body>) -> AxumTestResponse {
+    let (parts, body) = request.into_parts();
+
+    let mut path = parts.uri.path().to_string();
+    if let Some(query) = parts.uri.query()
+        && !query.is_empty()
+    {
+        path.push('?');
+        path.push_str(query);
+    }
+
+    let mut test_request = server.method(parts.method.clone(), &path);
+
+    for (name, value) in parts.headers.iter() {
+        test_request = test_request.add_header(name.clone(), value.clone());
+    }
+
+    let collected = body
+        .collect()
+        .await
+        .expect("failed to read request body for test dispatch");
+    let bytes = collected.to_bytes();
+    if !bytes.is_empty() {
+        test_request = test_request.bytes(bytes);
+    }
+
+    test_request.await
+}
 
 /// Convert an `AxumTestResponse` into a reusable [`ResponseSnapshot`].
 pub async fn snapshot_response(response: AxumTestResponse) -> Result<ResponseSnapshot, SnapshotError> {

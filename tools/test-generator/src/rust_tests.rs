@@ -1,5 +1,6 @@
 //! Rust test generation
 
+use crate::asyncapi::{AsyncFixture, load_sse_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
 use crate::streaming::streaming_data;
 use anyhow::{Context, Result};
@@ -13,6 +14,7 @@ pub fn generate_rust_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
 
     // Load fixtures from all subdirectories
     let categories = discover_fixture_categories(fixtures_dir)?;
+    let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
 
     println!("Found {} fixture categories", categories.len());
 
@@ -38,14 +40,36 @@ pub fn generate_rust_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
 
     println!("  ✓ Generated common/mod.rs");
 
+    if !sse_fixtures.is_empty() {
+        let sse_content = generate_sse_tests(&sse_fixtures)?;
+        fs::write(tests_dir.join("sse_tests.rs"), sse_content).context("Failed to write sse_tests.rs")?;
+        println!("  ✓ Generated sse_tests.rs");
+    }
+
     Ok(())
 }
 
 /// Sanitize fixture name to valid Rust identifier (must match rust_app.rs logic)
 fn sanitize_fixture_name(name: &str) -> String {
-    name.replace(|c: char| !c.is_alphanumeric() && c != '_', "_")
-        .trim_matches('_')
-        .to_string()
+    let mut result = String::with_capacity(name.len());
+    let mut last_was_underscore = false;
+
+    for ch in name.chars() {
+        if ch.is_ascii_alphanumeric() {
+            result.push(ch.to_ascii_lowercase());
+            last_was_underscore = false;
+        } else if !last_was_underscore {
+            result.push('_');
+            last_was_underscore = true;
+        }
+    }
+
+    let sanitized = result.trim_matches('_').to_string();
+    if sanitized.is_empty() {
+        "fixture".to_string()
+    } else {
+        sanitized
+    }
 }
 
 fn discover_fixture_categories(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<(Fixture, String)>>> {
@@ -397,7 +421,7 @@ async fn test_{category}_{case_name}() {{
     let request = request_builder.body(body).unwrap();
 
     let server = TestServer::new(app).unwrap();
-    let response = server.call(request).await;
+    let response = call_test_server(&server, request).await;
     let snapshot = snapshot_response(response).await.unwrap();
 
     assert_eq!(
@@ -435,7 +459,7 @@ use axum::body::Body;
 use axum::http::Request;
 use axum_test::TestServer;
 use serde_json::Value;
-use spikard_http::testing::snapshot_response;
+use spikard_http::testing::{{snapshot_response, call_test_server}};
 
 {test_cases}
 }}
@@ -464,7 +488,7 @@ fn generate_streaming_assertions(info: &Option<crate::streaming::StreamingFixtur
     if let Some(stream) = info {
         let expected_literal = rust_vec_literal(&stream.expected_bytes);
         format!(
-            "    let expected: Vec<u8> = {expected_literal};\n    assert_eq!(snapshot.body, expected);\n    return;\n",
+            "    let expected: Vec<u8> = {expected_literal};\n    assert_eq!(snapshot.body, expected);\n",
             expected_literal = expected_literal
         )
     } else {
@@ -478,23 +502,128 @@ fn generate_background_assertions(background: &Option<BackgroundFixtureData>) ->
             serde_json::json!({ bg.state_key.clone(): serde_json::Value::Array(bg.expected_state.clone()) });
         let expected_literal = serde_json::to_string(&expected_value).unwrap();
         return format!(
-            r##"    let state_request = Request::builder()
-        .method("GET")
-        .uri("{state_path}")
-        .body(Body::empty())
-        .unwrap();
-    let state_response = server.call(state_request).await;
-    let state_snapshot = snapshot_response(state_response).await.unwrap();
-    assert_eq!(state_snapshot.status, 200);
-    let state_json: Value = serde_json::from_slice(&state_snapshot.body).unwrap();
-    let expected_state: Value = serde_json::from_str(r#"{expected}"#).unwrap();
-    assert_eq!(state_json, expected_state);
+            r##"    let expected_state: Value = serde_json::from_str(r#"{expected}"#).unwrap();
+    let mut actual_state = Value::Null;
+    for _attempt in 0..5 {{
+        let state_request = Request::builder()
+            .method("GET")
+            .uri("{state_path}")
+            .body(Body::empty())
+            .unwrap();
+        let state_response = call_test_server(&server, state_request).await;
+        let state_snapshot = snapshot_response(state_response).await.unwrap();
+        assert_eq!(state_snapshot.status, 200);
+        actual_state = serde_json::from_slice(&state_snapshot.body).unwrap();
+        if actual_state == expected_state {{
+            break;
+        }}
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+    }}
+    assert_eq!(actual_state, expected_state);
 "##,
             state_path = bg.state_path,
             expected = expected_literal
         );
     }
     String::new()
+}
+
+fn generate_sse_tests(fixtures: &[AsyncFixture]) -> Result<String> {
+    use std::collections::BTreeMap;
+
+    let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
+    for fixture in fixtures {
+        if let Some(channel) = fixture.channel.as_deref() {
+            grouped.entry(channel.to_string()).or_default().push(fixture);
+        }
+    }
+
+    let mut tests = Vec::new();
+    for (channel, channel_fixtures) in grouped {
+        let channel_path = if channel.starts_with('/') {
+            channel
+        } else {
+            format!("/{}", channel)
+        };
+        let channel_slug = sanitize_fixture_name(&channel_path.trim_start_matches('/').replace('/', "_"));
+        let test_name = format!("test_sse_{}", channel_slug);
+        let app_fn = format!("create_app_sse_{}", channel_slug);
+
+        let mut expected_literals = Vec::new();
+        for fixture in &channel_fixtures {
+            for example in &fixture.examples {
+                let json_str = serde_json::to_string(example)?;
+                expected_literals.push(format!("\"{}\"", escape_rust_string(&json_str)));
+            }
+        }
+        if expected_literals.is_empty() {
+            expected_literals.push("\"{}\"".to_string());
+        }
+        let expected_vec = format!("vec![{}]", expected_literals.join(", "));
+
+        let test_case = format!(
+            r#"
+#[tokio::test]
+async fn {test_name}() {{
+    let app = spikard_e2e_app::{app_fn}();
+    let request = Request::builder()
+        .method("GET")
+        .uri("{path}")
+        .body(Body::empty())
+        .unwrap();
+    let server = TestServer::new(app).expect("Failed to build server");
+    let response = call_test_server(&server, request).await;
+    let snapshot = snapshot_response(response).await.unwrap();
+    assert_eq!(snapshot.status, 200);
+
+    let body = String::from_utf8(snapshot.body.clone()).expect("SSE stream should be UTF-8");
+    let events: Vec<&str> = body
+        .split("\n\n")
+        .filter(|chunk| chunk.starts_with("data:"))
+        .collect();
+
+    let expected_events = {expected_vec};
+    assert_eq!(
+        events.len(),
+        expected_events.len(),
+        "Expected {{}} events, got {{}}",
+        expected_events.len(),
+        events.len()
+    );
+
+    for (idx, expected) in expected_events.iter().enumerate() {{
+        let payload = events[idx].trim_start_matches("data:").trim();
+        let parsed: Value = serde_json::from_str(payload).expect("valid JSON payload");
+        let expected_value: Value = serde_json::from_str(expected).expect("valid expected JSON");
+        assert_eq!(parsed, expected_value, "Mismatched event at index {{}}", idx);
+    }}
+}}
+"#,
+            test_name = test_name,
+            app_fn = app_fn,
+            path = channel_path,
+            expected_vec = expected_vec
+        );
+
+        tests.push(test_case);
+    }
+
+    Ok(format!(
+        r#"//! SSE tests generated from AsyncAPI fixtures
+
+#[cfg(test)]
+mod sse {{
+use axum::body::Body;
+use axum::http::Request;
+use axum_test::TestServer;
+use serde_json::Value;
+use spikard_http::testing::{{snapshot_response, call_test_server}};
+
+{tests}
+}}
+"#,
+        tests = tests.join("\n")
+    ))
 }
 
 fn rust_vec_literal(bytes: &[u8]) -> String {
@@ -543,12 +672,21 @@ fn generate_header_assertions(headers: &Option<HashMap<String, String>>) -> Stri
                 }
                 _ => {
                     let escaped_value = escape_rust_string(value);
-                    code.push_str(&format!(
-                        "    if let Some(actual) = headers.get(\"{key}\") {{\n        assert_eq!(actual, \"{value}\", \"Mismatched header '{orig}'\");\n    }} else {{\n        panic!(\"Expected header '{orig}' to be present\");\n    }}\n",
-                        key = escaped_key,
-                        value = escaped_value,
-                        orig = escape_rust_string(key)
-                    ));
+                    if lower_key == "vary" {
+                        code.push_str(&format!(
+                            "    if let Some(actual) = headers.get(\"{key}\") {{\n        assert_eq!(actual.to_ascii_lowercase(), \"{value}\".to_ascii_lowercase(), \"Mismatched header '{orig}'\");\n    }} else {{\n        panic!(\"Expected header '{orig}' to be present\");\n    }}\n",
+                            key = escaped_key,
+                            value = escaped_value,
+                            orig = escape_rust_string(key)
+                        ));
+                    } else {
+                        code.push_str(&format!(
+                            "    if let Some(actual) = headers.get(\"{key}\") {{\n        assert_eq!(actual, \"{value}\", \"Mismatched header '{orig}'\");\n    }} else {{\n        panic!(\"Expected header '{orig}' to be present\");\n    }}\n",
+                            key = escaped_key,
+                            value = escaped_value,
+                            orig = escape_rust_string(key)
+                        ));
+                    }
                 }
             }
         }

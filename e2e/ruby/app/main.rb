@@ -3789,4 +3789,25 @@ module E2ERubyApp
     app
   end
 
+  def create_app_sse_notifications
+    app = Spikard::App.new
+    events = ["{\"level\":\"example_level\",\"message\":\"example_message\",\"source\":\"example_source\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"system_alert\"}", "{\"body\":\"example_body\",\"priority\":\"example_priority\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"title\":\"example_title\",\"type\":\"user_notification\",\"userId\":\"example_userId\"}", "{\"message\":\"example_message\",\"metadata\":{},\"service\":\"example_service\",\"status\":\"example_status\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"status_update\"}"]
+
+    app.get("/notifications", handler_name: "sse_notifications") do |_request|
+      stream = Enumerator.new do |yielder|
+        events.each do |payload|
+          yielder << "data: #{payload}\n\n"
+        end
+      end
+
+      Spikard::StreamingResponse.new(
+        stream,
+        status_code: 200,
+        headers: { "content-type" => "text/event-stream", "cache-control" => "no-cache" }
+      )
+    end
+
+    app
+  end
+
 end

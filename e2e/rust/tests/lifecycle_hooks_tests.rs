@@ -7,7 +7,7 @@ mod lifecycle_hooks {
     use axum::http::Request;
     use axum_test::TestServer;
     use serde_json::Value;
-    use spikard_http::testing::snapshot_response;
+    use spikard_http::testing::{call_test_server, snapshot_response};
 
     #[tokio::test]
     async fn test_lifecycle_hooks_hook_execution_order() {
@@ -21,7 +21,7 @@ mod lifecycle_hooks {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_lifecycle_hooks_Hook_Execution_Order();
+        let app = spikard_e2e_app::create_app_lifecycle_hooks_hook_execution_order();
 
         // Build request
         let mut uri = "/api/test-hook-order".to_string();
@@ -273,7 +273,7 @@ mod lifecycle_hooks {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -292,7 +292,7 @@ mod lifecycle_hooks {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_lifecycle_hooks_Multiple_Hooks___All_Phases();
+        let app = spikard_e2e_app::create_app_lifecycle_hooks_multiple_hooks_all_phases();
 
         // Build request
         let mut uri = "/api/full-lifecycle".to_string();
@@ -544,30 +544,30 @@ mod lifecycle_hooks {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
-        if let Some(actual) = headers.get("x-content-type-options") {
-            assert_eq!(actual, "nosniff", "Mismatched header 'X-Content-Type-Options'");
+        if let Some(actual) = headers.get("x-request-id") {
+            assert_eq!(actual, ".*", "Mismatched header 'X-Request-ID'");
         } else {
-            panic!("Expected header 'X-Content-Type-Options' to be present");
-        }
-        if let Some(actual) = headers.get("x-frame-options") {
-            assert_eq!(actual, "DENY", "Mismatched header 'X-Frame-Options'");
-        } else {
-            panic!("Expected header 'X-Frame-Options' to be present");
+            panic!("Expected header 'X-Request-ID' to be present");
         }
         if let Some(actual) = headers.get("x-response-time") {
             assert_eq!(actual, ".*ms", "Mismatched header 'X-Response-Time'");
         } else {
             panic!("Expected header 'X-Response-Time' to be present");
         }
-        if let Some(actual) = headers.get("x-request-id") {
-            assert_eq!(actual, ".*", "Mismatched header 'X-Request-ID'");
+        if let Some(actual) = headers.get("x-frame-options") {
+            assert_eq!(actual, "DENY", "Mismatched header 'X-Frame-Options'");
         } else {
-            panic!("Expected header 'X-Request-ID' to be present");
+            panic!("Expected header 'X-Frame-Options' to be present");
+        }
+        if let Some(actual) = headers.get("x-content-type-options") {
+            assert_eq!(actual, "nosniff", "Mismatched header 'X-Content-Type-Options'");
+        } else {
+            panic!("Expected header 'X-Content-Type-Options' to be present");
         }
     }
 
@@ -583,7 +583,7 @@ mod lifecycle_hooks {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_lifecycle_hooks_onError___Error_Logging();
+        let app = spikard_e2e_app::create_app_lifecycle_hooks_onerror_error_logging();
 
         // Build request
         let mut uri = "/api/test-error".to_string();
@@ -835,7 +835,7 @@ mod lifecycle_hooks {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 500, "Expected status 500, got {}", snapshot.status);
@@ -859,7 +859,7 @@ mod lifecycle_hooks {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_lifecycle_hooks_onRequest___Request_Logging();
+        let app = spikard_e2e_app::create_app_lifecycle_hooks_onrequest_request_logging();
 
         // Build request
         let mut uri = "/api/test-on-request".to_string();
@@ -1111,7 +1111,7 @@ mod lifecycle_hooks {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1135,7 +1135,7 @@ mod lifecycle_hooks {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_lifecycle_hooks_onResponse___Response_Timing();
+        let app = spikard_e2e_app::create_app_lifecycle_hooks_onresponse_response_timing();
 
         // Build request
         let mut uri = "/api/test-timing".to_string();
@@ -1387,7 +1387,7 @@ mod lifecycle_hooks {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1412,7 +1412,7 @@ mod lifecycle_hooks {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_lifecycle_hooks_onResponse___Security_Headers();
+        let app = spikard_e2e_app::create_app_lifecycle_hooks_onresponse_security_headers();
 
         // Build request
         let mut uri = "/api/test-security-headers".to_string();
@@ -1664,25 +1664,20 @@ mod lifecycle_hooks {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
-        if let Some(actual) = headers.get("x-frame-options") {
-            assert_eq!(actual, "DENY", "Mismatched header 'X-Frame-Options'");
-        } else {
-            panic!("Expected header 'X-Frame-Options' to be present");
-        }
-        if let Some(actual) = headers.get("x-content-type-options") {
-            assert_eq!(actual, "nosniff", "Mismatched header 'X-Content-Type-Options'");
-        } else {
-            panic!("Expected header 'X-Content-Type-Options' to be present");
-        }
         if let Some(actual) = headers.get("x-xss-protection") {
             assert_eq!(actual, "1; mode=block", "Mismatched header 'X-XSS-Protection'");
         } else {
             panic!("Expected header 'X-XSS-Protection' to be present");
+        }
+        if let Some(actual) = headers.get("x-frame-options") {
+            assert_eq!(actual, "DENY", "Mismatched header 'X-Frame-Options'");
+        } else {
+            panic!("Expected header 'X-Frame-Options' to be present");
         }
         if let Some(actual) = headers.get("strict-transport-security") {
             assert_eq!(
@@ -1691,6 +1686,11 @@ mod lifecycle_hooks {
             );
         } else {
             panic!("Expected header 'Strict-Transport-Security' to be present");
+        }
+        if let Some(actual) = headers.get("x-content-type-options") {
+            assert_eq!(actual, "nosniff", "Mismatched header 'X-Content-Type-Options'");
+        } else {
+            panic!("Expected header 'X-Content-Type-Options' to be present");
         }
     }
 
@@ -1707,7 +1707,7 @@ mod lifecycle_hooks {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_lifecycle_hooks_preHandler___Authentication_Failed__Short_Circuit();
+        let app = spikard_e2e_app::create_app_lifecycle_hooks_prehandler_authentication_failed_short_circuit();
 
         // Build request
         let mut uri = "/api/protected-resource-fail".to_string();
@@ -1959,7 +1959,7 @@ mod lifecycle_hooks {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
@@ -1978,7 +1978,7 @@ mod lifecycle_hooks {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_lifecycle_hooks_preHandler___Authentication_Success();
+        let app = spikard_e2e_app::create_app_lifecycle_hooks_prehandler_authentication_success();
 
         // Build request
         let mut uri = "/api/protected-resource".to_string();
@@ -2230,7 +2230,7 @@ mod lifecycle_hooks {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -2249,7 +2249,7 @@ mod lifecycle_hooks {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_lifecycle_hooks_preHandler___Authorization_Check();
+        let app = spikard_e2e_app::create_app_lifecycle_hooks_prehandler_authorization_check();
 
         // Build request
         let mut uri = "/api/admin-only".to_string();
@@ -2501,7 +2501,7 @@ mod lifecycle_hooks {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -2520,7 +2520,7 @@ mod lifecycle_hooks {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_lifecycle_hooks_preHandler___Authorization_Forbidden__Short_Circuit();
+        let app = spikard_e2e_app::create_app_lifecycle_hooks_prehandler_authorization_forbidden_short_circuit();
 
         // Build request
         let mut uri = "/api/admin-only-forbidden".to_string();
@@ -2772,7 +2772,7 @@ mod lifecycle_hooks {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 403, "Expected status 403, got {}", snapshot.status);
@@ -2791,7 +2791,7 @@ mod lifecycle_hooks {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_lifecycle_hooks_preValidation___Rate_Limit_Exceeded__Short_Circuit();
+        let app = spikard_e2e_app::create_app_lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit();
 
         // Build request
         let mut uri = "/api/test-rate-limit-exceeded".to_string();
@@ -3043,7 +3043,7 @@ mod lifecycle_hooks {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 429, "Expected status 429, got {}", snapshot.status);
@@ -3068,7 +3068,7 @@ mod lifecycle_hooks {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_lifecycle_hooks_preValidation___Rate_Limiting();
+        let app = spikard_e2e_app::create_app_lifecycle_hooks_prevalidation_rate_limiting();
 
         // Build request
         let mut uri = "/api/test-rate-limit".to_string();
@@ -3320,7 +3320,7 @@ mod lifecycle_hooks {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);

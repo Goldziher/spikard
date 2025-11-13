@@ -2,6 +2,7 @@
 //!
 //! Generates vitest test suites from fixtures for e2e testing.
 
+use crate::asyncapi::{AsyncFixture, load_sse_fixtures};
 use crate::background::background_data;
 use crate::middleware::parse_middleware;
 use crate::streaming::streaming_data;
@@ -53,6 +54,14 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
         println!("  ✓ Generated tests/{}.test.ts ({} tests)", category, fixtures.len());
     }
 
+    let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
+    if !sse_fixtures.is_empty() {
+        let sse_content = generate_sse_test_file(&sse_fixtures)?;
+        fs::write(tests_dir.join("asyncapi_sse.test.ts"), sse_content)
+            .context("Failed to write asyncapi_sse.test.ts")?;
+        println!("  ✓ Generated tests/asyncapi_sse.test.ts");
+    }
+
     format_generated_ts(output_dir)?;
 
     Ok(())
@@ -102,6 +111,72 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
     code.push_str("});\n");
 
     Ok(code)
+}
+
+fn generate_sse_test_file(fixtures: &[AsyncFixture]) -> Result<String> {
+    use std::collections::BTreeMap;
+
+    let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
+    for fixture in fixtures {
+        if let Some(channel) = fixture.channel.as_deref() {
+            grouped.entry(channel.to_string()).or_default().push(fixture);
+        }
+    }
+
+    if grouped.is_empty() {
+        return Ok(String::new());
+    }
+
+    let mut tests = String::new();
+
+    tests.push_str("/**\n * AsyncAPI SSE tests\n * @generated\n */\n\n");
+    tests.push_str("import { TestClient } from \"@spikard/node\";\n");
+    tests.push_str("import { describe, expect, test } from \"vitest\";\n");
+
+    let mut import_list = Vec::new();
+    for (channel, channel_fixtures) in &grouped {
+        let channel_path = if channel.starts_with('/') {
+            channel.clone()
+        } else {
+            format!("/{}", channel)
+        };
+        let slug = sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"));
+        let factory_name = format!("createApp{}", to_pascal_case(&format!("sse_{}", slug)));
+        import_list.push(factory_name.clone());
+        let test_name = format!("SSE {}", channel_path);
+        let expected_literal = build_sse_expected_literal(channel_fixtures)?;
+
+        tests.push_str(&format!(
+            "describe(\"asyncapi_sse\", () => {{\n\ttest(\"{test_name}\", async () => {{\n\t\tconst app = {factory_name}();\n\t\tconst client = new TestClient(app);\n\t\tconst response = await client.get(\"{path}\");\n\t\texpect(response.statusCode).toBe(200);\n\t\tconst normalized = response.text().replace(/\\r\\n/g, \"\\n\");\n\t\tconst events = normalized\n\t\t\t.split(\"\\n\\n\")\n\t\t\t.filter((chunk) => chunk.startsWith(\"data:\"))\n\t\t\t.map((chunk) => chunk.slice(5).trim());\n\t\tconst expected = {expected_literal};\n\t\texpect(events.length).toBe(expected.length);\n\t\tevents.forEach((payload, index) => {{\n\t\t\texpect(JSON.parse(payload)).toEqual(JSON.parse(expected[index]));\n\t\t}});\n\t}});\n}});\n\n",
+            test_name = test_name,
+            factory_name = factory_name,
+            path = channel_path,
+            expected_literal = expected_literal
+        ));
+    }
+
+    import_list.sort();
+    import_list.dedup();
+
+    let mut import_block = String::new();
+    if import_list.len() <= 4 && import_list.join(", ").len() <= 120 {
+        import_block.push_str(&format!(
+            "import {{ {} }} from \"../app/main.js\";\n\n",
+            import_list.join(", ")
+        ));
+    } else {
+        import_block.push_str("import {\n");
+        for name in &import_list {
+            import_block.push_str(&format!("\t{},\n", name));
+        }
+        import_block.push_str("} from \"../app/main.js\";\n\n");
+    }
+
+    let mut file_content = String::new();
+    file_content.push_str(import_block.as_str());
+    file_content.push_str(tests.as_str());
+
+    Ok(file_content)
 }
 
 /// Generate a single test function
@@ -873,6 +948,24 @@ fn sanitize_identifier(s: &str) -> String {
     }
 
     result.trim_matches('_').to_string()
+}
+
+fn escape_ts_string(value: &str) -> String {
+    value.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
+fn build_sse_expected_literal(fixtures: &[&AsyncFixture]) -> Result<String> {
+    let mut entries = Vec::new();
+    for fixture in fixtures {
+        for example in &fixture.examples {
+            let json_str = serde_json::to_string(example)?;
+            entries.push(format!("\"{}\"", escape_ts_string(&json_str)));
+        }
+    }
+    if entries.is_empty() {
+        entries.push("\"{}\"".to_string());
+    }
+    Ok(format!("[{}]", entries.join(", ")))
 }
 
 /// Convert to PascalCase

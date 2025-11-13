@@ -1,78 +1,68 @@
+//! AsyncAPI fixture utilities
+//!
+//! Provides helpers to load SSE/WebSocket fixtures that were generated
+//! from AsyncAPI specifications and stored under `testing_data/`.
+
 use anyhow::{Context, Result};
-use heck::ToSnakeCase;
-use spikard_cli::codegen::{
-    Protocol, detect_primary_protocol, generate_fixtures, generate_nodejs_test_app, generate_python_test_app,
-    generate_ruby_test_app, parse_asyncapi_schema,
-};
-use std::ffi::OsStr;
+use serde::Deserialize;
+use serde_json::Value;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-/// Generate AsyncAPI-driven SSE/WebSocket tests for supported languages.
-pub fn generate_asyncapi_tests(lang: &str, output_dir: &Path) -> Result<()> {
-    let specs_dir = Path::new("examples/asyncapi");
-    if !specs_dir.exists() {
-        return Ok(());
+#[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
+pub struct AsyncFixture {
+    pub name: String,
+    #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default)]
+    pub channel: Option<String>,
+    #[serde(default)]
+    pub protocol: Option<String>,
+    #[serde(default)]
+    pub schema: Value,
+    #[serde(default)]
+    pub examples: Vec<Value>,
+}
+
+pub fn load_sse_fixtures(fixtures_dir: &Path) -> Result<Vec<AsyncFixture>> {
+    load_asyncapi_fixtures(fixtures_dir.join("sse"), "sse")
+}
+
+#[allow(dead_code)]
+pub fn load_websocket_fixtures(fixtures_dir: &Path) -> Result<Vec<AsyncFixture>> {
+    load_asyncapi_fixtures(fixtures_dir.join("websockets"), "websocket")
+}
+
+fn load_asyncapi_fixtures(dir: PathBuf, expected_protocol: &str) -> Result<Vec<AsyncFixture>> {
+    if !dir.exists() {
+        return Ok(Vec::new());
     }
 
-    fs::create_dir_all(output_dir)
-        .with_context(|| format!("Failed to create output directory {}", output_dir.display()))?;
+    let mut fixtures = Vec::new();
 
-    for entry in fs::read_dir(specs_dir).context("Failed to read AsyncAPI examples directory")? {
-        let entry = entry?;
+    for entry in fs::read_dir(&dir).with_context(|| format!("Failed to read {}", dir.display()))? {
+        let entry = entry.context("Failed to read fixture entry")?;
         let path = entry.path();
-        if !is_schema_file(&path) {
+        if path.extension().is_none_or(|ext| ext != "json") {
             continue;
         }
 
-        let spec = parse_asyncapi_schema(&path)
-            .with_context(|| format!("Failed to parse AsyncAPI schema {}", path.display()))?;
-        let protocol = detect_primary_protocol(&spec)
-            .with_context(|| format!("Failed to detect protocol for {}", path.display()))?;
+        let content = fs::read_to_string(&path).with_context(|| format!("Failed to read {}", path.display()))?;
+        let mut fixture: AsyncFixture =
+            serde_json::from_str(&content).with_context(|| format!("Failed to parse {}", path.display()))?;
 
-        // Only generate tests for the protocols we currently support.
-        if !matches!(protocol, Protocol::Sse | Protocol::WebSocket) {
-            continue;
+        // Skip fixtures that don't match the expected protocol
+        if let Some(protocol) = fixture.protocol.as_deref() {
+            if protocol != expected_protocol {
+                continue;
+            }
+        } else {
+            fixture.protocol = Some(expected_protocol.to_string());
         }
 
-        // Ensure fixtures for this spec are up to date.
-        generate_fixtures(&spec, Path::new("testing_data"), protocol)
-            .with_context(|| format!("Failed to generate fixtures for {}", path.display()))?;
-
-        let slug = spec_slug(&path);
-        let filename = match lang {
-            "ruby" => format!("{slug}_test.rb"),
-            "python" => format!("{slug}_test.py"),
-            "node" => format!("{slug}_test.ts"),
-            _ => continue,
-        };
-
-        let output_file = output_dir.join(filename);
-
-        let code = match lang {
-            "ruby" => generate_ruby_test_app(&spec, protocol)?,
-            "python" => generate_python_test_app(&spec, protocol)?,
-            "node" => generate_nodejs_test_app(&spec, protocol)?,
-            _ => continue,
-        };
-
-        fs::write(&output_file, code)
-            .with_context(|| format!("Failed to write AsyncAPI test app {}", output_file.display()))?;
+        fixtures.push(fixture);
     }
 
-    Ok(())
-}
-
-fn is_schema_file(path: &Path) -> bool {
-    matches!(
-        path.extension().and_then(OsStr::to_str),
-        Some("yaml") | Some("yml") | Some("json")
-    )
-}
-
-fn spec_slug(path: &Path) -> String {
-    path.file_stem()
-        .and_then(OsStr::to_str)
-        .map(|s| s.to_snake_case())
-        .unwrap_or_else(|| "asyncapi".to_string())
+    Ok(fixtures)
 }

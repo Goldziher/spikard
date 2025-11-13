@@ -7,7 +7,7 @@ mod edge_cases {
     use axum::http::Request;
     use axum_test::TestServer;
     use serde_json::Value;
-    use spikard_http::testing::snapshot_response;
+    use spikard_http::testing::{call_test_server, snapshot_response};
 
     #[tokio::test]
     async fn test_edge_cases_11_utf8_query_parameter() {
@@ -273,7 +273,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -544,7 +544,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -815,7 +815,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1085,7 +1085,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1356,7 +1356,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
@@ -1626,7 +1626,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
@@ -1896,7 +1896,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -2166,7 +2166,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
@@ -2436,7 +2436,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
@@ -2706,7 +2706,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -2976,7 +2976,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
@@ -3246,7 +3246,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -3516,7 +3516,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 400, "Expected status 400, got {}", snapshot.status);
@@ -3786,7 +3786,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -3804,7 +3804,7 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_Deeply_nested_structure__10__levels();
+        let app = spikard_e2e_app::create_app_edge_cases_deeply_nested_structure_10_levels();
 
         // Build request
         let mut uri = "/nested/".to_string();
@@ -4056,7 +4056,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -4074,7 +4074,7 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_Empty_and_null_value_handling();
+        let app = spikard_e2e_app::create_app_edge_cases_empty_and_null_value_handling();
 
         // Build request
         let mut uri = "/nulls/".to_string();
@@ -4326,7 +4326,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -4344,7 +4344,7 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_Float_precision_and_rounding();
+        let app = spikard_e2e_app::create_app_edge_cases_float_precision_and_rounding();
 
         // Build request
         let mut uri = "/calculations/".to_string();
@@ -4596,7 +4596,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -4614,7 +4614,7 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_Large_integer_boundary_values();
+        let app = spikard_e2e_app::create_app_edge_cases_large_integer_boundary_values();
 
         // Build request
         let mut uri = "/numbers/".to_string();
@@ -4866,7 +4866,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -4884,7 +4884,7 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_Special_string_values_and_escaping();
+        let app = spikard_e2e_app::create_app_edge_cases_special_string_values_and_escaping();
 
         // Build request
         let mut uri = "/strings/".to_string();
@@ -5136,7 +5136,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -5154,7 +5154,7 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_Unicode_and_emoji_handling();
+        let app = spikard_e2e_app::create_app_edge_cases_unicode_and_emoji_handling();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -5406,7 +5406,7 @@ mod edge_cases {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);

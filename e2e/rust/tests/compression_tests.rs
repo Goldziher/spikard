@@ -7,7 +7,7 @@ mod compression {
     use axum::http::Request;
     use axum_test::TestServer;
     use serde_json::Value;
-    use spikard_http::testing::snapshot_response;
+    use spikard_http::testing::{call_test_server, snapshot_response};
 
     #[tokio::test]
     async fn test_compression_compression_gzip_applied() {
@@ -21,7 +21,7 @@ mod compression {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_compression_Compression___gzip_applied();
+        let app = spikard_e2e_app::create_app_compression_compression_gzip_applied();
 
         // Build request
         let mut uri = "/compression/gzip".to_string();
@@ -273,20 +273,24 @@ mod compression {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
-        if let Some(actual) = headers.get("vary") {
-            assert_eq!(actual, "Accept-Encoding", "Mismatched header 'vary'");
-        } else {
-            panic!("Expected header 'vary' to be present");
-        }
         if let Some(actual) = headers.get("content-encoding") {
             assert_eq!(actual, "gzip", "Mismatched header 'content-encoding'");
         } else {
             panic!("Expected header 'content-encoding' to be present");
+        }
+        if let Some(actual) = headers.get("vary") {
+            assert_eq!(
+                actual.to_ascii_lowercase(),
+                "Accept-Encoding".to_ascii_lowercase(),
+                "Mismatched header 'vary'"
+            );
+        } else {
+            panic!("Expected header 'vary' to be present");
         }
     }
 
@@ -302,7 +306,7 @@ mod compression {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_compression_Compression___payload_below_min_size_is_not_compressed();
+        let app = spikard_e2e_app::create_app_compression_compression_payload_below_min_size_is_not_compressed();
 
         // Build request
         let mut uri = "/compression/skip".to_string();
@@ -554,7 +558,7 @@ mod compression {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);

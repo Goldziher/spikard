@@ -140,10 +140,6 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
         _ => unreachable!("Invalid language"),
     }
 
-    if matches!(lang, "ruby" | "python" | "node") {
-        asyncapi::generate_asyncapi_tests(lang, &output)?;
-    }
-
     println!("✓ {} tests generated successfully", lang);
     Ok(())
 }
