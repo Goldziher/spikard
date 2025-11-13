@@ -7,7 +7,7 @@ mod streaming {
     use axum::http::Request;
     use axum_test::TestServer;
     use serde_json::Value;
-    use spikard_http::testing::snapshot_response;
+    use spikard_http::testing::{call_test_server, snapshot_response};
 
     #[tokio::test]
     async fn test_streaming_binary_log_download() {
@@ -21,7 +21,7 @@ mod streaming {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_streaming_Binary_log_download();
+        let app = spikard_e2e_app::create_app_streaming_binary_log_download();
 
         // Build request
         let mut uri = "/stream/logfile".to_string();
@@ -273,7 +273,7 @@ mod streaming {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -282,7 +282,6 @@ mod streaming {
             0x7cu8, 0x07u8, 0x5cu8, 0x6eu8,
         ];
         assert_eq!(snapshot.body, expected);
-        return;
         let headers = &snapshot.headers;
         if let Some(actual) = headers.get("content-type") {
             assert_eq!(actual, "application/octet-stream", "Mismatched header 'content-type'");
@@ -303,7 +302,7 @@ mod streaming {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_streaming_Chunked_CSV_export();
+        let app = spikard_e2e_app::create_app_streaming_chunked_csv_export();
 
         // Build request
         let mut uri = "/stream/csv-report".to_string();
@@ -555,7 +554,7 @@ mod streaming {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -565,7 +564,6 @@ mod streaming {
             0x6eu8, 0x32u8, 0x2cu8, 0x42u8, 0x6fu8, 0x62u8, 0x2cu8, 0x37u8, 0x5cu8, 0x6eu8,
         ];
         assert_eq!(snapshot.body, expected);
-        return;
         let headers = &snapshot.headers;
         if let Some(actual) = headers.get("content-type") {
             assert_eq!(actual, "text/csv", "Mismatched header 'content-type'");
@@ -586,7 +584,7 @@ mod streaming {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_streaming_Stream_JSON_lines();
+        let app = spikard_e2e_app::create_app_streaming_stream_json_lines();
 
         // Build request
         let mut uri = "/stream/json-lines".to_string();
@@ -838,7 +836,7 @@ mod streaming {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -853,7 +851,6 @@ mod streaming {
             0x6eu8,
         ];
         assert_eq!(snapshot.body, expected);
-        return;
         let headers = &snapshot.headers;
         if let Some(actual) = headers.get("content-type") {
             assert_eq!(actual, "application/x-ndjson", "Mismatched header 'content-type'");

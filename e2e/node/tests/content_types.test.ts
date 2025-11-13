@@ -110,8 +110,8 @@ describe("content_types", () => {
 		const responseData = response.json();
 		expect(responseData).toBe("pdf_binary_data");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["content-type"]).toBe("application/pdf");
 		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=document.pdf");
+		expect(responseHeaders["content-type"]).toBe("application/pdf");
 	});
 
 	test("20_content_length_mismatch", async () => {
@@ -119,8 +119,8 @@ describe("content_types", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Content-Type": "application/json",
 			"Content-Length": "100",
+			"Content-Type": "application/json",
 		};
 		const json = { value: "short" };
 		const response = await client.post("/data", { headers, json });
@@ -295,8 +295,8 @@ describe("content_types", () => {
 		const responseData = response.json();
 		expect(responseData).toBe("id,name,price\n1,Item A,10.0\n2,Item B,20.0");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["content-type"]).toBe("text/csv; charset=utf-8");
 		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=data.csv");
+		expect(responseHeaders["content-type"]).toBe("text/csv; charset=utf-8");
 	});
 
 	test("Binary response - application octet-stream", async () => {

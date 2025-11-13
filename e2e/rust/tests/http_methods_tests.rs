@@ -7,7 +7,7 @@ mod http_methods {
     use axum::http::Request;
     use axum_test::TestServer;
     use serde_json::Value;
-    use spikard_http::testing::snapshot_response;
+    use spikard_http::testing::{call_test_server, snapshot_response};
 
     #[tokio::test]
     async fn test_http_methods_delete_remove_resource() {
@@ -21,7 +21,7 @@ mod http_methods {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_http_methods_DELETE___Remove_resource();
+        let app = spikard_e2e_app::create_app_http_methods_delete_remove_resource();
 
         // Build request
         let mut uri = "/items/1".to_string();
@@ -273,7 +273,7 @@ mod http_methods {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -291,7 +291,7 @@ mod http_methods {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_http_methods_DELETE___Resource_not_found();
+        let app = spikard_e2e_app::create_app_http_methods_delete_resource_not_found();
 
         // Build request
         let mut uri = "/items/999".to_string();
@@ -543,7 +543,7 @@ mod http_methods {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -561,7 +561,7 @@ mod http_methods {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_http_methods_DELETE___With_response_body();
+        let app = spikard_e2e_app::create_app_http_methods_delete_with_response_body();
 
         // Build request
         let mut uri = "/items/1".to_string();
@@ -813,7 +813,7 @@ mod http_methods {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -831,7 +831,7 @@ mod http_methods {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_http_methods_HEAD___Get_metadata_without_body();
+        let app = spikard_e2e_app::create_app_http_methods_head_get_metadata_without_body();
 
         // Build request
         let mut uri = "/items/1".to_string();
@@ -1083,7 +1083,7 @@ mod http_methods {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1112,7 +1112,7 @@ mod http_methods {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_http_methods_OPTIONS___CORS_preflight_request();
+        let app = spikard_e2e_app::create_app_http_methods_options_cors_preflight_request();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -1364,7 +1364,7 @@ mod http_methods {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1377,10 +1377,13 @@ mod http_methods {
         } else {
             panic!("Expected header 'Access-Control-Allow-Headers' to be present");
         }
-        if let Some(actual) = headers.get("access-control-max-age") {
-            assert_eq!(actual, "86400", "Mismatched header 'Access-Control-Max-Age'");
+        if let Some(actual) = headers.get("access-control-allow-methods") {
+            assert_eq!(
+                actual, "GET, POST, PUT, DELETE, OPTIONS",
+                "Mismatched header 'Access-Control-Allow-Methods'"
+            );
         } else {
-            panic!("Expected header 'Access-Control-Max-Age' to be present");
+            panic!("Expected header 'Access-Control-Allow-Methods' to be present");
         }
         if let Some(actual) = headers.get("access-control-allow-origin") {
             assert_eq!(
@@ -1390,13 +1393,10 @@ mod http_methods {
         } else {
             panic!("Expected header 'Access-Control-Allow-Origin' to be present");
         }
-        if let Some(actual) = headers.get("access-control-allow-methods") {
-            assert_eq!(
-                actual, "GET, POST, PUT, DELETE, OPTIONS",
-                "Mismatched header 'Access-Control-Allow-Methods'"
-            );
+        if let Some(actual) = headers.get("access-control-max-age") {
+            assert_eq!(actual, "86400", "Mismatched header 'Access-Control-Max-Age'");
         } else {
-            panic!("Expected header 'Access-Control-Allow-Methods' to be present");
+            panic!("Expected header 'Access-Control-Max-Age' to be present");
         }
     }
 
@@ -1412,7 +1412,7 @@ mod http_methods {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_http_methods_PATCH___Partial_update();
+        let app = spikard_e2e_app::create_app_http_methods_patch_partial_update();
 
         // Build request
         let mut uri = "/items/1".to_string();
@@ -1664,7 +1664,7 @@ mod http_methods {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1682,7 +1682,7 @@ mod http_methods {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_http_methods_PATCH___Update_multiple_fields();
+        let app = spikard_e2e_app::create_app_http_methods_patch_update_multiple_fields();
 
         // Build request
         let mut uri = "/items/1".to_string();
@@ -1934,7 +1934,7 @@ mod http_methods {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1952,7 +1952,7 @@ mod http_methods {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_http_methods_PUT___Complete_resource_replacement();
+        let app = spikard_e2e_app::create_app_http_methods_put_complete_resource_replacement();
 
         // Build request
         let mut uri = "/items/1".to_string();
@@ -2204,7 +2204,7 @@ mod http_methods {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -2222,7 +2222,7 @@ mod http_methods {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_http_methods_PUT___Create_resource_if_doesn_t_exist();
+        let app = spikard_e2e_app::create_app_http_methods_put_create_resource_if_doesn_t_exist();
 
         // Build request
         let mut uri = "/items/999".to_string();
@@ -2474,7 +2474,7 @@ mod http_methods {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -2492,7 +2492,7 @@ mod http_methods {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_http_methods_PUT___Idempotent_operation();
+        let app = spikard_e2e_app::create_app_http_methods_put_idempotent_operation();
 
         // Build request
         let mut uri = "/items/1".to_string();
@@ -2744,7 +2744,7 @@ mod http_methods {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -2763,7 +2763,7 @@ mod http_methods {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_http_methods_PUT___Missing_required_field();
+        let app = spikard_e2e_app::create_app_http_methods_put_missing_required_field();
 
         // Build request
         let mut uri = "/items/1".to_string();
@@ -3015,7 +3015,7 @@ mod http_methods {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -3033,7 +3033,7 @@ mod http_methods {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_http_methods_PUT___Validation_error();
+        let app = spikard_e2e_app::create_app_http_methods_put_validation_error();
 
         // Build request
         let mut uri = "/items/1".to_string();
@@ -3285,7 +3285,7 @@ mod http_methods {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);

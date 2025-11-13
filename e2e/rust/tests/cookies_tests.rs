@@ -7,7 +7,7 @@ mod cookies {
     use axum::http::Request;
     use axum_test::TestServer;
     use serde_json::Value;
-    use spikard_http::testing::snapshot_response;
+    use spikard_http::testing::{call_test_server, snapshot_response};
 
     #[tokio::test]
     async fn test_cookies_24_cookie_samesite_strict() {
@@ -273,7 +273,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -543,7 +543,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -813,7 +813,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1083,7 +1083,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1101,7 +1101,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_APIKey_cookie_authentication___missing();
+        let app = spikard_e2e_app::create_app_cookies_apikey_cookie_authentication_missing();
 
         // Build request
         let mut uri = "/users/me/auth".to_string();
@@ -1353,7 +1353,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -1371,7 +1371,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_APIKey_cookie_authentication___success();
+        let app = spikard_e2e_app::create_app_cookies_apikey_cookie_authentication_success();
 
         // Build request
         let mut uri = "/users/me".to_string();
@@ -1623,7 +1623,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1642,7 +1642,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Cookie_regex_pattern_validation___fail();
+        let app = spikard_e2e_app::create_app_cookies_cookie_regex_pattern_validation_fail();
 
         // Build request
         let mut uri = "/cookies/pattern".to_string();
@@ -1894,7 +1894,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -1912,7 +1912,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Cookie_regex_pattern_validation___success();
+        let app = spikard_e2e_app::create_app_cookies_cookie_regex_pattern_validation_success();
 
         // Build request
         let mut uri = "/cookies/pattern".to_string();
@@ -2164,7 +2164,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -2183,7 +2183,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Cookie_validation___max_length_constraint_fail();
+        let app = spikard_e2e_app::create_app_cookies_cookie_validation_max_length_constraint_fail();
 
         // Build request
         let mut uri = "/cookies/validated".to_string();
@@ -2435,7 +2435,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -2454,7 +2454,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Cookie_validation___min_length_constraint_success();
+        let app = spikard_e2e_app::create_app_cookies_cookie_validation_min_length_constraint_success();
 
         // Build request
         let mut uri = "/cookies/min-length".to_string();
@@ -2706,7 +2706,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -2725,7 +2725,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Cookie_validation___min_length_failure();
+        let app = spikard_e2e_app::create_app_cookies_cookie_validation_min_length_failure();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -2977,7 +2977,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -2995,7 +2995,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Multiple_cookies___success();
+        let app = spikard_e2e_app::create_app_cookies_multiple_cookies_success();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -3247,7 +3247,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -3265,7 +3265,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Optional_APIKey_cookie___missing();
+        let app = spikard_e2e_app::create_app_cookies_optional_apikey_cookie_missing();
 
         // Build request
         let mut uri = "/users/me".to_string();
@@ -3517,7 +3517,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -3535,7 +3535,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Optional_cookie_parameter___missing();
+        let app = spikard_e2e_app::create_app_cookies_optional_cookie_parameter_missing();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -3787,7 +3787,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -3805,7 +3805,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Optional_cookie_parameter___success();
+        let app = spikard_e2e_app::create_app_cookies_optional_cookie_parameter_success();
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -4057,7 +4057,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -4075,7 +4075,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Required_cookie___missing();
+        let app = spikard_e2e_app::create_app_cookies_required_cookie_missing();
 
         // Build request
         let mut uri = "/items/cookies".to_string();
@@ -4327,7 +4327,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -4345,7 +4345,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Response___delete_cookie();
+        let app = spikard_e2e_app::create_app_cookies_response_delete_cookie();
 
         // Build request
         let mut uri = "/cookies/delete".to_string();
@@ -4597,7 +4597,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -4615,7 +4615,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Response___multiple_cookies();
+        let app = spikard_e2e_app::create_app_cookies_response_multiple_cookies();
 
         // Build request
         let mut uri = "/cookies/multiple".to_string();
@@ -4867,7 +4867,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -4885,7 +4885,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Response___session_cookie__no_max_age();
+        let app = spikard_e2e_app::create_app_cookies_response_session_cookie_no_max_age();
 
         // Build request
         let mut uri = "/cookies/session".to_string();
@@ -5137,7 +5137,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -5155,7 +5155,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Response_cookie_with_SameSite_Lax();
+        let app = spikard_e2e_app::create_app_cookies_response_cookie_with_samesite_lax();
 
         // Build request
         let mut uri = "/cookies/samesite-lax".to_string();
@@ -5407,7 +5407,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -5425,7 +5425,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Response_cookie_with_SameSite_None();
+        let app = spikard_e2e_app::create_app_cookies_response_cookie_with_samesite_none();
 
         // Build request
         let mut uri = "/cookies/samesite-none".to_string();
@@ -5677,7 +5677,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -5696,7 +5696,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Response_cookie_with_SameSite_Strict();
+        let app = spikard_e2e_app::create_app_cookies_response_cookie_with_samesite_strict();
 
         // Build request
         let mut uri = "/cookies/samesite-strict".to_string();
@@ -5948,7 +5948,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -5967,7 +5967,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Response_cookie_with_attributes();
+        let app = spikard_e2e_app::create_app_cookies_response_cookie_with_attributes();
 
         // Build request
         let mut uri = "/cookie/set".to_string();
@@ -6219,7 +6219,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -6237,7 +6237,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Response_cookie_with_domain_attribute();
+        let app = spikard_e2e_app::create_app_cookies_response_cookie_with_domain_attribute();
 
         // Build request
         let mut uri = "/cookies/set-with-domain".to_string();
@@ -6489,7 +6489,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -6507,7 +6507,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Response_cookie_with_path_attribute();
+        let app = spikard_e2e_app::create_app_cookies_response_cookie_with_path_attribute();
 
         // Build request
         let mut uri = "/cookies/set-with-path".to_string();
@@ -6759,7 +6759,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -6777,7 +6777,7 @@ mod cookies {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cookies_Response_set_cookie___basic();
+        let app = spikard_e2e_app::create_app_cookies_response_set_cookie_basic();
 
         // Build request
         let mut uri = "/cookie/".to_string();
@@ -7029,7 +7029,7 @@ mod cookies {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);

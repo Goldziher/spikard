@@ -52,15 +52,15 @@ def handle_websocket(uri)
       puts 'Sending userLeft message...'
       ws.send(JSON.generate(example_userLeft))
 
-      fixture_chatMessage = load_fixture('chatMessage')
-      example_chatMessage = fixture_chatMessage['examples'][0]
-      puts 'Sending chatMessage message...'
-      ws.send(JSON.generate(example_chatMessage))
-
       fixture_userJoined = load_fixture('userJoined')
       example_userJoined = fixture_userJoined['examples'][0]
       puts 'Sending userJoined message...'
       ws.send(JSON.generate(example_userJoined))
+
+      fixture_chatMessage = load_fixture('chatMessage')
+      example_chatMessage = fixture_chatMessage['examples'][0]
+      puts 'Sending chatMessage message...'
+      ws.send(JSON.generate(example_chatMessage))
 
     end
 
@@ -71,8 +71,8 @@ def handle_websocket(uri)
 
       # Validate based on message type
       validate_message(message, 'userLeft') if msg_type == 'userLeft'
-      validate_message(message, 'chatMessage') if msg_type == 'chatMessage'
       validate_message(message, 'userJoined') if msg_type == 'userJoined'
+      validate_message(message, 'chatMessage') if msg_type == 'chatMessage'
     end
 
     ws.on :close do |event|

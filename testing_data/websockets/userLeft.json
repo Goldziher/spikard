@@ -1,4 +1,5 @@
 {
+	"channel": "/chat",
 	"description": "Test fixture for userLeft message",
 	"examples": [
 		{
@@ -8,6 +9,7 @@
 		}
 	],
 	"name": "userLeft",
+	"protocol": "websocket",
 	"schema": {
 		"properties": {
 			"timestamp": {

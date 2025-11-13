@@ -7,7 +7,7 @@ mod auth {
     use axum::http::Request;
     use axum_test::TestServer;
     use serde_json::Value;
-    use spikard_http::testing::snapshot_response;
+    use spikard_http::testing::{call_test_server, snapshot_response};
 
     #[tokio::test]
     async fn test_auth_api_key_authentication_invalid_key() {
@@ -21,7 +21,7 @@ mod auth {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_auth_API_key_authentication___invalid_key();
+        let app = spikard_e2e_app::create_app_auth_api_key_authentication_invalid_key();
 
         // Build request
         let mut uri = "/api/data".to_string();
@@ -273,7 +273,7 @@ mod auth {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
@@ -291,7 +291,7 @@ mod auth {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_auth_API_key_authentication___missing_header();
+        let app = spikard_e2e_app::create_app_auth_api_key_authentication_missing_header();
 
         // Build request
         let mut uri = "/api/data".to_string();
@@ -543,7 +543,7 @@ mod auth {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
@@ -561,7 +561,7 @@ mod auth {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_auth_API_key_authentication___valid_key();
+        let app = spikard_e2e_app::create_app_auth_api_key_authentication_valid_key();
 
         // Build request
         let mut uri = "/api/data".to_string();
@@ -813,7 +813,7 @@ mod auth {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -831,7 +831,7 @@ mod auth {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_auth_API_key_in_query_parameter();
+        let app = spikard_e2e_app::create_app_auth_api_key_in_query_parameter();
 
         // Build request
         let mut uri = "/api/data".to_string();
@@ -1083,7 +1083,7 @@ mod auth {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1101,7 +1101,7 @@ mod auth {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_auth_API_key_rotation___old_key_still_valid();
+        let app = spikard_e2e_app::create_app_auth_api_key_rotation_old_key_still_valid();
 
         // Build request
         let mut uri = "/api/data".to_string();
@@ -1353,7 +1353,7 @@ mod auth {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1377,7 +1377,7 @@ mod auth {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_auth_API_key_with_custom_header_name();
+        let app = spikard_e2e_app::create_app_auth_api_key_with_custom_header_name();
 
         // Build request
         let mut uri = "/api/data".to_string();
@@ -1629,7 +1629,7 @@ mod auth {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -1647,7 +1647,7 @@ mod auth {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_auth_Bearer_token_without_prefix();
+        let app = spikard_e2e_app::create_app_auth_bearer_token_without_prefix();
 
         // Build request
         let mut uri = "/api/protected".to_string();
@@ -1899,7 +1899,7 @@ mod auth {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
@@ -1917,7 +1917,7 @@ mod auth {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_auth_JWT_authentication___expired_token();
+        let app = spikard_e2e_app::create_app_auth_jwt_authentication_expired_token();
 
         // Build request
         let mut uri = "/protected/user".to_string();
@@ -2169,7 +2169,7 @@ mod auth {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
@@ -2187,7 +2187,7 @@ mod auth {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_auth_JWT_authentication___invalid_audience();
+        let app = spikard_e2e_app::create_app_auth_jwt_authentication_invalid_audience();
 
         // Build request
         let mut uri = "/protected/user".to_string();
@@ -2439,7 +2439,7 @@ mod auth {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
@@ -2457,7 +2457,7 @@ mod auth {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_auth_JWT_authentication___invalid_signature();
+        let app = spikard_e2e_app::create_app_auth_jwt_authentication_invalid_signature();
 
         // Build request
         let mut uri = "/protected/user".to_string();
@@ -2709,7 +2709,7 @@ mod auth {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
@@ -2727,7 +2727,7 @@ mod auth {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_auth_JWT_authentication___missing_Authorization_header();
+        let app = spikard_e2e_app::create_app_auth_jwt_authentication_missing_authorization_header();
 
         // Build request
         let mut uri = "/protected/user".to_string();
@@ -2979,7 +2979,7 @@ mod auth {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
@@ -2997,7 +2997,7 @@ mod auth {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_auth_JWT_authentication___valid_token();
+        let app = spikard_e2e_app::create_app_auth_jwt_authentication_valid_token();
 
         // Build request
         let mut uri = "/protected/user".to_string();
@@ -3249,7 +3249,7 @@ mod auth {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -3267,7 +3267,7 @@ mod auth {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_auth_JWT_invalid_issuer();
+        let app = spikard_e2e_app::create_app_auth_jwt_invalid_issuer();
 
         // Build request
         let mut uri = "/api/protected".to_string();
@@ -3519,7 +3519,7 @@ mod auth {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
@@ -3537,7 +3537,7 @@ mod auth {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_auth_JWT_malformed_token_format();
+        let app = spikard_e2e_app::create_app_auth_jwt_malformed_token_format();
 
         // Build request
         let mut uri = "/api/protected".to_string();
@@ -3789,7 +3789,7 @@ mod auth {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
@@ -3807,7 +3807,7 @@ mod auth {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_auth_JWT_missing_required_custom_claims();
+        let app = spikard_e2e_app::create_app_auth_jwt_missing_required_custom_claims();
 
         // Build request
         let mut uri = "/api/admin".to_string();
@@ -4059,7 +4059,7 @@ mod auth {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 403, "Expected status 403, got {}", snapshot.status);
@@ -4077,7 +4077,7 @@ mod auth {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_auth_JWT_not_before_claim_in_future();
+        let app = spikard_e2e_app::create_app_auth_jwt_not_before_claim_in_future();
 
         // Build request
         let mut uri = "/api/protected".to_string();
@@ -4329,7 +4329,7 @@ mod auth {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 401, "Expected status 401, got {}", snapshot.status);
@@ -4347,7 +4347,7 @@ mod auth {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_auth_JWT_with_multiple_audiences();
+        let app = spikard_e2e_app::create_app_auth_jwt_with_multiple_audiences();
 
         // Build request
         let mut uri = "/api/protected".to_string();
@@ -4599,7 +4599,7 @@ mod auth {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -4617,7 +4617,7 @@ mod auth {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_auth_Multiple_authentication_schemes___JWT_precedence();
+        let app = spikard_e2e_app::create_app_auth_multiple_authentication_schemes_jwt_precedence();
 
         // Build request
         let mut uri = "/api/data".to_string();
@@ -4869,7 +4869,7 @@ mod auth {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);

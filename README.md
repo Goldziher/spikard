@@ -54,10 +54,11 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - [ ] AsyncAPI support (WebSocket generation)
 
 ### Testing & Benchmarking
-- [x] Fixture-driven integration tests (408 fixtures + streaming/SSE/websocket coverage)
-- [x] Python e2e tests (408/408 passing - 100%)
-- [x] Node.js e2e tests (408/408 passing - 100%)
-- [x] Ruby e2e tests (411/411 passing - 100%)
+- [x] Fixture-driven integration tests (423 REST fixtures + streaming/SSE/WebSocket coverage)
+- [x] Rust e2e tests (423/423 passing via `axum_test`)
+- [x] Python e2e tests (423/423 passing - 100%)
+- [x] Node.js e2e tests (423/423 passing - 100%)
+- [x] Ruby e2e tests (426/426 passing - 100%)
 - [x] AsyncAPI streaming fixtures (Ruby, Python, Node.js runners)
 - [x] Benchmark harness
 - [x] Performance benchmarks (Python, Node, Ruby, Rust)

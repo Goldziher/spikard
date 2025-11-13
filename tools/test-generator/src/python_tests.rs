@@ -2,6 +2,7 @@
 //!
 //! Generates pytest test suites from fixtures for e2e testing.
 
+use crate::asyncapi::{AsyncFixture, load_sse_fixtures};
 use crate::background::background_data;
 use crate::middleware::parse_middleware;
 use crate::streaming::streaming_data;
@@ -42,6 +43,7 @@ pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<(
             }
         }
     }
+    let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
 
     // Generate test file for each category
     for (category, fixtures) in fixtures_by_category.iter() {
@@ -49,6 +51,13 @@ pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<(
         let test_file = tests_dir.join(format!("test_{}.py", category));
         fs::write(&test_file, test_content).with_context(|| format!("Failed to write test file for {}", category))?;
         println!("  ✓ Generated tests/test_{}.py ({} tests)", category, fixtures.len());
+    }
+
+    if !sse_fixtures.is_empty() {
+        let sse_content = generate_sse_test_module(&sse_fixtures)?;
+        fs::write(tests_dir.join("test_asyncapi_sse.py"), sse_content)
+            .context("Failed to write test_asyncapi_sse.py")?;
+        println!("  ✓ Generated tests/test_asyncapi_sse.py");
     }
 
     Ok(())
@@ -131,6 +140,84 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
     }
 
     Ok(code)
+}
+
+fn generate_sse_test_module(fixtures: &[AsyncFixture]) -> Result<String> {
+    use std::collections::BTreeMap;
+
+    let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
+    for fixture in fixtures {
+        if let Some(channel) = fixture.channel.as_deref() {
+            grouped.entry(channel.to_string()).or_default().push(fixture);
+        }
+    }
+
+    if grouped.is_empty() {
+        return Ok(String::new());
+    }
+
+    let mut test_cases = Vec::new();
+    for (channel, channel_fixtures) in grouped {
+        let channel_path = if channel.starts_with('/') {
+            channel
+        } else {
+            format!("/{}", channel)
+        };
+        let slug = sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"));
+        let factory_name = format!("create_app_sse_{}", slug);
+        let expected_literal = build_sse_expected_literal(&channel_fixtures)?;
+        test_cases.push((channel_path, slug, factory_name, expected_literal));
+    }
+
+    let mut imports = String::new();
+    imports.push_str("from app.main import (\n");
+    for (_, _, factory_name, _) in &test_cases {
+        imports.push_str(&format!("    {},\n", factory_name));
+    }
+    imports.push_str(")\n\n");
+
+    let mut tests = String::new();
+    for (channel_path, slug, factory_name, expected_literal) in test_cases {
+        tests.push_str(&format!("async def test_sse_{slug}() -> None:\n"));
+        tests.push_str(&format!("    \"\"\"SSE channel test for {channel_path}.\"\"\"\n"));
+        tests.push_str(&format!(
+            "    app = {factory_name}()\n    client = TestClient(app)\n    response = await client.get(\"{channel_path}\")\n"
+        ));
+        tests.push_str("    assert response.status_code == 200\n");
+        tests.push_str("    body = response.text()\n");
+        tests.push_str("    normalized = body.replace(\"\\r\\n\", \"\\n\")\n");
+        tests.push_str(
+            "    events = [chunk[5:] for chunk in normalized.split(\"\\n\\n\") if chunk.startswith(\"data:\")]\n",
+        );
+        tests.push_str(&format!("    expected = {}\n", expected_literal));
+        tests.push_str("    assert len(events) == len(expected)\n");
+        tests.push_str("    for payload, expected_json in zip(events, expected):\n");
+        tests.push_str("        assert json.loads(payload.strip()) == json.loads(expected_json)\n\n");
+    }
+
+    let module = format!(
+        "\"\"\"AsyncAPI SSE tests.\"\"\"\n\nimport json\n\nfrom spikard.testing import TestClient\n{imports}{tests}",
+        imports = imports,
+        tests = tests
+    );
+
+    Ok(module)
+}
+
+fn build_sse_expected_literal(fixtures: &[&AsyncFixture]) -> Result<String> {
+    let mut entries = Vec::new();
+    for fixture in fixtures {
+        for example in &fixture.examples {
+            let json_str = serde_json::to_string(example).context("Failed to serialize SSE example")?;
+            entries.push(format!("\"{}\"", escape_python_string(&json_str)));
+        }
+    }
+
+    if entries.is_empty() {
+        entries.push("\"{}\"".to_string());
+    }
+
+    Ok(format!("[{}]", entries.join(", ")))
 }
 
 /// Generate a single test function
@@ -706,4 +793,8 @@ fn sanitize_identifier(s: &str) -> String {
     }
 
     result.trim_matches('_').to_string()
+}
+
+fn escape_python_string(value: &str) -> String {
+    value.replace('\\', "\\\\").replace('"', "\\\"")
 }

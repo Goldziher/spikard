@@ -10,6 +10,7 @@
 //! - msgspec.Struct (fastest typed)
 //! - Pydantic BaseModel (popular, slower)
 
+use crate::asyncapi::{AsyncFixture, load_sse_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::{StreamingFixtureData, chunk_bytes, streaming_data};
@@ -74,7 +75,11 @@ pub fn generate_python_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
     // Create output directory structure
     let app_dir = output_dir.join("app");
     fs::create_dir_all(&app_dir).context("Failed to create app directory")?;
-    fs::create_dir_all(app_dir.join("static_assets")).context("Failed to create static assets directory")?;
+    let static_root = app_dir.join("static_assets");
+    if static_root.exists() {
+        fs::remove_dir_all(&static_root).with_context(|| format!("Failed to clear {}", static_root.display()))?;
+    }
+    fs::create_dir_all(&static_root).context("Failed to create static assets directory")?;
 
     // Load all fixtures by category
     let mut fixtures_by_category: HashMap<String, Vec<Fixture>> = HashMap::new();
@@ -93,8 +98,10 @@ pub fn generate_python_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
         }
     }
 
-    // Generate main app file with per-fixture app factories
-    let app_content = generate_app_file_per_fixture(&fixtures_by_category, &app_dir)?;
+    let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
+
+    // Generate main app file with per-fixture and SSE app factories
+    let app_content = generate_app_file_per_fixture(&fixtures_by_category, &app_dir, &sse_fixtures)?;
     fs::write(app_dir.join("main.py"), app_content).context("Failed to write main.py")?;
 
     // Generate __init__.py
@@ -109,6 +116,7 @@ pub fn generate_python_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
 fn generate_app_file_per_fixture(
     fixtures_by_category: &HashMap<String, Vec<Fixture>>,
     app_dir: &Path,
+    sse_fixtures: &[AsyncFixture],
 ) -> Result<String> {
     let mut needs_background = false;
     let mut needs_static_assets = false;
@@ -245,6 +253,8 @@ fn generate_app_file_per_fixture(
         }
     }
 
+    append_sse_factories(&mut code, sse_fixtures, &mut all_app_factories)?;
+
     // Add a comment listing all app factories
     code.push_str("# App factory functions:\n");
     for (category, fixture_name, factory_fn) in all_app_factories {
@@ -252,6 +262,65 @@ fn generate_app_file_per_fixture(
     }
 
     Ok(code)
+}
+
+fn append_sse_factories(
+    code: &mut String,
+    fixtures: &[AsyncFixture],
+    registry: &mut Vec<(String, String, String)>,
+) -> Result<()> {
+    use std::collections::BTreeMap;
+
+    if fixtures.is_empty() {
+        return Ok(());
+    }
+
+    let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
+    for fixture in fixtures {
+        if let Some(channel) = fixture.channel.as_deref() {
+            grouped.entry(channel.to_string()).or_default().push(fixture);
+        }
+    }
+
+    for (channel, channel_fixtures) in grouped {
+        let channel_path = if channel.starts_with('/') {
+            channel
+        } else {
+            format!("/{}", channel)
+        };
+        let slug = sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"));
+        let factory_name = format!("create_app_sse_{}", slug);
+        let handler_name = format!("sse_handler_{}", slug);
+        let events_literal = build_sse_events_literal(&channel_fixtures)?;
+
+        code.push_str(&format!(
+            "\n\ndef {factory_name}() -> Spikard:\n    \"\"\"SSE channel for {channel_path}\"\"\"\n    app = Spikard()\n    events = {events_literal}\n\n    @get(\"{channel_path}\")\n    async def {handler_name}():\n        async def event_stream():\n            for payload in events:\n                yield f\"data: {{payload}}\\n\\n\"\n\n        return StreamingResponse(\n            event_stream(),\n            status_code=200,\n            headers={{\n                \"content-type\": \"text/event-stream\",\n                \"cache-control\": \"no-cache\",\n            }},\n        )\n\n    return app\n",
+            factory_name = factory_name,
+            channel_path = channel_path,
+            events_literal = events_literal,
+            handler_name = handler_name
+        ));
+
+        registry.push(("sse".to_string(), channel_path.clone(), factory_name));
+    }
+
+    Ok(())
+}
+
+fn build_sse_events_literal(fixtures: &[&AsyncFixture]) -> Result<String> {
+    let mut events = Vec::new();
+    for fixture in fixtures {
+        for example in &fixture.examples {
+            let json_str = serde_json::to_string(example).context("Failed to serialize SSE example")?;
+            events.push(format!("\"{}\"", escape_python_string(&json_str)));
+        }
+    }
+
+    if events.is_empty() {
+        events.push("\"{}\"".to_string());
+    }
+
+    Ok(format!("[{}]", events.join(", ")))
 }
 
 /// Generate handler and app factory for a single fixture (Python version)
@@ -920,6 +989,10 @@ fn sanitize_identifier(s: &str) -> String {
     }
 
     result.trim_matches('_').to_string()
+}
+
+fn escape_python_string(value: &str) -> String {
+    value.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
 /// Generate CORS preflight handler

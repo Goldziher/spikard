@@ -1,6 +1,6 @@
 # Missing Features Implementation Plan
 
-> **Last Updated**: 2025-02-14
+> **Last Updated**: 2025-02-16
 >
 > This document catalogs features needed for production-ready API framework capabilities, prioritized by user expectations and ecosystem maturity.
 
@@ -32,6 +32,12 @@
 | 13 | Static File Serving | ✅ **COMPLETE** | tower-http `fs` | MIT/Apache-2.0 | Official |
 | 14 | AsyncAPI Code Generation | ⚠️ Partial | Custom (planned) | - | - |
 | 15 | Background Tasks | ✅ **COMPLETE (2025-02)** | Custom + tokio::spawn | - | - |
+
+## Release Readiness Snapshot (2025-02-16)
+
+- ✅ Completed for GA: streaming responses, background executor, middleware parity (compression, rate limit, request timeout, static files) and fixture-driven e2e coverage across Rust/Python/Node/Ruby.
+- ⚠️ Blocking item before tagging v1.0: **AsyncAPI-first code generation** (WebSocket/SSE fixtures, CLI workflow, docs). SSE/WebSocket fixtures currently skip generation because they lack the `request` metadata that REST fixtures provide; closing that gap is the only remaining feature-level dependency.
+- 📋 Nice-to-have polish (non-blocking): benchmarking suites for WebSockets/SSE, AsyncAPI docs/tutorials, and optional observability integrations (metrics/log shipping) once AsyncAPI land.
 
 ---
 

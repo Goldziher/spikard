@@ -168,6 +168,18 @@ impl Protocol {
             _ => Protocol::Other,
         }
     }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Protocol::WebSocket => "websocket",
+            Protocol::Sse => "sse",
+            Protocol::Http => "http",
+            Protocol::Kafka => "kafka",
+            Protocol::Mqtt => "mqtt",
+            Protocol::Amqp => "amqp",
+            Protocol::Other => "other",
+        }
+    }
 }
 
 /// Determine primary protocol from AsyncAPI spec
@@ -201,6 +213,7 @@ pub fn detect_primary_protocol(spec: &AsyncApiV3Spec) -> Result<Protocol> {
 pub fn generate_fixtures(spec: &AsyncApiV3Spec, output_dir: &Path, protocol: Protocol) -> Result<usize> {
     // Extract message schemas
     let schemas = extract_message_schemas(spec)?;
+    let message_channels = collect_message_channels(spec);
 
     if schemas.is_empty() {
         tracing::warn!("No message schemas found in AsyncAPI spec");
@@ -225,9 +238,12 @@ pub fn generate_fixtures(spec: &AsyncApiV3Spec, output_dir: &Path, protocol: Pro
         let fixture_path = target_dir.join(format!("{}.json", message_name));
 
         // Create fixture with metadata
+        let channel = message_channels.get(message_name).cloned();
         let fixture = serde_json::json!({
             "name": message_name,
             "description": format!("Test fixture for {} message", message_name),
+            "protocol": protocol.as_str(),
+            "channel": channel,
             "schema": schema,
             "examples": generate_example_from_schema(schema)?
         });
@@ -409,6 +425,27 @@ fn extract_channel_info(spec: &AsyncApiV3Spec) -> Result<Vec<ChannelInfo>> {
     }
 
     Ok(channels)
+}
+
+fn collect_message_channels(spec: &AsyncApiV3Spec) -> HashMap<String, String> {
+    use asyncapiv3::spec::common::Either;
+
+    let mut map = HashMap::new();
+
+    for (channel_path, channel_ref_or) in &spec.channels {
+        let address = match channel_ref_or {
+            Either::Right(channel) => channel.address.clone().unwrap_or_else(|| channel_path.clone()),
+            Either::Left(_) => continue,
+        };
+
+        if let Either::Right(channel) = channel_ref_or {
+            for message_name in channel.messages.keys() {
+                map.entry(message_name.clone()).or_insert_with(|| address.clone());
+            }
+        }
+    }
+
+    map
 }
 
 /// Generate WebSocket message handlers for Python

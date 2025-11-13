@@ -7,7 +7,7 @@ mod multipart {
     use axum::http::Request;
     use axum_test::TestServer;
     use serde_json::Value;
-    use spikard_http::testing::snapshot_response;
+    use spikard_http::testing::{call_test_server, snapshot_response};
 
     #[tokio::test]
     async fn test_multipart_17_file_magic_number_png_success() {
@@ -274,7 +274,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
@@ -545,7 +545,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
@@ -816,7 +816,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -1087,7 +1087,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -1358,7 +1358,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
@@ -1628,7 +1628,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -1646,7 +1646,7 @@ mod multipart {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_multipart_Content_Type_validation___invalid_type();
+        let app = spikard_e2e_app::create_app_multipart_content_type_validation_invalid_type();
 
         // Build request
         let mut uri = "/files/images-only".to_string();
@@ -1898,7 +1898,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -1916,7 +1916,7 @@ mod multipart {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_multipart_Empty_file_upload();
+        let app = spikard_e2e_app::create_app_multipart_empty_file_upload();
 
         // Build request
         let mut uri = "/files/upload".to_string();
@@ -2168,7 +2168,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -2186,7 +2186,7 @@ mod multipart {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_multipart_File_list_upload__array_of_files();
+        let app = spikard_e2e_app::create_app_multipart_file_list_upload_array_of_files();
 
         // Build request
         let mut uri = "/files/list".to_string();
@@ -2438,7 +2438,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -2456,7 +2456,7 @@ mod multipart {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_multipart_File_size_validation___too_large();
+        let app = spikard_e2e_app::create_app_multipart_file_size_validation_too_large();
 
         // Build request
         let mut uri = "/files/validated".to_string();
@@ -2708,7 +2708,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 413, "Expected status 413, got {}", snapshot.status);
@@ -2726,7 +2726,7 @@ mod multipart {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_multipart_File_upload_with_custom_headers();
+        let app = spikard_e2e_app::create_app_multipart_file_upload_with_custom_headers();
 
         // Build request
         let mut uri = "/".to_string();
@@ -2978,7 +2978,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -2996,7 +2996,7 @@ mod multipart {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_multipart_File_upload_without_filename();
+        let app = spikard_e2e_app::create_app_multipart_file_upload_without_filename();
 
         // Build request
         let mut uri = "/".to_string();
@@ -3248,7 +3248,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -3266,7 +3266,7 @@ mod multipart {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_multipart_Form_data_without_files();
+        let app = spikard_e2e_app::create_app_multipart_form_data_without_files();
 
         // Build request
         let mut uri = "/".to_string();
@@ -3518,7 +3518,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -3536,7 +3536,7 @@ mod multipart {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_multipart_Image_file_upload();
+        let app = spikard_e2e_app::create_app_multipart_image_file_upload();
 
         // Build request
         let mut uri = "/files/image".to_string();
@@ -3788,7 +3788,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -3806,7 +3806,7 @@ mod multipart {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_multipart_Mixed_files_and_form_data();
+        let app = spikard_e2e_app::create_app_multipart_mixed_files_and_form_data();
 
         // Build request
         let mut uri = "/".to_string();
@@ -4058,7 +4058,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -4076,7 +4076,7 @@ mod multipart {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_multipart_Multiple_file_uploads();
+        let app = spikard_e2e_app::create_app_multipart_multiple_file_uploads();
 
         // Build request
         let mut uri = "/".to_string();
@@ -4328,7 +4328,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -4346,7 +4346,7 @@ mod multipart {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_multipart_Multiple_values_for_same_field_name();
+        let app = spikard_e2e_app::create_app_multipart_multiple_values_for_same_field_name();
 
         // Build request
         let mut uri = "/".to_string();
@@ -4598,7 +4598,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -4616,7 +4616,7 @@ mod multipart {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_multipart_Optional_file_upload___missing();
+        let app = spikard_e2e_app::create_app_multipart_optional_file_upload_missing();
 
         // Build request
         let mut uri = "/files/optional".to_string();
@@ -4868,7 +4868,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -4887,7 +4887,7 @@ mod multipart {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_multipart_Optional_file_upload___provided();
+        let app = spikard_e2e_app::create_app_multipart_optional_file_upload_provided();
 
         // Build request
         let mut uri = "/files/optional".to_string();
@@ -5139,7 +5139,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -5157,7 +5157,7 @@ mod multipart {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_multipart_PDF_file_upload();
+        let app = spikard_e2e_app::create_app_multipart_pdf_file_upload();
 
         // Build request
         let mut uri = "/files/document".to_string();
@@ -5409,7 +5409,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
@@ -5427,7 +5427,7 @@ mod multipart {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_multipart_Required_file_upload___missing();
+        let app = spikard_e2e_app::create_app_multipart_required_file_upload_missing();
 
         // Build request
         let mut uri = "/files/required".to_string();
@@ -5679,7 +5679,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
@@ -5697,7 +5697,7 @@ mod multipart {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_multipart_Simple_file_upload();
+        let app = spikard_e2e_app::create_app_multipart_simple_file_upload();
 
         // Build request
         let mut uri = "/".to_string();
@@ -5949,7 +5949,7 @@ mod multipart {
         let request = request_builder.body(body).unwrap();
 
         let server = TestServer::new(app).unwrap();
-        let response = server.call(request).await;
+        let response = call_test_server(&server, request).await;
         let snapshot = snapshot_response(response).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);

@@ -1,4 +1,5 @@
 {
+	"channel": "/notifications",
 	"description": "Test fixture for statusUpdate message",
 	"examples": [
 		{
@@ -11,6 +12,7 @@
 		}
 	],
 	"name": "statusUpdate",
+	"protocol": "sse",
 	"schema": {
 		"properties": {
 			"message": {

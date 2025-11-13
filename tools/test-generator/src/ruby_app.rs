@@ -2,6 +2,7 @@
 //!
 //! Generates Ruby Spikard applications based on fixtures.
 
+use crate::asyncapi::{AsyncFixture, load_sse_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use anyhow::{Context, Result};
@@ -21,6 +22,10 @@ use crate::streaming::chunk_bytes;
 pub fn generate_ruby_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     let app_dir = output_dir.join("app");
     fs::create_dir_all(&app_dir).context("Failed to create Ruby app directory")?;
+    let static_root = app_dir.join("static_assets");
+    if static_root.exists() {
+        fs::remove_dir_all(&static_root).with_context(|| format!("Failed to clear {}", static_root.display()))?;
+    }
 
     let fixtures_by_category = load_fixtures_grouped(fixtures_dir)?;
     let mut needs_background = false;
@@ -78,6 +83,8 @@ pub fn generate_ruby_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
 ",
     );
 
+    let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
+
     for (category, fixtures) in fixtures_by_category.iter() {
         for (index, fixture) in fixtures.iter().enumerate() {
             let metadata = parse_middleware(fixture)?;
@@ -100,6 +107,7 @@ pub fn generate_ruby_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
             )?);
         }
     }
+    append_sse_factories(&mut code, &sse_fixtures)?;
 
     code.push_str(
         "end
@@ -286,6 +294,57 @@ fn build_fixture_function(
     );
 
     Ok(function)
+}
+
+fn append_sse_factories(code: &mut String, fixtures: &[AsyncFixture]) -> Result<()> {
+    use std::collections::BTreeMap;
+
+    if fixtures.is_empty() {
+        return Ok(());
+    }
+
+    let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
+    for fixture in fixtures {
+        if let Some(channel) = fixture.channel.as_deref() {
+            grouped.entry(channel.to_string()).or_default().push(fixture);
+        }
+    }
+
+    for (channel, channel_fixtures) in grouped {
+        let channel_path = if channel.starts_with('/') {
+            channel
+        } else {
+            format!("/{}", channel)
+        };
+        let slug = sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"));
+        let app_fn_name = format!("create_app_sse_{}", slug);
+        let handler_name = format!("sse_{}", slug);
+        let events_literal = build_sse_events_literal(&channel_fixtures)?;
+
+        code.push_str(&format!(
+            "  def {app_fn_name}\n    app = Spikard::App.new\n    events = {events_literal}\n\n    app.get(\"{path}\", handler_name: \"{handler_name}\") do |_request|\n      stream = Enumerator.new do |yielder|\n        events.each do |payload|\n          yielder << \"data: #{{payload}}\\n\\n\"\n        end\n      end\n\n      Spikard::StreamingResponse.new(\n        stream,\n        status_code: 200,\n        headers: {{ \"content-type\" => \"text/event-stream\", \"cache-control\" => \"no-cache\" }}\n      )\n    end\n\n    app\n  end\n\n",
+            app_fn_name = app_fn_name,
+            events_literal = events_literal,
+            path = channel_path,
+            handler_name = handler_name
+        ));
+    }
+
+    Ok(())
+}
+
+fn build_sse_events_literal(fixtures: &[&AsyncFixture]) -> Result<String> {
+    let mut entries = Vec::new();
+    for fixture in fixtures {
+        for example in &fixture.examples {
+            let json = serde_json::to_string(example)?;
+            entries.push(string_literal(&json));
+        }
+    }
+    if entries.is_empty() {
+        entries.push("\"{}\"".to_string());
+    }
+    Ok(format!("[{}]", entries.join(", ")))
 }
 
 fn build_background_handler_block(

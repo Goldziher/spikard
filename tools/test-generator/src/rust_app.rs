@@ -51,11 +51,13 @@
 //! Use fixtures to drive TDD development of Spikard's Rust engine and ensure
 //! consistent behavior across all language bindings (Rust, Python, TypeScript, Ruby).
 
+use crate::asyncapi::{AsyncFixture, load_sse_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::chunk_bytes;
 use anyhow::{Context, Result};
 use serde_json::Value;
+use spikard_codegen::openapi::from_fixtures::FixtureExpectedResponse;
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::{BTreeMap, HashMap};
 use std::fs;
@@ -69,9 +71,39 @@ pub fn generate_rust_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
 
     // Load fixtures from all subdirectories
     let categories = discover_fixture_categories(fixtures_dir)?;
+    let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
+
+    // Pre-compute middleware metadata for all fixtures (needed for imports + generation)
+    let mut middleware_lookup: HashMap<String, MiddlewareMetadata> = HashMap::new();
+    let mut has_compression = false;
+    let mut has_rate_limit = false;
+    let mut has_static = false;
+    for (category, fixtures) in &categories {
+        for fixture in fixtures {
+            let metadata = parse_middleware(fixture)?;
+            if metadata.compression.is_some() {
+                has_compression = true;
+            }
+            if metadata.rate_limit.is_some() {
+                has_rate_limit = true;
+            }
+            if !metadata.static_dirs.is_empty() {
+                has_static = true;
+            }
+            let fixture_id = format!("{}_{}", category, sanitize_name(&fixture.name));
+            middleware_lookup.insert(fixture_id, metadata);
+        }
+    }
 
     // Generate directly in output_dir (no app/ subdirectory)
     fs::create_dir_all(output_dir).context("Failed to create output directory")?;
+
+    // Remove stale static assets before regenerating (fixture identifiers may change)
+    let static_assets_root = output_dir.join("static_assets");
+    if static_assets_root.exists() {
+        fs::remove_dir_all(&static_assets_root)
+            .with_context(|| format!("Failed to clear {}", static_assets_root.display()))?;
+    }
 
     // Generate Cargo.toml
     let cargo_toml = generate_cargo_toml();
@@ -88,7 +120,15 @@ pub fn generate_rust_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     println!("  ✓ Generated src/main.rs");
 
     // Generate lib.rs for reuse in tests
-    let lib_rs = generate_lib_rs(&categories, output_dir)?;
+    let lib_rs = generate_lib_rs(
+        &categories,
+        output_dir,
+        &middleware_lookup,
+        has_compression,
+        has_rate_limit,
+        has_static,
+        &sse_fixtures,
+    )?;
     fs::write(src_dir.join("lib.rs"), lib_rs).context("Failed to write lib.rs")?;
     println!("  ✓ Generated src/lib.rs");
 
@@ -146,6 +186,18 @@ spikard-http = { path = "../../crates/spikard-http" }
 axum = "0.8"
 tokio = { version = "1", features = ["full"] }
 tower = "0.5"
+tower-http = { version = "0.6", features = [
+    "trace",
+    "request-id",
+    "compression-gzip",
+    "compression-br",
+    "timeout",
+    "limit",
+    "fs",
+    "set-header",
+    "sensitive-headers",
+] }
+tower_governor = "0.8"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tracing = "0.1"
@@ -165,8 +217,6 @@ fn generate_main_rs(_categories: &BTreeMap<String, Vec<Fixture>>) -> String {
     r#"//! Generated test application
 //! This is a minimal Axum app that echoes back validated parameters
 
-use axum::{routing::get, Json, Router};
-use serde_json::{json, Value};
 use std::net::SocketAddr;
 
 pub use spikard_e2e_app::*;
@@ -187,13 +237,25 @@ async fn main() {
     .to_string()
 }
 
-fn generate_lib_rs(categories: &BTreeMap<String, Vec<Fixture>>, output_dir: &Path) -> Result<String> {
+fn generate_lib_rs(
+    categories: &BTreeMap<String, Vec<Fixture>>,
+    output_dir: &Path,
+    middleware_lookup: &HashMap<String, MiddlewareMetadata>,
+    has_compression: bool,
+    has_rate_limit: bool,
+    has_static_files: bool,
+    sse_fixtures: &[AsyncFixture],
+) -> Result<String> {
+    let has_sse = !sse_fixtures.is_empty();
     let mut handlers = Vec::new();
     let mut app_functions = Vec::new();
-    let has_streaming = categories
+    let mut has_streaming = categories
         .values()
         .flat_map(|fixtures| fixtures.iter())
         .any(|fixture| fixture.streaming.is_some());
+    if has_sse {
+        has_streaming = true;
+    }
     let has_background = categories
         .values()
         .flat_map(|fixtures| fixtures.iter())
@@ -202,20 +264,33 @@ fn generate_lib_rs(categories: &BTreeMap<String, Vec<Fixture>>, output_dir: &Pat
     // Generate one handler per fixture (no grouping!)
     for (category, fixtures) in categories {
         for fixture in fixtures {
-            let metadata = parse_middleware(fixture)?;
+            let fixture_slug = format!("{}_{}", category, sanitize_name(&fixture.name));
+            let metadata = middleware_lookup
+                .get(&fixture_slug)
+                .with_context(|| format!("Missing middleware metadata for {}", fixture_slug))?;
             if !metadata.static_dirs.is_empty() {
-                let fixture_slug = format!("{}_{}", category, sanitize_name(&fixture.name));
                 write_static_assets(output_dir, &fixture_slug, &metadata.static_dirs)?;
             }
-            let (handler_code, app_fn_code) = generate_fixture_handler_and_app(category, fixture, &metadata);
-            handlers.push(handler_code);
+            let (handler_code, app_fn_code) =
+                generate_fixture_handler_and_app(category, fixture, metadata, &fixture_slug);
+            if handler_code.trim().is_empty() {
+                // Static-only fixtures don't need dedicated handlers
+            } else {
+                handlers.push(handler_code);
+            }
             app_functions.push(app_fn_code);
         }
     }
 
+    if has_sse {
+        let (sse_handlers, sse_apps) = generate_sse_handlers(sse_fixtures);
+        handlers.extend(sse_handlers);
+        app_functions.extend(sse_apps);
+    }
+
     let mut header = String::from("//! Generated route handlers - one handler per fixture for complete isolation\n\n");
     header.push_str(
-        "use axum::{routing, routing::{get, post, put, patch, delete, head, options, trace}, Json, Router, middleware};\n",
+        "use axum::{routing::{get, post, put, patch, delete, head, options, trace}, Json, Router, middleware};\n",
     );
     if has_background {
         header.push_str("use axum::extract::State;\n");
@@ -224,23 +299,41 @@ fn generate_lib_rs(categories: &BTreeMap<String, Vec<Fixture>>, output_dir: &Pat
     header.push_str("use form_urlencoded;\n");
     header.push_str("use serde_json::{json, Value};\n");
     header.push_str("use std::collections::HashMap;\n");
-    if has_background {
+    if has_background || has_rate_limit {
         header.push_str("use std::sync::Arc;\n");
+    }
+    if has_background {
         header.push_str("use tokio::sync::Mutex;\n");
     }
-    header.push_str("use spikard_http::parameters::ParameterValidator;\n");
     if has_streaming {
         header.push_str("use bytes::Bytes;\n");
         header.push_str("use futures::stream;\n");
         header.push_str("use spikard_http::HandlerResponse;\n");
-        header.push_str("use std::str::FromStr;\n");
     }
     header.push_str("use axum::response::Response;\n");
     header.push_str("use axum::http::{HeaderName, HeaderValue};\n");
+    if has_static_files {
+        header.push_str("use std::path::PathBuf;\n");
+        header.push_str("use axum::http::header::CACHE_CONTROL;\n");
+        header.push_str("use axum::routing::get_service;\n");
+        header.push_str("use tower::ServiceBuilder;\n");
+        header.push_str("use tower_http::services::ServeDir;\n");
+        header.push_str("use tower_http::set_header::SetResponseHeaderLayer;\n");
+    }
+    if has_compression {
+        header.push_str("use tower_http::compression::CompressionLayer;\n");
+        header.push_str("use tower_http::compression::CompressionLevel;\n");
+        header.push_str("use tower_http::compression::predicate::{NotForContentType, Predicate, SizeAbove};\n");
+    }
+    if has_rate_limit {
+        header.push_str("use tower_governor::governor::GovernorConfigBuilder;\n");
+        header.push_str("use tower_governor::key_extractor::GlobalKeyExtractor;\n");
+        header.push_str("use tower_governor::GovernorLayer;\n");
+    }
     header.push_str(
         r#"fn apply_expected_headers(mut response: Response, headers: &[(&str, &str)]) -> Response {
-    for (name, value) in headers {
-        if let Ok(header_name) = HeaderName::from_lowercase_str(name) {
+    for &(name, value) in headers {
+        if let Ok(header_name) = HeaderName::from_lowercase(name.as_bytes()) {
             if let Ok(header_value) = HeaderValue::from_str(value) {
                 response.headers_mut().insert(header_name, header_value);
             }
@@ -254,13 +347,6 @@ fn generate_lib_rs(categories: &BTreeMap<String, Vec<Fixture>>, output_dir: &Pat
 
     Ok(format!(
         r#"{header}
-
-#[derive(Clone, Copy)]
-pub struct CorsConfig {{
-    allow_origin: &'static str,
-    allow_methods: &'static str,
-    allow_headers: &'static str,
-}}
 
 // Default app for backwards compatibility (empty)
 pub fn create_app() -> Router {{
@@ -284,7 +370,8 @@ pub fn create_app() -> Router {{
 fn generate_fixture_handler_and_app(
     category: &str,
     fixture: &Fixture,
-    _metadata: &MiddlewareMetadata,
+    metadata: &MiddlewareMetadata,
+    fixture_slug: &str,
 ) -> (String, String) {
     // Create unique names based on category and fixture name
     let fixture_id = format!("{}_{}", category, sanitize_name(&fixture.name));
@@ -309,9 +396,6 @@ fn generate_fixture_handler_and_app(
     let method = fixture.request.method.as_str();
     let method_lower = method.to_lowercase();
 
-    // Generate handler code
-    let handler_code = generate_single_handler(fixture, &handler_name);
-
     // Check for lifecycle hooks in middleware
     let hooks_code = if let Some(handler) = &fixture.handler {
         if let Some(middleware) = &handler.middleware {
@@ -327,16 +411,54 @@ fn generate_fixture_handler_and_app(
         String::new()
     };
 
+    let middleware_layers = build_middleware_layers(metadata, fixture_slug);
+    let normalized_route = axum_route.trim_end_matches('/').to_string();
+    let static_conflict = metadata.static_dirs.iter().any(|dir| {
+        let mut prefix = if dir.route_prefix.starts_with('/') {
+            dir.route_prefix.clone()
+        } else {
+            format!("/{}", dir.route_prefix)
+        };
+        if prefix.is_empty() {
+            prefix = "/".to_string();
+        }
+        let normalized_prefix = prefix.trim_end_matches('/');
+        normalized_prefix == normalized_route && !normalized_prefix.is_empty()
+    });
+    let handler_code = if static_conflict {
+        String::new()
+    } else {
+        generate_single_handler(fixture, &handler_name)
+    };
+    let needs_mut_app = !middleware_layers.trim().is_empty();
+    let app_decl = if needs_mut_app { "let mut app" } else { "let app" };
+    let route_setup = if static_conflict {
+        format!(
+            "    {app_decl} = Router::new()\n        .layer(middleware::from_fn(spikard_http::middleware::validate_content_type_middleware));\n",
+            app_decl = app_decl
+        )
+    } else {
+        format!(
+            "    {app_decl} = Router::new()\n        .route(\"{}\", {}({}))\n        .layer(middleware::from_fn(spikard_http::middleware::validate_content_type_middleware));\n",
+            axum_route,
+            method_lower,
+            handler_name,
+            app_decl = app_decl
+        )
+    };
+
     // Generate app function with hooks registration
     let app_fn_code = if hooks_code.is_empty() {
         format!(
             r#"/// App for fixture: {}
 pub fn {}() -> Router {{
-    Router::new()
-        .route("{}", {}({}))
-        .layer(middleware::from_fn(spikard_http::middleware::validate_content_type_middleware))
+{route_setup}{middleware_layers}
+    app
 }}"#,
-            fixture.name, app_fn_name, axum_route, method_lower, handler_name
+            fixture.name,
+            app_fn_name,
+            route_setup = route_setup,
+            middleware_layers = middleware_layers
         )
     } else {
         // Include lifecycle hooks
@@ -357,26 +479,127 @@ pub fn {}() -> Router {{
         format!(
             r#"/// App for fixture: {}
 pub fn {}() -> Router {{
-    use spikard_http::{{LifecycleHooks, request_hook, response_hook, HookResult}};
+    let _hooks = {};
 
-    let hooks = {};
-
-    Router::new()
-        .route("{}", {}({}))
-        .layer(middleware::from_fn(spikard_http::middleware::validate_content_type_middleware))
+{route_setup}{middleware_layers}
+    app
 }}"#,
-            fixture.name, app_fn_name, hooks_registration, axum_route, method_lower, handler_name
+            fixture.name,
+            app_fn_name,
+            hooks_registration,
+            route_setup = route_setup,
+            middleware_layers = middleware_layers
         )
     };
 
     // Combine hooks and handler code
     let combined_handler_code = if hooks_code.is_empty() {
         handler_code
+    } else if handler_code.trim().is_empty() {
+        hooks_code
     } else {
         format!("{}\n\n{}", hooks_code, handler_code)
     };
 
     (combined_handler_code, app_fn_code)
+}
+
+fn build_middleware_layers(metadata: &MiddlewareMetadata, fixture_slug: &str) -> String {
+    let mut layers = String::new();
+
+    if let Some(compression) = &metadata.compression {
+        layers.push_str("\n    // Compression middleware\n");
+        layers.push_str("    let mut compression_layer = CompressionLayer::new();\n");
+        if let Some(gzip) = compression.gzip
+            && !gzip
+        {
+            layers.push_str("    compression_layer = compression_layer.gzip(false);\n");
+        }
+        if let Some(brotli) = compression.brotli
+            && !brotli
+        {
+            layers.push_str("    compression_layer = compression_layer.br(false);\n");
+        }
+        if let Some(quality) = compression.quality {
+            layers.push_str(&format!(
+                "    compression_layer = compression_layer.quality(CompressionLevel::Precise({} as i32));\n",
+                quality
+            ));
+        }
+        let min_size = compression.min_size.unwrap_or(1024);
+        layers.push_str(&format!(
+            "    let predicate = SizeAbove::new({}.min(u16::MAX as usize) as u16)\n        .and(NotForContentType::GRPC)\n        .and(NotForContentType::IMAGES)\n        .and(NotForContentType::SSE);\n",
+            min_size
+        ));
+        layers.push_str("    let compression_layer = compression_layer.compress_when(predicate);\n");
+        layers.push_str("    app = app.layer(compression_layer);\n");
+    }
+
+    if let Some(rate_limit) = &metadata.rate_limit {
+        layers.push_str("\n    // Rate limiting middleware\n");
+        if rate_limit.ip_based.unwrap_or(true) {
+            layers.push_str(&format!(
+                "    let governor_conf = Arc::new(\n        GovernorConfigBuilder::default()\n            .per_second({})\n            .burst_size({})\n            .finish()\n            .expect(\"failed to create rate limiter\"),\n    );\n",
+                rate_limit.per_second, rate_limit.burst
+            ));
+        } else {
+            layers.push_str(&format!(
+                "    let governor_conf = Arc::new(\n        GovernorConfigBuilder::default()\n            .per_second({})\n            .burst_size({})\n            .key_extractor(GlobalKeyExtractor)\n            .finish()\n            .expect(\"failed to create rate limiter\"),\n    );\n",
+                rate_limit.per_second, rate_limit.burst
+            ));
+        }
+        layers.push_str("    app = app.layer(GovernorLayer::new(governor_conf));\n");
+    }
+
+    if !metadata.static_dirs.is_empty() {
+        layers.push_str("\n    // Static file serving\n");
+        for (idx, dir) in metadata.static_dirs.iter().enumerate() {
+            let mut route_prefix = if dir.route_prefix.starts_with('/') {
+                dir.route_prefix.clone()
+            } else {
+                format!("/{}", dir.route_prefix)
+            };
+            if route_prefix.is_empty() {
+                route_prefix = "/".to_string();
+            }
+            let escaped_route = escape_rust_string(&route_prefix);
+            let escaped_dir = escape_rust_string(&dir.directory_name);
+            layers.push_str(&format!(
+                "    let static_path_{idx} = PathBuf::from(env!(\"CARGO_MANIFEST_DIR\"))\n        .join(\"static_assets\")\n        .join(\"{fixture}\")\n        .join(\"{dir}\");\n",
+                idx = idx,
+                fixture = escape_rust_string(fixture_slug),
+                dir = escaped_dir
+            ));
+            layers.push_str(&format!(
+                "    let service_{idx} = get_service(ServeDir::new(static_path_{idx}).append_index_html_on_directories({index_flag}));\n",
+                idx = idx,
+                index_flag = dir.index_file
+            ));
+            if let Some(cache) = &dir.cache_control {
+                layers.push_str(&format!(
+                    "    let cache_control_value_{idx} = HeaderValue::from_str(\"{}\").expect(\"invalid cache-control header\");\n",
+                    escape_rust_string(cache)
+                ));
+                layers.push_str(&format!(
+                    "    let layered_service_{idx} = ServiceBuilder::new()\n        .layer(SetResponseHeaderLayer::if_not_present(CACHE_CONTROL, cache_control_value_{idx}.clone()))\n        .service(service_{idx});\n",
+                    idx = idx
+                ));
+                layers.push_str(&format!(
+                    "    app = app.nest_service(\"{route}\", layered_service_{idx});\n",
+                    route = escaped_route,
+                    idx = idx
+                ));
+            } else {
+                layers.push_str(&format!(
+                    "    app = app.nest_service(\"{route}\", service_{idx});\n",
+                    route = escaped_route,
+                    idx = idx
+                ));
+            }
+        }
+    }
+
+    layers
 }
 
 fn generate_background_fixture(
@@ -397,6 +620,9 @@ fn generate_background_fixture(
     let method_lower = method.to_lowercase();
     let state_handler_name = format!("{}_background_state", handler_name);
     let expected_status = fixture.expected_response.status_code;
+    let sanitized_headers = sanitized_expected_headers(fixture);
+    let header_literal = header_literal(&sanitized_headers);
+    let header_apply_block = header_application_block("    ", header_literal.as_deref());
 
     let handler_code = format!(
         r#"async fn {handler_name}(
@@ -410,7 +636,7 @@ fn generate_background_fixture(
             return (
                 axum::http::StatusCode::BAD_REQUEST,
                 Json(json!({{"error": "missing background value"}})),
-            );
+            ).into_response();
         }}
     }};
 
@@ -420,10 +646,11 @@ fn generate_background_fixture(
         guard.push(value);
     }});
 
-    (
+    let response = (
         axum::http::StatusCode::from_u16({status}).unwrap(),
         Json(Value::Null),
-    )
+    ).into_response();
+{header_apply}    response
 }}
 
 async fn {state_handler_name}(
@@ -439,7 +666,8 @@ async fn {state_handler_name}(
         state_handler_name = state_handler_name,
         value_field = background.value_field,
         status = expected_status,
-        state_key = background.state_key
+        state_key = background.state_key,
+        header_apply = header_apply_block
     );
 
     let app_fn_code = format!(
@@ -467,9 +695,25 @@ pub fn {app_fn_name}() -> Router {{
 
 /// Sanitize fixture name to valid Rust identifier
 fn sanitize_name(name: &str) -> String {
-    name.replace(|c: char| !c.is_alphanumeric() && c != '_', "_")
-        .trim_matches('_')
-        .to_string()
+    let mut result = String::with_capacity(name.len());
+    let mut last_was_underscore = false;
+
+    for ch in name.chars() {
+        if ch.is_ascii_alphanumeric() {
+            result.push(ch.to_ascii_lowercase());
+            last_was_underscore = false;
+        } else if !last_was_underscore {
+            result.push('_');
+            last_was_underscore = true;
+        }
+    }
+
+    let sanitized = result.trim_matches('_').to_string();
+    if sanitized.is_empty() {
+        "fixture".to_string()
+    } else {
+        sanitized
+    }
 }
 
 /// Strip type hints and query strings from route pattern
@@ -631,10 +875,11 @@ fn generate_cors_preflight_handler(handler_name: &str, cors_config: &Value) -> S
 
 /// Generate handler with explicit name (for per-fixture handlers)
 fn generate_handler_with_name(method: &str, fixtures: &[&Fixture], handler_name: &str) -> String {
-    let route = if let Some(handler) = fixtures[0].handler.as_ref() {
+    let primary_fixture = fixtures[0];
+    let route = if let Some(handler) = primary_fixture.handler.as_ref() {
         handler.route.as_str()
     } else {
-        fixtures[0].request.path.as_str()
+        primary_fixture.request.path.as_str()
     };
     let route_path = route.split('?').next().unwrap_or(route);
     let has_path_params = route_path.contains('{');
@@ -659,9 +904,12 @@ fn generate_handler(route: &str, method: &str, fixtures: &[&Fixture]) -> String 
 }
 
 fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str, has_path_params: bool) -> String {
+    let primary_fixture = fixtures[0];
+    let sanitized_headers = sanitized_expected_headers(primary_fixture);
+    let header_literal = header_literal(&sanitized_headers);
     let has_body = method == "POST" || method == "PUT" || method == "PATCH";
     if fixtures.first().and_then(|f| f.streaming.as_ref()).is_some() {
-        return generate_streaming_handler(fixtures[0], handler_name);
+        return generate_streaming_handler(primary_fixture, handler_name);
     }
 
     // Check if this handler has CORS configuration
@@ -676,8 +924,8 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
 
     // Since we generate one handler per fixture, use the exact expected_response
     // from the fixture to return the correct status code and body for stub handlers
-    let expected_status = fixtures[0].expected_response.status_code;
-    let expected_body = &fixtures[0].expected_response.body;
+    let expected_status = primary_fixture.expected_response.status_code;
+    let expected_body = &primary_fixture.expected_response.body;
 
     // Serialize the expected response body to a JSON string for embedding in generated code
     let expected_body_json = serde_json::to_string(expected_body)
@@ -728,22 +976,30 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
             String::new()
         };
 
+        let header_apply_block = header_application_block("    ", header_literal.as_deref());
         let response_code = if cors_config.is_some() {
             format!(
                 r#"
     // Add CORS headers to response
     let expected_body: Value = serde_json::from_str("{}").unwrap();
-    let mut response = (axum::http::StatusCode::from_u16({}).unwrap(), Json(expected_body)).into_response();
-    response = add_cors_headers(response, origin, &cors_config);
+    let response = (axum::http::StatusCode::from_u16({}).unwrap(), Json(expected_body)).into_response();
+    let response = add_cors_headers(response, origin, &cors_config);
+{header_apply}
     response"#,
-                expected_body_json, expected_status
+                expected_body_json,
+                expected_status,
+                header_apply = header_apply_block
             )
         } else {
             format!(
                 r#"
     let expected_body: Value = serde_json::from_str("{}").unwrap();
-    (axum::http::StatusCode::from_u16({}).unwrap(), Json(expected_body))"#,
-                expected_body_json, expected_status
+    let response = (axum::http::StatusCode::from_u16({}).unwrap(), Json(expected_body)).into_response();
+{header_apply}
+    response"#,
+                expected_body_json,
+                expected_status,
+                header_apply = header_apply_block
             )
         };
 
@@ -810,6 +1066,8 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
     } else {
         None
     };
+
+    let body_placeholder_needed = is_multipart && body_schema.is_none();
 
     // Extract file schemas for multipart validation
     let file_schemas = extract_file_schemas(fixtures);
@@ -884,17 +1142,42 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
         };
 
         let body_validation_code = if body_schema.is_some() {
-            r#"
+            if cors_config.is_some() {
+                format!(
+                    r#"
             // Validate request body
-            if let Err(err) = body_validator.validate(&body) {
-                let error_response = serde_json::json!({
+            if let Err(err) = body_validator.validate(&body) {{
+                let error_response = serde_json::json!({{
                     "detail": err.errors
-                });
-                return (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response));
+                }});
+                let response = (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response)).into_response();
+                let response = add_cors_headers(response, origin, &cors_config);
+{headers}
+                return response;
+            }}
+"#,
+                    headers = header_application_block("                ", header_literal.as_deref())
+                )
+            } else {
+                format!(
+                    r#"
+            // Validate request body
+            if let Err(err) = body_validator.validate(&body) {{
+                let error_response = serde_json::json!({{
+                    "detail": err.errors
+                }});
+                let response = (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response)).into_response();
+{headers}
+                return response;
+            }}
+"#,
+                    headers = header_application_block("                ", header_literal.as_deref())
+                )
             }
-"#
+        } else if body_placeholder_needed {
+            "            let _ = &body;\n".to_string()
         } else {
-            ""
+            String::new()
         };
 
         // Generate file validation code if we have file schemas
@@ -929,22 +1212,28 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
 
         // Generate CORS header addition code if CORS config is present
         // Return the exact expected_response body instead of validated parameters
+        let header_apply_block = header_application_block("    ", header_literal.as_deref());
         let cors_headers_code = if cors_config.is_some() {
             format!(
                 r#"
     // Add CORS headers to response
     let expected_body: Value = serde_json::from_str("{}").unwrap();
-    let mut response = (axum::http::StatusCode::from_u16(status_code).unwrap(), Json(expected_body)).into_response();
-    response = add_cors_headers(response, origin, &cors_config);
+    let response = (axum::http::StatusCode::from_u16(status_code).unwrap(), Json(expected_body)).into_response();
+    let response = add_cors_headers(response, origin, &cors_config);
+{header_apply}
     response"#,
-                expected_body_json
+                expected_body_json,
+                header_apply = header_apply_block
             )
         } else {
             format!(
                 r#"
     let expected_body: Value = serde_json::from_str("{}").unwrap();
-    (axum::http::StatusCode::from_u16(status_code).unwrap(), Json(expected_body))"#,
-                expected_body_json
+    let response = (axum::http::StatusCode::from_u16(status_code).unwrap(), Json(expected_body)).into_response();
+{header_apply}
+    response"#,
+                expected_body_json,
+                header_apply = header_apply_block
             )
         };
 
@@ -1003,7 +1292,7 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
         &headers_map,
         &cookies,
     ) {{
-        Ok(validated) => {{{}{}
+        Ok(_validated) => {{{}{}
             let status_code = {};
             {}
         }}
@@ -1024,11 +1313,7 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
             file_validation_code,
             expected_status, // Use exact expected status from fixture
             cors_headers_code,
-            if cors_config.is_some() {
-                "(axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response)).into_response()"
-            } else {
-                "(axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))"
-            }
+            "(axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response)).into_response()"
         )
     } else if let Some(body_schema) = body_schema {
         // Body-only handler with validation
@@ -1084,34 +1369,50 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
             format!(
                 r#"
             let expected_body: Value = serde_json::from_str("{}").unwrap();
-            let mut response = (axum::http::StatusCode::from_u16({}).unwrap(), Json(expected_body)).into_response();
-            response = add_cors_headers(response, origin, &cors_config);
+            let response = (axum::http::StatusCode::from_u16({}).unwrap(), Json(expected_body)).into_response();
+            let response = add_cors_headers(response, origin, &cors_config);
+{}
             response"#,
-                expected_body_json, expected_status
+                expected_body_json,
+                expected_status,
+                header_application_block("            ", header_literal.as_deref())
             )
         } else {
             format!(
                 r#"
             let expected_body: Value = serde_json::from_str("{}").unwrap();
-            (axum::http::StatusCode::from_u16({}).unwrap(), Json(expected_body))"#,
-                expected_body_json, expected_status
+            let response = (axum::http::StatusCode::from_u16({}).unwrap(), Json(expected_body)).into_response();
+{}
+            response"#,
+                expected_body_json,
+                expected_status,
+                header_application_block("            ", header_literal.as_deref())
             )
         };
 
         let error_response_code = if cors_config.is_some() {
-            r#"
-            let error_response = serde_json::json!({
+            format!(
+                r#"
+            let error_response = serde_json::json!({{
                 "detail": err.errors
-            });
-            let mut response = (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response)).into_response();
-            response = add_cors_headers(response, origin, &cors_config);
-            response"#
+            }});
+            let response = (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response)).into_response();
+            let response = add_cors_headers(response, origin, &cors_config);
+{headers}
+            response"#,
+                headers = header_application_block("            ", header_literal.as_deref())
+            )
         } else {
-            r#"
-            let error_response = serde_json::json!({
+            format!(
+                r#"
+            let error_response = serde_json::json!({{
                 "detail": err.errors
-            });
-            (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response))"#
+            }});
+            let response = (axum::http::StatusCode::UNPROCESSABLE_ENTITY, Json(error_response)).into_response();
+{headers}
+            response"#,
+                headers = header_application_block("            ", header_literal.as_deref())
+            )
         };
 
         // Body validation handler with actual validation
@@ -1171,22 +1472,30 @@ fn generate_handler_impl(method: &str, fixtures: &[&Fixture], handler_name: &str
             format!(r#"async fn {}() -> impl axum::response::IntoResponse"#, handler_name)
         };
 
+        let header_apply_block = header_application_block("    ", header_literal.as_deref());
         let cors_headers_code = if cors_config.is_some() {
             format!(
                 r#"
     // Add CORS headers to response
     let expected_body: Value = serde_json::from_str("{}").unwrap();
-    let mut response = (axum::http::StatusCode::from_u16({}).unwrap(), Json(expected_body)).into_response();
-    response = add_cors_headers(response, origin, &cors_config);
+    let response = (axum::http::StatusCode::from_u16({}).unwrap(), Json(expected_body)).into_response();
+    let response = add_cors_headers(response, origin, &cors_config);
+{header_apply}
     response"#,
-                expected_body_json, expected_status
+                expected_body_json,
+                expected_status,
+                header_apply = header_apply_block
             )
         } else {
             format!(
                 r#"
     let expected_body: Value = serde_json::from_str("{}").unwrap();
-    (axum::http::StatusCode::from_u16({}).unwrap(), Json(expected_body))"#,
-                expected_body_json, expected_status
+    let response = (axum::http::StatusCode::from_u16({}).unwrap(), Json(expected_body)).into_response();
+{header_apply}
+    response"#,
+                expected_body_json,
+                expected_status,
+                header_apply = header_apply_block
             )
         };
 
@@ -1223,10 +1532,11 @@ fn generate_streaming_handler(fixture: &Fixture, handler_name: &str) -> String {
     let stream = stream::iter(vec![
 {chunk_section}    ]);
 
-    let mut response = HandlerResponse::stream(stream)
-        .with_status(axum::http::StatusCode::from_u16({status}).unwrap());
+    let response = HandlerResponse::stream(stream)
+        .with_status(axum::http::StatusCode::from_u16({status}).unwrap())
+        .into_response();
 {headers}
-    response.into_response()
+    response
 }}"#,
         handler_name = handler_name,
         chunk_section = chunk_section,
@@ -1238,36 +1548,10 @@ fn generate_streaming_handler(fixture: &Fixture, handler_name: &str) -> String {
 }
 
 fn build_streaming_headers_rust(fixture: &Fixture) -> String {
-    let mut headers = fixture.expected_response.headers.clone().unwrap_or_default();
-
-    if let Some(content_type) = fixture
-        .streaming
-        .as_ref()
-        .and_then(|streaming| streaming.content_type.as_ref())
-    {
-        headers.insert("content-type".to_string(), content_type.clone());
-    }
-
-    if !headers.contains_key("content-type") {
-        headers.insert("content-type".to_string(), "application/octet-stream".to_string());
-    }
-
-    if headers.is_empty() {
-        return String::new();
-    }
-
-    headers
-        .into_iter()
-        .map(|(name, value)| {
-            let escaped_value = value.replace('\\', "\\\\").replace('"', "\\\"");
-            format!(
-                "    response = response.with_header(\n        axum::http::HeaderName::from_str(\"{name}\").unwrap(),\n        axum::http::HeaderValue::from_str(\"{value}\").unwrap(),\n    );",
-                name = name,
-                value = escaped_value,
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n")
+    let headers = streaming_expected_headers(fixture);
+    header_literal(&headers)
+        .map(|lit| format!("    let response = apply_expected_headers(response, {});\n", lit))
+        .unwrap_or_default()
 }
 
 fn rust_bytes_slice_literal(bytes: &[u8]) -> String {
@@ -1281,6 +1565,157 @@ fn rust_bytes_slice_literal(bytes: &[u8]) -> String {
             .join(", ");
         format!("&[{}]", items)
     }
+}
+
+fn sanitized_expected_headers(fixture: &Fixture) -> Vec<(String, String)> {
+    sanitize_expected_headers_inner(&fixture.expected_response)
+}
+
+fn streaming_expected_headers(fixture: &Fixture) -> Vec<(String, String)> {
+    let mut headers = sanitize_expected_headers_inner(&fixture.expected_response);
+    let has_content_type = headers.iter().any(|(name, _)| name == "content-type");
+
+    if let Some(content_type) = fixture
+        .streaming
+        .as_ref()
+        .and_then(|streaming| streaming.content_type.as_ref())
+    {
+        headers.retain(|(name, _)| name != "content-type");
+        headers.push(("content-type".to_string(), content_type.clone()));
+    } else if !has_content_type {
+        headers.push(("content-type".to_string(), "application/octet-stream".to_string()));
+    }
+
+    headers
+}
+
+fn generate_sse_handlers(fixtures: &[AsyncFixture]) -> (Vec<String>, Vec<String>) {
+    use std::collections::BTreeMap;
+
+    let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
+    for fixture in fixtures {
+        if let Some(channel) = fixture.channel.as_deref() {
+            grouped.entry(channel.to_string()).or_default().push(fixture);
+        }
+    }
+
+    let mut handlers = Vec::new();
+    let mut app_functions = Vec::new();
+    for (channel, channel_fixtures) in grouped {
+        let (handler_code, app_fn_code) = build_sse_handler(&channel, &channel_fixtures);
+        handlers.push(handler_code);
+        app_functions.push(app_fn_code);
+    }
+
+    (handlers, app_functions)
+}
+
+fn build_sse_handler(channel: &str, fixtures: &[&AsyncFixture]) -> (String, String) {
+    let channel_path = if channel.starts_with('/') {
+        channel.to_string()
+    } else {
+        format!("/{}", channel)
+    };
+    let channel_slug = sanitize_name(&channel_path.trim_start_matches('/').replace('/', "_"));
+    let handler_name = format!("sse_{}_handler", channel_slug);
+    let app_fn_name = format!("create_app_sse_{}", channel_slug);
+
+    let mut event_literals = Vec::new();
+    for fixture in fixtures {
+        for example in &fixture.examples {
+            let json_str = serde_json::to_string(example).unwrap_or_else(|_| "{}".to_string());
+            let chunk = format!("data: {}\n\n", json_str);
+            event_literals.push(format!("\"{}\"", escape_rust_string(&chunk)));
+        }
+    }
+    if event_literals.is_empty() {
+        event_literals.push("\"data: {}\\\\n\\\\n\"".to_string());
+    }
+    let events_literal = format!(
+        "vec![{items}].into_iter().map(String::from).collect::<Vec<_>>()",
+        items = event_literals.join(", ")
+    );
+
+    let handler_code = format!(
+        r#"async fn {handler_name}() -> impl axum::response::IntoResponse {{
+    let events: Vec<String> = {events_literal};
+    let stream = stream::iter(events.into_iter().map(|chunk| {{
+        Ok::<Bytes, std::io::Error>(Bytes::from(chunk))
+    }}));
+    let response = HandlerResponse::stream(stream)
+        .with_status(axum::http::StatusCode::OK)
+        .with_header(
+            axum::http::header::CONTENT_TYPE,
+            axum::http::HeaderValue::from_static("text/event-stream"),
+        )
+        .with_header(HeaderName::from_static("cache-control"), HeaderValue::from_static("no-cache"))
+        .into_response();
+    response
+}}"#,
+        handler_name = handler_name,
+        events_literal = events_literal
+    );
+
+    let app_fn_code = format!(
+        r#"/// App for SSE channel: {channel}
+pub fn {app_fn_name}() -> Router {{
+    Router::new()
+        .route("{path}", get({handler_name}))
+        .layer(middleware::from_fn(spikard_http::middleware::validate_content_type_middleware))
+}}"#,
+        channel = channel_path,
+        app_fn_name = app_fn_name,
+        path = channel_path,
+        handler_name = handler_name
+    );
+
+    (handler_code, app_fn_code)
+}
+
+fn sanitize_expected_headers_inner(expected: &FixtureExpectedResponse) -> Vec<(String, String)> {
+    let mut headers = Vec::new();
+    if let Some(map) = expected.headers.as_ref() {
+        for (name, value) in map {
+            if name.eq_ignore_ascii_case("content-encoding") {
+                continue;
+            }
+            if let Some(converted) = normalize_expected_header_value(value) {
+                headers.push((name.to_ascii_lowercase(), converted));
+            }
+        }
+    }
+    headers
+}
+
+fn normalize_expected_header_value(raw: &str) -> Option<String> {
+    match raw {
+        "<<absent>>" => None,
+        "<<present>>" => Some("spikard-test-value".to_string()),
+        "<<uuid>>" => Some("00000000-0000-4000-8000-000000000000".to_string()),
+        _ => Some(raw.to_string()),
+    }
+}
+
+fn header_literal(headers: &[(String, String)]) -> Option<String> {
+    if headers.is_empty() {
+        return None;
+    }
+    let pairs = headers
+        .iter()
+        .map(|(name, value)| format!("(\"{}\", \"{}\")", escape_rust_string(name), escape_rust_string(value)))
+        .collect::<Vec<_>>()
+        .join(", ");
+    Some(format!("&[{}]", pairs))
+}
+
+fn header_application_block(indent: &str, literal: Option<&str>) -> String {
+    literal
+        .map(|lit| format!("{indent}let response = apply_expected_headers(response, {lit});\n"))
+        .unwrap_or_default()
+}
+
+fn escape_rust_string(value: &str) -> String {
+    value.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
 /// Extract CORS configuration from fixtures if present
@@ -1739,7 +2174,7 @@ fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixt
 
 /// Generate Rust lifecycle hooks registration using LifecycleHooks::builder()
 fn generate_hooks_registration_rust(fixture_id: &str, hooks: &Value) -> String {
-    let mut code = String::from("LifecycleHooks::builder()");
+    let mut code = String::from("spikard_http::LifecycleHooks::builder()");
 
     // Process on_request hooks
     if let Some(on_request) = hooks.get("on_request").and_then(|v| v.as_array()) {
@@ -1747,7 +2182,7 @@ fn generate_hooks_registration_rust(fixture_id: &str, hooks: &Value) -> String {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
             let func_name = format!("{}_{}_on_request_{}", fixture_id, sanitize_name(hook_name), idx);
             code.push_str(&format!(
-                "\n        .on_request(request_hook(\"{}\", {}))",
+                "\n        .on_request(spikard_http::request_hook(\"{}\", {}))",
                 hook_name, func_name
             ));
         }
@@ -1759,7 +2194,7 @@ fn generate_hooks_registration_rust(fixture_id: &str, hooks: &Value) -> String {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
             let func_name = format!("{}_{}_pre_validation_{}", fixture_id, sanitize_name(hook_name), idx);
             code.push_str(&format!(
-                "\n        .pre_validation(request_hook(\"{}\", {}))",
+                "\n        .pre_validation(spikard_http::request_hook(\"{}\", {}))",
                 hook_name, func_name
             ));
         }
@@ -1771,7 +2206,7 @@ fn generate_hooks_registration_rust(fixture_id: &str, hooks: &Value) -> String {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
             let func_name = format!("{}_{}_pre_handler_{}", fixture_id, sanitize_name(hook_name), idx);
             code.push_str(&format!(
-                "\n        .pre_handler(request_hook(\"{}\", {}))",
+                "\n        .pre_handler(spikard_http::request_hook(\"{}\", {}))",
                 hook_name, func_name
             ));
         }
@@ -1783,7 +2218,7 @@ fn generate_hooks_registration_rust(fixture_id: &str, hooks: &Value) -> String {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
             let func_name = format!("{}_{}_on_response_{}", fixture_id, sanitize_name(hook_name), idx);
             code.push_str(&format!(
-                "\n        .on_response(response_hook(\"{}\", {}))",
+                "\n        .on_response(spikard_http::response_hook(\"{}\", {}))",
                 hook_name, func_name
             ));
         }
@@ -1795,7 +2230,7 @@ fn generate_hooks_registration_rust(fixture_id: &str, hooks: &Value) -> String {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
             let func_name = format!("{}_{}_on_error_{}", fixture_id, sanitize_name(hook_name), idx);
             code.push_str(&format!(
-                "\n        .on_error(response_hook(\"{}\", {}))",
+                "\n        .on_error(spikard_http::response_hook(\"{}\", {}))",
                 hook_name, func_name
             ));
         }

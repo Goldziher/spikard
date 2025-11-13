@@ -379,8 +379,8 @@ describe("headers", () => {
 
 		const headers = {
 			"X-Trace-Id": "trace-abc",
-			"X-Client-Version": "1.2.3",
 			"X-Request-Id": "req-12345",
+			"X-Client-Version": "1.2.3",
 		};
 		const response = await client.get("/headers/multiple", headers);
 
