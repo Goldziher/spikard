@@ -1,5 +1,7 @@
 """E2E tests for lifecycle_hooks."""
 
+import re
+
 from spikard.testing import TestClient
 from app.main import (
     create_app_lifecycle_hooks_hook_execution_order,
@@ -29,8 +31,8 @@ async def test_onresponse_security_headers() -> None:
         assert response_data["message"] == "Response with security headers"
         response_headers = response.headers
         assert response_headers.get("strict-transport-security") == "max-age=31536000; includeSubDomains"
-        assert response_headers.get("x-frame-options") == "DENY"
         assert response_headers.get("x-content-type-options") == "nosniff"
+        assert response_headers.get("x-frame-options") == "DENY"
         assert response_headers.get("x-xss-protection") == "1; mode=block"
 
 
@@ -149,10 +151,14 @@ async def test_multiple_hooks_all_phases() -> None:
         assert "user_id" in response_data
         assert response_data["user_id"] == "user-123"
         response_headers = response.headers
-        assert response_headers.get("x-content-type-options") == "nosniff"
+        header_value = response_headers.get("x-request-id")
+        assert header_value is not None
+        assert re.match(r".*", header_value)
         assert response_headers.get("x-frame-options") == "DENY"
-        assert response_headers.get("x-request-id") == ".*"
-        assert response_headers.get("x-response-time") == ".*ms"
+        header_value = response_headers.get("x-response-time")
+        assert header_value is not None
+        assert re.match(r".*ms", header_value)
+        assert response_headers.get("x-content-type-options") == "nosniff"
 
 
 async def test_hook_execution_order() -> None:
@@ -183,7 +189,9 @@ async def test_onresponse_response_timing() -> None:
         assert "message" in response_data
         assert response_data["message"] == "Response with timing info"
         response_headers = response.headers
-        assert response_headers.get("x-response-time") == ".*ms"
+        header_value = response_headers.get("x-response-time")
+        assert header_value is not None
+        assert re.match(r".*ms", header_value)
 
 
 async def test_prehandler_authorization_forbidden_short_circuit() -> None:
@@ -218,7 +226,9 @@ async def test_onrequest_request_logging() -> None:
         assert "request_logged" in response_data
         assert response_data["request_logged"] == True
         response_headers = response.headers
-        assert response_headers.get("x-request-id") == ".*"
+        header_value = response_headers.get("x-request-id")
+        assert header_value is not None
+        assert re.match(r".*", header_value)
 
 
 async def test_prevalidation_rate_limiting() -> None:
