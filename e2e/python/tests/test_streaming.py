@@ -18,7 +18,7 @@ async def test_stream_json_lines() -> None:
         expected_bytes = (
             b'{"index":0,"payload":"alpha"}\\n{"index":1,"payload":"beta"}\\n{"index":2,"payload":"gamma"}\\n'
         )
-        assert response.bytes() == expected_bytes
+        assert response.content == expected_bytes
         assert response.text == expected_bytes.decode()
 
 
@@ -30,7 +30,7 @@ async def test_binary_log_download() -> None:
 
         assert response.status_code == 200
         expected_bytes = b"LOG:\x00\x01\x02\x03|TAIL|\x07\\n"
-        assert response.bytes() == expected_bytes
+        assert response.content == expected_bytes
 
 
 async def test_chunked_csv_export() -> None:
@@ -41,5 +41,5 @@ async def test_chunked_csv_export() -> None:
 
         assert response.status_code == 200
         expected_bytes = b"id,name,value\\n1,Alice,42\\n2,Bob,7\\n"
-        assert response.bytes() == expected_bytes
+        assert response.content == expected_bytes
         assert response.text == expected_bytes.decode()
