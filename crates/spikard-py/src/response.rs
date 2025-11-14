@@ -239,14 +239,27 @@ impl StreamingResponse {
             None => PyDict::new(py).unbind(),
         };
 
-        if !stream.bind(py).hasattr("__anext__")? {
+        let bound_stream = stream.bind(py);
+
+        // Check if this is an async generator (has __anext__)
+        let wrapped_stream = if bound_stream.hasattr("__anext__")? {
+            // Import AsyncGeneratorWrapper from Python
+            let wrapper_module = py.import("spikard._internal.async_generator_wrapper")?;
+            let wrapper_class = wrapper_module.getattr("AsyncGeneratorWrapper")?;
+
+            // Wrap the async generator to make it sync
+            wrapper_class.call1((stream,))?.into()
+        } else if bound_stream.hasattr("__next__")? || bound_stream.hasattr("__iter__")? {
+            // Already a sync iterator, use as-is
+            stream
+        } else {
             return Err(PyTypeError::new_err(
-                "StreamingResponse requires an async iterator that implements __anext__",
+                "StreamingResponse requires an iterator (sync or async)",
             ));
-        }
+        };
 
         Ok(Self {
-            stream,
+            stream: wrapped_stream,
             status_code,
             headers: headers_dict,
         })
@@ -264,56 +277,51 @@ impl StreamingResponse {
         let header_pairs = extract_header_pairs(py, &self.headers)?;
         let stream_object = Python::attach(|py| self.stream.clone_ref(py));
 
+        // Create Rust stream that calls Python's __next__() method
+        // The stream is already wrapped by AsyncGeneratorWrapper if it was async
         let rust_stream = stream! {
             loop {
-                let next_future = Python::attach(|py| -> PyResult<Option<_>> {
-                    let bound = stream_object.bind(py);
-                    match bound.call_method0("__anext__") {
-                        Ok(awaitable) => into_future(awaitable).map(Some),
-                        Err(err) => {
-                            if err.is_instance_of::<PyStopAsyncIteration>(py) {
-                                Ok(None)
-                            } else {
-                                Err(err)
+                let stream_clone = Python::attach(|py| stream_object.clone_ref(py));
+
+                // Simple: just call __next__() on the (wrapped) iterator
+                let result = tokio::task::spawn_blocking(move || {
+                    Python::with_gil(|py| -> PyResult<Option<Bytes>> {
+                        let bound = stream_clone.bind(py);
+
+                        // Call __next__() - works for both sync and wrapped async generators
+                        match bound.call_method0("__next__") {
+                            Ok(value) => {
+                                // Convert the chunk to bytes
+                                convert_chunk_to_bytes(&value).map(Some)
+                            }
+                            Err(err) => {
+                                // Check if this is StopIteration (normal end)
+                                if err.is_instance_of::<pyo3::exceptions::PyStopIteration>(py) {
+                                    Ok(None)
+                                } else {
+                                    Err(err)
+                                }
                             }
                         }
-                    }
-                });
+                    })
+                }).await;
 
-                let fut = match next_future {
-                    Ok(Some(fut)) => fut,
-                    Ok(None) => break,
-                    Err(err) => {
+                match result {
+                    Ok(Ok(Some(bytes))) => {
+                        yield Ok(bytes);
+                    }
+                    Ok(Ok(None)) => {
+                        // Stream ended normally
+                        break;
+                    }
+                    Ok(Err(err)) => {
                         let message = format_pyerr(err);
                         yield Err(Box::new(io::Error::other(message)));
                         break;
                     }
-                };
-
-                match fut.await {
-                    Ok(obj) => {
-                        let chunk = Python::attach(|py| {
-                            let bound = obj.bind(py);
-                            convert_chunk_to_bytes(bound)
-                        });
-                        match chunk {
-                            Ok(bytes) => yield Ok(bytes),
-                            Err(err) => {
-                                let message = format_pyerr(err);
-                                yield Err(Box::new(io::Error::other(message)));
-                                break;
-                            }
-                        }
-                    }
                     Err(err) => {
-                        let is_stop = Python::attach(|py| err.is_instance_of::<PyStopAsyncIteration>(py));
-                        if is_stop {
-                            break;
-                        } else {
-                            let message = format_pyerr(err);
-                            yield Err(Box::new(io::Error::other(message)));
-                            break;
-                        }
+                        yield Err(Box::new(io::Error::other(format!("Task error: {}", err))));
+                        break;
                     }
                 }
             }
