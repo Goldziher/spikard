@@ -45,5 +45,5 @@ async def test_compression_gzip_applied() -> None:
             == "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         )
         response_headers = response.headers
-        assert response_headers.get("vary") == "Accept-Encoding"
         assert response_headers.get("content-encoding") == "gzip"
+        assert response_headers.get("vary") == "Accept-Encoding"

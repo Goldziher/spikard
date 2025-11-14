@@ -325,7 +325,9 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
 
         let treat_as_json = content_type
             .as_deref()
-            .map(|ct| ct.contains("application/json") || ct.contains("application/xml"))
+            .map(|ct| {
+                ct.contains("application/json") || ct.contains("application/xml") || ct.contains("+json") // Vendor-specific JSON types like application/vnd.api+json
+            })
             .unwrap_or(true);
 
         if is_form_urlencoded {

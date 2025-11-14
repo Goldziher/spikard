@@ -118,8 +118,8 @@ async def test_pdf_response_application_pdf() -> None:
         response_data = response.json()
         assert response_data == "pdf_binary_data"
         response_headers = response.headers
-        assert response_headers.get("content-disposition") == "attachment; filename=document.pdf"
         assert response_headers.get("content-type") == "application/pdf"
+        assert response_headers.get("content-disposition") == "attachment; filename=document.pdf"
 
 
 async def test_20_content_length_mismatch() -> None:
@@ -146,8 +146,8 @@ async def test_17_vendor_json_accepted() -> None:
         headers = {
             "Content-Type": "application/vnd.api+json",
         }
-        raw_body = {"data": "value"}
-        response = await client.post("/api/v1/resource", headers=headers, data=raw_body)
+        json_data = {"data": "value"}
+        response = await client.post("/api/v1/resource", headers=headers, json=json_data)
 
         assert response.status_code == 201
         response_data = response.json()
@@ -329,5 +329,5 @@ async def test_binary_response_application_octet_stream() -> None:
         response_data = response.json()
         assert response_data == "binary_data_placeholder"
         response_headers = response.headers
-        assert response_headers.get("content-disposition") == "attachment; filename=file.bin"
         assert response_headers.get("content-type") == "application/octet-stream"
+        assert response_headers.get("content-disposition") == "attachment; filename=file.bin"
