@@ -188,19 +188,18 @@ fn generate_sse_test_module(fixtures: &[AsyncFixture]) -> Result<String> {
     for (channel_path, slug, factory_name, expected_literal) in test_cases {
         tests.push_str(&format!("async def test_sse_{slug}() -> None:\n"));
         tests.push_str(&format!("    \"\"\"SSE channel test for {channel_path}.\"\"\"\n"));
-        tests.push_str(&format!(
-            "    app = {factory_name}()\n    client = TestClient(app)\n    response = await client.get(\"{channel_path}\")\n"
-        ));
-        tests.push_str("    assert response.status_code == 200\n");
-        tests.push_str("    body = response.text()\n");
-        tests.push_str("    normalized = body.replace(\"\\r\\n\", \"\\n\")\n");
+        tests.push_str(&format!("    async with TestClient({}()) as client:\n", factory_name));
+        tests.push_str(&format!("        response = await client.get(\"{channel_path}\")\n"));
+        tests.push_str("        assert response.status_code == 200\n");
+        tests.push_str("        body = response.text\n");
+        tests.push_str("        normalized = body.replace(\"\\r\\n\", \"\\n\")\n");
         tests.push_str(
-            "    events = [chunk[5:] for chunk in normalized.split(\"\\n\\n\") if chunk.startswith(\"data:\")]\n",
+            "        events = [chunk[5:] for chunk in normalized.split(\"\\n\\n\") if chunk.startswith(\"data:\")]\n",
         );
-        tests.push_str(&format!("    expected = {}\n", expected_literal));
-        tests.push_str("    assert len(events) == len(expected)\n");
-        tests.push_str("    for payload, expected_json in zip(events, expected):\n");
-        tests.push_str("        assert json.loads(payload.strip()) == json.loads(expected_json)\n\n");
+        tests.push_str(&format!("        expected = {}\n", expected_literal));
+        tests.push_str("        assert len(events) == len(expected)\n");
+        tests.push_str("        for payload, expected_json in zip(events, expected):\n");
+        tests.push_str("            assert json.loads(payload.strip()) == json.loads(expected_json)\n\n");
     }
 
     let module = format!(
@@ -246,8 +245,10 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     // sanitize_identifier(&format!("{}_{}", category, &fixture.name))
     let fixture_id = sanitize_identifier(&format!("{}_{}", category, &fixture.name));
     let app_factory_name = format!("create_app_{}", fixture_id);
-    code.push_str(&format!("    app = {}()\n", app_factory_name));
-    code.push_str("    client = TestClient(app)\n\n");
+    code.push_str(&format!(
+        "    async with TestClient({}()) as client:\n",
+        app_factory_name
+    ));
 
     // Build request
     let method = fixture.request.method.to_lowercase();
@@ -260,19 +261,19 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     if let Some(ref query_params) = fixture.request.query_params
         && !query_params.is_empty()
     {
-        code.push_str("    params = {\n");
+        code.push_str("        params = {\n");
         for (key, value) in query_params {
-            code.push_str(&format!("        \"{}\": {},\n", key, json_to_python(value)));
+            code.push_str(&format!("            \"{}\": {},\n", key, json_to_python(value)));
         }
-        code.push_str("    }\n");
-        request_kwargs.push("query_params=params");
+        code.push_str("        }\n");
+        request_kwargs.push("params=params");
     }
 
     // Add headers
     if let Some(ref headers) = fixture.request.headers
         && !headers.is_empty()
     {
-        code.push_str("    headers = {\n");
+        code.push_str("        headers = {\n");
         for (key, value) in headers {
             // Escape special characters in header values
             let escaped_value = value
@@ -282,9 +283,9 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                 .replace('\r', "\\r")
                 .replace('\t', "\\t")
                 .replace('\0', "\\0");
-            code.push_str(&format!("        \"{}\": \"{}\",\n", key, escaped_value));
+            code.push_str(&format!("            \"{}\": \"{}\",\n", key, escaped_value));
         }
-        code.push_str("    }\n");
+        code.push_str("        }\n");
         request_kwargs.push("headers=headers");
     }
 
@@ -292,7 +293,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     if let Some(ref cookies) = fixture.request.cookies
         && !cookies.is_empty()
     {
-        code.push_str("    cookies = {\n");
+        code.push_str("        cookies = {\n");
         for (key, value) in cookies {
             // Escape special characters in cookie values
             let escaped_value = value
@@ -304,7 +305,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                 .replace('\0', "\\0");
             code.push_str(&format!("        \"{}\": \"{}\",\n", key, escaped_value));
         }
-        code.push_str("    }\n");
+        code.push_str("        }\n");
         request_kwargs.push("cookies=cookies");
     }
 
@@ -327,23 +328,23 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
             .unwrap_or(true);
 
         if treat_as_json {
-            code.push_str(&format!("    json_data = {}\n", json_to_python(body)));
+            code.push_str(&format!("        json_data = {}\n", json_to_python(body)));
             request_kwargs.push("json=json_data");
         } else {
-            code.push_str(&format!("    raw_body = {}\n", json_to_python(body)));
+            code.push_str(&format!("        raw_body = {}\n", json_to_python(body)));
             request_kwargs.push("data=raw_body");
         }
     }
 
     // Add form data (for URL-encoded forms)
     if let Some(ref form_data) = fixture.request.form_data {
-        code.push_str(&format!("    json_data = {}\n", hashmap_to_python(form_data)));
+        code.push_str(&format!("        json_data = {}\n", hashmap_to_python(form_data)));
         request_kwargs.push("json=json_data");
     }
 
     // Add form data (for multipart form data without files)
     if let Some(ref data) = fixture.request.data {
-        code.push_str(&format!("    data = {}\n", hashmap_to_python(data)));
+        code.push_str(&format!("        data = {}\n", hashmap_to_python(data)));
         request_kwargs.push("data=data");
     }
 
@@ -388,7 +389,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         }
 
         // Generate files dict
-        code.push_str("    files = {\n");
+        code.push_str("        files = {\n");
         for (field_name, file_tuples) in files_by_name.iter() {
             if file_tuples.len() == 1 {
                 // Single file for this field name
@@ -398,7 +399,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                 code.push_str(&format!("        \"{}\": [{}],\n", field_name, file_tuples.join(", ")));
             }
         }
-        code.push_str("    }\n");
+        code.push_str("        }\n");
         request_kwargs.push("files=files");
     }
 
@@ -411,52 +412,52 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     if let Some(rate_limit) = &middleware_meta.rate_limit
         && rate_limit.warmup_requests > 0
     {
-        code.push_str(&format!("    for _ in range({}):\n", rate_limit.warmup_requests));
+        code.push_str(&format!("        for _ in range({}):\n", rate_limit.warmup_requests));
         code.push_str(&format!(
-            "        warmup_response = await client.{}(\"{}\"{})\n",
+            "            warmup_response = await client.{}(\"{}\"{})\n",
             method, path, kwargs_str
         ));
         let warmup_status = rate_limit.warmup_expect_status.unwrap_or(200);
         code.push_str(&format!(
-            "        assert warmup_response.status_code == {}\n",
+            "            assert warmup_response.status_code == {}\n",
             warmup_status
         ));
         if let Some(delay) = rate_limit.sleep_ms_between {
             let sleep_literal = format_sleep_seconds(delay);
-            code.push_str(&format!("        await asyncio.sleep({})\n", sleep_literal));
+            code.push_str(&format!("            await asyncio.sleep({})\n", sleep_literal));
         }
     }
 
     code.push_str(&format!(
-        "    response = await client.{}(\"{}\"{})\n\n",
+        "        response = await client.{}(\"{}\"{})\n\n",
         method, path, kwargs_str
     ));
 
     // Assert status code
     code.push_str(&format!(
-        "    assert response.status_code == {}\n",
+        "        assert response.status_code == {}\n",
         fixture.expected_response.status_code
     ));
 
     if let Some(stream_info) = streaming_info {
         let expected_literal = python_bytes_literal(&stream_info.expected_bytes);
-        code.push_str(&format!("    expected_bytes = {}\n", expected_literal));
-        code.push_str("    assert response.bytes() == expected_bytes\n");
+        code.push_str(&format!("        expected_bytes = {}\n", expected_literal));
+        code.push_str("        assert response.bytes() == expected_bytes\n");
         if stream_info.is_text_only {
-            code.push_str("    assert response.text() == expected_bytes.decode()\n");
+            code.push_str("        assert response.text == expected_bytes.decode()\n");
         }
         return Ok(code);
     }
 
     if let Some(bg) = background_info {
         code.push_str(&format!(
-            "    state_response = await client.get(\"{}\")\n",
+            "        state_response = await client.get(\"{}\")\n",
             bg.state_path
         ));
-        code.push_str("    assert state_response.status_code == 200\n");
+        code.push_str("        assert state_response.status_code == 200\n");
         let expected_state_value = serde_json::Value::Array(bg.expected_state.clone());
         let expected_body = format!("{{\"{}\": {} }}", bg.state_key, json_to_python(&expected_state_value));
-        code.push_str(&format!("    assert state_response.json() == {}\n", expected_body));
+        code.push_str(&format!("        assert state_response.json() == {}\n", expected_body));
         return Ok(code);
     }
 
@@ -484,7 +485,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         let should_parse_json = !is_text_response && (method != "HEAD" || fixture.expected_response.body.is_some());
 
         if should_parse_json {
-            code.push_str("    response_data = response.json()\n");
+            code.push_str("        response_data = response.json()\n");
         }
 
         // If fixture has expected response body, assert against that (handles type conversion)
@@ -492,7 +493,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
             // For text responses (HTML, plain text, CSV, etc.), assert against response.text() directly
             if is_text_response && expected_body.is_string() {
                 code.push_str(&format!(
-                    "    assert response.text() == {}\n",
+                    "        assert response.text == {}\n",
                     json_to_python(expected_body)
                 ));
             } else {
@@ -511,7 +512,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
             if let Some(ref form_data) = fixture.request.form_data {
                 for (key, value) in form_data {
                     code.push_str(&format!(
-                        "    assert response_data[\"{}\"] == {}\n",
+                        "        assert response_data[\"{}\"] == {}\n",
                         key,
                         json_to_python(value)
                     ));
@@ -522,7 +523,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
             if let Some(ref query_params) = fixture.request.query_params {
                 for (key, value) in query_params {
                     code.push_str(&format!(
-                        "    assert response_data[\"{}\"] == {}\n",
+                        "        assert response_data[\"{}\"] == {}\n",
                         key,
                         json_to_python(value)
                     ));
@@ -531,36 +532,36 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         }
     } else if status_code == 422 {
         // Validation error - framework should reject before handler
-        code.push_str("    response_data = response.json()\n");
-        code.push_str("    # Validation should be done by framework, not handler\n");
-        code.push_str("    assert \"errors\" in response_data or \"detail\" in response_data\n");
+        code.push_str("        response_data = response.json()\n");
+        code.push_str("        # Validation should be done by framework, not handler\n");
+        code.push_str("        assert \"errors\" in response_data or \"detail\" in response_data\n");
         // Don't assert specific error structure - that varies by validator
     } else {
         // Other status codes - assert expected response body
         if let Some(ref body) = fixture.expected_response.body {
-            code.push_str("    response_data = response.json()\n");
+            code.push_str("        response_data = response.json()\n");
             generate_body_assertions(&mut code, body, "response_data");
         }
     }
 
     // Legacy validation_errors field (deprecated in favor of status code checking)
     if let Some(ref errors) = fixture.expected_response.validation_errors {
-        code.push_str("    response_data = response.json()\n");
+        code.push_str("        response_data = response.json()\n");
         // RFC 9457 format uses "errors" array, not "detail"
-        code.push_str("    assert \"errors\" in response_data\n");
+        code.push_str("        assert \"errors\" in response_data\n");
         code.push_str(&format!(
-            "    assert len(response_data[\"errors\"]) == {}\n",
+            "        assert len(response_data[\"errors\"]) == {}\n",
             errors.len()
         ));
 
         for (idx, error) in errors.iter().enumerate() {
-            code.push_str(&format!("    error_{} = response_data[\"errors\"][{}]\n", idx, idx));
+            code.push_str(&format!("        error_{} = response_data[\"errors\"][{}]\n", idx, idx));
             code.push_str(&format!(
-                "    assert error_{}[\"type\"] == \"{}\"\n",
+                "        assert error_{}[\"type\"] == \"{}\"\n",
                 idx, error.error_type
             ));
             code.push_str(&format!(
-                "    assert error_{}[\"loc\"] == [{}]\n",
+                "        assert error_{}[\"loc\"] == [{}]\n",
                 idx,
                 error
                     .loc
@@ -569,39 +570,39 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                     .collect::<Vec<_>>()
                     .join(", ")
             ));
-            code.push_str(&format!("    assert error_{}[\"msg\"] == \"{}\"\n", idx, error.msg));
+            code.push_str(&format!("        assert error_{}[\"msg\"] == \"{}\"\n", idx, error.msg));
         }
     }
 
     if let Some(headers) = fixture.expected_response.headers.as_ref().filter(|map| !map.is_empty()) {
-        code.push_str("    response_headers = response.headers\n");
+        code.push_str("        response_headers = response.headers\n");
         for (key, value) in headers.iter() {
             let lookup_key = key.to_ascii_lowercase();
             match value.as_str() {
                 "<<uuid>>" => {
                     code.push_str(&format!(
-                        "    header_value = response_headers.get(\"{}\")\n",
+                        "        header_value = response_headers.get(\"{}\")\n",
                         lookup_key
                     ));
-                    code.push_str("    assert header_value is not None\n");
-                    code.push_str("    UUID(header_value)\n");
+                    code.push_str("        assert header_value is not None\n");
+                    code.push_str("        UUID(header_value)\n");
                 }
                 "<<present>>" => {
                     code.push_str(&format!(
-                        "    assert response_headers.get(\"{}\") is not None\n",
+                        "        assert response_headers.get(\"{}\") is not None\n",
                         lookup_key
                     ));
                 }
                 "<<absent>>" => {
                     code.push_str(&format!(
-                        "    assert response_headers.get(\"{}\") is None\n",
+                        "        assert response_headers.get(\"{}\") is None\n",
                         lookup_key
                     ));
                 }
                 _ => {
                     let expected = json_to_python(&serde_json::Value::String(value.clone()));
                     code.push_str(&format!(
-                        "    assert response_headers.get(\"{}\") == {}\n",
+                        "        assert response_headers.get(\"{}\") == {}\n",
                         lookup_key, expected
                     ));
                 }
@@ -652,27 +653,27 @@ fn generate_echo_assertions(code: &mut String, sent_value: &serde_json::Value, p
         serde_json::Value::Object(obj) => {
             for (key, value) in obj {
                 let new_path = format!("{}[\"{}\"]", path, key);
-                code.push_str(&format!("    assert \"{}\" in {}\n", key, path));
+                code.push_str(&format!("        assert \"{}\" in {}\n", key, path));
 
                 match value {
                     serde_json::Value::Object(_) | serde_json::Value::Array(_) => {
                         generate_echo_assertions(code, value, &new_path);
                     }
                     _ => {
-                        code.push_str(&format!("    assert {} == {}\n", new_path, json_to_python(value)));
+                        code.push_str(&format!("        assert {} == {}\n", new_path, json_to_python(value)));
                     }
                 }
             }
         }
         serde_json::Value::Array(arr) => {
-            code.push_str(&format!("    assert len({}) == {}\n", path, arr.len()));
+            code.push_str(&format!("        assert len({}) == {}\n", path, arr.len()));
             for (idx, item) in arr.iter().enumerate() {
                 let new_path = format!("{}[{}]", path, idx);
                 generate_echo_assertions(code, item, &new_path);
             }
         }
         _ => {
-            code.push_str(&format!("    assert {} == {}\n", path, json_to_python(sent_value)));
+            code.push_str(&format!("        assert {} == {}\n", path, json_to_python(sent_value)));
         }
     }
 }
@@ -683,7 +684,7 @@ fn generate_body_assertions(code: &mut String, body: &serde_json::Value, path: &
         serde_json::Value::Object(obj) => {
             for (key, value) in obj {
                 let new_path = format!("{}[\"{}\"]", path, key);
-                code.push_str(&format!("    assert \"{}\" in {}\n", key, path));
+                code.push_str(&format!("        assert \"{}\" in {}\n", key, path));
 
                 match value {
                     serde_json::Value::Object(_) => {
@@ -711,21 +712,21 @@ fn generate_body_assertions(code: &mut String, body: &serde_json::Value, path: &
                             );
 
                         if !skip_assertion {
-                            code.push_str(&format!("    assert {} == {}\n", new_path, json_to_python(value)));
+                            code.push_str(&format!("        assert {} == {}\n", new_path, json_to_python(value)));
                         }
                     }
                 }
             }
         }
         serde_json::Value::Array(arr) => {
-            code.push_str(&format!("    assert len({}) == {}\n", path, arr.len()));
+            code.push_str(&format!("        assert len({}) == {}\n", path, arr.len()));
             for (idx, item) in arr.iter().enumerate() {
                 let new_path = format!("{}[{}]", path, idx);
                 generate_body_assertions(code, item, &new_path);
             }
         }
         _ => {
-            code.push_str(&format!("    assert {} == {}\n", path, json_to_python(body)));
+            code.push_str(&format!("        assert {} == {}\n", path, json_to_python(body)));
         }
     }
 }
@@ -854,27 +855,31 @@ fn generate_websocket_test_module(fixtures: &[AsyncFixture]) -> Result<String> {
     for (channel_path, slug, factory_name, test_messages) in test_cases {
         tests.push_str(&format!("async def test_websocket_{slug}() -> None:\n"));
         tests.push_str(&format!("    \"\"\"WebSocket channel test for {channel_path}.\"\"\"\n"));
-        tests.push_str(&format!("    app = {factory_name}()\n    client = TestClient(app)\n"));
-        tests.push_str(&format!("    ws = await client.websocket(\"{channel_path}\")\n"));
-        tests.push_str("    \n");
+        tests.push_str(&format!("    async with TestClient({}()) as client:\n", factory_name));
+        tests.push_str(&format!(
+            "        async with client.websocket(\"{channel_path}\") as ws:\n"
+        ));
 
         for (fixture_name, message_json) in test_messages {
             let escaped_json = escape_python_string(&message_json);
-            tests.push_str(&format!("    # Send {fixture_name} message\n"));
-            tests.push_str(&format!("    sent_message = json.loads(\"{}\")\n", escaped_json));
-            tests.push_str("    await ws.send_json(sent_message)\n");
-            tests.push_str("    \n");
-            tests.push_str("    # Receive echo response\n");
-            tests.push_str("    response = await ws.receive_json()\n");
-            tests.push_str("    assert response.get(\"validated\") is True\n");
-            tests.push_str("    \n");
-            tests.push_str("    # Verify echoed fields match sent message\n");
-            tests.push_str("    for key, value in sent_message.items():\n");
-            tests.push_str("        assert response.get(key) == value\n");
-            tests.push_str("    \n");
+            tests.push_str(&format!("            # Send {fixture_name} message\n"));
+            tests.push_str(&format!(
+                "            sent_message = json.loads(\"{}\")\n",
+                escaped_json
+            ));
+            tests.push_str("            await ws.send(json.dumps(sent_message))\n");
+            tests.push_str("            \n");
+            tests.push_str("            # Receive echo response\n");
+            tests.push_str("            response_str = await ws.recv()\n");
+            tests.push_str("            response = json.loads(response_str)\n");
+            tests.push_str("            assert response.get(\"validated\") is True\n");
+            tests.push_str("            \n");
+            tests.push_str("            # Verify echoed fields match sent message\n");
+            tests.push_str("            for key, value in sent_message.items():\n");
+            tests.push_str("                assert response.get(key) == value\n");
+            tests.push_str("            \n");
         }
 
-        tests.push_str("    await ws.close()\n");
         tests.push_str("\n");
     }
 

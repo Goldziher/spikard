@@ -34,409 +34,357 @@ from app.main import (
 async def test_25_cookie_samesite_lax() -> None:
     """Cookie with SameSite=Lax attribute should be validated."""
 
-    app = create_app_cookies_25_cookie_samesite_lax()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_25_cookie_samesite_lax()) as client:
+        cookies = {
+            "tracking": "track123",
+        }
+        response = await client.get("/data", cookies=cookies)
 
-    cookies = {
-        "tracking": "track123",
-    }
-    response = await client.get("/data", cookies=cookies)
-
-    assert response.status_code == 200
-    response_data = response.json()
+        assert response.status_code == 200
+        response_data = response.json()
 
 
 async def test_optional_cookie_parameter_success() -> None:
     """Tests optional cookie parameter with value provided."""
 
-    app = create_app_cookies_optional_cookie_parameter_success()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_optional_cookie_parameter_success()) as client:
+        cookies = {
+            "ads_id": "abc123",
+        }
+        response = await client.get("/items/", cookies=cookies)
 
-    cookies = {
-        "ads_id": "abc123",
-    }
-    response = await client.get("/items/", cookies=cookies)
-
-    assert response.status_code == 200
-    response_data = response.json()
-    assert "ads_id" in response_data
-    assert response_data["ads_id"] == "abc123"
+        assert response.status_code == 200
+        response_data = response.json()
+        assert "ads_id" in response_data
+        assert response_data["ads_id"] == "abc123"
 
 
 async def test_cookie_regex_pattern_validation_fail() -> None:
     """Tests cookie with regex pattern validation failure."""
 
-    app = create_app_cookies_cookie_regex_pattern_validation_fail()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_cookie_regex_pattern_validation_fail()) as client:
+        cookies = {
+            "tracking_id": "invalid-format",
+        }
+        response = await client.get("/cookies/pattern", cookies=cookies)
 
-    cookies = {
-        "tracking_id": "invalid-format",
-    }
-    response = await client.get("/cookies/pattern", cookies=cookies)
-
-    assert response.status_code == 422
-    response_data = response.json()
-    # Validation should be done by framework, not handler
-    assert "errors" in response_data or "detail" in response_data
+        assert response.status_code == 422
+        response_data = response.json()
+        # Validation should be done by framework, not handler
+        assert "errors" in response_data or "detail" in response_data
 
 
 async def test_response_session_cookie_no_max_age() -> None:
     """Tests setting session cookie without max_age (expires with browser)."""
 
-    app = create_app_cookies_response_session_cookie_no_max_age()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_response_session_cookie_no_max_age()) as client:
+        json_data = {"value": "session_abc123"}
+        response = await client.post("/cookies/session", json=json_data)
 
-    json_data = {"value": "session_abc123"}
-    response = await client.post("/cookies/session", json=json_data)
-
-    assert response.status_code == 200
-    response_data = response.json()
-    assert "message" in response_data
-    assert response_data["message"] == "Session cookie set"
+        assert response.status_code == 200
+        response_data = response.json()
+        assert "message" in response_data
+        assert response_data["message"] == "Session cookie set"
 
 
 async def test_27_cookie_httponly_flag() -> None:
     """Cookie with HttpOnly flag should prevent JavaScript access."""
 
-    app = create_app_cookies_27_cookie_httponly_flag()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_27_cookie_httponly_flag()) as client:
+        cookies = {
+            "session": "session_abc123",
+        }
+        response = await client.get("/secure", cookies=cookies)
 
-    cookies = {
-        "session": "session_abc123",
-    }
-    response = await client.get("/secure", cookies=cookies)
-
-    assert response.status_code == 200
-    response_data = response.json()
+        assert response.status_code == 200
+        response_data = response.json()
 
 
 async def test_response_cookie_with_attributes() -> None:
     """Tests setting a cookie with max_age, secure, httponly, and samesite attributes."""
 
-    app = create_app_cookies_response_cookie_with_attributes()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_response_cookie_with_attributes()) as client:
+        response = await client.get("/cookie/set")
 
-    response = await client.get("/cookie/set")
-
-    assert response.status_code == 200
-    response_data = response.json()
-    assert "message" in response_data
-    assert response_data["message"] == "Cookie set"
+        assert response.status_code == 200
+        response_data = response.json()
+        assert "message" in response_data
+        assert response_data["message"] == "Cookie set"
 
 
 async def test_24_cookie_samesite_strict() -> None:
     """Cookie with SameSite=Strict attribute should be validated."""
 
-    app = create_app_cookies_24_cookie_samesite_strict()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_24_cookie_samesite_strict()) as client:
+        cookies = {
+            "session_id": "abc123xyz789",
+        }
+        response = await client.get("/secure", cookies=cookies)
 
-    cookies = {
-        "session_id": "abc123xyz789",
-    }
-    response = await client.get("/secure", cookies=cookies)
-
-    assert response.status_code == 200
-    response_data = response.json()
+        assert response.status_code == 200
+        response_data = response.json()
 
 
 async def test_apikey_cookie_authentication_success() -> None:
     """Tests APIKeyCookie authentication with valid cookie."""
 
-    app = create_app_cookies_apikey_cookie_authentication_success()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_apikey_cookie_authentication_success()) as client:
+        cookies = {
+            "key": "secret",
+        }
+        response = await client.get("/users/me", cookies=cookies)
 
-    cookies = {
-        "key": "secret",
-    }
-    response = await client.get("/users/me", cookies=cookies)
-
-    assert response.status_code == 200
-    response_data = response.json()
-    assert "username" in response_data
-    assert response_data["username"] == "secret"
+        assert response.status_code == 200
+        response_data = response.json()
+        assert "username" in response_data
+        assert response_data["username"] == "secret"
 
 
 async def test_cookie_validation_min_length_constraint_success() -> None:
     """Tests cookie validation with min_length constraint at boundary."""
 
-    app = create_app_cookies_cookie_validation_min_length_constraint_success()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_cookie_validation_min_length_constraint_success()) as client:
+        cookies = {
+            "token": "abc",
+        }
+        response = await client.get("/cookies/min-length", cookies=cookies)
 
-    cookies = {
-        "token": "abc",
-    }
-    response = await client.get("/cookies/min-length", cookies=cookies)
-
-    assert response.status_code == 200
-    response_data = response.json()
-    assert "token" in response_data
-    assert response_data["token"] == "abc"
+        assert response.status_code == 200
+        response_data = response.json()
+        assert "token" in response_data
+        assert response_data["token"] == "abc"
 
 
 async def test_cookie_validation_min_length_failure() -> None:
     """Tests cookie parameter with min_length constraint returns 422 when too short."""
 
-    app = create_app_cookies_cookie_validation_min_length_failure()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_cookie_validation_min_length_failure()) as client:
+        cookies = {
+            "tracking_id": "ab",
+        }
+        response = await client.get("/items/", cookies=cookies)
 
-    cookies = {
-        "tracking_id": "ab",
-    }
-    response = await client.get("/items/", cookies=cookies)
-
-    assert response.status_code == 422
-    response_data = response.json()
-    # Validation should be done by framework, not handler
-    assert "errors" in response_data or "detail" in response_data
+        assert response.status_code == 422
+        response_data = response.json()
+        # Validation should be done by framework, not handler
+        assert "errors" in response_data or "detail" in response_data
 
 
 async def test_cookie_validation_max_length_constraint_fail() -> None:
     """Tests cookie validation with max_length constraint failure."""
 
-    app = create_app_cookies_cookie_validation_max_length_constraint_fail()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_cookie_validation_max_length_constraint_fail()) as client:
+        cookies = {
+            "session_id": "this_cookie_value_is_way_too_long",
+        }
+        response = await client.get("/cookies/validated", cookies=cookies)
 
-    cookies = {
-        "session_id": "this_cookie_value_is_way_too_long",
-    }
-    response = await client.get("/cookies/validated", cookies=cookies)
-
-    assert response.status_code == 422
-    response_data = response.json()
-    # Validation should be done by framework, not handler
-    assert "errors" in response_data or "detail" in response_data
+        assert response.status_code == 422
+        response_data = response.json()
+        # Validation should be done by framework, not handler
+        assert "errors" in response_data or "detail" in response_data
 
 
 async def test_required_cookie_missing() -> None:
     """Tests validation error when required cookie is missing."""
 
-    app = create_app_cookies_required_cookie_missing()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_required_cookie_missing()) as client:
+        cookies = {
+            "fatebook_tracker": "tracker456",
+        }
+        response = await client.get("/items/cookies", cookies=cookies)
 
-    cookies = {
-        "fatebook_tracker": "tracker456",
-    }
-    response = await client.get("/items/cookies", cookies=cookies)
-
-    assert response.status_code == 422
-    response_data = response.json()
-    # Validation should be done by framework, not handler
-    assert "errors" in response_data or "detail" in response_data
+        assert response.status_code == 422
+        response_data = response.json()
+        # Validation should be done by framework, not handler
+        assert "errors" in response_data or "detail" in response_data
 
 
 async def test_optional_cookie_parameter_missing() -> None:
     """Tests optional cookie parameter returns None when not provided."""
 
-    app = create_app_cookies_optional_cookie_parameter_missing()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_optional_cookie_parameter_missing()) as client:
+        response = await client.get("/items/")
 
-    response = await client.get("/items/")
-
-    assert response.status_code == 200
-    response_data = response.json()
-    assert "ads_id" in response_data
-    assert response_data["ads_id"] == None
+        assert response.status_code == 200
+        response_data = response.json()
+        assert "ads_id" in response_data
+        assert response_data["ads_id"] == None
 
 
 async def test_apikey_cookie_authentication_missing() -> None:
     """Tests APIKeyCookie authentication returns 403 when cookie missing."""
 
-    app = create_app_cookies_apikey_cookie_authentication_missing()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_apikey_cookie_authentication_missing()) as client:
+        response = await client.get("/users/me/auth")
 
-    response = await client.get("/users/me/auth")
-
-    assert response.status_code == 422
-    response_data = response.json()
-    # Validation should be done by framework, not handler
-    assert "errors" in response_data or "detail" in response_data
+        assert response.status_code == 422
+        response_data = response.json()
+        # Validation should be done by framework, not handler
+        assert "errors" in response_data or "detail" in response_data
 
 
 async def test_response_multiple_cookies() -> None:
     """Tests setting multiple cookies in single response."""
 
-    app = create_app_cookies_response_multiple_cookies()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_response_multiple_cookies()) as client:
+        json_data = {"session": "session123", "user": "john"}
+        response = await client.post("/cookies/multiple", json=json_data)
 
-    json_data = {"session": "session123", "user": "john"}
-    response = await client.post("/cookies/multiple", json=json_data)
-
-    assert response.status_code == 200
-    response_data = response.json()
-    assert "message" in response_data
-    assert response_data["message"] == "Multiple cookies set"
+        assert response.status_code == 200
+        response_data = response.json()
+        assert "message" in response_data
+        assert response_data["message"] == "Multiple cookies set"
 
 
 async def test_response_cookie_with_samesite_lax() -> None:
     """Tests setting cookie with SameSite lax attribute."""
 
-    app = create_app_cookies_response_cookie_with_samesite_lax()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_response_cookie_with_samesite_lax()) as client:
+        json_data = {"value": "lax_cookie"}
+        response = await client.post("/cookies/samesite-lax", json=json_data)
 
-    json_data = {"value": "lax_cookie"}
-    response = await client.post("/cookies/samesite-lax", json=json_data)
-
-    assert response.status_code == 200
-    response_data = response.json()
-    assert "message" in response_data
-    assert response_data["message"] == "Cookie set with SameSite=Lax"
+        assert response.status_code == 200
+        response_data = response.json()
+        assert "message" in response_data
+        assert response_data["message"] == "Cookie set with SameSite=Lax"
 
 
 async def test_response_delete_cookie() -> None:
     """Tests deleting a cookie by setting max_age to 0."""
 
-    app = create_app_cookies_response_delete_cookie()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_response_delete_cookie()) as client:
+        cookies = {
+            "session": "old_session_123",
+        }
+        response = await client.post("/cookies/delete", cookies=cookies)
 
-    cookies = {
-        "session": "old_session_123",
-    }
-    response = await client.post("/cookies/delete", cookies=cookies)
-
-    assert response.status_code == 200
-    response_data = response.json()
-    assert "message" in response_data
-    assert response_data["message"] == "Cookie deleted"
+        assert response.status_code == 200
+        response_data = response.json()
+        assert "message" in response_data
+        assert response_data["message"] == "Cookie deleted"
 
 
 async def test_response_cookie_with_path_attribute() -> None:
     """Tests setting cookie with specific path."""
 
-    app = create_app_cookies_response_cookie_with_path_attribute()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_response_cookie_with_path_attribute()) as client:
+        json_data = {"value": "path_test"}
+        response = await client.post("/cookies/set-with-path", json=json_data)
 
-    json_data = {"value": "path_test"}
-    response = await client.post("/cookies/set-with-path", json=json_data)
-
-    assert response.status_code == 200
-    response_data = response.json()
-    assert "message" in response_data
-    assert response_data["message"] == "Cookie set with path"
+        assert response.status_code == 200
+        response_data = response.json()
+        assert "message" in response_data
+        assert response_data["message"] == "Cookie set with path"
 
 
 async def test_optional_apikey_cookie_missing() -> None:
     """Tests optional APIKeyCookie (auto_error=False) returns None without 403."""
 
-    app = create_app_cookies_optional_apikey_cookie_missing()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_optional_apikey_cookie_missing()) as client:
+        response = await client.get("/users/me")
 
-    response = await client.get("/users/me")
-
-    assert response.status_code == 200
-    response_data = response.json()
-    assert "msg" in response_data
-    assert response_data["msg"] == "Create an account first"
+        assert response.status_code == 200
+        response_data = response.json()
+        assert "msg" in response_data
+        assert response_data["msg"] == "Create an account first"
 
 
 async def test_response_cookie_with_samesite_strict() -> None:
     """Tests setting cookie with SameSite strict attribute."""
 
-    app = create_app_cookies_response_cookie_with_samesite_strict()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_response_cookie_with_samesite_strict()) as client:
+        json_data = {"value": "strict_cookie"}
+        response = await client.post("/cookies/samesite-strict", json=json_data)
 
-    json_data = {"value": "strict_cookie"}
-    response = await client.post("/cookies/samesite-strict", json=json_data)
-
-    assert response.status_code == 200
-    response_data = response.json()
-    assert "message" in response_data
-    assert response_data["message"] == "Cookie set with SameSite=Strict"
+        assert response.status_code == 200
+        response_data = response.json()
+        assert "message" in response_data
+        assert response_data["message"] == "Cookie set with SameSite=Strict"
 
 
 async def test_response_cookie_with_samesite_none() -> None:
     """Tests setting cookie with SameSite none (requires Secure)."""
 
-    app = create_app_cookies_response_cookie_with_samesite_none()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_response_cookie_with_samesite_none()) as client:
+        json_data = {"value": "none_cookie"}
+        response = await client.post("/cookies/samesite-none", json=json_data)
 
-    json_data = {"value": "none_cookie"}
-    response = await client.post("/cookies/samesite-none", json=json_data)
-
-    assert response.status_code == 200
-    response_data = response.json()
-    assert "message" in response_data
-    assert response_data["message"] == "Cookie set with SameSite=None"
+        assert response.status_code == 200
+        response_data = response.json()
+        assert "message" in response_data
+        assert response_data["message"] == "Cookie set with SameSite=None"
 
 
 async def test_cookie_regex_pattern_validation_success() -> None:
     """Tests cookie with regex pattern validation success."""
 
-    app = create_app_cookies_cookie_regex_pattern_validation_success()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_cookie_regex_pattern_validation_success()) as client:
+        cookies = {
+            "tracking_id": "ABC12345",
+        }
+        response = await client.get("/cookies/pattern", cookies=cookies)
 
-    cookies = {
-        "tracking_id": "ABC12345",
-    }
-    response = await client.get("/cookies/pattern", cookies=cookies)
-
-    assert response.status_code == 200
-    response_data = response.json()
-    assert "tracking_id" in response_data
-    assert response_data["tracking_id"] == "ABC12345"
+        assert response.status_code == 200
+        response_data = response.json()
+        assert "tracking_id" in response_data
+        assert response_data["tracking_id"] == "ABC12345"
 
 
 async def test_response_set_cookie_basic() -> None:
     """Tests setting a cookie in the response."""
 
-    app = create_app_cookies_response_set_cookie_basic()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_response_set_cookie_basic()) as client:
+        response = await client.post("/cookie/")
 
-    response = await client.post("/cookie/")
-
-    assert response.status_code == 200
-    response_data = response.json()
-    assert "message" in response_data
-    assert response_data["message"] == "Come to the dark side, we have cookies"
+        assert response.status_code == 200
+        response_data = response.json()
+        assert "message" in response_data
+        assert response_data["message"] == "Come to the dark side, we have cookies"
 
 
 async def test_multiple_cookies_success() -> None:
     """Tests multiple cookie parameters in a single request."""
 
-    app = create_app_cookies_multiple_cookies_success()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_multiple_cookies_success()) as client:
+        cookies = {
+            "fatebook_tracker": "tracker456",
+            "session_id": "session123",
+            "googall_tracker": "ga789",
+        }
+        response = await client.get("/items/", cookies=cookies)
 
-    cookies = {
-        "session_id": "session123",
-        "googall_tracker": "ga789",
-        "fatebook_tracker": "tracker456",
-    }
-    response = await client.get("/items/", cookies=cookies)
-
-    assert response.status_code == 200
-    response_data = response.json()
-    assert "fatebook_tracker" in response_data
-    assert response_data["fatebook_tracker"] == "tracker456"
-    assert "googall_tracker" in response_data
-    assert response_data["googall_tracker"] == "ga789"
-    assert "session_id" in response_data
-    assert response_data["session_id"] == "session123"
+        assert response.status_code == 200
+        response_data = response.json()
+        assert "fatebook_tracker" in response_data
+        assert response_data["fatebook_tracker"] == "tracker456"
+        assert "googall_tracker" in response_data
+        assert response_data["googall_tracker"] == "ga789"
+        assert "session_id" in response_data
+        assert response_data["session_id"] == "session123"
 
 
 async def test_26_cookie_secure_flag() -> None:
     """Cookie with Secure flag should be validated for HTTPS."""
 
-    app = create_app_cookies_26_cookie_secure_flag()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_26_cookie_secure_flag()) as client:
+        cookies = {
+            "auth_token": "secure_token_xyz",
+        }
+        response = await client.get("/secure", cookies=cookies)
 
-    cookies = {
-        "auth_token": "secure_token_xyz",
-    }
-    response = await client.get("/secure", cookies=cookies)
-
-    assert response.status_code == 200
-    response_data = response.json()
+        assert response.status_code == 200
+        response_data = response.json()
 
 
 async def test_response_cookie_with_domain_attribute() -> None:
     """Tests setting cookie with specific domain."""
 
-    app = create_app_cookies_response_cookie_with_domain_attribute()
-    client = TestClient(app)
+    async with TestClient(create_app_cookies_response_cookie_with_domain_attribute()) as client:
+        json_data = {"value": "domain_test"}
+        response = await client.post("/cookies/set-with-domain", json=json_data)
 
-    json_data = {"value": "domain_test"}
-    response = await client.post("/cookies/set-with-domain", json=json_data)
-
-    assert response.status_code == 200
-    response_data = response.json()
-    assert "message" in response_data
-    assert response_data["message"] == "Cookie set with domain"
+        assert response.status_code == 200
+        response_data = response.json()
+        assert "message" in response_data
+        assert response_data["message"] == "Cookie set with domain"
