@@ -394,18 +394,26 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
             files_by_name.entry(field_name).or_default().push(file_tuple);
         }
 
-        // Generate files dict
-        code.push_str("        files = {\n");
-        for (field_name, file_tuples) in files_by_name.iter() {
-            if file_tuples.len() == 1 {
-                // Single file for this field name
-                code.push_str(&format!("        \"{}\": {},\n", field_name, file_tuples[0]));
-            } else {
-                // Multiple files for this field name - use list
-                code.push_str(&format!("        \"{}\": [{}],\n", field_name, file_tuples.join(", ")));
+        // Generate files (dict for single files per field, list for multiple)
+        let has_multiple_files_per_field = files_by_name.values().any(|v| v.len() > 1);
+
+        if has_multiple_files_per_field {
+            // Use list format for httpx: [(field_name, file_tuple), ...]
+            code.push_str("        files = [\n");
+            for (field_name, file_tuples) in files_by_name.iter() {
+                for file_tuple in file_tuples {
+                    code.push_str(&format!("            (\"{}\", {}),\n", field_name, file_tuple));
+                }
             }
+            code.push_str("        ]\n");
+        } else {
+            // Use dict format for simple case
+            code.push_str("        files = {\n");
+            for (field_name, file_tuples) in files_by_name.iter() {
+                code.push_str(&format!("            \"{}\": {},\n", field_name, file_tuples[0]));
+            }
+            code.push_str("        }\n");
         }
-        code.push_str("        }\n");
         request_kwargs.push("files=files");
     }
 
