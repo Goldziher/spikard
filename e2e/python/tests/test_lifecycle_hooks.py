@@ -30,9 +30,9 @@ async def test_onresponse_security_headers() -> None:
         assert "message" in response_data
         assert response_data["message"] == "Response with security headers"
         response_headers = response.headers
+        assert response_headers.get("strict-transport-security") == "max-age=31536000; includeSubDomains"
         assert response_headers.get("x-frame-options") == "DENY"
         assert response_headers.get("x-content-type-options") == "nosniff"
-        assert response_headers.get("strict-transport-security") == "max-age=31536000; includeSubDomains"
         assert response_headers.get("x-xss-protection") == "1; mode=block"
 
 
@@ -151,11 +151,11 @@ async def test_multiple_hooks_all_phases() -> None:
         assert "user_id" in response_data
         assert response_data["user_id"] == "user-123"
         response_headers = response.headers
+        assert response_headers.get("x-frame-options") == "DENY"
         header_value = response_headers.get("x-response-time")
         assert header_value is not None
         assert re.match(r".*ms", header_value)
         assert response_headers.get("x-content-type-options") == "nosniff"
-        assert response_headers.get("x-frame-options") == "DENY"
         header_value = response_headers.get("x-request-id")
         assert header_value is not None
         assert re.match(r".*", header_value)

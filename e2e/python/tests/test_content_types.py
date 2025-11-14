@@ -127,8 +127,8 @@ async def test_20_content_length_mismatch() -> None:
 
     async with TestClient(create_app_content_types_20_content_length_mismatch()) as client:
         headers = {
-            "Content-Length": "100",
             "Content-Type": "application/json",
+            "Content-Length": "100",
         }
         json_data = {"value": "short"}
         response = await client.post("/data", headers=headers, json=json_data)
@@ -315,8 +315,8 @@ async def test_csv_response_text_csv() -> None:
         assert response.status_code == 200
         assert response.text == "id,name,price\n1,Item A,10.0\n2,Item B,20.0"
         response_headers = response.headers
-        assert response_headers.get("content-type") == "text/csv; charset=utf-8"
         assert response_headers.get("content-disposition") == "attachment; filename=data.csv"
+        assert response_headers.get("content-type") == "text/csv; charset=utf-8"
 
 
 async def test_binary_response_application_octet_stream() -> None:
