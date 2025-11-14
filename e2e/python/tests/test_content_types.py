@@ -127,8 +127,8 @@ async def test_20_content_length_mismatch() -> None:
 
     async with TestClient(create_app_content_types_20_content_length_mismatch()) as client:
         headers = {
-            "Content-Type": "application/json",
             "Content-Length": "100",
+            "Content-Type": "application/json",
         }
         json_data = {"value": "short"}
         response = await client.post("/data", headers=headers, json=json_data)

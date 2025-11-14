@@ -355,7 +355,9 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     }
 
     // Add form data (for URL-encoded forms)
-    if let Some(ref form_data) = fixture.request.form_data {
+    if let Some(ref form_data) = fixture.request.form_data
+        && !form_data.is_empty()
+    {
         code.push_str(&format!("        form_data = {}\n", hashmap_to_python(form_data)));
         request_kwargs.push("data=form_data");
     }
