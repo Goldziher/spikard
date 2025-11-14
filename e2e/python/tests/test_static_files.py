@@ -10,27 +10,23 @@ from app.main import (
 async def test_static_file_server_returns_text_file() -> None:
     """Tests serving a plain text file with Cache-Control headers.."""
 
-    app = create_app_static_files_static_file_server_returns_text_file()
-    client = TestClient(app)
+    async with TestClient(create_app_static_files_static_file_server_returns_text_file()) as client:
+        response = await client.get("/public/hello.txt")
 
-    response = await client.get("/public/hello.txt")
-
-    assert response.status_code == 200
-    assert response.text() == "Hello from static storage"
-    response_headers = response.headers
-    assert response_headers.get("content-type") == "text/plain"
-    assert response_headers.get("cache-control") == "public, max-age=60"
+        assert response.status_code == 200
+        assert response.text == "Hello from static storage"
+        response_headers = response.headers
+        assert response_headers.get("content-type") == "text/plain"
+        assert response_headers.get("cache-control") == "public, max-age=60"
 
 
 async def test_static_server_returns_index_html_for_directory() -> None:
     """When index files are enabled the server should serve index.html when the directory root is requested.."""
 
-    app = create_app_static_files_static_server_returns_index_html_for_directory()
-    client = TestClient(app)
+    async with TestClient(create_app_static_files_static_server_returns_index_html_for_directory()) as client:
+        response = await client.get("/app/")
 
-    response = await client.get("/app/")
-
-    assert response.status_code == 200
-    assert response.text() == "<!doctype html><h1>Welcome</h1>"
-    response_headers = response.headers
-    assert response_headers.get("content-type") == "text/html"
+        assert response.status_code == 200
+        assert response.text == "<!doctype html><h1>Welcome</h1>"
+        response_headers = response.headers
+        assert response_headers.get("content-type") == "text/html"

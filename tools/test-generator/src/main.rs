@@ -119,6 +119,35 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
             python_app::generate_python_app(&fixtures, &output)?;
             // Then generate tests
             python_tests::generate_python_tests(&fixtures, &output)?;
+
+            // Format generated Python code with ruff
+            println!("Running ruff fix on generated Python code...");
+            let ruff_fix_status = std::process::Command::new("uv")
+                .args(["run", "ruff", "check", "--fix", "--unsafe-fixes"])
+                .arg(&output)
+                .status()
+                .context("Failed to run ruff fix")?;
+
+            if !ruff_fix_status.success() {
+                eprintln!(
+                    "Warning: ruff fix had issues (exit code {})",
+                    ruff_fix_status.code().unwrap_or(-1)
+                );
+            }
+
+            println!("Running ruff format on generated Python code...");
+            let ruff_format_status = std::process::Command::new("uv")
+                .args(["run", "ruff", "format"])
+                .arg(&output)
+                .status()
+                .context("Failed to run ruff format")?;
+
+            if !ruff_format_status.success() {
+                eprintln!(
+                    "Warning: ruff format had issues (exit code {})",
+                    ruff_format_status.code().unwrap_or(-1)
+                );
+            }
         }
         "typescript" => {
             println!("TODO: Generate TypeScript/Vitest test suite");
