@@ -8,6 +8,7 @@ from app.main import (
     create_app_rate_limit_rate_limit_exceeded_returns_429,
 )
 
+
 async def test_rate_limit_below_threshold_succeeds() -> None:
     """Verifies that requests below the configured rate limit are served normally.."""
 
@@ -33,5 +34,3 @@ async def test_rate_limit_exceeded_returns_429() -> None:
         response = await client.get("/rate-limit/exceeded")
 
         assert response.status_code == 429
-
-

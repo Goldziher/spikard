@@ -725,9 +725,8 @@ fn generate_handler_function_for_fixture(
     let mut code = String::new();
 
     // Function signature
-    let has_streaming = fixture.streaming.is_some();
-    let requires_async = metadata.request_timeout.as_ref().and_then(|cfg| cfg.sleep_ms).is_some() || has_streaming;
-    let fn_prefix = if requires_async { "async def" } else { "def" };
+    // Python handlers must always be async
+    let fn_prefix = "async def";
     code.push_str(&format!("{} {}(\n", fn_prefix, handler_name));
 
     // Add body parameter if present

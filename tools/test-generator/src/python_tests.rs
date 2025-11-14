@@ -884,7 +884,7 @@ fn generate_websocket_test_module(fixtures: &[AsyncFixture]) -> Result<String> {
             tests.push_str("            \n");
         }
 
-        tests.push_str("\n");
+        tests.push('\n');
     }
 
     let module = format!(

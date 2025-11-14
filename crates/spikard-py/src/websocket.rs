@@ -75,7 +75,7 @@ impl WebSocketHandler for PythonWebSocketHandler {
 
         // Use spawn_blocking to call Python code
         let result = tokio::task::spawn_blocking(move || {
-            Python::with_gil(|py| -> PyResult<Option<Value>> {
+            Python::attach(|py| -> PyResult<Option<Value>> {
                 // Convert JSON Value to Python dict
                 let py_message = Self::json_to_python(py, &message)?;
 
@@ -133,7 +133,7 @@ impl WebSocketHandler for PythonWebSocketHandler {
         let handler = Arc::clone(&self.handler);
 
         let _ = tokio::task::spawn_blocking(move || {
-            Python::with_gil(|py| -> PyResult<()> {
+            Python::attach(|py| -> PyResult<()> {
                 debug!("Python WebSocket handler: on_connect acquired GIL");
                 let coroutine = handler.bind(py).call_method0("on_connect")?;
                 let asyncio = py.import("asyncio")?;
@@ -151,7 +151,7 @@ impl WebSocketHandler for PythonWebSocketHandler {
         let handler = Arc::clone(&self.handler);
 
         let _ = tokio::task::spawn_blocking(move || {
-            Python::with_gil(|py| -> PyResult<()> {
+            Python::attach(|py| -> PyResult<()> {
                 let coroutine = handler.bind(py).call_method0("on_disconnect")?;
                 let asyncio = py.import("asyncio")?;
                 asyncio.call_method1("run", (coroutine,))?;
@@ -209,6 +209,7 @@ pub fn create_websocket_state(
 
     // Create and return WebSocket state with schemas
     if message_schema.is_some() || response_schema.is_some() {
+        #[allow(clippy::redundant_closure)]
         spikard_http::WebSocketState::with_schemas(py_handler, message_schema, response_schema)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e))
     } else {
