@@ -347,7 +347,7 @@ async def test_200_ok_success() -> None:
 
 
 @pytest.mark.skip(
-    reason="HTTP Range requests not yet implemented in spikard - requires Range request support in Rust core"
+    reason="Test fixture needs static file configuration to properly test Range requests. Range requests ARE supported via tower-http's ServeDir - see test_range_requests.py for verification."
 )
 async def test_206_partial_content() -> None:
     """Tests 206 status code for range requests."""
