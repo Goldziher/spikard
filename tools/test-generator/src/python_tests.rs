@@ -86,6 +86,7 @@ This ensures complete test isolation and allows multiple tests for the same rout
 fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
     let mut needs_asyncio_sleep = false;
     let mut needs_uuid_import = false;
+    let mut needs_re_import = false;
     for fixture in fixtures {
         let metadata = parse_middleware(fixture)?;
         if metadata
@@ -103,6 +104,14 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
             .is_some_and(|headers| headers.values().any(|value| value == "<<uuid>>"))
         {
             needs_uuid_import = true;
+        }
+        if fixture
+            .expected_response
+            .headers
+            .as_ref()
+            .is_some_and(|headers| headers.values().any(|value| is_regex_pattern(value)))
+        {
+            needs_re_import = true;
         }
     }
 
@@ -124,10 +133,13 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
     if needs_asyncio_sleep {
         code.push_str("import asyncio\n");
     }
+    if needs_re_import {
+        code.push_str("import re\n");
+    }
     if needs_uuid_import {
         code.push_str("from uuid import UUID\n");
     }
-    if needs_asyncio_sleep || needs_uuid_import {
+    if needs_asyncio_sleep || needs_uuid_import || needs_re_import {
         code.push('\n');
     }
     code.push_str("from spikard.testing import TestClient\n");
@@ -614,11 +626,24 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                     ));
                 }
                 _ => {
-                    let expected = json_to_python(&serde_json::Value::String(value.clone()));
-                    code.push_str(&format!(
-                        "        assert response_headers.get(\"{}\") == {}\n",
-                        lookup_key, expected
-                    ));
+                    // Check if the value looks like a regex pattern
+                    if is_regex_pattern(value.as_str()) {
+                        code.push_str(&format!(
+                            "        header_value = response_headers.get(\"{}\")\n",
+                            lookup_key
+                        ));
+                        code.push_str("        assert header_value is not None\n");
+                        code.push_str(&format!(
+                            "        assert re.match(r\"{}\", header_value)\n",
+                            value.replace("\\", "\\\\")
+                        ));
+                    } else {
+                        let expected = json_to_python(&serde_json::Value::String(value.clone()));
+                        code.push_str(&format!(
+                            "        assert response_headers.get(\"{}\") == {}\n",
+                            lookup_key, expected
+                        ));
+                    }
                 }
             }
         }
@@ -820,6 +845,22 @@ fn sanitize_identifier(s: &str) -> String {
 
 fn escape_python_string(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
+/// Checks if a string looks like a regex pattern
+fn is_regex_pattern(value: &str) -> bool {
+    // Common regex metacharacters that indicate a pattern
+    value.contains(".*")
+        || value.contains(".+")
+        || value.contains("\\d")
+        || value.contains("\\w")
+        || value.contains("\\s")
+        || value.contains("[")
+        || value.contains("]")
+        || value.contains("^")
+        || value.contains("$")
+        || (value.contains("?") && !value.starts_with("http"))
+        || (value.contains("+") && !value.chars().all(|c| c.is_alphanumeric() || c == '+' || c == '-'))
 }
 
 fn generate_websocket_test_module(fixtures: &[AsyncFixture]) -> Result<String> {
