@@ -17,6 +17,7 @@ pub fn clear_handle() {
 }
 
 #[napi]
+#[allow(dead_code)]
 pub fn background_run(task: Function<(), Promise<()>>) -> Result<()> {
     let handle = BACKGROUND_HANDLE
         .read()
@@ -44,6 +45,7 @@ pub fn background_run(task: Function<(), Promise<()>>) -> Result<()> {
         .map_err(map_spawn_error)
 }
 
+#[allow(dead_code)]
 fn map_spawn_error(err: BackgroundSpawnError) -> Error {
     Error::from_reason(err.to_string())
 }

@@ -142,7 +142,7 @@ fn node_object_to_json(obj: &Object) -> Result<serde_json::Value> {
             let global = env.get_global()?;
             let json: Object = global.get_named_property("JSON")?;
             let stringify: Function<Object, String> = json.get_named_property("stringify")?;
-            stringify.call(obj.clone())
+            stringify.call(*obj)
         })?;
 
     serde_json::from_str(&json_str).map_err(|e| napi::Error::from_reason(format!("Failed to parse JSON: {}", e)))
@@ -197,7 +197,7 @@ pub fn create_sse_state(producer_instance: &Object) -> Result<spikard_http::SseS
 
     // Create and return SSE state with schema
     if event_schema.is_some() {
-        spikard_http::SseState::with_schema(node_producer, event_schema).map_err(|e| napi::Error::from_reason(e))
+        spikard_http::SseState::with_schema(node_producer, event_schema).map_err(napi::Error::from_reason)
     } else {
         Ok(spikard_http::SseState::new(node_producer))
     }

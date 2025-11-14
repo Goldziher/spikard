@@ -38,7 +38,7 @@ impl SseEventProducer for PythonSseEventProducer {
 
         // Run in blocking task with asyncio.run() like regular handlers
         let result = tokio::task::spawn_blocking(move || {
-            Python::with_gil(|py| -> PyResult<Option<SseEvent>> {
+            Python::attach(|py| -> PyResult<Option<SseEvent>> {
                 debug!("Python SSE producer: acquired GIL");
 
                 // Call the producer's next_event method (synchronous)
