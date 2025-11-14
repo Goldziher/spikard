@@ -129,11 +129,19 @@ impl LifecycleHook for PythonHook {
         let name = self.name.clone();
 
         Box::pin(async move {
+            // Buffer the response body BEFORE entering blocking task
+            // This is necessary because Body is an async stream
+            let (parts, body) = resp.into_parts();
+            use axum::body::to_bytes;
+            let body_bytes = to_bytes(body, usize::MAX)
+                .await
+                .map_err(|e| format!("Failed to buffer response body: {}", e))?;
+
             // Run Python async function in a blocking task
             let result = tokio::task::spawn_blocking(move || {
                 Python::attach(|py| -> PyResult<HookResult<Response<Body>>> {
-                    // Convert Rust response to Python Response
-                    let py_resp = Py::new(py, PyResponse::from_response(resp, py)?)?;
+                    // Convert Rust response to Python Response with buffered body
+                    let py_resp = Py::new(py, PyResponse::from_response_parts(parts, body_bytes.clone(), py)?)?;
 
                     // Call the Python function
                     let result = func.call1(py, (py_resp.bind(py),))?;
