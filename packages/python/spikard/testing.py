@@ -13,6 +13,7 @@ import socket
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -31,6 +32,38 @@ if TYPE_CHECKING:
 __all__ = [
     "TestClient",
 ]
+
+
+# Global port allocator to prevent race conditions
+class PortAllocator:
+    """Thread-safe port allocator to prevent port conflicts during concurrent testing."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._allocated_ports: set[int] = set()
+
+    def allocate(self) -> int:
+        """Allocate an available port."""
+        with self._lock:
+            # Try to find an available port that's not already allocated
+            for _ in range(100):  # Max 100 attempts
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    s.bind(("127.0.0.1", 0))
+                    port: int = s.getsockname()[1]
+                    if port not in self._allocated_ports:
+                        self._allocated_ports.add(port)
+                        return port
+            raise RuntimeError("Could not allocate an available port after 100 attempts")
+
+    def release(self, port: int) -> None:
+        """Release a previously allocated port."""
+        with self._lock:
+            self._allocated_ports.discard(port)
+
+
+# Global instance
+_port_allocator = PortAllocator()
 
 
 class TestClient:
@@ -103,9 +136,9 @@ class TestClient:
 
     async def _start_server(self) -> None:
         """Start the Spikard server in a subprocess."""
-        # Find an available port if not specified
+        # Allocate an available port if not specified
         if self._requested_port == 0:
-            self._port = self._find_available_port()
+            self._port = _port_allocator.allocate()
         else:
             self._port = self._requested_port
 
@@ -134,7 +167,7 @@ app.run(host="127.0.0.1", port={self._port})
         # Start the server process
         env = os.environ.copy()
         # Ensure PYTHONPATH includes the current directory so cloudpickle can unpickle handlers
-        cwd = os.getcwd()
+        cwd = str(Path.cwd())
         if "PYTHONPATH" in env:
             # Append current directory to existing PYTHONPATH
             env["PYTHONPATH"] = f"{cwd}{os.pathsep}{env['PYTHONPATH']}"
@@ -193,19 +226,14 @@ app.run(host="127.0.0.1", port={self._port})
             finally:
                 self._process = None
 
+        # Release the allocated port
+        if self._port is not None and self._requested_port == 0:
+            _port_allocator.release(self._port)
+
         # Clean up temporary script
         if self._server_script is not None and self._server_script.exists():
             self._server_script.unlink()
             self._server_script = None
-
-    @staticmethod
-    def _find_available_port() -> int:
-        """Find an available port on localhost."""
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(("127.0.0.1", 0))
-            s.listen(1)
-            port: int = s.getsockname()[1]
-            return port
 
     async def _wait_for_server_ready(self, timeout: float = 10.0) -> None:
         """Wait for the server to be ready to accept connections."""
@@ -292,7 +320,9 @@ app.run(host="127.0.0.1", port={self._port})
         """
         if self._http_client is None:
             raise RuntimeError("Server not started")
-        return await self._http_client.post(path, json=json, data=data, files=files, params=params, headers=headers, cookies=cookies)
+        return await self._http_client.post(
+            path, json=json, data=data, files=files, params=params, headers=headers, cookies=cookies
+        )
 
     async def put(
         self,
