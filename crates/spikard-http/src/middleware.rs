@@ -1,5 +1,6 @@
 //! HTTP middleware for request validation
 
+use crate::problem::{CONTENT_TYPE_PROBLEM_JSON, ProblemDetails};
 use axum::{
     body::Body,
     extract::{FromRequest, Multipart, Request},
@@ -40,10 +41,20 @@ fn validate_json_content_type(headers: &HeaderMap) -> Result<(), Response> {
 
             if !is_json && !is_form {
                 // Content-Type is present but not JSON/form - return 415
-                let error_body = json!({
-                    "error": "Unsupported Media Type. Expected application/json"
-                });
-                return Err((StatusCode::UNSUPPORTED_MEDIA_TYPE, axum::Json(error_body)).into_response());
+                let problem = ProblemDetails::new(
+                    "https://spikard.dev/errors/unsupported-media-type",
+                    "Unsupported Media Type",
+                    StatusCode::UNSUPPORTED_MEDIA_TYPE,
+                )
+                .with_detail("Unsupported media type");
+
+                let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                return Err((
+                    StatusCode::UNSUPPORTED_MEDIA_TYPE,
+                    [(axum::http::header::CONTENT_TYPE, CONTENT_TYPE_PROBLEM_JSON)],
+                    body,
+                )
+                    .into_response());
             }
         }
     }
@@ -58,10 +69,18 @@ fn validate_content_length(headers: &HeaderMap, actual_size: usize) -> Result<()
         if let Ok(content_length_str) = content_length_header.to_str() {
             if let Ok(declared_length) = content_length_str.parse::<usize>() {
                 if declared_length != actual_size {
-                    let error_body = json!({
-                        "error": "Content-Length header does not match actual body size"
-                    });
-                    return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                    let problem = ProblemDetails::bad_request(format!(
+                        "Content-Length header ({}) does not match actual body size ({})",
+                        declared_length, actual_size
+                    ));
+
+                    let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                    return Err((
+                        StatusCode::BAD_REQUEST,
+                        [(axum::http::header::CONTENT_TYPE, CONTENT_TYPE_PROBLEM_JSON)],
+                        body,
+                    )
+                        .into_response());
                 }
             }
         }
@@ -579,10 +598,23 @@ fn validate_content_type_headers(headers: &HeaderMap, _declared_body_size: usize
             if let Some(charset) = parsed_mime.get_param(mime::CHARSET).map(|c| c.as_str()) {
                 // Only UTF-8 is allowed (the mime crate normalizes charset names)
                 if !charset.eq_ignore_ascii_case("utf-8") && !charset.eq_ignore_ascii_case("utf8") {
-                    let error_body = json!({
-                        "error": format!("Unsupported charset '{}' for JSON. Only UTF-8 is supported.", charset)
-                    });
-                    return Err((StatusCode::UNSUPPORTED_MEDIA_TYPE, axum::Json(error_body)).into_response());
+                    let problem = ProblemDetails::new(
+                        "https://spikard.dev/errors/unsupported-charset",
+                        "Unsupported Charset",
+                        StatusCode::UNSUPPORTED_MEDIA_TYPE,
+                    )
+                    .with_detail(format!(
+                        "Unsupported charset '{}' for JSON. Only UTF-8 is supported.",
+                        charset
+                    ));
+
+                    let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                    return Err((
+                        StatusCode::UNSUPPORTED_MEDIA_TYPE,
+                        [(axum::http::header::CONTENT_TYPE, CONTENT_TYPE_PROBLEM_JSON)],
+                        body,
+                    )
+                        .into_response());
                 }
             }
         }
