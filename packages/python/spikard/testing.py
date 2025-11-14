@@ -356,6 +356,18 @@ app.run(host="127.0.0.1", port={self._port})
             raise RuntimeError("Server not started")
         return await self._http_client.head(path, params=params, headers=headers, cookies=cookies)
 
+    async def trace(
+        self,
+        path: str,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+    ) -> httpx.Response:
+        """Make a TRACE request."""
+        if self._http_client is None:
+            raise RuntimeError("Server not started")
+        return await self._http_client.request("TRACE", path, params=params, headers=headers, cookies=cookies)
+
     @asynccontextmanager
     async def websocket(self, path: str) -> AsyncIterator[ClientConnection]:
         """Connect to a WebSocket endpoint.

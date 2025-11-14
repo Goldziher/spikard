@@ -31,7 +31,10 @@
 	"expected_response": {
 		"status_code": 415,
 		"body": {
-			"error": "Unsupported Media Type. Expected application/json"
+			"type": "https://spikard.dev/errors/unsupported-media-type",
+			"title": "Unsupported Media Type",
+			"status": 415,
+			"detail": "Unsupported media type"
 		}
 	},
 	"tags": ["content_types", "validation", "error"]
