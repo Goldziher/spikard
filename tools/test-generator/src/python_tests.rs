@@ -318,16 +318,23 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
             .and_then(|headers| headers.get("Content-Type"))
             .map(|value| value.to_ascii_lowercase());
 
+        let is_form_urlencoded = content_type
+            .as_deref()
+            .map(|ct| ct.contains("application/x-www-form-urlencoded"))
+            .unwrap_or(false);
+
         let treat_as_json = content_type
             .as_deref()
             .map(|ct| {
                 ct.contains("application/json")
-                    || ct.contains("application/x-www-form-urlencoded")
                     || ct.contains("application/xml")
             })
             .unwrap_or(true);
 
-        if treat_as_json {
+        if is_form_urlencoded {
+            code.push_str(&format!("        form_data = {}\n", json_to_python(body)));
+            request_kwargs.push("data=form_data");
+        } else if treat_as_json {
             code.push_str(&format!("        json_data = {}\n", json_to_python(body)));
             request_kwargs.push("json=json_data");
         } else {
