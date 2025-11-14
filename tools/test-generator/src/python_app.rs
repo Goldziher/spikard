@@ -492,8 +492,26 @@ fn generate_fixture_handler_and_app_python(
     // Extract body_schema for registration
     let body_schema_str = if let Some(handler) = &fixture.handler {
         if let Some(schema) = &handler.body_schema {
-            let schema_json = serde_json::to_string(schema)?;
-            json_to_python_dict(&schema_json)
+            // Check if schema is effectively empty (no required fields, no or empty properties)
+            // If so, treat as None to avoid requiring a body
+            let is_empty_schema = schema.get("type").and_then(|v| v.as_str()) == Some("object")
+                && schema
+                    .get("properties")
+                    .and_then(|v| v.as_object())
+                    .map(|props| props.is_empty())
+                    .unwrap_or(true)
+                && schema
+                    .get("required")
+                    .and_then(|v| v.as_array())
+                    .map(|req| req.is_empty())
+                    .unwrap_or(true);
+
+            if is_empty_schema {
+                "None".to_string()
+            } else {
+                let schema_json = serde_json::to_string(schema)?;
+                json_to_python_dict(&schema_json)
+            }
         } else {
             "None".to_string()
         }
@@ -732,12 +750,27 @@ fn generate_handler_function_for_fixture(
     // Add body parameter if present
     // IMPORTANT: All parameters must use their original names (no underscore prefix)
     // because Rust FFI passes them by name in kwargs.
+    // Skip body parameter if schema is effectively empty (no properties, no required fields)
     if let Some(schema) = body_schema {
-        let body_param_type = match body_type {
-            BodyType::PlainDict => json_type_to_python(schema).unwrap_or_else(|_| "dict[str, Any]".to_string()),
-            _ => model_name.unwrap_or("dict[str, Any]").to_string(),
-        };
-        code.push_str(&format!("    body: {},\n", body_param_type));
+        let is_empty_schema = schema.get("type").and_then(|v| v.as_str()) == Some("object")
+            && schema
+                .get("properties")
+                .and_then(|v| v.as_object())
+                .map(|props| props.is_empty())
+                .unwrap_or(true)
+            && schema
+                .get("required")
+                .and_then(|v| v.as_array())
+                .map(|req| req.is_empty())
+                .unwrap_or(true);
+
+        if !is_empty_schema {
+            let body_param_type = match body_type {
+                BodyType::PlainDict => json_type_to_python(schema).unwrap_or_else(|_| "dict[str, Any]".to_string()),
+                _ => model_name.unwrap_or("dict[str, Any]").to_string(),
+            };
+            code.push_str(&format!("    body: {},\n", body_param_type));
+        }
     }
 
     // Add other parameters - required first, then optional

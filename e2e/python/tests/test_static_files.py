@@ -16,8 +16,8 @@ async def test_static_file_server_returns_text_file() -> None:
         assert response.status_code == 200
         assert response.text == "Hello from static storage"
         response_headers = response.headers
-        assert response_headers.get("cache-control") == "public, max-age=60"
         assert response_headers.get("content-type") == "text/plain"
+        assert response_headers.get("cache-control") == "public, max-age=60"
 
 
 async def test_static_server_returns_index_html_for_directory() -> None:
