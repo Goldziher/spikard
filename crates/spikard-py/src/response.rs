@@ -160,9 +160,11 @@ impl Response {
 }
 
 impl Response {
-    /// Convert an Axum Response to PyResponse
+    /// Convert an Axum Response to PyResponse (body will be discarded)
     ///
     /// This extracts response data and makes it accessible to Python.
+    /// Note: The body is not accessible because it's an async stream.
+    /// Use `from_response_parts` if you have a buffered body.
     pub fn from_response(resp: axum::http::Response<axum::body::Body>, py: Python<'_>) -> PyResult<Self> {
         let (parts, _body) = resp.into_parts();
 
@@ -176,10 +178,54 @@ impl Response {
             }
         }
 
-        // For now, content is None (body is consumed)
-        // In a full implementation, we'd need to buffer the body
+        // Body is an async stream, cannot be accessed synchronously
         Ok(Self {
             content: None,
+            status_code,
+            headers: headers_dict.into(),
+        })
+    }
+
+    /// Convert Axum Response parts with buffered body to PyResponse
+    ///
+    /// This is used in lifecycle hooks where we pre-buffer the body
+    /// to avoid async/sync conversion issues.
+    pub fn from_response_parts(
+        parts: axum::http::response::Parts,
+        body_bytes: bytes::Bytes,
+        py: Python<'_>,
+    ) -> PyResult<Self> {
+        let status_code = parts.status.as_u16();
+
+        // Extract headers
+        let headers_dict = PyDict::new(py);
+        for (name, value) in parts.headers.iter() {
+            if let Ok(value_str) = value.to_str() {
+                headers_dict.set_item(name.as_str(), value_str)?;
+            }
+        }
+
+        // Convert buffered body to Python object
+        let content = if body_bytes.is_empty() {
+            None
+        } else {
+            // Try to parse as JSON first
+            if let Ok(json_str) = std::str::from_utf8(&body_bytes) {
+                match py.import("json")?.call_method1("loads", (json_str,)) {
+                    Ok(parsed) => Some(parsed.unbind()),
+                    Err(_) => {
+                        // Not JSON, treat as raw string
+                        Some(PyString::new(py, json_str).into_any().unbind())
+                    }
+                }
+            } else {
+                // Binary data, convert to bytes
+                Some(PyBytes::new(py, &body_bytes).into_any().unbind())
+            }
+        };
+
+        Ok(Self {
+            content,
             status_code,
             headers: headers_dict.into(),
         })
