@@ -219,6 +219,18 @@ pub fn create_sse_state(
         .funcall::<_, _, Value>("method", (ruby.to_symbol("on_disconnect"),))
         .ok();
 
+    // Extract event schema if available
+    let event_schema = producer_obj
+        .funcall::<_, _, Value>("instance_variable_get", (ruby.to_symbol("@_event_schema"),))
+        .ok()
+        .and_then(|v| {
+            if v.is_nil() {
+                None
+            } else {
+                RubySseEventProducer::ruby_to_json(ruby, v).ok()
+            }
+        });
+
     // Create Ruby SSE producer
     let ruby_producer = RubySseEventProducer::new(
         "SseEventProducer".to_string(),
@@ -227,6 +239,11 @@ pub fn create_sse_state(
         on_disconnect_proc,
     );
 
-    // Create and return SSE state
-    Ok(spikard_http::SseState::new(ruby_producer))
+    // Create and return SSE state with schema
+    if event_schema.is_some() {
+        spikard_http::SseState::with_schema(ruby_producer, event_schema)
+            .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e))
+    } else {
+        Ok(spikard_http::SseState::new(ruby_producer))
+    }
 }

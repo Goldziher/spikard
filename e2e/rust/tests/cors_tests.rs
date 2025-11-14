@@ -818,14 +818,6 @@ mod cors {
 
         assert_eq!(snapshot.status, 204, "Expected status 204, got {}", snapshot.status);
         let headers = &snapshot.headers;
-        if let Some(actual) = headers.get("access-control-allow-origin") {
-            assert_eq!(
-                actual, "https://example.com",
-                "Mismatched header 'Access-Control-Allow-Origin'"
-            );
-        } else {
-            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
-        }
         if let Some(actual) = headers.get("access-control-allow-methods") {
             assert_eq!(actual, "POST", "Mismatched header 'Access-Control-Allow-Methods'");
         } else {
@@ -838,6 +830,14 @@ mod cors {
             );
         } else {
             panic!("Expected header 'Access-Control-Allow-Headers' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
         }
         if let Some(actual) = headers.get("access-control-max-age") {
             assert_eq!(actual, "3600", "Mismatched header 'Access-Control-Max-Age'");
@@ -1115,10 +1115,18 @@ mod cors {
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
-        if let Some(actual) = headers.get("x-request-id") {
-            assert_eq!(actual, "abc123", "Mismatched header 'X-Request-Id'");
+        if let Some(actual) = headers.get("access-control-expose-headers") {
+            assert_eq!(
+                actual, "X-Total-Count, X-Request-Id",
+                "Mismatched header 'Access-Control-Expose-Headers'"
+            );
         } else {
-            panic!("Expected header 'X-Request-Id' to be present");
+            panic!("Expected header 'Access-Control-Expose-Headers' to be present");
+        }
+        if let Some(actual) = headers.get("x-total-count") {
+            assert_eq!(actual, "42", "Mismatched header 'X-Total-Count'");
+        } else {
+            panic!("Expected header 'X-Total-Count' to be present");
         }
         if let Some(actual) = headers.get("access-control-allow-origin") {
             assert_eq!(
@@ -1128,18 +1136,10 @@ mod cors {
         } else {
             panic!("Expected header 'Access-Control-Allow-Origin' to be present");
         }
-        if let Some(actual) = headers.get("x-total-count") {
-            assert_eq!(actual, "42", "Mismatched header 'X-Total-Count'");
+        if let Some(actual) = headers.get("x-request-id") {
+            assert_eq!(actual, "abc123", "Mismatched header 'X-Request-Id'");
         } else {
-            panic!("Expected header 'X-Total-Count' to be present");
-        }
-        if let Some(actual) = headers.get("access-control-expose-headers") {
-            assert_eq!(
-                actual, "X-Total-Count, X-Request-Id",
-                "Mismatched header 'Access-Control-Expose-Headers'"
-            );
-        } else {
-            panic!("Expected header 'Access-Control-Expose-Headers' to be present");
+            panic!("Expected header 'X-Request-Id' to be present");
         }
     }
 
@@ -1691,19 +1691,6 @@ mod cors {
         } else {
             panic!("Expected header 'Vary' to be present");
         }
-        if let Some(actual) = headers.get("access-control-allow-private-network") {
-            assert_eq!(
-                actual, "true",
-                "Mismatched header 'Access-Control-Allow-Private-Network'"
-            );
-        } else {
-            panic!("Expected header 'Access-Control-Allow-Private-Network' to be present");
-        }
-        if let Some(actual) = headers.get("access-control-allow-methods") {
-            assert_eq!(actual, "GET, POST", "Mismatched header 'Access-Control-Allow-Methods'");
-        } else {
-            panic!("Expected header 'Access-Control-Allow-Methods' to be present");
-        }
         if let Some(actual) = headers.get("access-control-allow-origin") {
             assert_eq!(
                 actual, "https://public.example.com",
@@ -1711,6 +1698,19 @@ mod cors {
             );
         } else {
             panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-methods") {
+            assert_eq!(actual, "GET, POST", "Mismatched header 'Access-Control-Allow-Methods'");
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Methods' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-private-network") {
+            assert_eq!(
+                actual, "true",
+                "Mismatched header 'Access-Control-Allow-Private-Network'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Private-Network' to be present");
         }
     }
 
@@ -2276,14 +2276,6 @@ mod cors {
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
-        if let Some(actual) = headers.get("access-control-allow-origin") {
-            assert_eq!(
-                actual, "https://admin.example.com",
-                "Mismatched header 'Access-Control-Allow-Origin'"
-            );
-        } else {
-            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
-        }
         if let Some(actual) = headers.get("vary") {
             assert_eq!(
                 actual.to_ascii_lowercase(),
@@ -2292,6 +2284,14 @@ mod cors {
             );
         } else {
             panic!("Expected header 'Vary' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://admin.example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
         }
     }
 
@@ -2844,19 +2844,6 @@ mod cors {
 
         assert_eq!(snapshot.status, 204, "Expected status 204, got {}", snapshot.status);
         let headers = &snapshot.headers;
-        if let Some(actual) = headers.get("access-control-allow-methods") {
-            assert_eq!(
-                actual, "GET, POST, PUT, PATCH, DELETE",
-                "Mismatched header 'Access-Control-Allow-Methods'"
-            );
-        } else {
-            panic!("Expected header 'Access-Control-Allow-Methods' to be present");
-        }
-        if let Some(actual) = headers.get("access-control-max-age") {
-            assert_eq!(actual, "3600", "Mismatched header 'Access-Control-Max-Age'");
-        } else {
-            panic!("Expected header 'Access-Control-Max-Age' to be present");
-        }
         if let Some(actual) = headers.get("access-control-allow-origin") {
             assert_eq!(
                 actual, "https://app.example.com",
@@ -2864,6 +2851,19 @@ mod cors {
             );
         } else {
             panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-max-age") {
+            assert_eq!(actual, "3600", "Mismatched header 'Access-Control-Max-Age'");
+        } else {
+            panic!("Expected header 'Access-Control-Max-Age' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-methods") {
+            assert_eq!(
+                actual, "GET, POST, PUT, PATCH, DELETE",
+                "Mismatched header 'Access-Control-Allow-Methods'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Methods' to be present");
         }
         if let Some(actual) = headers.get("vary") {
             assert_eq!(
@@ -3145,6 +3145,14 @@ mod cors {
 
         assert_eq!(snapshot.status, 204, "Expected status 204, got {}", snapshot.status);
         let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://app.example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
         if let Some(actual) = headers.get("access-control-allow-headers") {
             assert_eq!(
                 actual, "Content-Type, X-Custom-Header",
@@ -3162,19 +3170,6 @@ mod cors {
         } else {
             panic!("Expected header 'Vary' to be present");
         }
-        if let Some(actual) = headers.get("access-control-allow-origin") {
-            assert_eq!(
-                actual, "https://app.example.com",
-                "Mismatched header 'Access-Control-Allow-Origin'"
-            );
-        } else {
-            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
-        }
-        if let Some(actual) = headers.get("access-control-max-age") {
-            assert_eq!(actual, "3600", "Mismatched header 'Access-Control-Max-Age'");
-        } else {
-            panic!("Expected header 'Access-Control-Max-Age' to be present");
-        }
         if let Some(actual) = headers.get("access-control-allow-methods") {
             assert_eq!(
                 actual, "GET, POST, PUT, PATCH, DELETE",
@@ -3182,6 +3177,11 @@ mod cors {
             );
         } else {
             panic!("Expected header 'Access-Control-Allow-Methods' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-max-age") {
+            assert_eq!(actual, "3600", "Mismatched header 'Access-Control-Max-Age'");
+        } else {
+            panic!("Expected header 'Access-Control-Max-Age' to be present");
         }
     }
 
@@ -3454,10 +3454,13 @@ mod cors {
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
-        if let Some(actual) = headers.get("access-control-max-age") {
-            assert_eq!(actual, "600", "Mismatched header 'Access-Control-Max-Age'");
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
         } else {
-            panic!("Expected header 'Access-Control-Max-Age' to be present");
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
         }
         if let Some(actual) = headers.get("access-control-allow-headers") {
             assert_eq!(
@@ -3467,13 +3470,10 @@ mod cors {
         } else {
             panic!("Expected header 'Access-Control-Allow-Headers' to be present");
         }
-        if let Some(actual) = headers.get("access-control-allow-origin") {
-            assert_eq!(
-                actual, "https://example.com",
-                "Mismatched header 'Access-Control-Allow-Origin'"
-            );
+        if let Some(actual) = headers.get("access-control-max-age") {
+            assert_eq!(actual, "600", "Mismatched header 'Access-Control-Max-Age'");
         } else {
-            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+            panic!("Expected header 'Access-Control-Max-Age' to be present");
         }
         if let Some(actual) = headers.get("access-control-allow-methods") {
             assert_eq!(
@@ -4312,14 +4312,6 @@ mod cors {
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
-        if let Some(actual) = headers.get("access-control-allow-origin") {
-            assert_eq!(
-                actual, "https://app.example.com",
-                "Mismatched header 'Access-Control-Allow-Origin'"
-            );
-        } else {
-            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
-        }
         if let Some(actual) = headers.get("vary") {
             assert_eq!(
                 actual.to_ascii_lowercase(),
@@ -4328,6 +4320,14 @@ mod cors {
             );
         } else {
             panic!("Expected header 'Vary' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://app.example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
         }
     }
 
@@ -4876,11 +4876,6 @@ mod cors {
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
-        if let Some(actual) = headers.get("access-control-allow-credentials") {
-            assert_eq!(actual, "true", "Mismatched header 'Access-Control-Allow-Credentials'");
-        } else {
-            panic!("Expected header 'Access-Control-Allow-Credentials' to be present");
-        }
         if let Some(actual) = headers.get("access-control-allow-origin") {
             assert_eq!(
                 actual, "https://app.example.com",
@@ -4888,6 +4883,11 @@ mod cors {
             );
         } else {
             panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-credentials") {
+            assert_eq!(actual, "true", "Mismatched header 'Access-Control-Allow-Credentials'");
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Credentials' to be present");
         }
         if let Some(actual) = headers.get("vary") {
             assert_eq!(
@@ -5169,6 +5169,14 @@ mod cors {
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
         if let Some(actual) = headers.get("vary") {
             assert_eq!(
                 actual.to_ascii_lowercase(),
@@ -5177,14 +5185,6 @@ mod cors {
             );
         } else {
             panic!("Expected header 'Vary' to be present");
-        }
-        if let Some(actual) = headers.get("access-control-allow-origin") {
-            assert_eq!(
-                actual, "https://example.com",
-                "Mismatched header 'Access-Control-Allow-Origin'"
-            );
-        } else {
-            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
         }
     }
 }

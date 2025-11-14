@@ -3,7 +3,7 @@
 import functools
 import inspect
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from spikard.config import ServerConfig
 from spikard.introspection import extract_parameter_schema
@@ -14,6 +14,9 @@ from spikard.types import Route
 if TYPE_CHECKING:
     from spikard.sse import SseEventProducer
     from spikard.websocket import WebSocketHandler
+
+# Type alias for HTTP methods
+HttpMethod = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "TRACE"]
 
 
 class Spikard:
@@ -43,7 +46,7 @@ class Spikard:
 
     def register_route(
         self,
-        method: str,
+        method: HttpMethod,
         path: str,
         *,
         body_schema: dict[str, Any] | None = None,
@@ -53,7 +56,7 @@ class Spikard:
         """Internal method to register a route.
 
         Args:
-            method: HTTP method
+            method: HTTP method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS, TRACE)
             path: URL path pattern
             body_schema: Optional explicit body schema (takes precedence over type hint extraction)
             parameter_schema: Optional explicit parameter schema (takes precedence over type hint extraction)

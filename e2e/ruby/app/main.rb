@@ -3810,4 +3810,19 @@ module E2ERubyApp
     app
   end
 
+  def create_app_websocket_chat
+    app = Spikard::App.new
+    app.websocket("/chat", handler_name: "websocket_chat") do |req, ws|
+      loop do
+        msg = ws.receive_message
+        break if msg.close?
+
+        data = msg.as_json
+        data['validated'] = true
+        ws.send_json(data)
+      end
+    end
+    app
+  end
+
 end

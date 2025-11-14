@@ -2,7 +2,7 @@
 //!
 //! Generates Ruby Spikard applications based on fixtures.
 
-use crate::asyncapi::{AsyncFixture, load_sse_fixtures};
+use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use anyhow::{Context, Result};
@@ -84,6 +84,7 @@ pub fn generate_ruby_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     );
 
     let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
+    let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
 
     for (category, fixtures) in fixtures_by_category.iter() {
         for (index, fixture) in fixtures.iter().enumerate() {
@@ -108,6 +109,7 @@ pub fn generate_ruby_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
         }
     }
     append_sse_factories(&mut code, &sse_fixtures)?;
+    append_websocket_factories(&mut code, &websocket_fixtures)?;
 
     code.push_str(
         "end
@@ -345,6 +347,56 @@ fn build_sse_events_literal(fixtures: &[&AsyncFixture]) -> Result<String> {
         entries.push("\"{}\"".to_string());
     }
     Ok(format!("[{}]", entries.join(", ")))
+}
+
+fn append_websocket_factories(code: &mut String, fixtures: &[AsyncFixture]) -> Result<()> {
+    use std::collections::BTreeMap;
+
+    if fixtures.is_empty() {
+        return Ok(());
+    }
+
+    let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
+    for fixture in fixtures {
+        if let Some(channel) = fixture.channel.as_deref() {
+            grouped.entry(channel.to_string()).or_default().push(fixture);
+        }
+    }
+
+    for (channel, _channel_fixtures) in grouped {
+        let channel_path = if channel.starts_with('/') {
+            channel
+        } else {
+            format!("/{}", channel)
+        };
+        let slug = sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"));
+        let app_fn_name = format!("create_app_websocket_{}", slug);
+        let handler_name = format!("websocket_{}", slug);
+
+        code.push_str(&format!(
+            r#"  def {app_fn_name}
+    app = Spikard::App.new
+    app.websocket("{path}", handler_name: "{handler_name}") do |req, ws|
+      loop do
+        msg = ws.receive_message
+        break if msg.close?
+
+        data = msg.as_json
+        data['validated'] = true
+        ws.send_json(data)
+      end
+    end
+    app
+  end
+
+"#,
+            app_fn_name = app_fn_name,
+            path = channel_path,
+            handler_name = handler_name
+        ));
+    }
+
+    Ok(())
 }
 
 fn build_background_handler_block(

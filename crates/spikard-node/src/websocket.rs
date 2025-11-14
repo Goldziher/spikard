@@ -102,6 +102,24 @@ impl WebSocketHandler for NodeWebSocketHandler {
     }
 }
 
+/// Convert Node.js object to JSON Value
+fn node_object_to_json(obj: &Object) -> Result<serde_json::Value> {
+    let json_str: String = obj
+        .get_named_property("toJSON")
+        .and_then(|func: Function<(), String>| func.call(()))
+        .or_else(|_| {
+            // Fallback: use JSON.stringify
+            let env_ptr = obj.env();
+            let env = napi::Env::from_raw(env_ptr);
+            let global = env.get_global()?;
+            let json: Object = global.get_named_property("JSON")?;
+            let stringify: Function<Object, String> = json.get_named_property("stringify")?;
+            stringify.call(obj.clone())
+        })?;
+
+    serde_json::from_str(&json_str).map_err(|e| napi::Error::from_reason(format!("Failed to parse JSON: {}", e)))
+}
+
 /// Create WebSocketState from Node.js handler factory
 ///
 /// This function is designed to be called from JavaScript to register WebSocket handlers.
@@ -135,6 +153,17 @@ pub fn create_websocket_state(handler_instance: &Object) -> Result<spikard_http:
                 .ok()
         });
 
+    // Extract schemas if available
+    let message_schema = handler_instance
+        .get_named_property::<Object>("_messageSchema")
+        .ok()
+        .and_then(|obj| node_object_to_json(&obj).ok());
+
+    let response_schema = handler_instance
+        .get_named_property::<Object>("_responseSchema")
+        .ok()
+        .and_then(|obj| node_object_to_json(&obj).ok());
+
     // Create Node WebSocket handler
     let node_handler = NodeWebSocketHandler::new(
         "WebSocketHandler".to_string(),
@@ -143,6 +172,11 @@ pub fn create_websocket_state(handler_instance: &Object) -> Result<spikard_http:
         on_disconnect_tsfn,
     );
 
-    // Create and return WebSocket state
-    Ok(spikard_http::WebSocketState::new(node_handler))
+    // Create and return WebSocket state with schemas
+    if message_schema.is_some() || response_schema.is_some() {
+        spikard_http::WebSocketState::with_schemas(node_handler, message_schema, response_schema)
+            .map_err(|e| napi::Error::from_reason(e))
+    } else {
+        Ok(spikard_http::WebSocketState::new(node_handler))
+    }
 }

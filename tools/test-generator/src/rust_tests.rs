@@ -1,6 +1,6 @@
 //! Rust test generation
 
-use crate::asyncapi::{AsyncFixture, load_sse_fixtures};
+use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
 use crate::streaming::streaming_data;
 use anyhow::{Context, Result};
@@ -44,6 +44,14 @@ pub fn generate_rust_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
         let sse_content = generate_sse_tests(&sse_fixtures)?;
         fs::write(tests_dir.join("sse_tests.rs"), sse_content).context("Failed to write sse_tests.rs")?;
         println!("  ✓ Generated sse_tests.rs");
+    }
+
+    let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
+    if !websocket_fixtures.is_empty() {
+        let websocket_content = generate_websocket_tests(&websocket_fixtures)?;
+        fs::write(tests_dir.join("websocket_tests.rs"), websocket_content)
+            .context("Failed to write websocket_tests.rs")?;
+        println!("  ✓ Generated websocket_tests.rs");
     }
 
     Ok(())
@@ -623,6 +631,102 @@ use spikard_http::testing::{{snapshot_response, call_test_server}};
 }}
 "#,
         tests = tests.join("\n")
+    ))
+}
+
+fn generate_websocket_tests(fixtures: &[AsyncFixture]) -> Result<String> {
+    use std::collections::BTreeMap;
+
+    let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
+    for fixture in fixtures {
+        if let Some(channel) = fixture.channel.as_deref() {
+            grouped.entry(channel.to_string()).or_default().push(fixture);
+        }
+    }
+
+    let mut tests = Vec::new();
+    for (channel, channel_fixtures) in grouped {
+        let channel_path = if channel.starts_with('/') {
+            channel
+        } else {
+            format!("/{}", channel)
+        };
+        let channel_slug = sanitize_fixture_name(&channel_path.trim_start_matches('/').replace('/', "_"));
+
+        // Generate test for each example in the channel
+        for (example_idx, fixture) in channel_fixtures.iter().enumerate() {
+            for (msg_idx, example) in fixture.examples.iter().enumerate() {
+                let test_name = if channel_fixtures.len() == 1 && fixture.examples.len() == 1 {
+                    format!("test_websocket_{}", channel_slug)
+                } else {
+                    format!(
+                        "test_websocket_{}_msg_{}",
+                        channel_slug,
+                        example_idx * fixture.examples.len() + msg_idx + 1
+                    )
+                };
+                let app_fn = format!("create_app_websocket_{}", channel_slug);
+                let example_json = serde_json::to_string(example)?;
+
+                let test_case = format!(
+                    r#"
+#[tokio::test]
+async fn {test_name}() {{
+    use axum_test::{{TestServer, TestServerConfig}};
+
+    let app = spikard_e2e_app::{app_fn}();
+    let config = TestServerConfig::builder()
+        .save_cookies()
+        .build();
+    let server = TestServer::new_with_config(app, config).expect("Failed to build server");
+
+    let mut ws = server.get_websocket("{path}").await;
+
+    let message: Value = serde_json::from_str("{example_json}").expect("valid JSON");
+
+    ws.send_json(&message).await;
+
+    let response_msg = ws.receive_text().await.expect("receive response");
+    let response: Value = serde_json::from_str(&response_msg).expect("valid response JSON");
+
+    assert_eq!(response["validated"], Value::Bool(true), "Should have validated field set to true");
+
+    // Verify all original fields are present
+    if let Some(obj) = message.as_object() {{
+        for (key, value) in obj {{
+            assert_eq!(
+                response[key], *value,
+                "Field should match original value"
+            );
+        }}
+    }}
+
+    ws.close().await;
+}}
+"#,
+                    test_name = test_name,
+                    app_fn = app_fn,
+                    path = channel_path,
+                    example_json = escape_rust_string(&example_json)
+                );
+
+                tests.push(test_case);
+            }
+        }
+    }
+
+    let tests_joined = tests.join("\n");
+    Ok(format!(
+        r#"//! WebSocket tests generated from AsyncAPI fixtures
+
+#[cfg(test)]
+mod websocket {{
+use serde_json::Value;
+
+{}
+}}
+"#,
+        tests_joined
     ))
 }
 

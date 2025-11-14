@@ -554,15 +554,15 @@ mod lifecycle_hooks {
         } else {
             panic!("Expected header 'X-Request-ID' to be present");
         }
-        if let Some(actual) = headers.get("x-response-time") {
-            assert_eq!(actual, ".*ms", "Mismatched header 'X-Response-Time'");
-        } else {
-            panic!("Expected header 'X-Response-Time' to be present");
-        }
         if let Some(actual) = headers.get("x-frame-options") {
             assert_eq!(actual, "DENY", "Mismatched header 'X-Frame-Options'");
         } else {
             panic!("Expected header 'X-Frame-Options' to be present");
+        }
+        if let Some(actual) = headers.get("x-response-time") {
+            assert_eq!(actual, ".*ms", "Mismatched header 'X-Response-Time'");
+        } else {
+            panic!("Expected header 'X-Response-Time' to be present");
         }
         if let Some(actual) = headers.get("x-content-type-options") {
             assert_eq!(actual, "nosniff", "Mismatched header 'X-Content-Type-Options'");
@@ -1669,6 +1669,14 @@ mod lifecycle_hooks {
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("strict-transport-security") {
+            assert_eq!(
+                actual, "max-age=31536000; includeSubDomains",
+                "Mismatched header 'Strict-Transport-Security'"
+            );
+        } else {
+            panic!("Expected header 'Strict-Transport-Security' to be present");
+        }
         if let Some(actual) = headers.get("x-xss-protection") {
             assert_eq!(actual, "1; mode=block", "Mismatched header 'X-XSS-Protection'");
         } else {
@@ -1678,14 +1686,6 @@ mod lifecycle_hooks {
             assert_eq!(actual, "DENY", "Mismatched header 'X-Frame-Options'");
         } else {
             panic!("Expected header 'X-Frame-Options' to be present");
-        }
-        if let Some(actual) = headers.get("strict-transport-security") {
-            assert_eq!(
-                actual, "max-age=31536000; includeSubDomains",
-                "Mismatched header 'Strict-Transport-Security'"
-            );
-        } else {
-            panic!("Expected header 'Strict-Transport-Security' to be present");
         }
         if let Some(actual) = headers.get("x-content-type-options") {
             assert_eq!(actual, "nosniff", "Mismatched header 'X-Content-Type-Options'");

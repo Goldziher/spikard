@@ -36,12 +36,18 @@ pub trait WebSocketHandler: Send + Sync {
 /// WebSocket state shared across connections
 pub struct WebSocketState<H: WebSocketHandler> {
     handler: Arc<H>,
+    /// Optional JSON Schema for validating incoming messages
+    message_schema: Option<Arc<jsonschema::Validator>>,
+    /// Optional JSON Schema for validating outgoing responses
+    response_schema: Option<Arc<jsonschema::Validator>>,
 }
 
 impl<H: WebSocketHandler> Clone for WebSocketState<H> {
     fn clone(&self) -> Self {
         Self {
             handler: Arc::clone(&self.handler),
+            message_schema: self.message_schema.clone(),
+            response_schema: self.response_schema.clone(),
         }
     }
 }
@@ -51,7 +57,38 @@ impl<H: WebSocketHandler + 'static> WebSocketState<H> {
     pub fn new(handler: H) -> Self {
         Self {
             handler: Arc::new(handler),
+            message_schema: None,
+            response_schema: None,
         }
+    }
+
+    /// Create new WebSocket state with a handler and schemas
+    pub fn with_schemas(
+        handler: H,
+        message_schema: Option<serde_json::Value>,
+        response_schema: Option<serde_json::Value>,
+    ) -> Result<Self, String> {
+        let message_validator = if let Some(schema) = message_schema {
+            Some(Arc::new(
+                jsonschema::validator_for(&schema).map_err(|e| format!("Invalid message schema: {}", e))?,
+            ))
+        } else {
+            None
+        };
+
+        let response_validator = if let Some(schema) = response_schema {
+            Some(Arc::new(
+                jsonschema::validator_for(&schema).map_err(|e| format!("Invalid response schema: {}", e))?,
+            ))
+        } else {
+            None
+        };
+
+        Ok(Self {
+            handler: Arc::new(handler),
+            message_schema: message_validator,
+            response_schema: response_validator,
+        })
     }
 }
 
@@ -82,8 +119,30 @@ async fn handle_socket<H: WebSocketHandler>(mut socket: WebSocket, state: WebSoc
                 // Parse JSON message
                 match serde_json::from_str::<Value>(&text) {
                     Ok(json_msg) => {
+                        // Validate incoming message if schema is provided
+                        if let Some(validator) = &state.message_schema
+                            && !validator.is_valid(&json_msg)
+                        {
+                            error!("Message validation failed");
+                            let error_response = serde_json::json!({
+                                "error": "Message validation failed"
+                            });
+                            if let Ok(error_text) = serde_json::to_string(&error_response) {
+                                let _ = socket.send(Message::Text(error_text.into())).await;
+                            }
+                            continue;
+                        }
+
                         // Handle the message
                         if let Some(response) = state.handler.handle_message(json_msg).await {
+                            // Validate outgoing response if schema is provided
+                            if let Some(validator) = &state.response_schema
+                                && !validator.is_valid(&response)
+                            {
+                                error!("Response validation failed");
+                                continue;
+                            }
+
                             // Send response back
                             let response_text = serde_json::to_string(&response).unwrap_or_else(|_| "{}".to_string());
 

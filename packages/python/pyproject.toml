@@ -21,8 +21,12 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
+  "cloudpickle>=3.1.2",
+  "httpx>=0.28.1",
+  "httpx-sse>=0.4.3",
   "msgspec>=0.19",
   "uvloop>=0.22; sys_platform!='win32'",
+  "websockets>=15.0.1",
 ]
 
 optional-dependencies.uvloop = [

@@ -3,6 +3,8 @@
 mod background;
 mod lifecycle;
 mod sse;
+mod test_sse;
+mod test_websocket;
 mod websocket;
 
 use async_stream::stream;
@@ -304,6 +306,31 @@ impl NativeTestClient {
     fn close(&self) -> Result<(), Error> {
         *self.inner.borrow_mut() = None;
         Ok(())
+    }
+
+    fn websocket(ruby: &Ruby, this: &Self, path: String) -> Result<Value, Error> {
+        let inner_borrow = this.inner.borrow();
+        let inner = inner_borrow
+            .as_ref()
+            .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "TestClient not initialised"))?;
+
+        test_websocket::connect_websocket_for_test(ruby, &inner.server, &path)
+    }
+
+    fn sse(ruby: &Ruby, this: &Self, path: String) -> Result<Value, Error> {
+        let inner_borrow = this.inner.borrow();
+        let inner = inner_borrow
+            .as_ref()
+            .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "TestClient not initialised"))?;
+
+        let response = GLOBAL_RUNTIME
+            .block_on(async {
+                let axum_response = inner.server.get(&path).await;
+                snapshot_response(axum_response).await
+            })
+            .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("SSE request failed: {}", e)))?;
+
+        test_sse::sse_stream_from_response(ruby, &response)
     }
 }
 
@@ -1755,7 +1782,14 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     class.define_alloc_func::<NativeTestClient>();
     class.define_method("initialize", method!(NativeTestClient::initialize, 3))?;
     class.define_method("request", method!(NativeTestClient::request, 3))?;
+    class.define_method("websocket", method!(NativeTestClient::websocket, 1))?;
+    class.define_method("sse", method!(NativeTestClient::sse, 1))?;
     class.define_method("close", method!(NativeTestClient::close, 0))?;
+
+    // Initialize WebSocket and SSE test client modules
+    let spikard_module = ruby.define_module("Spikard")?;
+    test_websocket::init(ruby, &spikard_module)?;
+    test_sse::init(ruby, &spikard_module)?;
 
     Ok(())
 }

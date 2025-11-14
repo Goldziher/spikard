@@ -6,7 +6,7 @@ from _spikard import Response, StreamingResponse
 
 from spikard import background
 from spikard._internal.converters import register_decoder
-from spikard.app import Spikard
+from spikard.app import HttpMethod, Spikard
 from spikard.config import (
     ApiKeyConfig,
     CompressionConfig,
@@ -18,8 +18,8 @@ from spikard.config import (
 from spikard.params import Body, Cookie, Header, Path, Query
 from spikard.request import Request
 from spikard.routing import delete, get, head, options, patch, post, put, route, trace
-from spikard.sse import SseEvent, SseEventProducer
-from spikard.websocket import WebSocketHandler
+from spikard.sse import SseEvent, sse
+from spikard.websocket import websocket
 
 __all__ = [
     "ApiKeyConfig",
@@ -27,6 +27,7 @@ __all__ = [
     "CompressionConfig",
     "Cookie",
     "Header",
+    "HttpMethod",
     "JwtConfig",
     "Path",
     "Query",
@@ -36,10 +37,8 @@ __all__ = [
     "ServerConfig",
     "Spikard",
     "SseEvent",
-    "SseEventProducer",
     "StaticFilesConfig",
     "StreamingResponse",
-    "WebSocketHandler",
     "background",
     "delete",
     "get",
@@ -50,5 +49,7 @@ __all__ = [
     "put",
     "register_decoder",
     "route",
+    "sse",
     "trace",
+    "websocket",
 ]
