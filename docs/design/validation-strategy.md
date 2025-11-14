@@ -486,15 +486,174 @@ For parameters:
 
 This is the **pragmatic approach** - leverage existing tools, optimize the critical path.
 
+## WebSocket & SSE Validation
+
+### Overview
+
+WebSocket and SSE handlers use the same JSON Schema validation strategy as HTTP handlers, with all validation happening in Rust for maximum performance.
+
+**Key Features:**
+- Automatic schema extraction from type hints
+- Validation in Rust using `jsonschema` crate
+- Zero-cost when schemas aren't provided
+- Consistent validation across all language bindings
+
+### WebSocket Validation
+
+```python
+from spikard import websocket
+from typing import TypedDict
+
+class ChatMessage(TypedDict):
+    text: str
+    user: str
+
+@websocket("/chat")
+async def chat_handler(message: ChatMessage) -> dict:
+    # message is validated by Rust before reaching here
+    return {"echo": message["text"], "from": message["user"]}
+```
+
+**Validation Flow:**
+1. Decorator extracts JSON Schema from `ChatMessage` type hint
+2. Schema passed to Rust via `create_websocket_state()`
+3. **Incoming messages** validated before handler execution
+4. **Outgoing responses** validated before sending to client
+
+**Error Handling:**
+- Invalid incoming message → error response sent to client, connection continues
+- Invalid outgoing response → logged and dropped, connection continues
+
+### SSE Validation
+
+```python
+from spikard import sse
+from typing import TypedDict, AsyncIterator
+
+class StatusEvent(TypedDict):
+    status: str
+    message: str
+
+@sse("/status")
+async def status_stream() -> AsyncIterator[StatusEvent]:
+    for i in range(10):
+        await asyncio.sleep(1)
+        yield {"status": "ok", "message": f"Update {i}"}
+```
+
+**Validation Flow:**
+1. Decorator extracts JSON Schema from `AsyncIterator[StatusEvent]` type hint
+2. Schema passed to Rust via `create_sse_state()`
+3. Each event validated before streaming to clients
+
+**Error Handling:**
+- Invalid event → logged and skipped
+- Sends "validation_error" placeholder event
+- Stream continues with valid events
+
+### Schema Sources
+
+Same as HTTP validation, all Python type systems supported:
+
+```python
+# TypedDict
+class Message(TypedDict):
+    text: str
+
+# Pydantic
+from pydantic import BaseModel
+class Message(BaseModel):
+    text: str
+
+# msgspec
+import msgspec
+class Message(msgspec.Struct):
+    text: str
+
+# Raw JSON Schema
+message_schema = {
+    "type": "object",
+    "properties": {"text": {"type": "string"}},
+    "required": ["text"]
+}
+
+@websocket("/ws", message_schema=message_schema)
+async def handler(message: dict) -> dict:
+    return message
+```
+
+### Rust Implementation
+
+**WebSocket State:**
+```rust
+pub struct WebSocketState<H: WebSocketHandler> {
+    handler: Arc<H>,
+    message_schema: Option<Arc<jsonschema::Validator>>,
+    response_schema: Option<Arc<jsonschema::Validator>>,
+}
+
+impl<H: WebSocketHandler + 'static> WebSocketState<H> {
+    pub fn with_schemas(
+        handler: H,
+        message_schema: Option<serde_json::Value>,
+        response_schema: Option<serde_json::Value>,
+    ) -> Result<Self, String> {
+        // Compile JSON Schema validators at connection setup
+        // ...
+    }
+}
+```
+
+**SSE State:**
+```rust
+pub struct SseState<P: SseEventProducer> {
+    producer: Arc<P>,
+    event_schema: Option<Arc<jsonschema::Validator>>,
+}
+
+impl<P: SseEventProducer + 'static> SseState<P> {
+    pub fn with_schema(
+        producer: P,
+        event_schema: Option<serde_json::Value>,
+    ) -> Result<Self, String> {
+        // Compile JSON Schema validator at connection setup
+        // ...
+    }
+}
+```
+
+### Performance
+
+Same as HTTP validation:
+- **~500k validations/sec** in Rust
+- **Zero GIL contention** - validation outside Python
+- **Zero-copy** - direct validation on `serde_json::Value`
+- **Zero-cost when unused** - no overhead without schemas
+
+### Implementation Files
+
+| Component | File |
+|-----------|------|
+| WebSocket Core | `crates/spikard-http/src/websocket.rs` |
+| WebSocket Python | `crates/spikard-py/src/websocket.rs` |
+| WebSocket API | `packages/python/spikard/websocket.py` |
+| SSE Core | `crates/spikard-http/src/sse.rs` |
+| SSE Python | `crates/spikard-py/src/sse.rs` |
+| SSE API | `packages/python/spikard/sse.py` |
+
+See [websocket-support.md](./websocket-support.md) and [server-sent-events.md](./server-sent-events.md) for detailed documentation.
+
 ## References
 
 ### IETF Standards
 - [RFC 8259: The JavaScript Object Notation (JSON) Data Interchange Format](https://www.rfc-editor.org/rfc/rfc8259.html) (December 2017, STD 90)
 - [RFC 9110: HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110.html) (June 2022, Internet Standard 97)
+- [RFC 6455: The WebSocket Protocol](https://www.rfc-editor.org/rfc/rfc6455.html) (December 2011, Proposed Standard)
 
 ### Specifications
 - [JSON Schema 2020-12](https://json-schema.org/draft/2020-12/json-schema-core.html) - Current JSON Schema specification (IETF Internet-Draft)
 - [JSON Schema Validation](https://json-schema.org/draft/2020-12/json-schema-validation.html) - Validation keywords and semantics
+- [Server-Sent Events](https://html.spec.whatwg.org/multipage/server-sent-events.html) - W3C EventSource specification
 
 ### Alternative Standards
 - [RFC 8927: JSON Type Definition (JTD)](https://www.rfc-editor.org/rfc/rfc8927.html) - Alternative to JSON Schema, optimized for code generation

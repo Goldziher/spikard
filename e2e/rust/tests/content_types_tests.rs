@@ -4664,6 +4664,11 @@ mod content_types {
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-type") {
+            assert_eq!(actual, "application/pdf", "Mismatched header 'content-type'");
+        } else {
+            panic!("Expected header 'content-type' to be present");
+        }
         if let Some(actual) = headers.get("content-disposition") {
             assert_eq!(
                 actual, "attachment; filename=document.pdf",
@@ -4671,11 +4676,6 @@ mod content_types {
             );
         } else {
             panic!("Expected header 'content-disposition' to be present");
-        }
-        if let Some(actual) = headers.get("content-type") {
-            assert_eq!(actual, "application/pdf", "Mismatched header 'content-type'");
-        } else {
-            panic!("Expected header 'content-type' to be present");
         }
     }
 

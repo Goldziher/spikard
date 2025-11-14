@@ -10,7 +10,7 @@
 //! - msgspec.Struct (fastest typed)
 //! - Pydantic BaseModel (popular, slower)
 
-use crate::asyncapi::{AsyncFixture, load_sse_fixtures};
+use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::{StreamingFixtureData, chunk_bytes, streaming_data};
@@ -99,9 +99,11 @@ pub fn generate_python_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
     }
 
     let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
+    let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
 
-    // Generate main app file with per-fixture and SSE app factories
-    let app_content = generate_app_file_per_fixture(&fixtures_by_category, &app_dir, &sse_fixtures)?;
+    // Generate main app file with per-fixture and SSE/WebSocket app factories
+    let app_content =
+        generate_app_file_per_fixture(&fixtures_by_category, &app_dir, &sse_fixtures, &websocket_fixtures)?;
     fs::write(app_dir.join("main.py"), app_content).context("Failed to write main.py")?;
 
     // Generate __init__.py
@@ -117,6 +119,7 @@ fn generate_app_file_per_fixture(
     fixtures_by_category: &HashMap<String, Vec<Fixture>>,
     app_dir: &Path,
     sse_fixtures: &[AsyncFixture],
+    websocket_fixtures: &[AsyncFixture],
 ) -> Result<String> {
     let mut needs_background = false;
     let mut needs_static_assets = false;
@@ -184,6 +187,12 @@ fn generate_app_file_per_fixture(
     ];
     if needs_background {
         spikard_imports.push("background");
+    }
+    if !websocket_fixtures.is_empty() {
+        spikard_imports.push("websocket");
+    }
+    if !sse_fixtures.is_empty() {
+        spikard_imports.push("sse");
     }
     code.push_str(&format!("from spikard import {}\n", spikard_imports.join(", ")));
     code.push_str("from spikard.config import (\n");
@@ -254,6 +263,7 @@ fn generate_app_file_per_fixture(
     }
 
     append_sse_factories(&mut code, sse_fixtures, &mut all_app_factories)?;
+    append_websocket_factories(&mut code, websocket_fixtures, &mut all_app_factories)?;
 
     // Add a comment listing all app factories
     code.push_str("# App factory functions:\n");
@@ -294,7 +304,22 @@ fn append_sse_factories(
         let events_literal = build_sse_events_literal(&channel_fixtures)?;
 
         code.push_str(&format!(
-            "\n\ndef {factory_name}() -> Spikard:\n    \"\"\"SSE channel for {channel_path}\"\"\"\n    app = Spikard()\n    events = {events_literal}\n\n    @get(\"{channel_path}\")\n    async def {handler_name}():\n        async def event_stream():\n            for payload in events:\n                yield f\"data: {{payload}}\\n\\n\"\n\n        return StreamingResponse(\n            event_stream(),\n            status_code=200,\n            headers={{\n                \"content-type\": \"text/event-stream\",\n                \"cache-control\": \"no-cache\",\n            }},\n        )\n\n    return app\n",
+            r#"
+
+
+def {factory_name}() -> Spikard:
+    """SSE channel for {channel_path}"""
+    app = Spikard()
+
+    @sse("{channel_path}")
+    async def {handler_name}():
+        """SSE event stream for {channel_path}."""
+        events = {events_literal}
+        for event_data in events:
+            yield json.loads(event_data)
+
+    return app
+"#,
             factory_name = factory_name,
             channel_path = channel_path,
             events_literal = events_literal,
@@ -321,6 +346,61 @@ fn build_sse_events_literal(fixtures: &[&AsyncFixture]) -> Result<String> {
     }
 
     Ok(format!("[{}]", events.join(", ")))
+}
+
+fn append_websocket_factories(
+    code: &mut String,
+    fixtures: &[AsyncFixture],
+    registry: &mut Vec<(String, String, String)>,
+) -> Result<()> {
+    use std::collections::BTreeMap;
+
+    if fixtures.is_empty() {
+        return Ok(());
+    }
+
+    let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
+    for fixture in fixtures {
+        if let Some(channel) = fixture.channel.as_deref() {
+            grouped.entry(channel.to_string()).or_default().push(fixture);
+        }
+    }
+
+    for (channel, _channel_fixtures) in grouped {
+        let channel_path = if channel.starts_with('/') {
+            channel
+        } else {
+            format!("/{}", channel)
+        };
+        let slug = sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"));
+        let factory_name = format!("create_app_websocket_{}", slug);
+        let handler_name = format!("websocket_handler_{}", slug);
+
+        code.push_str(&format!(
+            r#"
+
+
+def {factory_name}() -> Spikard:
+    """WebSocket channel for {channel_path}"""
+    app = Spikard()
+
+    @websocket("{channel_path}")
+    async def {handler_name}(message: dict) -> dict | None:
+        """WebSocket handler for {channel_path} - echoes messages with validation."""
+        message["validated"] = True
+        return message
+
+    return app
+"#,
+            factory_name = factory_name,
+            channel_path = channel_path,
+            handler_name = handler_name
+        ));
+
+        registry.push(("websocket".to_string(), channel_path.clone(), factory_name));
+    }
+
+    Ok(())
 }
 
 /// Generate handler and app factory for a single fixture (Python version)

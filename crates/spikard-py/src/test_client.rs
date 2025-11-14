@@ -3,15 +3,29 @@
 //! This module provides a test client powered by axum-test for testing Spikard applications
 //! without needing to start a real HTTP server.
 
+use crate::test_sse;
+use crate::test_websocket;
 use axum::Router as AxumRouter;
 use axum::http::{HeaderName, HeaderValue, Method};
 use axum_test::{TestResponse as AxumTestResponse, TestServer as AxumTestServer};
+use once_cell::sync::Lazy;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict, PyString};
 use serde_json::Value;
 use spikard_http::testing::{ResponseSnapshot, SnapshotError, snapshot_response};
 use std::sync::Arc;
+use tokio::runtime::{Builder, Runtime};
 use urlencoding::encode;
+
+// Global Tokio runtime for synchronous test client creation with HTTP transport
+// Must be multi-threaded to support HTTP transport background tasks
+pub(crate) static GLOBAL_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
+    Builder::new_multi_thread()
+        .worker_threads(2)
+        .enable_all()
+        .build()
+        .expect("Failed to create Tokio runtime")
+});
 
 /// A test client for making requests to a Spikard application
 ///
@@ -24,6 +38,8 @@ pub struct TestClient {
 impl TestClient {
     /// Create a new test client from an Axum router
     pub fn from_router(router: AxumRouter) -> PyResult<Self> {
+        // Use default transport (no HTTP) since WebSocket support in axum-test
+        // seems to have issues with HTTP transport
         let server = AxumTestServer::new(router)
             .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to create test server: {}", e)))?;
 
@@ -517,6 +533,52 @@ impl TestClient {
 
             let response = request.await;
             TestResponse::from_axum_response(response).await
+        };
+
+        pyo3_async_runtimes::tokio::future_into_py(py, fut)
+    }
+
+    /// Connect to a WebSocket endpoint
+    ///
+    /// Args:
+    ///     path: The WebSocket endpoint path (e.g., "/ws")
+    ///
+    /// Returns:
+    ///     WebSocketTestConnection: A WebSocket connection for testing
+    fn websocket<'py>(&self, py: Python<'py>, path: &str) -> PyResult<Bound<'py, PyAny>> {
+        let path = path.to_string();
+        let server = Arc::clone(&self.server);
+
+        // Run the WebSocket connection in the GLOBAL_RUNTIME, then convert to Python
+        let fut = GLOBAL_RUNTIME.spawn(async move { test_websocket::connect_websocket_for_test(&server, &path).await });
+
+        // Convert the JoinHandle into a Python awaitable
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            fut.await
+                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("WebSocket task failed: {}", e)))?
+        })
+    }
+
+    /// Connect to a Server-Sent Events endpoint
+    ///
+    /// Args:
+    ///     path: The SSE endpoint path (e.g., "/events")
+    ///
+    /// Returns:
+    ///     SseStream: An SSE stream for testing
+    fn sse<'py>(&self, py: Python<'py>, path: &str) -> PyResult<Bound<'py, PyAny>> {
+        let path = path.to_string();
+        let server = Arc::clone(&self.server);
+
+        let fut = async move {
+            // Make GET request to SSE endpoint
+            let axum_response = server.get(&path).await;
+            let snapshot = snapshot_response(axum_response).await.map_err(snapshot_err_to_py)?;
+
+            // Parse SSE stream from response
+            let sse_stream = test_sse::sse_stream_from_response(&snapshot)?;
+
+            Ok(sse_stream)
         };
 
         pyo3_async_runtimes::tokio::future_into_py(py, fut)

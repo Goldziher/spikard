@@ -51,7 +51,7 @@
 //! Use fixtures to drive TDD development of Spikard's Rust engine and ensure
 //! consistent behavior across all language bindings (Rust, Python, TypeScript, Ruby).
 
-use crate::asyncapi::{AsyncFixture, load_sse_fixtures};
+use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::chunk_bytes;
@@ -72,6 +72,7 @@ pub fn generate_rust_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     // Load fixtures from all subdirectories
     let categories = discover_fixture_categories(fixtures_dir)?;
     let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
+    let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
 
     // Pre-compute middleware metadata for all fixtures (needed for imports + generation)
     let mut middleware_lookup: HashMap<String, MiddlewareMetadata> = HashMap::new();
@@ -128,6 +129,7 @@ pub fn generate_rust_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
         has_rate_limit,
         has_static,
         &sse_fixtures,
+        &websocket_fixtures,
     )?;
     fs::write(src_dir.join("lib.rs"), lib_rs).context("Failed to write lib.rs")?;
     println!("  ✓ Generated src/lib.rs");
@@ -245,15 +247,17 @@ fn generate_lib_rs(
     has_rate_limit: bool,
     has_static_files: bool,
     sse_fixtures: &[AsyncFixture],
+    websocket_fixtures: &[AsyncFixture],
 ) -> Result<String> {
     let has_sse = !sse_fixtures.is_empty();
+    let has_websocket = !websocket_fixtures.is_empty();
     let mut handlers = Vec::new();
     let mut app_functions = Vec::new();
     let mut has_streaming = categories
         .values()
         .flat_map(|fixtures| fixtures.iter())
         .any(|fixture| fixture.streaming.is_some());
-    if has_sse {
+    if has_sse || has_websocket {
         has_streaming = true;
     }
     let has_background = categories
@@ -286,6 +290,12 @@ fn generate_lib_rs(
         let (sse_handlers, sse_apps) = generate_sse_handlers(sse_fixtures);
         handlers.extend(sse_handlers);
         app_functions.extend(sse_apps);
+    }
+
+    if has_websocket {
+        let (ws_handlers, ws_apps) = generate_websocket_handlers(websocket_fixtures);
+        handlers.extend(ws_handlers);
+        app_functions.extend(ws_apps);
     }
 
     let mut header = String::from("//! Generated route handlers - one handler per fixture for complete isolation\n\n");
@@ -329,6 +339,9 @@ fn generate_lib_rs(
         header.push_str("use tower_governor::governor::GovernorConfigBuilder;\n");
         header.push_str("use tower_governor::key_extractor::GlobalKeyExtractor;\n");
         header.push_str("use tower_governor::GovernorLayer;\n");
+    }
+    if has_websocket {
+        header.push_str("use axum::extract::ws::{WebSocket, WebSocketUpgrade, Message};\n");
     }
     header.push_str(
         r#"fn apply_expected_headers(mut response: Response, headers: &[(&str, &str)]) -> Response {
@@ -1658,6 +1671,79 @@ fn build_sse_handler(channel: &str, fixtures: &[&AsyncFixture]) -> (String, Stri
 
     let app_fn_code = format!(
         r#"/// App for SSE channel: {channel}
+pub fn {app_fn_name}() -> Router {{
+    Router::new()
+        .route("{path}", get({handler_name}))
+        .layer(middleware::from_fn(spikard_http::middleware::validate_content_type_middleware))
+}}"#,
+        channel = channel_path,
+        app_fn_name = app_fn_name,
+        path = channel_path,
+        handler_name = handler_name
+    );
+
+    (handler_code, app_fn_code)
+}
+
+fn generate_websocket_handlers(fixtures: &[AsyncFixture]) -> (Vec<String>, Vec<String>) {
+    use std::collections::BTreeMap;
+
+    let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
+    for fixture in fixtures {
+        if let Some(channel) = fixture.channel.as_deref() {
+            grouped.entry(channel.to_string()).or_default().push(fixture);
+        }
+    }
+
+    let mut handlers = Vec::new();
+    let mut app_functions = Vec::new();
+    for (channel, channel_fixtures) in grouped {
+        let (handler_code, app_fn_code) = build_websocket_handler(&channel, &channel_fixtures);
+        handlers.push(handler_code);
+        app_functions.push(app_fn_code);
+    }
+
+    (handlers, app_functions)
+}
+
+fn build_websocket_handler(channel: &str, _fixtures: &[&AsyncFixture]) -> (String, String) {
+    let channel_path = if channel.starts_with('/') {
+        channel.to_string()
+    } else {
+        format!("/{}", channel)
+    };
+    let channel_slug = sanitize_name(&channel_path.trim_start_matches('/').replace('/', "_"));
+    let handler_name = format!("websocket_{}_handler", channel_slug);
+    let app_fn_name = format!("create_app_websocket_{}", channel_slug);
+
+    let handler_code = format!(
+        r#"async fn {handler_name}(ws: WebSocketUpgrade) -> impl axum::response::IntoResponse {{
+    ws.on_upgrade(|socket| handle_websocket_{channel_slug}(socket))
+}}
+
+async fn handle_websocket_{channel_slug}(mut socket: WebSocket) {{
+    while let Some(Ok(msg)) = socket.recv().await {{
+        if let Message::Text(text) = msg {{
+            // Parse JSON, add validation flag, and send back
+            if let Ok(mut data) = serde_json::from_str::<Value>(&text) {{
+                if let Some(obj) = data.as_object_mut() {{
+                    obj.insert("validated".to_string(), Value::Bool(true));
+                }}
+                if let Ok(response_text) = serde_json::to_string(&data) {{
+                    if socket.send(Message::Text(response_text)).await.is_err() {{
+                        break;
+                    }}
+                }}
+            }}
+        }}
+    }}
+}}"#,
+        handler_name = handler_name,
+        channel_slug = channel_slug
+    );
+
+    let app_fn_code = format!(
+        r#"/// App for WebSocket channel: {channel}
 pub fn {app_fn_name}() -> Router {{
     Router::new()
         .route("{path}", get({handler_name}))

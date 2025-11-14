@@ -9,6 +9,8 @@ pub mod request;
 pub mod response;
 pub mod sse;
 mod test_client;
+mod test_sse;
+mod test_websocket;
 pub mod websocket;
 
 use pyo3::prelude::*;
@@ -215,8 +217,38 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
         })
         .collect();
 
-    let axum_router = Server::with_handlers_and_metadata(config, handler_routes, route_metadata)
+    let mut axum_router = Server::with_handlers_and_metadata(config, handler_routes, route_metadata)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to build router: {}", e)))?;
+
+    // Add WebSocket handlers
+    let websocket_handlers = app.call_method0("get_websocket_handlers")?;
+    let ws_dict = websocket_handlers.cast::<pyo3::types::PyDict>()?;
+    for (path, factory) in ws_dict.iter() {
+        let path_str: String = path.extract()?;
+        let ws_state = crate::websocket::create_websocket_state(&factory)?;
+        eprintln!("[spikard-test] Registered WebSocket endpoint: {}", path_str);
+
+        use axum::routing::get;
+        axum_router = axum_router.route(
+            &path_str,
+            get(spikard_http::websocket_handler::<crate::websocket::PythonWebSocketHandler>).with_state(ws_state),
+        );
+    }
+
+    // Add SSE endpoints
+    let sse_producers = app.call_method0("get_sse_producers")?;
+    let sse_dict = sse_producers.cast::<pyo3::types::PyDict>()?;
+    for (path, factory) in sse_dict.iter() {
+        let path_str: String = path.extract()?;
+        let sse_state = crate::sse::create_sse_state(&factory)?;
+        eprintln!("[spikard-test] Registered SSE endpoint: {}", path_str);
+
+        use axum::routing::get;
+        axum_router = axum_router.route(
+            &path_str,
+            get(spikard_http::sse_handler::<crate::sse::PythonSseEventProducer>).with_state(sse_state),
+        );
+    }
 
     let _ = std::fs::write("/tmp/axum_router_built.log", "Axum router built successfully\n");
 
@@ -635,6 +667,10 @@ fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<response::StreamingResponse>()?;
     m.add_class::<test_client::TestClient>()?;
     m.add_class::<test_client::TestResponse>()?;
+    m.add_class::<test_websocket::WebSocketTestConnection>()?;
+    m.add_class::<test_websocket::WebSocketMessage>()?;
+    m.add_class::<test_sse::SseStream>()?;
+    m.add_class::<test_sse::SseEvent>()?;
     m.add_function(wrap_pyfunction!(background::background_run, m)?)?;
     m.add_function(wrap_pyfunction!(create_test_client, m)?)?;
     m.add_function(wrap_pyfunction!(process, m)?)?;

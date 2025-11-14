@@ -71,21 +71,35 @@ impl WebSocketHandler for PythonWebSocketHandler {
         debug!("Python WebSocket handler: handle_message");
 
         let handler = Arc::clone(&self.handler);
+        let message = message.clone();
 
-        // Run in blocking task with asyncio.run() like SSE
+        // Use spawn_blocking to call Python code
         let result = tokio::task::spawn_blocking(move || {
-            Python::attach(|py| -> PyResult<Option<Value>> {
+            Python::with_gil(|py| -> PyResult<Option<Value>> {
                 // Convert JSON Value to Python dict
                 let py_message = Self::json_to_python(py, &message)?;
 
                 // Call the handler's handle_message method
-                let coroutine = handler.bind(py).call_method1("handle_message", (py_message,))?;
+                let result_or_coroutine = handler.bind(py).call_method1("handle_message", (py_message,))?;
                 debug!("Python WebSocket handler: called handle_message method");
 
-                // Run the coroutine using asyncio.run()
+                // Check if it's a coroutine or a plain value
                 let asyncio = py.import("asyncio")?;
-                let result = asyncio.call_method1("run", (coroutine,))?;
-                debug!("Python WebSocket handler: asyncio.run() completed");
+                let is_coroutine: bool = asyncio
+                    .call_method1("iscoroutine", (result_or_coroutine.as_any(),))?
+                    .extract()?;
+
+                let result = if is_coroutine {
+                    // It's async, run it with asyncio.run
+                    debug!("Python WebSocket handler: result is a coroutine, running with asyncio.run");
+                    asyncio.call_method1("run", (result_or_coroutine,))?
+                } else {
+                    // It's synchronous, use it directly
+                    debug!("Python WebSocket handler: result is synchronous");
+                    result_or_coroutine
+                };
+
+                debug!("Python WebSocket handler: handler completed");
 
                 // Check if result is None
                 if result.is_none() {
@@ -119,7 +133,7 @@ impl WebSocketHandler for PythonWebSocketHandler {
         let handler = Arc::clone(&self.handler);
 
         let _ = tokio::task::spawn_blocking(move || {
-            Python::attach(|py| -> PyResult<()> {
+            Python::with_gil(|py| -> PyResult<()> {
                 debug!("Python WebSocket handler: on_connect acquired GIL");
                 let coroutine = handler.bind(py).call_method0("on_connect")?;
                 let asyncio = py.import("asyncio")?;
@@ -137,7 +151,7 @@ impl WebSocketHandler for PythonWebSocketHandler {
         let handler = Arc::clone(&self.handler);
 
         let _ = tokio::task::spawn_blocking(move || {
-            Python::attach(|py| -> PyResult<()> {
+            Python::with_gil(|py| -> PyResult<()> {
                 let coroutine = handler.bind(py).call_method0("on_disconnect")?;
                 let asyncio = py.import("asyncio")?;
                 asyncio.call_method1("run", (coroutine,))?;
@@ -156,9 +170,48 @@ pub fn create_websocket_state(
     // Call the factory to get a handler instance
     let handler_instance = factory.call0()?;
 
+    // Extract schemas if available
+    let message_schema = handler_instance.getattr("_message_schema").ok().and_then(|attr| {
+        if attr.is_none() {
+            None
+        } else {
+            // Convert Python object to JSON Value
+            handler_instance.py().import("json").ok().and_then(|json_module| {
+                json_module
+                    .call_method1("dumps", (attr,))
+                    .ok()
+                    .and_then(|json_str: Bound<'_, PyAny>| {
+                        let json_string: String = json_str.extract().ok()?;
+                        serde_json::from_str(&json_string).ok()
+                    })
+            })
+        }
+    });
+
+    let response_schema = handler_instance.getattr("_response_schema").ok().and_then(|attr| {
+        if attr.is_none() {
+            None
+        } else {
+            handler_instance.py().import("json").ok().and_then(|json_module| {
+                json_module
+                    .call_method1("dumps", (attr,))
+                    .ok()
+                    .and_then(|json_str: Bound<'_, PyAny>| {
+                        let json_string: String = json_str.extract().ok()?;
+                        serde_json::from_str(&json_string).ok()
+                    })
+            })
+        }
+    });
+
     // Create Python WebSocket handler
     let py_handler = PythonWebSocketHandler::new(handler_instance.unbind());
 
-    // Create and return WebSocket state
-    Ok(spikard_http::WebSocketState::new(py_handler))
+    // Create and return WebSocket state with schemas
+    if message_schema.is_some() || response_schema.is_some() {
+        spikard_http::WebSocketState::with_schemas(py_handler, message_schema, response_schema)
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e))
+    } else {
+        Ok(spikard_http::WebSocketState::new(py_handler))
+    }
 }

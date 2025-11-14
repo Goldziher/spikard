@@ -2,7 +2,7 @@
 //!
 //! Generates pytest test suites from fixtures for e2e testing.
 
-use crate::asyncapi::{AsyncFixture, load_sse_fixtures};
+use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::background_data;
 use crate::middleware::parse_middleware;
 use crate::streaming::streaming_data;
@@ -44,6 +44,7 @@ pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<(
         }
     }
     let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
+    let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
 
     // Generate test file for each category
     for (category, fixtures) in fixtures_by_category.iter() {
@@ -58,6 +59,13 @@ pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<(
         fs::write(tests_dir.join("test_asyncapi_sse.py"), sse_content)
             .context("Failed to write test_asyncapi_sse.py")?;
         println!("  ✓ Generated tests/test_asyncapi_sse.py");
+    }
+
+    if !websocket_fixtures.is_empty() {
+        let websocket_content = generate_websocket_test_module(&websocket_fixtures)?;
+        fs::write(tests_dir.join("test_asyncapi_websocket.py"), websocket_content)
+            .context("Failed to write test_asyncapi_websocket.py")?;
+        println!("  ✓ Generated tests/test_asyncapi_websocket.py");
     }
 
     Ok(())
@@ -797,4 +805,84 @@ fn sanitize_identifier(s: &str) -> String {
 
 fn escape_python_string(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
+fn generate_websocket_test_module(fixtures: &[AsyncFixture]) -> Result<String> {
+    use std::collections::BTreeMap;
+
+    let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
+    for fixture in fixtures {
+        if let Some(channel) = fixture.channel.as_deref() {
+            grouped.entry(channel.to_string()).or_default().push(fixture);
+        }
+    }
+
+    if grouped.is_empty() {
+        return Ok(String::new());
+    }
+
+    let mut test_cases = Vec::new();
+    for (channel, channel_fixtures) in grouped {
+        let channel_path = if channel.starts_with('/') {
+            channel
+        } else {
+            format!("/{}", channel)
+        };
+        let slug = sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"));
+        let factory_name = format!("create_app_websocket_{}", slug);
+
+        // Collect test messages from all fixtures for this channel
+        let mut test_messages = Vec::new();
+        for fixture in &channel_fixtures {
+            for example in &fixture.examples {
+                let json_str = serde_json::to_string(example).context("Failed to serialize WebSocket example")?;
+                test_messages.push((fixture.name.clone(), json_str));
+            }
+        }
+
+        test_cases.push((channel_path, slug, factory_name, test_messages));
+    }
+
+    let mut imports = String::new();
+    imports.push_str("from app.main import (\n");
+    for (_, _, factory_name, _) in &test_cases {
+        imports.push_str(&format!("    {},\n", factory_name));
+    }
+    imports.push_str(")\n\n");
+
+    let mut tests = String::new();
+    for (channel_path, slug, factory_name, test_messages) in test_cases {
+        tests.push_str(&format!("async def test_websocket_{slug}() -> None:\n"));
+        tests.push_str(&format!("    \"\"\"WebSocket channel test for {channel_path}.\"\"\"\n"));
+        tests.push_str(&format!("    app = {factory_name}()\n    client = TestClient(app)\n"));
+        tests.push_str(&format!("    ws = await client.websocket(\"{channel_path}\")\n"));
+        tests.push_str("    \n");
+
+        for (fixture_name, message_json) in test_messages {
+            let escaped_json = escape_python_string(&message_json);
+            tests.push_str(&format!("    # Send {fixture_name} message\n"));
+            tests.push_str(&format!("    sent_message = json.loads(\"{}\")\n", escaped_json));
+            tests.push_str("    await ws.send_json(sent_message)\n");
+            tests.push_str("    \n");
+            tests.push_str("    # Receive echo response\n");
+            tests.push_str("    response = await ws.receive_json()\n");
+            tests.push_str("    assert response.get(\"validated\") is True\n");
+            tests.push_str("    \n");
+            tests.push_str("    # Verify echoed fields match sent message\n");
+            tests.push_str("    for key, value in sent_message.items():\n");
+            tests.push_str("        assert response.get(key) == value\n");
+            tests.push_str("    \n");
+        }
+
+        tests.push_str("    await ws.close()\n");
+        tests.push_str("\n");
+    }
+
+    let module = format!(
+        "\"\"\"AsyncAPI WebSocket tests.\"\"\"\n\nimport json\n\nfrom spikard.testing import TestClient\n{imports}{tests}",
+        imports = imports,
+        tests = tests
+    );
+
+    Ok(module)
 }

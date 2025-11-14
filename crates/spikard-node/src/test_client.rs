@@ -19,6 +19,8 @@ use napi_derive::napi;
 use serde_json::{Map as JsonMap, Value, json};
 // TODO: Update to use current handler trait API
 // use spikard_http::handler::{ForeignHandler, HandlerFuture, HandlerResult, RequestData};
+use crate::test_sse;
+use crate::test_websocket;
 use spikard_http::problem::ProblemDetails;
 use spikard_http::testing::{SnapshotError, snapshot_response};
 use spikard_http::{HandlerResult, RequestData, ResponseBodySize, Server};
@@ -434,6 +436,23 @@ impl TestClient {
     #[napi]
     pub async fn trace(&self, path: String, headers: Option<Value>) -> Result<TestResponse> {
         self.request("TRACE", path, headers, None).await
+    }
+
+    /// Connect to a WebSocket endpoint
+    #[napi]
+    pub async fn websocket(&self, path: String) -> Result<test_websocket::WebSocketTestConnection> {
+        test_websocket::connect_websocket_for_test(&self.server, &path).await
+    }
+
+    /// Connect to a Server-Sent Events endpoint
+    #[napi]
+    pub async fn sse(&self, path: String) -> Result<test_sse::SseStream> {
+        // Make GET request to SSE endpoint
+        let axum_response = self.server.get(&path).await;
+        let snapshot = snapshot_response(axum_response).await.map_err(map_snapshot_error)?;
+
+        // Parse SSE stream from response
+        test_sse::sse_stream_from_response(&snapshot)
     }
 
     async fn request(

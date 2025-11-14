@@ -130,6 +130,24 @@ impl SseEventProducer for NodeSseEventProducer {
     }
 }
 
+/// Convert Node.js object to JSON Value
+fn node_object_to_json(obj: &Object) -> Result<serde_json::Value> {
+    let json_str: String = obj
+        .get_named_property("toJSON")
+        .and_then(|func: Function<(), String>| func.call(()))
+        .or_else(|_| {
+            // Fallback: use JSON.stringify
+            let env_ptr = obj.env();
+            let env = napi::Env::from_raw(env_ptr);
+            let global = env.get_global()?;
+            let json: Object = global.get_named_property("JSON")?;
+            let stringify: Function<Object, String> = json.get_named_property("stringify")?;
+            stringify.call(obj.clone())
+        })?;
+
+    serde_json::from_str(&json_str).map_err(|e| napi::Error::from_reason(format!("Failed to parse JSON: {}", e)))
+}
+
 /// Create SseState from Node.js producer factory
 ///
 /// This function is designed to be called from JavaScript to register SSE producers.
@@ -163,6 +181,12 @@ pub fn create_sse_state(producer_instance: &Object) -> Result<spikard_http::SseS
                 .ok()
         });
 
+    // Extract event schema if available
+    let event_schema = producer_instance
+        .get_named_property::<Object>("_eventSchema")
+        .ok()
+        .and_then(|obj| node_object_to_json(&obj).ok());
+
     // Create Node SSE producer
     let node_producer = NodeSseEventProducer::new(
         "SseEventProducer".to_string(),
@@ -171,6 +195,10 @@ pub fn create_sse_state(producer_instance: &Object) -> Result<spikard_http::SseS
         on_disconnect_tsfn,
     );
 
-    // Create and return SSE state
-    Ok(spikard_http::SseState::new(node_producer))
+    // Create and return SSE state with schema
+    if event_schema.is_some() {
+        spikard_http::SseState::with_schema(node_producer, event_schema).map_err(|e| napi::Error::from_reason(e))
+    } else {
+        Ok(spikard_http::SseState::new(node_producer))
+    }
 }

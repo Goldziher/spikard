@@ -21,8 +21,8 @@ describe("static_files", () => {
 		const responseText = response.text();
 		expect(responseText).toBe("Hello from static storage");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["content-type"]).toBe("text/plain");
 		expect(responseHeaders["cache-control"]).toBe("public, max-age=60");
+		expect(responseHeaders["content-type"]).toBe("text/plain");
 	});
 
 	test("Static server returns index html for directory", async () => {

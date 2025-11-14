@@ -1369,13 +1369,10 @@ mod http_methods {
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
-        if let Some(actual) = headers.get("access-control-allow-headers") {
-            assert_eq!(
-                actual, "Content-Type",
-                "Mismatched header 'Access-Control-Allow-Headers'"
-            );
+        if let Some(actual) = headers.get("access-control-max-age") {
+            assert_eq!(actual, "86400", "Mismatched header 'Access-Control-Max-Age'");
         } else {
-            panic!("Expected header 'Access-Control-Allow-Headers' to be present");
+            panic!("Expected header 'Access-Control-Max-Age' to be present");
         }
         if let Some(actual) = headers.get("access-control-allow-methods") {
             assert_eq!(
@@ -1385,6 +1382,14 @@ mod http_methods {
         } else {
             panic!("Expected header 'Access-Control-Allow-Methods' to be present");
         }
+        if let Some(actual) = headers.get("access-control-allow-headers") {
+            assert_eq!(
+                actual, "Content-Type",
+                "Mismatched header 'Access-Control-Allow-Headers'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Headers' to be present");
+        }
         if let Some(actual) = headers.get("access-control-allow-origin") {
             assert_eq!(
                 actual, "https://example.com",
@@ -1392,11 +1397,6 @@ mod http_methods {
             );
         } else {
             panic!("Expected header 'Access-Control-Allow-Origin' to be present");
-        }
-        if let Some(actual) = headers.get("access-control-max-age") {
-            assert_eq!(actual, "86400", "Mismatched header 'Access-Control-Max-Age'");
-        } else {
-            panic!("Expected header 'Access-Control-Max-Age' to be present");
         }
     }
 

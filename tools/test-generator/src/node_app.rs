@@ -2,7 +2,7 @@
 //!
 //! Generates a Spikard Node.js/TypeScript application from fixtures for e2e testing.
 
-use crate::asyncapi::{AsyncFixture, load_sse_fixtures};
+use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::{StreamingFixtureData, streaming_data};
@@ -43,9 +43,11 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     }
 
     let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
+    let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
 
     // Generate main app file with per-fixture app factories
-    let app_content = generate_app_file_per_fixture(&fixtures_by_category, &app_dir, &sse_fixtures)?;
+    let app_content =
+        generate_app_file_per_fixture(&fixtures_by_category, &app_dir, &sse_fixtures, &websocket_fixtures)?;
     fs::write(app_dir.join("main.ts"), app_content).context("Failed to write main.ts")?;
 
     // Generate package.json for the e2e app
@@ -146,6 +148,7 @@ fn generate_app_file_per_fixture(
     fixtures_by_category: &HashMap<String, Vec<Fixture>>,
     app_dir: &Path,
     sse_fixtures: &[AsyncFixture],
+    websocket_fixtures: &[AsyncFixture],
 ) -> Result<String> {
     let mut needs_background = false;
     let mut needs_static_assets = false;
@@ -249,6 +252,12 @@ fn generate_app_file_per_fixture(
     }
 
     append_sse_factories(&mut code, sse_fixtures, &mut all_app_factories, &mut handler_names)?;
+    append_websocket_factories(
+        &mut code,
+        websocket_fixtures,
+        &mut all_app_factories,
+        &mut handler_names,
+    )?;
 
     // Add a comment listing all app factories
     code.push_str("// App factory functions:\n");
@@ -819,6 +828,91 @@ fn build_sse_events_literal(fixtures: &[&AsyncFixture]) -> Result<String> {
         entries.push("\"{}\"".to_string());
     }
     Ok(format!("[{}]", entries.join(", ")))
+}
+
+fn append_websocket_factories(
+    code: &mut String,
+    fixtures: &[AsyncFixture],
+    registry: &mut Vec<(String, String, String)>,
+    handler_names: &mut HashMap<String, usize>,
+) -> Result<()> {
+    use std::collections::BTreeMap;
+
+    if fixtures.is_empty() {
+        return Ok(());
+    }
+
+    let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
+    for fixture in fixtures {
+        if let Some(channel) = fixture.channel.as_deref() {
+            grouped.entry(channel.to_string()).or_default().push(fixture);
+        }
+    }
+
+    for (channel, _channel_fixtures) in grouped {
+        let channel_path = if channel.starts_with('/') {
+            channel
+        } else {
+            format!("/{}", channel)
+        };
+        let slug = sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"));
+        let unique = make_unique_name(&format!("websocket_{}", slug), handler_names);
+        let handler_fn = format!("websocketHandler{}", to_pascal_case(&unique));
+        let factory_slug = format!("websocket_{}", unique);
+        let factory_fn = format!("createApp{}", to_pascal_case(&factory_slug));
+
+        let handler_code = format!(
+            "async function {handler_fn}(ws: any): Promise<void> {{
+\tawait ws.accept();
+\ttry {{
+\t\twhile (true) {{
+\t\t\tconst msg = await ws.receiveJson();
+\t\t\t// Echo back with validation indicator
+\t\t\tmsg.validated = true;
+\t\t\tawait ws.sendJson(msg);
+\t\t}}
+\t}} catch (error) {{
+\t\t// Connection closed or error
+\t}}
+}}",
+            handler_fn = handler_fn
+        );
+
+        let factory_code = format!(
+            "export function {factory_fn}(): SpikardApp {{
+\tconst route: RouteMetadata = {{
+\t\tmethod: \"GET\",
+\t\tpath: \"{path}\",
+\t\thandler_name: \"{handler_fn}\",
+\t\trequest_schema: undefined,
+\t\tresponse_schema: undefined,
+\t\tparameter_schema: undefined,
+\t\tfile_params: undefined,
+\t\tis_async: true,
+\t}};
+
+\treturn {{
+\t\troutes: [route],
+\t\thandlers: {{
+\t\t\t{handler_fn},
+\t\t}},
+\t}};
+}}",
+            factory_fn = factory_fn,
+            path = channel_path,
+            handler_fn = handler_fn
+        );
+
+        code.push_str("\n\n");
+        code.push_str(&handler_code);
+        code.push_str("\n\n");
+        code.push_str(&factory_code);
+        code.push('\n');
+
+        registry.push(("asyncapi_websocket".to_string(), channel_path.clone(), factory_fn));
+    }
+
+    Ok(())
 }
 
 fn metadata_requires_server_config(metadata: &MiddlewareMetadata) -> bool {

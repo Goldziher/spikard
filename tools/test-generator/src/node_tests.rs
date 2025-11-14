@@ -2,7 +2,7 @@
 //!
 //! Generates vitest test suites from fixtures for e2e testing.
 
-use crate::asyncapi::{AsyncFixture, load_sse_fixtures};
+use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::background_data;
 use crate::middleware::parse_middleware;
 use crate::streaming::streaming_data;
@@ -60,6 +60,14 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
         fs::write(tests_dir.join("asyncapi_sse.test.ts"), sse_content)
             .context("Failed to write asyncapi_sse.test.ts")?;
         println!("  ✓ Generated tests/asyncapi_sse.test.ts");
+    }
+
+    let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
+    if !websocket_fixtures.is_empty() {
+        let websocket_content = generate_websocket_test_file(&websocket_fixtures)?;
+        fs::write(tests_dir.join("asyncapi_websocket.test.ts"), websocket_content)
+            .context("Failed to write asyncapi_websocket.test.ts")?;
+        println!("  ✓ Generated tests/asyncapi_websocket.test.ts");
     }
 
     format_generated_ts(output_dir)?;
@@ -152,6 +160,117 @@ fn generate_sse_test_file(fixtures: &[AsyncFixture]) -> Result<String> {
             factory_name = factory_name,
             path = channel_path,
             expected_literal = expected_literal
+        ));
+    }
+
+    import_list.sort();
+    import_list.dedup();
+
+    let mut import_block = String::new();
+    if import_list.len() <= 4 && import_list.join(", ").len() <= 120 {
+        import_block.push_str(&format!(
+            "import {{ {} }} from \"../app/main.js\";\n\n",
+            import_list.join(", ")
+        ));
+    } else {
+        import_block.push_str("import {\n");
+        for name in &import_list {
+            import_block.push_str(&format!("\t{},\n", name));
+        }
+        import_block.push_str("} from \"../app/main.js\";\n\n");
+    }
+
+    let mut file_content = String::new();
+    file_content.push_str(import_block.as_str());
+    file_content.push_str(tests.as_str());
+
+    Ok(file_content)
+}
+
+fn generate_websocket_test_file(fixtures: &[AsyncFixture]) -> Result<String> {
+    use std::collections::BTreeMap;
+
+    let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
+    for fixture in fixtures {
+        if let Some(channel) = fixture.channel.as_deref() {
+            grouped.entry(channel.to_string()).or_default().push(fixture);
+        }
+    }
+
+    if grouped.is_empty() {
+        return Ok(String::new());
+    }
+
+    let mut tests = String::new();
+
+    tests.push_str("/**\n * AsyncAPI WebSocket tests\n * @generated\n */\n\n");
+    tests.push_str("import { TestClient } from \"@spikard/node\";\n");
+    tests.push_str("import { describe, expect, test } from \"vitest\";\n");
+
+    let mut import_list = Vec::new();
+    for (channel, channel_fixtures) in &grouped {
+        let channel_path = if channel.starts_with('/') {
+            channel.clone()
+        } else {
+            format!("/{}", channel)
+        };
+        let slug = sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"));
+        let factory_name = format!("createApp{}", to_pascal_case(&format!("websocket_{}", slug)));
+        import_list.push(factory_name.clone());
+        let test_name = format!("WebSocket {}", channel_path);
+
+        // Build test messages
+        let mut test_messages = Vec::new();
+        for fixture in channel_fixtures {
+            for example in &fixture.examples {
+                let json_str = serde_json::to_string(example)?;
+                test_messages.push((fixture.name.clone(), json_str));
+            }
+        }
+
+        let mut test_body = String::new();
+        for (fixture_name, message_json) in test_messages {
+            let escaped_json = escape_ts_string(&message_json);
+            test_body.push_str(&format!("\t\t// Send {} message\n", fixture_name));
+            test_body.push_str(&format!(
+                "\t\tconst sent_message_{} = JSON.parse(\"{}\");\n",
+                sanitize_identifier(&fixture_name),
+                escaped_json
+            ));
+            test_body.push_str(&format!(
+                "\t\tawait ws.sendJson(sent_message_{});\n",
+                sanitize_identifier(&fixture_name)
+            ));
+            test_body.push_str("\t\t\n");
+            test_body.push_str("\t\t// Receive echo response\n");
+            test_body.push_str(&format!(
+                "\t\tconst response_{} = await ws.receiveJson();\n",
+                sanitize_identifier(&fixture_name)
+            ));
+            test_body.push_str(&format!(
+                "\t\texpect(response_{}.validated).toBe(true);\n",
+                sanitize_identifier(&fixture_name)
+            ));
+            test_body.push_str("\t\t\n");
+            test_body.push_str("\t\t// Verify echoed fields match sent message\n");
+            test_body.push_str(&format!(
+                "\t\tfor (const [key, value] of Object.entries(sent_message_{})) {{\n",
+                sanitize_identifier(&fixture_name)
+            ));
+            test_body.push_str(&format!(
+                "\t\t\texpect(response_{}[key]).toEqual(value);\n",
+                sanitize_identifier(&fixture_name)
+            ));
+            test_body.push_str("\t\t}\n");
+            test_body.push_str("\t\t\n");
+        }
+
+        tests.push_str(&format!(
+            "describe(\"asyncapi_websocket\", () => {{\n\ttest(\"{test_name}\", async () => {{\n\t\tconst app = {factory_name}();\n\t\tconst client = new TestClient(app);\n\t\tconst ws = await client.websocketConnect(\"{path}\");\n\t\t\n{test_body}\t\tawait ws.close();\n\t}});\n}});\n\n",
+            test_name = test_name,
+            factory_name = factory_name,
+            path = channel_path,
+            test_body = test_body
         ));
     }
 
