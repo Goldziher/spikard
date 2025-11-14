@@ -32,9 +32,10 @@ async def test_multiple_values_for_same_field_name() -> None:
 
     async with TestClient(create_app_multipart_multiple_values_for_same_field_name()) as client:
         data = {"tags": ["python", "rust", "web"]}
-        files = {
-            "files": [("file1.txt", b"first file", "text/plain"), ("file2.txt", b"second file", "text/plain")],
-        }
+        files = [
+            ("files", ("file1.txt", b"first file", "text/plain")),
+            ("files", ("file2.txt", b"second file", "text/plain")),
+        ]
         response = await client.post("/", data=data, files=files)
 
         assert response.status_code == 200
@@ -153,12 +154,10 @@ async def test_file_list_upload_array_of_files() -> None:
     """Tests uploading multiple files as a list parameter."""
 
     async with TestClient(create_app_multipart_file_list_upload_array_of_files()) as client:
-        files = {
-            "files": [
-                ("file1.txt", b"content of file 1", "text/plain"),
-                ("file2.txt", b"content of file 2", "text/plain"),
-            ],
-        }
+        files = [
+            ("files", ("file1.txt", b"content of file 1", "text/plain")),
+            ("files", ("file2.txt", b"content of file 2", "text/plain")),
+        ]
         response = await client.post("/files/list", files=files)
 
         assert response.status_code == 200
@@ -358,8 +357,8 @@ async def test_multiple_file_uploads() -> None:
 
     async with TestClient(create_app_multipart_multiple_file_uploads()) as client:
         files = {
-            "test1": ("test1.txt", b"<file1 content>", "text/plain"),
             "test2": ("test2.txt", b"<file2 content>", "text/plain"),
+            "test1": ("test1.txt", b"<file1 content>", "text/plain"),
         }
         response = await client.post("/", files=files)
 
