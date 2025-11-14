@@ -29,8 +29,8 @@ async def test_onresponse_security_headers() -> None:
         assert response_data["message"] == "Response with security headers"
         response_headers = response.headers
         assert response_headers.get("x-xss-protection") == "1; mode=block"
-        assert response_headers.get("x-frame-options") == "DENY"
         assert response_headers.get("x-content-type-options") == "nosniff"
+        assert response_headers.get("x-frame-options") == "DENY"
         assert response_headers.get("strict-transport-security") == "max-age=31536000; includeSubDomains"
 
 
@@ -151,8 +151,8 @@ async def test_multiple_hooks_all_phases() -> None:
         response_headers = response.headers
         assert response_headers.get("x-request-id") == ".*"
         assert response_headers.get("x-response-time") == ".*ms"
-        assert response_headers.get("x-frame-options") == "DENY"
         assert response_headers.get("x-content-type-options") == "nosniff"
+        assert response_headers.get("x-frame-options") == "DENY"
 
 
 async def test_hook_execution_order() -> None:

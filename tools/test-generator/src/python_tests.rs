@@ -345,8 +345,8 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
 
     // Add form data (for URL-encoded forms)
     if let Some(ref form_data) = fixture.request.form_data {
-        code.push_str(&format!("        json_data = {}\n", hashmap_to_python(form_data)));
-        request_kwargs.push("json=json_data");
+        code.push_str(&format!("        form_data = {}\n", hashmap_to_python(form_data)));
+        request_kwargs.push("data=form_data");
     }
 
     // Add form data (for multipart form data without files)
@@ -449,7 +449,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     if let Some(stream_info) = streaming_info {
         let expected_literal = python_bytes_literal(&stream_info.expected_bytes);
         code.push_str(&format!("        expected_bytes = {}\n", expected_literal));
-        code.push_str("        assert response.bytes() == expected_bytes\n");
+        code.push_str("        assert response.content == expected_bytes\n");
         if stream_info.is_text_only {
             code.push_str("        assert response.text == expected_bytes.decode()\n");
         }
