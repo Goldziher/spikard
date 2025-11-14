@@ -34,8 +34,8 @@ async def test_simple_form_submission_success() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = {"password": "secret", "username": "johndoe"}
-        response = await client.post("/login/", headers=headers, json=json_data)
+        form_data = {"password": "secret", "username": "johndoe"}
+        response = await client.post("/login/", headers=headers, data=form_data)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -68,8 +68,8 @@ async def test_pattern_validation_fail() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = {"username": "john doe"}
-        response = await client.post("/form/validated", headers=headers, json=json_data)
+        form_data = {"username": "john doe"}
+        response = await client.post("/form/validated", headers=headers, data=form_data)
 
         assert response.status_code == 422
         response_data = response.json()
@@ -132,8 +132,8 @@ async def test_multiple_values_for_same_field() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = {"tags": ["python", "fastapi", "web"]}
-        response = await client.post("/form/tags", headers=headers, json=json_data)
+        form_data = {"tags": ["python", "fastapi", "web"]}
+        response = await client.post("/form/tags", headers=headers, data=form_data)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -151,8 +151,8 @@ async def test_required_field_missing_validation_error() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = {"password": "secret"}
-        response = await client.post("/login/", headers=headers, json=json_data)
+        form_data = {"password": "secret"}
+        response = await client.post("/login/", headers=headers, data=form_data)
 
         assert response.status_code == 422
         response_data = response.json()
@@ -186,8 +186,8 @@ async def test_numeric_field_type_conversion() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = {"age": "30", "username": "johndoe"}
-        response = await client.post("/form/", headers=headers, json=json_data)
+        form_data = {"age": "30", "username": "johndoe"}
+        response = await client.post("/form/", headers=headers, data=form_data)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -204,8 +204,8 @@ async def test_special_characters_encoding() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = {"description": "Test & Development", "name": "John Doe"}
-        response = await client.post("/form/", headers=headers, json=json_data)
+        form_data = {"description": "Test & Development", "name": "John Doe"}
+        response = await client.post("/form/", headers=headers, data=form_data)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -222,8 +222,8 @@ async def test_boolean_field_conversion() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = {"subscribe": "true", "username": "johndoe"}
-        response = await client.post("/form/", headers=headers, json=json_data)
+        form_data = {"subscribe": "true", "username": "johndoe"}
+        response = await client.post("/form/", headers=headers, data=form_data)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -240,8 +240,8 @@ async def test_empty_string_value() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = {"description": "", "username": "johndoe"}
-        response = await client.post("/form/", headers=headers, json=json_data)
+        form_data = {"description": "", "username": "johndoe"}
+        response = await client.post("/form/", headers=headers, data=form_data)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -258,8 +258,8 @@ async def test_oauth2_password_grant_flow() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = {"grant_type": "password", "password": "secret", "scope": "", "username": "johndoe"}
-        response = await client.post("/token", headers=headers, json=json_data)
+        form_data = {"grant_type": "password", "password": "secret", "scope": "", "username": "johndoe"}
+        response = await client.post("/token", headers=headers, data=form_data)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -292,8 +292,8 @@ async def test_optional_field_missing_success() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = {"password": "secret", "username": "johndoe"}
-        response = await client.post("/register/", headers=headers, json=json_data)
+        form_data = {"password": "secret", "username": "johndoe"}
+        response = await client.post("/register/", headers=headers, data=form_data)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -331,8 +331,8 @@ async def test_string_max_length_validation_fail() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = {"username": "this_is_a_very_long_username_that_exceeds_limit"}
-        response = await client.post("/form/validated", headers=headers, json=json_data)
+        form_data = {"username": "this_is_a_very_long_username_that_exceeds_limit"}
+        response = await client.post("/form/validated", headers=headers, data=form_data)
 
         assert response.status_code == 422
         response_data = response.json()
@@ -395,8 +395,8 @@ async def test_string_min_length_validation_fail() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = {"username": "ab"}
-        response = await client.post("/form/validated", headers=headers, json=json_data)
+        form_data = {"username": "ab"}
+        response = await client.post("/form/validated", headers=headers, data=form_data)
 
         assert response.status_code == 422
         response_data = response.json()
