@@ -1,12 +1,12 @@
 """Testing utilities for Spikard applications.
 
-This module provides test clients for making requests to Spikard applications.
-The AsyncTestClient starts a real server in a subprocess for reliable WebSocket
-and SSE testing, while the TestClient uses Rust's axum-test for fast in-memory
-HTTP testing.
+This module provides a test client for making requests to Spikard applications.
+The TestClient starts a real server in a subprocess for reliable WebSocket
+and SSE testing.
 """
 
 import asyncio
+import base64
 import os
 import signal
 import socket
@@ -19,15 +19,8 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-import cloudpickle
+import cloudpickle  # type: ignore[import-untyped]
 import httpx
-from _spikard import SseEvent as _SseEvent
-from _spikard import SseStream as _SseStream
-from _spikard import TestClient as _TestClient
-from _spikard import TestResponse as _TestResponse
-from _spikard import WebSocketMessage as _WebSocketMessage
-from _spikard import WebSocketTestConnection as _WebSocketTestConnection
-from _spikard import create_test_client as _create_test_client
 from httpx_sse import ServerSentEvent, aconnect_sse
 from websockets.asyncio.client import ClientConnection
 from websockets.asyncio.client import connect as ws_connect
@@ -36,83 +29,16 @@ if TYPE_CHECKING:
     from spikard.app import Spikard
 
 __all__ = [
-    "AsyncTestClient",
-    "SseEvent",
-    "SseStream",
     "TestClient",
-    "TestResponse",
-    "WebSocketMessage",
-    "WebSocketTestConnection",
 ]
-
-
-class TestResponse:
-    """Response from a test request.
-
-    This wraps the Rust TestResponse and provides a Python-friendly interface.
-    """
-
-    __test__ = False  # Tell pytest not to treat this helper as a test class.
-
-    def __init__(self, rust_response: _TestResponse) -> None:
-        self._response = rust_response
-
-    @property
-    def status_code(self) -> int:
-        """Get the HTTP status code."""
-        return int(self._response.status_code)
-
-    @property
-    def headers(self) -> dict[str, str]:
-        """Get response headers as a dictionary."""
-        return dict(self._response.headers)
-
-    def bytes(self) -> bytes:
-        """Get the response body as bytes."""
-        return bytes(self._response.bytes())
-
-    def text(self) -> str:
-        """Get the response body as text."""
-        return str(self._response.text())
-
-    def json(self) -> Any:
-        """Parse the response body as JSON."""
-        return self._response.json()
-
-    def assert_status(self, expected: int) -> None:
-        """Assert that the status code matches the expected value."""
-        self._response.assert_status(expected)
-
-    def assert_status_ok(self) -> None:
-        """Assert that the status code is 200 OK."""
-        self._response.assert_status_ok()
-
-    def assert_status_created(self) -> None:
-        """Assert that the status code is 201 Created."""
-        self._response.assert_status_created()
-
-    def assert_status_bad_request(self) -> None:
-        """Assert that the status code is 400 Bad Request."""
-        self._response.assert_status_bad_request()
-
-    def assert_status_not_found(self) -> None:
-        """Assert that the status code is 404 Not Found."""
-        self._response.assert_status_not_found()
-
-    def assert_status_server_error(self) -> None:
-        """Assert that the status code is 500 Internal Server Error."""
-        self._response.assert_status_server_error()
-
-    def __repr__(self) -> str:
-        """Return a concise representation for debugging."""
-        return f"<TestResponse status={self.status_code}>"
 
 
 class TestClient:
     """Test client for making requests to a Spikard application.
 
-    This client allows you to test your Spikard application without starting
-    a real HTTP server. All requests are handled in-memory using Rust's axum-test.
+    This client provides reliable testing for HTTP, WebSocket, and SSE endpoints by
+    starting an actual server process. All operations are fully async using
+    httpx, websockets, and httpx-sse libraries.
 
     Example:
         >>> from spikard import Spikard, get
@@ -125,384 +51,7 @@ class TestClient:
         >>>     return {"message": "Hello, World!"}
         >>>
         >>> async def test_hello():
-        >>>     client = TestClient(app)
-        >>>     response = await client.get("/hello")
-        >>>     assert response.status_code == 200
-        >>>     assert response.json() == {"message": "Hello, World!"}
-    """
-
-    __test__ = False  # Prevent pytest from issuing collection warnings.
-
-    def __init__(self, app: "Spikard") -> None:
-        """Create a new test client for the given Spikard application.
-
-        Args:
-            app: A Spikard application instance
-        """
-        self._client: _TestClient = _create_test_client(app)
-
-    async def get(
-        self,
-        path: str,
-        query_params: dict[str, Any] | None = None,
-        headers: dict[str, str] | None = None,
-        cookies: dict[str, str] | None = None,
-    ) -> TestResponse:
-        """Make a GET request.
-
-        Args:
-            path: The path to request (e.g., "/users/123")
-            query_params: Optional query parameters
-            headers: Optional request headers
-            cookies: Optional cookies as a dict
-
-        Returns:
-            TestResponse: The response from the server
-        """
-        rust_response = await self._client.get(path, query_params, headers, cookies)
-        return TestResponse(rust_response)
-
-    async def post(
-        self,
-        path: str,
-        json: Any | None = None,
-        data: dict[str, Any] | str | None = None,
-        files: dict[str, Any] | None = None,
-        query_params: dict[str, Any] | None = None,
-        headers: dict[str, str] | None = None,
-        cookies: dict[str, str] | None = None,
-    ) -> TestResponse:
-        """Make a POST request.
-
-        Args:
-            path: The path to request
-            json: Optional JSON body
-            data: Optional form data - can be dict for multipart/form-data (text fields)
-                  or string for application/x-www-form-urlencoded
-            files: Optional files for multipart/form-data upload
-                   Format: {"field": ("filename", bytes)}
-                   or {"field": [("file1", bytes), ("file2", bytes)]}
-            query_params: Optional query parameters
-            headers: Optional request headers
-            cookies: Optional cookies as a dict
-
-        Returns:
-            TestResponse: The response from the server
-        """
-        # Convert cookies to Cookie header if provided
-        if cookies:
-            if headers is None:
-                headers = {}
-            cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
-            headers["cookie"] = cookie_header
-        rust_response = await self._client.post(path, json, data, files, query_params, headers)
-        return TestResponse(rust_response)
-
-    async def put(
-        self,
-        path: str,
-        json: Any | None = None,
-        query_params: dict[str, Any] | None = None,
-        headers: dict[str, str] | None = None,
-        cookies: dict[str, str] | None = None,
-    ) -> TestResponse:
-        """Make a PUT request.
-
-        Args:
-            path: The path to request
-            json: Optional JSON body
-            query_params: Optional query parameters
-            headers: Optional request headers
-            cookies: Optional cookies as a dict
-
-        Returns:
-            TestResponse: The response from the server
-        """
-        # Convert cookies to Cookie header if provided
-        if cookies:
-            if headers is None:
-                headers = {}
-            cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
-            headers["cookie"] = cookie_header
-        rust_response = await self._client.put(path, json, query_params, headers)
-        return TestResponse(rust_response)
-
-    async def patch(
-        self,
-        path: str,
-        json: Any | None = None,
-        query_params: dict[str, Any] | None = None,
-        headers: dict[str, str] | None = None,
-        cookies: dict[str, str] | None = None,
-    ) -> TestResponse:
-        """Make a PATCH request.
-
-        Args:
-            path: The path to request
-            json: Optional JSON body
-            query_params: Optional query parameters
-            headers: Optional request headers
-            cookies: Optional cookies as a dict
-
-        Returns:
-            TestResponse: The response from the server
-        """
-        # Convert cookies to Cookie header if provided
-        if cookies:
-            if headers is None:
-                headers = {}
-            cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
-            headers["cookie"] = cookie_header
-        rust_response = await self._client.patch(path, json, query_params, headers)
-        return TestResponse(rust_response)
-
-    async def delete(
-        self,
-        path: str,
-        query_params: dict[str, Any] | None = None,
-        headers: dict[str, str] | None = None,
-        cookies: dict[str, str] | None = None,
-    ) -> TestResponse:
-        """Make a DELETE request.
-
-        Args:
-            path: The path to request
-            query_params: Optional query parameters
-            headers: Optional request headers
-            cookies: Optional cookies as a dict
-
-        Returns:
-            TestResponse: The response from the server
-        """
-        # Convert cookies to Cookie header if provided
-        if cookies:
-            if headers is None:
-                headers = {}
-            cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
-            headers["cookie"] = cookie_header
-        rust_response = await self._client.delete(path, query_params, headers)
-        return TestResponse(rust_response)
-
-    async def options(
-        self,
-        path: str,
-        query_params: dict[str, Any] | None = None,
-        headers: dict[str, str] | None = None,
-        cookies: dict[str, str] | None = None,
-    ) -> TestResponse:
-        """Make an OPTIONS request."""
-        # Convert cookies to Cookie header if provided
-        if cookies:
-            if headers is None:
-                headers = {}
-            cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
-            headers["cookie"] = cookie_header
-        rust_response = await self._client.options(path, query_params, headers)
-        return TestResponse(rust_response)
-
-    async def head(
-        self,
-        path: str,
-        query_params: dict[str, Any] | None = None,
-        headers: dict[str, str] | None = None,
-        cookies: dict[str, str] | None = None,
-    ) -> TestResponse:
-        """Make a HEAD request."""
-        # Convert cookies to Cookie header if provided
-        if cookies:
-            if headers is None:
-                headers = {}
-            cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
-            headers["cookie"] = cookie_header
-        rust_response = await self._client.head(path, query_params, headers)
-        return TestResponse(rust_response)
-
-    async def trace(
-        self,
-        path: str,
-        query_params: dict[str, Any] | None = None,
-        headers: dict[str, str] | None = None,
-        cookies: dict[str, str] | None = None,
-    ) -> TestResponse:
-        """Make a TRACE request."""
-        # Convert cookies to Cookie header if provided
-        if cookies:
-            if headers is None:
-                headers = {}
-            cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
-            headers["cookie"] = cookie_header
-        rust_response = await self._client.trace(path, query_params, headers)
-        return TestResponse(rust_response)
-
-    async def websocket(self, path: str) -> "WebSocketTestConnection":
-        """Connect to a WebSocket endpoint.
-
-        Args:
-            path: The WebSocket endpoint path (e.g., "/ws")
-
-        Returns:
-            WebSocketTestConnection: A WebSocket connection for testing
-        """
-        rust_ws = await self._client.websocket(path)
-        return WebSocketTestConnection(rust_ws)
-
-    async def sse(self, path: str) -> "SseStream":
-        """Connect to a Server-Sent Events endpoint.
-
-        Args:
-            path: The SSE endpoint path (e.g., "/events")
-
-        Returns:
-            SseStream: An SSE stream for testing
-        """
-        rust_sse = await self._client.sse(path)
-        return SseStream(rust_sse)
-
-
-class WebSocketTestConnection:
-    """WebSocket connection for testing.
-
-    Provides methods for sending and receiving WebSocket messages in tests.
-    """
-
-    __test__ = False
-
-    def __init__(self, rust_ws: _WebSocketTestConnection) -> None:
-        """Create a WebSocket test connection wrapper."""
-        self._ws = rust_ws
-
-    async def send_text(self, text: str) -> None:
-        """Send a text message over the WebSocket."""
-        await self._ws.send_text(text)
-
-    async def send_json(self, obj: Any) -> None:
-        """Send a JSON message over the WebSocket."""
-        await self._ws.send_json(obj)
-
-    async def receive_text(self) -> str:
-        """Receive the next text message from the WebSocket."""
-        return await self._ws.receive_text()
-
-    async def receive_json(self) -> str:
-        """Receive and parse a JSON message from the WebSocket.
-
-        Note: Returns a JSON string that needs to be parsed with json.loads().
-        """
-        return await self._ws.receive_json()
-
-    async def receive_bytes(self) -> bytes:
-        """Receive raw bytes from the WebSocket."""
-        return await self._ws.receive_bytes()
-
-    async def receive_message(self) -> "WebSocketMessage":
-        """Receive the next raw message from the WebSocket."""
-        rust_msg = await self._ws.receive_message()
-        return WebSocketMessage(rust_msg)
-
-    async def close(self) -> None:
-        """Close the WebSocket connection."""
-        await self._ws.close()
-
-
-class WebSocketMessage:
-    """A WebSocket message that can be text or binary."""
-
-    __test__ = False
-
-    def __init__(self, rust_msg: _WebSocketMessage) -> None:
-        """Create a WebSocket message wrapper."""
-        self._msg = rust_msg
-
-    def as_text(self) -> str | None:
-        """Get the message as text, if it's a text message."""
-        return self._msg.as_text()
-
-    def as_json(self) -> Any | None:
-        """Get the message as JSON, if it's a text message containing JSON."""
-        return self._msg.as_json()
-
-    def as_binary(self) -> bytes | None:
-        """Get the message as binary, if it's a binary message."""
-        return self._msg.as_binary()
-
-    def is_close(self) -> bool:
-        """Check if this is a close message."""
-        return self._msg.is_close()
-
-    def __repr__(self) -> str:
-        """Return a concise representation for debugging."""
-        return repr(self._msg)
-
-
-class SseStream:
-    """Server-Sent Events stream for testing."""
-
-    __test__ = False
-
-    def __init__(self, rust_sse: _SseStream) -> None:
-        """Create an SSE stream wrapper."""
-        self._sse = rust_sse
-
-    def body(self) -> str:
-        """Get the raw body of the SSE response."""
-        return self._sse.body()
-
-    def events(self) -> list["SseEvent"]:
-        """Get all events from the stream."""
-        rust_events = self._sse.events()
-        return [SseEvent(e) for e in rust_events]
-
-    def events_as_json(self) -> list[Any]:
-        """Get events as JSON values."""
-        return self._sse.events_as_json()
-
-    def __repr__(self) -> str:
-        """Return a concise representation for debugging."""
-        return repr(self._sse)
-
-
-class SseEvent:
-    """A single Server-Sent Event."""
-
-    __test__ = False
-
-    def __init__(self, rust_event: _SseEvent) -> None:
-        """Create an SSE event wrapper."""
-        self._event = rust_event
-
-    @property
-    def data(self) -> str:
-        """Get the data field of the event."""
-        return self._event.data
-
-    def as_json(self) -> Any:
-        """Parse the event data as JSON."""
-        return self._event.as_json()
-
-    def __repr__(self) -> str:
-        """Return a concise representation for debugging."""
-        return repr(self._event)
-
-
-class AsyncTestClient:
-    """Async test client that runs a real Spikard server in a subprocess.
-
-    This client provides reliable testing for WebSocket and SSE endpoints by
-    starting an actual server process. All operations are fully async using
-    httpx, websockets, and httpx-sse libraries.
-
-    Example:
-        >>> from spikard import Spikard, get
-        >>> from spikard.testing import AsyncTestClient
-        >>>
-        >>> app = Spikard()
-        >>>
-        >>> @get("/hello")
-        >>> async def hello():
-        >>>     return {"message": "Hello, World!"}
-        >>>
-        >>> async def test_hello():
-        >>>     async with AsyncTestClient(app) as client:
+        >>>     async with TestClient(app) as client:
         >>>         response = await client.get("/hello")
         >>>         assert response.status_code == 200
         >>>         assert response.json() == {"message": "Hello, World!"}
@@ -511,7 +60,7 @@ class AsyncTestClient:
     __test__ = False
 
     def __init__(self, app: "Spikard", port: int = 0) -> None:
-        """Create a new async test client.
+        """Create a new test client.
 
         Args:
             app: A Spikard application instance
@@ -520,7 +69,7 @@ class AsyncTestClient:
         self._app = app
         self._requested_port = port
         self._port: int | None = None
-        self._process: subprocess.Popen | None = None
+        self._process: subprocess.Popen[bytes] | None = None
         self._server_script: Path | None = None
         self._http_client: httpx.AsyncClient | None = None
 
@@ -528,22 +77,27 @@ class AsyncTestClient:
     def base_url(self) -> str:
         """Get the base URL for HTTP requests."""
         if self._port is None:
-            raise RuntimeError("Server not started. Use 'async with AsyncTestClient(app)' context manager.")
+            raise RuntimeError("Server not started. Use 'async with TestClient(app)' context manager.")
         return f"http://127.0.0.1:{self._port}"
 
     @property
     def ws_url(self) -> str:
         """Get the base URL for WebSocket connections."""
         if self._port is None:
-            raise RuntimeError("Server not started. Use 'async with AsyncTestClient(app)' context manager.")
+            raise RuntimeError("Server not started. Use 'async with TestClient(app)' context manager.")
         return f"ws://127.0.0.1:{self._port}"
 
-    async def __aenter__(self) -> "AsyncTestClient":
+    async def __aenter__(self) -> "TestClient":
         """Start the server and return the client."""
         await self._start_server()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: object,
+    ) -> None:
         """Stop the server."""
         await self._stop_server()
 
@@ -556,8 +110,6 @@ class AsyncTestClient:
             self._port = self._requested_port
 
         # Serialize the app using cloudpickle
-        import base64
-
         app_bytes = cloudpickle.dumps(self._app)
         app_b64 = base64.b64encode(app_bytes).decode("ascii")
 
@@ -581,12 +133,21 @@ app.run(host="127.0.0.1", port={self._port})
 
         # Start the server process
         env = os.environ.copy()
+        # Use process group for better cleanup (Unix only)
+        # Note: subprocess.Popen is unavoidable for starting external processes
+        # ruff: noqa: ASYNC220
+        kwargs: dict[str, Any] = {
+            "stdout": subprocess.PIPE,
+            "stderr": subprocess.PIPE,
+        }
+        if hasattr(os, "setsid"):
+            # Unix: use process group for clean shutdown
+            # preexec_fn is safe here as we don't use threads before fork
+            kwargs["preexec_fn"] = os.setsid
         self._process = subprocess.Popen(
             [sys.executable, str(self._server_script)],
             env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            preexec_fn=os.setsid if hasattr(os, "setsid") else None,
+            **kwargs,
         )
 
         # Wait for server to be ready
@@ -635,7 +196,8 @@ app.run(host="127.0.0.1", port={self._port})
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(("127.0.0.1", 0))
             s.listen(1)
-            return s.getsockname()[1]
+            port: int = s.getsockname()[1]
+            return port
 
     async def _wait_for_server_ready(self, timeout: float = 10.0) -> None:
         """Wait for the server to be ready to accept connections."""

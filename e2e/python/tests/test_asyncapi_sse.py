@@ -1,47 +1,26 @@
-"""AsyncAPI SSE tests using real server and httpx-sse library."""
+"""AsyncAPI SSE tests."""
 
 import json
 
-import pytest
-from httpx_sse import aconnect_sse
+from spikard.testing import TestClient
+from app.main import (
+    create_app_sse_notifications,
+)
 
 
-@pytest.mark.asyncio
-async def test_sse_notifications(http_client) -> None:
+async def test_sse_notifications() -> None:
     """SSE channel test for /notifications."""
-    expected = [
-        {
-            "level": "example_level",
-            "message": "example_message",
-            "source": "example_source",
-            "timestamp": "2024-01-15T10:30:00Z",
-            "type": "system_alert",
-        },
-        {
-            "body": "example_body",
-            "priority": "example_priority",
-            "timestamp": "2024-01-15T10:30:00Z",
-            "title": "example_title",
-            "type": "user_notification",
-            "userId": "example_userId",
-        },
-        {
-            "message": "example_message",
-            "metadata": {},
-            "service": "example_service",
-            "status": "example_status",
-            "timestamp": "2024-01-15T10:30:00Z",
-            "type": "status_update",
-        },
-    ]
-
-    events = []
-    async with aconnect_sse(http_client, "GET", "/notifications") as event_source:
-        async for event in event_source.aiter_sse():
-            events.append(json.loads(event.data))
-            if len(events) >= len(expected):
-                break
-
-    assert len(events) == len(expected)
-    for received, expected_data in zip(events, expected):
-        assert received == expected_data
+    async with TestClient(create_app_sse_notifications()) as client:
+        response = await client.get("/notifications")
+        assert response.status_code == 200
+        body = response.text
+        normalized = body.replace("\r\n", "\n")
+        events = [chunk[5:] for chunk in normalized.split("\n\n") if chunk.startswith("data:")]
+        expected = [
+            '{"level":"example_level","message":"example_message","source":"example_source","timestamp":"2024-01-15T10:30:00Z","type":"system_alert"}',
+            '{"body":"example_body","priority":"example_priority","timestamp":"2024-01-15T10:30:00Z","title":"example_title","type":"user_notification","userId":"example_userId"}',
+            '{"message":"example_message","metadata":{},"service":"example_service","status":"example_status","timestamp":"2024-01-15T10:30:00Z","type":"status_update"}',
+        ]
+        assert len(events) == len(expected)
+        for payload, expected_json in zip(events, expected):
+            assert json.loads(payload.strip()) == json.loads(expected_json)

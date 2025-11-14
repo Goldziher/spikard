@@ -10,28 +10,24 @@ from app.main import (
 async def test_background_event_logging_second_payload() -> None:
     """Ensures background jobs handle different payloads."""
 
-    app = create_app_background_background_event_logging_second_payload()
-    client = TestClient(app)
+    async with TestClient(create_app_background_background_event_logging_second_payload()) as client:
+        json_data = {"event": "beta"}
+        response = await client.post("/background/events", json=json_data)
 
-    json_data = {"event": "beta"}
-    response = await client.post("/background/events", json=json_data)
-
-    assert response.status_code == 202
-    state_response = await client.get("/background/events")
-    assert state_response.status_code == 200
-    assert state_response.json() == {"events": ["beta"]}
+        assert response.status_code == 202
+        state_response = await client.get("/background/events")
+        assert state_response.status_code == 200
+        assert state_response.json() == {"events": ["beta"]}
 
 
 async def test_background_event_logging() -> None:
     """Enqueues a background job that appends the posted event to shared state."""
 
-    app = create_app_background_background_event_logging()
-    client = TestClient(app)
+    async with TestClient(create_app_background_background_event_logging()) as client:
+        json_data = {"event": "alpha"}
+        response = await client.post("/background/events", json=json_data)
 
-    json_data = {"event": "alpha"}
-    response = await client.post("/background/events", json=json_data)
-
-    assert response.status_code == 202
-    state_response = await client.get("/background/events")
-    assert state_response.status_code == 200
-    assert state_response.json() == {"events": ["alpha"]}
+        assert response.status_code == 202
+        state_response = await client.get("/background/events")
+        assert state_response.status_code == 200
+        assert state_response.json() == {"events": ["alpha"]}
