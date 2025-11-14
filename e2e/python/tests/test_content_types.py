@@ -98,8 +98,14 @@ async def test_16_text_plain_not_accepted() -> None:
 
         assert response.status_code == 415
         response_data = response.json()
-        assert "error" in response_data
-        assert response_data["error"] == "Unsupported Media Type. Expected application/json"
+        assert "detail" in response_data
+        assert response_data["detail"] == "Unsupported media type"
+        assert "status" in response_data
+        assert response_data["status"] == 415
+        assert "title" in response_data
+        assert response_data["title"] == "Unsupported Media Type"
+        assert "type" in response_data
+        assert response_data["type"] == "https://spikard.dev/errors/unsupported-media-type"
 
 
 async def test_pdf_response_application_pdf() -> None:
@@ -161,8 +167,14 @@ async def test_13_json_with_charset_utf16() -> None:
 
         assert response.status_code == 415
         response_data = response.json()
-        assert "error" in response_data
-        assert response_data["error"] == "Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported."
+        assert "detail" in response_data
+        assert response_data["detail"] == "Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported."
+        assert "status" in response_data
+        assert response_data["status"] == 415
+        assert "title" in response_data
+        assert response_data["title"] == "Unsupported Charset"
+        assert "type" in response_data
+        assert response_data["type"] == "https://spikard.dev/errors/unsupported-charset"
 
 
 async def test_json_response_application_json() -> None:

@@ -32,7 +32,10 @@
 	"expected_response": {
 		"status_code": 415,
 		"body": {
-			"error": "Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported."
+			"type": "https://spikard.dev/errors/unsupported-charset",
+			"title": "Unsupported Charset",
+			"status": 415,
+			"detail": "Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported."
 		}
 	},
 	"tags": ["content_types", "charset", "validation", "error"]
