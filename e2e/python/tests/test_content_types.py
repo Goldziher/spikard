@@ -1,5 +1,7 @@
 """E2E tests for content_types."""
 
+import pytest
+
 from spikard.testing import TestClient
 from app.main import (
     create_app_content_types_13_json_with_charset_utf16,
@@ -122,6 +124,9 @@ async def test_pdf_response_application_pdf() -> None:
         assert response_headers.get("content-disposition") == "attachment; filename=document.pdf"
 
 
+@pytest.mark.skip(
+    reason="httpx/h11 client validates Content-Length before sending - cannot test server-side validation"
+)
 async def test_20_content_length_mismatch() -> None:
     """Content-Length header mismatch with actual body size should fail."""
 
