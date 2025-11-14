@@ -15,6 +15,7 @@ use tracing::{info, warn};
 /// Chat message types matching AsyncAPI specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
+#[allow(clippy::enum_variant_names)]
 enum ChatMessage {
     #[serde(rename = "message")]
     ChatMessage {

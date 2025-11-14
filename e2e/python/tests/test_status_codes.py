@@ -324,10 +324,10 @@ async def test_429_too_many_requests() -> None:
         assert "detail" in response_data
         assert response_data["detail"] == "Rate limit exceeded. Try again in 60 seconds."
         response_headers = response.headers
-        assert response_headers.get("retry-after") == "60"
-        assert response_headers.get("x-ratelimit-reset") == "1609459200"
-        assert response_headers.get("x-ratelimit-limit") == "100"
         assert response_headers.get("x-ratelimit-remaining") == "0"
+        assert response_headers.get("x-ratelimit-limit") == "100"
+        assert response_headers.get("x-ratelimit-reset") == "1609459200"
+        assert response_headers.get("retry-after") == "60"
 
 
 async def test_200_ok_success() -> None:

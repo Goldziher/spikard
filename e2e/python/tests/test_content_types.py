@@ -118,8 +118,8 @@ async def test_pdf_response_application_pdf() -> None:
         response_data = response.json()
         assert response_data == "pdf_binary_data"
         response_headers = response.headers
-        assert response_headers.get("content-type") == "application/pdf"
         assert response_headers.get("content-disposition") == "attachment; filename=document.pdf"
+        assert response_headers.get("content-type") == "application/pdf"
 
 
 async def test_20_content_length_mismatch() -> None:
@@ -127,8 +127,8 @@ async def test_20_content_length_mismatch() -> None:
 
     async with TestClient(create_app_content_types_20_content_length_mismatch()) as client:
         headers = {
-            "Content-Length": "100",
             "Content-Type": "application/json",
+            "Content-Length": "100",
         }
         json_data = {"value": "short"}
         response = await client.post("/data", headers=headers, json=json_data)
@@ -329,5 +329,5 @@ async def test_binary_response_application_octet_stream() -> None:
         response_data = response.json()
         assert response_data == "binary_data_placeholder"
         response_headers = response.headers
-        assert response_headers.get("content-type") == "application/octet-stream"
         assert response_headers.get("content-disposition") == "attachment; filename=file.bin"
+        assert response_headers.get("content-type") == "application/octet-stream"

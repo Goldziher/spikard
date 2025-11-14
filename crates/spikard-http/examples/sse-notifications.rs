@@ -14,6 +14,7 @@ use tracing::info;
 /// Notification event types matching AsyncAPI specification
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "type")]
+#[allow(clippy::enum_variant_names)]
 enum Notification {
     #[serde(rename = "system_alert")]
     SystemAlert {

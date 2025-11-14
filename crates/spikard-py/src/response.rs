@@ -3,10 +3,9 @@
 use async_stream::stream;
 use axum::http::{HeaderName, HeaderValue, StatusCode};
 use bytes::Bytes;
-use pyo3::exceptions::{PyStopAsyncIteration, PyTypeError, PyValueError};
+use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict, PyString};
-use pyo3_async_runtimes::tokio::into_future;
 use spikard_http::HandlerResponse;
 use std::io;
 use std::str::FromStr;
@@ -285,7 +284,7 @@ impl StreamingResponse {
 
                 // Simple: just call __next__() on the (wrapped) iterator
                 let result = tokio::task::spawn_blocking(move || {
-                    Python::with_gil(|py| -> PyResult<Option<Bytes>> {
+                    Python::attach(|py| -> PyResult<Option<Bytes>> {
                         let bound = stream_clone.bind(py);
 
                         // Call __next__() - works for both sync and wrapped async generators

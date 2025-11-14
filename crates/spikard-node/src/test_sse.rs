@@ -37,7 +37,7 @@ impl SseStream {
     /// Get events as JSON values
     #[napi]
     pub fn events_as_json(&self) -> Result<Vec<serde_json::Value>> {
-        self.inner.events_as_json().map_err(|e| Error::from_reason(e))
+        self.inner.events_as_json().map_err(Error::from_reason)
     }
 }
 
@@ -64,7 +64,7 @@ impl SseEvent {
     /// Parse the event data as JSON
     #[napi]
     pub fn as_json(&self) -> Result<serde_json::Value> {
-        self.inner.as_json().map_err(|e| Error::from_reason(e))
+        self.inner.as_json().map_err(Error::from_reason)
     }
 }
 

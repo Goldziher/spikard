@@ -74,6 +74,7 @@ impl TestResponse {
 
 /// Optional configuration for a streaming response.
 #[napi(object)]
+#[allow(dead_code)]
 pub struct StreamingResponseInit {
     /// HTTP status code for the streaming response (default 200).
     pub status_code: Option<u16>,
@@ -91,9 +92,11 @@ pub struct StreamingHandle {
 }
 
 static STREAM_HANDLE_REGISTRY: Lazy<Mutex<HashMap<i64, StreamingHandle>>> = Lazy::new(|| Mutex::new(HashMap::new()));
+#[allow(dead_code)]
 static STREAM_HANDLE_COUNTER: AtomicU64 = AtomicU64::new(1);
 
 #[napi]
+#[allow(dead_code)]
 pub fn create_streaming_handle(iterator: Object, init: Option<StreamingResponseInit>) -> Result<i64> {
     let next_fn: Function<(), Promise<IteratorChunk>> = iterator
         .get_named_property("next")

@@ -36,6 +36,7 @@ impl SseStream {
 
     /// Get events as JSON values
     fn events_as_json(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        #[allow(clippy::redundant_closure)]
         let json_events = self
             .inner
             .events_as_json()
@@ -77,6 +78,7 @@ impl SseEvent {
 
     /// Parse the event data as JSON
     fn as_json(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        #[allow(clippy::redundant_closure)]
         let value = self
             .inner
             .as_json()
@@ -92,6 +94,7 @@ impl SseEvent {
 
 /// Create an SSE stream from a response snapshot
 pub fn sse_stream_from_response(response: &ResponseSnapshot) -> PyResult<SseStream> {
+    #[allow(clippy::redundant_closure)]
     let stream =
         RustSseStream::from_response(response).map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e))?;
     Ok(SseStream::new(stream))

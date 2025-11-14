@@ -239,6 +239,7 @@ async fn main() {
     .to_string()
 }
 
+#[allow(clippy::too_many_arguments)]
 fn generate_lib_rs(
     categories: &BTreeMap<String, Vec<Fixture>>,
     output_dir: &Path,
