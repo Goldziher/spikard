@@ -133,6 +133,14 @@ app.run(host="127.0.0.1", port={self._port})
 
         # Start the server process
         env = os.environ.copy()
+        # Ensure PYTHONPATH includes the current directory so cloudpickle can unpickle handlers
+        cwd = os.getcwd()
+        if "PYTHONPATH" in env:
+            # Append current directory to existing PYTHONPATH
+            env["PYTHONPATH"] = f"{cwd}{os.pathsep}{env['PYTHONPATH']}"
+        else:
+            # Set PYTHONPATH to current directory
+            env["PYTHONPATH"] = cwd
         # Use process group for better cleanup (Unix only)
         # Note: subprocess.Popen is unavoidable for starting external processes
         # ruff: noqa: ASYNC220
@@ -241,6 +249,7 @@ app.run(host="127.0.0.1", port={self._port})
         path: str,
         params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
     ) -> httpx.Response:
         """Make a GET request.
 
@@ -248,13 +257,14 @@ app.run(host="127.0.0.1", port={self._port})
             path: The path to request
             params: Optional query parameters
             headers: Optional request headers
+            cookies: Optional cookies to send
 
         Returns:
             httpx.Response: The response from the server
         """
         if self._http_client is None:
             raise RuntimeError("Server not started")
-        return await self._http_client.get(path, params=params, headers=headers)
+        return await self._http_client.get(path, params=params, headers=headers, cookies=cookies)
 
     async def post(
         self,
@@ -264,6 +274,7 @@ app.run(host="127.0.0.1", port={self._port})
         files: Any | None = None,
         params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
     ) -> httpx.Response:
         """Make a POST request.
 
@@ -274,13 +285,14 @@ app.run(host="127.0.0.1", port={self._port})
             files: Optional files for multipart upload
             params: Optional query parameters
             headers: Optional request headers
+            cookies: Optional cookies to send
 
         Returns:
             httpx.Response: The response from the server
         """
         if self._http_client is None:
             raise RuntimeError("Server not started")
-        return await self._http_client.post(path, json=json, data=data, files=files, params=params, headers=headers)
+        return await self._http_client.post(path, json=json, data=data, files=files, params=params, headers=headers, cookies=cookies)
 
     async def put(
         self,
@@ -288,11 +300,12 @@ app.run(host="127.0.0.1", port={self._port})
         json: Any | None = None,
         params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
     ) -> httpx.Response:
         """Make a PUT request."""
         if self._http_client is None:
             raise RuntimeError("Server not started")
-        return await self._http_client.put(path, json=json, params=params, headers=headers)
+        return await self._http_client.put(path, json=json, params=params, headers=headers, cookies=cookies)
 
     async def patch(
         self,
@@ -300,22 +313,48 @@ app.run(host="127.0.0.1", port={self._port})
         json: Any | None = None,
         params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
     ) -> httpx.Response:
         """Make a PATCH request."""
         if self._http_client is None:
             raise RuntimeError("Server not started")
-        return await self._http_client.patch(path, json=json, params=params, headers=headers)
+        return await self._http_client.patch(path, json=json, params=params, headers=headers, cookies=cookies)
 
     async def delete(
         self,
         path: str,
         params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
     ) -> httpx.Response:
         """Make a DELETE request."""
         if self._http_client is None:
             raise RuntimeError("Server not started")
-        return await self._http_client.delete(path, params=params, headers=headers)
+        return await self._http_client.delete(path, params=params, headers=headers, cookies=cookies)
+
+    async def options(
+        self,
+        path: str,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+    ) -> httpx.Response:
+        """Make an OPTIONS request."""
+        if self._http_client is None:
+            raise RuntimeError("Server not started")
+        return await self._http_client.options(path, params=params, headers=headers, cookies=cookies)
+
+    async def head(
+        self,
+        path: str,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+    ) -> httpx.Response:
+        """Make a HEAD request."""
+        if self._http_client is None:
+            raise RuntimeError("Server not started")
+        return await self._http_client.head(path, params=params, headers=headers, cookies=cookies)
 
     @asynccontextmanager
     async def websocket(self, path: str) -> AsyncIterator[ClientConnection]:
