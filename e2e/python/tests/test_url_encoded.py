@@ -50,8 +50,8 @@ async def test_15_special_characters_field_names() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = "user-name=JohnDoe&contact.email=john%40example.com"
-        response = await client.post("/data", headers=headers, json=json_data)
+        form_data = "user-name=JohnDoe&contact.email=john%40example.com"
+        response = await client.post("/data", headers=headers, data=form_data)
 
         assert response.status_code == 201
         response_data = response.json()
@@ -84,8 +84,8 @@ async def test_22_additional_properties_strict_failure() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = "theme=dark&unknown_field=value"
-        response = await client.post("/settings", headers=headers, json=json_data)
+        form_data = "theme=dark&unknown_field=value"
+        response = await client.post("/settings", headers=headers, data=form_data)
 
         assert response.status_code == 422
         response_data = response.json()
@@ -100,8 +100,8 @@ async def test_17_pattern_validation_failure() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = "account_id=INVALID123"
-        response = await client.post("/accounts", headers=headers, json=json_data)
+        form_data = "account_id=INVALID123"
+        response = await client.post("/accounts", headers=headers, data=form_data)
 
         assert response.status_code == 422
         response_data = response.json()
@@ -116,8 +116,8 @@ async def test_20_format_email_validation_failure() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = "email=not-an-email"
-        response = await client.post("/subscribe", headers=headers, json=json_data)
+        form_data = "email=not-an-email"
+        response = await client.post("/subscribe", headers=headers, data=form_data)
 
         assert response.status_code == 422
         response_data = response.json()
@@ -167,8 +167,8 @@ async def test_13_array_field_success() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = "tags[]=python&tags[]=rust&tags[]=typescript"
-        response = await client.post("/register", headers=headers, json=json_data)
+        form_data = "tags[]=python&tags[]=rust&tags[]=typescript"
+        response = await client.post("/register", headers=headers, data=form_data)
 
         assert response.status_code == 201
         response_data = response.json()
@@ -276,8 +276,8 @@ async def test_19_array_minitems_validation_failure() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = "tags[]=single"
-        response = await client.post("/tags", headers=headers, json=json_data)
+        form_data = "tags[]=single"
+        response = await client.post("/tags", headers=headers, data=form_data)
 
         assert response.status_code == 422
         response_data = response.json()
@@ -310,8 +310,8 @@ async def test_14_nested_object_bracket_notation() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = "user[name]=John%20Doe&user[email]=john@example.com&user[age]=30"
-        response = await client.post("/profile", headers=headers, json=json_data)
+        form_data = "user[name]=John%20Doe&user[email]=john@example.com&user[age]=30"
+        response = await client.post("/profile", headers=headers, data=form_data)
 
         assert response.status_code == 201
         response_data = response.json()
@@ -347,8 +347,8 @@ async def test_18_integer_minimum_validation_failure() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = "quantity=0"
-        response = await client.post("/products", headers=headers, json=json_data)
+        form_data = "quantity=0"
+        response = await client.post("/products", headers=headers, data=form_data)
 
         assert response.status_code == 422
         response_data = response.json()
@@ -363,8 +363,8 @@ async def test_21_integer_type_coercion_failure() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = "price=not-a-number"
-        response = await client.post("/products", headers=headers, json=json_data)
+        form_data = "price=not-a-number"
+        response = await client.post("/products", headers=headers, data=form_data)
 
         assert response.status_code == 422
         response_data = response.json()
@@ -379,8 +379,8 @@ async def test_16_minlength_validation_failure() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = "username=ab"
-        response = await client.post("/users", headers=headers, json=json_data)
+        form_data = "username=ab"
+        response = await client.post("/users", headers=headers, data=form_data)
 
         assert response.status_code == 422
         response_data = response.json()

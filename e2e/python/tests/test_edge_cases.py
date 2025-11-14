@@ -124,8 +124,8 @@ async def test_24_array_with_holes() -> None:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        json_data = "items[0]=first&items[2]=third&items[5]=sixth"
-        response = await client.post("/items", headers=headers, json=json_data)
+        form_data = "items[0]=first&items[2]=third&items[5]=sixth"
+        response = await client.post("/items", headers=headers, data=form_data)
 
         assert response.status_code == 200
         response_data = response.json()
