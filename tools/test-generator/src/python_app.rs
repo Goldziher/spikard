@@ -770,6 +770,28 @@ fn generate_handler_function_for_fixture(
     let should_return_expected = expected_body.is_some() && !expected_body_is_empty;
     let should_return_validation_errors = validation_errors_body.is_some() && !should_return_expected;
     let mut headers_map = sanitized_expected_headers(fixture);
+
+    // Remove headers that will be added by on_response lifecycle hooks to avoid duplication
+    if let Some(middleware) = fixture.handler.as_ref().and_then(|h| h.middleware.as_ref())
+        && let Some(hooks) = middleware.get("lifecycle_hooks")
+        && let Some(on_response) = hooks.get("on_response").and_then(|v| v.as_array())
+    {
+        for hook in on_response.iter() {
+            if let Some(hook_name) = hook.get("name").and_then(|v| v.as_str()) {
+                if hook_name.contains("security") {
+                    // Security hook adds these headers
+                    headers_map.remove("X-Content-Type-Options");
+                    headers_map.remove("X-Frame-Options");
+                    headers_map.remove("X-XSS-Protection");
+                    headers_map.remove("Strict-Transport-Security");
+                } else if hook_name.contains("timing") || hook_name.contains("timer") {
+                    // Timing hook adds this header
+                    headers_map.remove("X-Response-Time");
+                }
+            }
+        }
+    }
+
     let fixture_has_expected_headers = !headers_map.is_empty();
     let has_request_inputs = body_schema.is_some() || !params.is_empty();
     let handler_status = if metadata.rate_limit.is_some() {
