@@ -205,6 +205,29 @@ pub fn create_websocket_state(
         .funcall::<_, _, Value>("method", (ruby.to_symbol("on_disconnect"),))
         .ok();
 
+    // Extract schemas if available
+    let message_schema = handler_obj
+        .funcall::<_, _, Value>("instance_variable_get", (ruby.to_symbol("@_message_schema"),))
+        .ok()
+        .and_then(|v| {
+            if v.is_nil() {
+                None
+            } else {
+                RubyWebSocketHandler::ruby_to_json(ruby, v).ok()
+            }
+        });
+
+    let response_schema = handler_obj
+        .funcall::<_, _, Value>("instance_variable_get", (ruby.to_symbol("@_response_schema"),))
+        .ok()
+        .and_then(|v| {
+            if v.is_nil() {
+                None
+            } else {
+                RubyWebSocketHandler::ruby_to_json(ruby, v).ok()
+            }
+        });
+
     // Create Ruby WebSocket handler
     let ruby_handler = RubyWebSocketHandler::new(
         "WebSocketHandler".to_string(),
@@ -213,6 +236,11 @@ pub fn create_websocket_state(
         on_disconnect_proc,
     );
 
-    // Create and return WebSocket state
-    Ok(spikard_http::WebSocketState::new(ruby_handler))
+    // Create and return WebSocket state with schemas
+    if message_schema.is_some() || response_schema.is_some() {
+        spikard_http::WebSocketState::with_schemas(ruby_handler, message_schema, response_schema)
+            .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e))
+    } else {
+        Ok(spikard_http::WebSocketState::new(ruby_handler))
+    }
 }

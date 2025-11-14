@@ -106,12 +106,15 @@ impl SseEvent {
 /// SSE state shared across connections
 pub struct SseState<P: SseEventProducer> {
     producer: Arc<P>,
+    /// Optional JSON Schema for validating outgoing events
+    event_schema: Option<Arc<jsonschema::Validator>>,
 }
 
 impl<P: SseEventProducer> Clone for SseState<P> {
     fn clone(&self) -> Self {
         Self {
             producer: Arc::clone(&self.producer),
+            event_schema: self.event_schema.clone(),
         }
     }
 }
@@ -121,7 +124,24 @@ impl<P: SseEventProducer + 'static> SseState<P> {
     pub fn new(producer: P) -> Self {
         Self {
             producer: Arc::new(producer),
+            event_schema: None,
         }
+    }
+
+    /// Create new SSE state with an event producer and event schema
+    pub fn with_schema(producer: P, event_schema: Option<serde_json::Value>) -> Result<Self, String> {
+        let event_validator = if let Some(schema) = event_schema {
+            Some(Arc::new(
+                jsonschema::validator_for(&schema).map_err(|e| format!("Invalid event schema: {}", e))?,
+            ))
+        } else {
+            None
+        };
+
+        Ok(Self {
+            producer: Arc::new(producer),
+            event_schema: event_validator,
+        })
     }
 }
 
@@ -137,12 +157,26 @@ pub async fn sse_handler<P: SseEventProducer + 'static>(State(state): State<SseS
 
     // Create event stream
     let producer = Arc::clone(&state.producer);
-    let stream = stream::unfold(producer, |producer| async move {
+    let event_schema = state.event_schema.clone();
+    let stream = stream::unfold((producer, event_schema), |(producer, event_schema)| async move {
         match producer.next_event().await {
             Some(sse_event) => {
                 debug!("Sending SSE event: {:?}", sse_event.event_type);
+
+                // Validate event data if schema is provided
+                if let Some(validator) = &event_schema
+                    && !validator.is_valid(&sse_event.data)
+                {
+                    error!("SSE event validation failed");
+                    // Skip this event and continue to the next one
+                    return Some((
+                        Ok::<_, Infallible>(Event::default().data("validation_error")),
+                        (producer, event_schema),
+                    ));
+                }
+
                 match sse_event.into_axum_event() {
-                    Ok(event) => Some((Ok::<_, Infallible>(event), producer)),
+                    Ok(event) => Some((Ok::<_, Infallible>(event), (producer, event_schema))),
                     Err(e) => {
                         error!("Failed to serialize SSE event: {}", e);
                         None

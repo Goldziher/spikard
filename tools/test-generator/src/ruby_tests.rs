@@ -2,7 +2,7 @@
 //!
 //! Generates RSpec test files from fixtures.
 
-use crate::asyncapi::{AsyncFixture, load_sse_fixtures};
+use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::background_data;
 use crate::middleware::parse_middleware;
 use anyhow::{Context, Result};
@@ -40,6 +40,13 @@ pub fn generate_ruby_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
     if !sse_fixtures.is_empty() {
         let sse_spec = build_sse_spec(&sse_fixtures)?;
         fs::write(spec_dir.join("asyncapi_sse_spec.rb"), sse_spec).context("Failed to write asyncapi_sse_spec.rb")?;
+    }
+
+    let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
+    if !websocket_fixtures.is_empty() {
+        let websocket_spec = build_websocket_spec(&websocket_fixtures)?;
+        fs::write(spec_dir.join("asyncapi_websocket_spec.rb"), websocket_spec)
+            .context("Failed to write asyncapi_websocket_spec.rb")?;
     }
 
     Ok(())
@@ -546,6 +553,84 @@ fn build_sse_expected_literal(fixtures: Vec<&AsyncFixture>) -> Result<String> {
         entries.push("\"{}\"".to_string());
     }
     Ok(format!("[{}]", entries.join(", ")))
+}
+
+fn build_websocket_spec(fixtures: &[AsyncFixture]) -> Result<String> {
+    use std::collections::BTreeMap;
+
+    let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
+    for fixture in fixtures {
+        if let Some(channel) = fixture.channel.as_deref() {
+            grouped.entry(channel.to_string()).or_default().push(fixture);
+        }
+    }
+
+    if grouped.is_empty() {
+        return Ok(String::new());
+    }
+
+    let mut spec = String::new();
+    spec.push_str(
+        "# frozen_string_literal: true\n\nrequire 'spec_helper'\nrequire 'json'\n\nRSpec.describe \"asyncapi_websocket\" do\n",
+    );
+
+    for (channel, channel_fixtures) in grouped {
+        let channel_path = if channel.starts_with('/') {
+            channel
+        } else {
+            format!("/{}", channel)
+        };
+        let factory_name = format!(
+            "create_app_websocket_{}",
+            sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"))
+        );
+
+        // Generate test for each example in the channel
+        for (example_idx, fixture) in channel_fixtures.iter().enumerate() {
+            for (msg_idx, example) in fixture.examples.iter().enumerate() {
+                let test_name = if channel_fixtures.len() == 1 && fixture.examples.len() == 1 {
+                    format!("echoes WebSocket messages on {}", channel_path)
+                } else {
+                    format!(
+                        "echoes WebSocket message {} on {}",
+                        example_idx * fixture.examples.len() + msg_idx + 1,
+                        channel_path
+                    )
+                };
+
+                let example_json = serde_json::to_string(example)?;
+
+                spec.push_str(&format!(
+                    r#"  it "{}" do
+    app = E2ERubyApp.{}
+    client = Spikard::Testing.create_test_client(app)
+    ws = client.websocket("{}")
+
+    message = JSON.parse({})
+    ws.send_json(message)
+    response = ws.receive_json
+
+    expect(response['validated']).to eq(true)
+    message.each do |key, value|
+      expect(response[key]).to eq(value)
+    end
+
+    ws.close
+    client.close
+  end
+
+"#,
+                    test_name,
+                    factory_name,
+                    channel_path,
+                    string_literal(&example_json)
+                ));
+            }
+        }
+    }
+
+    spec.push_str("end\n");
+    Ok(spec)
 }
 
 /// Build Ruby hash representation of file uploads

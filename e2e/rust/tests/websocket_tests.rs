@@ -1,0 +1,111 @@
+//! WebSocket tests generated from AsyncAPI fixtures
+
+#[cfg(test)]
+mod websocket {
+    use serde_json::Value;
+
+    #[tokio::test]
+    async fn test_websocket_chat_msg_1() {
+        use axum_test::{TestServer, TestServerConfig};
+
+        let app = spikard_e2e_app::create_app_websocket_chat();
+        let config = TestServerConfig::builder().save_cookies().build();
+        let server = TestServer::new_with_config(app, config).expect("Failed to build server");
+
+        let mut ws = server.get_websocket("/chat").await;
+
+        let message: Value = serde_json::from_str("{\"text\":\"example_text\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"message\",\"user\":\"example_user\"}").expect("valid JSON");
+
+        ws.send_json(&message).await;
+
+        let response_msg = ws.receive_text().await.expect("receive response");
+        let response: Value = serde_json::from_str(&response_msg).expect("valid response JSON");
+
+        assert_eq!(
+            response["validated"],
+            Value::Bool(true),
+            "Should have validated field set to true"
+        );
+
+        // Verify all original fields are present
+        if let Some(obj) = message.as_object() {
+            for (key, value) in obj {
+                assert_eq!(response[key], *value, "Field should match original value");
+            }
+        }
+
+        ws.close().await;
+    }
+
+    #[tokio::test]
+    async fn test_websocket_chat_msg_2() {
+        use axum_test::{TestServer, TestServerConfig};
+
+        let app = spikard_e2e_app::create_app_websocket_chat();
+        let config = TestServerConfig::builder().save_cookies().build();
+        let server = TestServer::new_with_config(app, config).expect("Failed to build server");
+
+        let mut ws = server.get_websocket("/chat").await;
+
+        let message: Value = serde_json::from_str(
+            "{\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"userLeft\",\"user\":\"example_user\"}",
+        )
+        .expect("valid JSON");
+
+        ws.send_json(&message).await;
+
+        let response_msg = ws.receive_text().await.expect("receive response");
+        let response: Value = serde_json::from_str(&response_msg).expect("valid response JSON");
+
+        assert_eq!(
+            response["validated"],
+            Value::Bool(true),
+            "Should have validated field set to true"
+        );
+
+        // Verify all original fields are present
+        if let Some(obj) = message.as_object() {
+            for (key, value) in obj {
+                assert_eq!(response[key], *value, "Field should match original value");
+            }
+        }
+
+        ws.close().await;
+    }
+
+    #[tokio::test]
+    async fn test_websocket_chat_msg_3() {
+        use axum_test::{TestServer, TestServerConfig};
+
+        let app = spikard_e2e_app::create_app_websocket_chat();
+        let config = TestServerConfig::builder().save_cookies().build();
+        let server = TestServer::new_with_config(app, config).expect("Failed to build server");
+
+        let mut ws = server.get_websocket("/chat").await;
+
+        let message: Value = serde_json::from_str(
+            "{\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"userJoined\",\"user\":\"example_user\"}",
+        )
+        .expect("valid JSON");
+
+        ws.send_json(&message).await;
+
+        let response_msg = ws.receive_text().await.expect("receive response");
+        let response: Value = serde_json::from_str(&response_msg).expect("valid response JSON");
+
+        assert_eq!(
+            response["validated"],
+            Value::Bool(true),
+            "Should have validated field set to true"
+        );
+
+        // Verify all original fields are present
+        if let Some(obj) = message.as_object() {
+            for (key, value) in obj {
+                assert_eq!(response[key], *value, "Field should match original value");
+            }
+        }
+
+        ws.close().await;
+    }
+}

@@ -40,6 +40,8 @@ mod lifecycle;
 mod response;
 mod sse;
 mod test_client;
+mod test_sse;
+mod test_websocket;
 mod websocket;
 
 use crate::response::HandlerReturnValue;

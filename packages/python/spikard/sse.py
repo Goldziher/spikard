@@ -1,8 +1,37 @@
-"""Server-Sent Events (SSE) support for Spikard."""
+"""Server-Sent Events (SSE) support for Spikard.
 
-from abc import ABC, abstractmethod
+SSE handlers follow the same decorator pattern as HTTP handlers.
+Use the @sse() decorator to define async generator functions that yield events.
+
+Example:
+    ```python
+    from spikard import sse
+    import asyncio
+
+
+    @sse("/notifications")
+    async def notifications():
+        '''Stream notifications to clients.'''
+        for i in range(10):
+            await asyncio.sleep(1)
+            yield {"message": f"Notification {i}", "count": i}
+    ```
+
+The handler function should be an async generator that yields dicts.
+Each dict is sent as a Server-Sent Event with JSON data.
+"""
+
+import asyncio
+import threading
+import time
+from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
-from typing import Any
+from functools import wraps
+from typing import Any, TypeVar, get_args, get_origin, get_type_hints
+
+__all__ = ["SseEvent", "SseEventProducer", "sse"]
+
+F = TypeVar("F", bound=Callable[..., AsyncIterator[dict[str, Any]]])
 
 
 @dataclass
@@ -14,6 +43,10 @@ class SseEvent:
         event_type: Optional event type
         id: Optional event ID for client reconnection support
         retry: Optional retry timeout in milliseconds
+
+    Note:
+        This class is kept for compatibility but the recommended approach
+        is to use the @sse() decorator with async generators that yield dicts.
     """
 
     data: dict[str, Any]
@@ -22,70 +55,181 @@ class SseEvent:
     retry: int | None = None
 
 
-class SseEventProducer(ABC):
-    """Base class for SSE event producers.
+class SseEventProducer:
+    """Wraps an async generator function to provide the SseEventProducer interface expected by Rust.
 
-    Implement this class to generate Server-Sent Events.
+    This class bridges the gap between Python async generators and the Rust SseEventProducer trait.
+    Uses a persistent event loop to maintain generator state across calls.
+    """
+
+    def __init__(
+        self, generator_func: Callable[[], AsyncIterator[dict[str, Any]]], event_schema: dict[str, Any] | None = None
+    ) -> None:
+        """Initialize the producer with an async generator function.
+
+        Args:
+            generator_func: Async generator function that yields event dicts
+            event_schema: Optional JSON Schema for event validation
+        """
+        self._generator_func = generator_func
+        self._generator: AsyncIterator[dict[str, Any]] | None = None
+        self._event_schema = event_schema
+        self._loop = None
+        self._loop_thread = None
+
+    def on_connect(self) -> None:
+        """Called when a client connects. Initializes the generator and event loop."""
+
+        # Create a new event loop in a background thread
+        def run_loop() -> None:
+            self._loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self._loop)
+            self._loop.run_forever()
+
+        self._loop_thread = threading.Thread(target=run_loop, daemon=True)
+        self._loop_thread.start()
+
+        # Wait for loop to be ready
+        while self._loop is None:
+            time.sleep(0.001)
+
+        # Create the generator in the event loop
+        future = asyncio.run_coroutine_threadsafe(self._create_generator(), self._loop)
+        future.result()  # Wait for generator creation
+
+    async def _create_generator(self) -> None:
+        """Create the generator (must run in the event loop)."""
+        self._generator = self._generator_func()
+
+    def on_disconnect(self) -> None:
+        """Called when a client disconnects. Cleans up the generator and event loop."""
+        if self._loop is not None:
+            self._loop.call_soon_threadsafe(self._loop.stop)
+            if self._loop_thread is not None:
+                self._loop_thread.join(timeout=1.0)
+        self._generator = None
+        self._loop = None
+
+    def next_event(self) -> SseEvent | None:
+        """Get the next event from the generator (SYNCHRONOUS).
+
+        Returns:
+            SseEvent or None when the stream ends.
+        """
+        if self._generator is None or self._loop is None:
+            return None
+
+        # Run the async operation in the persistent event loop
+        try:
+            future = asyncio.run_coroutine_threadsafe(self._get_next_event(), self._loop)
+            return future.result(timeout=30.0)  # 30 second timeout
+        except (TimeoutError, asyncio.CancelledError, RuntimeError):
+            return None
+
+    async def _get_next_event(self) -> SseEvent | None:
+        """Get the next event (must run in the event loop)."""
+        try:
+            data = await self._generator.__anext__()
+            return SseEvent(data=data)
+        except StopAsyncIteration:
+            return None
+
+
+def sse(
+    path: str,
+    *,
+    event_schema: dict[str, Any] | None = None,
+) -> Callable[[F], F]:
+    """Decorator to define a Server-Sent Events endpoint.
+
+    Args:
+        path: The SSE endpoint path (e.g., "/notifications")
+        event_schema: Optional JSON Schema for event validation.
+                     If not provided, will be extracted from the generator's yield type hint.
+
+    Returns:
+        Decorated async generator function that yields events
 
     Example:
         ```python
-        from spikard import Spikard
-        from spikard.sse import SseEventProducer, SseEvent
+        from spikard import sse
+        from typing import TypedDict, AsyncIterator
         import asyncio
 
 
-        class NotificationProducer(SseEventProducer):
-            def __init__(self):
-                self.count = 0
-
-            async def next_event(self) -> SseEvent | None:
-                await asyncio.sleep(1)  # Wait 1 second between events
-
-                if self.count >= 10:
-                    return None  # End stream after 10 events
-
-                event = SseEvent(data={"message": f"Notification {self.count}"}, event_type="notification", id=str(self.count))
-                self.count += 1
-                return event
-
-            async def on_connect(self) -> None:
-                print("Client connected to SSE stream")
-
-            async def on_disconnect(self) -> None:
-                print("Client disconnected from SSE stream")
+        class StatusEvent(TypedDict):
+            status: str
+            message: str
+            timestamp: int
 
 
-        app = Spikard()
-
-
-        @app.sse("/notifications")
-        def notifications_endpoint():
-            return NotificationProducer()
-
-
-        app.run()
+        @sse("/status")
+        async def status_stream() -> AsyncIterator[StatusEvent]:
+            for i in range(10):
+                await asyncio.sleep(1)
+                yield {"status": "ok", "message": f"Update {i}", "timestamp": i}
         ```
+
+    Note:
+        The handler function must be an async generator that yields dicts.
+        Each dict is sent as a Server-Sent Event with JSON-encoded data.
+        JSON Schema validation will be performed on outgoing events if a schema is provided.
     """
 
-    @abstractmethod
-    async def next_event(self) -> SseEvent | None:
-        """Generate the next event.
+    def decorator(func: F) -> F:
+        # Import here to avoid circular dependency
+        from spikard.app import Spikard  # noqa: PLC0415
+        from spikard.schema import extract_json_schema  # noqa: PLC0415
 
-        This method is called repeatedly to produce the event stream.
+        app = Spikard.current_instance
+        if app is None:
+            raise RuntimeError(
+                "No Spikard app instance found. Create a Spikard() instance before using @sse decorator."
+            )
 
-        Returns:
-            SseEvent when an event is ready, or None to end the stream.
-        """
-        ...
+        # Extract event schema from return type hint if not explicitly provided
+        extracted_event_schema = event_schema
 
-    async def on_connect(self) -> None:  # noqa: B027
-        """Called when a client connects to the SSE endpoint.
+        if extracted_event_schema is None:
+            try:
+                type_hints = get_type_hints(func)
+                return_type = type_hints.get("return")
 
-        Override this method to perform initialization when a client connects.
-        """
+                # AsyncIterator[EventType] -> extract EventType
+                if return_type:
+                    origin = get_origin(return_type)
+                    # Check for AsyncIterator, AsyncGenerator, or Iterator
+                    if origin is not None:
+                        args = get_args(return_type)
+                        if args and args[0] is not dict:
+                            # Extract schema from the yielded type
+                            extracted_event_schema = extract_json_schema(args[0])
 
-    async def on_disconnect(self) -> None:  # noqa: B027
-        """Called when a client disconnects from the SSE endpoint.
+            except (AttributeError, NameError, TypeError, ValueError):
+                # Schema extraction failed, continue without schema
+                pass
 
-        Override this method to perform cleanup when a client disconnects.
-        """
+        @wraps(func)
+        async def wrapper(*args: Any, **kwargs: Any) -> AsyncIterator[dict[str, Any]]:
+            async for event in func(*args, **kwargs):
+                yield event
+
+        # Store SSE metadata
+        wrapper._sse_path = path  # type: ignore[attr-defined]  # noqa: SLF001
+        wrapper._is_sse_handler = True  # type: ignore[attr-defined]  # noqa: SLF001
+        wrapper._sse_func = func  # type: ignore[attr-defined]  # noqa: SLF001
+        wrapper._event_schema = extracted_event_schema  # type: ignore[attr-defined]  # noqa: SLF001
+
+        # Register with the app as a factory that returns an SseEventProducer
+        def producer_factory() -> SseEventProducer:
+            """Factory that creates an SseEventProducer instance."""
+            producer = SseEventProducer(lambda: wrapper(), event_schema=extracted_event_schema)
+            # Store the schema on the producer instance so Rust can extract it
+            producer._event_schema = extracted_event_schema  # type: ignore[attr-defined]  # noqa: SLF001
+            return producer
+
+        app._sse_producers[path] = producer_factory  # noqa: SLF001
+
+        return wrapper  # type: ignore[return-value]
+
+    return decorator
