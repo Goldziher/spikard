@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
-from spikard.app import Spikard
+from spikard.app import HttpMethod, Spikard
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -249,7 +249,7 @@ def route(
 
         # Register the route for each method
         for method in method_list:
-            method_upper = method.upper()
+            method_upper = cast("HttpMethod", method.upper())
             app.register_route(method_upper, path, body_schema=body_schema)(func)
 
         return func
