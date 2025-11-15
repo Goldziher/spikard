@@ -34,7 +34,7 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - [x] Test client (Python, Node.js, Ruby)
   - Python: Full HTTP + WebSocket + SSE testing
   - Node.js: HTTP testing (WebSocket/SSE pending)
-  - Ruby: HTTP testing (WebSocket/SSE pending)
+  - Ruby: Full HTTP + WebSocket + SSE testing
 - [x] Lifecycle hooks (onRequest, preValidation, preHandler, onResponse, onError)
 - [x] WebSocket support
 - [x] Server-Sent Events (SSE)
@@ -61,7 +61,7 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - [x] Rust e2e tests (423/423 passing via `axum_test`)
 - [x] Python e2e tests (423/423 passing - 100%)
 - [x] Node.js e2e tests (422/423 passing - 99.76%, WebSocket pending)
-- [x] Ruby e2e tests (426/426 passing - 100%)
+- [x] Ruby e2e tests (430/457 passing - 94.1%, WebSocket/SSE complete, 27 validation schema failures)
 - [x] AsyncAPI streaming fixtures (Ruby, Python, Node.js runners)
 - [x] Benchmark harness
 - [x] Performance benchmarks (Python, Node, Ruby, Rust)
@@ -72,7 +72,7 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 
 Remaining work before v1.0:
 - AsyncAPI-first code generation (WebSocket/SSE handler generation + CLI integration)
-- WebSocket/SSE TestClient support for Node.js and Ruby (Python complete)
+- WebSocket/SSE TestClient support for Node.js (Python and Ruby complete)
 
 ## Structure
 
