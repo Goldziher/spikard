@@ -2,10 +2,9 @@
  * Testing utilities for Spikard applications
  */
 
-import { type ChildProcess, spawn } from "node:child_process";
+import type { ChildProcess } from "node:child_process";
 import { once } from "node:events";
 import * as fs from "node:fs";
-import * as os from "node:os";
 import * as path from "node:path";
 import type WebSocket from "ws";
 
@@ -40,86 +39,6 @@ export interface RequestOptions {
 }
 
 /**
- * WebSocket connection wrapper for testing
- */
-class WebSocketConnection {
-	private ws: WebSocket;
-	private messageQueue: any[] = [];
-	private resolveNext: ((value: any) => void) | null = null;
-
-	constructor(ws: WebSocket) {
-		this.ws = ws;
-
-		// Queue incoming messages
-		this.ws.on("message", (data: WebSocket.Data) => {
-			const message = data.toString();
-			if (this.resolveNext) {
-				this.resolveNext(message);
-				this.resolveNext = null;
-			} else {
-				this.messageQueue.push(message);
-			}
-		});
-	}
-
-	/**
-	 * Send JSON data over the WebSocket
-	 */
-	async sendJson(data: any): Promise<void> {
-		const message = JSON.stringify(data);
-		return new Promise((resolve, reject) => {
-			this.ws.send(message, (error) => {
-				if (error) reject(error);
-				else resolve();
-			});
-		});
-	}
-
-	/**
-	 * Send text data over the WebSocket
-	 */
-	async sendText(text: string): Promise<void> {
-		return new Promise((resolve, reject) => {
-			this.ws.send(text, (error) => {
-				if (error) reject(error);
-				else resolve();
-			});
-		});
-	}
-
-	/**
-	 * Receive JSON data from the WebSocket
-	 */
-	async receiveJson(): Promise<any> {
-		const message = await this.receiveText();
-		return JSON.parse(message);
-	}
-
-	/**
-	 * Receive text data from the WebSocket
-	 */
-	async receiveText(): Promise<string> {
-		if (this.messageQueue.length > 0) {
-			return this.messageQueue.shift();
-		}
-
-		return new Promise((resolve) => {
-			this.resolveNext = resolve;
-		});
-	}
-
-	/**
-	 * Close the WebSocket connection
-	 */
-	async close(): Promise<void> {
-		return new Promise((resolve) => {
-			this.ws.close();
-			this.ws.once("close", () => resolve());
-		});
-	}
-}
-
-/**
  * Test client for making HTTP requests to Spikard applications
  *
  * Provides a high-level API for testing HTTP endpoints without
@@ -150,9 +69,7 @@ class WebSocketConnection {
  */
 export class TestClient {
 	private nativeClient: NativeTestClient;
-	private app: SpikardApp;
 	private serverProcess: ChildProcess | null = null;
-	private serverPort: number | null = null;
 	private serverScriptPath: string | null = null;
 
 	/**
@@ -292,103 +209,6 @@ export class TestClient {
 		}
 
 		return null;
-	}
-
-	/**
-	 * Start the subprocess server for WebSocket testing
-	 */
-	private async startServer(): Promise<number> {
-		if (this.serverProcess && this.serverPort) {
-			return this.serverPort;
-		}
-
-		// Create temporary directory for server script
-		const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "spikard-test-"));
-		this.serverScriptPath = path.join(tmpDir, "server.cjs");
-
-		// Generate a random port in the high range to avoid conflicts
-		const port = 50000 + Math.floor(Math.random() * 10000);
-
-		// Get absolute path to the Spikard package (use CommonJS build)
-		const spikardPackagePath = path.resolve(__dirname, "../dist/index.js");
-
-		// Write server script that starts Spikard with the app configuration (CommonJS)
-		const serverScript = `
-const { runServer } = require('${spikardPackagePath.replace(/\\/g, "\\\\")}');
-
-const app = ${JSON.stringify({
-			routes: this.app.routes,
-			config: this.app.config || {},
-		})};
-
-// Handler functions need to be reconstructed from the serialized app
-const handlers = {};
-${Object.entries(this.app.handlers)
-	.map(
-		([name, _handler]) => `
-handlers.${name} = ${this.app.handlers[name].toString()};
-`,
-	)
-	.join("\n")}
-
-app.handlers = handlers;
-
-// Start server on assigned port
-const config = { ...app.config, host: '127.0.0.1', port: ${port} };
-(async () => {
-  await runServer(app, config);
-  // Keep process alive - server runs in background thread
-  setInterval(() => {}, 1000);
-})();
-`;
-
-		fs.writeFileSync(this.serverScriptPath, serverScript);
-
-		// Start the server process
-		// Set cwd to current directory so the subprocess can find node_modules
-		this.serverProcess = spawn(process.execPath, [this.serverScriptPath], {
-			stdio: ["ignore", "pipe", "pipe"],
-			cwd: process.cwd(),
-		});
-
-		// Wait for server to output the ready signal
-		const actualPort = await new Promise<number>((resolve, reject) => {
-			let stdout = "";
-			let stderr = "";
-
-			const timeout = setTimeout(() => {
-				this.serverProcess?.kill();
-				reject(new Error("Server startup timeout"));
-			}, 10000);
-
-			this.serverProcess?.stdout?.on("data", (data: Buffer) => {
-				stdout += data.toString();
-				const match = /SPIKARD_TEST_SERVER_READY:(\d+)/.exec(stdout);
-				if (match) {
-					clearTimeout(timeout);
-					resolve(Number.parseInt(match[1], 10));
-				}
-			});
-
-			this.serverProcess?.stderr?.on("data", (data: Buffer) => {
-				stderr += data.toString();
-			});
-
-			this.serverProcess?.on("error", (error: Error) => {
-				clearTimeout(timeout);
-				reject(error);
-			});
-
-			this.serverProcess?.on("exit", (code: number | null) => {
-				if (code !== null && code !== 0) {
-					clearTimeout(timeout);
-					reject(new Error(`Server exited with code ${code}\nstderr: ${stderr}`));
-				}
-			});
-		});
-
-		this.serverPort = actualPort;
-		return actualPort;
 	}
 
 	/**
