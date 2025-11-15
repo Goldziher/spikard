@@ -20,7 +20,9 @@ module Spikard
 
       routes_json = JSON.generate(app.route_metadata)
       handlers = app.handler_map.transform_keys(&:to_sym)
-      native = Spikard::Native::TestClient.new(routes_json, handlers, config)
+      ws_handlers = app.websocket_handlers || {}
+      sse_producers = app.sse_producers || {}
+      native = Spikard::Native::TestClient.new(routes_json, handlers, config, ws_handlers, sse_producers)
       TestClient.new(native)
     end
 
