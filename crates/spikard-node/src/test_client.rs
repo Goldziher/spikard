@@ -390,6 +390,8 @@ impl TestClient {
         let axum_router =
             spikard_http::Server::with_handlers_and_metadata(server_config, prepared_routes, metadata_list)
                 .map_err(|e| Error::from_reason(format!("Failed to build router: {}", e)))?;
+
+        // Create test server with in-memory transport for HTTP tests
         let server = TestServer::new(axum_router)
             .map_err(|e| Error::from_reason(format!("Failed to create test server: {}", e)))?;
 
@@ -436,12 +438,6 @@ impl TestClient {
     #[napi]
     pub async fn trace(&self, path: String, headers: Option<Value>) -> Result<TestResponse> {
         self.request("TRACE", path, headers, None).await
-    }
-
-    /// Connect to a WebSocket endpoint
-    #[napi]
-    pub async fn websocket(&self, path: String) -> Result<test_websocket::WebSocketTestConnection> {
-        test_websocket::connect_websocket_for_test(&self.server, &path).await
     }
 
     /// Connect to a Server-Sent Events endpoint

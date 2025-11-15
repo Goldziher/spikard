@@ -1,7 +1,5 @@
 """E2E tests for status_codes."""
 
-import pytest
-
 from spikard.testing import TestClient
 from app.main import (
     create_app_status_codes_19_413_payload_too_large,
@@ -326,10 +324,10 @@ async def test_429_too_many_requests() -> None:
         assert "detail" in response_data
         assert response_data["detail"] == "Rate limit exceeded. Try again in 60 seconds."
         response_headers = response.headers
-        assert response_headers.get("x-ratelimit-limit") == "100"
-        assert response_headers.get("retry-after") == "60"
         assert response_headers.get("x-ratelimit-reset") == "1609459200"
+        assert response_headers.get("x-ratelimit-limit") == "100"
         assert response_headers.get("x-ratelimit-remaining") == "0"
+        assert response_headers.get("retry-after") == "60"
 
 
 async def test_200_ok_success() -> None:
@@ -346,9 +344,6 @@ async def test_200_ok_success() -> None:
         assert response_data["name"] == "Item 1"
 
 
-@pytest.mark.skip(
-    reason="Test fixture needs static file configuration to properly test Range requests. Range requests ARE supported via tower-http's ServeDir - see test_range_requests.py for verification."
-)
 async def test_206_partial_content() -> None:
     """Tests 206 status code for range requests."""
 
@@ -363,6 +358,6 @@ async def test_206_partial_content() -> None:
         assert response_data == "binary_data_1024_bytes"
         response_headers = response.headers
         assert response_headers.get("content-length") == "1024"
-        assert response_headers.get("content-range") == "bytes 0-1023/5000"
-        assert response_headers.get("accept-ranges") == "bytes"
         assert response_headers.get("content-type") == "application/pdf"
+        assert response_headers.get("accept-ranges") == "bytes"
+        assert response_headers.get("content-range") == "bytes 0-1023/5000"
