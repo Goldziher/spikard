@@ -176,7 +176,7 @@ module Spikard
     #   app.websocket('/chat') do
     #     ChatHandler.new
     #   end
-    def websocket(path, &factory)
+    def websocket(path, _handler_name: nil, **_options, &factory)
       raise ArgumentError, 'block required for WebSocket handler factory' unless factory
 
       @websocket_handlers[path] = factory
@@ -193,7 +193,7 @@ module Spikard
     #   app.sse('/notifications') do
     #     NotificationProducer.new
     #   end
-    def sse(path, &factory)
+    def sse(path, _handler_name: nil, **_options, &factory)
       raise ArgumentError, 'block required for SSE producer factory' unless factory
 
       @sse_producers[path] = factory
