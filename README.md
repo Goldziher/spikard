@@ -32,6 +32,9 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - [x] Swagger UI integration
 - [x] Redoc integration
 - [x] Test client (Python, Node.js, Ruby)
+  - Python: Full HTTP + WebSocket + SSE testing
+  - Node.js: HTTP testing (WebSocket/SSE pending)
+  - Ruby: HTTP testing (WebSocket/SSE pending)
 - [x] Lifecycle hooks (onRequest, preValidation, preHandler, onResponse, onError)
 - [x] WebSocket support
 - [x] Server-Sent Events (SSE)
@@ -57,7 +60,7 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - [x] Fixture-driven integration tests (423 REST fixtures + streaming/SSE/WebSocket coverage)
 - [x] Rust e2e tests (423/423 passing via `axum_test`)
 - [x] Python e2e tests (423/423 passing - 100%)
-- [x] Node.js e2e tests (423/423 passing - 100%)
+- [x] Node.js e2e tests (422/423 passing - 99.76%, WebSocket pending)
 - [x] Ruby e2e tests (426/426 passing - 100%)
 - [x] AsyncAPI streaming fixtures (Ruby, Python, Node.js runners)
 - [x] Benchmark harness
@@ -67,7 +70,9 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 
 ### Roadmap To v1.0
 
-The last big blocker before tagging v1.0 is **AsyncAPI-first codegen** (WebSocket/SSE handlers + CLI integration). Track progress in `MISSING_FEATURES.md`.
+Remaining work before v1.0:
+- AsyncAPI-first code generation (WebSocket/SSE handler generation + CLI integration)
+- WebSocket/SSE TestClient support for Node.js and Ruby (Python complete)
 
 ## Structure
 

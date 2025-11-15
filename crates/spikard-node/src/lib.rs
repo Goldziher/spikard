@@ -48,6 +48,7 @@ use crate::response::HandlerReturnValue;
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use spikard_http::{BackgroundRuntime, RouteMetadata, Server, ServerConfig};
+use std::io::Write;
 use std::sync::Arc;
 use tracing::{error, info, warn};
 
@@ -352,10 +353,15 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
         .get_named_property("handlers")
         .map_err(|e| Error::from_reason(format!("Failed to get handlers from app: {}", e)))?;
 
-    // Build handler map by extracting JS functions and creating ThreadsafeFunctions
+    // Separate regular routes from WebSocket routes
+    let (regular_routes, websocket_routes): (Vec<_>, Vec<_>) = routes
+        .into_iter()
+        .partition(|route| !route.handler_name.to_lowercase().starts_with("websocket"));
+
+    // Build handler map for regular handlers only
     let mut handler_map = std::collections::HashMap::new();
 
-    for route in &routes {
+    for route in &regular_routes {
         // Get the JS handler function from the handlers object
         let js_handler: Function<String, Promise<HandlerReturnValue>> = handlers_obj
             .get_named_property(&route.handler_name)
@@ -372,12 +378,10 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                 ))
             })?;
 
-        // Create NodeHandler with the ThreadsafeFunction
-        let node_handler = handler::NodeHandler::new(route.handler_name.clone(), tsfn);
-        handler_map.insert(
-            route.handler_name.clone(),
-            Arc::new(node_handler) as Arc<dyn spikard_http::Handler>,
-        );
+        // Create Node handler
+        let handler = Arc::new(handler::NodeHandler::new(route.handler_name.clone(), tsfn));
+
+        handler_map.insert(route.handler_name.clone(), handler);
     }
 
     // Extract lifecycle hooks from app if they exist
@@ -445,9 +449,9 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
     // Create schema registry for validator deduplication
     let schema_registry = spikard_http::SchemaRegistry::new();
 
-    // Build routes with compiled validators
-    let routes_with_handlers: Vec<(spikard_http::Route, Arc<dyn spikard_http::Handler>)> = routes
-        .into_iter()
+    // Build routes with compiled validators for regular handlers
+    let routes_with_handlers: Vec<(spikard_http::Route, Arc<dyn spikard_http::Handler>)> = regular_routes
+        .iter()
         .map(|metadata| {
             let route = spikard_http::Route::from_metadata(metadata.clone(), &schema_registry)
                 .map_err(|e| Error::from_reason(format!("Failed to create route: {}", e)))?;
@@ -457,7 +461,8 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                 .ok_or_else(|| Error::from_reason(format!("Handler not found: {}", metadata.handler_name)))?
                 .clone();
 
-            Ok::<_, Error>((route, handler))
+            // Explicitly upcast to Arc<dyn Handler>
+            Ok::<_, Error>((route, handler as Arc<dyn spikard_http::Handler>))
         })
         .collect::<Result<Vec<_>>>()?;
 
@@ -465,11 +470,58 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
     Server::init_logging();
 
     info!("Starting Spikard server on {}:{}", host, port);
-    info!("Registered {} routes", routes_with_handlers.len());
+    info!("Registered {} HTTP routes", routes_with_handlers.len());
 
-    // Build Axum router with handlers
-    let app_router = Server::with_handlers(server_config.clone(), routes_with_handlers)
-        .map_err(|e| Error::from_reason(format!("Failed to build router: {}", e)))?;
+    // Build Axum router with regular handlers
+    let mut app_router =
+        Server::with_handlers_and_metadata(server_config.clone(), routes_with_handlers, regular_routes)
+            .map_err(|e| Error::from_reason(format!("Failed to build router: {}", e)))?;
+
+    // Add WebSocket routes
+    for ws_metadata in websocket_routes {
+        let path = ws_metadata.path.clone();
+
+        // Get the JS handler function
+        let js_handler: Function<String, Promise<String>> = handlers_obj
+            .get_named_property(&ws_metadata.handler_name)
+            .map_err(|e| {
+                Error::from_reason(format!(
+                    "Failed to get WebSocket handler '{}': {}",
+                    ws_metadata.handler_name, e
+                ))
+            })?;
+
+        // Build ThreadsafeFunction for message handling
+        let handle_message_tsfn = js_handler
+            .build_threadsafe_function()
+            .build_callback(|ctx| Ok(vec![ctx.value]))
+            .map_err(|e| {
+                Error::from_reason(format!(
+                    "Failed to build ThreadsafeFunction for WebSocket handler '{}': {}",
+                    ws_metadata.handler_name, e
+                ))
+            })?;
+
+        // Create WebSocket handler
+        let ws_handler = websocket::NodeWebSocketHandler::new(
+            ws_metadata.handler_name.clone(),
+            handle_message_tsfn,
+            None, // on_connect
+            None, // on_disconnect
+        );
+
+        // Create WebSocket state
+        let ws_state = spikard_http::WebSocketState::new(ws_handler);
+
+        // Add WebSocket route to the router
+        use axum::routing::get;
+        app_router = app_router.route(
+            &path,
+            get(spikard_http::websocket_handler::<websocket::NodeWebSocketHandler>).with_state(ws_state),
+        );
+
+        info!("Registered WebSocket route: {}", path);
+    }
 
     let background_config = server_config.background_tasks.clone();
 
@@ -489,6 +541,8 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                 .unwrap_or_else(|_| panic!("Failed to bind to {}", socket_addr));
 
             info!("Server listening on {}", socket_addr);
+            println!("SPIKARD_TEST_SERVER_READY:{}", socket_addr.port());
+            let _ = std::io::stdout().flush();
 
             let background_runtime = BackgroundRuntime::start(background_config.clone()).await;
             crate::background::install_handle(background_runtime.handle());

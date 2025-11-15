@@ -1088,15 +1088,15 @@ mod http_methods {
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
-        if let Some(actual) = headers.get("content-type") {
-            assert_eq!(actual, "application/json", "Mismatched header 'Content-Type'");
-        } else {
-            panic!("Expected header 'Content-Type' to be present");
-        }
         if let Some(actual) = headers.get("content-length") {
             assert_eq!(actual, "85", "Mismatched header 'Content-Length'");
         } else {
             panic!("Expected header 'Content-Length' to be present");
+        }
+        if let Some(actual) = headers.get("content-type") {
+            assert_eq!(actual, "application/json", "Mismatched header 'Content-Type'");
+        } else {
+            panic!("Expected header 'Content-Type' to be present");
         }
     }
 
@@ -1374,6 +1374,14 @@ mod http_methods {
         } else {
             panic!("Expected header 'Access-Control-Max-Age' to be present");
         }
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
         if let Some(actual) = headers.get("access-control-allow-methods") {
             assert_eq!(
                 actual, "GET, POST, PUT, DELETE, OPTIONS",
@@ -1389,14 +1397,6 @@ mod http_methods {
             );
         } else {
             panic!("Expected header 'Access-Control-Allow-Headers' to be present");
-        }
-        if let Some(actual) = headers.get("access-control-allow-origin") {
-            assert_eq!(
-                actual, "https://example.com",
-                "Mismatched header 'Access-Control-Allow-Origin'"
-            );
-        } else {
-            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
         }
     }
 

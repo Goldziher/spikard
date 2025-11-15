@@ -1731,7 +1731,7 @@ async fn handle_websocket_{channel_slug}(mut socket: WebSocket) {{
                     obj.insert("validated".to_string(), Value::Bool(true));
                 }}
                 if let Ok(response_text) = serde_json::to_string(&data) {{
-                    if socket.send(Message::Text(response_text)).await.is_err() {{
+                    if socket.send(Message::Text(response_text.into())).await.is_err() {{
                         break;
                     }}
                 }}

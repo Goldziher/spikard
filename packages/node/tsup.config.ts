@@ -8,7 +8,8 @@ export default defineConfig({
 	sourcemap: true,
 	clean: true,
 	minify: false,
-	// Mark the parent directory (napi-generated index.js) as external
-	external: [/^\.\./],
+	shims: true, // Enable __dirname and __filename in ESM
+	// Mark the parent directory (napi-generated index.js) and ws as external
+	external: [/^\.\./, "ws"],
 	noExternal: [],
 });

@@ -9,7 +9,7 @@ RSpec.describe "content_types" do
     client = Spikard::Testing.create_test_client(app)
     response = client.post("/data", headers: {"Content-Type" => "application/json; charset=utf-16"}, json: {"value" => "test"})
     expect(response.status_code).to eq(415)
-    expect(response.json).to eq({"error" => "Unsupported charset \'utf-16\' for JSON. Only UTF-8 is supported."})
+    expect(response.json).to eq({"detail" => "Unsupported charset \'utf-16\' for JSON. Only UTF-8 is supported.", "status" => 415, "title" => "Unsupported Charset", "type" => "https://spikard.dev/errors/unsupported-charset"})
     client.close
   end
 
@@ -36,7 +36,7 @@ RSpec.describe "content_types" do
     client = Spikard::Testing.create_test_client(app)
     response = client.post("/data", headers: {"Content-Type" => "text/plain"}, raw_body: "{\"data\": \"value\"}")
     expect(response.status_code).to eq(415)
-    expect(response.json).to eq({"error" => "Unsupported Media Type. Expected application/json"})
+    expect(response.json).to eq({"detail" => "Unsupported media type", "status" => 415, "title" => "Unsupported Media Type", "type" => "https://spikard.dev/errors/unsupported-media-type"})
     client.close
   end
 
