@@ -10,7 +10,7 @@ mod websocket;
 use async_stream::stream;
 use axum::body::Body;
 use axum::http::{HeaderName, HeaderValue, Method, StatusCode};
-use axum_test::TestServer;
+use axum_test::{TestServer, TestServerConfig, Transport};
 use bytes::Bytes;
 use cookie::Cookie;
 use magnus::prelude::*;
@@ -32,8 +32,11 @@ use std::pin::Pin;
 use std::sync::Arc;
 use tokio::runtime::{Builder, Runtime};
 
+// Global Tokio runtime for test client with WebSocket/SSE support
+// Must be multi-threaded to support WebSocket and SSE without HTTP transport
 static GLOBAL_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
-    Builder::new_current_thread()
+    Builder::new_multi_thread()
+        .worker_threads(2)
         .enable_all()
         .build()
         .expect("Failed to initialise global Tokio runtime")
@@ -213,6 +216,8 @@ impl NativeTestClient {
         routes_json: String,
         handlers: Value,
         config_value: Value,
+        ws_handlers: Value,
+        sse_producers: Value,
     ) -> Result<(), Error> {
         let metadata: Vec<RouteMetadata> = serde_json::from_str(&routes_json)
             .map_err(|err| Error::new(ruby.exception_arg_error(), format!("Invalid routes JSON: {err}")))?;
@@ -249,18 +254,91 @@ impl NativeTestClient {
         }
 
         // Use build_router_with_handlers_and_config to support OpenAPI and middleware
-        let router = spikard_http::server::build_router_with_handlers_and_config(
+        let mut router = spikard_http::server::build_router_with_handlers_and_config(
             prepared_routes,
             server_config,
             route_metadata_vec,
         )
         .map_err(|err| Error::new(ruby.exception_runtime_error(), format!("Failed to build router: {err}")))?;
 
-        let server = TestServer::new(router).map_err(|err| {
-            Error::new(
-                ruby.exception_runtime_error(),
-                format!("Failed to initialise test server: {err}"),
-            )
+        // Collect WebSocket handlers
+        let mut ws_endpoints = Vec::new();
+        if !ws_handlers.is_nil() {
+            let ws_hash = RHash::from_value(ws_handlers)
+                .ok_or_else(|| Error::new(ruby.exception_arg_error(), "WebSocket handlers must be a Hash"))?;
+
+            ws_hash.foreach(|path: String, factory: Value| -> Result<ForEach, Error> {
+                // Call the factory to get the handler instance
+                let handler_instance = factory.funcall::<_, _, Value>("call", ()).map_err(|e| {
+                    Error::new(
+                        ruby.exception_runtime_error(),
+                        format!("Failed to create WebSocket handler: {}", e),
+                    )
+                })?;
+
+                // Create WebSocket state
+                let ws_state = crate::websocket::create_websocket_state(ruby, handler_instance)?;
+
+                ws_endpoints.push((path, ws_state));
+
+                Ok(ForEach::Continue)
+            })?;
+        }
+
+        // Collect SSE producers
+        let mut sse_endpoints = Vec::new();
+        if !sse_producers.is_nil() {
+            let sse_hash = RHash::from_value(sse_producers)
+                .ok_or_else(|| Error::new(ruby.exception_arg_error(), "SSE producers must be a Hash"))?;
+
+            sse_hash.foreach(|path: String, factory: Value| -> Result<ForEach, Error> {
+                // Call the factory to get the producer instance
+                let producer_instance = factory.funcall::<_, _, Value>("call", ()).map_err(|e| {
+                    Error::new(
+                        ruby.exception_runtime_error(),
+                        format!("Failed to create SSE producer: {}", e),
+                    )
+                })?;
+
+                // Create SSE state
+                let sse_state = crate::sse::create_sse_state(ruby, producer_instance)?;
+
+                sse_endpoints.push((path, sse_state));
+
+                Ok(ForEach::Continue)
+            })?;
+        }
+
+        // Register WebSocket endpoints
+        use axum::routing::get;
+        for (path, ws_state) in ws_endpoints {
+            router = router.route(
+                &path,
+                get(spikard_http::websocket_handler::<crate::websocket::RubyWebSocketHandler>).with_state(ws_state),
+            );
+        }
+
+        // Register SSE endpoints
+        for (path, sse_state) in sse_endpoints {
+            router = router.route(
+                &path,
+                get(spikard_http::sse_handler::<crate::sse::RubySseEventProducer>).with_state(sse_state),
+            );
+        }
+
+        // Create TestServer with HTTP transport (required for WebSocket support in axum-test 18)
+        // This must be done within the Tokio runtime context
+        let config = TestServerConfig {
+            transport: Some(Transport::HttpRandomPort),
+            ..Default::default()
+        };
+        let server = GLOBAL_RUNTIME.block_on(async {
+            TestServer::new_with_config(router, config).map_err(|err| {
+                Error::new(
+                    ruby.exception_runtime_error(),
+                    format!("Failed to initialise test server: {err}"),
+                )
+            })
         })?;
 
         *this.inner.borrow_mut() = Some(ClientInner {
@@ -314,7 +392,26 @@ impl NativeTestClient {
             .as_ref()
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "TestClient not initialised"))?;
 
-        test_websocket::connect_websocket_for_test(ruby, &inner.server, &path)
+        let server = Arc::clone(&inner.server);
+
+        // Drop the borrow before entering the async block
+        drop(inner_borrow);
+
+        // Spawn the WebSocket connection on the runtime's worker threads (matching Python approach)
+        // This is crucial - block_on runs on the current thread, but spawn runs on worker threads
+        // where the proper async context is set up for WebSocket connections
+        let handle =
+            GLOBAL_RUNTIME.spawn(async move { spikard_http::testing::connect_websocket(&server, &path).await });
+
+        // Block on an async block that awaits the handle to avoid nested runtime issues
+        let ws = GLOBAL_RUNTIME.block_on(async {
+            handle
+                .await
+                .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("WebSocket task failed: {}", e)))
+        })?;
+
+        let ws_conn = test_websocket::WebSocketTestConnection::new(ws);
+        Ok(ruby.obj_wrap(ws_conn).as_value())
     }
 
     fn sse(ruby: &Ruby, this: &Self, path: String) -> Result<Value, Error> {
@@ -1780,7 +1877,7 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     // Register TestClient class
     let class = native.define_class("TestClient", ruby.class_object())?;
     class.define_alloc_func::<NativeTestClient>();
-    class.define_method("initialize", method!(NativeTestClient::initialize, 3))?;
+    class.define_method("initialize", method!(NativeTestClient::initialize, 5))?;
     class.define_method("request", method!(NativeTestClient::request, 3))?;
     class.define_method("websocket", method!(NativeTestClient::websocket, 1))?;
     class.define_method("sse", method!(NativeTestClient::sse, 1))?;
