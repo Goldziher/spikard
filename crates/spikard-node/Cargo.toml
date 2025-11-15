@@ -23,7 +23,7 @@ async-trait = "0.1"
 axum = { workspace = true }
 axum-test = "18"
 tower = "0.5"
-bytes = "1.10"
+bytes = "1.11"
 url = "2.5"
 http-body-util = "0.1"
 cookie = "0.18"

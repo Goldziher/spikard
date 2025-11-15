@@ -18,7 +18,7 @@ serde_json = "1.0"
 spikard-http = { path = "../spikard-http" }
 axum = "0.8"
 axum-test = "18"
-bytes = "1.10"
+bytes = "1.11"
 cookie = "0.18"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
