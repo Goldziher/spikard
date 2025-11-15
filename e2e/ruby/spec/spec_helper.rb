@@ -2,6 +2,7 @@
 
 $LOAD_PATH.unshift File.expand_path("../../../packages/ruby/lib", __dir__)
 require "spikard"
+require_relative "../app/main"
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
