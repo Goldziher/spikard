@@ -376,15 +376,14 @@ fn append_websocket_factories(code: &mut String, fixtures: &[AsyncFixture]) -> R
         code.push_str(&format!(
             r#"  def {app_fn_name}
     app = Spikard::App.new
-    app.websocket("{path}", handler_name: "{handler_name}") do |req, ws|
-      loop do
-        msg = ws.receive_message
-        break if msg.close?
-
-        data = msg.as_json
-        data['validated'] = true
-        ws.send_json(data)
+    app.websocket("{path}", handler_name: "{handler_name}") do
+      # Create handler object with handle_message method (message-based pattern)
+      handler = Object.new
+      def handler.handle_message(message)
+        message['validated'] = true
+        message
       end
+      handler
     end
     app
   end

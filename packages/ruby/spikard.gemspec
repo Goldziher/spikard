@@ -33,5 +33,8 @@ Gem::Specification.new do |spec|
   ]
   spec.require_paths = ['lib']
   spec.extensions = ['ext/spikard_rb/extconf.rb']
+
+  # Runtime dependency for WebSocket test client (subprocess approach)
+  spec.add_dependency 'websocket-client-simple', '~> 0.8'
 end
 # rubocop:enable Metrics/BlockLength
