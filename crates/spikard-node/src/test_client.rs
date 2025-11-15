@@ -366,10 +366,17 @@ impl TestClient {
         };
 
         let schema_registry = spikard_http::SchemaRegistry::new();
+
+        // Separate regular routes from WebSocket routes (handler names starting with "websocket")
+        let (regular_routes_data, websocket_routes_data): (Vec<_>, Vec<_>) = routes_data
+            .into_iter()
+            .partition(|metadata| !metadata.handler_name.to_lowercase().starts_with("websocket"));
+
         let mut prepared_routes: Vec<(Route, Arc<dyn spikard_http::Handler>)> = Vec::new();
         let mut metadata_list: Vec<RouteMetadata> = Vec::new();
 
-        for metadata in routes_data {
+        // Process regular HTTP routes
+        for metadata in regular_routes_data {
             // Clone metadata before converting to Route
             metadata_list.push(metadata.clone());
 
@@ -387,11 +394,53 @@ impl TestClient {
         }
 
         // Use Server::with_handlers_and_metadata to build router with full config support
-        let axum_router =
+        let mut axum_router =
             spikard_http::Server::with_handlers_and_metadata(server_config, prepared_routes, metadata_list)
                 .map_err(|e| Error::from_reason(format!("Failed to build router: {}", e)))?;
 
-        // Create test server with in-memory transport for HTTP tests
+        // Add WebSocket routes
+        for ws_metadata in websocket_routes_data {
+            let path = ws_metadata.path.clone();
+            let handler_name = ws_metadata.handler_name.clone();
+
+            // Get the JS handler function
+            let js_handler: Function<String, Promise<String>> =
+                handlers_map.get_named_property(&handler_name).map_err(|e| {
+                    Error::from_reason(format!("Failed to get WebSocket handler '{}': {}", handler_name, e))
+                })?;
+
+            // Build ThreadsafeFunction for message handling
+            let handle_message_tsfn = js_handler
+                .build_threadsafe_function()
+                .build_callback(|ctx| Ok(vec![ctx.value]))
+                .map_err(|e| {
+                    Error::from_reason(format!(
+                        "Failed to build ThreadsafeFunction for WebSocket handler '{}': {}",
+                        handler_name, e
+                    ))
+                })?;
+
+            // Create WebSocket handler
+            let ws_handler = crate::websocket::NodeWebSocketHandler::new(
+                handler_name.clone(),
+                handle_message_tsfn,
+                None, // on_connect
+                None, // on_disconnect
+            );
+
+            // Create WebSocket state
+            let ws_state = spikard_http::WebSocketState::new(ws_handler);
+
+            // Add WebSocket route to the router
+            use axum::routing::get;
+            axum_router = axum_router.route(
+                &path,
+                get(spikard_http::websocket_handler::<crate::websocket::NodeWebSocketHandler>).with_state(ws_state),
+            );
+        }
+
+        // Create test server with default transport (in-memory)
+        // Note: HTTP transport has issues with WebSocket support in axum-test
         let server = TestServer::new(axum_router)
             .map_err(|e| Error::from_reason(format!("Failed to create test server: {}", e)))?;
 
@@ -449,6 +498,16 @@ impl TestClient {
 
         // Parse SSE stream from response
         test_sse::sse_stream_from_response(&snapshot)
+    }
+
+    /// Connect to a WebSocket endpoint
+    #[napi]
+    pub async fn websocket(&self, path: String) -> Result<test_websocket::WebSocketTestConnection> {
+        // Connect to WebSocket endpoint using the test server
+        let ws_conn = spikard_http::testing::connect_websocket(&self.server, &path).await;
+
+        // Wrap in Node.js WebSocket connection
+        Ok(test_websocket::WebSocketTestConnection::new(ws_conn))
     }
 
     async fn request(

@@ -32,6 +32,8 @@ export declare class TestClient {
   trace(path: string, headers?: any | undefined | null): Promise<TestResponse>
   /** Connect to a Server-Sent Events endpoint */
   sse(path: string): Promise<SseStream>
+  /** Connect to a WebSocket endpoint */
+  websocket(path: string): Promise<WebSocketTestConnection>
 }
 
 /** HTTP Response wrapper */

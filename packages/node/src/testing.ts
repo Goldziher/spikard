@@ -7,7 +7,7 @@ import { once } from "node:events";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import WebSocket from "ws";
+import type WebSocket from "ws";
 
 // Native module is built into this package directory; import the napi loader directly
 import {
@@ -417,20 +417,14 @@ const config = { ...app.config, host: '127.0.0.1', port: ${port} };
 	/**
 	 * Connect to a WebSocket endpoint
 	 *
-	 * Creates a WebSocket connection by starting a real HTTP server
-	 * in a subprocess and connecting via the ws library.
+	 * Uses the native test client to create an in-memory WebSocket connection
+	 * without requiring a subprocess server.
 	 *
 	 * @param path - WebSocket path
 	 * @returns WebSocket test connection
 	 */
-	async websocketConnect(path: string): Promise<WebSocketConnection> {
-		const port = await this.startServer();
-		const wsUrl = `ws://127.0.0.1:${port}${path}`;
-
-		const ws = new WebSocket(wsUrl);
-		await once(ws, "open");
-
-		return new WebSocketConnection(ws);
+	async websocketConnect(path: string): Promise<WebSocketTestConnection> {
+		return this.nativeClient.websocket(path);
 	}
 
 	/**
