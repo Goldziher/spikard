@@ -30,6 +30,15 @@ module Spikard
         @native = native
       end
 
+      # Factory method for creating test client from an app
+      def self.new(app_or_native, config: nil)
+        # If passed a native client directly, use it
+        return super(app_or_native) if app_or_native.is_a?(Spikard::Native::TestClient)
+
+        # Otherwise, create test client from app
+        Spikard::Testing.create_test_client(app_or_native, config: config)
+      end
+
       def request(method, path, **options)
         payload = @native.request(method.to_s.upcase, path, options)
         Response.new(payload)

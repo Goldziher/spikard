@@ -29,3 +29,8 @@ rescue LoadError => e
     Original error: #{e.message}
   MSG
 end
+
+# Convenience alias for test client at top level
+module Spikard
+  TestClient = Testing::TestClient
+end
