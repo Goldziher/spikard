@@ -384,7 +384,7 @@ module E2ERubyApp
   def create_app_content_types_1_13_json_with_charset_utf16
     app = Spikard::App.new
     app.post("/data", handler_name: "content_types_1_13_json_with_charset_utf16", request_schema: {"properties" => {"value" => {"type" => "string"}}, "type" => "object"}) do |_request|
-      build_response(content: {"error" => "Unsupported charset \'utf-16\' for JSON. Only UTF-8 is supported."}, status: 415, headers: nil)
+      build_response(content: {"detail" => "Unsupported charset \'utf-16\' for JSON. Only UTF-8 is supported.", "status" => 415, "title" => "Unsupported Charset", "type" => "https://spikard.dev/errors/unsupported-charset"}, status: 415, headers: nil)
     end
     app
   end
@@ -408,7 +408,7 @@ module E2ERubyApp
   def create_app_content_types_4_16_text_plain_not_accepted
     app = Spikard::App.new
     app.post("/data", handler_name: "content_types_4_16_text_plain_not_accepted", request_schema: {"properties" => {"data" => {"type" => "string"}}, "required" => ["data"], "type" => "object"}) do |_request|
-      build_response(content: {"error" => "Unsupported Media Type. Expected application/json"}, status: 415, headers: nil)
+      build_response(content: {"detail" => "Unsupported media type", "status" => 415, "title" => "Unsupported Media Type", "type" => "https://spikard.dev/errors/unsupported-media-type"}, status: 415, headers: nil)
     end
     app
   end

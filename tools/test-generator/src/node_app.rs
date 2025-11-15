@@ -754,9 +754,8 @@ fn append_sse_factories(
         };
         let slug = sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"));
         let unique = make_unique_name(&format!("sse_{}", slug), handler_names);
-        let handler_fn = format!("sseHandler{}", to_pascal_case(&unique));
-        let factory_slug = format!("sse_{}", unique);
-        let factory_fn = format!("createApp{}", to_pascal_case(&factory_slug));
+        let handler_fn = format!("sseHandler{}", to_pascal_case(&slug));
+        let factory_fn = format!("createApp{}", to_pascal_case(&unique));
         let events_literal = build_sse_events_literal(&channel_fixtures)?;
 
         let handler_code = format!(
@@ -857,23 +856,15 @@ fn append_websocket_factories(
         };
         let slug = sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"));
         let unique = make_unique_name(&format!("websocket_{}", slug), handler_names);
-        let handler_fn = format!("websocketHandler{}", to_pascal_case(&unique));
-        let factory_slug = format!("websocket_{}", unique);
-        let factory_fn = format!("createApp{}", to_pascal_case(&factory_slug));
+        let handler_fn = format!("websocketHandler{}", to_pascal_case(&slug));
+        let factory_fn = format!("createApp{}", to_pascal_case(&unique));
 
         let handler_code = format!(
-            "async function {handler_fn}(ws: any): Promise<void> {{
-\tawait ws.accept();
-\ttry {{
-\t\twhile (true) {{
-\t\t\tconst msg = await ws.receiveJson();
-\t\t\t// Echo back with validation indicator
-\t\t\tmsg.validated = true;
-\t\t\tawait ws.sendJson(msg);
-\t\t}}
-\t}} catch (error) {{
-\t\t// Connection closed or error
-\t}}
+            "async function {handler_fn}(message: any): Promise<string> {{
+\t// Parse incoming message, add validation indicator, and return as JSON
+\tconst parsedMessage = JSON.parse(message);
+\tparsedMessage.validated = true;
+\treturn JSON.stringify(parsedMessage);
 }}",
             handler_fn = handler_fn
         );

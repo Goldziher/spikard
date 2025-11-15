@@ -278,6 +278,11 @@ mod compression {
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-encoding") {
+            assert_eq!(actual, "gzip", "Mismatched header 'content-encoding'");
+        } else {
+            panic!("Expected header 'content-encoding' to be present");
+        }
         if let Some(actual) = headers.get("vary") {
             assert_eq!(
                 actual.to_ascii_lowercase(),
@@ -286,11 +291,6 @@ mod compression {
             );
         } else {
             panic!("Expected header 'vary' to be present");
-        }
-        if let Some(actual) = headers.get("content-encoding") {
-            assert_eq!(actual, "gzip", "Mismatched header 'content-encoding'");
-        } else {
-            panic!("Expected header 'content-encoding' to be present");
         }
     }
 

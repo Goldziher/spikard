@@ -572,8 +572,12 @@ if (!nativeBinding) {
 }
 
 module.exports = nativeBinding
+module.exports.SseEvent = nativeBinding.SseEvent
+module.exports.SseStream = nativeBinding.SseStream
 module.exports.TestClient = nativeBinding.TestClient
 module.exports.TestResponse = nativeBinding.TestResponse
+module.exports.WebSocketMessage = nativeBinding.WebSocketMessage
+module.exports.WebSocketTestConnection = nativeBinding.WebSocketTestConnection
 module.exports.backgroundRun = nativeBinding.backgroundRun
 module.exports.createStreamingHandle = nativeBinding.createStreamingHandle
 module.exports.runServer = nativeBinding.runServer

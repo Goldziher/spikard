@@ -1,12 +1,9 @@
 // ! WebSocket test client bindings for Node.js
 
-use axum_test::TestServer;
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use serde_json::Value;
-use spikard_http::testing::{
-    WebSocketConnection as RustWebSocketConnection, WebSocketMessage as RustWebSocketMessage, connect_websocket,
-};
+use spikard_http::testing::{WebSocketConnection as RustWebSocketConnection, WebSocketMessage as RustWebSocketMessage};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -122,10 +119,4 @@ impl WebSocketMessage {
     pub fn is_close(&self) -> bool {
         self.inner.is_close()
     }
-}
-
-/// Connect to a WebSocket endpoint for testing
-pub async fn connect_websocket_for_test(server: &TestServer, path: &str) -> Result<WebSocketTestConnection> {
-    let ws = connect_websocket(server, path).await;
-    Ok(WebSocketTestConnection::new(ws))
 }

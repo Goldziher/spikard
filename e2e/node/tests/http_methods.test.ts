@@ -34,8 +34,8 @@ describe("http_methods", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["access-control-max-age"]).toBe("86400");
 		expect(responseHeaders["access-control-allow-headers"]).toBe("Content-Type");
+		expect(responseHeaders["access-control-max-age"]).toBe("86400");
 		expect(responseHeaders["access-control-allow-origin"]).toBe("https://example.com");
 		expect(responseHeaders["access-control-allow-methods"]).toBe("GET, POST, PUT, DELETE, OPTIONS");
 	});
@@ -112,8 +112,8 @@ describe("http_methods", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["content-length"]).toBe("85");
 		expect(responseHeaders["content-type"]).toBe("application/json");
+		expect(responseHeaders["content-length"]).toBe("85");
 	});
 
 	test("DELETE - With response body", async () => {

@@ -17,10 +17,13 @@
 		"vitest": "^4.0.8"
 	},
 	"napi": {
-		"name": "spikard-node",
-		"triples": {
-			"defaults": true
-		}
+		"binaryName": "spikard-node",
+		"targets": [
+			"x86_64-apple-darwin",
+			"aarch64-apple-darwin",
+			"x86_64-unknown-linux-gnu",
+			"x86_64-pc-windows-msvc"
+		]
 	},
 	"dependencies": {
 		"zod": "^4.1.12"

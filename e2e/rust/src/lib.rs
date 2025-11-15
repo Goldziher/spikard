@@ -6135,9 +6135,7 @@ async fn compression_compression_payload_below_min_size_is_not_compressed_handle
 }
 
 async fn content_types_13_json_with_charset_utf16_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"error\":\"Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported.\"}")
-            .unwrap();
+    let expected_body: Value = serde_json::from_str("{\"detail\":\"Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported.\",\"status\":415,\"title\":\"Unsupported Charset\",\"type\":\"https://spikard.dev/errors/unsupported-charset\"}").unwrap();
     let response = (axum::http::StatusCode::from_u16(415).unwrap(), Json(expected_body)).into_response();
 
     response
@@ -6183,8 +6181,7 @@ async fn content_types_15_multipart_boundary_required_handler() -> impl axum::re
 }
 
 async fn content_types_16_text_plain_not_accepted_handler() -> impl axum::response::IntoResponse {
-    let expected_body: Value =
-        serde_json::from_str("{\"error\":\"Unsupported Media Type. Expected application/json\"}").unwrap();
+    let expected_body: Value = serde_json::from_str("{\"detail\":\"Unsupported media type\",\"status\":415,\"title\":\"Unsupported Media Type\",\"type\":\"https://spikard.dev/errors/unsupported-media-type\"}").unwrap();
     let response = (axum::http::StatusCode::from_u16(415).unwrap(), Json(expected_body)).into_response();
 
     response
@@ -6302,8 +6299,8 @@ async fn content_types_binary_response_application_octet_stream_handler() -> imp
     let response = apply_expected_headers(
         response,
         &[
-            ("content-disposition", "attachment; filename=file.bin"),
             ("content-type", "application/octet-stream"),
+            ("content-disposition", "attachment; filename=file.bin"),
         ],
     );
 
@@ -8113,9 +8110,9 @@ async fn cors_08_cors_max_age_handler(
                 response,
                 &[
                     ("access-control-allow-origin", "https://example.com"),
-                    ("access-control-allow-methods", "POST"),
-                    ("access-control-allow-headers", "Content-Type"),
                     ("access-control-max-age", "3600"),
+                    ("access-control-allow-headers", "Content-Type"),
+                    ("access-control-allow-methods", "POST"),
                 ],
             );
 
@@ -8203,9 +8200,9 @@ async fn cors_09_cors_expose_headers_handler(
                 response,
                 &[
                     ("x-total-count", "42"),
-                    ("access-control-allow-origin", "https://example.com"),
                     ("x-request-id", "abc123"),
                     ("access-control-expose-headers", "X-Total-Count, X-Request-Id"),
+                    ("access-control-allow-origin", "https://example.com"),
                 ],
             );
 
@@ -8233,10 +8230,10 @@ async fn cors_cors_private_network_access_handler() -> impl axum::response::Into
     let response = apply_expected_headers(
         response,
         &[
-            ("access-control-allow-methods", "GET, POST"),
-            ("access-control-allow-private-network", "true"),
-            ("access-control-allow-origin", "https://public.example.com"),
             ("vary", "Origin"),
+            ("access-control-allow-origin", "https://public.example.com"),
+            ("access-control-allow-private-network", "true"),
+            ("access-control-allow-methods", "GET, POST"),
         ],
     );
 
@@ -8249,9 +8246,9 @@ async fn cors_cors_vary_header_for_proper_caching_handler() -> impl axum::respon
     let response = apply_expected_headers(
         response,
         &[
-            ("vary", "Origin"),
             ("cache-control", "public, max-age=3600"),
             ("access-control-allow-origin", "https://app.example.com"),
+            ("vary", "Origin"),
         ],
     );
 
@@ -8264,8 +8261,8 @@ async fn cors_cors_multiple_allowed_origins_handler() -> impl axum::response::In
     let response = apply_expected_headers(
         response,
         &[
-            ("vary", "Origin"),
             ("access-control-allow-origin", "https://admin.example.com"),
+            ("vary", "Origin"),
         ],
     );
 
@@ -8286,10 +8283,10 @@ async fn cors_cors_preflight_for_delete_method_handler() -> impl axum::response:
     let response = apply_expected_headers(
         response,
         &[
-            ("access-control-max-age", "3600"),
-            ("access-control-allow-origin", "https://app.example.com"),
             ("access-control-allow-methods", "GET, POST, PUT, PATCH, DELETE"),
             ("vary", "Origin"),
+            ("access-control-max-age", "3600"),
+            ("access-control-allow-origin", "https://app.example.com"),
         ],
     );
 
@@ -8302,11 +8299,11 @@ async fn cors_cors_preflight_for_put_method_handler() -> impl axum::response::In
     let response = apply_expected_headers(
         response,
         &[
-            ("access-control-max-age", "3600"),
-            ("access-control-allow-origin", "https://app.example.com"),
-            ("access-control-allow-methods", "GET, POST, PUT, PATCH, DELETE"),
             ("access-control-allow-headers", "Content-Type, X-Custom-Header"),
             ("vary", "Origin"),
+            ("access-control-allow-origin", "https://app.example.com"),
+            ("access-control-allow-methods", "GET, POST, PUT, PATCH, DELETE"),
+            ("access-control-max-age", "3600"),
         ],
     );
 
@@ -8319,10 +8316,10 @@ async fn cors_cors_preflight_request_handler() -> impl axum::response::IntoRespo
     let response = apply_expected_headers(
         response,
         &[
-            ("access-control-allow-headers", "Content-Type, X-Custom-Header"),
             ("access-control-allow-methods", "GET, POST, PUT, DELETE, OPTIONS"),
-            ("access-control-allow-origin", "https://example.com"),
             ("access-control-max-age", "600"),
+            ("access-control-allow-headers", "Content-Type, X-Custom-Header"),
+            ("access-control-allow-origin", "https://example.com"),
         ],
     );
 
@@ -8380,9 +8377,9 @@ async fn cors_cors_with_credentials_handler() -> impl axum::response::IntoRespon
     let response = apply_expected_headers(
         response,
         &[
-            ("access-control-allow-credentials", "true"),
-            ("access-control-allow-origin", "https://app.example.com"),
             ("vary", "Origin"),
+            ("access-control-allow-origin", "https://app.example.com"),
+            ("access-control-allow-credentials", "true"),
         ],
     );
 
@@ -12059,10 +12056,10 @@ async fn http_methods_options_cors_preflight_request_handler() -> impl axum::res
     let response = apply_expected_headers(
         response,
         &[
-            ("access-control-allow-methods", "GET, POST, PUT, DELETE, OPTIONS"),
             ("access-control-allow-headers", "Content-Type"),
-            ("access-control-allow-origin", "https://example.com"),
+            ("access-control-allow-methods", "GET, POST, PUT, DELETE, OPTIONS"),
             ("access-control-max-age", "86400"),
+            ("access-control-allow-origin", "https://example.com"),
         ],
     );
 
@@ -14352,10 +14349,10 @@ async fn lifecycle_hooks_multiple_hooks_all_phases_handler(
             let response = apply_expected_headers(
                 response,
                 &[
-                    ("x-request-id", ".*"),
-                    ("x-frame-options", "DENY"),
-                    ("x-content-type-options", "nosniff"),
                     ("x-response-time", ".*ms"),
+                    ("x-request-id", ".*"),
+                    ("x-content-type-options", "nosniff"),
+                    ("x-frame-options", "DENY"),
                 ],
             );
 
@@ -14369,10 +14366,10 @@ async fn lifecycle_hooks_multiple_hooks_all_phases_handler(
             let response = apply_expected_headers(
                 response,
                 &[
-                    ("x-request-id", ".*"),
-                    ("x-frame-options", "DENY"),
-                    ("x-content-type-options", "nosniff"),
                     ("x-response-time", ".*ms"),
+                    ("x-request-id", ".*"),
+                    ("x-content-type-options", "nosniff"),
+                    ("x-frame-options", "DENY"),
                 ],
             );
 
@@ -14480,9 +14477,9 @@ async fn lifecycle_hooks_onresponse_security_headers_handler() -> impl axum::res
     let response = apply_expected_headers(
         response,
         &[
-            ("x-content-type-options", "nosniff"),
-            ("x-frame-options", "DENY"),
             ("x-xss-protection", "1; mode=block"),
+            ("x-frame-options", "DENY"),
+            ("x-content-type-options", "nosniff"),
             ("strict-transport-security", "max-age=31536000; includeSubDomains"),
         ],
     );
@@ -23989,8 +23986,8 @@ async fn status_codes_206_partial_content_handler() -> impl axum::response::Into
         response,
         &[
             ("accept-ranges", "bytes"),
-            ("content-type", "application/pdf"),
             ("content-range", "bytes 0-1023/5000"),
+            ("content-type", "application/pdf"),
             ("content-length", "1024"),
         ],
     );
@@ -24130,9 +24127,9 @@ async fn status_codes_429_too_many_requests_handler() -> impl axum::response::In
     let response = apply_expected_headers(
         response,
         &[
-            ("x-ratelimit-remaining", "0"),
-            ("retry-after", "60"),
             ("x-ratelimit-limit", "100"),
+            ("retry-after", "60"),
+            ("x-ratelimit-remaining", "0"),
             ("x-ratelimit-reset", "1609459200"),
         ],
     );
@@ -26023,7 +26020,7 @@ async fn handle_websocket_chat(mut socket: WebSocket) {
                     obj.insert("validated".to_string(), Value::Bool(true));
                 }
                 if let Ok(response_text) = serde_json::to_string(&data) {
-                    if socket.send(Message::Text(response_text)).await.is_err() {
+                    if socket.send(Message::Text(response_text.into())).await.is_err() {
                         break;
                     }
                 }
