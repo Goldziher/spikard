@@ -1,12 +1,9 @@
 //! WebSocket test client bindings for Ruby
 
-use axum_test::TestServer;
 use magnus::prelude::*;
 use magnus::{Error, Ruby, Value, method};
 use serde_json::Value as JsonValue;
-use spikard_http::testing::{
-    WebSocketConnection as RustWebSocketConnection, WebSocketMessage as RustWebSocketMessage, connect_websocket,
-};
+use spikard_http::testing::{WebSocketConnection as RustWebSocketConnection, WebSocketMessage as RustWebSocketMessage};
 use std::cell::RefCell;
 
 /// Ruby wrapper for WebSocket test client
@@ -17,7 +14,8 @@ pub struct WebSocketTestConnection {
 }
 
 impl WebSocketTestConnection {
-    pub fn new(inner: RustWebSocketConnection) -> Self {
+    /// Create a new WebSocket test connection (public for lib.rs)
+    pub(crate) fn new(inner: RustWebSocketConnection) -> Self {
         Self {
             inner: RefCell::new(Some(inner)),
         }
@@ -145,14 +143,6 @@ impl WebSocketMessage {
     fn is_close(&self) -> bool {
         self.inner.is_close()
     }
-}
-
-/// Connect to a WebSocket endpoint for testing
-pub fn connect_websocket_for_test(ruby: &Ruby, server: &TestServer, path: &str) -> Result<Value, Error> {
-    let ws = crate::GLOBAL_RUNTIME.block_on(async { connect_websocket(server, path).await });
-
-    let ws_conn = WebSocketTestConnection::new(ws);
-    Ok(ruby.obj_wrap(ws_conn).as_value())
 }
 
 /// Helper to convert Ruby object to JSON
