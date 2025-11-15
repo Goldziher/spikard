@@ -13,7 +13,6 @@ from spikard.types import Route
 
 if TYPE_CHECKING:
     from spikard.sse import SseEventProducer
-    from spikard.websocket import WebSocketHandler
 
 # Type alias for HTTP methods
 HttpMethod = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "TRACE"]
@@ -32,7 +31,7 @@ class Spikard:
                    You can also pass configuration to the run() method.
         """
         self._routes: list[Route] = []
-        self._websocket_handlers: dict[str, Callable[[], WebSocketHandler]] = {}
+        self._websocket_handlers: dict[str, Callable[[], Any]] = {}
         self._sse_producers: dict[str, Callable[[], SseEventProducer]] = {}
         self._config = config
         self._lifecycle_hooks: dict[str, list[Callable[..., Any]]] = {
@@ -341,7 +340,7 @@ class Spikard:
         """
         return {hook_type: hooks.copy() for hook_type, hooks in self._lifecycle_hooks.items()}
 
-    def websocket(self, path: str) -> Callable[[Callable[[], "WebSocketHandler"]], Callable[[], "WebSocketHandler"]]:
+    def websocket(self, path: str) -> Callable[[Callable[[], Any]], Callable[[], Any]]:
         """Register a WebSocket endpoint.
 
         Args:
@@ -353,7 +352,6 @@ class Spikard:
         Example:
             ```python
             from spikard import Spikard
-            from spikard.websocket import WebSocketHandler
 
             app = Spikard()
 
@@ -364,7 +362,7 @@ class Spikard:
             ```
         """
 
-        def decorator(factory: Callable[[], "WebSocketHandler"]) -> Callable[[], "WebSocketHandler"]:
+        def decorator(factory: Callable[[], Any]) -> Callable[[], Any]:
             self._websocket_handlers[path] = factory
             return factory
 
@@ -399,7 +397,7 @@ class Spikard:
 
         return decorator
 
-    def get_websocket_handlers(self) -> dict[str, Callable[[], "WebSocketHandler"]]:
+    def get_websocket_handlers(self) -> dict[str, Callable[[], Any]]:
         """Get all registered WebSocket handlers.
 
         Returns:

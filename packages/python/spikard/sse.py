@@ -74,8 +74,8 @@ class SseEventProducer:
         self._generator_func = generator_func
         self._generator: AsyncIterator[dict[str, Any]] | None = None
         self._event_schema = event_schema
-        self._loop = None
-        self._loop_thread = None
+        self._loop: asyncio.AbstractEventLoop | None = None
+        self._loop_thread: threading.Thread | None = None
 
     def on_connect(self) -> None:
         """Called when a client connects. Initializes the generator and event loop."""
@@ -128,6 +128,8 @@ class SseEventProducer:
 
     async def _get_next_event(self) -> SseEvent | None:
         """Get the next event (must run in the event loop)."""
+        if self._generator is None:
+            return None
         try:
             data = await self._generator.__anext__()
             return SseEvent(data=data)
@@ -225,7 +227,7 @@ def sse(
             """Factory that creates an SseEventProducer instance."""
             producer = SseEventProducer(lambda: wrapper(), event_schema=extracted_event_schema)
             # Store the schema on the producer instance so Rust can extract it
-            producer._event_schema = extracted_event_schema  # type: ignore[attr-defined]  # noqa: SLF001
+            producer._event_schema = extracted_event_schema  # noqa: SLF001
             return producer
 
         app._sse_producers[path] = producer_factory  # noqa: SLF001

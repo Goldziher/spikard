@@ -139,9 +139,9 @@ def websocket(
                 """Called when WebSocket connection is closed."""
 
         # Register with the app as a factory that returns a handler instance
-        app._websocket_handlers[path] = lambda: WebSocketHandlerWrapper()  # type: ignore[attr-defined]  # noqa: SLF001
+        app._websocket_handlers[path] = lambda: WebSocketHandlerWrapper()  # noqa: SLF001
 
         # Return the original function (for documentation/inspection purposes)
-        return func  # type: ignore[return-value]
+        return func
 
     return decorator
