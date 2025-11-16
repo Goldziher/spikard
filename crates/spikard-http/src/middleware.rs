@@ -629,6 +629,29 @@ mod tests {
     use axum::http::HeaderValue;
 
     #[test]
+    fn validate_content_length_accepts_matching_sizes() {
+        let mut headers = HeaderMap::new();
+        headers.insert(axum::http::header::CONTENT_LENGTH, HeaderValue::from_static("5"));
+
+        assert!(validate_content_length(&headers, 5).is_ok());
+    }
+
+    #[test]
+    fn validate_content_length_rejects_mismatched_sizes() {
+        let mut headers = HeaderMap::new();
+        headers.insert(axum::http::header::CONTENT_LENGTH, HeaderValue::from_static("10"));
+
+        let err = validate_content_length(&headers, 4).expect_err("expected mismatch");
+        assert_eq!(err.status(), StatusCode::BAD_REQUEST);
+        assert_eq!(
+            err.headers()
+                .get(axum::http::header::CONTENT_TYPE)
+                .and_then(|value| value.to_str().ok()),
+            Some(CONTENT_TYPE_PROBLEM_JSON)
+        );
+    }
+
+    #[test]
     fn test_multipart_without_boundary() {
         let mut headers = HeaderMap::new();
         headers.insert(

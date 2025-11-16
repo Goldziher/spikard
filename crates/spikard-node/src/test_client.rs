@@ -22,7 +22,9 @@ use serde_json::{Map as JsonMap, Value, json};
 use crate::test_sse;
 use crate::test_websocket;
 use spikard_http::problem::ProblemDetails;
-use spikard_http::testing::{SnapshotError, snapshot_response};
+use spikard_http::testing::{
+    MultipartFilePart, SnapshotError, build_multipart_body, encode_urlencoded_body, snapshot_response,
+};
 use spikard_http::{HandlerResult, RequestData, ResponseBodySize, Server};
 use spikard_http::{ParameterValidator, Route, RouteMetadata, SchemaValidator};
 use std::collections::HashMap;
@@ -564,7 +566,7 @@ impl TestClient {
                     }
                 }
                 BodyPayload::Form(form_data) => {
-                    let body_vec = encode_form_body(form_data)
+                    let body_vec = encode_urlencoded_body(&form_data)
                         .map_err(|err| Error::from_reason(format!("Failed to encode form body: {}", err)))?;
                     request = request.bytes(Bytes::from(body_vec));
 
@@ -587,57 +589,6 @@ impl TestClient {
         let response = request.await;
         let snapshot = snapshot_response(response).await.map_err(map_snapshot_error)?;
         Ok(TestResponse::from_snapshot(snapshot))
-    }
-}
-
-fn encode_form_body(body: Value) -> std::result::Result<Vec<u8>, String> {
-    match body {
-        Value::String(s) => Ok(s.into_bytes()),
-        Value::Object(map) => {
-            let mut parts = Vec::new();
-            for (key, value) in map {
-                append_form_value(&mut parts, key, value)?;
-            }
-            Ok(parts.join("&").into_bytes())
-        }
-        other => serde_qs::to_string(&other)
-            .map(|encoded| encoded.into_bytes())
-            .map_err(|e| e.to_string()),
-    }
-}
-
-fn append_form_value(parts: &mut Vec<String>, key: String, value: Value) -> std::result::Result<(), String> {
-    match value {
-        Value::Array(items) => {
-            for item in items {
-                append_form_value(parts, key.clone(), item)?;
-            }
-            Ok(())
-        }
-        Value::Object(obj) => {
-            for (nested_key, nested_value) in obj {
-                let new_key = format!("{}[{}]", key, nested_key);
-                append_form_value(parts, new_key, nested_value)?;
-            }
-            Ok(())
-        }
-        other => {
-            let encoded_key = urlencoding::encode(&key).into_owned();
-            let value_string = value_to_form_string(&other);
-            let encoded_value = urlencoding::encode(&value_string).into_owned();
-            parts.push(format!("{}={}", encoded_key, encoded_value));
-            Ok(())
-        }
-    }
-}
-
-fn value_to_form_string(value: &Value) -> String {
-    match value {
-        Value::Null => String::new(),
-        Value::Bool(b) => b.to_string(),
-        Value::Number(n) => n.to_string(),
-        Value::String(s) => s.clone(),
-        other => other.to_string(),
     }
 }
 
@@ -670,44 +621,34 @@ fn encode_multipart_body(value: &Value) -> std::result::Result<(Vec<u8>, String)
         .as_object()
         .ok_or_else(|| "Multipart payload must be an object".to_string())?;
 
-    let fields = obj
-        .get("fields")
-        .and_then(|v| v.as_object())
-        .cloned()
-        .unwrap_or_default();
-    let files = obj.get("files").and_then(|v| v.as_array()).cloned().unwrap_or_default();
-
-    let boundary = format!(
-        "spikard-boundary-{}",
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_err(|e| e.to_string())?
-            .as_nanos()
-    );
-
-    let mut body = Vec::new();
-
-    // Encode form fields
-    for (name, value) in fields {
-        append_field(&mut body, &boundary, &name, &value)?;
+    let mut fields: Vec<(String, String)> = Vec::new();
+    if let Some(field_map) = obj.get("fields").and_then(|v| v.as_object()) {
+        for (name, field_value) in field_map {
+            collect_field_values(&mut fields, name.clone(), field_value)?;
+        }
     }
 
-    // Encode files
-    for file in files {
-        append_file(&mut body, &boundary, &file)?;
+    let mut files: Vec<MultipartFilePart> = Vec::new();
+    if let Some(file_values) = obj.get("files").and_then(|v| v.as_array()) {
+        for file in file_values {
+            files.push(parse_multipart_file(file)?);
+        }
     }
 
-    body.extend_from_slice(format!("--{}--\r\n", boundary).as_bytes());
-
+    let (body, boundary) = build_multipart_body(&fields, &files);
     let content_type = format!("multipart/form-data; boundary={}", boundary);
     Ok((body, content_type))
 }
 
-fn append_field(body: &mut Vec<u8>, boundary: &str, name: &str, value: &Value) -> std::result::Result<(), String> {
+fn collect_field_values(
+    fields: &mut Vec<(String, String)>,
+    name: String,
+    value: &Value,
+) -> std::result::Result<(), String> {
     match value {
-        Value::Array(values) => {
-            for item in values {
-                append_field(body, boundary, name, item)?;
+        Value::Array(items) => {
+            for item in items {
+                collect_field_values(fields, name.clone(), item)?;
             }
             Ok(())
         }
@@ -719,17 +660,13 @@ fn append_field(body: &mut Vec<u8>, boundary: &str, name: &str, value: &Value) -
                 Value::Number(n) => n.to_string(),
                 other => serde_json::to_string(other).map_err(|e| e.to_string())?,
             };
-
-            body.extend_from_slice(format!("--{}\r\n", boundary).as_bytes());
-            body.extend_from_slice(format!("Content-Disposition: form-data; name=\"{}\"\r\n\r\n", name).as_bytes());
-            body.extend_from_slice(string_value.as_bytes());
-            body.extend_from_slice(b"\r\n");
+            fields.push((name, string_value));
             Ok(())
         }
     }
 }
 
-fn append_file(body: &mut Vec<u8>, boundary: &str, file: &Value) -> std::result::Result<(), String> {
+fn parse_multipart_file(file: &Value) -> std::result::Result<MultipartFilePart, String> {
     let file_obj = file
         .as_object()
         .ok_or_else(|| "File entry must be an object".to_string())?;
@@ -738,14 +675,19 @@ fn append_file(body: &mut Vec<u8>, boundary: &str, file: &Value) -> std::result:
         .get("name")
         .or_else(|| file_obj.get("field_name"))
         .and_then(|v| v.as_str())
-        .ok_or_else(|| "File entry missing 'name'".to_string())?;
+        .ok_or_else(|| "File entry missing 'name'".to_string())?
+        .to_string();
 
-    let filename = file_obj.get("filename").and_then(|v| v.as_str()).unwrap_or("file");
+    let filename = file_obj
+        .get("filename")
+        .and_then(|v| v.as_str())
+        .unwrap_or("file")
+        .to_string();
     let content_type = file_obj
         .get("contentType")
         .or_else(|| file_obj.get("content_type"))
         .and_then(|v| v.as_str())
-        .unwrap_or("application/octet-stream");
+        .map(|s| s.to_string());
 
     let content = if let Some(content) = file_obj.get("content").and_then(|v| v.as_str()) {
         content.as_bytes().to_vec()
@@ -755,19 +697,12 @@ fn append_file(body: &mut Vec<u8>, boundary: &str, file: &Value) -> std::result:
         Vec::new()
     };
 
-    body.extend_from_slice(format!("--{}\r\n", boundary).as_bytes());
-    body.extend_from_slice(
-        format!(
-            "Content-Disposition: form-data; name=\"{}\"; filename=\"{}\"\r\n",
-            field_name, filename
-        )
-        .as_bytes(),
-    );
-    body.extend_from_slice(format!("Content-Type: {}\r\n\r\n", content_type).as_bytes());
-    body.extend_from_slice(&content);
-    body.extend_from_slice(b"\r\n");
-
-    Ok(())
+    Ok(MultipartFilePart {
+        field_name,
+        filename,
+        content_type,
+        content,
+    })
 }
 
 fn map_snapshot_error(err: SnapshotError) -> Error {
