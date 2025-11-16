@@ -1,6 +1,9 @@
 """E2E tests for content_types."""
 
-from spikard.testing import TestClient
+import asyncio
+import json
+
+from spikard.testing import InProcessTestClient, TestClient
 from app.main import (
     create_app_content_types_13_json_with_charset_utf16,
     create_app_content_types_14_content_type_case_insensitive,
@@ -125,7 +128,7 @@ async def test_pdf_response_application_pdf() -> None:
 async def test_20_content_length_mismatch() -> None:
     """Content-Length header mismatch with actual body size should fail."""
 
-    async with TestClient(create_app_content_types_20_content_length_mismatch()) as client:
+    async with InProcessTestClient(create_app_content_types_20_content_length_mismatch()) as client:
         headers = {
             "Content-Length": "100",
             "Content-Type": "application/json",
@@ -134,9 +137,12 @@ async def test_20_content_length_mismatch() -> None:
         response = await client.post("/data", headers=headers, json=json_data)
 
         assert response.status_code == 400
-        response_data = response.json()
-        assert "error" in response_data
-        assert response_data["error"] == "Content-Length header does not match actual body size"
+        assert response.json() == {
+            "type": "https://spikard.dev/errors/bad-request",
+            "title": "Bad Request",
+            "status": 400,
+            "detail": "Content-Length header (100) does not match actual body size (17)",
+        }
 
 
 async def test_17_vendor_json_accepted() -> None:
