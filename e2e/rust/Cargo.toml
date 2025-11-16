@@ -44,3 +44,6 @@ bytes = "1.7"
 futures = "0.3"
 axum-test = "18"
 uuid = "1"
+
+[dev-dependencies]
+futures-util = "0.3"

@@ -2,23 +2,29 @@
 
 #[cfg(test)]
 mod websocket {
+    use axum_test::{TestServer, TestServerConfig, Transport};
     use serde_json::Value;
+
+    fn websocket_config() -> TestServerConfig {
+        TestServerConfig {
+            save_cookies: true,
+            transport: Some(Transport::HttpRandomPort),
+            ..Default::default()
+        }
+    }
 
     #[tokio::test]
     async fn test_websocket_chat_msg_1() {
-        use axum_test::{TestServer, TestServerConfig};
-
         let app = spikard_e2e_app::create_app_websocket_chat();
-        let config = TestServerConfig::builder().save_cookies().build();
-        let server = TestServer::new_with_config(app, config).expect("Failed to build server");
+        let server = TestServer::new_with_config(app, websocket_config()).expect("Failed to build server");
 
-        let mut ws = server.get_websocket("/chat").await;
+        let mut ws = server.get_websocket("/chat").await.into_websocket().await;
 
         let message: Value = serde_json::from_str("{\"text\":\"example_text\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"message\",\"user\":\"example_user\"}").expect("valid JSON");
 
         ws.send_json(&message).await;
 
-        let response_msg = ws.receive_text().await.expect("receive response");
+        let response_msg = ws.receive_text().await;
         let response: Value = serde_json::from_str(&response_msg).expect("valid response JSON");
 
         assert_eq!(
@@ -39,13 +45,10 @@ mod websocket {
 
     #[tokio::test]
     async fn test_websocket_chat_msg_2() {
-        use axum_test::{TestServer, TestServerConfig};
-
         let app = spikard_e2e_app::create_app_websocket_chat();
-        let config = TestServerConfig::builder().save_cookies().build();
-        let server = TestServer::new_with_config(app, config).expect("Failed to build server");
+        let server = TestServer::new_with_config(app, websocket_config()).expect("Failed to build server");
 
-        let mut ws = server.get_websocket("/chat").await;
+        let mut ws = server.get_websocket("/chat").await.into_websocket().await;
 
         let message: Value = serde_json::from_str(
             "{\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"userLeft\",\"user\":\"example_user\"}",
@@ -54,7 +57,7 @@ mod websocket {
 
         ws.send_json(&message).await;
 
-        let response_msg = ws.receive_text().await.expect("receive response");
+        let response_msg = ws.receive_text().await;
         let response: Value = serde_json::from_str(&response_msg).expect("valid response JSON");
 
         assert_eq!(
@@ -75,13 +78,10 @@ mod websocket {
 
     #[tokio::test]
     async fn test_websocket_chat_msg_3() {
-        use axum_test::{TestServer, TestServerConfig};
-
         let app = spikard_e2e_app::create_app_websocket_chat();
-        let config = TestServerConfig::builder().save_cookies().build();
-        let server = TestServer::new_with_config(app, config).expect("Failed to build server");
+        let server = TestServer::new_with_config(app, websocket_config()).expect("Failed to build server");
 
-        let mut ws = server.get_websocket("/chat").await;
+        let mut ws = server.get_websocket("/chat").await.into_websocket().await;
 
         let message: Value = serde_json::from_str(
             "{\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"userJoined\",\"user\":\"example_user\"}",
@@ -90,7 +90,7 @@ mod websocket {
 
         ws.send_json(&message).await;
 
-        let response_msg = ws.receive_text().await.expect("receive response");
+        let response_msg = ws.receive_text().await;
         let response: Value = serde_json::from_str(&response_msg).expect("valid response JSON");
 
         assert_eq!(
