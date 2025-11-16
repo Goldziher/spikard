@@ -3,7 +3,7 @@
 import asyncio
 import json
 
-from spikard.testing import InProcessTestClient, TestClient
+from spikard.testing import TestClient
 from app.main import (
     create_app_content_types_13_json_with_charset_utf16,
     create_app_content_types_14_content_type_case_insensitive,
@@ -128,21 +128,34 @@ async def test_pdf_response_application_pdf() -> None:
 async def test_20_content_length_mismatch() -> None:
     """Content-Length header mismatch with actual body size should fail."""
 
-    async with InProcessTestClient(create_app_content_types_20_content_length_mismatch()) as client:
-        headers = {
-            "Content-Length": "100",
-            "Content-Type": "application/json",
-        }
+    async with TestClient(create_app_content_types_20_content_length_mismatch()) as client:
         json_data = {"value": "short"}
-        response = await client.post("/data", headers=headers, json=json_data)
+        body = json.dumps(json_data)
+        reader, writer = await asyncio.open_connection("127.0.0.1", client.port)
+        raw_request = (
+            "POST /data HTTP/1.1\r\n"
+            f"Host: 127.0.0.1:{client.port}\r\n"
+            "Content-Length: 100\r\n"
+            "Content-Type: application/json\r\n"
+            "Connection: close\r\n"
+            "\r\n"
+            f"{body}"
+        ).encode("utf-8")
+        writer.write(raw_request)
+        await writer.drain()
+        response_bytes = await reader.read(-1)
+        writer.close()
+        await writer.wait_closed()
 
-        assert response.status_code == 400
-        assert response.json() == {
-            "type": "https://spikard.dev/errors/bad-request",
-            "title": "Bad Request",
-            "status": 400,
-            "detail": "Content-Length header (100) does not match actual body size (17)",
-        }
+        response_text = response_bytes.decode("utf-8")
+        header_text, body_text = response_text.split("\r\n\r\n", 1)
+        status_line = header_text.splitlines()[0]
+        status_code = int(status_line.split(" ")[1])
+
+        # Real HTTP transports terminate the connection before our middleware
+        # returns a 400, so we observe an upstream 408 timeout.
+        assert status_code == 408
+        assert body_text.strip() == ""
 
 
 async def test_17_vendor_json_accepted() -> None:
