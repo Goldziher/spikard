@@ -30,6 +30,6 @@
 
 ## Follow-ups
 
-1. Extend the schema extractor to surface Dry type metadata (format enums, arrays) when Dry exposes it.
-2. Add snapshot-driven tests for streaming/SSE helpers to guard future transport toggles.
-3. Evaluate whether the new in-process Python test client can cover more fixtures (e.g., WebSocket edge cases) and document when to prefer it over the subprocess runner.
+1. Document a consistent strategy for Python transport edge cases (e.g., helper utilities for issuing raw requests when the subprocess client short-circuits).
+2. Add snapshot-driven tests for WebSocket helpers to mirror the SSE coverage and catch future regressions.
+3. Ensure the Node/Python/Ruby docs consistently call out the shared request builders and testing story so contributors know how the layers fit together.
