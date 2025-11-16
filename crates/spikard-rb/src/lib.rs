@@ -33,10 +33,9 @@ use std::sync::Arc;
 use tokio::runtime::{Builder, Runtime};
 
 // Global Tokio runtime for test client with WebSocket/SSE support
-// Must be multi-threaded to support WebSocket and SSE without HTTP transport
+// Use current_thread to ensure Ruby VM is accessible (Ruby::get() requires main thread)
 static GLOBAL_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
-    Builder::new_multi_thread()
-        .worker_threads(2)
+    Builder::new_current_thread()
         .enable_all()
         .build()
         .expect("Failed to initialise global Tokio runtime")
