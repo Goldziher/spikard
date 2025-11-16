@@ -22,7 +22,9 @@ use once_cell::sync::Lazy;
 use serde_json::{Map as JsonMap, Value as JsonValue};
 use spikard_http::ParameterValidator;
 use spikard_http::problem::ProblemDetails;
-use spikard_http::testing::{SnapshotError, snapshot_response};
+use spikard_http::testing::{
+    MultipartFilePart, SnapshotError, build_multipart_body, encode_urlencoded_body, snapshot_response,
+};
 use spikard_http::{Handler, HandlerResponse, HandlerResult, RequestData};
 use spikard_http::{Route, RouteMetadata, SchemaValidator};
 use std::cell::RefCell;
@@ -48,7 +50,8 @@ struct NativeTestClient {
 }
 
 struct ClientInner {
-    server: Arc<TestServer>,
+    http_server: Arc<TestServer>,
+    transport_server: Arc<TestServer>,
     /// Keep Ruby handler closures alive for GC; accessed via the `mark` hook.
     #[allow(dead_code)]
     handlers: Vec<RubyHandler>,
@@ -67,16 +70,8 @@ enum RequestBody {
     Raw(String),
     Multipart {
         form_data: Vec<(String, String)>,
-        files: Vec<FileData>,
+        files: Vec<MultipartFilePart>,
     },
-}
-
-#[derive(Debug, Clone)]
-struct FileData {
-    field_name: String,
-    filename: String,
-    content: Vec<u8>,
-    content_type: Option<String>,
 }
 
 #[derive(Clone)]
@@ -325,23 +320,33 @@ impl NativeTestClient {
             );
         }
 
-        // Create TestServer with HTTP transport (required for WebSocket support in axum-test 18)
-        // This must be done within the Tokio runtime context
-        let config = TestServerConfig {
-            transport: Some(Transport::HttpRandomPort),
-            ..Default::default()
-        };
-        let server = GLOBAL_RUNTIME.block_on(async {
-            TestServer::new_with_config(router, config).map_err(|err| {
+        // Prefer in-memory transport for regular HTTP requests to match other bindings and avoid HTTP Content-Length quirks.
+        let http_server = GLOBAL_RUNTIME
+            .block_on(async { TestServer::new(router.clone()) })
+            .map_err(|err| {
                 Error::new(
                     ruby.exception_runtime_error(),
                     format!("Failed to initialise test server: {err}"),
                 )
-            })
-        })?;
+            })?;
+
+        // Dedicated HTTP transport server for WebSocket/SSE flows that require a TCP layer
+        let ws_config = TestServerConfig {
+            transport: Some(Transport::HttpRandomPort),
+            ..Default::default()
+        };
+        let transport_server = GLOBAL_RUNTIME
+            .block_on(async { TestServer::new_with_config(router, ws_config) })
+            .map_err(|err| {
+                Error::new(
+                    ruby.exception_runtime_error(),
+                    format!("Failed to initialise WebSocket transport server: {err}"),
+                )
+            })?;
 
         *this.inner.borrow_mut() = Some(ClientInner {
-            server: Arc::new(server),
+            http_server: Arc::new(http_server),
+            transport_server: Arc::new(transport_server),
             handlers: handler_refs,
         });
 
@@ -365,7 +370,7 @@ impl NativeTestClient {
 
         let response = GLOBAL_RUNTIME
             .block_on(execute_request(
-                inner.server.clone(),
+                inner.http_server.clone(),
                 http_method,
                 path.clone(),
                 request_config,
@@ -391,7 +396,7 @@ impl NativeTestClient {
             .as_ref()
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "TestClient not initialised"))?;
 
-        let server = Arc::clone(&inner.server);
+        let server = Arc::clone(&inner.transport_server);
 
         // Drop the borrow before entering the async block
         drop(inner_borrow);
@@ -421,7 +426,7 @@ impl NativeTestClient {
 
         let response = GLOBAL_RUNTIME
             .block_on(async {
-                let axum_response = inner.server.get(&path).await;
+                let axum_response = inner.transport_server.get(&path).await;
                 snapshot_response(axum_response).await
             })
             .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("SSE request failed: {}", e)))?;
@@ -677,7 +682,7 @@ async fn execute_request(
                 request = request.json(&json_value);
             }
             RequestBody::Form(form_value) => {
-                let encoded = serde_qs::to_string(&form_value)
+                let encoded = encode_urlencoded_body(&form_value)
                     .map_err(|err| NativeRequestError(format!("Failed to encode form body: {err}")))?;
                 request = request
                     .content_type("application/x-www-form-urlencoded")
@@ -687,8 +692,7 @@ async fn execute_request(
                 request = request.bytes(Bytes::from(raw));
             }
             RequestBody::Multipart { form_data, files } => {
-                let boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
-                let multipart_body = build_multipart_body(&form_data, &files, boundary);
+                let (multipart_body, boundary) = build_multipart_body(&form_data, &files);
                 request = request
                     .content_type(&format!("multipart/form-data; boundary={}", boundary))
                     .bytes(Bytes::from(multipart_body));
@@ -1173,7 +1177,7 @@ fn get_required_string_from_hash(hash: RHash, key: &str, ruby: &Ruby) -> Result<
     String::try_convert(value)
 }
 
-fn extract_files(ruby: &Ruby, files_value: Value) -> Result<Vec<FileData>, Error> {
+fn extract_files(ruby: &Ruby, files_value: Value) -> Result<Vec<MultipartFilePart>, Error> {
     let files_hash = RHash::try_convert(files_value)?;
 
     // Call Ruby's .keys method to get an array of keys
@@ -1215,7 +1219,7 @@ fn extract_files(ruby: &Ruby, files_value: Value) -> Result<Vec<FileData>, Error
 }
 
 /// Extract a single file from Ruby array [filename, content, content_type (optional)]
-fn extract_single_file(ruby: &Ruby, field_name: &str, array_value: Value) -> Result<FileData, Error> {
+fn extract_single_file(ruby: &Ruby, field_name: &str, array_value: Value) -> Result<MultipartFilePart, Error> {
     let array = RArray::from_value(array_value)
         .ok_or_else(|| Error::new(ruby.exception_arg_error(), "file must be an Array [filename, content]"))?;
 
@@ -1237,77 +1241,12 @@ fn extract_single_file(ruby: &Ruby, field_name: &str, array_value: Value) -> Res
         None
     };
 
-    Ok(FileData {
+    Ok(MultipartFilePart {
         field_name: field_name.to_string(),
         filename,
         content,
         content_type,
     })
-}
-
-/// Build multipart/form-data body
-fn build_multipart_body(form_data: &[(String, String)], files: &[FileData], boundary: &str) -> Vec<u8> {
-    let mut body = Vec::new();
-
-    // Add form fields first
-    for (field_name, field_value) in form_data {
-        // Boundary line
-        body.extend_from_slice(b"--");
-        body.extend_from_slice(boundary.as_bytes());
-        body.extend_from_slice(b"\r\n");
-
-        // Content-Disposition header (no filename for regular fields)
-        body.extend_from_slice(b"Content-Disposition: form-data; name=\"");
-        body.extend_from_slice(field_name.as_bytes());
-        body.extend_from_slice(b"\"\r\n");
-
-        // Empty line before content
-        body.extend_from_slice(b"\r\n");
-
-        // Field value
-        body.extend_from_slice(field_value.as_bytes());
-
-        // CRLF after content
-        body.extend_from_slice(b"\r\n");
-    }
-
-    // Add files
-    for file in files {
-        // Boundary line
-        body.extend_from_slice(b"--");
-        body.extend_from_slice(boundary.as_bytes());
-        body.extend_from_slice(b"\r\n");
-
-        // Content-Disposition header
-        body.extend_from_slice(b"Content-Disposition: form-data; name=\"");
-        body.extend_from_slice(file.field_name.as_bytes());
-        body.extend_from_slice(b"\"; filename=\"");
-        body.extend_from_slice(file.filename.as_bytes());
-        body.extend_from_slice(b"\"\r\n");
-
-        // Content-Type header (if specified)
-        if let Some(ref content_type) = file.content_type {
-            body.extend_from_slice(b"Content-Type: ");
-            body.extend_from_slice(content_type.as_bytes());
-            body.extend_from_slice(b"\r\n");
-        }
-
-        // Empty line before content
-        body.extend_from_slice(b"\r\n");
-
-        // File content
-        body.extend_from_slice(&file.content);
-
-        // CRLF after content
-        body.extend_from_slice(b"\r\n");
-    }
-
-    // Final boundary
-    body.extend_from_slice(b"--");
-    body.extend_from_slice(boundary.as_bytes());
-    body.extend_from_slice(b"--\r\n");
-
-    body
 }
 
 /// Extract ServerConfig from Ruby ServerConfig object

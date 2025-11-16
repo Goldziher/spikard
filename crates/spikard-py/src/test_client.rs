@@ -12,7 +12,9 @@ use once_cell::sync::Lazy;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict, PyString};
 use serde_json::Value;
-use spikard_http::testing::{ResponseSnapshot, SnapshotError, snapshot_response};
+use spikard_http::testing::{
+    MultipartFilePart, ResponseSnapshot, SnapshotError, build_multipart_body, encode_urlencoded_body, snapshot_response,
+};
 use std::sync::Arc;
 use tokio::runtime::{Builder, Runtime};
 use urlencoding::encode;
@@ -195,89 +197,34 @@ impl TestClient {
 
             // Add headers and body
             if is_multipart {
-                // Build multipart/form-data body
-                let boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
-                let multipart_body = build_multipart_body(&form_data, &files_data, boundary);
-
-                // Set Content-Type with boundary
+                let (multipart_body, boundary) = build_multipart_body(&form_data, &files_data);
                 request = request.add_header(
                     HeaderName::from_static("content-type"),
-                    HeaderValue::from_str(&format!("multipart/form-data; boundary={}", boundary)).map_err(|e| {
+                    HeaderValue::from_str(&format!("multipart/form-data; boundary={boundary}")).map_err(|e| {
                         PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header: {}", e))
                     })?,
                 );
-
-                // Set body
                 request = request.bytes(bytes::Bytes::from(multipart_body));
             } else if let Some(body) = raw_body {
                 request = request.bytes(bytes::Bytes::from(body));
-            } else if let Some(json_val) = json_value {
-                if is_form_encoded {
-                    // For form-encoded requests, manually set Content-Type header and body bytes
-                    let form_body = match &json_val {
-                        serde_json::Value::String(s) => {
-                            // If json is a string, use it directly as the form body
-                            s.clone()
-                        }
-                        serde_json::Value::Object(map) => {
-                            // If json is an object, encode it as form data
-                            let mut form_data: Vec<String> = Vec::new();
-                            for (k, v) in map.iter() {
-                                match v {
-                                    serde_json::Value::Array(arr) => {
-                                        // For arrays, repeat the key for each value
-                                        for item in arr {
-                                            let item_str = match item {
-                                                serde_json::Value::String(s) => s.clone(),
-                                                serde_json::Value::Number(n) => n.to_string(),
-                                                serde_json::Value::Bool(b) => b.to_string(),
-                                                serde_json::Value::Null => String::new(),
-                                                _ => serde_json::to_string(item).unwrap_or_default(),
-                                            };
-                                            form_data.push(format!(
-                                                "{}={}",
-                                                urlencoding::encode(k),
-                                                urlencoding::encode(&item_str)
-                                            ));
-                                        }
-                                    }
-                                    _ => {
-                                        // For scalar values, add single key=value pair
-                                        let value_str = match v {
-                                            serde_json::Value::String(s) => s.clone(),
-                                            serde_json::Value::Number(n) => n.to_string(),
-                                            serde_json::Value::Bool(b) => b.to_string(),
-                                            serde_json::Value::Null => String::new(),
-                                            _ => serde_json::to_string(v).unwrap_or_default(),
-                                        };
-                                        form_data.push(format!(
-                                            "{}={}",
-                                            urlencoding::encode(k),
-                                            urlencoding::encode(&value_str)
-                                        ));
-                                    }
-                                }
-                            }
-                            form_data.join("&")
-                        }
-                        _ => {
-                            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                                "Form-encoded body must be a dict or string",
-                            ));
-                        }
-                    };
+            } else if is_form_encoded {
+                let json_val = json_value.clone().ok_or_else(|| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                        "Form-encoded requests require a JSON body to encode",
+                    )
+                })?;
 
-                    // Set Content-Type header
-                    request = request.add_header(
-                        HeaderName::from_static("content-type"),
-                        HeaderValue::from_static("application/x-www-form-urlencoded"),
-                    );
+                let encoded = encode_urlencoded_body(&json_val).map_err(|e| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid form body: {}", e))
+                })?;
 
-                    // Set body as bytes (doesn't set Content-Type)
-                    request = request.bytes(bytes::Bytes::from(form_body));
-                } else {
-                    request = request.json(&json_val);
-                }
+                request = request.add_header(
+                    HeaderName::from_static("content-type"),
+                    HeaderValue::from_static("application/x-www-form-urlencoded"),
+                );
+                request = request.bytes(bytes::Bytes::from(encoded));
+            } else if let Some(json_val) = json_value.clone() {
+                request = request.json(&json_val);
             }
 
             // Add remaining headers (skip Content-Type for form-encoded since we set it above)
@@ -750,18 +697,9 @@ fn snapshot_err_to_py(err: SnapshotError) -> PyErr {
     pyo3::exceptions::PyRuntimeError::new_err(err.to_string())
 }
 
-/// File data for multipart upload
-#[derive(Debug, Clone)]
-struct FileData {
-    field_name: String,
-    filename: String,
-    content: Vec<u8>,
-    content_type: Option<String>,
-}
-
 /// Extract files from Python dict
 /// Expects: {"field": ("filename", bytes), "field2": [("file1", bytes), ("file2", bytes)]}
-fn extract_files(files_dict: Option<&Bound<'_, PyDict>>) -> PyResult<Vec<FileData>> {
+fn extract_files(files_dict: Option<&Bound<'_, PyDict>>) -> PyResult<Vec<MultipartFilePart>> {
     let Some(files) = files_dict else {
         return Ok(Vec::new());
     };
@@ -788,7 +726,7 @@ fn extract_files(files_dict: Option<&Bound<'_, PyDict>>) -> PyResult<Vec<FileDat
 }
 
 /// Extract a single file from Python tuple (filename, bytes)
-fn extract_single_file(field_name: &str, tuple: &Bound<'_, PyAny>) -> PyResult<FileData> {
+fn extract_single_file(field_name: &str, tuple: &Bound<'_, PyAny>) -> PyResult<MultipartFilePart> {
     use pyo3::types::PyTuple;
 
     let tuple = tuple
@@ -811,75 +749,10 @@ fn extract_single_file(field_name: &str, tuple: &Bound<'_, PyAny>) -> PyResult<F
         None
     };
 
-    Ok(FileData {
+    Ok(MultipartFilePart {
         field_name: field_name.to_string(),
         filename,
         content,
         content_type,
     })
-}
-
-/// Build multipart/form-data body
-fn build_multipart_body(form_data: &[(String, String)], files: &[FileData], boundary: &str) -> Vec<u8> {
-    let mut body = Vec::new();
-
-    // Add form fields first
-    for (field_name, field_value) in form_data {
-        // Boundary line
-        body.extend_from_slice(b"--");
-        body.extend_from_slice(boundary.as_bytes());
-        body.extend_from_slice(b"\r\n");
-
-        // Content-Disposition header (no filename for regular fields)
-        body.extend_from_slice(b"Content-Disposition: form-data; name=\"");
-        body.extend_from_slice(field_name.as_bytes());
-        body.extend_from_slice(b"\"\r\n");
-
-        // Empty line before content
-        body.extend_from_slice(b"\r\n");
-
-        // Field value
-        body.extend_from_slice(field_value.as_bytes());
-
-        // CRLF after content
-        body.extend_from_slice(b"\r\n");
-    }
-
-    // Add files
-    for file in files {
-        // Boundary line
-        body.extend_from_slice(b"--");
-        body.extend_from_slice(boundary.as_bytes());
-        body.extend_from_slice(b"\r\n");
-
-        // Content-Disposition header
-        body.extend_from_slice(b"Content-Disposition: form-data; name=\"");
-        body.extend_from_slice(file.field_name.as_bytes());
-        body.extend_from_slice(b"\"; filename=\"");
-        body.extend_from_slice(file.filename.as_bytes());
-        body.extend_from_slice(b"\"\r\n");
-
-        // Content-Type header (if specified)
-        if let Some(ref content_type) = file.content_type {
-            body.extend_from_slice(b"Content-Type: ");
-            body.extend_from_slice(content_type.as_bytes());
-            body.extend_from_slice(b"\r\n");
-        }
-
-        // Empty line before content
-        body.extend_from_slice(b"\r\n");
-
-        // File content
-        body.extend_from_slice(&file.content);
-
-        // CRLF after content
-        body.extend_from_slice(b"\r\n");
-    }
-
-    // Final boundary
-    body.extend_from_slice(b"--");
-    body.extend_from_slice(boundary.as_bytes());
-    body.extend_from_slice(b"--\r\n");
-
-    body
 }

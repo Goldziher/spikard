@@ -1,8 +1,14 @@
 use axum::body::Body;
 use axum::http::Request as AxumRequest;
 use axum_test::{TestResponse as AxumTestResponse, TestServer, TestWebSocket, WsMessage};
+
+pub mod multipart;
+pub use multipart::{MultipartFilePart, build_multipart_body};
+
+pub mod form;
 use brotli::Decompressor;
 use flate2::read::GzDecoder;
+pub use form::encode_urlencoded_body;
 use http_body_util::BodyExt;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -338,5 +344,36 @@ impl SseEvent {
     /// Parse the event data as JSON.
     pub fn as_json(&self) -> Result<Value, String> {
         serde_json::from_str(&self.data).map_err(|e| format!("Failed to parse JSON: {}", e))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sse_stream_parses_multiple_events() {
+        let mut headers = HashMap::new();
+        headers.insert("content-type".to_string(), "text/event-stream".to_string());
+
+        let snapshot = ResponseSnapshot {
+            status: 200,
+            headers,
+            body: b"data: {\"id\": 1}\n\ndata: \"hello\"\n\n".to_vec(),
+        };
+
+        let stream = SseStream::from_response(&snapshot).expect("stream");
+        assert_eq!(stream.events().len(), 2);
+        assert_eq!(stream.events()[0].as_json().unwrap()["id"], serde_json::json!(1));
+        assert_eq!(stream.events()[1].data, "\"hello\"");
+        assert_eq!(stream.events_as_json().unwrap().len(), 2);
+    }
+
+    #[test]
+    fn sse_event_reports_invalid_json() {
+        let event = SseEvent {
+            data: "not-json".to_string(),
+        };
+        assert!(event.as_json().is_err());
     }
 }

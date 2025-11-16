@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# rubocop:disable Metrics/ModuleLength
 module Spikard
   # Schema extraction helpers for Ruby type systems
   #
@@ -41,6 +42,7 @@ module Spikard
   #
   #   schema = Spikard::Schema.extract_json_schema(schema_hash)
   module Schema
+    # rubocop:disable Metrics/ClassLength
     class << self
       # Extract JSON Schema from various Ruby schema sources
       #
@@ -136,37 +138,100 @@ module Spikard
 
       # Convert Dry::Types type to JSON Schema type
       def dry_type_to_json_schema(type_def)
-        # Get the primitive class name
-        type_class = type_def.primitive
-
-        # Map Ruby types to JSON Schema types
-        case type_class.to_s
-        when 'String'
-          { 'type' => 'string' }
-        when 'Integer'
-          { 'type' => 'integer' }
-        when 'Float', 'BigDecimal'
-          { 'type' => 'number' }
-        when 'TrueClass', 'FalseClass'
-          { 'type' => 'boolean' }
-        when 'Array'
-          {
-            'type' => 'array',
-            'items' => {} # Could be more specific with member type
-          }
-        when 'Hash'
-          {
-            'type' => 'object'
-          }
-        when 'NilClass'
-          { 'type' => 'null' }
-        else
-          # Default to object for unknown types
-          { 'type' => 'object' }
-        end
+        schema = base_schema_for(type_def)
+        apply_metadata_constraints(schema, type_def)
       rescue StandardError
         { 'type' => 'object' }
       end
+
+      def base_schema_for(type_def)
+        type_class = type_def.primitive.to_s
+        case type_class
+        when 'String' then { 'type' => 'string' }
+        when 'Integer' then { 'type' => 'integer' }
+        when 'Float', 'BigDecimal' then { 'type' => 'number' }
+        when 'TrueClass', 'FalseClass' then { 'type' => 'boolean' }
+        when 'Array'
+          {
+            'type' => 'array',
+            'items' => infer_array_items_schema(type_def)
+          }
+        when 'Hash'
+          { 'type' => 'object', 'additionalProperties' => true }
+        when 'NilClass' then { 'type' => 'null' }
+        else
+          { 'type' => 'object' }
+        end
+      end
+
+      def infer_array_items_schema(type_def)
+        if type_def.respond_to?(:member) && type_def.member
+          dry_type_to_json_schema(type_def.member)
+        else
+          {}
+        end
+      rescue StandardError
+        {}
+      end
+
+      def apply_metadata_constraints(schema, type_def)
+        metadata = extract_metadata(type_def)
+        return schema if metadata.empty?
+
+        schema = apply_enum_and_format(schema, metadata)
+        apply_numeric_constraints(schema, metadata)
+      end
+
+      def apply_enum_and_format(schema, metadata)
+        enum_values = metadata[:enum] || metadata['enum']
+        schema['enum'] = Array(enum_values) if enum_values
+
+        format_value = metadata[:format] || metadata['format']
+        schema['format'] = format_value.to_s if format_value
+
+        description = metadata[:description] || metadata['description']
+        schema['description'] = description.to_s if description
+        schema
+      end
+
+      def apply_numeric_constraints(schema, metadata)
+        mapping = {
+          min_size: 'minLength',
+          max_size: 'maxLength',
+          min_items: 'minItems',
+          max_items: 'maxItems',
+          min: 'minimum',
+          max: 'maximum',
+          gte: 'minimum',
+          lte: 'maximum',
+          gt: 'exclusiveMinimum',
+          lt: 'exclusiveMaximum'
+        }
+
+        mapping.each do |meta_key, json_key|
+          value = metadata[meta_key] || metadata[meta_key.to_s]
+          next unless value
+
+          schema[json_key] = value
+        end
+        schema
+      end
+
+      def extract_metadata(type_def)
+        return {} unless type_def.respond_to?(:meta) || type_def.respond_to?(:options)
+
+        if type_def.respond_to?(:meta) && type_def.meta
+          type_def.meta
+        elsif type_def.respond_to?(:options) && type_def.options.is_a?(Hash)
+          type_def.options
+        else
+          {}
+        end
+      rescue StandardError
+        {}
+      end
     end
+    # rubocop:enable Metrics/ClassLength
   end
 end
+# rubocop:enable Metrics/ModuleLength

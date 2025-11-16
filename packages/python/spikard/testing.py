@@ -22,6 +22,21 @@ from typing import TYPE_CHECKING, Any
 
 import cloudpickle  # type: ignore[import-untyped]
 import httpx
+from _spikard import (
+    SseStream as NativeSseStream,
+)
+from _spikard import (
+    TestClient as NativeTestClient,
+)
+from _spikard import (
+    TestResponse as NativeTestResponse,
+)
+from _spikard import (
+    WebSocketTestConnection as NativeWebSocketConnection,
+)
+from _spikard import (
+    create_test_client as _native_create_test_client,
+)
 from httpx_sse import ServerSentEvent, aconnect_sse
 from websockets.asyncio.client import ClientConnection
 from websockets.asyncio.client import connect as ws_connect
@@ -30,6 +45,7 @@ if TYPE_CHECKING:
     from spikard.app import Spikard
 
 __all__ = [
+    "InProcessTestClient",
     "TestClient",
 ]
 
@@ -119,6 +135,13 @@ class TestClient:
         if self._port is None:
             raise RuntimeError("Server not started. Use 'async with TestClient(app)' context manager.")
         return f"ws://127.0.0.1:{self._port}"
+
+    @property
+    def port(self) -> int:
+        """Return the port the subprocess server is bound to."""
+        if self._port is None:
+            raise RuntimeError("Server not started. Use 'async with TestClient(app)' context manager.")
+        return self._port
 
     async def __aenter__(self) -> "TestClient":
         """Start the server and return the client."""
@@ -441,3 +464,140 @@ app.run(host="127.0.0.1", port={self._port})
         url = f"{self.base_url}{path}"
         async with aconnect_sse(self._http_client, "GET", url) as event_source:
             yield event_source.aiter_sse()
+
+
+class InProcessTestClient:
+    """In-process test client backed by the native Rust test client."""
+
+    __test__ = False
+
+    def __init__(self, app: "Spikard") -> None:
+        self._app = app
+        self._client: NativeTestClient | None = None
+
+    async def __aenter__(self) -> "InProcessTestClient":
+        """Build the native test client and return this wrapper."""
+        self._client = _native_create_test_client(self._app)
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: object,
+    ) -> None:
+        """Dispose of the native client when leaving the context."""
+        await self.close()
+
+    async def close(self) -> None:
+        """Release the underlying client."""
+        self._client = None
+
+    def _require_client(self) -> NativeTestClient:
+        if self._client is None:
+            raise RuntimeError("Client not started. Use 'async with InProcessTestClient(...)'.")
+        return self._client
+
+    async def get(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+    ) -> NativeTestResponse:
+        """Issue a GET request via the native client."""
+        client = self._require_client()
+        return await client.get(path, query_params=params, headers=headers, cookies=cookies)
+
+    async def post(
+        self,
+        path: str,
+        *,
+        json: Any | None = None,
+        data: Any | None = None,
+        files: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> NativeTestResponse:
+        """Issue a POST request."""
+        client = self._require_client()
+        return await client.post(path, json=json, data=data, files=files, query_params=params, headers=headers)
+
+    async def put(
+        self,
+        path: str,
+        *,
+        json: Any | None = None,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> NativeTestResponse:
+        """Issue a PUT request."""
+        client = self._require_client()
+        return await client.put(path, json=json, query_params=params, headers=headers)
+
+    async def patch(
+        self,
+        path: str,
+        *,
+        json: Any | None = None,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> NativeTestResponse:
+        """Issue a PATCH request."""
+        client = self._require_client()
+        return await client.patch(path, json=json, query_params=params, headers=headers)
+
+    async def delete(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> NativeTestResponse:
+        """Issue a DELETE request."""
+        client = self._require_client()
+        return await client.delete(path, query_params=params, headers=headers)
+
+    async def head(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> NativeTestResponse:
+        """Issue a HEAD request."""
+        client = self._require_client()
+        return await client.head(path, query_params=params, headers=headers)
+
+    async def options(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> NativeTestResponse:
+        """Issue an OPTIONS request."""
+        client = self._require_client()
+        return await client.options(path, query_params=params, headers=headers)
+
+    async def trace(
+        self,
+        path: str,
+        *,
+        params: dict[str, object] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> NativeTestResponse:
+        """Issue a TRACE request."""
+        client = self._require_client()
+        return await client.trace(path, query_params=params, headers=headers)
+
+    async def websocket(self, path: str) -> NativeWebSocketConnection:
+        """Open a WebSocket test connection."""
+        client = self._require_client()
+        return await client.websocket(path)
+
+    async def sse(self, path: str) -> NativeSseStream:
+        """Open an SSE stream from the native client."""
+        client = self._require_client()
+        return await client.sse(path)
