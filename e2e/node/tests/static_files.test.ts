@@ -19,7 +19,7 @@ describe("static_files", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseText = response.text();
-		expect(responseText).toBe("Hello from static storage");
+		expect(responseText).toBe("Hello from static storage\n");
 		const responseHeaders = response.headers();
 		expect(responseHeaders["cache-control"]).toBe("public, max-age=60");
 		expect(responseHeaders["content-type"]).toBe("text/plain");
@@ -33,7 +33,7 @@ describe("static_files", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseText = response.text();
-		expect(responseText).toBe("<!doctype html><h1>Welcome</h1>");
+		expect(responseText).toBe("<!doctype html><h1>Welcome</h1>\n");
 		const responseHeaders = response.headers();
 		expect(responseHeaders["content-type"]).toBe("text/html");
 	});
