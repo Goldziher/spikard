@@ -5,9 +5,8 @@
 mod streaming {
     use axum::body::Body;
     use axum::http::Request;
-    use axum_test::TestServer;
     use serde_json::Value;
-    use spikard_http::testing::{call_test_server, snapshot_response};
+    use spikard::testing::TestServer;
 
     #[tokio::test]
     async fn test_streaming_binary_log_download() {
@@ -21,7 +20,8 @@ mod streaming {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_streaming_binary_log_download();
+        let app = spikard_e2e_app::create_app_streaming_binary_log_download().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/stream/logfile".to_string();
@@ -272,9 +272,7 @@ mod streaming {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let expected: Vec<u8> = vec![
@@ -302,7 +300,8 @@ mod streaming {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_streaming_chunked_csv_export();
+        let app = spikard_e2e_app::create_app_streaming_chunked_csv_export().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/stream/csv-report".to_string();
@@ -553,9 +552,7 @@ mod streaming {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let expected: Vec<u8> = vec![
@@ -584,7 +581,8 @@ mod streaming {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_streaming_stream_json_lines();
+        let app = spikard_e2e_app::create_app_streaming_stream_json_lines().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/stream/json-lines".to_string();
@@ -835,9 +833,7 @@ mod streaming {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let expected: Vec<u8> = vec![

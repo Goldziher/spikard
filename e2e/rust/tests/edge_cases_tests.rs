@@ -5,9 +5,8 @@
 mod edge_cases {
     use axum::body::Body;
     use axum::http::Request;
-    use axum_test::TestServer;
     use serde_json::Value;
-    use spikard_http::testing::{call_test_server, snapshot_response};
+    use spikard::testing::TestServer;
 
     #[tokio::test]
     async fn test_edge_cases_11_utf8_query_parameter() {
@@ -21,7 +20,9 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_11_utf8_query_parameter();
+        let app =
+            spikard_e2e_app::create_app_edge_cases_11_utf8_query_parameter().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/search".to_string();
@@ -272,9 +273,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
@@ -292,7 +291,9 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_12_percent_encoded_special_chars();
+        let app = spikard_e2e_app::create_app_edge_cases_12_percent_encoded_special_chars()
+            .expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/search".to_string();
@@ -543,9 +544,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
@@ -563,7 +562,9 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_13_empty_string_query_param_preserved();
+        let app = spikard_e2e_app::create_app_edge_cases_13_empty_string_query_param_preserved()
+            .expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/items".to_string();
@@ -814,9 +815,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
@@ -833,7 +832,9 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_14_large_integer_boundary();
+        let app =
+            spikard_e2e_app::create_app_edge_cases_14_large_integer_boundary().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/items".to_string();
@@ -1084,9 +1085,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
@@ -1104,7 +1103,9 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_15_float_precision_preservation();
+        let app = spikard_e2e_app::create_app_edge_cases_15_float_precision_preservation()
+            .expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/calculate".to_string();
@@ -1355,9 +1356,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
     }
@@ -1374,7 +1373,9 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_16_negative_zero_handling();
+        let app =
+            spikard_e2e_app::create_app_edge_cases_16_negative_zero_handling().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/data".to_string();
@@ -1625,9 +1626,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
     }
@@ -1644,7 +1643,9 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_17_extremely_long_string();
+        let app =
+            spikard_e2e_app::create_app_edge_cases_17_extremely_long_string().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/text".to_string();
@@ -1895,9 +1896,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
@@ -1914,7 +1913,9 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_18_unicode_normalization();
+        let app =
+            spikard_e2e_app::create_app_edge_cases_18_unicode_normalization().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/users".to_string();
@@ -2165,9 +2166,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
     }
@@ -2184,7 +2183,8 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_19_emoji_in_strings();
+        let app = spikard_e2e_app::create_app_edge_cases_19_emoji_in_strings().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/messages".to_string();
@@ -2435,9 +2435,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
     }
@@ -2454,7 +2452,8 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_20_null_byte_in_string();
+        let app = spikard_e2e_app::create_app_edge_cases_20_null_byte_in_string().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/files".to_string();
@@ -2705,9 +2704,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 422, "Expected status 422, got {}", snapshot.status);
     }
@@ -2724,7 +2721,9 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_21_scientific_notation_number();
+        let app = spikard_e2e_app::create_app_edge_cases_21_scientific_notation_number()
+            .expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/calculate".to_string();
@@ -2975,9 +2974,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 201, "Expected status 201, got {}", snapshot.status);
     }
@@ -2994,7 +2991,9 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_22_leading_zeros_integer();
+        let app =
+            spikard_e2e_app::create_app_edge_cases_22_leading_zeros_integer().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/data".to_string();
@@ -3245,9 +3244,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
@@ -3264,7 +3261,9 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_23_deeply_nested_json_limit();
+        let app =
+            spikard_e2e_app::create_app_edge_cases_23_deeply_nested_json_limit().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/data".to_string();
@@ -3515,9 +3514,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 400, "Expected status 400, got {}", snapshot.status);
     }
@@ -3534,7 +3531,8 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_24_array_with_holes();
+        let app = spikard_e2e_app::create_app_edge_cases_24_array_with_holes().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/items".to_string();
@@ -3785,9 +3783,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
@@ -3804,7 +3800,9 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_deeply_nested_structure_10_levels();
+        let app = spikard_e2e_app::create_app_edge_cases_deeply_nested_structure_10_levels()
+            .expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/nested/".to_string();
@@ -4055,9 +4053,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
@@ -4074,7 +4070,9 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_empty_and_null_value_handling();
+        let app = spikard_e2e_app::create_app_edge_cases_empty_and_null_value_handling()
+            .expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/nulls/".to_string();
@@ -4325,9 +4323,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
@@ -4344,7 +4340,9 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_float_precision_and_rounding();
+        let app =
+            spikard_e2e_app::create_app_edge_cases_float_precision_and_rounding().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/calculations/".to_string();
@@ -4595,9 +4593,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
@@ -4614,7 +4610,9 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_large_integer_boundary_values();
+        let app = spikard_e2e_app::create_app_edge_cases_large_integer_boundary_values()
+            .expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/numbers/".to_string();
@@ -4865,9 +4863,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
@@ -4884,7 +4880,9 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_special_string_values_and_escaping();
+        let app = spikard_e2e_app::create_app_edge_cases_special_string_values_and_escaping()
+            .expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/strings/".to_string();
@@ -5135,9 +5133,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
@@ -5154,7 +5150,9 @@ mod edge_cases {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_edge_cases_unicode_and_emoji_handling();
+        let app =
+            spikard_e2e_app::create_app_edge_cases_unicode_and_emoji_handling().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -5405,9 +5403,7 @@ mod edge_cases {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }

@@ -5,9 +5,8 @@
 mod cors {
     use axum::body::Body;
     use axum::http::Request;
-    use axum_test::TestServer;
     use serde_json::Value;
-    use spikard_http::testing::{call_test_server, snapshot_response};
+    use spikard::testing::TestServer;
 
     #[tokio::test]
     async fn test_cors_06_cors_preflight_method_not_allowed() {
@@ -21,7 +20,9 @@ mod cors {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cors_06_cors_preflight_method_not_allowed();
+        let app = spikard_e2e_app::create_app_cors_06_cors_preflight_method_not_allowed()
+            .expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/api/data".to_string();
@@ -272,9 +273,7 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 403, "Expected status 403, got {}", snapshot.status);
     }
@@ -291,7 +290,9 @@ mod cors {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cors_07_cors_preflight_header_not_allowed();
+        let app = spikard_e2e_app::create_app_cors_07_cors_preflight_header_not_allowed()
+            .expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/api/data".to_string();
@@ -542,9 +543,7 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 403, "Expected status 403, got {}", snapshot.status);
     }
@@ -561,7 +560,8 @@ mod cors {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cors_08_cors_max_age();
+        let app = spikard_e2e_app::create_app_cors_08_cors_max_age().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/api/data".to_string();
@@ -812,20 +812,10 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 204, "Expected status 204, got {}", snapshot.status);
         let headers = &snapshot.headers;
-        if let Some(actual) = headers.get("access-control-allow-headers") {
-            assert_eq!(
-                actual, "Content-Type",
-                "Mismatched header 'Access-Control-Allow-Headers'"
-            );
-        } else {
-            panic!("Expected header 'Access-Control-Allow-Headers' to be present");
-        }
         if let Some(actual) = headers.get("access-control-allow-origin") {
             assert_eq!(
                 actual, "https://example.com",
@@ -834,15 +824,23 @@ mod cors {
         } else {
             panic!("Expected header 'Access-Control-Allow-Origin' to be present");
         }
+        if let Some(actual) = headers.get("access-control-max-age") {
+            assert_eq!(actual, "3600", "Mismatched header 'Access-Control-Max-Age'");
+        } else {
+            panic!("Expected header 'Access-Control-Max-Age' to be present");
+        }
         if let Some(actual) = headers.get("access-control-allow-methods") {
             assert_eq!(actual, "POST", "Mismatched header 'Access-Control-Allow-Methods'");
         } else {
             panic!("Expected header 'Access-Control-Allow-Methods' to be present");
         }
-        if let Some(actual) = headers.get("access-control-max-age") {
-            assert_eq!(actual, "3600", "Mismatched header 'Access-Control-Max-Age'");
+        if let Some(actual) = headers.get("access-control-allow-headers") {
+            assert_eq!(
+                actual, "Content-Type",
+                "Mismatched header 'Access-Control-Allow-Headers'"
+            );
         } else {
-            panic!("Expected header 'Access-Control-Max-Age' to be present");
+            panic!("Expected header 'Access-Control-Allow-Headers' to be present");
         }
     }
 
@@ -858,7 +856,8 @@ mod cors {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cors_09_cors_expose_headers();
+        let app = spikard_e2e_app::create_app_cors_09_cors_expose_headers().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/api/data".to_string();
@@ -1109,25 +1108,10 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
-        if let Some(actual) = headers.get("access-control-expose-headers") {
-            assert_eq!(
-                actual, "X-Total-Count, X-Request-Id",
-                "Mismatched header 'Access-Control-Expose-Headers'"
-            );
-        } else {
-            panic!("Expected header 'Access-Control-Expose-Headers' to be present");
-        }
-        if let Some(actual) = headers.get("x-total-count") {
-            assert_eq!(actual, "42", "Mismatched header 'X-Total-Count'");
-        } else {
-            panic!("Expected header 'X-Total-Count' to be present");
-        }
         if let Some(actual) = headers.get("access-control-allow-origin") {
             assert_eq!(
                 actual, "https://example.com",
@@ -1136,10 +1120,23 @@ mod cors {
         } else {
             panic!("Expected header 'Access-Control-Allow-Origin' to be present");
         }
+        if let Some(actual) = headers.get("x-total-count") {
+            assert_eq!(actual, "42", "Mismatched header 'X-Total-Count'");
+        } else {
+            panic!("Expected header 'X-Total-Count' to be present");
+        }
         if let Some(actual) = headers.get("x-request-id") {
             assert_eq!(actual, "abc123", "Mismatched header 'X-Request-Id'");
         } else {
             panic!("Expected header 'X-Request-Id' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-expose-headers") {
+            assert_eq!(
+                actual, "X-Total-Count, X-Request-Id",
+                "Mismatched header 'Access-Control-Expose-Headers'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Expose-Headers' to be present");
         }
     }
 
@@ -1155,7 +1152,8 @@ mod cors {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cors_10_cors_origin_null();
+        let app = spikard_e2e_app::create_app_cors_10_cors_origin_null().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/api/data".to_string();
@@ -1406,9 +1404,7 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 403, "Expected status 403, got {}", snapshot.status);
     }
@@ -1425,7 +1421,8 @@ mod cors {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cors_cors_private_network_access();
+        let app = spikard_e2e_app::create_app_cors_cors_private_network_access().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/api/local-resource".to_string();
@@ -1676,21 +1673,10 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 204, "Expected status 204, got {}", snapshot.status);
         let headers = &snapshot.headers;
-        if let Some(actual) = headers.get("vary") {
-            assert_eq!(
-                actual.to_ascii_lowercase(),
-                "Origin".to_ascii_lowercase(),
-                "Mismatched header 'Vary'"
-            );
-        } else {
-            panic!("Expected header 'Vary' to be present");
-        }
         if let Some(actual) = headers.get("access-control-allow-private-network") {
             assert_eq!(
                 actual, "true",
@@ -1712,6 +1698,15 @@ mod cors {
         } else {
             panic!("Expected header 'Access-Control-Allow-Methods' to be present");
         }
+        if let Some(actual) = headers.get("vary") {
+            assert_eq!(
+                actual.to_ascii_lowercase(),
+                "Origin".to_ascii_lowercase(),
+                "Mismatched header 'Vary'"
+            );
+        } else {
+            panic!("Expected header 'Vary' to be present");
+        }
     }
 
     #[tokio::test]
@@ -1726,7 +1721,9 @@ mod cors {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cors_cors_vary_header_for_proper_caching();
+        let app = spikard_e2e_app::create_app_cors_cors_vary_header_for_proper_caching()
+            .expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/api/cached-resource".to_string();
@@ -1977,20 +1974,10 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
-        if let Some(actual) = headers.get("access-control-allow-origin") {
-            assert_eq!(
-                actual, "https://app.example.com",
-                "Mismatched header 'Access-Control-Allow-Origin'"
-            );
-        } else {
-            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
-        }
         if let Some(actual) = headers.get("vary") {
             assert_eq!(
                 actual.to_ascii_lowercase(),
@@ -1999,6 +1986,14 @@ mod cors {
             );
         } else {
             panic!("Expected header 'Vary' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://app.example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
         }
         if let Some(actual) = headers.get("cache-control") {
             assert_eq!(actual, "public, max-age=3600", "Mismatched header 'Cache-Control'");
@@ -2019,7 +2014,9 @@ mod cors {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cors_cors_multiple_allowed_origins();
+        let app =
+            spikard_e2e_app::create_app_cors_cors_multiple_allowed_origins().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/api/data".to_string();
@@ -2270,20 +2267,10 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
-        if let Some(actual) = headers.get("access-control-allow-origin") {
-            assert_eq!(
-                actual, "https://admin.example.com",
-                "Mismatched header 'Access-Control-Allow-Origin'"
-            );
-        } else {
-            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
-        }
         if let Some(actual) = headers.get("vary") {
             assert_eq!(
                 actual.to_ascii_lowercase(),
@@ -2292,6 +2279,14 @@ mod cors {
             );
         } else {
             panic!("Expected header 'Vary' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://admin.example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
         }
     }
 
@@ -2307,7 +2302,8 @@ mod cors {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cors_cors_origin_case_sensitivity();
+        let app = spikard_e2e_app::create_app_cors_cors_origin_case_sensitivity().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/api/data".to_string();
@@ -2558,9 +2554,7 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
@@ -2587,7 +2581,9 @@ mod cors {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cors_cors_preflight_for_delete_method();
+        let app =
+            spikard_e2e_app::create_app_cors_cors_preflight_for_delete_method().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/api/resource/456".to_string();
@@ -2838,9 +2834,7 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 204, "Expected status 204, got {}", snapshot.status);
         let headers = &snapshot.headers;
@@ -2860,6 +2854,11 @@ mod cors {
         } else {
             panic!("Expected header 'Access-Control-Allow-Methods' to be present");
         }
+        if let Some(actual) = headers.get("access-control-max-age") {
+            assert_eq!(actual, "3600", "Mismatched header 'Access-Control-Max-Age'");
+        } else {
+            panic!("Expected header 'Access-Control-Max-Age' to be present");
+        }
         if let Some(actual) = headers.get("vary") {
             assert_eq!(
                 actual.to_ascii_lowercase(),
@@ -2868,11 +2867,6 @@ mod cors {
             );
         } else {
             panic!("Expected header 'Vary' to be present");
-        }
-        if let Some(actual) = headers.get("access-control-max-age") {
-            assert_eq!(actual, "3600", "Mismatched header 'Access-Control-Max-Age'");
-        } else {
-            panic!("Expected header 'Access-Control-Max-Age' to be present");
         }
     }
 
@@ -2888,7 +2882,9 @@ mod cors {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cors_cors_preflight_for_put_method();
+        let app =
+            spikard_e2e_app::create_app_cors_cors_preflight_for_put_method().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/api/resource/123".to_string();
@@ -3139,19 +3135,22 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 204, "Expected status 204, got {}", snapshot.status);
         let headers = &snapshot.headers;
-        if let Some(actual) = headers.get("access-control-allow-origin") {
+        if let Some(actual) = headers.get("access-control-max-age") {
+            assert_eq!(actual, "3600", "Mismatched header 'Access-Control-Max-Age'");
+        } else {
+            panic!("Expected header 'Access-Control-Max-Age' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-headers") {
             assert_eq!(
-                actual, "https://app.example.com",
-                "Mismatched header 'Access-Control-Allow-Origin'"
+                actual, "Content-Type, X-Custom-Header",
+                "Mismatched header 'Access-Control-Allow-Headers'"
             );
         } else {
-            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+            panic!("Expected header 'Access-Control-Allow-Headers' to be present");
         }
         if let Some(actual) = headers.get("vary") {
             assert_eq!(
@@ -3162,11 +3161,6 @@ mod cors {
         } else {
             panic!("Expected header 'Vary' to be present");
         }
-        if let Some(actual) = headers.get("access-control-max-age") {
-            assert_eq!(actual, "3600", "Mismatched header 'Access-Control-Max-Age'");
-        } else {
-            panic!("Expected header 'Access-Control-Max-Age' to be present");
-        }
         if let Some(actual) = headers.get("access-control-allow-methods") {
             assert_eq!(
                 actual, "GET, POST, PUT, PATCH, DELETE",
@@ -3175,13 +3169,13 @@ mod cors {
         } else {
             panic!("Expected header 'Access-Control-Allow-Methods' to be present");
         }
-        if let Some(actual) = headers.get("access-control-allow-headers") {
+        if let Some(actual) = headers.get("access-control-allow-origin") {
             assert_eq!(
-                actual, "Content-Type, X-Custom-Header",
-                "Mismatched header 'Access-Control-Allow-Headers'"
+                actual, "https://app.example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
             );
         } else {
-            panic!("Expected header 'Access-Control-Allow-Headers' to be present");
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
         }
     }
 
@@ -3197,7 +3191,8 @@ mod cors {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cors_cors_preflight_request();
+        let app = spikard_e2e_app::create_app_cors_cors_preflight_request().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -3448,9 +3443,7 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
@@ -3462,14 +3455,6 @@ mod cors {
         } else {
             panic!("Expected header 'Access-Control-Allow-Headers' to be present");
         }
-        if let Some(actual) = headers.get("access-control-allow-origin") {
-            assert_eq!(
-                actual, "https://example.com",
-                "Mismatched header 'Access-Control-Allow-Origin'"
-            );
-        } else {
-            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
-        }
         if let Some(actual) = headers.get("access-control-allow-methods") {
             assert_eq!(
                 actual, "GET, POST, PUT, DELETE, OPTIONS",
@@ -3477,6 +3462,14 @@ mod cors {
             );
         } else {
             panic!("Expected header 'Access-Control-Allow-Methods' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
         }
         if let Some(actual) = headers.get("access-control-max-age") {
             assert_eq!(actual, "600", "Mismatched header 'Access-Control-Max-Age'");
@@ -3497,7 +3490,9 @@ mod cors {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cors_cors_regex_pattern_matching_for_origins();
+        let app = spikard_e2e_app::create_app_cors_cors_regex_pattern_matching_for_origins()
+            .expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/api/data".to_string();
@@ -3748,12 +3743,18 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://subdomain.example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
         if let Some(actual) = headers.get("vary") {
             assert_eq!(
                 actual.to_ascii_lowercase(),
@@ -3762,14 +3763,6 @@ mod cors {
             );
         } else {
             panic!("Expected header 'Vary' to be present");
-        }
-        if let Some(actual) = headers.get("access-control-allow-origin") {
-            assert_eq!(
-                actual, "https://subdomain.example.com",
-                "Mismatched header 'Access-Control-Allow-Origin'"
-            );
-        } else {
-            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
         }
     }
 
@@ -3785,7 +3778,8 @@ mod cors {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cors_cors_request_blocked();
+        let app = spikard_e2e_app::create_app_cors_cors_request_blocked().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -4036,9 +4030,7 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 403, "Expected status 403, got {}", snapshot.status);
     }
@@ -4055,7 +4047,9 @@ mod cors {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cors_cors_safelisted_headers_without_preflight();
+        let app = spikard_e2e_app::create_app_cors_cors_safelisted_headers_without_preflight()
+            .expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/api/form".to_string();
@@ -4306,9 +4300,7 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
@@ -4343,7 +4335,8 @@ mod cors {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cors_cors_wildcard_origin();
+        let app = spikard_e2e_app::create_app_cors_cors_wildcard_origin().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/public/data".to_string();
@@ -4594,9 +4587,7 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
@@ -4619,7 +4610,8 @@ mod cors {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cors_cors_with_credentials();
+        let app = spikard_e2e_app::create_app_cors_cors_with_credentials().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/api/user/profile".to_string();
@@ -4870,12 +4862,23 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://app.example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
+        if let Some(actual) = headers.get("access-control-allow-credentials") {
+            assert_eq!(actual, "true", "Mismatched header 'Access-Control-Allow-Credentials'");
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Credentials' to be present");
+        }
         if let Some(actual) = headers.get("vary") {
             assert_eq!(
                 actual.to_ascii_lowercase(),
@@ -4884,19 +4887,6 @@ mod cors {
             );
         } else {
             panic!("Expected header 'Vary' to be present");
-        }
-        if let Some(actual) = headers.get("access-control-allow-credentials") {
-            assert_eq!(actual, "true", "Mismatched header 'Access-Control-Allow-Credentials'");
-        } else {
-            panic!("Expected header 'Access-Control-Allow-Credentials' to be present");
-        }
-        if let Some(actual) = headers.get("access-control-allow-origin") {
-            assert_eq!(
-                actual, "https://app.example.com",
-                "Mismatched header 'Access-Control-Allow-Origin'"
-            );
-        } else {
-            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
         }
     }
 
@@ -4912,7 +4902,8 @@ mod cors {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_cors_simple_cors_request();
+        let app = spikard_e2e_app::create_app_cors_simple_cors_request().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/items/".to_string();
@@ -5163,12 +5154,18 @@ mod cors {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("access-control-allow-origin") {
+            assert_eq!(
+                actual, "https://example.com",
+                "Mismatched header 'Access-Control-Allow-Origin'"
+            );
+        } else {
+            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        }
         if let Some(actual) = headers.get("vary") {
             assert_eq!(
                 actual.to_ascii_lowercase(),
@@ -5177,14 +5174,6 @@ mod cors {
             );
         } else {
             panic!("Expected header 'Vary' to be present");
-        }
-        if let Some(actual) = headers.get("access-control-allow-origin") {
-            assert_eq!(
-                actual, "https://example.com",
-                "Mismatched header 'Access-Control-Allow-Origin'"
-            );
-        } else {
-            panic!("Expected header 'Access-Control-Allow-Origin' to be present");
         }
     }
 }
