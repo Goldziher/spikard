@@ -7,12 +7,12 @@
 //! AsyncAPI is the standard for describing event-driven APIs, similar to
 //! how OpenAPI describes REST APIs.
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use asyncapiv3::spec::{AsyncApiSpec, AsyncApiV3Spec};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// Parse an AsyncAPI v3 specification file
 ///
@@ -210,14 +210,14 @@ pub fn detect_primary_protocol(spec: &AsyncApiV3Spec) -> Result<Protocol> {
 /// Generate fixture files from message schemas
 ///
 /// Creates JSON fixture files in the output directory for each message type
-pub fn generate_fixtures(spec: &AsyncApiV3Spec, output_dir: &Path, protocol: Protocol) -> Result<usize> {
+pub fn generate_fixtures(spec: &AsyncApiV3Spec, output_dir: &Path, protocol: Protocol) -> Result<Vec<PathBuf>> {
     // Extract message schemas
     let schemas = extract_message_schemas(spec)?;
     let message_channels = collect_message_channels(spec);
 
     if schemas.is_empty() {
         tracing::warn!("No message schemas found in AsyncAPI spec");
-        return Ok(0);
+        return Ok(Vec::new());
     }
 
     // Determine subdirectory based on protocol
@@ -231,7 +231,7 @@ pub fn generate_fixtures(spec: &AsyncApiV3Spec, output_dir: &Path, protocol: Pro
     let target_dir = output_dir.join(subdir);
     fs::create_dir_all(&target_dir).with_context(|| format!("Failed to create directory: {}", target_dir.display()))?;
 
-    let mut generated_count = 0;
+    let mut generated_paths = Vec::new();
 
     // Generate a fixture file for each message schema
     for (message_name, schema) in &schemas {
@@ -255,10 +255,10 @@ pub fn generate_fixtures(spec: &AsyncApiV3Spec, output_dir: &Path, protocol: Pro
             .with_context(|| format!("Failed to write fixture: {}", fixture_path.display()))?;
 
         println!("  Generated: {}", fixture_path.display());
-        generated_count += 1;
+        generated_paths.push(fixture_path);
     }
 
-    Ok(generated_count)
+    Ok(generated_paths)
 }
 
 /// Generate example data from JSON Schema
@@ -448,6 +448,52 @@ fn collect_message_channels(spec: &AsyncApiV3Spec) -> HashMap<String, String> {
     map
 }
 
+fn sanitize_identifier(name: &str) -> String {
+    let mut ident: String = name
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() {
+                c.to_ascii_lowercase()
+            } else {
+                '_'
+            }
+        })
+        .collect();
+
+    while ident.contains("__") {
+        ident = ident.replace("__", "_");
+    }
+
+    ident = ident.trim_matches('_').to_string();
+
+    if ident.is_empty() {
+        return "handler".to_string();
+    }
+
+    if ident.chars().next().unwrap().is_ascii_digit() {
+        ident.insert(0, '_');
+    }
+
+    ident
+}
+
+fn camel_identifier(name: &str) -> String {
+    let base = sanitize_identifier(name);
+    let mut result = String::new();
+    for part in base.split('_').filter(|segment| !segment.is_empty()) {
+        let mut chars = part.chars();
+        if let Some(first) = chars.next() {
+            result.push(first.to_ascii_uppercase());
+            result.push_str(chars.as_str());
+        }
+    }
+    if result.is_empty() {
+        "Handler".to_string()
+    } else {
+        result
+    }
+}
+
 /// Generate WebSocket message handlers for Python
 fn generate_websocket_handlers(spec: &AsyncApiV3Spec, channels: &[ChannelInfo]) -> Result<String> {
     let mut code = String::new();
@@ -588,10 +634,25 @@ pub fn generate_nodejs_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Re
     });
     code.push_str("');\n\n");
 
-    code.push_str("function loadFixture(name: string): any {\n");
+    code.push_str("type FixtureSchema = {\n");
+    code.push_str("  required?: string[];\n");
+    code.push_str("};\n\n");
+
+    code.push_str("type Fixture = {\n");
+    code.push_str("  name: string;\n");
+    code.push_str("  description?: string;\n");
+    code.push_str("  channel?: string;\n");
+    code.push_str("  protocol?: string;\n");
+    code.push_str("  schema: FixtureSchema;\n");
+    code.push_str("  examples: unknown[];\n");
+    code.push_str("};\n\n");
+
+    code.push_str("type MessageRecord = Record<string, unknown>;\n\n");
+
+    code.push_str("function loadFixture(name: string): Fixture {\n");
     code.push_str("  const fixturePath = join(FIXTURES_DIR, `${name}.json`);\n");
     code.push_str("  const content = readFileSync(fixturePath, 'utf-8');\n");
-    code.push_str("  return JSON.parse(content);\n");
+    code.push_str("  return JSON.parse(content) as Fixture;\n");
     code.push_str("}\n\n");
 
     // Generate message handlers based on protocol
@@ -617,11 +678,10 @@ fn generate_nodejs_websocket_handlers(spec: &AsyncApiV3Spec, channels: &[Channel
     let mut code = String::new();
 
     // Message validation function
-    code.push_str("function validateMessage(message: any, fixtureName: string): boolean {\n");
+    code.push_str("function validateMessage(message: MessageRecord, fixtureName: string): boolean {\n");
     code.push_str("  try {\n");
     code.push_str("    const fixture = loadFixture(fixtureName);\n");
-    code.push_str("    const schema = fixture.schema || {};\n");
-    code.push_str("    const required = schema.required || [];\n");
+    code.push_str("    const required = fixture.schema.required || [];\n");
     code.push_str("    \n");
     code.push_str("    // Basic validation - check required fields\n");
     code.push_str("    for (const field of required) {\n");
@@ -674,8 +734,9 @@ fn generate_nodejs_websocket_handlers(spec: &AsyncApiV3Spec, channels: &[Channel
     code.push_str("    });\n");
     code.push_str("    \n");
     code.push_str("    ws.on('message', (data: WebSocket.Data) => {\n");
-    code.push_str("      const message = JSON.parse(data.toString());\n");
-    code.push_str("      const msgType = message.type || 'unknown';\n");
+    code.push_str("      const message = JSON.parse(data.toString()) as MessageRecord;\n");
+    code.push_str("      const rawType = message.type;\n");
+    code.push_str("      const msgType = typeof rawType === 'string' ? rawType : 'unknown';\n");
     code.push_str("      console.log(`Received message type: ${msgType}`);\n");
     code.push_str("      \n");
     code.push_str("      // Validate based on message type\n");
@@ -741,7 +802,7 @@ fn generate_nodejs_sse_handlers(_spec: &AsyncApiV3Spec, channels: &[ChannelInfo]
     code.push_str("      if (line.startsWith('data:')) {\n");
     code.push_str("        const data = line.slice(5).trim();\n");
     code.push_str("        try {\n");
-    code.push_str("          const message = JSON.parse(data);\n");
+    code.push_str("          const message = JSON.parse(data) as MessageRecord;\n");
     code.push_str("          console.log('Received event:', message);\n");
     code.push_str("        } catch {\n");
     code.push_str("          console.log('Received:', data);\n");
@@ -831,6 +892,222 @@ pub fn generate_ruby_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Resu
     // Generate main execution
     code.push_str("\n# Run main function\n");
     code.push_str("main\n");
+
+    Ok(code)
+}
+
+/// Generate Python handler scaffolding from AsyncAPI spec
+pub fn generate_python_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
+    let channels = extract_channel_info(spec)?;
+    if channels.is_empty() {
+        bail!("AsyncAPI spec does not define any channels");
+    }
+
+    match protocol {
+        Protocol::WebSocket | Protocol::Sse => {}
+        other => {
+            bail!("Protocol {:?} is not supported for Python handler generation", other);
+        }
+    }
+
+    let mut code = String::new();
+    code.push_str("#!/usr/bin/env python3\n");
+    code.push_str("\"\"\"AsyncAPI handler skeleton generated by Spikard.\"\"\"\n\n");
+    code.push_str("from typing import Any\n");
+    if protocol == Protocol::Sse {
+        code.push_str("import asyncio\n");
+    }
+    match protocol {
+        Protocol::WebSocket => code.push_str("from spikard import Spikard, websocket\n"),
+        Protocol::Sse => code.push_str("from spikard import Spikard, sse\n"),
+        _ => {}
+    }
+    code.push_str("\napp = Spikard()\n\n");
+
+    for channel in &channels {
+        let handler_name = format!("{}_handler", sanitize_identifier(&channel.name));
+        let message_description = if channel.messages.is_empty() {
+            "messages".to_string()
+        } else {
+            channel.messages.join(", ")
+        };
+
+        match protocol {
+            Protocol::WebSocket => {
+                code.push_str(&format!("@websocket(\"{}\")\n", channel.path));
+                code.push_str(&format!(
+                    "async def {}(message: dict[str, Any]) -> dict[str, Any]:\n",
+                    handler_name
+                ));
+                code.push_str(&format!(
+                    "    \"\"\"Handles {} on {}.\"\"\"\n",
+                    message_description, channel.path
+                ));
+                code.push_str("    raise NotImplementedError(\"Implement WebSocket message handling logic\")\n\n");
+            }
+            Protocol::Sse => {
+                code.push_str(&format!("@sse(\"{}\")\n", channel.path));
+                code.push_str(&format!("async def {}() -> Any:\n", handler_name));
+                code.push_str(&format!(
+                    "    \"\"\"Streams events for {} on {}.\"\"\"\n",
+                    message_description, channel.path
+                ));
+                code.push_str("    yield {\"message\": \"replace with real event\"}\n\n");
+            }
+            _ => {}
+        }
+    }
+
+    code.push_str("if __name__ == \"__main__\":\n");
+    code.push_str("    app.run()\n");
+
+    Ok(code)
+}
+
+/// Generate Node.js handler scaffolding from AsyncAPI spec
+pub fn generate_nodejs_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
+    let channels = extract_channel_info(spec)?;
+    if channels.is_empty() {
+        bail!("AsyncAPI spec does not define any channels");
+    }
+
+    match protocol {
+        Protocol::WebSocket | Protocol::Sse => {}
+        other => bail!("Protocol {:?} is not supported for Node.js handler generation", other),
+    }
+
+    let mut code = String::new();
+    code.push_str("/**\n * AsyncAPI handler skeleton generated by Spikard CLI.\n */\n\n");
+    code.push_str("import type { RouteMetadata, SpikardApp } from \"@spikard/node\";\n");
+    if protocol == Protocol::Sse {
+        code.push_str("import { StreamingResponse } from \"@spikard/node\";\n");
+    }
+    code.push('\n');
+
+    let mut route_entries = Vec::new();
+    let mut handler_entries = Vec::new();
+
+    for channel in &channels {
+        let handler_name = format!("handle{}", camel_identifier(&channel.name));
+        let message_description = if channel.messages.is_empty() {
+            "messages".to_string()
+        } else {
+            channel.messages.join(", ")
+        };
+
+        match protocol {
+            Protocol::WebSocket => {
+                code.push_str(&format!(
+                    "async function {}(message: unknown): Promise<string> {{\n",
+                    handler_name
+                ));
+                code.push_str(&format!(
+                    "  // TODO: Handle {} for {}\n",
+                    message_description, channel.path
+                ));
+                code.push_str("  const parsed = typeof message === \"string\" ? JSON.parse(message) : message;\n");
+                code.push_str("  throw new Error(\"Implement WebSocket handler logic\");\n");
+                code.push_str("}\n\n");
+            }
+            Protocol::Sse => {
+                code.push_str(&format!(
+                    "async function {}(): Promise<StreamingResponse> {{\n",
+                    handler_name
+                ));
+                code.push_str("  async function* eventStream() {\n");
+                code.push_str("    yield \"data: {\\\"message\\\": \\\"replace with event\\\"}\\n\\n\";\n");
+                code.push_str("  }\n");
+                code.push_str(
+                    "  return new StreamingResponse(eventStream(), { statusCode: 200, headers: { \"content-type\": \"text/event-stream\", \"cache-control\": \"no-cache\" } });\n",
+                );
+                code.push_str("}\n\n");
+            }
+            _ => {}
+        }
+
+        route_entries.push(format!(
+            "{{ method: \"GET\", path: \"{}\", handler_name: \"{}\", is_async: true }}",
+            channel.path, handler_name
+        ));
+        handler_entries.push(format!("{}: {}", handler_name, handler_name));
+    }
+
+    code.push_str("const routes: RouteMetadata[] = [\n    ");
+    code.push_str(&route_entries.join(",\n    "));
+    code.push_str("\n];\n\n");
+    code.push_str("const handlers = {\n    ");
+    code.push_str(&handler_entries.join(",\n    "));
+    code.push_str("\n};\n\n");
+    code.push_str("export function createAsyncApiHandlers(): SpikardApp {\n");
+    code.push_str("  return { routes, handlers };\n");
+    code.push_str("}\n");
+
+    Ok(code)
+}
+
+/// Generate Ruby handler scaffolding from AsyncAPI spec
+pub fn generate_ruby_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
+    let channels = extract_channel_info(spec)?;
+    if channels.is_empty() {
+        bail!("AsyncAPI spec does not define any channels");
+    }
+
+    match protocol {
+        Protocol::WebSocket | Protocol::Sse => {}
+        other => bail!("Protocol {:?} is not supported for Ruby handler generation", other),
+    }
+
+    let mut code = String::new();
+    code.push_str("#!/usr/bin/env ruby\n");
+    code.push_str("# frozen_string_literal: true\n\n");
+    code.push_str("require \"spikard\"\n\n");
+    code.push_str("app = Spikard::App.new\n\n");
+
+    for channel in &channels {
+        let handler_name = sanitize_identifier(&channel.name);
+        let message_description = if channel.messages.is_empty() {
+            "messages".to_string()
+        } else {
+            channel.messages.join(", ")
+        };
+
+        match protocol {
+            Protocol::WebSocket => {
+                code.push_str(&format!(
+                    "app.websocket(\"{}\", handler_name: \"{}\") do\n",
+                    channel.path, handler_name
+                ));
+                code.push_str("  handler = Object.new\n");
+                code.push_str("  def handler.handle_message(message)\n");
+                code.push_str(&format!(
+                    "    # TODO: Handle {} for {}\n",
+                    message_description, channel.path
+                ));
+                code.push_str("    message\n");
+                code.push_str("  end\n");
+                code.push_str("  handler\n");
+                code.push_str("end\n\n");
+            }
+            Protocol::Sse => {
+                code.push_str(&format!(
+                    "app.get(\"{}\", handler_name: \"{}\") do |_request|\n",
+                    channel.path, handler_name
+                ));
+                code.push_str("  stream = Enumerator.new do |yielder|\n");
+                code.push_str("    yielder << \"data: {\\\"message\\\": \\\"replace with event\\\"}\\n\\n\"\n");
+                code.push_str("  end\n\n");
+                code.push_str(
+                    "  Spikard::StreamingResponse.new(stream, status_code: 200, headers: { \"content-type\" => \"text/event-stream\", \"cache-control\" => \"no-cache\" })\n",
+                );
+                code.push_str("end\n\n");
+            }
+            _ => {}
+        }
+    }
+
+    code.push_str("if $PROGRAM_NAME == __FILE__\n");
+    code.push_str("  app.run\n");
+    code.push_str("end\n");
 
     Ok(code)
 }
