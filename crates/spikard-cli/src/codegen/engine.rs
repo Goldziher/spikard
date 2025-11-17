@@ -1,7 +1,7 @@
 use super::asyncapi::{Protocol, parse_asyncapi_schema};
 use super::asyncapi::{
-    generate_nodejs_handler_app, generate_nodejs_test_app, generate_python_handler_app, generate_python_test_app,
-    generate_ruby_handler_app, generate_ruby_test_app,
+    generate_nodejs_handler_app, generate_nodejs_test_app, generate_php_handler_app, generate_python_handler_app,
+    generate_python_test_app, generate_ruby_handler_app, generate_ruby_test_app, generate_rust_handler_app,
 };
 use super::{DtoConfig, TargetLanguage, detect_primary_protocol, generate_fixtures};
 use crate::codegen::generate_from_openapi;
@@ -108,7 +108,7 @@ impl CodegenEngine {
                 let assets = Self::generate_asyncapi_bundle(&spec, protocol, output)?;
                 Ok(CodegenOutcome::Files(assets))
             }
-            _ => anyhow::bail!(
+            _ => bail!(
                 "Unsupported schema/target combination: {:?} -> {:?}",
                 request.schema_kind,
                 request.target
@@ -143,7 +143,7 @@ impl CodegenEngine {
             TargetLanguage::TypeScript => generate_nodejs_test_app(spec, protocol)?,
             TargetLanguage::Ruby => generate_ruby_test_app(spec, protocol)?,
             other => {
-                anyhow::bail!("{:?} is not supported for AsyncAPI test apps", other);
+                bail!("{:?} is not supported for AsyncAPI test apps", other);
             }
         };
 
@@ -171,7 +171,8 @@ impl CodegenEngine {
             TargetLanguage::Python => generate_python_handler_app(spec, protocol)?,
             TargetLanguage::TypeScript => generate_nodejs_handler_app(spec, protocol)?,
             TargetLanguage::Ruby => generate_ruby_handler_app(spec, protocol)?,
-            other => bail!("{:?} is not supported for AsyncAPI handler generation", other),
+            TargetLanguage::Rust => generate_rust_handler_app(spec, protocol)?,
+            TargetLanguage::Php => generate_php_handler_app(spec, protocol)?,
         };
 
         if let Some(parent) = output.parent()

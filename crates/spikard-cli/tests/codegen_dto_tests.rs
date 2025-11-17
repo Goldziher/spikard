@@ -300,6 +300,63 @@ fn asyncapi_test_app_generation_writes_ruby_handler() -> Result<()> {
     Ok(())
 }
 
+#[test]
+fn asyncapi_handler_generation_writes_rust_scaffold() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "asyncapi.yaml", SIMPLE_ASYNCAPI);
+    let output = dir.path().join("handlers.rs");
+
+    let request = CodegenRequest {
+        schema_path,
+        schema_kind: SchemaKind::AsyncApi,
+        target: CodegenTargetKind::AsyncHandlers {
+            language: TargetLanguage::Rust,
+            output: output.clone(),
+        },
+        dto: None,
+    };
+
+    match CodegenEngine::execute(request)? {
+        CodegenOutcome::Files(_) => {
+            let contents = fs::read_to_string(&output)?;
+            assert!(
+                contents.contains("use spikard::{App, AppError, RequestContext, get};"),
+                "expected Rust handler imports"
+            );
+        }
+        CodegenOutcome::InMemory(_) => panic!("Rust handler generation should emit files"),
+    }
+
+    Ok(())
+}
+
+#[test]
+fn asyncapi_handler_generation_writes_php_scaffold() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "asyncapi.yaml", SIMPLE_ASYNCAPI);
+    let output = dir.path().join("handlers.php");
+
+    let request = CodegenRequest {
+        schema_path,
+        schema_kind: SchemaKind::AsyncApi,
+        target: CodegenTargetKind::AsyncHandlers {
+            language: TargetLanguage::Php,
+            output: output.clone(),
+        },
+        dto: None,
+    };
+
+    match CodegenEngine::execute(request)? {
+        CodegenOutcome::Files(_) => {
+            let contents = fs::read_to_string(&output)?;
+            assert!(contents.contains("<?php"), "expected PHP file header");
+        }
+        CodegenOutcome::InMemory(_) => panic!("PHP handler generation should emit files"),
+    }
+
+    Ok(())
+}
+
 fn assert_python_class_executes(class_name: &str, code: &str) -> Result<()> {
     let dir = tempdir()?;
     let stub_dir = create_python_stub_dir(dir.path())?;

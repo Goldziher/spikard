@@ -307,3 +307,49 @@ def test_cli_generates_asyncapi_python_handler() -> None:
         env = os.environ.copy()
         env["PYTHONPATH"] = f"{stub_root}:{env.get('PYTHONPATH', '')}"
         subprocess.run(["python3", "-m", "py_compile", str(output)], check=True, env=env)
+
+
+def test_cli_generates_asyncapi_rust_handler() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp = Path(tmpdir)
+        spec_path = tmp / "asyncapi.yaml"
+        output = tmp / "handler.rs"
+        spec_path.write_text(ASYNCAPI_SPEC)
+
+        run_cli(
+            [
+                "generate",
+                "asyncapi",
+                str(spec_path),
+                "--lang",
+                "rust",
+                "--output",
+                str(output),
+            ]
+        )
+
+        contents = output.read_text()
+        assert "use spikard::{App, AppError, RequestContext, get};" in contents
+
+
+def test_cli_generates_asyncapi_php_handler() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp = Path(tmpdir)
+        spec_path = tmp / "asyncapi.yaml"
+        output = tmp / "handler.php"
+        spec_path.write_text(ASYNCAPI_SPEC)
+
+        run_cli(
+            [
+                "generate",
+                "asyncapi",
+                str(spec_path),
+                "--lang",
+                "php",
+                "--output",
+                str(output),
+            ]
+        )
+
+        contents = output.read_text()
+        assert contents.startswith("<?php")

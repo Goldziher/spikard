@@ -304,6 +304,61 @@ pub struct SerializationMetrics {
     pub sample_count: u64,
 }
 
+/// Result of a streaming benchmark (WebSocket/SSE).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StreamingBenchmarkResult {
+    pub framework: String,
+    pub protocol: StreamingProtocol,
+    pub channel: String,
+    pub duration_secs: u64,
+    pub connections: usize,
+    pub timestamp: DateTime<Utc>,
+    pub resources: ResourceMetrics,
+    pub metrics: StreamingMetrics,
+    pub success: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
+/// Streaming workload metrics.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct StreamingMetrics {
+    pub connections_established: usize,
+    pub messages_sent: u64,
+    pub responses_received: u64,
+    pub events_received: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub latency: Option<StreamingLatencyMetrics>,
+    pub errors: u64,
+}
+
+/// Minimal latency summary for streaming workloads.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StreamingLatencyMetrics {
+    pub average_ms: f64,
+    pub max_ms: f64,
+    pub samples: u64,
+}
+
+/// Supported streaming protocols.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum StreamingProtocol {
+    #[serde(alias = "ws", alias = "websocket")]
+    WebSocket,
+    #[serde(alias = "sse", alias = "server-sent-events")]
+    Sse,
+}
+
+impl std::fmt::Display for StreamingProtocol {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            StreamingProtocol::WebSocket => write!(f, "websocket"),
+            StreamingProtocol::Sse => write!(f, "sse"),
+        }
+    }
+}
+
 /// Raw output from oha load generator
 #[derive(Debug, Clone, Deserialize)]
 pub struct OhaOutput {

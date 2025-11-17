@@ -1,6 +1,9 @@
 //! Spikard Benchmark Harness CLI
 
-use benchmark_harness::{BenchmarkRunner, Fixture, FixtureManager, Result, RunnerConfig};
+use benchmark_harness::{
+    BenchmarkRunner, Fixture, FixtureManager, Result, RunnerConfig, StreamingBenchmarkRunner, StreamingFixture,
+    StreamingRunnerConfig,
+};
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -65,6 +68,41 @@ enum Commands {
         /// Optional fixture to test specific endpoint
         #[arg(long)]
         fixture: Option<PathBuf>,
+    },
+
+    /// Run a streaming benchmark (WebSocket/SSE)
+    Stream {
+        /// Framework to benchmark (e.g., spikard-python)
+        #[arg(short, long)]
+        framework: String,
+
+        /// App directory containing server entrypoint
+        #[arg(short, long)]
+        app_dir: PathBuf,
+
+        /// Streaming fixture path (from testing_data/websockets or testing_data/sse)
+        #[arg(long)]
+        fixture: PathBuf,
+
+        /// Duration in seconds
+        #[arg(short, long, default_value = "30")]
+        duration: u64,
+
+        /// Number of concurrent streaming connections
+        #[arg(short, long, default_value = "50")]
+        connections: usize,
+
+        /// Warmup duration in seconds
+        #[arg(long, default_value = "5")]
+        warmup: u64,
+
+        /// Variant name (e.g., async)
+        #[arg(long)]
+        variant: Option<String>,
+
+        /// Output file for JSON results
+        #[arg(short, long)]
+        output: Option<PathBuf>,
     },
 }
 
@@ -196,6 +234,67 @@ async fn main() -> Result<()> {
             println!("\n{}", "=".repeat(60));
 
             // Write JSON output
+            if let Some(output_path) = output {
+                let json = serde_json::to_string_pretty(&result)?;
+                std::fs::write(&output_path, json)?;
+                println!("\nResults written to: {}", output_path.display());
+            }
+
+            Ok(())
+        }
+
+        Commands::Stream {
+            framework,
+            app_dir,
+            fixture,
+            duration,
+            connections,
+            warmup,
+            variant,
+            output,
+        } => {
+            let streaming_fixture = StreamingFixture::from_file(&fixture)?;
+            let config = StreamingRunnerConfig {
+                framework: framework.clone(),
+                app_dir,
+                duration_secs: duration,
+                connections,
+                warmup_secs: warmup,
+                variant,
+            };
+
+            let runner = StreamingBenchmarkRunner::new(config);
+            let result = runner.run(&streaming_fixture).await?;
+
+            println!("{}\nStreaming Benchmark\n{}", "=".repeat(60), "=".repeat(60));
+            println!("Framework: {}", result.framework);
+            println!("Protocol:  {}", result.protocol);
+            println!("Channel:   {}", result.channel);
+            println!("Duration:  {}s", result.duration_secs);
+            println!("Connections: {}", result.connections);
+
+            if result.success {
+                println!("\n--- Streaming Metrics ---");
+                println!("  Connections established: {}", result.metrics.connections_established);
+                println!("  Messages sent:           {}", result.metrics.messages_sent);
+                println!("  Responses received:      {}", result.metrics.responses_received);
+                println!("  Events received:         {}", result.metrics.events_received);
+                if let Some(latency) = &result.metrics.latency {
+                    println!("  Avg round-trip (ms):     {:.2}", latency.average_ms);
+                    println!("  Max round-trip (ms):     {:.2}", latency.max_ms);
+                    println!("  Latency samples:         {}", latency.samples);
+                }
+                println!("  Errors:                  {}", result.metrics.errors);
+
+                println!("\n--- Resources ---");
+                println!("  Avg Memory:  {:.2} MB", result.resources.avg_memory_mb);
+                println!("  Peak Memory: {:.2} MB", result.resources.peak_memory_mb);
+                println!("  Avg CPU:     {:.1}%", result.resources.avg_cpu_percent);
+                println!("  Peak CPU:    {:.1}%", result.resources.peak_cpu_percent);
+            } else if let Some(err) = &result.error {
+                println!("\n❌ Streaming benchmark failed: {}", err);
+            }
+
             if let Some(output_path) = output {
                 let json = serde_json::to_string_pretty(&result)?;
                 std::fs::write(&output_path, json)?;

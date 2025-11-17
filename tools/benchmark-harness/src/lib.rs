@@ -11,6 +11,7 @@ pub mod load_generator;
 pub mod monitor;
 pub mod runner;
 pub mod server;
+pub mod streaming;
 pub mod types;
 
 pub use analysis::{AggregatedResult, MetricStats, aggregate_runs};
@@ -24,4 +25,8 @@ pub use load_generator::{LoadGeneratorType, LoadTestConfig};
 pub use monitor::{ResourceMonitor, ResourceSample};
 pub use runner::{BenchmarkRunner, RunnerConfig};
 pub use server::{ServerConfig, ServerHandle};
-pub use types::{BenchmarkResult, LatencyMetrics, ResourceMetrics, ThroughputMetrics};
+pub use streaming::{StreamingBenchmarkRunner, StreamingFixture, StreamingRunnerConfig};
+pub use types::{
+    BenchmarkResult, LatencyMetrics, ResourceMetrics, StreamingBenchmarkResult, StreamingLatencyMetrics,
+    StreamingMetrics, StreamingProtocol, ThroughputMetrics,
+};
