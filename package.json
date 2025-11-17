@@ -10,7 +10,7 @@
 		"format": "task format"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.3.5",
+		"@biomejs/biome": "^2.3.6",
 		"oxlint": "^1.28.0",
 		"typescript": "^5.9.3"
 	},
