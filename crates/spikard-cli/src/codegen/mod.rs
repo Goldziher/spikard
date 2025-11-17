@@ -12,8 +12,8 @@ mod typescript;
 
 pub use asyncapi::{
     Protocol, detect_primary_protocol, generate_fixtures, generate_nodejs_handler_app, generate_nodejs_test_app,
-    generate_python_handler_app, generate_python_test_app, generate_ruby_handler_app, generate_ruby_test_app,
-    parse_asyncapi_schema,
+    generate_php_handler_app, generate_python_handler_app, generate_python_test_app, generate_ruby_handler_app,
+    generate_ruby_test_app, generate_rust_handler_app, parse_asyncapi_schema,
 };
 pub use engine::{CodegenEngine, CodegenOutcome, CodegenRequest, CodegenTargetKind, GeneratedAsset, SchemaKind};
 pub use openapi::parse_openapi_schema;

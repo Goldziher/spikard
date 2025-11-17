@@ -69,8 +69,8 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - [x] AsyncAPI streaming fixtures (Ruby, Python, Node.js runners)
 - [x] Benchmark harness
 - [x] Performance benchmarks (Python, Node, Ruby, Rust)
-- [ ] WebSocket benchmarks
-- [ ] SSE benchmarks
+- [x] WebSocket benchmarks (`benchmark-harness stream --framework ... --fixture testing_data/websockets/...`)
+- [x] SSE benchmarks (`benchmark-harness stream --fixture testing_data/sse/...`)
 
 ### Roadmap To v1.0
 
@@ -85,9 +85,8 @@ Remaining work before v1.0:
 - ✅ Shared request builders keep Python/Node/Ruby test clients in sync with the Rust behavior.
 - ✅ Fixture-driven e2e suites pass for Rust, Python, Node, and Ruby.
 - 🔄 Outstanding items:
-  - AsyncAPI handler generation for additional languages (Rust/PHP) and richer protocol coverage.
-  - WebSocket/SSE benchmark scenarios and snapshot tests.
-  - Consolidated docs describing how to exercise transport edge cases (e.g., raw socket helpers when the HTTP stack short-circuits).
+  - AsyncAPI-first handler generation still needs deeper protocol coverage (batched messages, bidirectional channels, more DTO knobs) before we can scaffold entire streaming apps from specs.
+  - Snapshot coverage for streaming transports (capturing SSE/WebSocket transcripts from the new benchmarks) to catch regressions automatically.
 
 ## Structure
 
