@@ -2,9 +2,7 @@
 
 use anyhow::Result;
 use heck::{ToPascalCase, ToSnakeCase};
-use openapiv3::{
-    IntegerFormat, OpenAPI, Operation, Parameter, ReferenceOr, Schema, SchemaKind, Type, VariantOrUnknownOrEmpty,
-};
+use openapiv3::{IntegerFormat, OpenAPI, Operation, ReferenceOr, Schema, SchemaKind, Type, VariantOrUnknownOrEmpty};
 
 pub struct RustGenerator {
     spec: OpenAPI,
@@ -24,8 +22,10 @@ impl RustGenerator {
         // Generate schema models
         output.push_str(&self.generate_models()?);
 
-        // Generate routes
-        output.push_str(&self.generate_routes()?);
+        // Generate handlers and builder
+        let (handlers, registrations) = self.generate_handlers()?;
+        output.push_str(&handlers);
+        output.push_str(&self.generate_builder(&registrations));
 
         // Generate main block
         output.push_str(&self.generate_main());
@@ -40,14 +40,12 @@ impl RustGenerator {
 // Title: {}
 // DO NOT EDIT - regenerate from OpenAPI schema
 
-use axum::{{
-    extract::{{Path, Query}},
-    http::StatusCode,
-    routing::{{delete, get, patch, post, put}},
-    Json, Router,
-}};
+use axum::body::Body;
+use axum::http::StatusCode;
+use axum::http::Response as HttpResponse;
+use schemars::JsonSchema;
 use serde::{{Deserialize, Serialize}};
-use std::net::SocketAddr;
+use spikard::{{App, AppError, RequestContext, delete, get, patch, post, put}};
 
 "#,
             self.spec.openapi, self.spec.info.title
@@ -158,7 +156,7 @@ use std::net::SocketAddr;
     }
 
     /// Extract response type from operation (looks for 200/201 responses)
-    fn extract_response_type(&self, operation: &Operation) -> String {
+    fn extract_response_type(&self, operation: &Operation) -> Option<String> {
         use openapiv3::StatusCode;
 
         // Try to find a successful response (200, 201, 2XX)
@@ -175,18 +173,17 @@ use std::net::SocketAddr;
                     if let Some(content) = response.content.get("application/json")
                         && let Some(schema_ref) = &content.schema
                     {
-                        return self.extract_type_from_schema_ref(schema_ref);
+                        return Some(self.extract_type_from_schema_ref(schema_ref));
                     }
                 }
                 ReferenceOr::Reference { reference } => {
                     let ref_name = reference.split('/').next_back().unwrap();
-                    return ref_name.to_pascal_case();
+                    return Some(ref_name.to_pascal_case());
                 }
             }
         }
 
-        // Default to empty JSON object if no schema found
-        "()".to_string()
+        None
     }
 
     fn schema_to_rust_type(schema: &Schema, optional: bool) -> String {
@@ -224,9 +221,14 @@ use std::net::SocketAddr;
         }
     }
 
-    fn generate_routes(&self) -> Result<String> {
-        let mut output = String::new();
-        output.push_str("\n// Route Handlers\n\n");
+    fn generate_handlers(&self) -> Result<(String, String)> {
+        let mut handlers = String::from(
+            "
+// Route Handlers
+
+",
+        );
+        let mut registrations = String::new();
 
         for (path, path_item_ref) in &self.spec.paths.paths {
             let path_item = match path_item_ref {
@@ -234,268 +236,110 @@ use std::net::SocketAddr;
                 ReferenceOr::Reference { .. } => continue,
             };
 
-            // Generate route for each HTTP method
             if let Some(op) = &path_item.get {
-                output.push_str(&self.generate_route_handler(path, "get", op)?);
+                self.append_handler(path, "GET", op, &mut handlers, &mut registrations)?;
             }
             if let Some(op) = &path_item.post {
-                output.push_str(&self.generate_route_handler(path, "post", op)?);
+                self.append_handler(path, "POST", op, &mut handlers, &mut registrations)?;
             }
             if let Some(op) = &path_item.put {
-                output.push_str(&self.generate_route_handler(path, "put", op)?);
+                self.append_handler(path, "PUT", op, &mut handlers, &mut registrations)?;
             }
             if let Some(op) = &path_item.delete {
-                output.push_str(&self.generate_route_handler(path, "delete", op)?);
+                self.append_handler(path, "DELETE", op, &mut handlers, &mut registrations)?;
             }
             if let Some(op) = &path_item.patch {
-                output.push_str(&self.generate_route_handler(path, "patch", op)?);
+                self.append_handler(path, "PATCH", op, &mut handlers, &mut registrations)?;
             }
         }
 
-        Ok(output)
+        Ok((handlers, registrations))
     }
 
-    fn generate_route_handler(&self, path: &str, method: &str, operation: &Operation) -> Result<String> {
-        let mut output = String::new();
+    fn append_handler(
+        &self,
+        path: &str,
+        method: &str,
+        operation: &Operation,
+        handlers: &mut String,
+        registrations: &mut String,
+    ) -> Result<()> {
+        let builder_fn = match method {
+            "GET" => "get",
+            "POST" => "post",
+            "PUT" => "put",
+            "PATCH" => "patch",
+            "DELETE" => "delete",
+            _ => return Ok(()),
+        };
 
-        // Generate doc comment with route info and description
-        if let Some(summary) = &operation.summary {
-            output.push_str(&format!("/// {}\n", summary));
-        }
-        if let Some(description) = &operation.description {
-            output.push_str("///\n");
-            for line in description.lines() {
-                output.push_str(&format!("/// {}\n", line));
-            }
-        }
-
-        // Convert operation_id to function name, or generate one
-        let func_name = operation
+        let handler_name = operation
             .operation_id
             .as_ref()
             .map(|id| id.to_snake_case())
-            .unwrap_or_else(|| {
-                format!(
-                    "{}_{}",
-                    method,
-                    path.replace('/', "_").replace(['{', '}'], "").trim_matches('_')
-                )
-            });
+            .unwrap_or_else(|| format!("{}_{}", method.to_lowercase(), sanitize_identifier(path)));
 
-        // Parse parameters
-        let mut path_params = Vec::new();
-        let mut query_params = Vec::new();
+        let request_type = self.extract_request_body_type(operation);
+        let response_type = self.extract_response_type(operation);
+        let escaped_path = path.replace('"', "\\\"");
 
-        for param_ref in &operation.parameters {
-            if let ReferenceOr::Item(param) = param_ref {
-                match param {
-                    Parameter::Path { parameter_data, .. } => {
-                        let param_type = "String".to_string();
-                        path_params.push((parameter_data.name.clone(), param_type));
-                    }
-                    Parameter::Query { parameter_data, .. } => {
-                        let param_type = "String".to_string();
-                        query_params.push((parameter_data.name.clone(), param_type));
-                    }
-                    _ => {}
-                }
-            }
+        let mut builder = format!("{}(\"{}\")", builder_fn, escaped_path);
+        builder.push_str(&format!(".handler_name(\"{}\")", handler_name));
+        if let Some(ref req_ty) = request_type {
+            builder.push_str(&format!(".request_body::<{}>()", req_ty));
         }
-
-        // Extract request body type
-        let body_type = self.extract_request_body_type(operation);
-
-        // Extract response type
-        let return_type = self.extract_response_type(operation);
-
-        // Build parameter struct for query params if needed
-        let query_struct_name = if !query_params.is_empty() {
-            Some(format!("{}Query", func_name.to_pascal_case()))
-        } else {
-            None
-        };
-
-        // Generate query param struct if needed
-        if let Some(ref struct_name) = query_struct_name {
-            output.push_str("#[derive(Debug, Deserialize)]\n");
-            output.push_str(&format!("struct {} {{\n", struct_name));
-            for (param_name, param_type) in &query_params {
-                output.push_str(&format!("    {}: {},\n", param_name.to_snake_case(), param_type));
-            }
-            output.push_str("}\n\n");
+        if let Some(ref resp_ty) = response_type {
+            builder.push_str(&format!(".response_body::<{}>()", resp_ty));
         }
+        registrations.push_str(&format!("    app.route({builder}, {handler_name})?;\n"));
 
-        // Build path parameter struct if needed
-        let path_struct_name = if path_params.len() > 1 {
-            Some(format!("{}Params", func_name.to_pascal_case()))
-        } else {
-            None
-        };
-
-        // Generate path param struct if needed (multiple path params)
-        if let Some(ref struct_name) = path_struct_name {
-            output.push_str("#[derive(Debug, Deserialize)]\n");
-            output.push_str(&format!("struct {} {{\n", struct_name));
-            for (param_name, param_type) in &path_params {
-                output.push_str(&format!("    {}: {},\n", param_name.to_snake_case(), param_type));
-            }
-            output.push_str("}\n\n");
+        handlers.push_str(&format!(
+            "async fn {handler_name}(ctx: RequestContext) -> Result<HttpResponse<Body>, (StatusCode, String)> {{\n"
+        ));
+        if let Some(req_ty) = request_type {
+            handlers.push_str(&format!("    // let body: {ty} = ctx.json()?;\n", ty = req_ty));
         }
+        handlers.push_str(&format!("    println!(\"TODO: Implement {method} {path}\");\n"));
+        handlers.push_str("    let _ = ctx;\n");
+        handlers.push_str("    Err((StatusCode::NOT_IMPLEMENTED, \"Not implemented\".to_string()))\n");
+        handlers.push_str("}\n\n");
 
-        // Generate function signature
-        output.push_str(&format!("async fn {}(", func_name));
+        Ok(())
+    }
 
-        let mut params = Vec::new();
+    fn generate_builder(&self, registrations: &str) -> String {
+        format!(
+            "fn build_app() -> Result<App, AppError> {{
+    let mut app = App::new();
+{regs}    Ok(app)
+}}
 
-        // Add path parameters
-        if let Some(ref struct_name) = path_struct_name {
-            params.push(format!("Path(params): Path<{}>", struct_name));
-        } else if path_params.len() == 1 {
-            let (param_name, param_type) = &path_params[0];
-            params.push(format!("Path({}): Path<{}>", param_name.to_snake_case(), param_type));
-        }
-
-        // Add query parameters
-        if let Some(ref struct_name) = query_struct_name {
-            params.push(format!("Query(query): Query<{}>", struct_name));
-        }
-
-        // Add body parameter
-        if let Some(body_type_name) = &body_type {
-            params.push(format!("Json(body): Json<{}>", body_type_name));
-        }
-
-        output.push_str(&params.join(", "));
-
-        // Determine return type for Axum handler
-        let axum_return = if return_type == "()" {
-            "StatusCode".to_string()
-        } else {
-            format!("Json<{}>", return_type)
-        };
-
-        output.push_str(&format!(") -> {} {{\n", axum_return));
-
-        // Generate function body
-        output.push_str("    // TODO: Implement this endpoint\n");
-
-        if return_type == "()" {
-            output.push_str("    StatusCode::NOT_IMPLEMENTED\n");
-        } else {
-            output.push_str("    todo!(\"Implement this endpoint\")\n");
-        }
-
-        output.push_str("}\n\n");
-
-        Ok(output)
+",
+            regs = registrations
+        )
     }
 
     fn generate_main(&self) -> String {
-        let mut output = String::new();
-
-        output.push_str("// Application Router\n\n");
-        output.push_str("fn app() -> Router {\n");
-        output.push_str("    Router::new()\n");
-
-        // Collect all routes
-        for (path, path_item_ref) in &self.spec.paths.paths {
-            let path_item = match path_item_ref {
-                ReferenceOr::Item(item) => item,
-                ReferenceOr::Reference { .. } => continue,
-            };
-
-            // Convert OpenAPI path params {id} to Axum format :id
-            let axum_path = path.replace('{', ":").replace('}', "");
-
-            let mut methods = Vec::new();
-
-            if let Some(op) = &path_item.get {
-                let func_name = op
-                    .operation_id
-                    .as_ref()
-                    .map(|id| id.to_snake_case())
-                    .unwrap_or_else(|| {
-                        format!(
-                            "get_{}",
-                            path.replace('/', "_").replace(['{', '}'], "").trim_matches('_')
-                        )
-                    });
-                methods.push(("get", func_name));
-            }
-            if let Some(op) = &path_item.post {
-                let func_name = op
-                    .operation_id
-                    .as_ref()
-                    .map(|id| id.to_snake_case())
-                    .unwrap_or_else(|| {
-                        format!(
-                            "post_{}",
-                            path.replace('/', "_").replace(['{', '}'], "").trim_matches('_')
-                        )
-                    });
-                methods.push(("post", func_name));
-            }
-            if let Some(op) = &path_item.put {
-                let func_name = op
-                    .operation_id
-                    .as_ref()
-                    .map(|id| id.to_snake_case())
-                    .unwrap_or_else(|| {
-                        format!(
-                            "put_{}",
-                            path.replace('/', "_").replace(['{', '}'], "").trim_matches('_')
-                        )
-                    });
-                methods.push(("put", func_name));
-            }
-            if let Some(op) = &path_item.delete {
-                let func_name = op
-                    .operation_id
-                    .as_ref()
-                    .map(|id| id.to_snake_case())
-                    .unwrap_or_else(|| {
-                        format!(
-                            "delete_{}",
-                            path.replace('/', "_").replace(['{', '}'], "").trim_matches('_')
-                        )
-                    });
-                methods.push(("delete", func_name));
-            }
-            if let Some(op) = &path_item.patch {
-                let func_name = op
-                    .operation_id
-                    .as_ref()
-                    .map(|id| id.to_snake_case())
-                    .unwrap_or_else(|| {
-                        format!(
-                            "patch_{}",
-                            path.replace('/', "_").replace(['{', '}'], "").trim_matches('_')
-                        )
-                    });
-                methods.push(("patch", func_name));
-            }
-
-            // Generate route registration
-            for (method, func_name) in methods {
-                output.push_str(&format!(
-                    "        .route(\"{}\", {}({}))\n",
-                    axum_path, method, func_name
-                ));
-            }
-        }
-
-        output.push_str("}\n\n");
-
-        // Generate main function
-        output.push_str("#[tokio::main]\n");
-        output.push_str("async fn main() {\n");
-        output.push_str("    let app = app();\n");
-        output.push_str("    let addr = SocketAddr::from(([127, 0, 0, 1], 8000));\n");
-        output.push_str("    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();\n");
-        output.push_str("    println!(\"Server running on http://{}\", addr);\n");
-        output.push_str("    axum::serve(listener, app).await.unwrap();\n");
-        output.push_str("}\n");
-
-        output
+        r"#[tokio::main]
+async fn main() -> Result<(), AppError> {
+    let app = build_app()?;
+    app.run().await
+}
+"
+        .to_string()
     }
+}
+
+fn sanitize_identifier(path: &str) -> String {
+    path.chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() {
+                c.to_ascii_lowercase()
+            } else {
+                '_'
+            }
+        })
+        .collect::<String>()
+        .trim_matches('_')
+        .to_string()
 }

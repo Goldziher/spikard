@@ -253,6 +253,21 @@ pub fn post(path: impl Into<String>) -> RouteBuilder {
     RouteBuilder::new(Method::Post, path)
 }
 
+/// Convenience helper for building a PUT route.
+pub fn put(path: impl Into<String>) -> RouteBuilder {
+    RouteBuilder::new(Method::Put, path)
+}
+
+/// Convenience helper for building a PATCH route.
+pub fn patch(path: impl Into<String>) -> RouteBuilder {
+    RouteBuilder::new(Method::Patch, path)
+}
+
+/// Convenience helper for building a DELETE route.
+pub fn delete(path: impl Into<String>) -> RouteBuilder {
+    RouteBuilder::new(Method::Delete, path)
+}
+
 fn default_handler_name(method: &Method, path: &str) -> String {
     let prefix = method.as_str().to_lowercase();
     let suffix = sanitize_identifier(path);

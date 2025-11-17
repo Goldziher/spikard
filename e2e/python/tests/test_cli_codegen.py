@@ -258,6 +258,30 @@ def test_cli_generates_ruby_dry_struct_dto() -> None:
         subprocess.run(["ruby", "-c", str(output)], check=True)
 
 
+def test_cli_generates_rust_app() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp = Path(tmpdir)
+        spec_path = tmp / "openapi.yaml"
+        output = tmp / "app.rs"
+        spec_path.write_text(OPENAPI_SPEC)
+
+        run_cli(
+            [
+                "generate",
+                "openapi",
+                str(spec_path),
+                "--lang",
+                "rust",
+                "--output",
+                str(output),
+            ]
+        )
+
+        contents = output.read_text()
+        assert "use spikard::{App, AppError" in contents
+        assert 'app.route(post("/hello")' in contents
+
+
 def test_cli_generates_asyncapi_python_app() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp = Path(tmpdir)
