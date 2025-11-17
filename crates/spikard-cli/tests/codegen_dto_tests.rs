@@ -175,6 +175,24 @@ fn ruby_generation_uses_dry_structs() -> Result<()> {
 }
 
 #[test]
+fn rust_generation_uses_spikard_app() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);
+
+    let dto = DtoConfig::default();
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Rust, &dto, None)?;
+    assert!(
+        code.contains("use spikard::{App, AppError"),
+        "expected Spikard App import in Rust output"
+    );
+    assert!(
+        code.contains("app.route(get(\"/hello\")"),
+        "expected route registration using Spikard builder"
+    );
+    Ok(())
+}
+
+#[test]
 fn asyncapi_fixture_generation_creates_files() -> Result<()> {
     let dir = tempdir()?;
     let schema_path = write_temp_file(dir.path(), "asyncapi.yaml", SIMPLE_ASYNCAPI);
