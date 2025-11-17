@@ -272,6 +272,8 @@ def test_cli_generates_rust_app() -> None:
                 str(spec_path),
                 "--lang",
                 "rust",
+                "--dto",
+                "serde",
                 "--output",
                 str(output),
             ]
@@ -280,6 +282,31 @@ def test_cli_generates_rust_app() -> None:
         contents = output.read_text()
         assert "use spikard::{App, AppError" in contents
         assert 'app.route(post("/hello")' in contents
+
+
+def test_cli_generates_php_app() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp = Path(tmpdir)
+        spec_path = tmp / "openapi.yaml"
+        output = tmp / "app.php"
+        spec_path.write_text(OPENAPI_SPEC)
+
+        run_cli(
+            [
+                "generate",
+                "openapi",
+                str(spec_path),
+                "--lang",
+                "php",
+                "--dto",
+                "readonly-class",
+                "--output",
+                str(output),
+            ]
+        )
+
+        contents = output.read_text()
+        assert "readonly class" in contents
 
 
 def test_cli_generates_asyncapi_python_app() -> None:
