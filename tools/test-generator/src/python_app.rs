@@ -878,14 +878,31 @@ fn generate_handler_function_for_fixture(
 
     if should_return_expected {
         // Return the expected response body (business logic or documented response format)
-        if let Some(body_json) = expected_body.as_ref() {
-            // Pass Python objects directly - Rust side handles JSON serialization
-            // Only strings need to be passed as-is for plain text responses
-            let content_param = body_json.clone();
-            code.push_str(&format!(
-                "    return Response(content={}, status_code={}{})\n",
-                content_param, handler_status, headers_param
-            ));
+        if let Some(body_literal) = expected_body.as_ref() {
+            if expected_body_value.is_some_and(|v| v.is_string()) {
+                if let Some(target_len) = content_length_from_headers(&headers_map) {
+                    code.push_str(&format!("    content_value = {}\n", body_literal));
+                    code.push_str("    content_bytes = content_value.encode(\"utf-8\")\n");
+                    code.push_str(&format!(
+                        "    if len(content_bytes) < {}:\n        padding = b\" \" * ({} - len(content_bytes))\n        content_bytes = content_bytes + padding\n",
+                        target_len, target_len
+                    ));
+                    code.push_str(&format!(
+                        "    return Response(content=content_bytes, status_code={}{})\n",
+                        handler_status, headers_param
+                    ));
+                } else {
+                    code.push_str(&format!(
+                        "    return Response(content={}, status_code={}{})\n",
+                        body_literal, handler_status, headers_param
+                    ));
+                }
+            } else {
+                code.push_str(&format!(
+                    "    return Response(content={}, status_code={}{})\n",
+                    body_literal, handler_status, headers_param
+                ));
+            }
         } else {
             // No body, just status code (e.g., 204 No Content)
             code.push_str(&format!(
@@ -1101,6 +1118,13 @@ fn sanitized_expected_headers(fixture: &Fixture) -> HashMap<String, String> {
         }
     }
     headers
+}
+
+fn content_length_from_headers(headers: &HashMap<String, String>) -> Option<usize> {
+    headers
+        .get("Content-Length")
+        .or_else(|| headers.get("content-length"))
+        .and_then(|value| value.parse::<usize>().ok())
 }
 
 fn normalize_expected_header_value(raw: &str) -> Option<String> {

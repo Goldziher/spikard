@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'json'
+
 module Spikard
   # Testing helpers that wrap the native Ruby extension.
   module Testing
@@ -74,7 +76,7 @@ module Spikard
       end
 
       def send_text(text)
-        @native_ws.send_text(text)
+        @native_ws.send_text(JSON.generate(text))
       end
 
       def send_json(obj)
@@ -82,7 +84,10 @@ module Spikard
       end
 
       def receive_text
-        @native_ws.receive_text
+        raw = @native_ws.receive_text
+        JSON.parse(raw)
+      rescue JSON::ParserError
+        raw
       end
 
       def receive_json
@@ -90,7 +95,7 @@ module Spikard
       end
 
       def receive_bytes
-        @native_ws.receive_bytes
+        receive_text
       end
 
       def receive_message
@@ -110,7 +115,12 @@ module Spikard
       end
 
       def as_text
-        @native_msg.as_text
+        raw = @native_msg.as_text
+        return unless raw
+
+        JSON.parse(raw)
+      rescue JSON::ParserError
+        raw
       end
 
       def as_json
@@ -137,12 +147,46 @@ module Spikard
       end
 
       def events
-        @native_sse.events.map { |native_event| SseEvent.new(native_event) }
+        parsed_chunks.map { |chunk| InlineSseEvent.new(chunk) }
       end
 
       def events_as_json
-        @native_sse.events_as_json
+        parsed_chunks.filter_map do |chunk|
+          JSON.parse(chunk)
+        rescue JSON::ParserError
+          nil
+        end
       end
+
+      private
+
+      # rubocop:disable Metrics/AbcSize
+      def parsed_chunks
+        raw = body.to_s.gsub("\r\n", "\n")
+        events = []
+        current = []
+
+        raw.each_line do |line|
+          stripped = line.chomp
+          if stripped.start_with?('data:')
+            current << stripped[5..].strip
+          elsif stripped.empty?
+            unless current.empty?
+              data = current.join("\n").strip
+              events << data unless data.empty?
+              current = []
+            end
+          end
+        end
+
+        unless current.empty?
+          data = current.join("\n").strip
+          events << data unless data.empty?
+        end
+
+        events
+      end
+      # rubocop:enable Metrics/AbcSize
     end
 
     # SSE event wrapper
@@ -157,6 +201,19 @@ module Spikard
 
       def as_json
         @native_event.as_json
+      end
+    end
+
+    # Lightweight wrapper for parsed SSE events backed by strings.
+    class InlineSseEvent
+      attr_reader :data
+
+      def initialize(data)
+        @data = data
+      end
+
+      def as_json
+        JSON.parse(@data)
       end
     end
   end

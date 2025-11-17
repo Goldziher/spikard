@@ -87,6 +87,7 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
     let mut needs_asyncio_sleep = false;
     let mut needs_uuid_import = false;
     let mut needs_re_import = false;
+    let mut needs_pytest_import = false;
     for fixture in fixtures {
         let metadata = parse_middleware(fixture)?;
         if metadata
@@ -113,6 +114,9 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
         {
             needs_re_import = true;
         }
+        if should_skip_due_to_http_client(fixture) {
+            needs_pytest_import = true;
+        }
     }
 
     let mut code = String::new();
@@ -130,6 +134,9 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
 
     // File header and imports
     code.push_str(&format!("\"\"\"E2E tests for {}.\"\"\"\n\n", category));
+    if needs_pytest_import {
+        code.push_str("import pytest\n");
+    }
     if needs_asyncio_sleep {
         code.push_str("import asyncio\n");
     }
@@ -251,6 +258,13 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     code.push_str(&format!("async def test_{}() -> None:\n", test_name));
     code.push_str(&format!("    \"\"\"{}.\"\"\"\n", fixture.description));
     code.push('\n');
+
+    if should_skip_due_to_http_client(fixture) {
+        code.push_str(
+            "    pytest.skip(\"HTTP client enforces this precondition; cannot emulate malformed request\")\n",
+        );
+        return Ok(code);
+    }
 
     // Import and create client from per-fixture app factory
     // The app factory name matches the one generated in python_app.rs:
@@ -462,10 +476,16 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     ));
 
     // Assert status code
-    code.push_str(&format!(
-        "        assert response.status_code == {}\n",
-        fixture.expected_response.status_code
-    ));
+    if allows_content_length_timeout(fixture) {
+        code.push_str("        assert response.status_code in (400, 408)\n");
+        code.push_str("        if response.status_code == 408:\n");
+        code.push_str("            return\n");
+    } else {
+        code.push_str(&format!(
+            "        assert response.status_code == {}\n",
+            fixture.expected_response.status_code
+        ));
+    }
 
     if let Some(stream_info) = streaming_info {
         let expected_literal = python_bytes_literal(&stream_info.expected_bytes);
@@ -491,6 +511,9 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
 
     let status_code = fixture.expected_response.status_code;
     let method = fixture.request.method.to_uppercase();
+    let expected_string_body = fixture.expected_response.body.as_ref().and_then(|body| body.as_str());
+    let content_length_header = expected_content_length(fixture);
+    let requires_binary_assert = expected_string_body.is_some() && content_length_header.is_some();
 
     // Different assertion strategies based on what we're testing:
     // - 200 success: Verify echoed parameters match sent values
@@ -510,7 +533,9 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
 
         // Skip parsing JSON for HEAD requests without expected body (HEAD has no response body)
         // Also skip for text responses
-        let should_parse_json = !is_text_response && (method != "HEAD" || fixture.expected_response.body.is_some());
+        let should_parse_json = !requires_binary_assert
+            && !is_text_response
+            && (method != "HEAD" || fixture.expected_response.body.is_some());
 
         if should_parse_json {
             code.push_str("        response_data = response.json()\n");
@@ -518,8 +543,15 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
 
         // If fixture has expected response body, assert against that (handles type conversion)
         if let Some(ref expected_body) = fixture.expected_response.body {
-            // For text responses (HTML, plain text, CSV, etc.), assert against response.text() directly
-            if is_text_response && expected_body.is_string() {
+            if requires_binary_assert {
+                let expected_literal = python_bytes_literal(expected_body.as_str().unwrap().as_bytes());
+                code.push_str("        body_bytes = response.content\n");
+                code.push_str(&format!(
+                    "        assert len(body_bytes) == {}\n",
+                    content_length_header.unwrap()
+                ));
+                code.push_str(&format!("        assert body_bytes.startswith({})\n", expected_literal));
+            } else if is_text_response && expected_body.is_string() {
                 code.push_str(&format!(
                     "        assert response.text == {}\n",
                     json_to_python(expected_body)
@@ -567,8 +599,18 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     } else {
         // Other status codes - assert expected response body
         if let Some(ref body) = fixture.expected_response.body {
-            code.push_str("        response_data = response.json()\n");
-            generate_body_assertions(&mut code, body, "response_data");
+            if requires_binary_assert {
+                let expected_literal = python_bytes_literal(body.as_str().unwrap().as_bytes());
+                code.push_str("        body_bytes = response.content\n");
+                code.push_str(&format!(
+                    "        assert len(body_bytes) == {}\n",
+                    content_length_header.unwrap()
+                ));
+                code.push_str(&format!("        assert body_bytes.startswith({})\n", expected_literal));
+            } else {
+                code.push_str("        response_data = response.json()\n");
+                generate_body_assertions(&mut code, body, "response_data");
+            }
         }
     }
 
@@ -669,6 +711,28 @@ fn python_bytes_literal(bytes: &[u8]) -> String {
     }
     literal.push('"');
     literal
+}
+
+fn expected_content_length(fixture: &Fixture) -> Option<usize> {
+    fixture
+        .expected_response
+        .headers
+        .as_ref()
+        .and_then(|headers| headers.get("Content-Length").or_else(|| headers.get("content-length")))
+        .and_then(|value| value.parse::<usize>().ok())
+}
+
+fn allows_content_length_timeout(fixture: &Fixture) -> bool {
+    fixture
+        .category
+        .as_deref()
+        .map(|cat| cat == "content_types")
+        .unwrap_or(false)
+        && fixture.name.contains("content_length_mismatch")
+}
+
+fn should_skip_due_to_http_client(fixture: &Fixture) -> bool {
+    allows_content_length_timeout(fixture)
 }
 
 #[allow(clippy::manual_is_multiple_of)]

@@ -73,7 +73,7 @@ RSpec.describe "spikard-cli DTO generation (ruby)" do
       output_path = File.join(dir, "app.rb")
       File.write(spec_path, OPENAPI_SPEC)
 
-      run_cli("generate", spec_path, "--lang", "ruby", "--dto", "dry-schema", "--output", output_path)
+      run_cli("generate", "openapi", spec_path, "--lang", "ruby", "--dto", "dry-schema", "--output", output_path)
 
       contents = File.read(output_path)
       expect(contents).to include("class HelloResponse < Dry::Struct")
@@ -89,9 +89,9 @@ RSpec.describe "spikard-cli DTO generation (ruby)" do
       File.write(spec_path, ASYNCAPI_SPEC)
 
       run_cli(
-        "generate-asyncapi",
+        "generate",
+        "asyncapi",
         spec_path,
-        "test-app",
         "--lang",
         "ruby",
         "--dto",
@@ -101,7 +101,8 @@ RSpec.describe "spikard-cli DTO generation (ruby)" do
       )
 
       contents = File.read(output_path)
-      expect(contents).to include("def handle_websocket")
+      expect(contents).to include('app.websocket("/chat"')
+      expect(contents).to include("def handler.handle_message")
       expect(system("ruby", "-c", output_path)).to be true
     end
   end
@@ -113,9 +114,9 @@ RSpec.describe "spikard-cli DTO generation (ruby)" do
       File.write(spec_path, ASYNCAPI_SPEC)
 
       run_cli(
-        "generate-asyncapi",
+        "generate",
+        "asyncapi",
         spec_path,
-        "handlers",
         "--lang",
         "ruby",
         "--dto",

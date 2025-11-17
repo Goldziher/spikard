@@ -75,6 +75,10 @@ struct AsyncapiHandlerArgs {
     /// Output file path
     #[arg(long, short = 'o')]
     output: PathBuf,
+
+    /// DTO implementation for the selected language (defaults per language)
+    #[arg(long = "dto", value_enum)]
+    dto: Option<DtoArg>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -223,6 +227,10 @@ fn main() -> Result<()> {
                 println!("  Input: {}", args.schema.display());
                 println!("  Language: {:?}", args.lang);
                 println!("  Output: {}", args.output.display());
+                let mut dto_config = DtoConfig::default();
+                if let Some(arg) = args.dto {
+                    apply_dto_selection(&mut dto_config, args.lang, arg)?;
+                }
                 let request = CodegenRequest {
                     schema_path: args.schema.clone(),
                     schema_kind: SchemaKind::AsyncApi,
@@ -230,7 +238,7 @@ fn main() -> Result<()> {
                         language: args.lang.into(),
                         output: args.output.clone(),
                     },
-                    dto: None,
+                    dto: Some(dto_config),
                 };
                 match CodegenEngine::execute(request)? {
                     CodegenOutcome::Files(files) => {
