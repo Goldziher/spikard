@@ -320,8 +320,12 @@ fn asyncapi_handler_generation_writes_rust_scaffold() -> Result<()> {
         CodegenOutcome::Files(_) => {
             let contents = fs::read_to_string(&output)?;
             assert!(
-                contents.contains("use spikard::{App, AppError, RequestContext, get};"),
-                "expected Rust handler imports"
+                contents.contains("use spikard::{App, AppError, WebSocketHandler};"),
+                "expected WebSocket handler import in Rust scaffold"
+            );
+            assert!(
+                contents.contains("app.websocket(\"/chat\", ChatWebSocketHandler);"),
+                "expected websocket registration"
             );
         }
         CodegenOutcome::InMemory(_) => panic!("Rust handler generation should emit files"),

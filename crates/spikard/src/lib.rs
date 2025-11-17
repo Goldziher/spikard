@@ -10,13 +10,21 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use axum::body::Body;
 use axum::http::{Request, StatusCode};
+use axum::routing::get as axum_get;
+use axum::{Router as AxumRouter, body::Body};
 use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
-use spikard_http::handler_trait::{Handler, HandlerResult, RequestData};
-use spikard_http::{Method, Route, RouteMetadata, SchemaRegistry, Server, ServerConfig};
+pub use spikard_http::handler_response::HandlerResponse;
+pub use spikard_http::sse::{SseEvent, SseEventProducer};
+pub use spikard_http::websocket::WebSocketHandler;
+use spikard_http::{
+    Method, Route, RouteMetadata, SchemaRegistry, Server, ServerConfig,
+    handler_trait::{Handler, HandlerResult, RequestData},
+    sse::{SseState, sse_handler},
+    websocket::{WebSocketState, websocket_handler},
+};
 
 /// Spikard application builder.
 pub struct App {
@@ -24,6 +32,7 @@ pub struct App {
     registry: SchemaRegistry,
     routes: Vec<(Route, Arc<dyn Handler>)>,
     metadata: Vec<RouteMetadata>,
+    streaming_routes: Vec<AxumRouter>,
 }
 
 impl App {
@@ -34,6 +43,7 @@ impl App {
             registry: SchemaRegistry::new(),
             routes: Vec::new(),
             metadata: Vec::new(),
+            streaming_routes: Vec::new(),
         }
     }
 
@@ -56,15 +66,83 @@ impl App {
         Ok(self)
     }
 
+    /// Register a WebSocket handler for the specified path.
+    pub fn websocket<H>(&mut self, path: impl Into<String>, handler: H) -> &mut Self
+    where
+        H: WebSocketHandler + Send + Sync + 'static,
+    {
+        let _ = self.websocket_with_schemas(path, handler, None, None);
+        self
+    }
+
+    /// Register a WebSocket handler with optional message/response schemas.
+    pub fn websocket_with_schemas<H>(
+        &mut self,
+        path: impl Into<String>,
+        handler: H,
+        message_schema: Option<serde_json::Value>,
+        response_schema: Option<serde_json::Value>,
+    ) -> std::result::Result<&mut Self, AppError>
+    where
+        H: WebSocketHandler + Send + Sync + 'static,
+    {
+        let state = if message_schema.is_some() || response_schema.is_some() {
+            WebSocketState::with_schemas(handler, message_schema, response_schema).map_err(AppError::Route)?
+        } else {
+            WebSocketState::new(handler)
+        };
+
+        let path = normalize_path(path.into());
+        let router = AxumRouter::new().route(&path, axum_get(websocket_handler::<H>).with_state(state));
+        self.streaming_routes.push(router);
+        Ok(self)
+    }
+
+    /// Register an SSE producer for the specified path.
+    pub fn sse<P>(&mut self, path: impl Into<String>, producer: P) -> &mut Self
+    where
+        P: SseEventProducer + Send + Sync + 'static,
+    {
+        let _ = self.sse_with_schema(path, producer, None);
+        self
+    }
+
+    /// Register an SSE producer with optional JSON schema.
+    pub fn sse_with_schema<P>(
+        &mut self,
+        path: impl Into<String>,
+        producer: P,
+        event_schema: Option<serde_json::Value>,
+    ) -> std::result::Result<&mut Self, AppError>
+    where
+        P: SseEventProducer + Send + Sync + 'static,
+    {
+        let state = if let Some(schema) = event_schema {
+            SseState::with_schema(producer, Some(schema)).map_err(AppError::Route)?
+        } else {
+            SseState::new(producer)
+        };
+
+        let path = normalize_path(path.into());
+        let router = AxumRouter::new().route(&path, axum_get(sse_handler::<P>).with_state(state));
+        self.streaming_routes.push(router);
+        Ok(self)
+    }
+
     /// Build the underlying Axum router.
     pub fn into_router(self) -> std::result::Result<axum::Router, AppError> {
         let App {
             config,
             routes,
             metadata,
+            streaming_routes,
             ..
         } = self;
-        Server::with_handlers_and_metadata(config, routes, metadata).map_err(AppError::Server)
+        let mut router = Server::with_handlers_and_metadata(config, routes, metadata).map_err(AppError::Server)?;
+        for extra in streaming_routes {
+            router = router.merge(extra);
+        }
+        Ok(router)
     }
 
     /// Run the HTTP server using the configured routes.
@@ -73,9 +151,14 @@ impl App {
             config,
             routes,
             metadata,
+            streaming_routes,
             ..
         } = self;
-        let router = Server::with_handlers_and_metadata(config.clone(), routes, metadata).map_err(AppError::Server)?;
+        let mut router =
+            Server::with_handlers_and_metadata(config.clone(), routes, metadata).map_err(AppError::Server)?;
+        for extra in streaming_routes {
+            router = router.merge(extra);
+        }
         Server::run_with_config(router, config)
             .await
             .map_err(|err| AppError::Server(err.to_string()))
@@ -199,6 +282,14 @@ fn schema_for<T: JsonSchema>() -> Value {
     value.get("schema").cloned().unwrap_or(value)
 }
 
+fn normalize_path(path: String) -> String {
+    if path.starts_with('/') {
+        path
+    } else {
+        format!("/{}", path)
+    }
+}
+
 /// Error type for application builder operations.
 #[derive(Debug, thiserror::Error)]
 pub enum AppError {
@@ -304,8 +395,10 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::http::StatusCode;
+    use axum::http::{Request, StatusCode};
     use serde::{Deserialize, Serialize};
+    use serde_json::json;
+    use tower::util::ServiceExt;
 
     #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
     struct Greeting {
@@ -334,5 +427,57 @@ mod tests {
         assert!(meta.request_schema.is_some());
         assert!(meta.response_schema.is_some());
         assert!(meta.parameter_schema.is_none());
+    }
+
+    struct EchoWebSocket;
+
+    impl WebSocketHandler for EchoWebSocket {
+        fn handle_message(&self, message: serde_json::Value) -> impl Future<Output = Option<serde_json::Value>> + Send {
+            async move { Some(message) }
+        }
+    }
+
+    #[tokio::test]
+    async fn websocket_routes_are_registered() {
+        let mut app = App::new();
+        app.websocket("/ws", EchoWebSocket);
+        let router = app.into_router().unwrap();
+        let request = Request::builder()
+            .uri("http://localhost/ws")
+            .header("connection", "Upgrade")
+            .header("upgrade", "websocket")
+            .header("sec-websocket-version", "13")
+            .header("sec-websocket-key", "dGhlIHNhbXBsZSBub25jZQ==")
+            .body(Body::empty())
+            .unwrap();
+        let response = router.oneshot(request).await.unwrap();
+        assert!(
+            response.status() == StatusCode::SWITCHING_PROTOCOLS || response.status() == StatusCode::UPGRADE_REQUIRED
+        );
+    }
+
+    struct DummyProducer;
+
+    impl SseEventProducer for DummyProducer {
+        fn next_event(&self) -> impl Future<Output = Option<SseEvent>> + Send {
+            async move {
+                Some(SseEvent::new(json!({
+                    "message": "hello"
+                })))
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn sse_routes_are_registered() {
+        let mut app = App::new();
+        app.sse("/events", DummyProducer);
+        let router = app.into_router().unwrap();
+        let request = Request::builder()
+            .uri("http://localhost/events")
+            .body(Body::empty())
+            .unwrap();
+        let response = router.oneshot(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
     }
 }
