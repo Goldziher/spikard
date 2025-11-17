@@ -1,0 +1,516 @@
+name: Publish Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to build (e.g., v0.5.0)"
+        required: true
+        type: string
+      dry_run:
+        description: "Prepare artifacts without publishing"
+        required: false
+        type: boolean
+        default: false
+      ref:
+        description: "Optional git ref to build (defaults to tag)"
+        required: false
+        type: string
+  push:
+    tags:
+      - "v*"
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ (github.event_name == 'workflow_dispatch' && (github.event.inputs.ref || github.event.inputs.tag)) || github.ref || github.run_id }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  prepare:
+    name: Prepare metadata
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      version: ${{ steps.meta.outputs.version }}
+      ref: ${{ steps.meta.outputs.ref }}
+      checkout_ref: ${{ steps.meta.outputs.checkout_ref }}
+      target_sha: ${{ steps.meta.outputs.target_sha }}
+      matrix_ref: ${{ steps.meta.outputs.matrix_ref }}
+      dry_run: ${{ steps.meta.outputs.dry_run }}
+      is_tag: ${{ steps.meta.outputs.is_tag }}
+    steps:
+      - name: Resolve release metadata
+        id: meta
+        run: |
+          event="${{ github.event_name }}"
+          if [[ "$event" == "workflow_dispatch" ]]; then
+            tag="${{ inputs.tag }}"
+            dry_run_input="${{ inputs.dry_run }}"
+            ref_input="${{ inputs.ref }}"
+          elif [[ "$event" == "release" ]]; then
+            tag="${{ github.event.release.tag_name }}"
+            dry_run_input="false"
+            ref_input="refs/tags/${tag}"
+          else
+            tag="${GITHUB_REF_NAME}"
+            dry_run_input="false"
+            ref_input=""
+          fi
+
+          if [[ -z "$tag" ]]; then
+            echo "Unable to determine release tag" >&2
+            exit 1
+          fi
+
+          if [[ "$tag" != v* ]]; then
+            echo "Tag must start with 'v' (e.g., v0.5.0)" >&2
+            exit 1
+          fi
+
+          version="${tag#v}"
+
+          if [[ -n "$ref_input" ]]; then
+            ref="$ref_input"
+          else
+            ref="refs/tags/${tag}"
+          fi
+
+          if [[ "$ref" =~ ^refs/tags/ ]]; then
+            is_tag="true"
+          else
+            is_tag="false"
+          fi
+
+          if [[ "$ref" =~ ^[0-9a-f]{40}$ ]]; then
+            checkout_ref="refs/heads/main"
+            target_sha="$ref"
+          else
+            checkout_ref="$ref"
+            target_sha=""
+          fi
+
+          if [[ "$ref" =~ ^refs/heads/(.+)$ ]]; then
+            matrix_ref="${BASH_REMATCH[1]}"
+          elif [[ "$ref" =~ ^refs/tags/(.+)$ ]]; then
+            matrix_ref="${BASH_REMATCH[1]}"
+          else
+            matrix_ref="$ref"
+          fi
+
+          dry_run="$dry_run_input"
+
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "checkout_ref=$checkout_ref" >> "$GITHUB_OUTPUT"
+          echo "target_sha=$target_sha" >> "$GITHUB_OUTPUT"
+          echo "matrix_ref=$matrix_ref" >> "$GITHUB_OUTPUT"
+          echo "dry_run=${dry_run:-false}" >> "$GITHUB_OUTPUT"
+          echo "is_tag=$is_tag" >> "$GITHUB_OUTPUT"
+
+  python-wheels:
+    name: Build Python wheels (${{ matrix.os }})
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+
+      - name: Ensure target commit
+        if: ${{ needs.prepare.outputs.target_sha != '' }}
+        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
+
+      - name: Build wheels
+        uses: ./.github/actions/build-wheels
+        with:
+          python-version: "3.13"
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v5
+        with:
+          name: python-wheels-${{ matrix.os }}
+          path: wheelhouse/*.whl
+          retention-days: 14
+
+  python-sdist:
+    name: Build Python sdist
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+
+      - name: Ensure target commit
+        if: ${{ needs.prepare.outputs.target_sha != '' }}
+        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Build sdist
+        run: uv run maturin sdist --manifest-path crates/spikard-py/Cargo.toml
+
+      - name: Upload sdist
+        uses: actions/upload-artifact@v5
+        with:
+          name: python-sdist
+          path: target/wheels/*.tar.gz
+          retention-days: 14
+
+  cli-binaries:
+    name: Build CLI (${{ matrix.target }})
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+
+      - name: Ensure target commit
+        if: ${{ needs.prepare.outputs.target_sha != '' }}
+        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross toolchain (ARM Linux)
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+          echo 'CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc' >> $GITHUB_ENV
+
+      - name: Build CLI
+        run: cargo build --release --target ${{ matrix.target }} --package spikard-cli
+
+      - name: Package binary (Unix)
+        if: matrix.os != 'windows-latest'
+        run: |
+          cd target/${{ matrix.target }}/release
+          tar czf spikard-cli-${{ matrix.target }}.tar.gz spikard-cli
+          mv spikard-cli-${{ matrix.target }}.tar.gz $GITHUB_WORKSPACE/
+
+      - name: Package binary (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd target/${{ matrix.target }}/release
+          powershell Compress-Archive -Path spikard-cli.exe -DestinationPath spikard-cli-${{ matrix.target }}.zip
+          mv spikard-cli-${{ matrix.target }}.zip $GITHUB_WORKSPACE/
+
+      - name: Upload CLI artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: cli-${{ matrix.target }}
+          path: spikard-cli-${{ matrix.target }}.*
+          retention-days: 14
+
+  node-bindings:
+    name: Build NAPI bindings (${{ matrix.settings.target }})
+    needs: prepare
+    runs-on: ${{ matrix.settings.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        settings:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+
+      - name: Ensure target commit
+        if: ${{ needs.prepare.outputs.target_sha != '' }}
+        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.settings.target }}
+
+      - name: Install cross toolchain (Linux ARM64)
+        if: matrix.settings.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+          echo 'CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc' >> $GITHUB_ENV
+
+      - name: Build bindings
+        working-directory: crates/spikard-node
+        run: |
+          pnpm install
+          pnpm run build --target ${{ matrix.settings.target }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: napi-${{ matrix.settings.target }}
+          path: crates/spikard-node/*.node
+          retention-days: 14
+
+  smoke-tests:
+    name: Smoke e2e suites
+    needs:
+      - prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+
+      - name: Ensure target commit
+        if: ${{ needs.prepare.outputs.target_sha != '' }}
+        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Setup Node workspace
+        uses: ./.github/actions/setup-node-workspace
+        with:
+          node-version: "20"
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: rustfmt, clippy
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: packages/ruby
+
+      - name: Build Python bindings
+        run: |
+          uv sync --all-extras --all-groups --no-install-project
+          uv pip install -e crates/spikard-py --config-settings='--build-option=--release'
+          uv pip install -e packages/python
+
+      - name: Build Node bindings
+        run: pnpm --filter @spikard/node run build:debug
+
+      - name: Compile Ruby extension
+        working-directory: packages/ruby
+        env:
+          RB_SYS_CARGO_PROFILE: release
+        run: bundle exec rake ext:build
+
+      - name: Run fixture tests
+        run: |
+          cargo test --manifest-path e2e/rust/Cargo.toml --release
+          (cd e2e/python && PYTHONPATH=../../packages/python uv run pytest tests/ -vv)
+          (cd e2e/node && pnpm install --frozen-lockfile && pnpm test)
+          (cd e2e/ruby && bundle install && bundle exec rspec)
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: [prepare, python-wheels, python-sdist, smoke-tests]
+    if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Download wheels
+        uses: actions/download-artifact@v6
+        with:
+          pattern: python-wheels-*
+          path: dist
+          merge-multiple: true
+
+      - name: Download sdist
+        uses: actions/download-artifact@v6
+        with:
+          name: python-sdist
+          path: dist
+
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
+          skip-existing: true
+
+  publish-npm:
+    name: Publish to npm
+    needs: [prepare, node-bindings, smoke-tests]
+    if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+
+      - name: Download napi artifacts
+        uses: actions/download-artifact@v6
+        with:
+          pattern: napi-*
+          path: crates/spikard-node
+          merge-multiple: true
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Publish package
+        working-directory: crates/spikard-node
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          pnpm install
+          pnpm publish --access public --no-git-checks
+
+  publish-crates:
+    name: Publish crates.io packages
+    needs: [prepare, smoke-tests]
+    if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+
+      - name: Publish crates
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          set -euo pipefail
+          cargo publish --package spikard --allow-dirty
+          sleep 15
+          cargo publish --package spikard-cli --allow-dirty
+          sleep 15
+          cargo publish --package spikard-http --allow-dirty
+
+  publish-rubygems:
+    name: Publish RubyGem
+    needs: [prepare, smoke-tests]
+    if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: packages/ruby
+
+      - name: Build gem
+        working-directory: packages/ruby
+        run: gem build spikard.gemspec
+
+      - name: Publish gem
+        working-directory: packages/ruby
+        env:
+          RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+        run: gem push spikard-*.gem
+
+  attach-cli:
+    name: Upload CLI assets
+    needs: [prepare, cli-binaries]
+    if: ${{ needs.prepare.outputs.is_tag == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download CLI artifacts
+        uses: actions/download-artifact@v6
+        with:
+          pattern: cli-*
+          path: cli-dist
+          merge-multiple: true
+
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          for asset in cli-dist/*; do
+            gh release upload "${{ needs.prepare.outputs.tag }}" "$asset" --clobber
+          done
