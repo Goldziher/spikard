@@ -219,21 +219,18 @@ fn generate_main_rs(_categories: &BTreeMap<String, Vec<Fixture>>) -> String {
     r#"//! Generated test application
 //! This is a minimal Axum app that echoes back validated parameters
 
-use std::net::SocketAddr;
+use spikard::{App, AppError};
 
 pub use spikard_e2e_app::*;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), AppError> {
     tracing_subscriber::fmt::init();
 
-    let app = create_app();
+    let router = create_app();
+    let app = App::new().merge_axum_router(router);
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    println!("Listening on {}", addr);
-
-    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    app.run().await
 }
 "#
     .to_string()
