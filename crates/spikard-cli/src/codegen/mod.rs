@@ -43,6 +43,8 @@ pub struct DtoConfig {
     pub python: PythonDtoStyle,
     pub node: NodeDtoStyle,
     pub ruby: RubyDtoStyle,
+    pub rust: RustDtoStyle,
+    pub php: PhpDtoStyle,
 }
 
 impl Default for DtoConfig {
@@ -51,6 +53,8 @@ impl Default for DtoConfig {
             python: PythonDtoStyle::Dataclass,
             node: NodeDtoStyle::Zod,
             ruby: RubyDtoStyle::DrySchema,
+            rust: RustDtoStyle::SerdeStruct,
+            php: PhpDtoStyle::ReadonlyClass,
         }
     }
 }
@@ -69,6 +73,16 @@ pub enum NodeDtoStyle {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RubyDtoStyle {
     DrySchema,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RustDtoStyle {
+    SerdeStruct,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PhpDtoStyle {
+    ReadonlyClass,
 }
 
 /// Generate server code from an OpenAPI schema file
@@ -92,7 +106,7 @@ pub fn generate_from_openapi(
             generator.generate()?
         }
         TargetLanguage::Rust => {
-            let generator = RustGenerator::new(spec);
+            let generator = RustGenerator::new(spec, dto.rust);
             generator.generate()?
         }
         TargetLanguage::Ruby => {
@@ -100,7 +114,7 @@ pub fn generate_from_openapi(
             generator.generate()?
         }
         TargetLanguage::Php => {
-            let generator = PhpGenerator::new(spec);
+            let generator = PhpGenerator::new(spec, dto.php);
             generator.generate()?
         }
     };

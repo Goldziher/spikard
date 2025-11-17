@@ -1,20 +1,25 @@
 //! Rust code generation from OpenAPI schemas
 
+use super::RustDtoStyle;
 use anyhow::Result;
 use heck::{ToPascalCase, ToSnakeCase};
 use openapiv3::{IntegerFormat, OpenAPI, Operation, ReferenceOr, Schema, SchemaKind, Type, VariantOrUnknownOrEmpty};
 
 pub struct RustGenerator {
     spec: OpenAPI,
+    style: RustDtoStyle,
 }
 
 impl RustGenerator {
-    pub fn new(spec: OpenAPI) -> Self {
-        Self { spec }
+    pub fn new(spec: OpenAPI, style: RustDtoStyle) -> Self {
+        Self { spec, style }
     }
 
     pub fn generate(&self) -> Result<String> {
         let mut output = String::new();
+        match self.style {
+            RustDtoStyle::SerdeStruct => {}
+        }
 
         // Generate file header
         output.push_str(&self.generate_header());

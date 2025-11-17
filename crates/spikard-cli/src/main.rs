@@ -167,7 +167,14 @@ fn apply_dto_selection(config: &mut DtoConfig, lang: GenerateLanguage, dto: DtoA
             DtoArg::DrySchema => config.ruby = RubyDtoStyle::DrySchema,
             _ => bail!("DTO '{dto:?}' is not supported for Ruby"),
         },
-        other => bail!("DTO selection is not supported for {:?}", other),
+        GenerateLanguage::Rust => match dto {
+            DtoArg::Serde => config.rust = codegen::RustDtoStyle::SerdeStruct,
+            _ => bail!("DTO '{dto:?}' is not supported for Rust"),
+        },
+        GenerateLanguage::Php => match dto {
+            DtoArg::ReadonlyClass => config.php = codegen::PhpDtoStyle::ReadonlyClass,
+            _ => bail!("DTO '{dto:?}' is not supported for PHP"),
+        },
     }
     Ok(())
 }
@@ -178,6 +185,8 @@ enum DtoArg {
     Msgspec,
     Zod,
     DrySchema,
+    Serde,
+    ReadonlyClass,
 }
 
 fn main() -> Result<()> {

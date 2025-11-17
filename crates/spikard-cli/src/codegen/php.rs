@@ -1,20 +1,25 @@
 //! PHP code generation from OpenAPI schemas
 
+use super::PhpDtoStyle;
 use anyhow::Result;
 use heck::{ToPascalCase, ToSnakeCase};
 use openapiv3::{OpenAPI, Operation, Parameter, ReferenceOr, Schema, SchemaKind, Type};
 
 pub struct PhpGenerator {
     spec: OpenAPI,
+    style: PhpDtoStyle,
 }
 
 impl PhpGenerator {
-    pub fn new(spec: OpenAPI) -> Self {
-        Self { spec }
+    pub fn new(spec: OpenAPI, style: PhpDtoStyle) -> Self {
+        Self { spec, style }
     }
 
     pub fn generate(&self) -> Result<String> {
         let mut output = String::new();
+        match self.style {
+            PhpDtoStyle::ReadonlyClass => {}
+        }
 
         // Generate file header
         output.push_str(&self.generate_header());
