@@ -4,6 +4,17 @@ require 'spec_helper'
 require 'json'
 
 RSpec.describe 'SSE Type Systems' do
+  def extract_event_payloads(body)
+    body.gsub("\r\n", "\n").split("\n\n").filter_map do |chunk|
+      chunk
+        .lines
+        .find { |line| line.start_with?('data:') }
+        &.split('data:', 2)
+        &.last
+        &.strip
+    end
+  end
+
   # 1. Plain JSON Schema
   describe 'Plain JSON Schema' do
     let(:app) do
@@ -50,10 +61,7 @@ RSpec.describe 'SSE Type Systems' do
 
       expect(response.status).to eq(200)
 
-      body = response.body
-      normalized = body.gsub("\r\n", "\n")
-      events = normalized.split("\n\n").select { |chunk| chunk.start_with?('data:') }
-                        .map { |chunk| chunk[5..].strip }
+      events = extract_event_payloads(response.body)
 
       expect(events.length).to eq(3)
 
@@ -117,10 +125,7 @@ RSpec.describe 'SSE Type Systems' do
 
       expect(response.status).to eq(200)
 
-      body = response.body
-      normalized = body.gsub("\r\n", "\n")
-      events = normalized.split("\n\n").select { |chunk| chunk.start_with?('data:') }
-                        .map { |chunk| chunk[5..].strip }
+      events = extract_event_payloads(response.body)
 
       expect(events.length).to eq(3)
 
@@ -186,10 +191,7 @@ RSpec.describe 'SSE Type Systems' do
 
       expect(response.status).to eq(200)
 
-      body = response.body
-      normalized = body.gsub("\r\n", "\n")
-      events = normalized.split("\n\n").select { |chunk| chunk.start_with?('data:') }
-                        .map { |chunk| chunk[5..].strip }
+      events = extract_event_payloads(response.body)
 
       expect(events.length).to eq(3)
 

@@ -87,10 +87,10 @@ describe("spikard-cli DTO generation (node)", () => {
 		const outputPath = path.join(tmp, "ws_app.ts");
 		fs.writeFileSync(specPath, ASYNCAPI_SPEC);
 
-		runCli(["generate-asyncapi", specPath, "test-app", "--lang", "typescript", "--dto", "zod", "--output", outputPath]);
+		runCli(["generate", "asyncapi", specPath, "--lang", "typescript", "--dto", "zod", "--output", outputPath]);
 
 		const contents = fs.readFileSync(outputPath, "utf-8");
-		expect(contents).toContain("async function handleWebSocket");
+		expect(contents).toContain("async function handleChat");
 	});
 
 	test("generates AsyncAPI handler scaffolding", () => {
@@ -99,7 +99,7 @@ describe("spikard-cli DTO generation (node)", () => {
 		const outputPath = path.join(tmp, "handler.ts");
 		fs.writeFileSync(specPath, ASYNCAPI_SPEC);
 
-		runCli(["generate-asyncapi", specPath, "handlers", "--lang", "typescript", "--dto", "zod", "--output", outputPath]);
+		runCli(["generate", "asyncapi", specPath, "--lang", "typescript", "--dto", "zod", "--output", outputPath]);
 
 		const contents = fs.readFileSync(outputPath, "utf-8");
 		expect(contents).toContain("createAsyncApiHandlers");

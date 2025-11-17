@@ -324,10 +324,10 @@ async def test_429_too_many_requests() -> None:
         assert "detail" in response_data
         assert response_data["detail"] == "Rate limit exceeded. Try again in 60 seconds."
         response_headers = response.headers
-        assert response_headers.get("x-ratelimit-reset") == "1609459200"
-        assert response_headers.get("x-ratelimit-limit") == "100"
-        assert response_headers.get("x-ratelimit-remaining") == "0"
         assert response_headers.get("retry-after") == "60"
+        assert response_headers.get("x-ratelimit-limit") == "100"
+        assert response_headers.get("x-ratelimit-reset") == "1609459200"
+        assert response_headers.get("x-ratelimit-remaining") == "0"
 
 
 async def test_200_ok_success() -> None:
@@ -354,10 +354,11 @@ async def test_206_partial_content() -> None:
         response = await client.get("/files/document.pdf", headers=headers)
 
         assert response.status_code == 206
-        response_data = response.json()
-        assert response_data == "binary_data_1024_bytes"
+        body_bytes = response.content
+        assert len(body_bytes) == 1024
+        assert body_bytes.startswith(b"binary_data_1024_bytes")
         response_headers = response.headers
         assert response_headers.get("content-length") == "1024"
-        assert response_headers.get("content-type") == "application/pdf"
-        assert response_headers.get("accept-ranges") == "bytes"
         assert response_headers.get("content-range") == "bytes 0-1023/5000"
+        assert response_headers.get("accept-ranges") == "bytes"
+        assert response_headers.get("content-type") == "application/pdf"

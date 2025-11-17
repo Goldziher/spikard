@@ -14,7 +14,7 @@ async def test_static_file_server_returns_text_file() -> None:
         response = await client.get("/public/hello.txt")
 
         assert response.status_code == 200
-        assert response.text == "Hello from static storage\n"
+        assert response.text == "Hello from static storage"
         response_headers = response.headers
         assert response_headers.get("cache-control") == "public, max-age=60"
         assert response_headers.get("content-type") == "text/plain"
@@ -27,6 +27,6 @@ async def test_static_server_returns_index_html_for_directory() -> None:
         response = await client.get("/app/")
 
         assert response.status_code == 200
-        assert response.text == "<!doctype html><h1>Welcome</h1>\n"
+        assert response.text == "<!doctype html><h1>Welcome</h1>"
         response_headers = response.headers
         assert response_headers.get("content-type") == "text/html"

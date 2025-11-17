@@ -50,7 +50,8 @@ pub mod testing {
     /// Tests can build an `App`, convert it into a `TestServer`, and then issue
     /// HTTP/SSE/WebSocket requests without touching `axum-test` directly.
     pub struct TestServer {
-        inner: AxumTestServer,
+        mock_server: AxumTestServer,
+        http_server: AxumTestServer,
     }
 
     impl TestServer {
@@ -62,24 +63,28 @@ pub mod testing {
 
         /// Build a test server from an Axum router.
         pub fn from_router(router: AxumRouter) -> Result<Self, AppError> {
+            let mock_server = AxumTestServer::new(router.clone()).map_err(|err| AppError::Server(err.to_string()))?;
             let config = TestServerConfig {
                 transport: Some(Transport::HttpRandomPort),
                 ..Default::default()
             };
-            AxumTestServer::new_with_config(router, config)
-                .map(|inner| Self { inner })
-                .map_err(|err| AppError::Server(err.to_string()))
+            let http_server =
+                AxumTestServer::new_with_config(router, config).map_err(|err| AppError::Server(err.to_string()))?;
+            Ok(Self {
+                mock_server,
+                http_server,
+            })
         }
 
         /// Execute an HTTP request and return a snapshot of the response.
         pub async fn call(&self, request: Request<Body>) -> Result<ResponseSnapshot, SnapshotError> {
-            let response = spikard_http::testing::call_test_server(&self.inner, request).await;
+            let response = spikard_http::testing::call_test_server(&self.mock_server, request).await;
             spikard_http::testing::snapshot_response(response).await
         }
 
         /// Open a WebSocket connection for the provided path.
         pub async fn connect_websocket(&self, path: &str) -> WebSocketConnection {
-            spikard_http::testing::connect_websocket(&self.inner, path).await
+            spikard_http::testing::connect_websocket(&self.http_server, path).await
         }
     }
 }

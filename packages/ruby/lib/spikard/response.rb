@@ -8,10 +8,15 @@ module Spikard
     attr_accessor :content
     attr_reader :status_code, :headers
 
-    def initialize(content: nil, status_code: 200, headers: nil)
-      @content = content
+    def initialize(content: nil, body: nil, status_code: 200, headers: nil, content_type: nil)
+      @content = content.nil? ? body : content
       self.status_code = status_code
       self.headers = headers
+      set_header('content-type', content_type) if content_type
+    end
+
+    def status
+      @status_code
     end
 
     def status_code=(value)
@@ -72,6 +77,10 @@ module Spikard
         @headers = payload[:headers] || {}
         @body = payload[:body]
         @body_text = payload[:body_text]
+      end
+
+      def status
+        @status_code
       end
 
       def body_bytes

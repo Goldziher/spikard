@@ -3,36 +3,50 @@
 require 'json'
 
 RSpec.describe 'WebSocket Test Client', :websocket do
+  class EchoWebSocketHandler < Spikard::WebSocketHandler
+    def handle_message(message)
+      message
+    end
+  end
+
+  class JsonEchoWebSocketHandler < Spikard::WebSocketHandler
+    def handle_message(message)
+      message = message.dup
+      message['echoed'] = true
+      message
+    end
+  end
+
   def create_echo_app
     app = Spikard::App.new
-    app.websocket('/echo') do |_req, ws|
-      loop do
-        msg = ws.receive_message
-        break if msg.close?
-
-        if msg.as_text
-          ws.send_text(msg.as_text)
-        elsif msg.as_binary
-          ws.send_binary(msg.as_binary)
-        end
-      end
+    app.websocket('/echo', handler_name: 'websocket_echo') do
+      handler = EchoWebSocketHandler.new
+      schema = { 'type' => 'string' }
+      handler.instance_variable_set(:@_message_schema, schema)
+      handler.instance_variable_set(:@_response_schema, schema)
+      handler
     end
     app
   end
 
   def create_json_echo_app
     app = Spikard::App.new
-    app.websocket('/json-echo') do |_req, ws|
-      loop do
-        msg = ws.receive_message
-        break if msg.close?
-
-        if msg.as_json
-          data = msg.as_json
-          data['echoed'] = true
-          ws.send_json(data)
-        end
-      end
+    app.websocket('/json-echo', handler_name: 'websocket_json_echo') do
+      handler = JsonEchoWebSocketHandler.new
+      schema = {
+        'type' => 'object',
+        'properties' => {
+          'type' => { 'type' => 'string' },
+          'text' => { 'type' => 'string' },
+          'user' => { 'type' => 'object' },
+          'timestamp' => { 'type' => 'number' },
+          'tags' => { 'type' => 'array' },
+          'echoed' => { 'type' => 'boolean' }
+        }
+      }
+      handler.instance_variable_set(:@_message_schema, schema)
+      handler.instance_variable_set(:@_response_schema, schema)
+      handler
     end
     app
   end

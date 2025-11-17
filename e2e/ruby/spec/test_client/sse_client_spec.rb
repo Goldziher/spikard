@@ -5,7 +5,7 @@ require 'json'
 RSpec.describe 'SSE Test Client' do
   def create_simple_sse_app
     app = Spikard::App.new
-    app.get('/events') do |_req|
+    app.get('/events', handler_name: 'sse_events') do |_req|
       events = [
         "data: first event\n\n",
         "data: second event\n\n",
@@ -18,7 +18,7 @@ RSpec.describe 'SSE Test Client' do
 
   def create_json_sse_app
     app = Spikard::App.new
-    app.get('/json-events') do |_req|
+    app.get('/json-events', handler_name: 'sse_json') do |_req|
       events = [
         { type: 'greeting', message: 'Hello' },
         { type: 'update', value: 42 },
@@ -32,7 +32,7 @@ RSpec.describe 'SSE Test Client' do
 
   def create_complex_json_app
     app = Spikard::App.new
-    app.get('/complex') do |_req|
+    app.get('/complex', handler_name: 'sse_complex') do |_req|
       event = {
         user: {
           id: 123,
@@ -141,7 +141,7 @@ RSpec.describe 'SSE Test Client' do
   describe 'empty and malformed events' do
     it 'handles empty data lines' do
       app = Spikard::App.new
-      app.get('/empty') do |_req|
+      app.get('/empty', handler_name: 'sse_empty') do |_req|
         # Empty data lines should be filtered per SSE spec
         Spikard::Response.new(
           body: "data: \n\ndata: real event\n\ndata: \n\n",
@@ -162,7 +162,7 @@ RSpec.describe 'SSE Test Client' do
 
     it 'handles malformed JSON gracefully' do
       app = Spikard::App.new
-      app.get('/malformed') do |_req|
+      app.get('/malformed', handler_name: 'sse_malformed') do |_req|
         Spikard::Response.new(
           body: "data: {invalid json\n\ndata: {\"valid\": true}\n\n",
           content_type: 'text/event-stream'
@@ -188,7 +188,7 @@ RSpec.describe 'SSE Test Client' do
   describe 'special characters' do
     it 'handles special characters in event data' do
       app = Spikard::App.new
-      app.get('/special') do |_req|
+      app.get('/special', handler_name: 'sse_special_chars') do |_req|
         Spikard::Response.new(
           body: "data: Line 1\\nLine 2\\tTabbed\n\n",
           content_type: 'text/event-stream'
@@ -210,7 +210,7 @@ RSpec.describe 'SSE Test Client' do
   describe 'event order' do
     it 'preserves event order' do
       app = Spikard::App.new
-      app.get('/ordered') do |_req|
+      app.get('/ordered', handler_name: 'sse_ordered') do |_req|
         events = (1..10).map { |i| "data: event #{i}\n\n" }.join
         Spikard::Response.new(body: events, content_type: 'text/event-stream')
       end
@@ -231,7 +231,7 @@ RSpec.describe 'SSE Test Client' do
   describe 'multiline events' do
     it 'handles multiline event data' do
       app = Spikard::App.new
-      app.get('/multiline') do |_req|
+      app.get('/multiline', handler_name: 'sse_multiline') do |_req|
         # Multiline events use multiple data: lines
         Spikard::Response.new(
           body: "data: line 1\ndata: line 2\ndata: line 3\n\n",
@@ -254,7 +254,7 @@ RSpec.describe 'SSE Test Client' do
   describe 'unicode content' do
     it 'handles unicode in event data' do
       app = Spikard::App.new
-      app.get('/unicode') do |_req|
+      app.get('/unicode', handler_name: 'sse_unicode') do |_req|
         Spikard::Response.new(
           body: "data: 你好世界 🚀\n\n",
           content_type: 'text/event-stream'

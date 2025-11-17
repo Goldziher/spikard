@@ -6,8 +6,6 @@ import type { ChildProcess } from "node:child_process";
 import { once } from "node:events";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import type WebSocket from "ws";
-
 // Native module is built into this package directory; import the napi loader directly
 import {
 	TestClient as NativeTestClient,

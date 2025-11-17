@@ -139,8 +139,9 @@ module Spikard
       }
     end
 
-    def register_route(method, path, handler_name:, **options, &block)
+    def register_route(method, path, handler_name: nil, **options, &block)
       validate_route_arguments!(block, options)
+      handler_name ||= default_handler_name(method, path)
       metadata = build_metadata(method, path, handler_name, options)
 
       @routes << RouteEntry.new(metadata, block)
@@ -148,7 +149,7 @@ module Spikard
     end
 
     HTTP_METHODS.each do |verb|
-      define_method(verb.downcase) do |path, handler_name:, **options, &block|
+      define_method(verb.downcase) do |path, handler_name: nil, **options, &block|
         register_route(verb, path, handler_name: handler_name, **options, &block)
       end
     end
@@ -164,6 +165,12 @@ module Spikard
         map[name] = entry.handler
       end
       map
+    end
+
+    def default_handler_name(method, path)
+      normalized_path = path.gsub(/[^a-zA-Z0-9]+/, '_').gsub(/__+/, '_').sub(/^_+|_+$/, '')
+      normalized_path = 'root' if normalized_path.empty?
+      "#{method.to_s.downcase}_#{normalized_path}"
     end
 
     # Register a WebSocket endpoint
