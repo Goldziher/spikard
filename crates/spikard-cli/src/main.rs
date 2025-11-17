@@ -3,9 +3,12 @@
 //! Unified command-line interface for running Spikard applications
 //! across multiple language bindings (Rust, Python, Node.js, Ruby)
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::{Parser, Subcommand, ValueEnum};
-use spikard_cli::codegen;
+use spikard_cli::codegen::{
+    self, CodegenEngine, CodegenOutcome, CodegenRequest, CodegenTargetKind, DtoConfig, NodeDtoStyle, PythonDtoStyle,
+    RubyDtoStyle, SchemaKind,
+};
 use std::path::PathBuf;
 
 /// Spikard - High-performance HTTP framework with Rust core
@@ -30,6 +33,9 @@ enum Commands {
         /// Output file path (prints to stdout if not specified)
         #[arg(long, short = 'o')]
         output: Option<PathBuf>,
+        /// DTO implementation for the selected language (defaults per language)
+        #[arg(long = "dto", value_enum)]
+        dto: Option<DtoArg>,
     },
     /// Generate test fixtures and apps from AsyncAPI schema
     GenerateAsyncapi {
@@ -67,6 +73,16 @@ enum AsyncApiTarget {
         #[arg(long, short = 'o')]
         output: PathBuf,
     },
+    /// Generate handler scaffolding for a specific language
+    Handlers {
+        /// Target language
+        #[arg(long, short = 'l')]
+        lang: GenerateLanguage,
+
+        /// Output file path
+        #[arg(long, short = 'o')]
+        output: PathBuf,
+    },
     /// Generate everything (fixtures + test apps for all languages)
     All {
         /// Output directory (default: current directory)
@@ -82,6 +98,46 @@ enum GenerateLanguage {
     Rust,
     Ruby,
     Php,
+}
+
+impl From<GenerateLanguage> for codegen::TargetLanguage {
+    fn from(lang: GenerateLanguage) -> Self {
+        match lang {
+            GenerateLanguage::Python => codegen::TargetLanguage::Python,
+            GenerateLanguage::TypeScript => codegen::TargetLanguage::TypeScript,
+            GenerateLanguage::Rust => codegen::TargetLanguage::Rust,
+            GenerateLanguage::Ruby => codegen::TargetLanguage::Ruby,
+            GenerateLanguage::Php => codegen::TargetLanguage::Php,
+        }
+    }
+}
+
+fn apply_dto_selection(config: &mut DtoConfig, lang: GenerateLanguage, dto: DtoArg) -> Result<()> {
+    match lang {
+        GenerateLanguage::Python => match dto {
+            DtoArg::Dataclass => config.python = PythonDtoStyle::Dataclass,
+            DtoArg::Msgspec => config.python = PythonDtoStyle::Msgspec,
+            _ => bail!("DTO '{dto:?}' is not supported for Python"),
+        },
+        GenerateLanguage::TypeScript => match dto {
+            DtoArg::Zod => config.node = NodeDtoStyle::Zod,
+            _ => bail!("DTO '{dto:?}' is not supported for TypeScript"),
+        },
+        GenerateLanguage::Ruby => match dto {
+            DtoArg::DrySchema => config.ruby = RubyDtoStyle::DrySchema,
+            _ => bail!("DTO '{dto:?}' is not supported for Ruby"),
+        },
+        other => bail!("DTO selection is not supported for {:?}", other),
+    }
+    Ok(())
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum DtoArg {
+    Dataclass,
+    Msgspec,
+    Zod,
+    DrySchema,
 }
 
 fn main() -> Result<()> {
@@ -100,33 +156,33 @@ fn main() -> Result<()> {
             println!("  Node:   node server.js");
             println!("\nDocumentation: https://spikard.dev");
         }
-        Commands::Generate { schema, lang, output } => {
-            let target_lang = match lang {
-                GenerateLanguage::Python => codegen::TargetLanguage::Python,
-                GenerateLanguage::TypeScript => codegen::TargetLanguage::TypeScript,
-                GenerateLanguage::Rust => codegen::TargetLanguage::Rust,
-                GenerateLanguage::Ruby => codegen::TargetLanguage::Ruby,
-                GenerateLanguage::Php => codegen::TargetLanguage::Php,
+        Commands::Generate {
+            schema,
+            lang,
+            output,
+            dto,
+        } => {
+            let mut dto_config = DtoConfig::default();
+            if let Some(arg) = dto {
+                apply_dto_selection(&mut dto_config, lang, arg)?;
+            }
+            let request = CodegenRequest {
+                schema_path: schema.clone(),
+                schema_kind: SchemaKind::OpenApi,
+                target: CodegenTargetKind::Server {
+                    language: lang.into(),
+                    output: output.clone(),
+                },
+                dto: Some(dto_config),
             };
 
-            let code = codegen::generate_from_openapi(&schema, target_lang, output.as_deref())
-                .context("Failed to generate code from OpenAPI schema")?;
-
-            if output.is_none() {
-                // Print to stdout if no output file specified
-                println!("{}", code);
-            } else {
-                println!(
-                    "Generated {} code successfully: {}",
-                    match lang {
-                        GenerateLanguage::Python => "Python",
-                        GenerateLanguage::TypeScript => "TypeScript",
-                        GenerateLanguage::Rust => "Rust",
-                        GenerateLanguage::Ruby => "Ruby",
-                        GenerateLanguage::Php => "PHP",
-                    },
-                    output.as_ref().unwrap().display()
-                );
+            match CodegenEngine::execute(request).context("Failed to generate code from OpenAPI schema")? {
+                CodegenOutcome::InMemory(code) => println!("{}", code),
+                CodegenOutcome::Files(files) => {
+                    for asset in files {
+                        println!("✓ Generated {} at {}", asset.description, asset.path.display());
+                    }
+                }
             }
         }
         Commands::ValidateAsyncapi { schema } => {
@@ -148,58 +204,89 @@ fn main() -> Result<()> {
 
             println!("\nSchema validated successfully!");
         }
-        Commands::GenerateAsyncapi { schema, target } => {
-            // Parse AsyncAPI spec first
-            let spec = codegen::parse_asyncapi_schema(&schema).context("Failed to parse AsyncAPI schema")?;
-
-            match target {
-                AsyncApiTarget::Fixtures { output } => {
-                    println!("Generating test fixtures from AsyncAPI schema...");
-                    println!("  Input: {}", schema.display());
-                    println!("  Output: {}", output.display());
-
-                    // Detect protocol to determine subdirectory
-                    let protocol = codegen::detect_primary_protocol(&spec)?;
-
-                    // Generate fixture files
-                    let count = codegen::generate_fixtures(&spec, &output, protocol)?;
-
-                    println!("\n✓ Generated {} fixture files", count);
-                }
-                AsyncApiTarget::TestApp { lang, output } => {
-                    println!("Generating test application from AsyncAPI schema...");
-                    println!("  Input: {}", schema.display());
-                    println!("  Language: {:?}", lang);
-                    println!("  Output: {}", output.display());
-
-                    // Detect protocol to pass to generator
-                    let protocol = codegen::detect_primary_protocol(&spec)?;
-
-                    // Generate test application based on language
-                    let code = match lang {
-                        GenerateLanguage::Python => codegen::generate_python_test_app(&spec, protocol)?,
-                        GenerateLanguage::TypeScript => codegen::generate_nodejs_test_app(&spec, protocol)?,
-                        GenerateLanguage::Ruby => codegen::generate_ruby_test_app(&spec, protocol)?,
-                        GenerateLanguage::Rust | GenerateLanguage::Php => {
-                            return Err(anyhow::anyhow!("{:?} is not supported for AsyncAPI test apps", lang));
+        Commands::GenerateAsyncapi { schema, target } => match target {
+            AsyncApiTarget::Fixtures { output } => {
+                println!("Generating test fixtures from AsyncAPI schema...");
+                println!("  Input: {}", schema.display());
+                println!("  Output: {}", output.display());
+                let request = CodegenRequest {
+                    schema_path: schema.clone(),
+                    schema_kind: SchemaKind::AsyncApi,
+                    target: CodegenTargetKind::AsyncFixtures { output: output.clone() },
+                    dto: None,
+                };
+                let files = match CodegenEngine::execute(request)? {
+                    CodegenOutcome::Files(files) => files,
+                    CodegenOutcome::InMemory(_) => unreachable!("Fixtures always write files"),
+                };
+                println!("\n✓ Generated {} fixture files", files.len());
+            }
+            AsyncApiTarget::TestApp { lang, output } => {
+                println!("Generating test application from AsyncAPI schema...");
+                println!("  Input: {}", schema.display());
+                println!("  Language: {:?}", lang);
+                println!("  Output: {}", output.display());
+                let request = CodegenRequest {
+                    schema_path: schema.clone(),
+                    schema_kind: SchemaKind::AsyncApi,
+                    target: CodegenTargetKind::AsyncTestApp {
+                        language: lang.into(),
+                        output: output.clone(),
+                    },
+                    dto: None,
+                };
+                match CodegenEngine::execute(request)? {
+                    CodegenOutcome::Files(files) => {
+                        for asset in files {
+                            println!("✓ Generated {} at {}", asset.description, asset.path.display());
                         }
-                    };
-
-                    // Write to output file
-                    std::fs::write(&output, &code).context("Failed to write test application")?;
-
-                    println!("\n✓ Test app generation complete: {}", output.display());
-                }
-                AsyncApiTarget::All { output } => {
-                    println!("Generating all assets from AsyncAPI schema...");
-                    println!("  Input: {}", schema.display());
-                    println!("  Output directory: {}", output.display());
-
-                    // TODO: Generate fixtures and test apps for all languages
-                    println!("\n✓ All assets generated");
+                    }
+                    CodegenOutcome::InMemory(_) => {}
                 }
             }
-        }
+            AsyncApiTarget::Handlers { lang, output } => {
+                println!("Generating handler scaffolding from AsyncAPI schema...");
+                println!("  Input: {}", schema.display());
+                println!("  Language: {:?}", lang);
+                println!("  Output: {}", output.display());
+                let request = CodegenRequest {
+                    schema_path: schema.clone(),
+                    schema_kind: SchemaKind::AsyncApi,
+                    target: CodegenTargetKind::AsyncHandlers {
+                        language: lang.into(),
+                        output: output.clone(),
+                    },
+                    dto: None,
+                };
+                match CodegenEngine::execute(request)? {
+                    CodegenOutcome::Files(files) => {
+                        for asset in files {
+                            println!("✓ Generated {} at {}", asset.description, asset.path.display());
+                        }
+                    }
+                    CodegenOutcome::InMemory(_) => {}
+                }
+            }
+            AsyncApiTarget::All { output } => {
+                println!("Generating all assets from AsyncAPI schema...");
+                println!("  Input: {}", schema.display());
+                println!("  Output directory: {}", output.display());
+                let request = CodegenRequest {
+                    schema_path: schema.clone(),
+                    schema_kind: SchemaKind::AsyncApi,
+                    target: CodegenTargetKind::AsyncAll { output: output.clone() },
+                    dto: None,
+                };
+                let files = match CodegenEngine::execute(request)? {
+                    CodegenOutcome::Files(files) => files,
+                    CodegenOutcome::InMemory(_) => unreachable!("AsyncAPI bundle writes files"),
+                };
+                println!("\n✓ Generated {} assets:", files.len());
+                for asset in files {
+                    println!("  - {} -> {}", asset.description, asset.path.display());
+                }
+            }
+        },
     }
 
     Ok(())

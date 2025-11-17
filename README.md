@@ -32,9 +32,9 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - [x] Swagger UI integration
 - [x] Redoc integration
 - [x] Test client (Python, Node.js, Ruby)
-  - Python: Full HTTP + WebSocket + SSE testing
-  - Node.js: HTTP testing (WebSocket/SSE pending)
-  - Ruby: Full HTTP + WebSocket + SSE testing
+  - Python: Full HTTP + WebSocket + SSE testing via subprocess HTTP harness
+  - Node.js: Full HTTP + WebSocket + SSE testing through the native napi client
+  - Ruby: Full HTTP + WebSocket + SSE testing via Magnus bindings
 - [x] Lifecycle hooks (onRequest, preValidation, preHandler, onResponse, onError)
 - [x] WebSocket support
 - [x] Server-Sent Events (SSE)
@@ -54,14 +54,17 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - [x] OpenAPI to handler generation
 - [x] Multi-language code generation (Python, Node, Ruby, Rust)
 - [x] Fixture-based testing
-- [ ] AsyncAPI support (WebSocket generation)
+- [x] AsyncAPI streaming fixtures + language test apps (Python, Node, Ruby)
+- [x] AsyncAPI handler scaffolding (Python, Node, Ruby)
+- [ ] AsyncAPI-first handler generation (WebSocket/SSE server scaffolding)
+- [x] CLI smoke tests that exercise DTO variants (Python dataclass/msgspec + Node/Ruby generators)
 
 ### Testing & Benchmarking
 - [x] Fixture-driven integration tests (423 REST fixtures + streaming/SSE/WebSocket coverage)
 - [x] Rust e2e tests (423/423 passing via `axum_test`)
-- [x] Python e2e tests (423/423 passing - 100%)
-- [x] Node.js e2e tests (422/423 passing - 99.76%, WebSocket pending)
-- [x] Ruby e2e tests (430/457 passing - 94.1%, WebSocket/SSE complete, 27 validation schema failures)
+- [x] Python e2e tests (425/425 passing - 100%)
+- [x] Node.js e2e tests (423/423 passing - 100%)
+- [x] Ruby e2e tests (457/457 passing - 100%)
 - [x] AsyncAPI streaming fixtures (Ruby, Python, Node.js runners)
 - [x] Benchmark harness
 - [x] Performance benchmarks (Python, Node, Ruby, Rust)
@@ -71,8 +74,19 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 ### Roadmap To v1.0
 
 Remaining work before v1.0:
-- AsyncAPI-first code generation (WebSocket/SSE handler generation + CLI integration)
-- WebSocket/SSE TestClient support for Node.js (Python and Ruby complete)
+- AsyncAPI-first handler generation parity for additional languages (Rust/PHP) + advanced protocol features
+- WebSocket/SSE benchmark coverage
+- Transport hardening docs & snapshot validation
+
+### Release Readiness Snapshot
+
+- ✅ Core HTTP framework, middleware, lifecycle hooks, and streaming APIs are implemented across bindings.
+- ✅ Shared request builders keep Python/Node/Ruby test clients in sync with the Rust behavior.
+- ✅ Fixture-driven e2e suites pass for Rust, Python, Node, and Ruby.
+- 🔄 Outstanding items:
+  - AsyncAPI handler generation for additional languages (Rust/PHP) and richer protocol coverage.
+  - WebSocket/SSE benchmark scenarios and snapshot tests.
+  - Consolidated docs describing how to exercise transport edge cases (e.g., raw socket helpers when the HTTP stack short-circuits).
 
 ## Structure
 

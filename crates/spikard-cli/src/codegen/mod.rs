@@ -1,6 +1,7 @@
 //! Code generation from OpenAPI and AsyncAPI schemas
 
 mod asyncapi;
+mod engine;
 mod openapi;
 mod php;
 mod python;
@@ -9,9 +10,11 @@ mod rust;
 mod typescript;
 
 pub use asyncapi::{
-    Protocol, detect_primary_protocol, generate_fixtures, generate_nodejs_test_app, generate_python_test_app,
-    generate_ruby_test_app, parse_asyncapi_schema,
+    Protocol, detect_primary_protocol, generate_fixtures, generate_nodejs_handler_app, generate_nodejs_test_app,
+    generate_python_handler_app, generate_python_test_app, generate_ruby_handler_app, generate_ruby_test_app,
+    parse_asyncapi_schema,
 };
+pub use engine::{CodegenEngine, CodegenOutcome, CodegenRequest, CodegenTargetKind, GeneratedAsset, SchemaKind};
 pub use openapi::parse_openapi_schema;
 pub use php::PhpGenerator;
 pub use python::PythonGenerator;
@@ -32,10 +35,45 @@ pub enum TargetLanguage {
     Php,
 }
 
+/// DTO configuration per language.
+#[derive(Debug, Clone)]
+pub struct DtoConfig {
+    pub python: PythonDtoStyle,
+    pub node: NodeDtoStyle,
+    pub ruby: RubyDtoStyle,
+}
+
+impl Default for DtoConfig {
+    fn default() -> Self {
+        Self {
+            python: PythonDtoStyle::Dataclass,
+            node: NodeDtoStyle::Zod,
+            ruby: RubyDtoStyle::DrySchema,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PythonDtoStyle {
+    Dataclass,
+    Msgspec,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NodeDtoStyle {
+    Zod,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RubyDtoStyle {
+    DrySchema,
+}
+
 /// Generate server code from an OpenAPI schema file
 pub fn generate_from_openapi(
     schema_path: &Path,
     target_lang: TargetLanguage,
+    dto: &DtoConfig,
     output_path: Option<&Path>,
 ) -> Result<String> {
     // Parse the OpenAPI schema
@@ -44,11 +82,11 @@ pub fn generate_from_openapi(
     // Generate code based on target language
     let code = match target_lang {
         TargetLanguage::Python => {
-            let generator = PythonGenerator::new(spec);
+            let generator = PythonGenerator::new(spec, dto.python);
             generator.generate()?
         }
         TargetLanguage::TypeScript => {
-            let generator = TypeScriptGenerator::new(spec);
+            let generator = TypeScriptGenerator::new(spec, dto.node);
             generator.generate()?
         }
         TargetLanguage::Rust => {
@@ -56,7 +94,7 @@ pub fn generate_from_openapi(
             generator.generate()?
         }
         TargetLanguage::Ruby => {
-            let generator = RubyGenerator::new(spec);
+            let generator = RubyGenerator::new(spec, dto.ruby);
             generator.generate()?
         }
         TargetLanguage::Php => {
