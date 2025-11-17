@@ -34,6 +34,9 @@ components:
       properties:
         message:
           type: string
+        count:
+          type: integer
+          nullable: true
       required:
         - message
 "##;
@@ -104,6 +107,22 @@ fn python_msgspec_generation_emits_structs() -> Result<()> {
 }
 
 #[test]
+fn python_nullable_properties_emit_optional_union() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);
+
+    let mut dto = DtoConfig::default();
+    dto.python = PythonDtoStyle::Dataclass;
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto, None)?;
+    assert!(
+        code.contains("count: int | None = None"),
+        "expected nullable optional dataclass field"
+    );
+    Ok(())
+}
+
+#[test]
 fn node_generation_uses_zod_schemas() -> Result<()> {
     let dir = tempdir()?;
     let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);
@@ -119,6 +138,22 @@ fn node_generation_uses_zod_schemas() -> Result<()> {
     assert!(
         code.contains("export const HelloResponseSchema = z.object"),
         "expected inferred schema"
+    );
+    Ok(())
+}
+
+#[test]
+fn typescript_nullable_properties_emit_nullable_optional_schemas() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);
+
+    let mut dto = DtoConfig::default();
+    dto.node = NodeDtoStyle::Zod;
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::TypeScript, &dto, None)?;
+    assert!(
+        code.contains("\tcount: z.number().int().nullable().optional(),"),
+        "expected nullable + optional zod chain"
     );
     Ok(())
 }

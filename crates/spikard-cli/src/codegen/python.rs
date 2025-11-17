@@ -1,6 +1,6 @@
 //! Python code generation from OpenAPI schemas
 
-use super::PythonDtoStyle;
+use super::{PythonDtoStyle, SchemaRegistry};
 use anyhow::{Result, bail};
 use heck::{ToPascalCase, ToSnakeCase};
 use openapiv3::{OpenAPI, Operation, Parameter, ReferenceOr, Schema, SchemaKind, Type};
@@ -8,11 +8,13 @@ use openapiv3::{OpenAPI, Operation, Parameter, ReferenceOr, Schema, SchemaKind, 
 pub struct PythonGenerator {
     spec: OpenAPI,
     dto: PythonDtoStyle,
+    registry: SchemaRegistry,
 }
 
 impl PythonGenerator {
     pub fn new(spec: OpenAPI, dto: PythonDtoStyle) -> Self {
-        Self { spec, dto }
+        let registry = SchemaRegistry::from_spec(&spec);
+        Self { spec, dto, registry }
     }
 
     pub fn generate(&self) -> Result<String> {
@@ -146,17 +148,7 @@ app = Spikard()
                     for (prop_name, prop_schema_ref) in &obj.properties {
                         let is_required = obj.required.contains(prop_name);
                         let field_name = prop_name.to_snake_case();
-                        let type_hint = match prop_schema_ref {
-                            ReferenceOr::Item(prop_schema) => self.schema_to_python_type(prop_schema, !is_required),
-                            ReferenceOr::Reference { reference } => {
-                                let ref_name = reference.split('/').next_back().unwrap();
-                                if is_required {
-                                    ref_name.to_pascal_case()
-                                } else {
-                                    format!("{} | None", ref_name.to_pascal_case())
-                                }
-                            }
-                        };
+                        let type_hint = self.python_type_from_boxed_schema_ref(prop_schema_ref, !is_required);
 
                         if is_required {
                             output.push_str(&format!("    {}: {}\n", field_name, type_hint));
@@ -191,17 +183,7 @@ app = Spikard()
                         let is_required = obj.required.contains(prop_name);
                         let field_name = prop_name.to_snake_case();
 
-                        let type_hint = match prop_schema_ref {
-                            ReferenceOr::Item(prop_schema) => self.schema_to_python_type(prop_schema, !is_required),
-                            ReferenceOr::Reference { reference } => {
-                                let ref_name = reference.split('/').next_back().unwrap();
-                                if is_required {
-                                    ref_name.to_pascal_case()
-                                } else {
-                                    format!("{} | None", ref_name.to_pascal_case())
-                                }
-                            }
-                        };
+                        let type_hint = self.python_type_from_boxed_schema_ref(prop_schema_ref, !is_required);
 
                         if is_required {
                             output.push_str(&format!("    {}: {}\n", field_name, type_hint));
@@ -221,14 +203,7 @@ app = Spikard()
 
     /// Extract type name from a schema reference or inline schema
     fn extract_type_from_schema_ref(&self, schema_ref: &ReferenceOr<Schema>) -> String {
-        match schema_ref {
-            ReferenceOr::Reference { reference } => {
-                // Extract name from #/components/schemas/Pet -> Pet
-                let ref_name = reference.split('/').next_back().unwrap();
-                ref_name.to_pascal_case()
-            }
-            ReferenceOr::Item(schema) => self.schema_to_python_type(schema, false),
-        }
+        self.python_type_from_schema_ref(schema_ref, false)
     }
 
     /// Extract request body type from operation
@@ -279,32 +254,60 @@ app = Spikard()
         "dict[str, Any]".to_string()
     }
 
+    fn python_type_from_schema_ref(&self, schema_ref: &ReferenceOr<Schema>, optional: bool) -> String {
+        match schema_ref {
+            ReferenceOr::Item(schema) => self.schema_to_python_type(schema, optional),
+            ReferenceOr::Reference { reference } => self.python_type_from_reference(reference, optional),
+        }
+    }
+
+    fn python_type_from_boxed_schema_ref(&self, schema_ref: &ReferenceOr<Box<Schema>>, optional: bool) -> String {
+        match schema_ref {
+            ReferenceOr::Item(schema) => self.schema_to_python_type(schema, optional),
+            ReferenceOr::Reference { reference } => self.python_type_from_reference(reference, optional),
+        }
+    }
+
+    fn python_type_from_reference(&self, reference: &str, optional: bool) -> String {
+        let mut base = reference.split('/').next_back().unwrap().to_pascal_case();
+        if let Some(schema) = self.registry.resolve_reference(reference)
+            && schema.schema_data.nullable
+        {
+            base = self.append_optional(base, true);
+        }
+        self.append_optional(base, optional)
+    }
+
     #[allow(clippy::only_used_in_recursion)]
     fn schema_to_python_type(&self, schema: &Schema, optional: bool) -> String {
-        let base_type = match &schema.schema_kind {
+        let mut base_type = match &schema.schema_kind {
             SchemaKind::Type(Type::String(_)) => "str".to_string(),
             SchemaKind::Type(Type::Number(_)) => "float".to_string(),
             SchemaKind::Type(Type::Integer(_)) => "int".to_string(),
             SchemaKind::Type(Type::Boolean(_)) => "bool".to_string(),
             SchemaKind::Type(Type::Array(arr)) => {
                 let item_type = match &arr.items {
-                    Some(ReferenceOr::Item(item_schema)) => self.schema_to_python_type(item_schema, false),
-                    Some(ReferenceOr::Reference { reference }) => {
-                        let ref_name = reference.split('/').next_back().unwrap();
-                        ref_name.to_pascal_case()
-                    }
-                    None => "Any".to_string(),
+                    Some(item_schema) => self.python_type_from_boxed_schema_ref(item_schema, false),
+                    None => "dict[str, Any]".to_string(),
                 };
-                format!("list[{}]", item_type)
+                format!("list[{item_type}]")
             }
             SchemaKind::Type(Type::Object(_)) => "dict[str, Any]".to_string(),
-            _ => "Any".to_string(),
+            _ => "dict[str, Any]".to_string(),
         };
 
-        if optional {
-            format!("{} | None", base_type)
+        if schema.schema_data.nullable {
+            base_type = self.append_optional(base_type, true);
+        }
+
+        self.append_optional(base_type, optional)
+    }
+
+    fn append_optional(&self, base: String, optional: bool) -> String {
+        if optional && !base.trim().ends_with("| None") {
+            format!("{base} | None")
         } else {
-            base_type
+            base
         }
     }
 

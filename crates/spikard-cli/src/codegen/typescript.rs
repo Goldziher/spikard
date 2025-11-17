@@ -83,12 +83,10 @@ import {{ z }} from "zod";
             output.push_str(&format!("/** {} */\n", description));
         }
 
-        // Generate Zod schema
-        output.push_str(&format!("export const {} = ", schema_name));
-
-        match &schema.schema_kind {
+        // Generate Zod schema body
+        let mut schema_expr = match &schema.schema_kind {
             SchemaKind::Type(Type::Object(obj)) => {
-                output.push_str("z.object({\n");
+                let mut expr = String::from("z.object({\n");
 
                 for (prop_name, prop_schema_ref) in &obj.properties {
                     let is_required = obj.required.contains(prop_name);
@@ -107,15 +105,20 @@ import {{ z }} from "zod";
                         }
                     };
 
-                    output.push_str(&format!("\t{}: {},\n", field_name, zod_type));
+                    expr.push_str(&format!("\t{}: {},\n", field_name, zod_type));
                 }
 
-                output.push_str("});\n");
+                expr.push_str("})");
+                expr
             }
-            _ => {
-                output.push_str("z.unknown(); // Unsupported schema type\n");
-            }
+            _ => "z.unknown()".to_string(),
+        };
+
+        if schema.schema_data.nullable {
+            schema_expr.push_str(".nullable()");
         }
+
+        output.push_str(&format!("export const {} = {};\n", schema_name, schema_expr));
 
         // Generate TypeScript type from Zod schema
         output.push_str(&format!(
@@ -198,7 +201,7 @@ import {{ z }} from "zod";
     }
 
     fn schema_to_zod_type(schema: &Schema, optional: bool) -> String {
-        let base_type = match &schema.schema_kind {
+        let mut base_type = match &schema.schema_kind {
             SchemaKind::Type(Type::String(_)) => "z.string()".to_string(),
             SchemaKind::Type(Type::Number(_)) => "z.number()".to_string(),
             SchemaKind::Type(Type::Integer(_)) => "z.number().int()".to_string(),
@@ -210,7 +213,7 @@ import {{ z }} from "zod";
                         let ref_name = reference.split('/').next_back().unwrap();
                         format!("{}Schema", ref_name.to_pascal_case())
                     }
-                    None => "z.unknown()".to_string(),
+                    None => "z.record(z.string(), z.unknown())".to_string(),
                 };
                 format!("z.array({})", item_type)
             }
@@ -218,15 +221,19 @@ import {{ z }} from "zod";
             _ => "z.unknown()".to_string(),
         };
 
-        if optional {
-            format!("{}.optional()", base_type)
-        } else {
-            base_type
+        if schema.schema_data.nullable {
+            base_type.push_str(".nullable()");
         }
+
+        if optional {
+            base_type.push_str(".optional()");
+        }
+
+        base_type
     }
 
     fn schema_to_typescript_type(schema: &Schema, optional: bool) -> String {
-        let base_type = match &schema.schema_kind {
+        let mut base_type = match &schema.schema_kind {
             SchemaKind::Type(Type::String(_)) => "string".to_string(),
             SchemaKind::Type(Type::Number(_)) | SchemaKind::Type(Type::Integer(_)) => "number".to_string(),
             SchemaKind::Type(Type::Boolean(_)) => "boolean".to_string(),
@@ -237,7 +244,7 @@ import {{ z }} from "zod";
                         let ref_name = reference.split('/').next_back().unwrap();
                         ref_name.to_pascal_case()
                     }
-                    None => "unknown".to_string(),
+                    None => "Record<string, unknown>".to_string(),
                 };
                 format!("{}[]", item_type)
             }
@@ -245,11 +252,15 @@ import {{ z }} from "zod";
             _ => "unknown".to_string(),
         };
 
-        if optional {
-            format!("{} | undefined", base_type)
-        } else {
-            base_type
+        if schema.schema_data.nullable {
+            base_type.push_str(" | null");
         }
+
+        if optional {
+            base_type.push_str(" | undefined");
+        }
+
+        base_type
     }
 
     fn generate_routes(&self) -> Result<String> {
