@@ -217,7 +217,7 @@ uuid = "1"
 
 fn generate_main_rs(_categories: &BTreeMap<String, Vec<Fixture>>) -> String {
     r#"//! Generated test application
-//! This is a minimal Axum app that echoes back validated parameters
+//! This is a minimal Spikard app built from fixture data
 
 use spikard::{App, AppError};
 
