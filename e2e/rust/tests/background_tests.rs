@@ -5,9 +5,8 @@
 mod background {
     use axum::body::Body;
     use axum::http::Request;
-    use axum_test::TestServer;
     use serde_json::Value;
-    use spikard_http::testing::{call_test_server, snapshot_response};
+    use spikard::testing::TestServer;
 
     #[tokio::test]
     async fn test_background_background_event_logging() {
@@ -21,7 +20,9 @@ mod background {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_background_background_event_logging();
+        let app =
+            spikard_e2e_app::create_app_background_background_event_logging().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/background/events".to_string();
@@ -272,9 +273,7 @@ mod background {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 202, "Expected status 202, got {}", snapshot.status);
         let expected_state: Value = serde_json::from_str(r#"{"events":["alpha"]}"#).unwrap();
@@ -285,8 +284,7 @@ mod background {
                 .uri("/background/events")
                 .body(Body::empty())
                 .unwrap();
-            let state_response = call_test_server(&server, state_request).await;
-            let state_snapshot = snapshot_response(state_response).await.unwrap();
+            let state_snapshot = server.call(state_request).await.unwrap();
             assert_eq!(state_snapshot.status, 200);
             actual_state = serde_json::from_slice(&state_snapshot.body).unwrap();
             if actual_state == expected_state {
@@ -315,7 +313,9 @@ mod background {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_background_background_event_logging_second_payload();
+        let app = spikard_e2e_app::create_app_background_background_event_logging_second_payload()
+            .expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/background/events".to_string();
@@ -566,9 +566,7 @@ mod background {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 202, "Expected status 202, got {}", snapshot.status);
         let expected_state: Value = serde_json::from_str(r#"{"events":["beta"]}"#).unwrap();
@@ -579,8 +577,7 @@ mod background {
                 .uri("/background/events")
                 .body(Body::empty())
                 .unwrap();
-            let state_response = call_test_server(&server, state_request).await;
-            let state_snapshot = snapshot_response(state_response).await.unwrap();
+            let state_snapshot = server.call(state_request).await.unwrap();
             assert_eq!(state_snapshot.status, 200);
             actual_state = serde_json::from_slice(&state_snapshot.body).unwrap();
             if actual_state == expected_state {

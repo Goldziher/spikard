@@ -2,30 +2,21 @@
 
 #[cfg(test)]
 mod websocket {
-    use axum_test::{TestServer, TestServerConfig, Transport};
     use serde_json::Value;
-
-    fn websocket_config() -> TestServerConfig {
-        TestServerConfig {
-            save_cookies: true,
-            transport: Some(Transport::HttpRandomPort),
-            ..Default::default()
-        }
-    }
+    use spikard::testing::TestServer;
 
     #[tokio::test]
     async fn test_websocket_chat_msg_1() {
-        let app = spikard_e2e_app::create_app_websocket_chat();
-        let server = TestServer::new_with_config(app, websocket_config()).expect("Failed to build server");
+        let app = spikard_e2e_app::create_app_websocket_chat().expect("Failed to build WebSocket app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
-        let mut ws = server.get_websocket("/chat").await.into_websocket().await;
+        let mut ws = server.connect_websocket("/chat").await;
 
         let message: Value = serde_json::from_str("{\"text\":\"example_text\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"message\",\"user\":\"example_user\"}").expect("valid JSON");
 
         ws.send_json(&message).await;
 
-        let response_msg = ws.receive_text().await;
-        let response: Value = serde_json::from_str(&response_msg).expect("valid response JSON");
+        let response: Value = ws.receive_json().await;
 
         assert_eq!(
             response["validated"],
@@ -33,7 +24,6 @@ mod websocket {
             "Should have validated field set to true"
         );
 
-        // Verify all original fields are present
         if let Some(obj) = message.as_object() {
             for (key, value) in obj {
                 assert_eq!(response[key], *value, "Field should match original value");
@@ -45,10 +35,10 @@ mod websocket {
 
     #[tokio::test]
     async fn test_websocket_chat_msg_2() {
-        let app = spikard_e2e_app::create_app_websocket_chat();
-        let server = TestServer::new_with_config(app, websocket_config()).expect("Failed to build server");
+        let app = spikard_e2e_app::create_app_websocket_chat().expect("Failed to build WebSocket app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
-        let mut ws = server.get_websocket("/chat").await.into_websocket().await;
+        let mut ws = server.connect_websocket("/chat").await;
 
         let message: Value = serde_json::from_str(
             "{\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"userLeft\",\"user\":\"example_user\"}",
@@ -57,8 +47,7 @@ mod websocket {
 
         ws.send_json(&message).await;
 
-        let response_msg = ws.receive_text().await;
-        let response: Value = serde_json::from_str(&response_msg).expect("valid response JSON");
+        let response: Value = ws.receive_json().await;
 
         assert_eq!(
             response["validated"],
@@ -66,7 +55,6 @@ mod websocket {
             "Should have validated field set to true"
         );
 
-        // Verify all original fields are present
         if let Some(obj) = message.as_object() {
             for (key, value) in obj {
                 assert_eq!(response[key], *value, "Field should match original value");
@@ -78,10 +66,10 @@ mod websocket {
 
     #[tokio::test]
     async fn test_websocket_chat_msg_3() {
-        let app = spikard_e2e_app::create_app_websocket_chat();
-        let server = TestServer::new_with_config(app, websocket_config()).expect("Failed to build server");
+        let app = spikard_e2e_app::create_app_websocket_chat().expect("Failed to build WebSocket app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
-        let mut ws = server.get_websocket("/chat").await.into_websocket().await;
+        let mut ws = server.connect_websocket("/chat").await;
 
         let message: Value = serde_json::from_str(
             "{\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"userJoined\",\"user\":\"example_user\"}",
@@ -90,8 +78,7 @@ mod websocket {
 
         ws.send_json(&message).await;
 
-        let response_msg = ws.receive_text().await;
-        let response: Value = serde_json::from_str(&response_msg).expect("valid response JSON");
+        let response: Value = ws.receive_json().await;
 
         assert_eq!(
             response["validated"],
@@ -99,7 +86,6 @@ mod websocket {
             "Should have validated field set to true"
         );
 
-        // Verify all original fields are present
         if let Some(obj) = message.as_object() {
             for (key, value) in obj {
                 assert_eq!(response[key], *value, "Field should match original value");

@@ -1,8 +1,10 @@
 //! HTTP server implementation using Tokio and Axum
 
-use crate::handler_trait::{Handler, RequestData};
+use crate::handler_trait::{Handler, HandlerResult, RequestData};
+use crate::parameters::ParameterValidator;
 use crate::query_parser::parse_query_string_to_json;
-use crate::{CorsConfig, Router, ServerConfig};
+use crate::validation::SchemaValidator;
+use crate::{CorsConfig, ProblemDetails, Router, ServerConfig};
 use axum::Router as AxumRouter;
 use axum::body::Body;
 use axum::extract::{DefaultBodyLimit, Path};
@@ -10,7 +12,9 @@ use axum::routing::{MethodRouter, get};
 use http_body_util::BodyExt;
 use serde_json::Value;
 use std::collections::HashMap;
+use std::future::Future;
 use std::net::SocketAddr;
+use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::net::TcpListener;
@@ -29,6 +33,67 @@ use uuid::Uuid;
 
 /// Type alias for route handler pairs
 type RouteHandlerPair = (crate::Route, Arc<dyn Handler>);
+
+/// Wrapper that runs request/parameter validation before calling the user handler.
+struct ValidatingHandler {
+    inner: Arc<dyn Handler>,
+    request_validator: Option<Arc<SchemaValidator>>,
+    parameter_validator: Option<ParameterValidator>,
+}
+
+impl ValidatingHandler {
+    fn new(inner: Arc<dyn Handler>, route: &crate::Route) -> Self {
+        Self {
+            inner,
+            request_validator: route.request_validator.clone(),
+            parameter_validator: route.parameter_validator.clone(),
+        }
+    }
+}
+
+impl Handler for ValidatingHandler {
+    fn call(
+        &self,
+        req: axum::http::Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        let inner = self.inner.clone();
+        let request_validator = self.request_validator.clone();
+        let parameter_validator = self.parameter_validator.clone();
+
+        Box::pin(async move {
+            if let Some(validator) = request_validator
+                && let Err(errors) = validator.validate(&request_data.body)
+            {
+                let problem = ProblemDetails::from_validation_error(&errors);
+                let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                return Err((problem.status_code(), body));
+            }
+
+            if let Some(validator) = parameter_validator {
+                let raw_query_strings: HashMap<String, String> = request_data
+                    .raw_query_params
+                    .iter()
+                    .filter_map(|(k, v)| v.first().map(|value| (k.clone(), value.clone())))
+                    .collect();
+
+                if let Err(errors) = validator.validate_and_extract(
+                    &request_data.query_params,
+                    &raw_query_strings,
+                    &request_data.path_params,
+                    &request_data.headers,
+                    &request_data.cookies,
+                ) {
+                    let problem = ProblemDetails::from_validation_error(&errors);
+                    let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                    return Err((problem.status_code(), body));
+                }
+            }
+
+            inner.call(req, request_data).await
+        })
+    }
+}
 
 /// Request ID generator using UUIDs
 #[derive(Clone, Default)]
@@ -333,7 +398,8 @@ pub fn build_router_with_handlers(
 
         let mut handlers_by_method: HashMap<crate::Method, (crate::Route, Arc<dyn Handler>)> = HashMap::new();
         for (route, handler) in route_handlers {
-            handlers_by_method.insert(route.method.clone(), (route, handler));
+            let validating_handler = Arc::new(ValidatingHandler::new(handler, &route));
+            handlers_by_method.insert(route.method.clone(), (route, validating_handler));
         }
 
         // Check if any route on this path has CORS config

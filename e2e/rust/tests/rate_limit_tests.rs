@@ -5,9 +5,8 @@
 mod rate_limit {
     use axum::body::Body;
     use axum::http::Request;
-    use axum_test::TestServer;
     use serde_json::Value;
-    use spikard_http::testing::{call_test_server, snapshot_response};
+    use spikard::testing::TestServer;
 
     #[tokio::test]
     async fn test_rate_limit_rate_limit_below_threshold_succeeds() {
@@ -21,7 +20,9 @@ mod rate_limit {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_rate_limit_rate_limit_below_threshold_succeeds();
+        let app = spikard_e2e_app::create_app_rate_limit_rate_limit_below_threshold_succeeds()
+            .expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/rate-limit/basic".to_string();
@@ -272,9 +273,7 @@ mod rate_limit {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
@@ -291,7 +290,9 @@ mod rate_limit {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_rate_limit_rate_limit_exceeded_returns_429();
+        let app = spikard_e2e_app::create_app_rate_limit_rate_limit_exceeded_returns_429()
+            .expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/rate-limit/exceeded".to_string();
@@ -542,9 +543,7 @@ mod rate_limit {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 429, "Expected status 429, got {}", snapshot.status);
     }

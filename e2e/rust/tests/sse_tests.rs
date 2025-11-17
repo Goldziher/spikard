@@ -4,21 +4,19 @@
 mod sse {
     use axum::body::Body;
     use axum::http::Request;
-    use axum_test::TestServer;
     use serde_json::Value;
-    use spikard_http::testing::{call_test_server, snapshot_response};
+    use spikard::testing::TestServer;
 
     #[tokio::test]
     async fn test_sse_notifications() {
-        let app = spikard_e2e_app::create_app_sse_notifications();
+        let app = spikard_e2e_app::create_app_sse_notifications().expect("Failed to build SSE app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
         let request = Request::builder()
             .method("GET")
             .uri("/notifications")
             .body(Body::empty())
             .unwrap();
-        let server = TestServer::new(app).expect("Failed to build server");
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
         assert_eq!(snapshot.status, 200);
 
         let body = String::from_utf8(snapshot.body.clone()).expect("SSE stream should be UTF-8");

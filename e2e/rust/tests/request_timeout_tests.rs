@@ -5,9 +5,8 @@
 mod request_timeout {
     use axum::body::Body;
     use axum::http::Request;
-    use axum_test::TestServer;
     use serde_json::Value;
-    use spikard_http::testing::{call_test_server, snapshot_response};
+    use spikard::testing::TestServer;
 
     #[tokio::test]
     async fn test_request_timeout_request_completes_before_timeout() {
@@ -22,7 +21,9 @@ mod request_timeout {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_request_timeout_request_completes_before_timeout();
+        let app = spikard_e2e_app::create_app_request_timeout_request_completes_before_timeout()
+            .expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/timeouts/fast".to_string();
@@ -273,9 +274,7 @@ mod request_timeout {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
     }
@@ -292,7 +291,9 @@ mod request_timeout {
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
         // Create app for this specific fixture
-        let app = spikard_e2e_app::create_app_request_timeout_request_exceeds_timeout();
+        let app =
+            spikard_e2e_app::create_app_request_timeout_request_exceeds_timeout().expect("Failed to build fixture app");
+        let server = TestServer::from_app(app).expect("Failed to build server");
 
         // Build request
         let mut uri = "/timeouts/slow".to_string();
@@ -543,9 +544,7 @@ mod request_timeout {
 
         let request = request_builder.body(body).unwrap();
 
-        let server = TestServer::new(app).unwrap();
-        let response = call_test_server(&server, request).await;
-        let snapshot = snapshot_response(response).await.unwrap();
+        let snapshot = server.call(request).await.unwrap();
 
         assert_eq!(snapshot.status, 408, "Expected status 408, got {}", snapshot.status);
     }

@@ -183,7 +183,9 @@ async fn test_{category}_{case_name}() {{
         .expect("Failed to parse fixture JSON");
 
     // Create app for this specific fixture
-    let app = spikard_e2e_app::{app_fn_name}();
+    let app = spikard_e2e_app::{app_fn_name}()
+        .expect("Failed to build fixture app");
+    let server = TestServer::from_app(app).expect("Failed to build server");
 
     // Build request
     let mut uri = "{path}".to_string();
@@ -428,9 +430,7 @@ async fn test_{category}_{case_name}() {{
 
     let request = request_builder.body(body).unwrap();
 
-    let server = TestServer::new(app).unwrap();
-    let response = call_test_server(&server, request).await;
-    let snapshot = snapshot_response(response).await.unwrap();
+    let snapshot = server.call(request).await.unwrap();
 
     assert_eq!(
         snapshot.status,
@@ -465,9 +465,8 @@ async fn test_{category}_{case_name}() {{
 mod {test_name} {{
 use axum::body::Body;
 use axum::http::Request;
-use axum_test::TestServer;
 use serde_json::Value;
-use spikard_http::testing::{{snapshot_response, call_test_server}};
+use spikard::testing::TestServer;
 
 {test_cases}
 }}
@@ -518,8 +517,7 @@ fn generate_background_assertions(background: &Option<BackgroundFixtureData>) ->
             .uri("{state_path}")
             .body(Body::empty())
             .unwrap();
-        let state_response = call_test_server(&server, state_request).await;
-        let state_snapshot = snapshot_response(state_response).await.unwrap();
+        let state_snapshot = server.call(state_request).await.unwrap();
         assert_eq!(state_snapshot.status, 200);
         actual_state = serde_json::from_slice(&state_snapshot.body).unwrap();
         if actual_state == expected_state {{
@@ -573,15 +571,15 @@ fn generate_sse_tests(fixtures: &[AsyncFixture]) -> Result<String> {
             r#"
 #[tokio::test]
 async fn {test_name}() {{
-    let app = spikard_e2e_app::{app_fn}();
+    let app = spikard_e2e_app::{app_fn}()
+        .expect("Failed to build SSE app");
+    let server = TestServer::from_app(app).expect("Failed to build server");
     let request = Request::builder()
         .method("GET")
         .uri("{path}")
         .body(Body::empty())
         .unwrap();
-    let server = TestServer::new(app).expect("Failed to build server");
-    let response = call_test_server(&server, request).await;
-    let snapshot = snapshot_response(response).await.unwrap();
+    let snapshot = server.call(request).await.unwrap();
     assert_eq!(snapshot.status, 200);
 
     let body = String::from_utf8(snapshot.body.clone()).expect("SSE stream should be UTF-8");
@@ -623,9 +621,8 @@ async fn {test_name}() {{
 mod sse {{
 use axum::body::Body;
 use axum::http::Request;
-use axum_test::TestServer;
 use serde_json::Value;
-use spikard_http::testing::{{snapshot_response, call_test_server}};
+use spikard::testing::TestServer;
 
 {tests}
 }}
@@ -672,32 +669,23 @@ fn generate_websocket_tests(fixtures: &[AsyncFixture]) -> Result<String> {
                     r#"
 #[tokio::test]
 async fn {test_name}() {{
-    use axum_test::{{TestServer, TestServerConfig}};
+    let app = spikard_e2e_app::{app_fn}()
+        .expect("Failed to build WebSocket app");
+    let server = TestServer::from_app(app).expect("Failed to build server");
 
-    let app = spikard_e2e_app::{app_fn}();
-    let config = TestServerConfig::builder()
-        .save_cookies()
-        .build();
-    let server = TestServer::new_with_config(app, config).expect("Failed to build server");
-
-    let mut ws = server.get_websocket("{path}").await;
+    let mut ws = server.connect_websocket("{path}").await;
 
     let message: Value = serde_json::from_str("{example_json}").expect("valid JSON");
 
     ws.send_json(&message).await;
 
-    let response_msg = ws.receive_text().await.expect("receive response");
-    let response: Value = serde_json::from_str(&response_msg).expect("valid response JSON");
+    let response: Value = ws.receive_json().await;
 
     assert_eq!(response["validated"], Value::Bool(true), "Should have validated field set to true");
 
-    // Verify all original fields are present
     if let Some(obj) = message.as_object() {{
         for (key, value) in obj {{
-            assert_eq!(
-                response[key], *value,
-                "Field should match original value"
-            );
+            assert_eq!(response[key], *value, "Field should match original value");
         }}
     }}
 
@@ -722,6 +710,7 @@ async fn {test_name}() {{
 #[cfg(test)]
 mod websocket {{
 use serde_json::Value;
+use spikard::testing::TestServer;
 
 {}
 }}

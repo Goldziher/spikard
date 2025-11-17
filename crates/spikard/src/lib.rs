@@ -6,6 +6,7 @@
 //! by the shared `spikard-http` runtime, ensuring identical validation and
 //! middleware behaviour across languages.
 
+use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -16,15 +17,72 @@ use axum::{Router as AxumRouter, body::Body};
 use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
-pub use spikard_http::handler_response::HandlerResponse;
-pub use spikard_http::sse::{SseEvent, SseEventProducer};
-pub use spikard_http::websocket::WebSocketHandler;
+pub use spikard_http::{
+    CompressionConfig, CorsConfig, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, Method, RateLimitConfig,
+    ServerConfig, StaticFilesConfig,
+    cors::{add_cors_headers, handle_preflight, validate_cors_request},
+    handler_response::HandlerResponse,
+    handler_trait::HandlerResult,
+    lifecycle::{HookResult, request_hook, response_hook},
+    sse::{SseEvent, SseEventProducer},
+    websocket::WebSocketHandler,
+};
 use spikard_http::{
-    Method, Route, RouteMetadata, SchemaRegistry, Server, ServerConfig,
-    handler_trait::{Handler, HandlerResult, RequestData},
+    Route, RouteMetadata, SchemaRegistry, Server,
+    handler_trait::{Handler, RequestData},
     sse::{SseState, sse_handler},
     websocket::{WebSocketState, websocket_handler},
 };
+
+pub mod testing {
+    use super::{App, AppError};
+    use axum::Router as AxumRouter;
+    use axum::body::Body;
+    use axum::http::Request;
+    use axum_test::{TestServer as AxumTestServer, TestServerConfig, Transport};
+    pub use spikard_http::testing::{
+        MultipartFilePart, ResponseSnapshot, SnapshotError, SseEvent, SseStream, WebSocketConnection, WebSocketMessage,
+        build_multipart_body, encode_urlencoded_body,
+    };
+
+    /// Spikard-native test server wrapper that hides the Axum test harness.
+    ///
+    /// Tests can build an `App`, convert it into a `TestServer`, and then issue
+    /// HTTP/SSE/WebSocket requests without touching `axum-test` directly.
+    pub struct TestServer {
+        inner: AxumTestServer,
+    }
+
+    impl TestServer {
+        /// Build a test server from an `App`.
+        pub fn from_app(app: App) -> Result<Self, AppError> {
+            let router = app.into_router()?;
+            Self::from_router(router)
+        }
+
+        /// Build a test server from an Axum router.
+        pub fn from_router(router: AxumRouter) -> Result<Self, AppError> {
+            let config = TestServerConfig {
+                transport: Some(Transport::HttpRandomPort),
+                ..Default::default()
+            };
+            AxumTestServer::new_with_config(router, config)
+                .map(|inner| Self { inner })
+                .map_err(|err| AppError::Server(err.to_string()))
+        }
+
+        /// Execute an HTTP request and return a snapshot of the response.
+        pub async fn call(&self, request: Request<Body>) -> Result<ResponseSnapshot, SnapshotError> {
+            let response = spikard_http::testing::call_test_server(&self.inner, request).await;
+            spikard_http::testing::snapshot_response(response).await
+        }
+
+        /// Open a WebSocket connection for the provided path.
+        pub async fn connect_websocket(&self, path: &str) -> WebSocketConnection {
+            spikard_http::testing::connect_websocket(&self.inner, path).await
+        }
+    }
+}
 
 /// Spikard application builder.
 pub struct App {
@@ -191,6 +249,8 @@ pub struct RouteBuilder {
     request_schema: Option<Value>,
     response_schema: Option<Value>,
     parameter_schema: Option<Value>,
+    file_params: Option<Value>,
+    cors: Option<CorsConfig>,
     is_async: bool,
 }
 
@@ -206,6 +266,8 @@ impl RouteBuilder {
             request_schema: None,
             response_schema: None,
             parameter_schema: None,
+            file_params: None,
+            cors: None,
             is_async: true,
         }
     }
@@ -234,6 +296,36 @@ impl RouteBuilder {
         self
     }
 
+    /// Provide a raw JSON schema for the request body.
+    pub fn request_schema_json(mut self, schema: Value) -> Self {
+        self.request_schema = Some(schema);
+        self
+    }
+
+    /// Provide a raw JSON schema for the response body.
+    pub fn response_schema_json(mut self, schema: Value) -> Self {
+        self.response_schema = Some(schema);
+        self
+    }
+
+    /// Provide a raw JSON schema for request parameters.
+    pub fn params_schema_json(mut self, schema: Value) -> Self {
+        self.parameter_schema = Some(schema);
+        self
+    }
+
+    /// Provide multipart file parameter configuration.
+    pub fn file_params_json(mut self, schema: Value) -> Self {
+        self.file_params = Some(schema);
+        self
+    }
+
+    /// Attach a CORS configuration for this route.
+    pub fn cors(mut self, cors: CorsConfig) -> Self {
+        self.cors = Some(cors);
+        self
+    }
+
     /// Mark the route as synchronous.
     pub fn sync(mut self) -> Self {
         self.is_async = false;
@@ -248,9 +340,9 @@ impl RouteBuilder {
             request_schema: self.request_schema,
             response_schema: self.response_schema,
             parameter_schema: self.parameter_schema,
-            file_params: None,
+            file_params: self.file_params,
             is_async: self.is_async,
-            cors: None,
+            cors: self.cors,
         }
     }
 }
@@ -367,10 +459,25 @@ impl RequestContext {
         serde_json::from_value(self.data.query_params.clone()).map_err(|err| AppError::Decode(err.to_string()))
     }
 
+    /// Borrow the parsed query parameters as JSON.
+    pub fn query_value(&self) -> &Value {
+        &self.data.query_params
+    }
+
+    /// Borrow the raw query parameter map (string inputs as received on the wire).
+    pub fn raw_query_params(&self) -> &HashMap<String, Vec<String>> {
+        &self.data.raw_query_params
+    }
+
     /// Extract typed path parameters into the provided type.
     pub fn path<T: DeserializeOwned>(&self) -> std::result::Result<T, AppError> {
         let value = serde_json::to_value(&*self.data.path_params).map_err(|err| AppError::Decode(err.to_string()))?;
         serde_json::from_value(value).map_err(|err| AppError::Decode(err.to_string()))
+    }
+
+    /// Borrow the raw path parameter map.
+    pub fn path_params(&self) -> &HashMap<String, String> {
+        &self.data.path_params
     }
 
     /// Extract a raw path parameter by name.
@@ -383,9 +490,34 @@ impl RequestContext {
         self.data.headers.get(&name.to_ascii_lowercase()).map(|s| s.as_str())
     }
 
+    /// Borrow the normalized headers map.
+    pub fn headers_map(&self) -> &HashMap<String, String> {
+        &self.data.headers
+    }
+
     /// Return a cookie value.
     pub fn cookie(&self, name: &str) -> Option<&str> {
         self.data.cookies.get(name).map(|s| s.as_str())
+    }
+
+    /// Borrow the cookies map.
+    pub fn cookies_map(&self) -> &HashMap<String, String> {
+        &self.data.cookies
+    }
+
+    /// Borrow the raw JSON request body.
+    pub fn body_value(&self) -> &Value {
+        &self.data.body
+    }
+
+    /// Return the HTTP method.
+    pub fn method(&self) -> &str {
+        &self.data.method
+    }
+
+    /// Return the request path.
+    pub fn path_str(&self) -> &str {
+        &self.data.path
     }
 }
 

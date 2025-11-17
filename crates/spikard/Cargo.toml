@@ -15,6 +15,7 @@ path = "src/lib.rs"
 [dependencies]
 anyhow = "1.0"
 axum.workspace = true
+axum-test = "18"
 schemars = { version = "1.1", features = ["derive"] }
 serde.workspace = true
 serde_json.workspace = true
