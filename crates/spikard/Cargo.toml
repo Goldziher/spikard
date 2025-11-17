@@ -13,8 +13,13 @@ name = "spikard"
 path = "src/lib.rs"
 
 [dependencies]
-thiserror.workspace = true
-serde.workspace = true
 anyhow = "1.0"
+axum.workspace = true
+schemars = { version = "1.1", features = ["derive"] }
+serde.workspace = true
+serde_json.workspace = true
+spikard-http = { path = "../spikard-http" }
+thiserror.workspace = true
 
 [dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros"] }

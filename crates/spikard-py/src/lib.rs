@@ -120,7 +120,7 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
 /// Process using spikard (legacy function)
 #[pyfunction]
 fn process() -> PyResult<()> {
-    spikard::process().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Spikard error: {}", e)))
+    Ok(())
 }
 
 /// Create a test client from a Spikard application
