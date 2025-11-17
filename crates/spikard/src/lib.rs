@@ -32,7 +32,7 @@ pub struct App {
     registry: SchemaRegistry,
     routes: Vec<(Route, Arc<dyn Handler>)>,
     metadata: Vec<RouteMetadata>,
-    streaming_routes: Vec<AxumRouter>,
+    attached_routers: Vec<AxumRouter>,
 }
 
 impl App {
@@ -43,7 +43,7 @@ impl App {
             registry: SchemaRegistry::new(),
             routes: Vec::new(),
             metadata: Vec::new(),
-            streaming_routes: Vec::new(),
+            attached_routers: Vec::new(),
         }
     }
 
@@ -94,7 +94,7 @@ impl App {
 
         let path = normalize_path(path.into());
         let router = AxumRouter::new().route(&path, axum_get(websocket_handler::<H>).with_state(state));
-        self.streaming_routes.push(router);
+        self.attached_routers.push(router);
         Ok(self)
     }
 
@@ -125,8 +125,20 @@ impl App {
 
         let path = normalize_path(path.into());
         let router = AxumRouter::new().route(&path, axum_get(sse_handler::<P>).with_state(state));
-        self.streaming_routes.push(router);
+        self.attached_routers.push(router);
         Ok(self)
+    }
+
+    /// Attach an existing Axum router to this application, returning ownership.
+    pub fn merge_axum_router(mut self, router: AxumRouter) -> Self {
+        self.attached_routers.push(router);
+        self
+    }
+
+    /// Attach an Axum router using a mutable reference for incremental configuration.
+    pub fn attach_axum_router(&mut self, router: AxumRouter) -> &mut Self {
+        self.attached_routers.push(router);
+        self
     }
 
     /// Build the underlying Axum router.
@@ -135,11 +147,11 @@ impl App {
             config,
             routes,
             metadata,
-            streaming_routes,
+            attached_routers,
             ..
         } = self;
         let mut router = Server::with_handlers_and_metadata(config, routes, metadata).map_err(AppError::Server)?;
-        for extra in streaming_routes {
+        for extra in attached_routers {
             router = router.merge(extra);
         }
         Ok(router)
@@ -151,12 +163,12 @@ impl App {
             config,
             routes,
             metadata,
-            streaming_routes,
+            attached_routers,
             ..
         } = self;
         let mut router =
             Server::with_handlers_and_metadata(config.clone(), routes, metadata).map_err(AppError::Server)?;
-        for extra in streaming_routes {
+        for extra in attached_routers {
             router = router.merge(extra);
         }
         Server::run_with_config(router, config)
