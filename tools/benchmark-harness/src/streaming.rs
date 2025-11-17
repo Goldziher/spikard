@@ -273,7 +273,7 @@ async fn websocket_worker(uri: String, payload: String, deadline: Instant) -> St
             stats.connections_established = 1;
 
             while Instant::now() < deadline {
-                if ws_stream.send(Message::Text(payload.clone())).await.is_err() {
+                if ws_stream.send(Message::Text(payload.clone().into())).await.is_err() {
                     stats.errors += 1;
                     break;
                 }

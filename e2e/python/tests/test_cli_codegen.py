@@ -329,7 +329,8 @@ def test_cli_generates_asyncapi_rust_handler() -> None:
         )
 
         contents = output.read_text()
-        assert "use spikard::{App, AppError, RequestContext, get};" in contents
+        assert "use spikard::{App, AppError, WebSocketHandler};" in contents
+        assert 'app.websocket("/chat", ChatWebSocketHandler);' in contents
 
 
 def test_cli_generates_asyncapi_php_handler() -> None:
