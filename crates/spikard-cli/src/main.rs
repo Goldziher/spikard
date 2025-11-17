@@ -1,10 +1,7 @@
-//! Spikard CLI
-//!
-//! Unified command-line interface for running Spikard applications
-//! across multiple language bindings (Rust, Python, Node.js, Ruby)
+//! Spikard CLI – user-facing code generation + testing helpers
 
 use anyhow::{Context, Result, bail};
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 use spikard_cli::codegen::{
     self, CodegenEngine, CodegenOutcome, CodegenRequest, CodegenTargetKind, DtoConfig, NodeDtoStyle, PythonDtoStyle,
     RubyDtoStyle, SchemaKind,
@@ -21,30 +18,15 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    /// Generate server code from OpenAPI schema
+    /// User-facing code generation entrypoints
     Generate {
-        /// Path to OpenAPI schema file (JSON or YAML)
-        schema: PathBuf,
-
-        /// Target language for code generation
-        #[arg(long, short = 'l', default_value = "python")]
-        lang: GenerateLanguage,
-
-        /// Output file path (prints to stdout if not specified)
-        #[arg(long, short = 'o')]
-        output: Option<PathBuf>,
-        /// DTO implementation for the selected language (defaults per language)
-        #[arg(long = "dto", value_enum)]
-        dto: Option<DtoArg>,
-    },
-    /// Generate test fixtures and apps from AsyncAPI schema
-    GenerateAsyncapi {
-        /// Path to AsyncAPI schema file (JSON or YAML)
-        schema: PathBuf,
-
-        /// What to generate
         #[command(subcommand)]
-        target: AsyncApiTarget,
+        target: GenerateCommand,
+    },
+    /// Test-fixture generation helpers (used by the internal e2e suite)
+    Testing {
+        #[command(subcommand)]
+        target: TestingCommand,
     },
     /// Validate an AsyncAPI specification
     ValidateAsyncapi {
@@ -56,47 +38,105 @@ enum Commands {
 }
 
 #[derive(Subcommand, Debug)]
-enum AsyncApiTarget {
+enum GenerateCommand {
+    /// Generate REST handlers from OpenAPI schemas
+    Openapi(OpenapiArgs),
+    /// Generate AsyncAPI handler scaffolding (SSE/WebSocket)
+    Asyncapi(AsyncapiHandlerArgs),
+}
+
+#[derive(Args, Debug)]
+struct OpenapiArgs {
+    /// Path to OpenAPI schema file (JSON or YAML)
+    schema: PathBuf,
+
+    /// Target language for code generation
+    #[arg(long, short = 'l', default_value = "python")]
+    lang: GenerateLanguage,
+
+    /// Output file path (prints to stdout if not specified)
+    #[arg(long, short = 'o')]
+    output: Option<PathBuf>,
+
+    /// DTO implementation for the selected language (defaults per language)
+    #[arg(long = "dto", value_enum)]
+    dto: Option<DtoArg>,
+}
+
+#[derive(Args, Debug)]
+struct AsyncapiHandlerArgs {
+    /// Path to AsyncAPI schema file (JSON or YAML)
+    schema: PathBuf,
+
+    /// Target language for handler scaffolding
+    #[arg(long, short = 'l')]
+    lang: GenerateLanguage,
+
+    /// Output file path
+    #[arg(long, short = 'o')]
+    output: PathBuf,
+}
+
+#[derive(Subcommand, Debug)]
+enum TestingCommand {
+    /// AsyncAPI-specific fixture + harness generators
+    Asyncapi {
+        #[command(subcommand)]
+        target: AsyncapiTestingTarget,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum AsyncapiTestingTarget {
     /// Generate test fixtures from message schemas
-    Fixtures {
-        /// Output directory for fixtures (default: testing_data/)
-        #[arg(long, short = 'o', default_value = "testing_data")]
-        output: PathBuf,
-    },
+    Fixtures(AsyncFixtureArgs),
     /// Generate test application for a specific language
-    TestApp {
-        /// Target language
-        #[arg(long, short = 'l')]
-        lang: GenerateLanguage,
-
-        /// Output file path
-        #[arg(long, short = 'o')]
-        output: PathBuf,
-    },
-    /// Generate handler scaffolding for a specific language
-    Handlers {
-        /// Target language
-        #[arg(long, short = 'l')]
-        lang: GenerateLanguage,
-
-        /// Output file path
-        #[arg(long, short = 'o')]
-        output: PathBuf,
-    },
+    TestApp(AsyncTestAppArgs),
     /// Generate everything (fixtures + test apps for all languages)
-    All {
-        /// Output directory (default: current directory)
-        #[arg(long, short = 'o', default_value = ".")]
-        output: PathBuf,
-    },
+    All(AsyncAllArgs),
+}
+
+#[derive(Args, Debug)]
+struct AsyncFixtureArgs {
+    /// Path to AsyncAPI schema file (JSON or YAML)
+    schema: PathBuf,
+    /// Output directory for fixtures (default: testing_data/)
+    #[arg(long, short = 'o', default_value = "testing_data")]
+    output: PathBuf,
+}
+
+#[derive(Args, Debug)]
+struct AsyncTestAppArgs {
+    /// Path to AsyncAPI schema file (JSON or YAML)
+    schema: PathBuf,
+    /// Target language
+    #[arg(long, short = 'l')]
+    lang: GenerateLanguage,
+    /// Output file path
+    #[arg(long, short = 'o')]
+    output: PathBuf,
+}
+
+#[derive(Args, Debug)]
+struct AsyncAllArgs {
+    /// Path to AsyncAPI schema file (JSON or YAML)
+    schema: PathBuf,
+    /// Output directory (default: current directory)
+    #[arg(long, short = 'o', default_value = ".")]
+    output: PathBuf,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum GenerateLanguage {
+    #[value(name = "python")]
     Python,
+    #[value(name = "typescript")]
     TypeScript,
+    #[value(name = "rust")]
     Rust,
+    #[value(name = "ruby")]
     Ruby,
+    #[value(name = "php")]
     Php,
 }
 
@@ -144,6 +184,121 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::Generate { target } => match target {
+            GenerateCommand::Openapi(args) => {
+                let mut dto_config = DtoConfig::default();
+                if let Some(arg) = args.dto {
+                    apply_dto_selection(&mut dto_config, args.lang, arg)?;
+                }
+                let request = CodegenRequest {
+                    schema_path: args.schema.clone(),
+                    schema_kind: SchemaKind::OpenApi,
+                    target: CodegenTargetKind::Server {
+                        language: args.lang.into(),
+                        output: args.output.clone(),
+                    },
+                    dto: Some(dto_config),
+                };
+
+                match CodegenEngine::execute(request).context("Failed to generate code from OpenAPI schema")? {
+                    CodegenOutcome::InMemory(code) => println!("{}", code),
+                    CodegenOutcome::Files(files) => {
+                        for asset in files {
+                            println!("✓ Generated {} at {}", asset.description, asset.path.display());
+                        }
+                    }
+                }
+            }
+            GenerateCommand::Asyncapi(args) => {
+                println!("Generating handler scaffolding from AsyncAPI schema...");
+                println!("  Input: {}", args.schema.display());
+                println!("  Language: {:?}", args.lang);
+                println!("  Output: {}", args.output.display());
+                let request = CodegenRequest {
+                    schema_path: args.schema.clone(),
+                    schema_kind: SchemaKind::AsyncApi,
+                    target: CodegenTargetKind::AsyncHandlers {
+                        language: args.lang.into(),
+                        output: args.output.clone(),
+                    },
+                    dto: None,
+                };
+                match CodegenEngine::execute(request)? {
+                    CodegenOutcome::Files(files) => {
+                        for asset in files {
+                            println!("✓ Generated {} at {}", asset.description, asset.path.display());
+                        }
+                    }
+                    CodegenOutcome::InMemory(_) => {}
+                }
+            }
+        },
+        Commands::Testing { target } => match target {
+            TestingCommand::Asyncapi { target } => match target {
+                AsyncapiTestingTarget::Fixtures(args) => {
+                    println!("Generating test fixtures from AsyncAPI schema...");
+                    println!("  Input: {}", args.schema.display());
+                    println!("  Output: {}", args.output.display());
+                    let request = CodegenRequest {
+                        schema_path: args.schema.clone(),
+                        schema_kind: SchemaKind::AsyncApi,
+                        target: CodegenTargetKind::AsyncFixtures {
+                            output: args.output.clone(),
+                        },
+                        dto: None,
+                    };
+                    let files = match CodegenEngine::execute(request)? {
+                        CodegenOutcome::Files(files) => files,
+                        CodegenOutcome::InMemory(_) => unreachable!("Fixtures always write files"),
+                    };
+                    println!("\n✓ Generated {} fixture files", files.len());
+                }
+                AsyncapiTestingTarget::TestApp(args) => {
+                    println!("Generating test application from AsyncAPI schema...");
+                    println!("  Input: {}", args.schema.display());
+                    println!("  Language: {:?}", args.lang);
+                    println!("  Output: {}", args.output.display());
+                    let request = CodegenRequest {
+                        schema_path: args.schema.clone(),
+                        schema_kind: SchemaKind::AsyncApi,
+                        target: CodegenTargetKind::AsyncTestApp {
+                            language: args.lang.into(),
+                            output: args.output.clone(),
+                        },
+                        dto: None,
+                    };
+                    match CodegenEngine::execute(request)? {
+                        CodegenOutcome::Files(files) => {
+                            for asset in files {
+                                println!("✓ Generated {} at {}", asset.description, asset.path.display());
+                            }
+                        }
+                        CodegenOutcome::InMemory(_) => {}
+                    }
+                }
+                AsyncapiTestingTarget::All(args) => {
+                    println!("Generating all assets from AsyncAPI schema...");
+                    println!("  Input: {}", args.schema.display());
+                    println!("  Output directory: {}", args.output.display());
+                    let request = CodegenRequest {
+                        schema_path: args.schema.clone(),
+                        schema_kind: SchemaKind::AsyncApi,
+                        target: CodegenTargetKind::AsyncAll {
+                            output: args.output.clone(),
+                        },
+                        dto: None,
+                    };
+                    let files = match CodegenEngine::execute(request)? {
+                        CodegenOutcome::Files(files) => files,
+                        CodegenOutcome::InMemory(_) => unreachable!("AsyncAPI bundle writes files"),
+                    };
+                    println!("\n✓ Generated {} assets:", files.len());
+                    for asset in files {
+                        println!("  - {} -> {}", asset.description, asset.path.display());
+                    }
+                }
+            },
+        },
         Commands::Features => {
             println!("Spikard - High-performance HTTP framework\n");
             println!("Rust Core: ✓");
@@ -155,35 +310,6 @@ fn main() -> Result<()> {
             println!("  Python: python server.py");
             println!("  Node:   node server.js");
             println!("\nDocumentation: https://spikard.dev");
-        }
-        Commands::Generate {
-            schema,
-            lang,
-            output,
-            dto,
-        } => {
-            let mut dto_config = DtoConfig::default();
-            if let Some(arg) = dto {
-                apply_dto_selection(&mut dto_config, lang, arg)?;
-            }
-            let request = CodegenRequest {
-                schema_path: schema.clone(),
-                schema_kind: SchemaKind::OpenApi,
-                target: CodegenTargetKind::Server {
-                    language: lang.into(),
-                    output: output.clone(),
-                },
-                dto: Some(dto_config),
-            };
-
-            match CodegenEngine::execute(request).context("Failed to generate code from OpenAPI schema")? {
-                CodegenOutcome::InMemory(code) => println!("{}", code),
-                CodegenOutcome::Files(files) => {
-                    for asset in files {
-                        println!("✓ Generated {} at {}", asset.description, asset.path.display());
-                    }
-                }
-            }
         }
         Commands::ValidateAsyncapi { schema } => {
             // Parse and validate AsyncAPI spec
@@ -204,89 +330,6 @@ fn main() -> Result<()> {
 
             println!("\nSchema validated successfully!");
         }
-        Commands::GenerateAsyncapi { schema, target } => match target {
-            AsyncApiTarget::Fixtures { output } => {
-                println!("Generating test fixtures from AsyncAPI schema...");
-                println!("  Input: {}", schema.display());
-                println!("  Output: {}", output.display());
-                let request = CodegenRequest {
-                    schema_path: schema.clone(),
-                    schema_kind: SchemaKind::AsyncApi,
-                    target: CodegenTargetKind::AsyncFixtures { output: output.clone() },
-                    dto: None,
-                };
-                let files = match CodegenEngine::execute(request)? {
-                    CodegenOutcome::Files(files) => files,
-                    CodegenOutcome::InMemory(_) => unreachable!("Fixtures always write files"),
-                };
-                println!("\n✓ Generated {} fixture files", files.len());
-            }
-            AsyncApiTarget::TestApp { lang, output } => {
-                println!("Generating test application from AsyncAPI schema...");
-                println!("  Input: {}", schema.display());
-                println!("  Language: {:?}", lang);
-                println!("  Output: {}", output.display());
-                let request = CodegenRequest {
-                    schema_path: schema.clone(),
-                    schema_kind: SchemaKind::AsyncApi,
-                    target: CodegenTargetKind::AsyncTestApp {
-                        language: lang.into(),
-                        output: output.clone(),
-                    },
-                    dto: None,
-                };
-                match CodegenEngine::execute(request)? {
-                    CodegenOutcome::Files(files) => {
-                        for asset in files {
-                            println!("✓ Generated {} at {}", asset.description, asset.path.display());
-                        }
-                    }
-                    CodegenOutcome::InMemory(_) => {}
-                }
-            }
-            AsyncApiTarget::Handlers { lang, output } => {
-                println!("Generating handler scaffolding from AsyncAPI schema...");
-                println!("  Input: {}", schema.display());
-                println!("  Language: {:?}", lang);
-                println!("  Output: {}", output.display());
-                let request = CodegenRequest {
-                    schema_path: schema.clone(),
-                    schema_kind: SchemaKind::AsyncApi,
-                    target: CodegenTargetKind::AsyncHandlers {
-                        language: lang.into(),
-                        output: output.clone(),
-                    },
-                    dto: None,
-                };
-                match CodegenEngine::execute(request)? {
-                    CodegenOutcome::Files(files) => {
-                        for asset in files {
-                            println!("✓ Generated {} at {}", asset.description, asset.path.display());
-                        }
-                    }
-                    CodegenOutcome::InMemory(_) => {}
-                }
-            }
-            AsyncApiTarget::All { output } => {
-                println!("Generating all assets from AsyncAPI schema...");
-                println!("  Input: {}", schema.display());
-                println!("  Output directory: {}", output.display());
-                let request = CodegenRequest {
-                    schema_path: schema.clone(),
-                    schema_kind: SchemaKind::AsyncApi,
-                    target: CodegenTargetKind::AsyncAll { output: output.clone() },
-                    dto: None,
-                };
-                let files = match CodegenEngine::execute(request)? {
-                    CodegenOutcome::Files(files) => files,
-                    CodegenOutcome::InMemory(_) => unreachable!("AsyncAPI bundle writes files"),
-                };
-                println!("\n✓ Generated {} assets:", files.len());
-                for asset in files {
-                    println!("  - {} -> {}", asset.description, asset.path.display());
-                }
-            }
-        },
     }
 
     Ok(())

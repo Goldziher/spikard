@@ -51,13 +51,14 @@ A multi-language package built with Rust, targeting Python, Node.js, Ruby, and W
 - [x] Ruby: Typed config forwarding with Magnus FFI
 
 ### CLI & Code Generation
-- [x] OpenAPI to handler generation
+- [x] OpenAPI to handler generation via `spikard generate openapi`
 - [x] Multi-language code generation (Python, Node, Ruby, Rust)
 - [x] Fixture-based testing
-- [x] AsyncAPI streaming fixtures + language test apps (Python, Node, Ruby)
+- [x] AsyncAPI streaming fixtures + language test apps (Python, Node, Ruby) via `spikard testing asyncapi`
 - [x] AsyncAPI handler scaffolding (Python, Node, Ruby)
 - [ ] AsyncAPI-first handler generation (WebSocket/SSE server scaffolding)
 - [x] CLI smoke tests that exercise DTO variants (Python dataclass/msgspec + Node/Ruby generators)
+- [x] Structured DTO defaults documented in [`docs/design/structured-dtos.md`](docs/design/structured-dtos.md)
 
 ### Testing & Benchmarking
 - [x] Fixture-driven integration tests (423 REST fixtures + streaming/SSE/WebSocket coverage)

@@ -7,6 +7,7 @@ mod php;
 mod python;
 mod ruby;
 mod rust;
+mod schema_index;
 mod typescript;
 
 pub use asyncapi::{
@@ -20,6 +21,7 @@ pub use php::PhpGenerator;
 pub use python::PythonGenerator;
 pub use ruby::RubyGenerator;
 pub use rust::RustGenerator;
+pub use schema_index::SchemaRegistry;
 pub use typescript::TypeScriptGenerator;
 
 use anyhow::Result;

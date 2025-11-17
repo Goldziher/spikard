@@ -10,8 +10,10 @@ pub fn init() {
     console_error_panic_hook::set_once();
 }
 
-/// Process using spikard
+/// Placeholder entry-point for the WASM bindings.
 #[wasm_bindgen]
 pub fn process() -> Result<(), JsValue> {
-    spikard::process().map_err(|e| JsValue::from_str(&format!("Spikard error: {}", e)))
+    Err(JsValue::from_str(
+        "Spikard WASM bindings are not ready for the new App API",
+    ))
 }

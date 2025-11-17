@@ -169,6 +169,7 @@ def test_cli_generates_python_dataclass_dto() -> None:
         run_cli(
             [
                 "generate",
+                "openapi",
                 str(spec_path),
                 "--lang",
                 "python",
@@ -193,6 +194,7 @@ def test_cli_generates_python_msgspec_dto() -> None:
         run_cli(
             [
                 "generate",
+                "openapi",
                 str(spec_path),
                 "--lang",
                 "python",
@@ -207,6 +209,55 @@ def test_cli_generates_python_msgspec_dto() -> None:
         import_generated_module(output, stub_root, "HelloRequest")
 
 
+def test_cli_generates_typescript_zod_dto() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp = Path(tmpdir)
+        spec_path = tmp / "openapi.yaml"
+        output = tmp / "app.ts"
+        spec_path.write_text(OPENAPI_SPEC)
+
+        run_cli(
+            [
+                "generate",
+                "openapi",
+                str(spec_path),
+                "--lang",
+                "typescript",
+                "--dto",
+                "zod",
+                "--output",
+                str(output),
+            ]
+        )
+
+        contents = output.read_text()
+        assert 'import { z } from "zod"' in contents
+
+
+def test_cli_generates_ruby_dry_struct_dto() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp = Path(tmpdir)
+        spec_path = tmp / "openapi.yaml"
+        output = tmp / "app.rb"
+        spec_path.write_text(OPENAPI_SPEC)
+
+        run_cli(
+            [
+                "generate",
+                "openapi",
+                str(spec_path),
+                "--lang",
+                "ruby",
+                "--dto",
+                "dry-schema",
+                "--output",
+                str(output),
+            ]
+        )
+
+        subprocess.run(["ruby", "-c", str(output)], check=True)
+
+
 def test_cli_generates_asyncapi_python_app() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp = Path(tmpdir)
@@ -214,22 +265,23 @@ def test_cli_generates_asyncapi_python_app() -> None:
         output = tmp / "ws_app.py"
         spec_path.write_text(ASYNCAPI_SPEC)
 
-    run_cli(
-        [
-            "generate-asyncapi",
-            str(spec_path),
-            "test-app",
-            "--lang",
-            "python",
-            "--output",
-            str(output),
-        ]
-    )
+        run_cli(
+            [
+                "testing",
+                "asyncapi",
+                "test-app",
+                str(spec_path),
+                "--lang",
+                "python",
+                "--output",
+                str(output),
+            ]
+        )
 
-    stub_root = create_python_stub(tmp)
-    env = os.environ.copy()
-    env["PYTHONPATH"] = f"{stub_root}:{env.get('PYTHONPATH', '')}"
-    subprocess.run(["python3", "-m", "py_compile", str(output)], check=True, env=env)
+        stub_root = create_python_stub(tmp)
+        env = os.environ.copy()
+        env["PYTHONPATH"] = f"{stub_root}:{env.get('PYTHONPATH', '')}"
+        subprocess.run(["python3", "-m", "py_compile", str(output)], check=True, env=env)
 
 
 def test_cli_generates_asyncapi_python_handler() -> None:
@@ -241,9 +293,9 @@ def test_cli_generates_asyncapi_python_handler() -> None:
 
         run_cli(
             [
-                "generate-asyncapi",
+                "generate",
+                "asyncapi",
                 str(spec_path),
-                "handlers",
                 "--lang",
                 "python",
                 "--output",
