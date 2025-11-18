@@ -1,0 +1,5 @@
+target :signatures do
+  signature "sig"
+  library "json"
+  library "pathname"
+end

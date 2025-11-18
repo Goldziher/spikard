@@ -77,13 +77,7 @@ module Spikard
     attr_accessor location: String?
     attr_accessor name: String?
 
-    def initialize: (
-      type: String,
-      ?scheme: String?,
-      ?bearer_format: String?,
-      ?location: String?,
-      ?name: String?
-    ) -> void
+    def initialize: (type: String, ?scheme: String?, ?bearer_format: String?, ?location: String?, ?name: String?) -> void
   end
 
   class OpenApiConfig
@@ -160,7 +154,7 @@ module Spikard
       ?headers: Hash[untyped, untyped]?,
       ?content_type: String?
     ) -> void
-    def status: Integer
+    def status: () -> Integer
     def status_code=: (Integer) -> Integer
     def headers=: (Hash[untyped, untyped]?) -> Hash[String, String]
     def set_header: (String, String) -> String
@@ -196,7 +190,7 @@ module Spikard
   class App
     include LifecycleHooks
 
-    attr_reader routes: Array[RouteEntry]
+    attr_reader routes: Array[untyped]
 
     def initialize: () -> void
     def register_route: (String, String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
@@ -208,8 +202,6 @@ module Spikard
     def options: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
     def head: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
     def trace: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
-    def route_metadata: () -> Array[Hash[Symbol, untyped]]
-    def handler_map: () -> Hash[Symbol, Proc]
     def websocket: (String, ?handler_name: String?, **untyped) { () -> WebSocketHandler } -> Proc
     def sse: (String, ?handler_name: String?, **untyped) { () -> SseEventProducer } -> Proc
     def websocket_handlers: () -> Hash[String, Proc]
@@ -277,7 +269,7 @@ module Spikard
       attr_reader body: String?
 
       def initialize: (Hash[Symbol, untyped]) -> void
-      def status: Integer
+      def status: () -> Integer
       def body_bytes: () -> String
       def body_text: () -> String?
       def text: () -> String?
