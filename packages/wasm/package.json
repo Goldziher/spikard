@@ -49,10 +49,10 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.6",
 		"@types/node": "^24.10.1",
-		"@vitest/coverage-v8": "^4.0.9",
+		"@vitest/coverage-v8": "^4.0.10",
 		"tsup": "^8.5.1",
 		"typescript": "^5.9.3",
-		"vitest": "^4.0.9"
+		"vitest": "^4.0.10"
 	},
 	"dependencies": {
 		"zod": "^4.1.12"

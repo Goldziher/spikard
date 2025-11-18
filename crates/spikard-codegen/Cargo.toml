@@ -22,7 +22,7 @@ handlebars = "6.3"
 tera = "1.20"
 
 # JSON Schema
-jsonschema = "0.35"
+jsonschema = "0.36"
 schemars = "1.1"
 
 # Utilities
