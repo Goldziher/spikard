@@ -3,7 +3,14 @@
  */
 
 import type { HandlerFunction, RouteMetadata, SpikardApp } from "./index";
+import type { Request } from "./request";
 import { runServer, type ServerOptions } from "./server";
+import type { MaybePromise, StructuredHandlerResponse } from "./types";
+
+/**
+ * Payload type provided to lifecycle hooks
+ */
+export type LifecycleHookPayload = Request | StructuredHandlerResponse;
 
 /**
  * Lifecycle hook function type
@@ -12,7 +19,7 @@ import { runServer, type ServerOptions } from "./server";
  * - The (possibly modified) request to continue processing
  * - A Response object to short-circuit the request pipeline
  */
-export type LifecycleHookFunction = (req: any) => Promise<any>;
+export type LifecycleHookFunction = (payload: LifecycleHookPayload) => MaybePromise<LifecycleHookPayload>;
 
 /**
  * Container for lifecycle hooks

@@ -3,6 +3,8 @@
  */
 
 import type { CorsConfig, JsonSchema, RouteMetadata } from "./index";
+import type { Request } from "./request";
+import type { HandlerResult, JsonValue, MaybePromise } from "./types";
 
 /**
  * Route configuration options
@@ -35,7 +37,9 @@ export interface RouteOptions {
 	cors?: CorsConfig;
 }
 
-type RouteHandler = (...args: unknown[]) => unknown;
+type RouteArgument = Request | JsonValue | string | number | boolean | null | undefined;
+
+type RouteHandler = (...args: RouteArgument[]) => MaybePromise<HandlerResult>;
 
 /**
  * Route decorator for defining HTTP routes
@@ -82,7 +86,10 @@ export function route(path: string, options: RouteOptions = {}): (handler: Route
 		};
 
 		// Store metadata on the function
-		(handler as any).__route_metadata__ = metadata;
+		interface AnnotatedHandler extends RouteHandler {
+			__route_metadata__?: RouteMetadata;
+		}
+		(handler as AnnotatedHandler).__route_metadata__ = metadata;
 
 		return handler;
 	};

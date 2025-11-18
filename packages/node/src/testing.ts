@@ -7,7 +7,9 @@ import {
 	type TestResponse as NativeTestResponse,
 	type WebSocketTestConnection,
 } from "../index.js";
-import type { SpikardApp } from "./index";
+import type { ServerConfig } from "./config";
+import type { HandlerFunction, SpikardApp } from "./index";
+import type { JsonValue } from "./types";
 
 /**
  * HTTP response from test client
@@ -23,13 +25,61 @@ interface MultipartFile {
 
 export interface RequestOptions {
 	headers?: Record<string, string>;
-	json?: any;
-	form?: Record<string, any>;
+	json?: JsonValue;
+	form?: Record<string, JsonValue>;
 	multipart?: {
-		fields?: Record<string, any>;
+		fields?: Record<string, JsonValue>;
 		files?: MultipartFile[];
 	};
 }
+
+type MultipartPayload = {
+	__spikard_multipart__: {
+		fields: Record<string, JsonValue>;
+		files: MultipartFile[];
+	};
+};
+
+type FormPayload = {
+	__spikard_form__: Record<string, JsonValue>;
+};
+
+type NativeBody = MultipartPayload | FormPayload | JsonValue | null;
+
+interface NativeClient {
+	get(path: string, headers: Record<string, string> | null): Promise<TestResponse>;
+	post(path: string, headers: Record<string, string> | null, body: NativeBody): Promise<TestResponse>;
+	put(path: string, headers: Record<string, string> | null, body: NativeBody): Promise<TestResponse>;
+	delete(path: string, headers: Record<string, string> | null): Promise<TestResponse>;
+	patch(path: string, headers: Record<string, string> | null, body: NativeBody): Promise<TestResponse>;
+	head(path: string, headers: Record<string, string> | null): Promise<TestResponse>;
+	options(path: string, headers: Record<string, string> | null): Promise<TestResponse>;
+	trace(path: string, headers: Record<string, string> | null): Promise<TestResponse>;
+	websocket(path: string): Promise<WebSocketTestConnection>;
+}
+
+type NativeClientConstructor = new (
+	routesJson: string,
+	handlers: Record<string, HandlerFunction>,
+	config: ServerConfig | null,
+) => NativeClient;
+
+type NativeClientFactory = (
+	routesJson: string,
+	handlers: Record<string, HandlerFunction>,
+	config: ServerConfig | null,
+) => NativeClient;
+
+const defaultNativeClientFactory: NativeClientFactory = (routesJson, handlers, config) => {
+	const Ctor = NativeTestClient as NativeClientConstructor;
+	return new Ctor(routesJson, handlers, config);
+};
+
+let nativeClientFactory: NativeClientFactory = defaultNativeClientFactory;
+
+export const __setNativeClientFactory = (factory?: NativeClientFactory): void => {
+	nativeClientFactory = factory ?? defaultNativeClientFactory;
+};
 
 /**
  * Test client for making HTTP requests to Spikard applications
@@ -61,7 +111,7 @@ export interface RequestOptions {
  * ```
  */
 export class TestClient {
-	private nativeClient: NativeTestClient;
+	private nativeClient: NativeClient;
 
 	/**
 	 * Create a new test client
@@ -75,9 +125,9 @@ export class TestClient {
 		this.app = app;
 		const routesJson = JSON.stringify(app.routes);
 		const handlersMap = app.handlers || {};
-		const config = app.config || null;
+		const config = app.config ?? null;
 
-		this.nativeClient = new NativeTestClient(routesJson, handlersMap, config);
+		this.nativeClient = nativeClientFactory(routesJson, handlersMap, config);
 	}
 
 	/**
@@ -175,7 +225,7 @@ export class TestClient {
 		return options.headers;
 	}
 
-	private buildBody(options?: RequestOptions): any | null {
+	private buildBody(options?: RequestOptions): NativeBody {
 		if (!options) {
 			return null;
 		}

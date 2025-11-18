@@ -2,75 +2,77 @@
  * Unit tests for TestClient
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { SpikardApp } from "../index";
-import { TestClient } from "../testing";
+import { __setNativeClientFactory, TestClient } from "../testing";
+import type { JsonValue } from "../types";
 
-// Mock the native TestClient
-vi.mock("../index.js", () => ({
-	TestClient: class MockNativeTestClient {
-		constructor(
-			public routesJson: string,
-			public handlersMap: Record<string, (...args: unknown[]) => unknown>,
-		) {}
+type NativeFactory = Parameters<typeof __setNativeClientFactory>[0];
 
-		async get(path: string, headers: Record<string, string> | null) {
-			return {
-				statusCode: 200,
-				headers: () => ({}),
-				text: () => "{}",
-				json: () => ({}),
-				bytes: () => Buffer.from(""),
-			};
-		}
+class StubResponse {
+	constructor(private readonly payload: JsonValue | null) {}
 
-		async post(path: string, headers: Record<string, string> | null, body: any) {
-			return {
-				statusCode: 200,
-				headers: () => ({}),
-				text: () => JSON.stringify(body),
-				json: () => body,
-				bytes: () => Buffer.from(JSON.stringify(body)),
-			};
-		}
+	statusCode = 200;
 
-		async put(path: string, headers: Record<string, string> | null, body: any) {
-			return this.post(path, headers, body);
-		}
+	headers() {
+		return {};
+	}
 
-		async delete(path: string, headers: Record<string, string> | null) {
-			return this.get(path, headers);
-		}
+	text() {
+		return this.payload == null ? "" : JSON.stringify(this.payload);
+	}
 
-		async patch(path: string, headers: Record<string, string> | null, body: any) {
-			return this.post(path, headers, body);
-		}
+	json() {
+		return this.payload;
+	}
 
-		async head(path: string, headers: Record<string, string> | null) {
-			return {
-				statusCode: 200,
-				headers: () => ({ "content-length": "0" }),
-				text: () => "",
-				json: () => null,
-				bytes: () => Buffer.from(""),
-			};
-		}
+	bytes() {
+		const content = this.text();
+		return Buffer.from(content);
+	}
+}
 
-		async options(path: string, headers: Record<string, string> | null) {
-			return this.get(path, headers);
-		}
+class MockNativeClient {
+	async get(_path: string, _headers: Record<string, string> | null) {
+		return new StubResponse({});
+	}
 
-		async trace(path: string, headers: Record<string, string> | null) {
-			return this.get(path, headers);
-		}
-	},
-}));
+	async post(_path: string, _headers: Record<string, string> | null, body: JsonValue | null) {
+		return new StubResponse(body);
+	}
+
+	async put(path: string, headers: Record<string, string> | null, body: JsonValue | null) {
+		return this.post(path, headers, body);
+	}
+
+	async delete(path: string, headers: Record<string, string> | null) {
+		return this.get(path, headers);
+	}
+
+	async patch(path: string, headers: Record<string, string> | null, body: JsonValue | null) {
+		return this.post(path, headers, body);
+	}
+
+	async head(_path: string, _headers: Record<string, string> | null) {
+		return new StubResponse(null);
+	}
+
+	async options(path: string, headers: Record<string, string> | null) {
+		return this.get(path, headers);
+	}
+
+	async trace(path: string, headers: Record<string, string> | null) {
+		return this.get(path, headers);
+	}
+}
 
 describe("TestClient", () => {
 	let app: SpikardApp;
 	let client: TestClient;
+	const mockFactory: NativeFactory = () => new MockNativeClient();
 
 	beforeEach(() => {
+		__setNativeClientFactory(mockFactory);
 		app = {
 			routes: [
 				{
@@ -87,15 +89,19 @@ describe("TestClient", () => {
 		client = new TestClient(app);
 	});
 
+	afterEach(() => {
+		__setNativeClientFactory();
+	});
+
 	describe("constructor", () => {
 		it("should create client with valid app", () => {
 			expect(client).toBeInstanceOf(TestClient);
 		});
 
 		it("should throw error for invalid app", () => {
-			expect(() => new TestClient(null as any)).toThrow("Invalid Spikard app");
-			expect(() => new TestClient({} as any)).toThrow("Invalid Spikard app");
-			expect(() => new TestClient({ routes: "not-an-array" } as any)).toThrow("Invalid Spikard app");
+			expect(() => new TestClient(null as never as SpikardApp)).toThrow("Invalid Spikard app");
+			expect(() => new TestClient({} as never as SpikardApp)).toThrow("Invalid Spikard app");
+			expect(() => new TestClient({ routes: "not-an-array" } as never as SpikardApp)).toThrow("Invalid Spikard app");
 		});
 	});
 

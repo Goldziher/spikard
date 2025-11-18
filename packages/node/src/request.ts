@@ -1,3 +1,5 @@
+import type { JsonValue } from "./types";
+
 /**
  * Request type for Spikard handlers
  *
@@ -43,7 +45,7 @@ export interface Request {
 	 * @returns Parsed JSON data
 	 * @throws Error if body is not valid JSON
 	 */
-	json<T = unknown>(): T;
+	json<T extends JsonValue = JsonValue>(): T;
 
 	/**
 	 * Parse request body as form data

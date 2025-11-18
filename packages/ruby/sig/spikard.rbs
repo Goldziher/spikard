@@ -1,0 +1,344 @@
+module Spikard
+  VERSION: String
+
+  module Background
+    def self.run: () { () -> void } -> void
+  end
+
+  class CompressionConfig
+    attr_accessor gzip: bool
+    attr_accessor brotli: bool
+    attr_accessor min_size: Integer
+    attr_accessor quality: Integer
+
+    def initialize: (?gzip: bool, ?brotli: bool, ?min_size: Integer, ?quality: Integer) -> void
+  end
+
+  class RateLimitConfig
+    attr_accessor per_second: Integer
+    attr_accessor burst: Integer
+    attr_accessor ip_based: bool
+
+    def initialize: (per_second: Integer, burst: Integer, ?ip_based: bool) -> void
+  end
+
+  class JwtConfig
+    attr_accessor secret: String
+    attr_accessor algorithm: String
+    attr_accessor audience: Array[String]?
+    attr_accessor issuer: String?
+    attr_accessor leeway: Integer
+
+    def initialize: (secret: String, ?algorithm: String, ?audience: Array[String]?, ?issuer: String?, ?leeway: Integer) -> void
+  end
+
+  class ApiKeyConfig
+    attr_accessor keys: Array[String]
+    attr_accessor header_name: String
+
+    def initialize: (keys: Array[String], ?header_name: String) -> void
+  end
+
+  class StaticFilesConfig
+    attr_accessor directory: String
+    attr_accessor route_prefix: String
+    attr_accessor index_file: bool
+    attr_accessor cache_control: String?
+
+    def initialize: (directory: String, route_prefix: String, ?index_file: bool, ?cache_control: String?) -> void
+  end
+
+  class ContactInfo
+    attr_accessor name: String?
+    attr_accessor email: String?
+    attr_accessor url: String?
+
+    def initialize: (?name: String?, ?email: String?, ?url: String?) -> void
+  end
+
+  class LicenseInfo
+    attr_accessor name: String
+    attr_accessor url: String?
+
+    def initialize: (name: String, ?url: String?) -> void
+  end
+
+  class ServerInfo
+    attr_accessor url: String
+    attr_accessor description: String?
+
+    def initialize: (url: String, ?description: String?) -> void
+  end
+
+  class SecuritySchemeInfo
+    attr_accessor type: String
+    attr_accessor scheme: String?
+    attr_accessor bearer_format: String?
+    attr_accessor location: String?
+    attr_accessor name: String?
+
+    def initialize: (
+      type: String,
+      ?scheme: String?,
+      ?bearer_format: String?,
+      ?location: String?,
+      ?name: String?
+    ) -> void
+  end
+
+  class OpenApiConfig
+    attr_accessor enabled: bool
+    attr_accessor title: String
+    attr_accessor version: String
+    attr_accessor description: String?
+    attr_accessor swagger_ui_path: String
+    attr_accessor redoc_path: String
+    attr_accessor openapi_json_path: String
+    attr_accessor contact: ContactInfo?
+    attr_accessor license: LicenseInfo?
+    attr_accessor servers: Array[ServerInfo]
+    attr_accessor security_schemes: Hash[String, SecuritySchemeInfo]
+
+    def initialize: (
+      ?enabled: bool,
+      ?title: String,
+      ?version: String,
+      ?description: String?,
+      ?swagger_ui_path: String,
+      ?redoc_path: String,
+      ?openapi_json_path: String,
+      ?contact: ContactInfo?,
+      ?license: LicenseInfo?,
+      ?servers: Array[ServerInfo],
+      ?security_schemes: Hash[String, SecuritySchemeInfo]
+    ) -> void
+  end
+
+  class ServerConfig
+    attr_accessor host: String
+    attr_accessor port: Integer
+    attr_accessor workers: Integer
+    attr_accessor enable_request_id: bool
+    attr_accessor max_body_size: Integer?
+    attr_accessor request_timeout: Integer?
+    attr_accessor compression: CompressionConfig
+    attr_accessor rate_limit: RateLimitConfig?
+    attr_accessor jwt_auth: JwtConfig?
+    attr_accessor api_key_auth: ApiKeyConfig?
+    attr_accessor static_files: Array[StaticFilesConfig]
+    attr_accessor graceful_shutdown: bool
+    attr_accessor shutdown_timeout: Integer
+    attr_accessor openapi: OpenApiConfig?
+
+    def initialize: (
+      ?host: String,
+      ?port: Integer,
+      ?workers: Integer,
+      ?enable_request_id: bool,
+      ?max_body_size: Integer?,
+      ?request_timeout: Integer?,
+      ?compression: CompressionConfig,
+      ?rate_limit: RateLimitConfig?,
+      ?jwt_auth: JwtConfig?,
+      ?api_key_auth: ApiKeyConfig?,
+      ?static_files: Array[StaticFilesConfig],
+      ?graceful_shutdown: bool,
+      ?shutdown_timeout: Integer,
+      ?openapi: OpenApiConfig?
+    ) -> void
+  end
+
+  class Response
+    attr_accessor content: untyped
+    attr_reader status_code: Integer
+    attr_reader headers: Hash[String, String]
+
+    def initialize: (
+      ?content: untyped,
+      ?body: untyped,
+      ?status_code: Integer,
+      ?headers: Hash[untyped, untyped]?,
+      ?content_type: String?
+    ) -> void
+    def status: Integer
+    def status_code=: (Integer) -> Integer
+    def headers=: (Hash[untyped, untyped]?) -> Hash[String, String]
+    def set_header: (String, String) -> String
+    def set_cookie: (
+      String,
+      String,
+      ?max_age: Integer?,
+      ?domain: String?,
+      ?path: String?,
+      ?secure: bool?,
+      ?httponly: bool?,
+      ?samesite: String?
+    ) -> String
+  end
+
+  class StreamingResponse
+    attr_reader stream: Enumerable[untyped]
+    attr_reader status_code: Integer
+    attr_reader headers: Hash[String, String]
+
+    def initialize: (Enumerable[untyped], ?status_code: Integer, ?headers: Hash[untyped, untyped]?) -> void
+  end
+
+  module LifecycleHooks
+    def on_request: () { (untyped) -> untyped } -> Proc
+    def pre_validation: () { (untyped) -> untyped } -> Proc
+    def pre_handler: () { (untyped) -> untyped } -> Proc
+    def on_response: () { (untyped) -> untyped } -> Proc
+    def on_error: () { (untyped) -> untyped } -> Proc
+    def lifecycle_hooks: () -> Hash[Symbol, Array[Proc]]
+  end
+
+  class App
+    include LifecycleHooks
+
+    attr_reader routes: Array[RouteEntry]
+
+    def initialize: () -> void
+    def register_route: (String, String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
+    def get: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
+    def post: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
+    def put: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
+    def patch: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
+    def delete: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
+    def options: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
+    def head: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
+    def trace: (String, ?handler_name: String?, **untyped) { (untyped) -> untyped } -> Proc
+    def route_metadata: () -> Array[Hash[Symbol, untyped]]
+    def handler_map: () -> Hash[Symbol, Proc]
+    def websocket: (String, ?handler_name: String?, **untyped) { () -> WebSocketHandler } -> Proc
+    def sse: (String, ?handler_name: String?, **untyped) { () -> SseEventProducer } -> Proc
+    def websocket_handlers: () -> Hash[String, Proc]
+    def sse_producers: () -> Hash[String, Proc]
+    def run: (?config: ServerConfig | Hash[Symbol, untyped]?, ?host: String?, ?port: Integer?) -> void
+  end
+
+  class WebSocketHandler
+    def handle_message: (Hash[untyped, untyped]) -> Hash[untyped, untyped]?
+    def on_connect: () -> void
+    def on_disconnect: () -> void
+  end
+
+  class SseEvent
+    attr_accessor data: Hash[untyped, untyped]
+    attr_accessor event_type: String?
+    attr_accessor id: String?
+    attr_accessor retry_ms: Integer?
+
+    def initialize: (data: Hash[untyped, untyped], ?event_type: String?, ?id: String?, ?retry_ms: Integer?) -> void
+    def to_h: () -> Hash[Symbol, untyped]
+  end
+
+  class SseEventProducer
+    def next_event: () -> SseEvent?
+    def on_connect: () -> void
+    def on_disconnect: () -> void
+  end
+
+  module Schema
+    def self.extract_json_schema: (untyped) -> Hash[untyped, untyped]?
+  end
+
+  module Native
+    def self.run_server: (
+      String,
+      Hash[Symbol, Proc],
+      ServerConfig,
+      Hash[Symbol, Array[Proc]],
+      Hash[String, Proc],
+      Hash[String, Proc]
+    ) -> void
+
+    class TestClient
+      def initialize: (
+        String,
+        Hash[Symbol, Proc],
+        ServerConfig,
+        Hash[String, Proc],
+        Hash[String, Proc]
+      ) -> void
+      def request: (String, String, Hash[Symbol, untyped]) -> Hash[Symbol, untyped]
+      def websocket: (String) -> untyped
+      def sse: (String) -> untyped
+      def close: () -> void
+    end
+  end
+
+  module Testing
+    def self.create_test_client: (App, ?config: ServerConfig?) -> Testing::TestClient
+
+    class Response
+      attr_reader status_code: Integer
+      attr_reader headers: Hash[String, String]
+      attr_reader body: String?
+
+      def initialize: (Hash[Symbol, untyped]) -> void
+      def status: Integer
+      def body_bytes: () -> String
+      def body_text: () -> String?
+      def text: () -> String?
+      def json: () -> untyped
+      def bytes: () -> Array[Integer]
+    end
+
+    class TestClient
+      def initialize: (Spikard::Native::TestClient) -> void
+      def self.new: (App | Spikard::Native::TestClient, ?config: ServerConfig?) -> TestClient
+      def request: (String, String, **Hash[Symbol, untyped]) -> Response
+      def websocket: (String) -> WebSocketTestConnection
+      def sse: (String) -> SseStream
+      def close: () -> void
+      def get: (String, **Hash[Symbol, untyped]) -> Response
+      def post: (String, **Hash[Symbol, untyped]) -> Response
+      def put: (String, **Hash[Symbol, untyped]) -> Response
+      def patch: (String, **Hash[Symbol, untyped]) -> Response
+      def delete: (String, **Hash[Symbol, untyped]) -> Response
+      def head: (String, **Hash[Symbol, untyped]) -> Response
+      def options: (String, **Hash[Symbol, untyped]) -> Response
+      def trace: (String, **Hash[Symbol, untyped]) -> Response
+    end
+
+    class WebSocketTestConnection
+      def initialize: (untyped) -> void
+      def send_text: (untyped) -> void
+      def send_json: (untyped) -> void
+      def receive_text: () -> untyped
+      def receive_json: () -> untyped
+      def receive_bytes: () -> untyped
+      def receive_message: () -> WebSocketMessage
+      def close: () -> void
+    end
+
+    class WebSocketMessage
+      def initialize: (untyped) -> void
+      def as_text: () -> untyped
+      def as_json: () -> untyped
+      def as_binary: () -> untyped
+      def close?: () -> bool
+    end
+
+    class SseStream
+      def initialize: (untyped) -> void
+      def body: () -> String?
+      def events: () -> Array[InlineSseEvent]
+      def events_as_json: () -> Array[untyped]
+    end
+
+    class SseEvent
+      def initialize: (untyped) -> void
+      def data: () -> untyped
+      def as_json: () -> untyped
+    end
+
+    class InlineSseEvent
+      attr_reader data: String
+
+      def initialize: (String) -> void
+      def as_json: () -> untyped
+    end
+  end
+end

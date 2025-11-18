@@ -28,6 +28,7 @@ Gem::Specification.new do |spec|
   spec.files = Dir[
     'lib/**/*.rb',
     'ext/**/*.{rs,toml,lock,rb}',
+    'sig/**/*.rbs',
     'LICENSE',
     'README.md'
   ]
