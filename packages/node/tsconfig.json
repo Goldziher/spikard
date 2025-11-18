@@ -3,7 +3,10 @@
 	"compilerOptions": {
 		"rootDir": "./src",
 		"outDir": "./dist",
-		"lib": ["ES2022"],
+		"target": "ESNext",
+		"module": "ESNext",
+		"lib": ["ESNext"],
+		"strict": true,
 		"declarationMap": true,
 		"sourceMap": true,
 		"types": ["node"]

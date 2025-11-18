@@ -6,6 +6,7 @@ use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::{StreamingFixtureData, streaming_data};
+use crate::ts_target::TypeScriptTarget;
 use anyhow::{Context, Result, ensure};
 use serde_json::{Map as JsonMap, Value};
 use spikard_cli::codegen::ts_schema::{TypeScriptDto, generate_typescript_dto, json_value_to_ts_literal};
@@ -18,7 +19,7 @@ use std::process::Command;
 const MAX_SAFE_INTEGER: i128 = 9007199254740991; // 2^53 - 1
 
 /// Generate Node.js test application from fixtures
-pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
+pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeScriptTarget) -> Result<()> {
     println!("Generating Node.js test app...");
 
     // Create output directory structure
@@ -63,11 +64,12 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
         &sse_fixtures,
         &websocket_fixtures,
         &dto_map,
+        target,
     )?;
     fs::write(app_dir.join("main.ts"), app_content).context("Failed to write main.ts")?;
 
     // Generate package.json for the e2e app
-    let package_json = generate_package_json();
+    let package_json = generate_package_json(target);
     fs::write(output_dir.join("package.json"), package_json).context("Failed to write package.json")?;
 
     // Generate tsconfig.json
@@ -88,26 +90,29 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
 }
 
 /// Generate package.json for the e2e Node.js project
-fn generate_package_json() -> String {
-    r#"{
-	"name": "spikard-e2e-node",
+fn generate_package_json(target: &TypeScriptTarget) -> String {
+    format!(
+        r#"{{
+	"name": "{name}",
 	"version": "0.1.0",
 	"private": true,
 	"type": "module",
-	"scripts": {
+	"scripts": {{
 		"test": "vitest run",
 		"test:watch": "vitest"
-	},
-	"devDependencies": {
-		"@spikard/node": "workspace:*",
-		"@types/node": "^24.9.2",
+	}},
+	"devDependencies": {{
+		"{binding}": "workspace:*",
+        "@types/node": "^24.9.2",
 		"@vitest/coverage-v8": "^4.0.6",
 		"typescript": "^5.9.3",
 		"vitest": "^4.0.6"
-	}
-}
-"#
-    .to_string()
+	}}
+}}
+"#,
+        name = target.e2e_package_name,
+        binding = target.binding_package
+    )
 }
 
 /// Generate tsconfig.json for TypeScript compilation
@@ -166,6 +171,7 @@ fn generate_app_file_per_fixture(
     sse_fixtures: &[AsyncFixture],
     websocket_fixtures: &[AsyncFixture],
     dto_map: &HashMap<String, TypeScriptDto>,
+    target: &TypeScriptTarget,
 ) -> Result<String> {
     let mut needs_background = false;
     let mut needs_static_assets = false;
@@ -226,8 +232,9 @@ fn generate_app_file_per_fixture(
     }
     if !value_imports.is_empty() {
         code.push_str(&format!(
-            "import {{ {} }} from \"@spikard/node\";\n",
-            value_imports.join(", ")
+            "import {{ {} }} from \"{}\";\n",
+            value_imports.join(", "),
+            target.binding_package
         ));
     }
 
@@ -241,7 +248,7 @@ fn generate_app_file_per_fixture(
     for name in type_imports {
         code.push_str(&format!("\t{},\n", name));
     }
-    code.push_str("} from \"@spikard/node\";\n");
+    code.push_str(&format!("}} from \"{}\";\n", target.binding_package));
     let needs_buffer_import = has_websocket || padded_binary_bodies || streaming_has_binary_chunks;
     if needs_buffer_import {
         code.push_str("import { Buffer } from \"node:buffer\";\n");

@@ -6,6 +6,7 @@ use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::background_data;
 use crate::middleware::parse_middleware;
 use crate::streaming::streaming_data;
+use crate::ts_target::TypeScriptTarget;
 use anyhow::{Context, Result, ensure};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
@@ -20,7 +21,7 @@ use std::process::Command;
 const MAX_SAFE_INTEGER: i128 = 9007199254740991; // 2^53 - 1
 
 /// Generate Node.js test suite from fixtures
-pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
+pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &TypeScriptTarget) -> Result<()> {
     println!("Generating Node.js tests...");
 
     // Create tests directory
@@ -62,21 +63,21 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
         if category == "background" {
             continue;
         }
-        let test_content = generate_test_file(category, fixtures)?;
+        let test_content = generate_test_file(category, fixtures, target)?;
         let test_file = tests_dir.join(format!("{}.test.ts", category));
         fs::write(&test_file, test_content).with_context(|| format!("Failed to write test file for {}", category))?;
         println!("  ✓ Generated tests/{}.test.ts ({} tests)", category, fixtures.len());
     }
 
     if !sse_fixtures.is_empty() {
-        let sse_content = generate_sse_test_file(&sse_fixtures, &dto_map)?;
+        let sse_content = generate_sse_test_file(&sse_fixtures, &dto_map, target)?;
         fs::write(tests_dir.join("asyncapi_sse.test.ts"), sse_content)
             .context("Failed to write asyncapi_sse.test.ts")?;
         println!("  ✓ Generated tests/asyncapi_sse.test.ts");
     }
 
     if !websocket_fixtures.is_empty() {
-        let websocket_content = generate_websocket_test_file(&websocket_fixtures, &dto_map)?;
+        let websocket_content = generate_websocket_test_file(&websocket_fixtures, &dto_map, target)?;
         fs::write(tests_dir.join("asyncapi_websocket.test.ts"), websocket_content)
             .context("Failed to write asyncapi_websocket.test.ts")?;
         println!("  ✓ Generated tests/asyncapi_websocket.test.ts");
@@ -88,12 +89,15 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
 }
 
 /// Generate test file for a category
-fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
+fn generate_test_file(category: &str, fixtures: &[Fixture], target: &TypeScriptTarget) -> Result<String> {
     let mut code = String::new();
 
     // File header
     code.push_str(&format!("/**\n * E2E tests for {}\n * @generated\n */\n\n", category));
-    code.push_str("import { TestClient } from \"@spikard/node\";\n");
+    code.push_str(&format!(
+        "import {{ TestClient }} from \"{}\";\n",
+        target.binding_package
+    ));
     code.push_str("import { describe, expect, test } from \"vitest\";\n");
 
     // Import all app factories for this category
@@ -133,7 +137,11 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
     Ok(code)
 }
 
-fn generate_sse_test_file(fixtures: &[AsyncFixture], dto_map: &HashMap<String, TypeScriptDto>) -> Result<String> {
+fn generate_sse_test_file(
+    fixtures: &[AsyncFixture],
+    dto_map: &HashMap<String, TypeScriptDto>,
+    target: &TypeScriptTarget,
+) -> Result<String> {
     use std::collections::{BTreeMap, BTreeSet};
 
     let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
@@ -207,7 +215,10 @@ fn generate_sse_test_file(fixtures: &[AsyncFixture], dto_map: &HashMap<String, T
 
     let mut file_content = String::new();
     file_content.push_str("/**\n * AsyncAPI SSE tests\n * @generated\n */\n\n");
-    file_content.push_str("import { TestClient } from \"@spikard/node\";\n");
+    file_content.push_str(&format!(
+        "import {{ TestClient }} from \"{}\";\n",
+        target.binding_package
+    ));
     file_content.push_str("import { describe, expect, test } from \"vitest\";\n");
     file_content.push_str("import { readFileSync } from \"node:fs\";\n");
     file_content.push_str("import path from \"node:path\";\n");
@@ -234,7 +245,11 @@ fn generate_sse_test_file(fixtures: &[AsyncFixture], dto_map: &HashMap<String, T
     Ok(file_content)
 }
 
-fn generate_websocket_test_file(fixtures: &[AsyncFixture], dto_map: &HashMap<String, TypeScriptDto>) -> Result<String> {
+fn generate_websocket_test_file(
+    fixtures: &[AsyncFixture],
+    dto_map: &HashMap<String, TypeScriptDto>,
+    target: &TypeScriptTarget,
+) -> Result<String> {
     use std::collections::{BTreeMap, BTreeSet};
 
     let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
@@ -309,7 +324,10 @@ fn generate_websocket_test_file(fixtures: &[AsyncFixture], dto_map: &HashMap<Str
 
     let mut file_content = String::new();
     file_content.push_str("/**\n * AsyncAPI WebSocket tests\n * @generated\n */\n\n");
-    file_content.push_str("import { TestClient } from \"@spikard/node\";\n");
+    file_content.push_str(&format!(
+        "import {{ TestClient }} from \"{}\";\n",
+        target.binding_package
+    ));
     file_content.push_str("import { describe, expect, test } from \"vitest\";\n");
     file_content.push_str("import { readFileSync } from \"node:fs\";\n");
     file_content.push_str("import path from \"node:path\";\n");
