@@ -9,4 +9,5 @@ gem 'rspec', '~> 3.12'
 gem 'rubocop', '~> 1.50'
 gem 'rubocop-performance', '~> 1.18'
 gem 'rubocop-rspec', '~> 2.22'
+gem 'steep', '~> 1.10', require: false
 gem 'websocket-client-simple', '~> 0.8'

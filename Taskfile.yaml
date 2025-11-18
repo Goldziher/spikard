@@ -176,6 +176,15 @@ tasks:
     dir: packages/ruby
     cmds:
       - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rubocop
+      - task: ruby:typecheck
+
+  ruby:typecheck:
+    desc: "Run Steep static analysis against Ruby signatures"
+    deps:
+      - ruby:install
+    dir: packages/ruby
+    cmds:
+      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec steep check
 
   php:lint:
     desc: "Lint PHP code with PHPStan"
