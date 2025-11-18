@@ -305,6 +305,13 @@ export interface StaticFilesConfig {
 	cacheControl?: string;
 }
 
+/** @internal */
+export interface StaticManifestEntry {
+	route: string;
+	headers: Record<string, string>;
+	body: string;
+}
+
 /**
  * Complete server configuration for Spikard.
  *
@@ -387,6 +394,8 @@ export interface ServerConfig {
 	apiKeyAuth?: ApiKeyConfig | null;
 	/** Static file serving configurations */
 	staticFiles?: StaticFilesConfig[];
+	/** @internal Precomputed static manifest for wasm runtimes */
+	__wasmStaticManifest?: StaticManifestEntry[];
 
 	// Lifecycle
 	/** Enable graceful shutdown (default: true) */
