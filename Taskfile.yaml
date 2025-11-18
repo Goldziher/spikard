@@ -315,6 +315,12 @@ tasks:
       - rm -rf e2e/node
       - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang node --output e2e/node
 
+  generate:tests:wasm:
+    desc: "Generate WASM e2e test suite from fixtures (vitest)"
+    cmds:
+      - rm -rf e2e/wasm
+      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang wasm --output e2e/wasm
+
   generate:tests:ruby:
     desc: "Generate Ruby e2e test suite from fixtures"
     cmds:
@@ -326,6 +332,7 @@ tasks:
       - task: generate:tests:rust
       - task: generate:tests:python
       - task: generate:tests:node
+      - task: generate:tests:wasm
       - task: generate:tests:ruby
 
   verify:tests:rust:
@@ -389,6 +396,14 @@ tasks:
     cmds:
       - pnpm test
 
+  test:e2e:wasm:
+    desc: "Run WASM e2e tests (fixture-driven integration tests with vitest)"
+    dir: e2e/wasm
+    deps:
+      - build:js
+    cmds:
+      - pnpm test
+
   test:e2e:ruby:
     desc: "Run Ruby e2e tests (fixture-driven integration tests)"
     dir: e2e/ruby
@@ -403,13 +418,14 @@ tasks:
       - task: test:e2e:rust
       - task: test:e2e:python
       - task: test:e2e:node
+      - task: test:e2e:wasm
       - task: test:e2e:ruby
 
   build:js:
     desc: "Build all JavaScript/TypeScript packages (node, wasm)"
     cmds:
       - task: build:node
-      - task: build:wasm
+      - pnpm --filter @spikard/wasm run build
 
   run:cli:
     desc: "Run the CLI tool"

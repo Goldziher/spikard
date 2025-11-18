@@ -1,16 +1,17 @@
 {
-	"name": "@spikard/wasm",
+	"name": "@spikard/wasm-rs",
 	"version": "0.1.0",
 	"description": "WebAssembly bindings for spikard",
 	"main": "dist/spikard_wasm.js",
 	"types": "dist/spikard_wasm.d.ts",
 	"license": "MIT",
 	"scripts": {
-		"build": "pnpm run build:web && pnpm run build:node",
-		"build:web": "wasm-pack build --target web --out-dir dist-web --release",
-		"build:node": "wasm-pack build --target nodejs --out-dir dist-node --release",
-		"build:all": "pnpm run build:web && pnpm run build:node",
-		"test": "wasm-pack test --node"
+		"build": "pnpm run build:bundler",
+		"build:bundler": "PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack build --target bundler --out-dir dist-bundler --release",
+		"build:web": "PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack build --target web --out-dir dist-web --release",
+		"build:node": "PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack build --target nodejs --out-dir dist-node --release",
+		"build:all": "pnpm run build:bundler && pnpm run build:node",
+		"test": "PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack test --node"
 	},
 	"devDependencies": {
 		"wasm-pack": "^0.13.1"

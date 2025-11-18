@@ -16,6 +16,7 @@ mod ruby_utils;
 mod rust_app;
 mod rust_tests;
 mod streaming;
+mod ts_target;
 
 use anyhow::{Context, Result};
 use clap::Parser;
@@ -53,7 +54,7 @@ enum Commands {
     /// Generate test suite for a language
     Tests {
         /// Target language
-        #[arg(long, value_parser = ["rust", "python", "typescript", "node", "ruby"])]
+        #[arg(long, value_parser = ["rust", "python", "typescript", "node", "ruby", "wasm"])]
         lang: String,
 
         /// Fixtures directory
@@ -158,9 +159,13 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
         }
         "node" => {
             // Generate test app first
-            node_app::generate_node_app(&fixtures, &output)?;
+            node_app::generate_node_app(&fixtures, &output, &ts_target::NODE_TARGET)?;
             // Then generate tests
-            node_tests::generate_node_tests(&fixtures, &output)?;
+            node_tests::generate_node_tests(&fixtures, &output, &ts_target::NODE_TARGET)?;
+        }
+        "wasm" => {
+            node_app::generate_node_app(&fixtures, &output, &ts_target::WASM_TARGET)?;
+            node_tests::generate_node_tests(&fixtures, &output, &ts_target::WASM_TARGET)?;
         }
         "ruby" => {
             ruby_app::generate_ruby_app(&fixtures, &output)?;
