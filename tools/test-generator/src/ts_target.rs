@@ -14,6 +14,6 @@ pub const NODE_TARGET: TypeScriptTarget = TypeScriptTarget {
 };
 
 pub const WASM_TARGET: TypeScriptTarget = TypeScriptTarget {
-    binding_package: "@spikard/wasm",
+    binding_package: "@spikard/wasm/node",
     e2e_package_name: "spikard-e2e-wasm",
 };

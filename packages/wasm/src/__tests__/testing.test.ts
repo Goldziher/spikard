@@ -4,7 +4,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { HandlerFunction, JsonValue, SpikardApp } from "../index";
-import { type MultipartFile, TestClient } from "../testing";
+import { __setNativeClientFactory, type MultipartFile, TestClient } from "../testing";
 
 type NativeSnapshot = {
 	status: number;
@@ -34,66 +34,68 @@ function snapshotFromValue(value: JsonValue | null): NativeSnapshot {
 	};
 }
 
+class MockNativeTestClient {
+	constructor(
+		public routesJson: string,
+		public handlersMap: Record<string, HandlerFunction>,
+		public config: string | null,
+	) {}
+
+	async get(_path: string, _headers: Record<string, string> | null): Promise<NativeSnapshot> {
+		return snapshotFromValue(null);
+	}
+
+	async delete(path: string, headers: Record<string, string> | null): Promise<NativeSnapshot> {
+		return this.get(path, headers);
+	}
+
+	async head(_path: string, _headers: Record<string, string> | null): Promise<NativeSnapshot> {
+		return {
+			status: 200,
+			headers: { "content-length": "0" },
+			body: new Uint8Array(),
+		};
+	}
+
+	async options(path: string, headers: Record<string, string> | null): Promise<NativeSnapshot> {
+		return this.get(path, headers);
+	}
+
+	async trace(path: string, headers: Record<string, string> | null): Promise<NativeSnapshot> {
+		return this.get(path, headers);
+	}
+
+	async post(_path: string, options: NativeOptions | null): Promise<NativeSnapshot> {
+		if (!options) {
+			return snapshotFromValue(null);
+		}
+		if ("multipart" in options) {
+			return snapshotFromValue({ __spikard_multipart__: options.multipart as JsonValue });
+		}
+		if ("form" in options) {
+			return snapshotFromValue({ __spikard_form__: options.form as JsonValue });
+		}
+		if ("formRaw" in options) {
+			return snapshotFromValue({ formRaw: options.formRaw as JsonValue });
+		}
+		if ("json" in options) {
+			return snapshotFromValue((options.json as JsonValue) ?? null);
+		}
+		return snapshotFromValue(null);
+	}
+
+	async put(path: string, options: NativeOptions | null): Promise<NativeSnapshot> {
+		return this.post(path, options);
+	}
+
+	async patch(path: string, options: NativeOptions | null): Promise<NativeSnapshot> {
+		return this.post(path, options);
+	}
+}
+
 // Mock the native TestClient
 vi.mock("../runtime/spikard_wasm.js", () => ({
-	TestClient: class MockNativeTestClient {
-		constructor(
-			public routesJson: string,
-			public handlersMap: Record<string, HandlerFunction>,
-			public config: string | null,
-		) {}
-
-		async get(_path: string, _headers: Record<string, string> | null): Promise<NativeSnapshot> {
-			return snapshotFromValue(null);
-		}
-
-		async delete(path: string, headers: Record<string, string> | null): Promise<NativeSnapshot> {
-			return this.get(path, headers);
-		}
-
-		async head(_path: string, _headers: Record<string, string> | null): Promise<NativeSnapshot> {
-			return {
-				status: 200,
-				headers: { "content-length": "0" },
-				body: new Uint8Array(),
-			};
-		}
-
-		async options(path: string, headers: Record<string, string> | null): Promise<NativeSnapshot> {
-			return this.get(path, headers);
-		}
-
-		async trace(path: string, headers: Record<string, string> | null): Promise<NativeSnapshot> {
-			return this.get(path, headers);
-		}
-
-		async post(_path: string, options: NativeOptions | null): Promise<NativeSnapshot> {
-			if (!options) {
-				return snapshotFromValue(null);
-			}
-			if ("multipart" in options) {
-				return snapshotFromValue({ __spikard_multipart__: options.multipart as JsonValue });
-			}
-			if ("form" in options) {
-				return snapshotFromValue({ __spikard_form__: options.form as JsonValue });
-			}
-			if ("formRaw" in options) {
-				return snapshotFromValue({ formRaw: options.formRaw as JsonValue });
-			}
-			if ("json" in options) {
-				return snapshotFromValue((options.json as JsonValue) ?? null);
-			}
-			return snapshotFromValue(null);
-		}
-
-		async put(path: string, options: NativeOptions | null): Promise<NativeSnapshot> {
-			return this.post(path, options);
-		}
-
-		async patch(path: string, options: NativeOptions | null): Promise<NativeSnapshot> {
-			return this.post(path, options);
-		}
-	},
+	TestClient: MockNativeTestClient,
 }));
 
 describe("TestClient", () => {
@@ -101,6 +103,7 @@ describe("TestClient", () => {
 	let client: TestClient;
 
 	beforeEach(() => {
+		__setNativeClientFactory((routesJson, handlers, config) => new MockNativeTestClient(routesJson, handlers, config));
 		app = {
 			routes: [
 				{
@@ -115,6 +118,10 @@ describe("TestClient", () => {
 			},
 		};
 		client = new TestClient(app);
+	});
+
+	afterEach(() => {
+		__setNativeClientFactory();
 	});
 
 	describe("constructor", () => {

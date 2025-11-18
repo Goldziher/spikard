@@ -1,9 +1,5 @@
-import { Buffer } from "node:buffer";
-import fs from "node:fs";
-import path from "node:path";
-import { gunzipSync } from "node:zlib";
 import { TestClient as NativeTestClient } from "../runtime/spikard_wasm.js";
-import type { ServerConfig, StaticFilesConfig } from "./config";
+import type { ServerConfig } from "./config";
 import type { HandlerFunction, SpikardApp } from "./index";
 import { isStreamingResponse } from "./streaming";
 import type { HandlerPayload, JsonValue, StructuredHandlerResponse } from "./types";
@@ -29,12 +25,6 @@ export interface RequestOptions {
 	};
 }
 
-interface StaticManifestEntry {
-	route: string;
-	headers: HeaderMap;
-	body: string;
-}
-
 type NativeRequestOptions = {
 	headers?: HeaderMap;
 	json?: JsonValue;
@@ -46,6 +36,20 @@ type NativeRequestOptions = {
 	};
 };
 
+type NativeClientFactory = (
+	routesJson: string,
+	handlers: Record<string, HandlerFunction>,
+	config: string | null,
+) => NativeClient;
+
+let nativeClientFactory: NativeClientFactory = (routesJson, handlers, config) =>
+	new NativeTestClient(routesJson, handlers, config);
+
+export function __setNativeClientFactory(factory?: NativeClientFactory): void {
+	nativeClientFactory =
+		factory ?? ((routesJson, handlers, config) => new NativeTestClient(routesJson, handlers, config));
+}
+
 interface NativeSnapshot {
 	status: number;
 	headers: HeaderMap;
@@ -53,6 +57,14 @@ interface NativeSnapshot {
 }
 
 const textDecoder = new TextDecoder();
+
+export type GunzipImplementation = (data: Uint8Array) => Uint8Array;
+
+let gunzipImplementation: GunzipImplementation | null = null;
+
+export function __setGunzipImplementation(fn: GunzipImplementation | null): void {
+	gunzipImplementation = fn;
+}
 
 export class TestResponse {
 	private readonly bodyBytes: Uint8Array;
@@ -93,8 +105,8 @@ export class TestResponse {
 
 	bytes(): Uint8Array {
 		const decoded = this.getDecodedBody();
-		if (typeof Buffer !== "undefined") {
-			return Buffer.from(decoded);
+		if (typeof globalThis.Buffer !== "undefined") {
+			return globalThis.Buffer.from(decoded);
 		}
 		return decoded.slice();
 	}
@@ -138,7 +150,7 @@ export class TestClient {
 		const enhancedConfig = enhanceConfig(app.config);
 		const configString = enhancedConfig ? JSON.stringify(enhancedConfig) : null;
 
-		this.nativeClient = new NativeTestClient(routesJson, handlers, configString);
+		this.nativeClient = nativeClientFactory(routesJson, handlers, configString);
 	}
 
 	async get(path: string, headers?: Record<string, string>): Promise<TestResponse> {
@@ -295,97 +307,6 @@ export class WebSocketTestConnection {
 	}
 }
 
-function buildStaticManifest(configs: StaticFilesConfig[]): StaticManifestEntry[] {
-	if (!configs || configs.length === 0) {
-		return [];
-	}
-	const manifest: StaticManifestEntry[] = [];
-	for (const config of configs) {
-		if (!config?.directory || !config.routePrefix) {
-			continue;
-		}
-		if (!fs.existsSync(config.directory)) {
-			continue;
-		}
-		const files = listFiles(config.directory);
-		for (const filePath of files) {
-			const relative = path.relative(config.directory, filePath).split(path.sep).join("/");
-			const route = normalizeRoute(`${config.routePrefix.replace(/\/+$/, "")}/${relative}`);
-			const headers = buildStaticHeaders(filePath, config.cacheControl);
-			const body = fs.readFileSync(filePath).toString("base64");
-			manifest.push({ route, headers, body });
-		}
-
-		if (config.indexFile ?? true) {
-			const indexPath = path.join(config.directory, "index.html");
-			if (fs.existsSync(indexPath)) {
-				const headers = buildStaticHeaders(indexPath, config.cacheControl);
-				const body = fs.readFileSync(indexPath).toString("base64");
-				const prefix = normalizeRoute(config.routePrefix);
-				manifest.push({ route: prefix, headers: { ...headers }, body });
-				if (!prefix.endsWith("/")) {
-					manifest.push({ route: `${prefix}/`, headers: { ...headers }, body });
-				}
-			}
-		}
-	}
-	return manifest;
-}
-
-function listFiles(root: string): string[] {
-	const entries: string[] = [];
-	const stack: string[] = [root];
-	while (stack.length > 0) {
-		const current = stack.pop();
-		if (!current) {
-			continue;
-		}
-		const stats = fs.statSync(current);
-		if (stats.isDirectory()) {
-			for (const child of fs.readdirSync(current)) {
-				stack.push(path.join(current, child));
-			}
-		} else {
-			entries.push(current);
-		}
-	}
-	return entries;
-}
-
-function buildStaticHeaders(filePath: string, cacheControl?: string | null): Record<string, string> {
-	const headers: Record<string, string> = {
-		"content-type": lookupContentType(filePath),
-	};
-	if (cacheControl) {
-		headers["cache-control"] = cacheControl;
-	}
-	return headers;
-}
-
-function lookupContentType(filePath: string): string {
-	const ext = path.extname(filePath).toLowerCase();
-	switch (ext) {
-		case ".html":
-		case ".htm":
-			return "text/html";
-		case ".txt":
-			return "text/plain";
-		case ".json":
-			return "application/json";
-		case ".js":
-			return "application/javascript";
-		case ".css":
-			return "text/css";
-		default:
-			return "application/octet-stream";
-	}
-}
-
-function normalizeRoute(route: string): string {
-	const normalized = route.replace(/\/+/g, "/");
-	return normalized.startsWith("/") ? normalized : `/${normalized}`;
-}
-
 function normalizeRecord(record: HeaderInput): HeaderMap {
 	if (!record) {
 		return {};
@@ -404,7 +325,7 @@ function toUint8Array(value: ArrayBuffer | ArrayLike<number> | Uint8Array): Uint
 	if (value instanceof Uint8Array) {
 		return value;
 	}
-	if (typeof Buffer !== "undefined" && value instanceof Buffer) {
+	if (typeof globalThis.Buffer !== "undefined" && value instanceof globalThis.Buffer) {
 		return new Uint8Array(value);
 	}
 	if (ArrayBuffer.isView(value)) {
@@ -417,26 +338,28 @@ function toUint8Array(value: ArrayBuffer | ArrayLike<number> | Uint8Array): Uint
 }
 
 function gunzipBytes(data: Uint8Array): Uint8Array {
-	if (typeof Buffer === "undefined") {
-		return data;
+	if (gunzipImplementation) {
+		try {
+			return gunzipImplementation(data);
+		} catch {
+			return data;
+		}
 	}
-	try {
-		const buffer = Buffer.from(data);
-		return new Uint8Array(gunzipSync(buffer));
-	} catch {
-		return data;
-	}
+	return data;
 }
 
 function bufferToBase64(bytes: Uint8Array): string {
-	if (typeof Buffer !== "undefined") {
-		return Buffer.from(bytes).toString("base64");
+	if (typeof globalThis.Buffer !== "undefined") {
+		return globalThis.Buffer.from(bytes).toString("base64");
 	}
 	let binary = "";
 	for (const byte of bytes) {
 		binary += String.fromCharCode(byte);
 	}
-	return btoa(binary);
+	if (typeof btoa === "function") {
+		return btoa(binary);
+	}
+	throw new Error("Base64 encoding is not supported in this environment");
 }
 
 function shouldDecodeAsText(contentType?: string): boolean {
@@ -448,17 +371,10 @@ function shouldDecodeAsText(contentType?: string): boolean {
 }
 
 function enhanceConfig(config?: ServerConfig | null) {
-	const manifest = buildStaticManifest(config?.staticFiles ?? []);
-	if ((!config || Object.keys(config).length === 0) && manifest.length === 0) {
+	if (!config || Object.keys(config).length === 0) {
 		return null;
 	}
-	if (manifest.length === 0) {
-		return config ?? null;
-	}
-	return {
-		...config,
-		__wasmStaticManifest: manifest,
-	};
+	return config;
 }
 
 function wrapHandlers(handlers: Record<string, HandlerFunction>): Record<string, HandlerFunction> {
