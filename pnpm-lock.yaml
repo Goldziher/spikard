@@ -64,6 +64,24 @@ importers:
         specifier: ^4.0.6
         version: 4.0.9(@types/node@24.10.1)
 
+  e2e/wasm:
+    devDependencies:
+      '@spikard/wasm':
+        specifier: workspace:*
+        version: link:../../packages/wasm
+      '@types/node':
+        specifier: ^24.9.2
+        version: 24.10.1
+      '@vitest/coverage-v8':
+        specifier: ^4.0.6
+        version: 4.0.9(vitest@4.0.9(@types/node@24.10.1))
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.0.6
+        version: 4.0.9(@types/node@24.10.1)
+
   packages/node:
     dependencies:
       zod:
@@ -97,6 +115,31 @@ importers:
       ws:
         specifier: ^8.18.3
         version: 8.18.3
+
+  packages/wasm:
+    dependencies:
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
+    devDependencies:
+      '@biomejs/biome':
+        specifier: ^2.3.6
+        version: 2.3.6
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.10.1
+      '@vitest/coverage-v8':
+        specifier: ^4.0.9
+        version: 4.0.9(vitest@4.0.9(@types/node@24.10.1))
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.6)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.0.9
+        version: 4.0.9(@types/node@24.10.1)
 
 packages:
 
