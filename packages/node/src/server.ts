@@ -5,25 +5,33 @@
 import type { ServerConfig } from "./config";
 import type { SpikardApp } from "./index";
 
-// This will be the native binding once built
-let nativeBinding: any;
-
-try {
-	// Try to load the native module from the package root
-	nativeBinding = require("../spikard-node.darwin-arm64.node");
-} catch (_e) {
-	try {
-		// Fallback to platform-agnostic name
-		nativeBinding = require("../spikard-node.node");
-	} catch (_e2) {
-		console.warn("[spikard-node] Native binding not found. Please run: pnpm build:native");
-		nativeBinding = {
-			runServer: () => {
-				throw new Error("Native binding not built. Run: pnpm build:native");
-			},
-		};
-	}
+interface NativeServerBinding {
+	runServer(app: SpikardApp, config: ServerConfig | ServerOptions): void;
 }
+
+// This will be the native binding once built
+let nativeBinding: NativeServerBinding;
+
+const loadBinding = (): NativeServerBinding => {
+	try {
+		// Try to load the native module from the package root
+		return require("../spikard-node.darwin-arm64.node") as NativeServerBinding;
+	} catch {
+		try {
+			// Fallback to platform-agnostic name
+			return require("../spikard-node.node") as NativeServerBinding;
+		} catch {
+			console.warn("[spikard-node] Native binding not found. Please run: pnpm build:native");
+			return {
+				runServer: () => {
+					throw new Error("Native binding not built. Run: pnpm build:native");
+				},
+			};
+		}
+	}
+};
+
+nativeBinding = loadBinding();
 
 /**
  * @deprecated Use ServerConfig instead

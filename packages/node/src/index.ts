@@ -4,6 +4,8 @@
  * Type-safe routing, validation, and testing powered by Rust core.
  */
 
+import type { HandlerFunction, JsonValue } from "./types";
+
 // Application
 export { type LifecycleHookFunction, type LifecycleHooks, Spikard } from "./app";
 export * as background from "./background";
@@ -32,16 +34,28 @@ export { runServer, type ServerOptions } from "./server";
 export { StreamingResponse, type StreamingResponseInit } from "./streaming";
 // Testing utilities
 export { TestClient, type TestResponse } from "./testing";
+export type {
+	Base64EncodedBody,
+	HandlerFunction,
+	HandlerPayload,
+	HandlerResult,
+	JsonPrimitive,
+	JsonRecord,
+	JsonValue,
+	MaybePromise,
+	StructuredHandlerResponse,
+} from "./types";
 
 /**
  * JSON schema definition for validation
  */
 export interface JsonSchema {
-	type?: string;
+	type?: string | string[];
 	properties?: Record<string, JsonSchema>;
 	required?: string[];
-	items?: JsonSchema;
-	[key: string]: unknown;
+	items?: JsonSchema | JsonSchema[];
+	enum?: JsonValue[];
+	[key: string]: JsonSchema | JsonSchema[] | JsonValue | JsonValue[] | string | number | boolean | undefined;
 }
 
 /**
@@ -88,11 +102,6 @@ export interface RouteMetadata {
 	/** CORS configuration for this route */
 	cors?: CorsConfig;
 }
-
-/**
- * Handler function signature
- */
-export type HandlerFunction<TReturn = unknown> = (request: unknown) => TReturn | Promise<TReturn>;
 
 /**
  * Spikard application interface
