@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 target :signatures do
-  signature "sig"
-  library "json"
-  library "pathname"
+  signature 'sig'
+  library 'json'
+  library 'pathname'
 end

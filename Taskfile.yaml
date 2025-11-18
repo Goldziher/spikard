@@ -229,6 +229,7 @@ tasks:
     desc: "Run workspace linters for Rust, Python, TypeScript, Ruby, and PHP"
     cmds:
       - prek run --all-files
+      - task: ruby:lint
 
   fmt:
     desc: "Format Python, Rust, and TypeScript code"
