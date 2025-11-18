@@ -8,6 +8,7 @@ use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_asset
 use crate::streaming::{StreamingFixtureData, streaming_data};
 use anyhow::{Context, Result, ensure};
 use serde_json::{Map as JsonMap, Value};
+use spikard_cli::codegen::ts_schema::{TypeScriptDto, generate_typescript_dto, json_value_to_ts_literal};
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
 use std::fs;
@@ -46,8 +47,23 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
 
     // Generate main app file with per-fixture app factories
-    let app_content =
-        generate_app_file_per_fixture(&fixtures_by_category, &app_dir, &sse_fixtures, &websocket_fixtures)?;
+    let mut dto_map: HashMap<String, TypeScriptDto> = HashMap::new();
+    for fixture in sse_fixtures.iter().chain(websocket_fixtures.iter()) {
+        if dto_map.contains_key(&fixture.name) {
+            continue;
+        }
+        let dto = generate_typescript_dto(&fixture.name, &fixture.schema)
+            .with_context(|| format!("Failed to build DTO for {}", fixture.name))?;
+        dto_map.insert(fixture.name.clone(), dto);
+    }
+
+    let app_content = generate_app_file_per_fixture(
+        &fixtures_by_category,
+        &app_dir,
+        &sse_fixtures,
+        &websocket_fixtures,
+        &dto_map,
+    )?;
     fs::write(app_dir.join("main.ts"), app_content).context("Failed to write main.ts")?;
 
     // Generate package.json for the e2e app
@@ -149,11 +165,15 @@ fn generate_app_file_per_fixture(
     app_dir: &Path,
     sse_fixtures: &[AsyncFixture],
     websocket_fixtures: &[AsyncFixture],
+    dto_map: &HashMap<String, TypeScriptDto>,
 ) -> Result<String> {
     let mut needs_background = false;
     let mut needs_static_assets = false;
     let mut needs_server_config_import = false;
     let has_sse = !sse_fixtures.is_empty();
+    let mut padded_binary_bodies = false;
+    let mut streaming_has_binary_chunks = false;
+    let has_websocket = !websocket_fixtures.is_empty();
     for fixtures in fixtures_by_category.values() {
         for fixture in fixtures {
             if !needs_background && background_data(fixture)?.is_some() {
@@ -167,6 +187,13 @@ fn generate_app_file_per_fixture(
                 && (metadata_requires_server_config(&metadata) || handler_requires_server_config(fixture))
             {
                 needs_server_config_import = true;
+            }
+            if !padded_binary_bodies && fixture_requires_binary_body(fixture) {
+                padded_binary_bodies = true;
+            }
+            if !streaming_has_binary_chunks && streaming_data(fixture)?.map(|info| !info.is_text_only).unwrap_or(false)
+            {
+                streaming_has_binary_chunks = true;
             }
         }
     }
@@ -185,6 +212,9 @@ fn generate_app_file_per_fixture(
         .flat_map(|fixtures| fixtures.iter())
         .any(|fixture| fixture.streaming.is_some());
     if has_sse {
+        needs_streaming_import = true;
+    }
+    if !needs_streaming_import && padded_binary_bodies {
         needs_streaming_import = true;
     }
     let mut value_imports = Vec::new();
@@ -212,7 +242,68 @@ fn generate_app_file_per_fixture(
         code.push_str(&format!("\t{},\n", name));
     }
     code.push_str("} from \"@spikard/node\";\n");
-    code.push('\n');
+    let needs_buffer_import = has_websocket || padded_binary_bodies || streaming_has_binary_chunks;
+    if needs_buffer_import {
+        code.push_str("import { Buffer } from \"node:buffer\";\n");
+    }
+    code.push_str("import { z } from \"zod\";\n\n");
+
+    code.push_str("type HandlerResponse = {\n");
+    code.push_str("\tstatus: number;\n");
+    code.push_str("\theaders?: Record<string, string>;\n");
+    code.push_str("\tbody?: unknown;\n");
+    code.push_str("};\n");
+    code.push_str("type HookRequest = {\n");
+    code.push_str("\tbody?: unknown;\n");
+    code.push_str("\theaders?: Record<string, string>;\n");
+    code.push_str("\tparams?: Record<string, unknown>;\n");
+    code.push_str("\t[key: string]: unknown;\n");
+    code.push_str("};\n");
+    code.push_str("type HookResponse = {\n");
+    code.push_str("\tstatusCode?: number;\n");
+    code.push_str("\tbody?: unknown;\n");
+    code.push_str("\theaders?: Record<string, string>;\n");
+    code.push_str("\t[key: string]: unknown;\n");
+    code.push_str("};\n");
+    code.push_str("type HookResult = HookRequest | HookResponse;\n\n");
+
+    if has_websocket {
+        code.push_str("function normalizeWebsocketPayload(message: unknown): unknown {\n");
+        code.push_str("\tif (Array.isArray(message)) {\n");
+        code.push_str("\t\tif (message.length === 1) {\n");
+        code.push_str("\t\t\treturn normalizeWebsocketPayload(message[0]);\n");
+        code.push_str("\t\t}\n");
+        code.push_str("\t\treturn message.map((entry) => normalizeWebsocketPayload(entry));\n");
+        code.push_str("\t}\n");
+        code.push_str("\tif (typeof message === \"string\") {\n");
+        code.push_str("\t\ttry {\n");
+        code.push_str("\t\t\treturn JSON.parse(message);\n");
+        code.push_str("\t\t} catch {\n");
+        code.push_str("\t\t\treturn message;\n");
+        code.push_str("\t\t}\n");
+        code.push_str("\t}\n");
+        code.push_str("\tif (typeof Buffer !== \"undefined\" && Buffer.isBuffer(message)) {\n");
+        code.push_str("\t\treturn JSON.parse(message.toString(\"utf-8\"));\n");
+        code.push_str("\t}\n");
+        code.push_str("\tif (message instanceof ArrayBuffer) {\n");
+        code.push_str("\t\treturn JSON.parse(Buffer.from(message).toString(\"utf-8\"));\n");
+        code.push_str("\t}\n");
+        code.push_str("\tif (message && typeof message === \"object\" && ArrayBuffer.isView(message)) {\n");
+        code.push_str("\t\tconst view = message as ArrayBufferView;\n");
+        code.push_str("\t\tconst buffer = Buffer.from(view.buffer, view.byteOffset, view.byteLength);\n");
+        code.push_str("\t\treturn JSON.parse(buffer.toString(\"utf-8\"));\n");
+        code.push_str("\t}\n");
+        code.push_str("\treturn message;\n");
+        code.push_str("}\n\n");
+    }
+
+    for dto in dto_map.values() {
+        code.push_str(&dto.schema_declaration);
+        code.push('\n');
+        code.push_str(&dto.type_declaration);
+        code.push('\n');
+    }
+
     if needs_background {
         code.push_str("const BACKGROUND_STATE: Record<string, unknown[]> = {};\n\n");
     }
@@ -251,19 +342,37 @@ fn generate_app_file_per_fixture(
         }
     }
 
-    append_sse_factories(&mut code, sse_fixtures, &mut all_app_factories, &mut handler_names)?;
+    append_sse_factories(
+        &mut code,
+        sse_fixtures,
+        &mut all_app_factories,
+        &mut handler_names,
+        dto_map,
+    )?;
     append_websocket_factories(
         &mut code,
         websocket_fixtures,
         &mut all_app_factories,
         &mut handler_names,
+        dto_map,
     )?;
 
     // Add a comment listing all app factories
     code.push_str("// App factory functions:\n");
-    for (category, fixture_name, factory_fn) in all_app_factories {
+    for (category, fixture_name, factory_fn) in &all_app_factories {
         code.push_str(&format!("// - {}() for {} / {}\n", factory_fn, category, fixture_name));
     }
+    code.push('\n');
+    code.push_str("export {\n");
+    for dto in dto_map.values() {
+        code.push_str(&format!("\t{},\n", dto.schema_ident));
+    }
+    code.push_str("};\n");
+    code.push_str("export type {\n");
+    for dto in dto_map.values() {
+        code.push_str(&format!("\t{},\n", dto.type_ident));
+    }
+    code.push_str("};\n");
 
     Ok(code)
 }
@@ -540,13 +649,15 @@ fn generate_handler_function(
         !params.is_empty() && ((expected_status == 200 && expected_body.is_none()) || expected_status == 422);
     let params_var = if uses_params { "params" } else { "_params" };
     code.push_str(&format!("\tconst {} = request.params ?? {{}};\n", params_var));
-    code.push_str("\tconst response: any = {};\n");
     let handler_status = if metadata.rate_limit.is_some() {
         200
     } else {
         expected_status
     };
-    code.push_str(&format!("\tresponse.status = {};\n", handler_status));
+    code.push_str(&format!(
+        "\tconst response: HandlerResponse = {{ status: {} }};\n",
+        handler_status
+    ));
 
     if let Some(headers_literal) = build_expected_headers_literal(fixture)? {
         code.push_str(&format!("\tresponse.headers = {};\n", headers_literal));
@@ -592,15 +703,41 @@ fn generate_handler_function(
 
     if should_return_expected {
         if let Some(body_json) = expected_body {
-            let converted = convert_large_numbers_to_strings(body_json);
-            let json_str = serde_json::to_string(&converted)?;
-            code.push_str(&format!("\tconst responseBody = {};\n", json_str));
-            code.push_str("\tresponse.body = responseBody;\n");
+            if body_json.is_string() {
+                if let Some(target_len) = expected_content_length(fixture) {
+                    let literal = serde_json::to_string(body_json)?;
+                    code.push_str(&format!("\tconst contentValue = {};\n", literal));
+                    code.push_str("\tlet contentBytes = Buffer.from(contentValue, \"utf-8\");\n");
+                    code.push_str(&format!(
+                        "\tif (contentBytes.length < {}) {{\n\t\tconst padding = Buffer.alloc({} - contentBytes.length, \" \");\n\t\tcontentBytes = Buffer.concat([contentBytes, padding]);\n\t}}\n",
+                        target_len, target_len
+                    ));
+                    code.push_str("\tasync function* streamContent() {\n");
+                    code.push_str("\t\tyield contentBytes;\n");
+                    code.push_str("\t}\n");
+                    code.push_str("\treturn new StreamingResponse(streamContent(), {\n");
+                    code.push_str(&format!("\t\tstatusCode: {},\n", handler_status));
+                    code.push_str("\t\theaders: response.headers ?? {},\n");
+                    code.push_str("\t});\n");
+                    code.push('}');
+                    return Ok(code);
+                } else {
+                    let converted = convert_large_numbers_to_strings(body_json);
+                    let json_str = serde_json::to_string(&converted)?;
+                    code.push_str(&format!("\tconst responseBody = {};\n", json_str));
+                    code.push_str("\tresponse.body = responseBody;\n");
+                }
+            } else {
+                let converted = convert_large_numbers_to_strings(body_json);
+                let json_str = serde_json::to_string(&converted)?;
+                code.push_str(&format!("\tconst responseBody = {};\n", json_str));
+                code.push_str("\tresponse.body = responseBody;\n");
+            }
         } else {
             code.push_str("\tresponse.body = null;\n");
         }
     } else if should_echo_params {
-        code.push_str("\tconst result: Record<string, any> = {};\n");
+        code.push_str("\tconst result: Record<string, unknown> = {};\n");
         for binding in &params {
             let param_access = format_property_access(params_var, &binding.key);
             code.push_str(&format!("\tconst {} = {};\n", binding.var_name, param_access));
@@ -683,7 +820,7 @@ fn generate_streaming_handler(
     };
 
     Ok(format!(
-        "/**\n * Handler for {} {}\n */\nasync function {}(requestJson: string): Promise<any> {{\n\tconst stream = async function* () {{\n{}\t}};\n\n\treturn new StreamingResponse(stream(), {{\n\t\tstatusCode: {},\n\t\theaders: {}\n\t}});\n}}",
+        "/**\n * Handler for {} {}\n */\nasync function {}(requestJson: string): Promise<StreamingResponse> {{\n\tconst stream = async function* () {{\n{}\t}};\n\n\treturn new StreamingResponse(stream(), {{\n\t\tstatusCode: {},\n\t\theaders: {}\n\t}});\n}}",
         method.to_uppercase(),
         route,
         function_name,
@@ -699,7 +836,7 @@ fn generate_background_state_handler(
     background: &BackgroundFixtureData,
 ) -> String {
     format!(
-        "function {name}_background_state(): any {{
+        "function {name}_background_state(): Record<string, unknown> {{
 \tconst state = BACKGROUND_STATE[\"{fixture}\"] ?? [];
 \treturn {{ \"{state_key}\": state }};
 }}",
@@ -732,6 +869,7 @@ fn append_sse_factories(
     fixtures: &[AsyncFixture],
     registry: &mut Vec<(String, String, String)>,
     handler_names: &mut HashMap<String, usize>,
+    dto_map: &HashMap<String, TypeScriptDto>,
 ) -> Result<()> {
     use std::collections::BTreeMap;
 
@@ -756,14 +894,37 @@ fn append_sse_factories(
         let unique = make_unique_name(&format!("sse_{}", slug), handler_names);
         let handler_fn = format!("sseHandler{}", to_pascal_case(&slug));
         let factory_fn = format!("createApp{}", to_pascal_case(&unique));
-        let events_literal = build_sse_events_literal(&channel_fixtures)?;
+        let mut union_members = Vec::new();
+        let mut event_entries = Vec::new();
+        for fixture in &channel_fixtures {
+            if let Some(dto) = dto_map.get(&fixture.name) {
+                union_members.push(dto.type_ident.clone());
+                if fixture.examples.is_empty() {
+                    event_entries.push(format!("    {}.parse({{}})", dto.schema_ident));
+                } else {
+                    for example in &fixture.examples {
+                        let literal = json_value_to_ts_literal(example);
+                        event_entries.push(format!("    {}.parse({})", dto.schema_ident, literal));
+                    }
+                }
+            }
+        }
+        if union_members.is_empty() {
+            union_members.push("Record<string, unknown>".to_string());
+        }
+        union_members.sort();
+        union_members.dedup();
+        if event_entries.is_empty() {
+            event_entries.push("    z.record(z.string(), z.unknown()).parse({})".to_string());
+        }
+        let events_literal = format!("[\n{}\n  ]", event_entries.join(",\n"));
 
         let handler_code = format!(
-            "async function {handler_fn}(requestJson: string): Promise<any> {{
+            "async function {handler_fn}(requestJson: string): Promise<StreamingResponse> {{
 \tconst events = {events_literal};
 \tasync function* eventStream() {{
 \t\tfor (const payload of events) {{
-\t\t\tyield `data: ${{payload}}\\n\\n`;
+\t\t\tyield `data: ${{JSON.stringify(payload)}}\\n\\n`;
 \t\t}}
 \t}}
 \treturn new StreamingResponse(eventStream(), {{
@@ -815,25 +976,12 @@ fn append_sse_factories(
     Ok(())
 }
 
-fn build_sse_events_literal(fixtures: &[&AsyncFixture]) -> Result<String> {
-    let mut entries = Vec::new();
-    for fixture in fixtures {
-        for example in &fixture.examples {
-            let json = serde_json::to_string(example)?;
-            entries.push(format!("\"{}\"", escape_ts_string(&json)));
-        }
-    }
-    if entries.is_empty() {
-        entries.push("\"{}\"".to_string());
-    }
-    Ok(format!("[{}]", entries.join(", ")))
-}
-
 fn append_websocket_factories(
     code: &mut String,
     fixtures: &[AsyncFixture],
     registry: &mut Vec<(String, String, String)>,
     handler_names: &mut HashMap<String, usize>,
+    dto_map: &HashMap<String, TypeScriptDto>,
 ) -> Result<()> {
     use std::collections::BTreeMap;
 
@@ -848,7 +996,7 @@ fn append_websocket_factories(
         }
     }
 
-    for (channel, _channel_fixtures) in grouped {
+    for (channel, channel_fixtures) in grouped {
         let channel_path = if channel.starts_with('/') {
             channel
         } else {
@@ -858,14 +1006,35 @@ fn append_websocket_factories(
         let unique = make_unique_name(&format!("websocket_{}", slug), handler_names);
         let handler_fn = format!("websocketHandler{}", to_pascal_case(&slug));
         let factory_fn = format!("createApp{}", to_pascal_case(&unique));
+        let mut schema_idents = Vec::new();
+        for fixture in &channel_fixtures {
+            if let Some(dto) = dto_map.get(&fixture.name) {
+                schema_idents.push(dto.schema_ident.clone());
+            }
+        }
+        schema_idents.sort();
+        schema_idents.dedup();
 
+        let schema_expr = match schema_idents.len() {
+            0 => "z.record(z.string(), z.unknown())".to_string(),
+            1 => schema_idents[0].clone(),
+            _ => format!("z.union([{}])", schema_idents.join(", ")),
+        };
+        let schema_name = format!("{}ChannelSchema", to_pascal_case(&slug));
+        let type_name = format!("{}ChannelMessage", to_pascal_case(&slug));
         let handler_code = format!(
-            "async function {handler_fn}(message: any): Promise<string> {{
-\t// Parse incoming message, add validation indicator, and return as JSON
-\tconst parsedMessage = JSON.parse(message);
-\tparsedMessage.validated = true;
-\treturn JSON.stringify(parsedMessage);
+            "const {schema_name} = {schema_expr};
+type {type_name} = z.infer<typeof {schema_name}>;
+type {type_name}Response = {type_name} & {{ validated: true }};
+
+async function {handler_fn}(message: unknown): Promise<string> {{
+\tconst payload: {type_name} = {schema_name}.parse(normalizeWebsocketPayload(message));
+\tconst response: {type_name}Response = {{ ...payload, validated: true }};
+\treturn JSON.stringify(response);
 }}",
+            schema_name = schema_name,
+            schema_expr = schema_expr,
+            type_name = type_name,
             handler_fn = handler_fn
         );
 
@@ -962,6 +1131,27 @@ fn normalize_expected_header_value(raw: &str) -> Option<String> {
     }
 }
 
+fn expected_content_length(fixture: &Fixture) -> Option<usize> {
+    fixture.expected_response.headers.as_ref().and_then(|headers| {
+        headers.iter().find_map(|(key, value)| {
+            if key.eq_ignore_ascii_case("content-length") {
+                value.parse::<usize>().ok()
+            } else {
+                None
+            }
+        })
+    })
+}
+
+fn fixture_requires_binary_body(fixture: &Fixture) -> bool {
+    expected_content_length(fixture).is_some()
+        && fixture
+            .expected_response
+            .body
+            .as_ref()
+            .is_some_and(|body| body.is_string())
+}
+
 /// Extract parameters from parameter schema (TypeScript types)
 struct ParameterBinding {
     var_name: String,
@@ -1049,10 +1239,10 @@ fn json_type_to_typescript(schema: &Value) -> Result<String> {
                 let item_type = json_type_to_typescript(items)?;
                 return Ok(format!("{}[]", item_type));
             }
-            "any[]"
+            "unknown[]"
         }
-        "object" => "Record<string, any>",
-        _ => "any",
+        "object" => "Record<string, unknown>",
+        _ => "unknown",
     };
 
     Ok(type_str.to_string())
@@ -1440,10 +1630,6 @@ fn sanitize_identifier(s: &str) -> String {
     result.trim_matches('_').to_string()
 }
 
-fn escape_ts_string(value: &str) -> String {
-    value.replace('\\', "\\\\").replace('"', "\\\"")
-}
-
 /// Convert to camelCase
 fn to_camel_case(s: &str) -> String {
     let parts: Vec<&str> = s.split(&['_', '-'][..]).collect();
@@ -1500,7 +1686,7 @@ fn generate_lifecycle_hooks_ts(fixture_id: &str, hooks: &Value, fixture: &Fixtur
             let func_name = to_camel_case(&format!("{}_{}_on_request_{}", fixture_id, hook_name, idx));
 
             code.push_str(&format!(
-                r#"async function {}(request: any): Promise<any> {{
+                r#"async function {}(request: HookRequest): Promise<HookResult> {{
 	// Mock onRequest hook: {}
 	return request;
 }}
@@ -1522,7 +1708,7 @@ fn generate_lifecycle_hooks_ts(fixture_id: &str, hooks: &Value, fixture: &Fixtur
 
             if should_short_circuit {
                 code.push_str(&format!(
-                    r#"async function {}(_request: any): Promise<any> {{
+                    r#"async function {}(_request: HookRequest): Promise<HookResult> {{
 	// preValidation hook: {} - Short circuits with 429
 	return {{
 		statusCode: 429,
@@ -1541,7 +1727,7 @@ fn generate_lifecycle_hooks_ts(fixture_id: &str, hooks: &Value, fixture: &Fixtur
                 ));
             } else {
                 code.push_str(&format!(
-                    r#"async function {}(request: any): Promise<any> {{
+                    r#"async function {}(request: HookRequest): Promise<HookResult> {{
 	// Mock preValidation hook: {}
 	return request;
 }}
@@ -1571,7 +1757,7 @@ fn generate_lifecycle_hooks_ts(fixture_id: &str, hooks: &Value, fixture: &Fixtur
                 };
 
                 code.push_str(&format!(
-                    r#"async function {}(_request: any): Promise<any> {{
+                    r#"async function {}(_request: HookRequest): Promise<HookResult> {{
 	// preHandler hook: {} - Short circuits with {}
 	return {{
 		statusCode: {},
@@ -1587,7 +1773,7 @@ fn generate_lifecycle_hooks_ts(fixture_id: &str, hooks: &Value, fixture: &Fixtur
                 ));
             } else {
                 code.push_str(&format!(
-                    r#"async function {}(request: any): Promise<any> {{
+                    r#"async function {}(request: HookRequest): Promise<HookResult> {{
 	// Mock preHandler hook: {}
 	return request;
 }}
@@ -1608,7 +1794,7 @@ fn generate_lifecycle_hooks_ts(fixture_id: &str, hooks: &Value, fixture: &Fixtur
             // Add security headers if requested
             if hook_name.contains("security") {
                 code.push_str(&format!(
-                    r#"async function {}(response: any): Promise<any> {{
+                    r#"async function {}(response: HookResponse): Promise<HookResponse> {{
 	// onResponse hook: {} - Adds security headers
 	if (!response.headers) response.headers = {{}};
 	response.headers["X-Content-Type-Options"] = "nosniff";
@@ -1623,7 +1809,7 @@ fn generate_lifecycle_hooks_ts(fixture_id: &str, hooks: &Value, fixture: &Fixtur
                 ));
             } else if hook_name.contains("timing") || hook_name.contains("timer") {
                 code.push_str(&format!(
-                    r#"async function {}(response: any): Promise<any> {{
+                    r#"async function {}(response: HookResponse): Promise<HookResponse> {{
 	// onResponse hook: {} - Adds timing header
 	if (!response.headers) response.headers = {{}};
 	response.headers["X-Response-Time"] = "0ms";
@@ -1635,7 +1821,7 @@ fn generate_lifecycle_hooks_ts(fixture_id: &str, hooks: &Value, fixture: &Fixtur
                 ));
             } else {
                 code.push_str(&format!(
-                    r#"async function {}(response: any): Promise<any> {{
+                    r#"async function {}(response: HookResponse): Promise<HookResponse> {{
 	// Mock onResponse hook: {}
 	return response;
 }}
@@ -1654,7 +1840,7 @@ fn generate_lifecycle_hooks_ts(fixture_id: &str, hooks: &Value, fixture: &Fixtur
             let func_name = to_camel_case(&format!("{}_{}_on_error_{}", fixture_id, hook_name, idx));
 
             code.push_str(&format!(
-                r#"async function {}(response: any): Promise<any> {{
+                r#"async function {}(response: HookResponse): Promise<HookResponse> {{
 	// onError hook: {} - Format error response
 	if (!response.headers) response.headers = {{}};
 	response.headers["Content-Type"] = "application/json";

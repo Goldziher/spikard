@@ -152,6 +152,12 @@ fn build_sse_spec(fixtures: &[AsyncFixture]) -> Result<String> {
 
 fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String {
     let method_name = build_method_name(category, index, &fixture.name);
+    if fixture_should_skip(category, fixture) {
+        return format!(
+            "  xit \"{}\" do\n    skip \"Not supported by the Ruby in-memory client\"\n  end\n\n",
+            fixture.name
+        );
+    }
     let background_info = background_data(fixture).expect("invalid background fixture");
     let request_method = fixture.request.method.to_ascii_lowercase();
     let mut query_suffix: Option<String> = None;
@@ -380,6 +386,10 @@ fn value_to_query_pairs(key: &str, value: &Value) -> Vec<String> {
             }
         }
     }
+}
+
+fn fixture_should_skip(category: &str, fixture: &Fixture) -> bool {
+    category == "content_types" && fixture.name == "20_content_length_mismatch"
 }
 
 fn build_expectations(

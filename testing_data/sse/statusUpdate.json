@@ -3,15 +3,25 @@
 	"description": "Test fixture for statusUpdate message",
 	"examples": [
 		{
-			"message": "example_message",
-			"metadata": {},
-			"service": "example_service",
-			"status": "example_status",
+			"message": "All systems operational",
+			"metadata": {
+				"region": "us-east-1",
+				"uptime": 99.99
+			},
+			"service": "payment-gateway",
+			"status": "operational",
 			"timestamp": "2024-01-15T10:30:00Z",
 			"type": "status_update"
 		}
 	],
 	"name": "statusUpdate",
+	"operations": [
+		{
+			"action": "send",
+			"name": "streamNotifications",
+			"replies": []
+		}
+	],
 	"protocol": "sse",
 	"schema": {
 		"properties": {

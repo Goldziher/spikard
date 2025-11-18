@@ -3,14 +3,21 @@
 	"description": "Test fixture for systemAlert message",
 	"examples": [
 		{
-			"level": "example_level",
-			"message": "example_message",
-			"source": "example_source",
+			"level": "critical",
+			"message": "Database connection pool exhausted",
+			"source": "database-service",
 			"timestamp": "2024-01-15T10:30:00Z",
 			"type": "system_alert"
 		}
 	],
 	"name": "systemAlert",
+	"operations": [
+		{
+			"action": "send",
+			"name": "streamNotifications",
+			"replies": []
+		}
+	],
 	"protocol": "sse",
 	"schema": {
 		"properties": {

@@ -74,7 +74,7 @@ describe("spikard-cli DTO generation (node)", () => {
 		const outputPath = path.join(tmp, "app.ts");
 		fs.writeFileSync(specPath, OPENAPI_SPEC);
 
-		runCli(["generate", specPath, "--lang", "typescript", "--dto", "zod", "--output", outputPath]);
+		runCli(["generate", "openapi", specPath, "--lang", "typescript", "--dto", "zod", "--output", outputPath]);
 
 		const contents = fs.readFileSync(outputPath, "utf-8");
 		expect(contents).toContain('import { z } from "zod"');

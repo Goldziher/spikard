@@ -2,11 +2,6 @@
  * Testing utilities for Spikard applications
  */
 
-import type { ChildProcess } from "node:child_process";
-import { once } from "node:events";
-import * as fs from "node:fs";
-import * as path from "node:path";
-// Native module is built into this package directory; import the napi loader directly
 import {
 	TestClient as NativeTestClient,
 	type TestResponse as NativeTestResponse,
@@ -67,8 +62,6 @@ export interface RequestOptions {
  */
 export class TestClient {
 	private nativeClient: NativeTestClient;
-	private serverProcess: ChildProcess | null = null;
-	private serverScriptPath: string | null = null;
 
 	/**
 	 * Create a new test client
@@ -210,33 +203,9 @@ export class TestClient {
 	}
 
 	/**
-	 * Stop the subprocess server
-	 */
-	private async stopServer(): Promise<void> {
-		if (this.serverProcess) {
-			this.serverProcess.kill();
-			await once(this.serverProcess, "exit");
-			this.serverProcess = null;
-			this.serverPort = null;
-		}
-
-		if (this.serverScriptPath) {
-			const tmpDir = path.dirname(this.serverScriptPath);
-			try {
-				fs.unlinkSync(this.serverScriptPath);
-				fs.rmdirSync(tmpDir);
-			} catch (_error) {
-				// Ignore cleanup errors
-			}
-			this.serverScriptPath = null;
-		}
-	}
-
-	/**
 	 * Connect to a WebSocket endpoint
 	 *
-	 * Uses the native test client to create an in-memory WebSocket connection
-	 * without requiring a subprocess server.
+	 * Uses the native test client to create an in-memory WebSocket connection.
 	 *
 	 * @param path - WebSocket path
 	 * @returns WebSocket test connection
@@ -248,7 +217,5 @@ export class TestClient {
 	/**
 	 * Cleanup resources when test client is done
 	 */
-	async cleanup(): Promise<void> {
-		await this.stopServer();
-	}
+	async cleanup(): Promise<void> {}
 }

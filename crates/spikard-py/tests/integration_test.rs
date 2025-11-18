@@ -7,15 +7,39 @@ use axum::body::Body;
 use axum::http::{Method, Request, StatusCode};
 use pyo3::prelude::*;
 use serde_json::json;
-use spikard_http::ServerConfig;
 use spikard_http::handler_trait::{Handler, RequestData};
 use std::collections::HashMap;
+use std::ffi::CString;
 use std::sync::Arc;
 
 /// Helper function to initialize Python for tests
 fn init_python() {
     pyo3::prepare_freethreaded_python();
     let _ = _spikard::init_python_event_loop();
+}
+
+fn module_from_code<'py>(py: Python<'py>, code: &str, filename: &str, module_name: &str) -> Bound<'py, PyModule> {
+    let code_cstr = CString::new(code).expect("Python source must not contain null bytes");
+    let filename_cstr = CString::new(filename).expect("filename must not contain null bytes");
+    let module_cstr = CString::new(module_name).expect("module name must not contain null bytes");
+
+    PyModule::from_code(
+        py,
+        code_cstr.as_c_str(),
+        filename_cstr.as_c_str(),
+        module_cstr.as_c_str(),
+    )
+    .expect("failed to compile inline Python module")
+}
+
+fn build_python_handler(code: &str, function: &str, is_async: bool) -> Arc<dyn Handler> {
+    Python::with_gil(|py| {
+        let module = module_from_code(py, code, "test.py", "test");
+        let handler_fn = module.getattr(function).unwrap();
+        let handler_py: Py<PyAny> = handler_fn.into();
+        let python_handler = _spikard::PythonHandler::new(handler_py, is_async, None, None, None);
+        Arc::new(python_handler)
+    })
 }
 
 #[test]
@@ -29,7 +53,7 @@ def simple_handler(path_params, query_params, body, headers, cookies):
     return {"status_code": 200, "body": {"message": "Hello"}}
 "#;
 
-        let module = PyModule::from_code(py, code, "test.py", "test").unwrap();
+        let module = module_from_code(py, code, "test.py", "test");
         let handler_fn = module.getattr("simple_handler").unwrap();
         let handler_py: Py<PyAny> = handler_fn.into();
 
@@ -50,9 +74,7 @@ def simple_handler(path_params, query_params, body, headers, cookies):
 async fn test_python_handler_sync_execution() {
     init_python();
 
-    Python::with_gil(|py| {
-        // Create a synchronous Python handler
-        let code = r#"
+    let code = r#"
 def sync_handler(path_params, query_params, body, headers, cookies):
     return {
         "status_code": 200,
@@ -63,51 +85,37 @@ def sync_handler(path_params, query_params, body, headers, cookies):
     }
 "#;
 
-        let module = PyModule::from_code(py, code, "test.py", "test").unwrap();
-        let handler_fn = module.getattr("sync_handler").unwrap();
-        let handler_py: Py<PyAny> = handler_fn.into();
+    let handler = build_python_handler(code, "sync_handler", false);
 
-        let python_handler = _spikard::PythonHandler::new(handler_py, false, None, None, None);
+    let request_data = RequestData {
+        path_params: HashMap::new().into(),
+        query_params: serde_json::Value::Null,
+        raw_query_params: HashMap::new().into(),
+        body: json!({"test": "data"}),
+        headers: HashMap::new().into(),
+        cookies: HashMap::new().into(),
+        method: "POST".to_string(),
+        path: "/test".to_string(),
+    };
 
-        let handler: Arc<dyn Handler> = Arc::new(python_handler);
+    let request = Request::builder()
+        .method(Method::POST)
+        .uri("/test")
+        .body(Body::empty())
+        .unwrap();
 
-        // Create test request data
-        let request_data = RequestData {
-            path_params: HashMap::new(),
-            query_params: serde_json::Value::Null,
-            raw_query_params: HashMap::new(),
-            body: json!({"test": "data"}),
-            headers: HashMap::new(),
-            cookies: HashMap::new(),
-            method: "POST".to_string(),
-            path: "/test".to_string(),
-        };
+    let response = handler.call(request, request_data).await;
 
-        let request = Request::builder()
-            .method(Method::POST)
-            .uri("/test")
-            .body(Body::empty())
-            .unwrap();
-
-        // Execute handler
-        let result = handler.call(request, request_data);
-
-        // Run the future
-        let response = result.await;
-
-        assert!(response.is_ok());
-        let resp = response.unwrap();
-        assert_eq!(resp.status(), StatusCode::OK);
-    });
+    assert!(response.is_ok());
+    let resp = response.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
 }
 
 #[tokio::test]
 async fn test_python_handler_async_execution() {
     init_python();
 
-    Python::with_gil(|py| {
-        // Create an asynchronous Python handler
-        let code = r#"
+    let code = r#"
 import asyncio
 
 async def async_handler(path_params, query_params, body, headers, cookies):
@@ -122,104 +130,76 @@ async def async_handler(path_params, query_params, body, headers, cookies):
     }
 "#;
 
-        let module = PyModule::from_code(py, code, "test.py", "test").unwrap();
-        let handler_fn = module.getattr("async_handler").unwrap();
-        let handler_py: Py<PyAny> = handler_fn.into();
+    let handler = build_python_handler(code, "async_handler", true);
 
-        let python_handler = _spikard::PythonHandler::new(
-            handler_py, true, // async handler
-            None, None, None,
-        );
+    let mut path_params = HashMap::new();
+    path_params.insert("id".to_string(), "42".to_string());
 
-        let handler: Arc<dyn Handler> = Arc::new(python_handler);
+    let request_data = RequestData {
+        path_params: path_params.into(),
+        query_params: serde_json::Value::Null,
+        raw_query_params: HashMap::new().into(),
+        body: serde_json::Value::Null,
+        headers: HashMap::new().into(),
+        cookies: HashMap::new().into(),
+        method: "GET".to_string(),
+        path: "/items/42".to_string(),
+    };
 
-        // Create test request data with path params
-        let mut path_params = HashMap::new();
-        path_params.insert("id".to_string(), "42".to_string());
+    let request = Request::builder()
+        .method(Method::GET)
+        .uri("/items/42")
+        .body(Body::empty())
+        .unwrap();
 
-        let request_data = RequestData {
-            path_params,
-            query_params: serde_json::Value::Null,
-            raw_query_params: HashMap::new(),
-            body: serde_json::Value::Null,
-            headers: HashMap::new(),
-            cookies: HashMap::new(),
-            method: "GET".to_string(),
-            path: "/items/42".to_string(),
-        };
+    let response = handler.call(request, request_data).await;
 
-        let request = Request::builder()
-            .method(Method::GET)
-            .uri("/items/42")
-            .body(Body::empty())
-            .unwrap();
-
-        // Execute handler
-        let result = handler.call(request, request_data);
-
-        // Run the future
-        let response = result.await;
-
-        assert!(response.is_ok());
-        let resp = response.unwrap();
-        assert_eq!(resp.status(), StatusCode::OK);
-    });
+    assert!(response.is_ok());
+    let resp = response.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
 }
 
 #[tokio::test]
 async fn test_python_handler_error_handling() {
     init_python();
 
-    Python::with_gil(|py| {
-        // Create a Python handler that raises an exception
-        let code = r#"
+    let code = r#"
 def error_handler(path_params, query_params, body, headers, cookies):
     raise ValueError("Test error")
 "#;
 
-        let module = PyModule::from_code(py, code, "test.py", "test").unwrap();
-        let handler_fn = module.getattr("error_handler").unwrap();
-        let handler_py: Py<PyAny> = handler_fn.into();
+    let handler = build_python_handler(code, "error_handler", false);
 
-        let python_handler = _spikard::PythonHandler::new(handler_py, false, None, None, None);
+    let request_data = RequestData {
+        path_params: HashMap::new().into(),
+        query_params: serde_json::Value::Null,
+        raw_query_params: HashMap::new().into(),
+        body: serde_json::Value::Null,
+        headers: HashMap::new().into(),
+        cookies: HashMap::new().into(),
+        method: "GET".to_string(),
+        path: "/error".to_string(),
+    };
 
-        let handler: Arc<dyn Handler> = Arc::new(python_handler);
+    let request = Request::builder()
+        .method(Method::GET)
+        .uri("/error")
+        .body(Body::empty())
+        .unwrap();
 
-        let request_data = RequestData {
-            path_params: HashMap::new(),
-            query_params: serde_json::Value::Null,
-            raw_query_params: HashMap::new(),
-            body: serde_json::Value::Null,
-            headers: HashMap::new(),
-            cookies: HashMap::new(),
-            method: "GET".to_string(),
-            path: "/error".to_string(),
-        };
+    let result = handler.call(request, request_data).await;
 
-        let request = Request::builder()
-            .method(Method::GET)
-            .uri("/error")
-            .body(Body::empty())
-            .unwrap();
-
-        // Execute handler
-        let result = handler.call(request, request_data).await;
-
-        // Should return error
-        assert!(result.is_err());
-        let (status, message) = result.unwrap_err();
-        assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
-        assert!(message.contains("Python error"));
-    });
+    assert!(result.is_err());
+    let (status, message) = result.unwrap_err();
+    assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
+    assert!(message.contains("Python error"));
 }
 
 #[tokio::test]
 async fn test_python_handler_with_headers_and_cookies() {
     init_python();
 
-    Python::with_gil(|py| {
-        // Create a handler that echoes headers and cookies
-        let code = r#"
+    let code = r#"
 def echo_handler(path_params, query_params, body, headers, cookies):
     return {
         "status_code": 200,
@@ -230,46 +210,37 @@ def echo_handler(path_params, query_params, body, headers, cookies):
     }
 "#;
 
-        let module = PyModule::from_code(py, code, "test.py", "test").unwrap();
-        let handler_fn = module.getattr("echo_handler").unwrap();
-        let handler_py: Py<PyAny> = handler_fn.into();
+    let handler = build_python_handler(code, "echo_handler", false);
 
-        let python_handler = _spikard::PythonHandler::new(handler_py, false, None, None, None);
+    let mut headers = HashMap::new();
+    headers.insert("content-type".to_string(), "application/json".to_string());
+    headers.insert("authorization".to_string(), "Bearer token123".to_string());
 
-        let handler: Arc<dyn Handler> = Arc::new(python_handler);
+    let mut cookies = HashMap::new();
+    cookies.insert("session_id".to_string(), "abc123".to_string());
 
-        // Create request with headers and cookies
-        let mut headers = HashMap::new();
-        headers.insert("content-type".to_string(), "application/json".to_string());
-        headers.insert("authorization".to_string(), "Bearer token123".to_string());
+    let request_data = RequestData {
+        path_params: HashMap::new().into(),
+        query_params: serde_json::Value::Null,
+        raw_query_params: HashMap::new().into(),
+        body: serde_json::Value::Null,
+        headers: headers.clone().into(),
+        cookies: cookies.clone().into(),
+        method: "GET".to_string(),
+        path: "/echo".to_string(),
+    };
 
-        let mut cookies = HashMap::new();
-        cookies.insert("session_id".to_string(), "abc123".to_string());
+    let request = Request::builder()
+        .method(Method::GET)
+        .uri("/echo")
+        .body(Body::empty())
+        .unwrap();
 
-        let request_data = RequestData {
-            path_params: HashMap::new(),
-            query_params: serde_json::Value::Null,
-            raw_query_params: HashMap::new(),
-            body: serde_json::Value::Null,
-            headers,
-            cookies,
-            method: "GET".to_string(),
-            path: "/echo".to_string(),
-        };
+    let result = handler.call(request, request_data).await;
 
-        let request = Request::builder()
-            .method(Method::GET)
-            .uri("/echo")
-            .body(Body::empty())
-            .unwrap();
-
-        // Execute handler
-        let result = handler.call(request, request_data).await;
-
-        assert!(result.is_ok());
-        let resp = result.unwrap();
-        assert_eq!(resp.status(), StatusCode::OK);
-    });
+    assert!(result.is_ok());
+    let resp = result.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
 }
 
 #[test]
@@ -327,11 +298,11 @@ app.register_route(
         let sys_path = sys.getattr("path").unwrap();
         sys_path.call_method1("insert", (0, "packages/python")).unwrap();
 
-        let module = PyModule::from_code(py, code, "test_app.py", "test_app").unwrap();
+        let module = module_from_code(py, code, "test_app.py", "test_app");
         let app = module.getattr("app").unwrap();
 
         // Extract routes
-        let routes = _spikard::extract_routes_from_app(py, app);
+        let routes = _spikard::extract_routes_from_app(py, &app);
 
         assert!(routes.is_ok());
         let route_list = routes.unwrap();

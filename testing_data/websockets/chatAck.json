@@ -1,0 +1,39 @@
+{
+	"channel": null,
+	"description": "Test fixture for chatAck message",
+	"examples": [
+		{
+			"messageId": "ack-123",
+			"status": "delivered",
+			"timestamp": "2024-01-15T10:31:00Z",
+			"type": "chatAck"
+		}
+	],
+	"name": "chatAck",
+	"operations": [],
+	"protocol": "websocket",
+	"schema": {
+		"properties": {
+			"messageId": {
+				"description": "Server-side identifier of the published message",
+				"type": "string"
+			},
+			"status": {
+				"description": "Delivery result",
+				"enum": ["queued", "delivered", "rejected"],
+				"type": "string"
+			},
+			"timestamp": {
+				"description": "Time when the message was processed",
+				"format": "date-time",
+				"type": "string"
+			},
+			"type": {
+				"const": "chatAck",
+				"type": "string"
+			}
+		},
+		"required": ["type", "messageId", "status", "timestamp"],
+		"type": "object"
+	}
+}

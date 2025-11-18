@@ -3,12 +3,24 @@
 	"description": "Test fixture for userLeft message",
 	"examples": [
 		{
-			"timestamp": "2024-01-15T10:30:00Z",
+			"timestamp": "2024-01-15T10:35:00Z",
 			"type": "userLeft",
-			"user": "example_user"
+			"user": "charlie"
 		}
 	],
 	"name": "userLeft",
+	"operations": [
+		{
+			"action": "receive",
+			"name": "receiveMessage",
+			"replies": []
+		},
+		{
+			"action": "send",
+			"name": "broadcastPresence",
+			"replies": []
+		}
+	],
 	"protocol": "websocket",
 	"schema": {
 		"properties": {

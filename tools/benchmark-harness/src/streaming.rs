@@ -8,10 +8,12 @@ use crate::monitor::ResourceMonitor;
 use crate::server::{ServerConfig, find_available_port, start_server};
 use crate::types::{
     ResourceMetrics, StreamingBenchmarkResult, StreamingLatencyMetrics, StreamingMetrics, StreamingProtocol,
+    StreamingTranscript,
 };
 use chrono::Utc;
 use futures_util::{SinkExt, StreamExt, pin_mut};
 use serde::Deserialize;
+use serde_json;
 use std::path::{Path, PathBuf};
 use tokio::task::JoinSet;
 use tokio::time::{Duration, Instant, sleep_until, timeout};
@@ -116,6 +118,7 @@ impl StreamingBenchmarkRunner {
                     } else {
                         Some(format!("{} streaming errors", task_stats.errors))
                     },
+                    transcript: task_stats.transcript,
                 })
             }
             Err(err) => {
@@ -140,6 +143,7 @@ impl StreamingBenchmarkRunner {
                     metrics: StreamingMetrics::default(),
                     success: false,
                     error: Some(err.to_string()),
+                    transcript: None,
                 })
             }
         }
@@ -187,6 +191,7 @@ struct StreamingTaskStats {
     latency_max_ms: f64,
     latency_count: u64,
     errors: u64,
+    transcript: Option<StreamingTranscript>,
 }
 
 async fn run_streaming_load(
@@ -213,10 +218,11 @@ async fn run_websocket_load(
     let url = format!("{}{}", ws_base, fixture.channel);
     let deadline = Instant::now() + duration;
 
-    for _ in 0..connections {
+    for idx in 0..connections {
         let uri = url.clone();
         let payload = payload.clone();
-        join_set.spawn(async move { websocket_worker(uri, payload, deadline).await });
+        let capture = idx == 0;
+        join_set.spawn(async move { websocket_worker(uri, payload, deadline, capture).await });
     }
 
     aggregate_stats(join_set).await
@@ -232,9 +238,10 @@ async fn run_sse_load(
     let url = format!("{}{}", base_http_url, fixture.channel);
     let deadline = Instant::now() + duration;
 
-    for _ in 0..connections {
+    for idx in 0..connections {
         let uri = url.clone();
-        join_set.spawn(async move { sse_worker(uri, deadline).await });
+        let capture = idx == 0;
+        join_set.spawn(async move { sse_worker(uri, deadline, capture).await });
     }
 
     aggregate_stats(join_set).await
@@ -254,6 +261,9 @@ async fn aggregate_stats(mut join_set: JoinSet<StreamingTaskStats>) -> Result<St
                 aggregate.latency_max_ms = aggregate.latency_max_ms.max(stats.latency_max_ms);
                 aggregate.latency_count += stats.latency_count;
                 aggregate.errors += stats.errors;
+                if aggregate.transcript.is_none() {
+                    aggregate.transcript = stats.transcript;
+                }
             }
             Err(e) => {
                 aggregate.errors += 1;
@@ -265,8 +275,9 @@ async fn aggregate_stats(mut join_set: JoinSet<StreamingTaskStats>) -> Result<St
     Ok(aggregate)
 }
 
-async fn websocket_worker(uri: String, payload: String, deadline: Instant) -> StreamingTaskStats {
+async fn websocket_worker(uri: String, payload: String, deadline: Instant, capture: bool) -> StreamingTaskStats {
     let mut stats = StreamingTaskStats::default();
+    let mut transcript = capture.then(StreamingTranscript::default);
 
     match connect_async(&uri).await {
         Ok((mut ws_stream, _)) => {
@@ -279,14 +290,27 @@ async fn websocket_worker(uri: String, payload: String, deadline: Instant) -> St
                 }
                 stats.messages_sent += 1;
                 let send_start = Instant::now();
+                if let Some(record) = transcript.as_mut()
+                    && let Ok(value) = serde_json::from_str::<serde_json::Value>(&payload)
+                {
+                    record.sent.push(value);
+                }
 
                 match timeout(Duration::from_secs(2), ws_stream.next()).await {
-                    Ok(Some(Ok(Message::Text(_)))) | Ok(Some(Ok(Message::Binary(_)))) => {
+                    Ok(Some(Ok(Message::Text(text)))) => {
                         stats.responses_received += 1;
                         let elapsed = send_start.elapsed().as_secs_f64() * 1000.0;
                         stats.latency_total_ms += elapsed;
                         stats.latency_count += 1;
                         stats.latency_max_ms = stats.latency_max_ms.max(elapsed);
+                        if let Some(record) = transcript.as_mut()
+                            && let Ok(value) = serde_json::from_str::<serde_json::Value>(&text)
+                        {
+                            record.received.push(value);
+                        }
+                    }
+                    Ok(Some(Ok(Message::Binary(_)))) => {
+                        stats.responses_received += 1;
                     }
                     Ok(Some(Ok(Message::Frame(_)))) => {
                         // Ignore raw frames (should not appear for most clients).
@@ -314,12 +338,14 @@ async fn websocket_worker(uri: String, payload: String, deadline: Instant) -> St
         }
     }
 
+    stats.transcript = transcript;
     stats
 }
 
-async fn sse_worker(uri: String, deadline: Instant) -> StreamingTaskStats {
+async fn sse_worker(uri: String, deadline: Instant, capture: bool) -> StreamingTaskStats {
     let mut stats = StreamingTaskStats::default();
     let client = reqwest::Client::new();
+    let mut transcript = capture.then(StreamingTranscript::default);
 
     match client.get(&uri).header("accept", "text/event-stream").send().await {
         Ok(response) => {
@@ -334,7 +360,7 @@ async fn sse_worker(uri: String, deadline: Instant) -> StreamingTaskStats {
                         match chunk {
                             Some(Ok(bytes)) => {
                                 buffer.extend_from_slice(&bytes);
-                                stats.events_received += drain_sse_events(&mut buffer);
+                                stats.events_received += drain_sse_events(&mut buffer, transcript.as_mut());
                             }
                             Some(Err(_)) => {
                                 stats.errors += 1;
@@ -353,14 +379,25 @@ async fn sse_worker(uri: String, deadline: Instant) -> StreamingTaskStats {
         }
     }
 
+    stats.transcript = transcript;
     stats
 }
 
-fn drain_sse_events(buffer: &mut Vec<u8>) -> u64 {
+fn drain_sse_events(buffer: &mut Vec<u8>, mut transcript: Option<&mut StreamingTranscript>) -> u64 {
     let mut count = 0;
     while let Some(idx) = buffer.windows(2).position(|w| w == b"\n\n") {
+        let frame = buffer[..idx].to_vec();
         buffer.drain(..idx + 2);
         count += 1;
+        if let Some(record) = transcript.as_mut()
+            && let Ok(text) = std::str::from_utf8(&frame)
+            && let Some(data_line) = text.lines().find(|line| line.starts_with("data:"))
+        {
+            let payload = data_line.trim_start_matches("data:").trim();
+            if let Ok(value) = serde_json::from_str::<serde_json::Value>(payload) {
+                record.received.push(value);
+            }
+        }
     }
     count
 }

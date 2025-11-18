@@ -75,11 +75,7 @@ RSpec.describe 'SSE Type Systems' do
   end
 
   # 2. Dry::Schema (if available)
-  describe 'Dry::Schema', skip: !defined?(Dry::Schema) do
-    before(:all) do
-      require 'dry-schema'
-      Dry::Schema.load_extensions(:json_schema)
-    end
+  describe 'Dry::Schema', skip: !DRY_SCHEMA_AVAILABLE do
 
     let(:status_event_schema) do
       Dry::Schema.JSON do
@@ -139,21 +135,14 @@ RSpec.describe 'SSE Type Systems' do
   end
 
   # 3. Dry::Struct (if available)
-  describe 'Dry::Struct', skip: !defined?(Dry::Struct) do
+  describe 'Dry::Struct', skip: !DRY_STRUCT_AVAILABLE do
     before(:all) do
-      require 'dry-struct'
-      require 'dry-types'
-
-      module Types
-        include Dry.Types()
-      end
-
       # Define struct globally for tests
       ::StatusEvent = Class.new(Dry::Struct) do
         attribute :status, Types::String
         attribute :message, Types::String
         attribute :timestamp, Types::Integer
-      end
+      end unless defined?(::StatusEvent)
     end
 
     let(:app) do

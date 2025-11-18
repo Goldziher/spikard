@@ -23,6 +23,17 @@ pub struct AsyncFixture {
     pub schema: Value,
     #[serde(default)]
     pub examples: Vec<Value>,
+    #[serde(default)]
+    pub operations: Vec<AsyncFixtureOperation>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct AsyncFixtureOperation {
+    #[allow(dead_code)]
+    pub name: String,
+    pub action: String,
+    #[serde(default)]
+    pub replies: Vec<String>,
 }
 
 pub fn load_sse_fixtures(fixtures_dir: &Path) -> Result<Vec<AsyncFixture>> {

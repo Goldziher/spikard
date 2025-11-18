@@ -113,8 +113,8 @@ async def test_head_get_metadata_without_body() -> None:
 
         assert response.status_code == 200
         response_headers = response.headers
-        assert response_headers.get("content-type") == "application/json"
         assert response_headers.get("content-length") == "85"
+        assert response_headers.get("content-type") == "application/json"
 
 
 async def test_delete_with_response_body() -> None:

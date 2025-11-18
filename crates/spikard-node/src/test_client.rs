@@ -11,7 +11,7 @@ use crate::response::{HandlerReturnValue, TestResponse};
 use axum::body::Body;
 use axum::extract::Request;
 use axum::http::{HeaderMap, HeaderValue, Method, StatusCode, header};
-use axum_test::TestServer;
+use axum_test::{TestServer, Transport};
 use bytes::Bytes;
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::ThreadsafeFunction;
@@ -346,6 +346,8 @@ impl spikard_http::Handler for JsHandler {
 #[napi]
 pub struct TestClient {
     server: Arc<TestServer>,
+    #[allow(dead_code)]
+    http_runtime: Option<std::sync::Arc<tokio::runtime::Runtime>>,
 }
 
 #[napi]
@@ -443,11 +445,21 @@ impl TestClient {
 
         // Create test server with default transport (in-memory)
         // Note: HTTP transport has issues with WebSocket support in axum-test
-        let server = TestServer::new(axum_router)
+        let runtime = std::sync::Arc::new(
+            tokio::runtime::Runtime::new()
+                .map_err(|e| Error::from_reason(format!("Failed to create Tokio runtime: {}", e)))?,
+        );
+        let handle = runtime.handle().clone();
+        let _guard = handle.enter();
+        let server = TestServer::builder()
+            .transport(Transport::HttpRandomPort)
+            .build(axum_router)
             .map_err(|e| Error::from_reason(format!("Failed to create test server: {}", e)))?;
+        drop(_guard);
 
         Ok(Self {
             server: Arc::new(server),
+            http_runtime: Some(runtime),
         })
     }
 
