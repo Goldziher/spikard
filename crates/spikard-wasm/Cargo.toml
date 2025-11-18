@@ -12,18 +12,29 @@ description = "WebAssembly bindings (wasm-bindgen) for spikard"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-spikard.workspace = true
-wasm-bindgen = "0.2"
 serde.workspace = true
+serde_json.workspace = true
 serde-wasm-bindgen = "0.6"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
 console_error_panic_hook = "0.1"
 js-sys = "0.3"
+once_cell = "1.19"
+url = "2.5"
+percent-encoding = "2.3"
+base64 = "0.22"
+flate2 = { version = "1.0", default-features = false, features = ["rust_backend"] }
+brotli = { version = "3.5", default-features = false, features = ["std"] }
+jsonschema = { version = "0.35", default-features = false }
+thiserror.workspace = true
+serde_qs = "0.15"
+time = { version = "0.3", default-features = false, features = ["formatting", "parsing", "macros", "std"] }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
 
 [package.metadata.wasm-pack.profile.release]
-wasm-opt = ["-O3", "--enable-bulk-memory", "--enable-nontrapping-float-to-int"]
+wasm-opt = ["-O3", "--enable-bulk-memory", "--enable-nontrapping-float-to-int", "--enable-simd"]
 
 [package.metadata.wasm-pack.profile.dev]
 wasm-opt = false

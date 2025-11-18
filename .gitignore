@@ -49,6 +49,7 @@ node_modules/
 npm-debug.log*
 pnpm-debug.log*
 .pnpm-store/
+packages/wasm/runtime/
 
 # TypeScript / Build artifacts
 *.tsbuildinfo
