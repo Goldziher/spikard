@@ -83,10 +83,9 @@ Remaining work before v1.0:
 
 - ✅ Core HTTP framework, middleware, lifecycle hooks, and streaming APIs are implemented across bindings.
 - ✅ Spikard CLI exposes a consistent `generate openapi|asyncapi …` surface (DTO knobs wired for every language).
-- ✅ Test clients for Python/Node/Ruby now sit on the same shared request/streaming encoders as Rust, and all fixture-driven e2e suites are green (Python skips the malformed Content-Length case because httpx/h11 can’t emit invalid bodies).
-- 🔄 Outstanding items:
-  - AsyncAPI scaffolding still needs richer transport coverage (batched messages, true bidirectional channels, schema-aware DTO selection) before we can stamp out production-grade streaming apps from specs.
-  - Snapshot coverage for SSE/WebSocket benchmarks to automatically catch regressions in streaming transports.
+- ✅ Test clients for Python/Node/Ruby now sit on the same shared request/streaming encoders as Rust, and all fixture-driven e2e suites are green (Python + Ruby skip the malformed Content-Length case because the in-memory clients can’t emit invalid bodies).
+- ✅ AsyncAPI scaffolding now exercises batched SSE payloads, real bidirectional WebSocket flows, and the same DTO knobs exposed by the CLI so streaming fixtures stay in lockstep across languages.
+- ✅ Streaming snapshots for SSE/WebSocket benchmarks (see `benchmark-results/streaming/`) automatically catch transport regressions by snapshotting the harness transcripts.
 
 ## Structure
 

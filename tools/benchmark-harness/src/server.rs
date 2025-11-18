@@ -8,6 +8,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 /// Find the workspace root by looking for Cargo.toml
+#[allow(dead_code)]
 fn find_workspace_root() -> Result<PathBuf> {
     // Start from the current executable's directory
     let exe_path =
@@ -110,34 +111,27 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
             cmd.arg(port.to_string());
             cmd
         }
-        // Spikard Python and Node use the unified CLI (when available)
-        "spikard-python" | "spikard-node" => {
-            // Find workspace root and construct absolute path to CLI
-            let workspace_root = find_workspace_root()?;
-            let cli_path = workspace_root.join("target/release/spikard");
-
-            // Determine server file based on framework and variant
-            let server_file = match config.framework.as_str() {
-                "spikard-python" => {
-                    // Check if variant is "async", use server_async.py
-                    if let Some(ref variant) = config.variant {
-                        if variant == "async" {
-                            "server_async.py"
-                        } else {
-                            "server.py"
-                        }
-                    } else {
-                        "server.py"
-                    }
-                }
-                "spikard-node" => "server.ts",
-                _ => unreachable!(),
+        "spikard-python" => {
+            let server_file = if let Some(ref variant) = config.variant
+                && variant == "async"
+            {
+                "server_async.py"
+            } else {
+                "server.py"
             };
-
             let server_path = config.app_dir.join(server_file);
-
-            let mut cmd = Command::new(cli_path);
-            cmd.arg("run").arg(&server_path).arg("--port").arg(port.to_string());
+            let mut cmd = Command::new("uv");
+            cmd.arg("run")
+                .arg("python")
+                .arg(server_path)
+                .arg("--port")
+                .arg(port.to_string());
+            cmd
+        }
+        "spikard-node" => {
+            let server_path = config.app_dir.join("server.ts");
+            let mut cmd = Command::new("ts-node");
+            cmd.arg(server_path).arg("--port").arg(port.to_string());
             cmd
         }
         // Spikard Ruby runs directly with ruby interpreter

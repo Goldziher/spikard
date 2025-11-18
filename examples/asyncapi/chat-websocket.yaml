@@ -46,6 +46,24 @@ operations:
       - $ref: '#/components/messages/userJoined'
       - $ref: '#/components/messages/userLeft'
     description: Receive chat messages and user events
+  publishChat:
+    action: receive
+    channel:
+      $ref: '#/channels/~1chat'
+    summary: Client publishes chat messages to server
+    messages:
+      - $ref: '#/components/messages/chatMessage'
+    reply:
+      messages:
+        - $ref: '#/components/messages/chatAck'
+  broadcastPresence:
+    action: send
+    channel:
+      $ref: '#/channels/~1chat'
+    summary: Server broadcasts presence changes
+    messages:
+      - $ref: '#/components/messages/userJoined'
+      - $ref: '#/components/messages/userLeft'
 
 components:
   messages:
@@ -140,6 +158,39 @@ components:
             type: userLeft
             user: charlie
             timestamp: '2024-01-15T10:35:00Z'
+    chatAck:
+      name: chatAck
+      title: Chat ACK
+      summary: Acknowledgement for delivered chat messages
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: chatAck
+          messageId:
+            type: string
+            description: Server-side identifier of the published message
+          status:
+            type: string
+            enum: [queued, delivered, rejected]
+            description: Delivery result
+          timestamp:
+            type: string
+            format: date-time
+            description: Time when the message was processed
+        required:
+          - type
+          - messageId
+          - status
+          - timestamp
+      examples:
+        - payload:
+            type: chatAck
+            messageId: ack-123
+            status: delivered
+            timestamp: '2024-01-15T10:31:00Z'
 
   schemas:
     username:

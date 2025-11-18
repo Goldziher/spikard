@@ -48,7 +48,7 @@ describe("compression", () => {
 			"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 		);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["content-encoding"]).toBe("gzip");
 		expect(responseHeaders.vary).toBe("Accept-Encoding");
+		expect(responseHeaders["content-encoding"]).toBe("gzip");
 	});
 });

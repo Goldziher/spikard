@@ -28,9 +28,9 @@ async def test_07_cors_preflight_header_not_allowed() -> None:
 
     async with TestClient(create_app_cors_07_cors_preflight_header_not_allowed()) as client:
         headers = {
-            "Access-Control-Request-Method": "POST",
             "Access-Control-Request-Headers": "X-Custom-Header",
             "Origin": "https://example.com",
+            "Access-Control-Request-Method": "POST",
         }
         response = await client.options("/api/data", headers=headers)
 
@@ -42,8 +42,8 @@ async def test_cors_vary_header_for_proper_caching() -> None:
 
     async with TestClient(create_app_cors_cors_vary_header_for_proper_caching()) as client:
         headers = {
-            "Cache-Control": "max-age=3600",
             "Origin": "https://app.example.com",
+            "Cache-Control": "max-age=3600",
         }
         response = await client.get("/api/cached-resource", headers=headers)
 
@@ -52,9 +52,9 @@ async def test_cors_vary_header_for_proper_caching() -> None:
         assert "data" in response_data
         assert response_data["data"] == "cacheable resource"
         response_headers = response.headers
-        assert response_headers.get("access-control-allow-origin") == "https://app.example.com"
-        assert response_headers.get("vary") == "Origin"
         assert response_headers.get("cache-control") == "public, max-age=3600"
+        assert response_headers.get("vary") == "Origin"
+        assert response_headers.get("access-control-allow-origin") == "https://app.example.com"
 
 
 async def test_cors_preflight_for_put_method() -> None:
@@ -62,19 +62,19 @@ async def test_cors_preflight_for_put_method() -> None:
 
     async with TestClient(create_app_cors_cors_preflight_for_put_method()) as client:
         headers = {
+            "Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
             "Origin": "https://app.example.com",
             "Access-Control-Request-Method": "PUT",
-            "Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
         }
         response = await client.options("/api/resource/123", headers=headers)
 
         assert response.status_code == 204
         response_headers = response.headers
-        assert response_headers.get("access-control-max-age") == "3600"
-        assert response_headers.get("access-control-allow-headers") == "Content-Type, X-Custom-Header"
-        assert response_headers.get("access-control-allow-methods") == "GET, POST, PUT, PATCH, DELETE"
-        assert response_headers.get("vary") == "Origin"
         assert response_headers.get("access-control-allow-origin") == "https://app.example.com"
+        assert response_headers.get("vary") == "Origin"
+        assert response_headers.get("access-control-allow-headers") == "Content-Type, X-Custom-Header"
+        assert response_headers.get("access-control-max-age") == "3600"
+        assert response_headers.get("access-control-allow-methods") == "GET, POST, PUT, PATCH, DELETE"
 
 
 async def test_cors_preflight_for_delete_method() -> None:
@@ -89,10 +89,10 @@ async def test_cors_preflight_for_delete_method() -> None:
 
         assert response.status_code == 204
         response_headers = response.headers
-        assert response_headers.get("vary") == "Origin"
-        assert response_headers.get("access-control-allow-origin") == "https://app.example.com"
         assert response_headers.get("access-control-allow-methods") == "GET, POST, PUT, PATCH, DELETE"
         assert response_headers.get("access-control-max-age") == "3600"
+        assert response_headers.get("vary") == "Origin"
+        assert response_headers.get("access-control-allow-origin") == "https://app.example.com"
 
 
 async def test_cors_multiple_allowed_origins() -> None:
@@ -127,10 +127,10 @@ async def test_cors_preflight_request() -> None:
         assert response.status_code == 200
         response_data = response.json()
         response_headers = response.headers
-        assert response_headers.get("access-control-allow-origin") == "https://example.com"
         assert response_headers.get("access-control-allow-headers") == "Content-Type, X-Custom-Header"
-        assert response_headers.get("access-control-max-age") == "600"
         assert response_headers.get("access-control-allow-methods") == "GET, POST, PUT, DELETE, OPTIONS"
+        assert response_headers.get("access-control-allow-origin") == "https://example.com"
+        assert response_headers.get("access-control-max-age") == "600"
 
 
 async def test_cors_with_credentials() -> None:
@@ -148,9 +148,9 @@ async def test_cors_with_credentials() -> None:
         assert "username" in response_data
         assert response_data["username"] == "john"
         response_headers = response.headers
-        assert response_headers.get("access-control-allow-origin") == "https://app.example.com"
         assert response_headers.get("vary") == "Origin"
         assert response_headers.get("access-control-allow-credentials") == "true"
+        assert response_headers.get("access-control-allow-origin") == "https://app.example.com"
 
 
 async def test_cors_regex_pattern_matching_for_origins() -> None:
@@ -184,9 +184,9 @@ async def test_08_cors_max_age() -> None:
 
         assert response.status_code == 204
         response_headers = response.headers
-        assert response_headers.get("access-control-max-age") == "3600"
-        assert response_headers.get("access-control-allow-methods") == "POST"
         assert response_headers.get("access-control-allow-origin") == "https://example.com"
+        assert response_headers.get("access-control-allow-methods") == "POST"
+        assert response_headers.get("access-control-max-age") == "3600"
         assert response_headers.get("access-control-allow-headers") == "Content-Type"
 
 
@@ -229,8 +229,8 @@ async def test_cors_safelisted_headers_without_preflight() -> None:
         headers = {
             "Content-Type": "text/plain",
             "Accept": "application/json",
-            "Accept-Language": "en-US",
             "Origin": "https://app.example.com",
+            "Accept-Language": "en-US",
         }
         response = await client.post("/api/form", headers=headers)
 
@@ -249,17 +249,17 @@ async def test_cors_private_network_access() -> None:
     async with TestClient(create_app_cors_cors_private_network_access()) as client:
         headers = {
             "Origin": "https://public.example.com",
-            "Access-Control-Request-Private-Network": "true",
             "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Private-Network": "true",
         }
         response = await client.options("/api/local-resource", headers=headers)
 
         assert response.status_code == 204
         response_headers = response.headers
+        assert response_headers.get("vary") == "Origin"
+        assert response_headers.get("access-control-allow-origin") == "https://public.example.com"
         assert response_headers.get("access-control-allow-methods") == "GET, POST"
         assert response_headers.get("access-control-allow-private-network") == "true"
-        assert response_headers.get("access-control-allow-origin") == "https://public.example.com"
-        assert response_headers.get("vary") == "Origin"
 
 
 async def test_cors_origin_case_sensitivity() -> None:
@@ -333,8 +333,8 @@ async def test_06_cors_preflight_method_not_allowed() -> None:
 
     async with TestClient(create_app_cors_06_cors_preflight_method_not_allowed()) as client:
         headers = {
-            "Access-Control-Request-Headers": "Content-Type",
             "Access-Control-Request-Method": "DELETE",
+            "Access-Control-Request-Headers": "Content-Type",
             "Origin": "https://example.com",
         }
         response = await client.options("/api/data", headers=headers)

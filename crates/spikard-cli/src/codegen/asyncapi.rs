@@ -7,12 +7,74 @@
 //! AsyncAPI is the standard for describing event-driven APIs, similar to
 //! how OpenAPI describes REST APIs.
 
+use super::ts_schema::{TypeScriptDto, generate_typescript_dto};
 use anyhow::{Context, Result, bail};
+use asyncapiv3::spec::operation::OperationAction;
 use asyncapiv3::spec::{AsyncApiSpec, AsyncApiV3Spec};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+
+#[derive(Debug, Clone)]
+struct MessageDefinition {
+    schema: Value,
+    examples: Vec<Value>,
+}
+
+#[derive(Debug, Clone)]
+struct MessageOperationMetadata {
+    name: String,
+    action: String,
+    replies: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+#[allow(dead_code)]
+struct ChannelOperation {
+    name: String,
+    action: String,
+    messages: Vec<String>,
+    replies: Vec<String>,
+}
+
+fn decode_pointer_segment(segment: &str) -> String {
+    segment.replace("~1", "/").replace("~0", "~")
+}
+
+fn resolve_channel_from_ref(reference: &str) -> Option<String> {
+    let raw = reference.strip_prefix("#/channels/")?;
+    let decoded = raw.split('/').map(decode_pointer_segment).collect::<Vec<_>>().join("/");
+    let normalized = decoded.trim_start_matches('/').to_string();
+    Some(format!("/{}", normalized))
+}
+
+fn resolve_message_from_ref(reference: &str) -> Option<String> {
+    if let Some(name) = reference.strip_prefix("#/components/messages/") {
+        return Some(name.to_string());
+    }
+
+    if let Some(rest) = reference.strip_prefix("#/channels/") {
+        let mut parts = rest.split('/');
+        let channel = parts.next()?;
+        if parts.next()? != "messages" {
+            return None;
+        }
+        let message = parts.next()?;
+        let channel_name = decode_pointer_segment(channel);
+        let slug = channel_name.trim_start_matches('/').replace('/', "_");
+        return Some(format!("{}_{}", slug, decode_pointer_segment(message)));
+    }
+
+    None
+}
+
+fn operation_action_name(action: &OperationAction) -> &'static str {
+    match action {
+        OperationAction::Send => "send",
+        OperationAction::Receive => "receive",
+    }
+}
 
 /// Parse an AsyncAPI v3 specification file
 ///
@@ -40,7 +102,7 @@ pub fn parse_asyncapi_schema(path: &Path) -> Result<AsyncApiV3Spec> {
 /// Extract message schemas from AsyncAPI spec for fixture generation
 ///
 /// Returns a map of message name -> JSON Schema for generating test fixtures
-pub fn extract_message_schemas(spec: &AsyncApiV3Spec) -> Result<HashMap<String, Value>> {
+fn extract_message_schemas(spec: &AsyncApiV3Spec) -> Result<HashMap<String, MessageDefinition>> {
     use asyncapiv3::spec::common::Either;
 
     let mut schemas = HashMap::new();
@@ -52,9 +114,8 @@ pub fn extract_message_schemas(spec: &AsyncApiV3Spec) -> Result<HashMap<String, 
         // Handle either direct Message or reference
         match message_ref_or {
             Either::Right(message) => {
-                // Direct message definition
-                if let Some(schema) = extract_schema_from_message(message, message_name)? {
-                    schemas.insert(message_name.clone(), schema);
+                if let Some(definition) = build_message_definition(message, message_name)? {
+                    schemas.insert(message_name.clone(), definition);
                 }
             }
             Either::Left(reference) => {
@@ -77,8 +138,8 @@ pub fn extract_message_schemas(spec: &AsyncApiV3Spec) -> Result<HashMap<String, 
                     match msg_ref_or {
                         Either::Right(message) => {
                             let full_name = format!("{}_{}", channel_name.trim_start_matches('/'), msg_name);
-                            if let Some(schema) = extract_schema_from_message(message, &full_name)? {
-                                schemas.insert(full_name, schema);
+                            if let Some(definition) = build_message_definition(message, &full_name)? {
+                                schemas.insert(full_name, definition);
                             }
                         }
                         Either::Left(_reference) => {
@@ -95,6 +156,31 @@ pub fn extract_message_schemas(spec: &AsyncApiV3Spec) -> Result<HashMap<String, 
     }
 
     Ok(schemas)
+}
+
+fn build_message_definition(
+    message: &asyncapiv3::spec::message::Message,
+    message_name: &str,
+) -> Result<Option<MessageDefinition>> {
+    let schema = match extract_schema_from_message(message, message_name)? {
+        Some(schema) => schema,
+        None => return Ok(None),
+    };
+
+    let mut examples: Vec<Value> = Vec::new();
+    for example in &message.examples {
+        if !example.payload.is_empty() {
+            let value = serde_json::to_value(&example.payload)
+                .context("Failed to serialize AsyncAPI message example payload")?;
+            examples.push(value);
+        }
+    }
+
+    if examples.is_empty() {
+        examples = generate_example_from_schema(&schema)?;
+    }
+
+    Ok(Some(MessageDefinition { schema, examples }))
 }
 
 /// Extract JSON Schema from an AsyncAPI Message object
@@ -213,7 +299,8 @@ pub fn detect_primary_protocol(spec: &AsyncApiV3Spec) -> Result<Protocol> {
 pub fn generate_fixtures(spec: &AsyncApiV3Spec, output_dir: &Path, protocol: Protocol) -> Result<Vec<PathBuf>> {
     // Extract message schemas
     let schemas = extract_message_schemas(spec)?;
-    let message_channels = collect_message_channels(spec);
+    let (message_channels, alias_map) = collect_message_channels(spec);
+    let message_operations = collect_message_operations(spec, &alias_map);
 
     if schemas.is_empty() {
         tracing::warn!("No message schemas found in AsyncAPI spec");
@@ -234,18 +321,32 @@ pub fn generate_fixtures(spec: &AsyncApiV3Spec, output_dir: &Path, protocol: Pro
     let mut generated_paths = Vec::new();
 
     // Generate a fixture file for each message schema
-    for (message_name, schema) in &schemas {
+    for (message_name, definition) in &schemas {
         let fixture_path = target_dir.join(format!("{}.json", message_name));
 
         // Create fixture with metadata
         let channel = message_channels.get(message_name).cloned();
+        let operations = message_operations
+            .get(message_name)
+            .cloned()
+            .unwrap_or_default()
+            .into_iter()
+            .map(|meta| {
+                serde_json::json!({
+                    "name": meta.name,
+                    "action": meta.action,
+                    "replies": meta.replies,
+                })
+            })
+            .collect::<Vec<_>>();
         let fixture = serde_json::json!({
             "name": message_name,
             "description": format!("Test fixture for {} message", message_name),
             "protocol": protocol.as_str(),
             "channel": channel,
-            "schema": schema,
-            "examples": generate_example_from_schema(schema)?
+            "schema": definition.schema,
+            "examples": definition.examples,
+            "operations": operations,
         });
 
         // Write fixture file
@@ -272,7 +373,36 @@ fn generate_example_from_schema(schema: &Value) -> Result<Vec<Value>> {
         examples.extend(schema_examples.clone());
     }
 
-    // If no examples, generate a basic one from schema
+    if examples.is_empty()
+        && schema
+            .get("type")
+            .and_then(|value| value.as_str())
+            .map(|ty| ty.eq_ignore_ascii_case("array"))
+            .unwrap_or(false)
+    {
+        if let Some(items) = schema.get("items") {
+            let generated = generate_example_from_schema(items)?;
+            let template = generated
+                .into_iter()
+                .next()
+                .unwrap_or_else(|| Value::Object(serde_json::Map::new()));
+            let min_items = schema.get("minItems").and_then(|value| value.as_u64()).unwrap_or(1);
+            let mut target_len = usize::try_from(min_items).unwrap_or(usize::MAX);
+            if target_len == 0 {
+                target_len = 1;
+            }
+            let capped_len = target_len.min(5);
+            let mut array_values = Vec::new();
+            for _ in 0..capped_len {
+                array_values.push(template.clone());
+            }
+            examples.push(Value::Array(array_values));
+        } else {
+            examples.push(Value::Array(vec![]));
+        }
+    }
+
+    // If no examples, generate a basic one from schema objects
     if examples.is_empty()
         && let Some(obj) = schema.get("properties").and_then(|p| p.as_object())
     {
@@ -399,6 +529,7 @@ struct ChannelInfo {
     name: String,
     path: String,
     messages: Vec<String>,
+    operations: Vec<ChannelOperation>,
 }
 
 /// Extract channel information from AsyncAPI spec
@@ -406,16 +537,25 @@ fn extract_channel_info(spec: &AsyncApiV3Spec) -> Result<Vec<ChannelInfo>> {
     use asyncapiv3::spec::common::Either;
 
     let mut channels = Vec::new();
+    let operation_map = collect_channel_operations(spec);
 
     for (channel_path, channel_ref_or) in &spec.channels {
         match channel_ref_or {
             Either::Right(channel) => {
                 let messages: Vec<String> = channel.messages.keys().cloned().collect();
+                let raw_path = channel.address.clone().unwrap_or_else(|| channel_path.clone());
+                let normalized_path = if raw_path.starts_with('/') {
+                    raw_path.clone()
+                } else {
+                    format!("/{}", raw_path)
+                };
+                let operations = operation_map.get(&normalized_path).cloned().unwrap_or_default();
 
                 channels.push(ChannelInfo {
                     name: channel_path.trim_start_matches('/').replace('/', "_"),
-                    path: channel_path.clone(),
+                    path: normalized_path,
                     messages,
+                    operations,
                 });
             }
             Either::Left(_reference) => {
@@ -427,22 +567,138 @@ fn extract_channel_info(spec: &AsyncApiV3Spec) -> Result<Vec<ChannelInfo>> {
     Ok(channels)
 }
 
-fn collect_message_channels(spec: &AsyncApiV3Spec) -> HashMap<String, String> {
+fn collect_message_channels(spec: &AsyncApiV3Spec) -> (HashMap<String, String>, HashMap<String, String>) {
     use asyncapiv3::spec::common::Either;
 
     let mut map = HashMap::new();
+    let mut aliases = HashMap::new();
 
     for (channel_path, channel_ref_or) in &spec.channels {
         let address = match channel_ref_or {
             Either::Right(channel) => channel.address.clone().unwrap_or_else(|| channel_path.clone()),
             Either::Left(_) => continue,
         };
+        let normalized_address = if address.starts_with('/') {
+            address.clone()
+        } else {
+            format!("/{}", address)
+        };
 
         if let Either::Right(channel) = channel_ref_or {
-            for message_name in channel.messages.keys() {
-                map.entry(message_name.clone()).or_insert_with(|| address.clone());
+            for (message_name, message_ref) in &channel.messages {
+                let slug = channel_path.trim_start_matches('/').replace('/', "_");
+                let inline_key = format!("{}_{}", slug, message_name);
+                match message_ref {
+                    Either::Right(_) => {
+                        map.entry(inline_key.clone())
+                            .or_insert_with(|| normalized_address.clone());
+                    }
+                    Either::Left(reference) => {
+                        let target =
+                            resolve_message_from_ref(&reference.reference).unwrap_or_else(|| message_name.clone());
+                        map.entry(target.clone()).or_insert_with(|| normalized_address.clone());
+                        aliases.insert(inline_key, target);
+                    }
+                }
             }
         }
+    }
+
+    (map, aliases)
+}
+
+fn build_typescript_dtos(messages: &HashMap<String, MessageDefinition>) -> Result<HashMap<String, TypeScriptDto>> {
+    let mut map = HashMap::new();
+    for (name, definition) in messages {
+        let dto = generate_typescript_dto(name, &definition.schema)?;
+        map.insert(name.clone(), dto);
+    }
+    Ok(map)
+}
+
+fn collect_message_operations(
+    spec: &AsyncApiV3Spec,
+    aliases: &HashMap<String, String>,
+) -> HashMap<String, Vec<MessageOperationMetadata>> {
+    use asyncapiv3::spec::common::Either;
+
+    let mut map: HashMap<String, Vec<MessageOperationMetadata>> = HashMap::new();
+
+    for (op_name, operation_ref) in &spec.operations {
+        let operation = match operation_ref {
+            Either::Right(op) => op,
+            Either::Left(_) => continue,
+        };
+
+        let replies: Vec<String> = if let Some(Either::Right(reply)) = &operation.reply {
+            reply
+                .messages
+                .iter()
+                .filter_map(|reference| resolve_message_from_ref(&reference.reference))
+                .collect()
+        } else {
+            Vec::new()
+        };
+
+        if let Some(message_refs) = &operation.messages {
+            for reference in message_refs {
+                if let Some(name) = resolve_message_from_ref(&reference.reference) {
+                    let resolved_name = aliases.get(&name).cloned().unwrap_or(name.clone());
+                    map.entry(resolved_name).or_default().push(MessageOperationMetadata {
+                        name: op_name.clone(),
+                        action: operation_action_name(&operation.action).to_string(),
+                        replies: replies.clone(),
+                    });
+                }
+            }
+        }
+    }
+
+    map
+}
+
+fn collect_channel_operations(spec: &AsyncApiV3Spec) -> HashMap<String, Vec<ChannelOperation>> {
+    use asyncapiv3::spec::common::Either;
+
+    let mut map: HashMap<String, Vec<ChannelOperation>> = HashMap::new();
+
+    for (op_name, operation_ref) in &spec.operations {
+        let operation = match operation_ref {
+            Either::Right(op) => op,
+            Either::Left(_) => continue,
+        };
+
+        let channel_path = match resolve_channel_from_ref(&operation.channel.reference) {
+            Some(path) => path,
+            None => continue,
+        };
+
+        let messages = operation
+            .messages
+            .as_ref()
+            .map(|refs| {
+                refs.iter()
+                    .filter_map(|reference| resolve_message_from_ref(&reference.reference))
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+
+        let replies = if let Some(Either::Right(reply)) = &operation.reply {
+            reply
+                .messages
+                .iter()
+                .filter_map(|reference| resolve_message_from_ref(&reference.reference))
+                .collect::<Vec<_>>()
+        } else {
+            Vec::new()
+        };
+
+        map.entry(channel_path.clone()).or_default().push(ChannelOperation {
+            name: op_name.clone(),
+            action: operation_action_name(&operation.action).to_string(),
+            messages,
+            replies,
+        });
     }
 
     map
@@ -975,6 +1231,9 @@ pub fn generate_nodejs_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) ->
         bail!("AsyncAPI spec does not define any channels");
     }
 
+    let schema_map = extract_message_schemas(spec)?;
+    let dto_map = build_typescript_dtos(&schema_map)?;
+
     match protocol {
         Protocol::WebSocket | Protocol::Sse => {}
         other => bail!("Protocol {:?} is not supported for Node.js handler generation", other),
@@ -986,7 +1245,20 @@ pub fn generate_nodejs_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) ->
     if protocol == Protocol::Sse {
         code.push_str("import { StreamingResponse } from \"@spikard/node\";\n");
     }
+    code.push_str("import { z } from \"zod\";\n");
     code.push('\n');
+
+    let mut dto_declarations = String::new();
+    for dto in dto_map.values() {
+        dto_declarations.push_str(&dto.schema_declaration);
+        dto_declarations.push('\n');
+        dto_declarations.push_str(&dto.type_declaration);
+        dto_declarations.push('\n');
+    }
+    if !dto_declarations.is_empty() {
+        code.push_str(&dto_declarations);
+        code.push('\n');
+    }
 
     let mut route_entries = Vec::new();
     let mut handler_entries = Vec::new();
@@ -1001,16 +1273,25 @@ pub fn generate_nodejs_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) ->
 
         match protocol {
             Protocol::WebSocket => {
+                let dto = channel.messages.iter().find_map(|name| dto_map.get(name)).cloned();
+
                 code.push_str(&format!(
                     "async function {}(message: unknown): Promise<string> {{\n",
                     handler_name
                 ));
+                if let Some(dto) = dto {
+                    code.push_str(&format!(
+                        "  const payload: {} = {}.parse(typeof message === \"string\" ? JSON.parse(message) : message);\n",
+                        dto.type_ident, dto.schema_ident
+                    ));
+                } else {
+                    code.push_str("  const payload = typeof message === \"string\" ? JSON.parse(message) : message;\n");
+                }
                 code.push_str(&format!(
                     "  // TODO: Handle {} for {}\n",
                     message_description, channel.path
                 ));
-                code.push_str("  const parsed = typeof message === \"string\" ? JSON.parse(message) : message;\n");
-                code.push_str("  throw new Error(\"Implement WebSocket handler logic\");\n");
+                code.push_str("  return JSON.stringify(payload);\n");
                 code.push_str("}\n\n");
             }
             Protocol::Sse => {
@@ -1019,7 +1300,15 @@ pub fn generate_nodejs_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) ->
                     handler_name
                 ));
                 code.push_str("  async function* eventStream() {\n");
-                code.push_str("    yield \"data: {\\\"message\\\": \\\"replace with event\\\"}\\n\\n\";\n");
+                if let Some(dto) = channel.messages.iter().find_map(|name| dto_map.get(name)) {
+                    code.push_str(&format!(
+                        "    const sample: {} = {}.parse({{}});\n",
+                        dto.type_ident, dto.schema_ident
+                    ));
+                    code.push_str("    yield `data: ${JSON.stringify(sample)}\\n\\n`;\n");
+                } else {
+                    code.push_str("    yield \"data: {\\\"message\\\": \\\"replace with event\\\"}\\n\\n\";\n");
+                }
                 code.push_str("  }\n");
                 code.push_str(
                     "  return new StreamingResponse(eventStream(), { statusCode: 200, headers: { \"content-type\": \"text/event-stream\", \"cache-control\": \"no-cache\" } });\n",

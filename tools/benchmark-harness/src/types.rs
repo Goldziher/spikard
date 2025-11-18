@@ -318,6 +318,8 @@ pub struct StreamingBenchmarkResult {
     pub success: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub transcript: Option<StreamingTranscript>,
 }
 
 /// Streaming workload metrics.
@@ -338,6 +340,12 @@ pub struct StreamingLatencyMetrics {
     pub average_ms: f64,
     pub max_ms: f64,
     pub samples: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct StreamingTranscript {
+    pub sent: Vec<serde_json::Value>,
+    pub received: Vec<serde_json::Value>,
 }
 
 /// Supported streaming protocols.

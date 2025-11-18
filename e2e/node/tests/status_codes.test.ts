@@ -278,10 +278,10 @@ describe("status_codes", () => {
 
 		expect(response.statusCode).toBe(429);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["x-ratelimit-limit"]).toBe("100");
+		expect(responseHeaders["x-ratelimit-reset"]).toBe("1609459200");
 		expect(responseHeaders["x-ratelimit-remaining"]).toBe("0");
 		expect(responseHeaders["retry-after"]).toBe("60");
-		expect(responseHeaders["x-ratelimit-reset"]).toBe("1609459200");
+		expect(responseHeaders["x-ratelimit-limit"]).toBe("100");
 	});
 
 	test("200 OK - Success", async () => {
@@ -308,12 +308,13 @@ describe("status_codes", () => {
 		const response = await client.get("/files/document.pdf", headers);
 
 		expect(response.statusCode).toBe(206);
-		const responseData = response.json();
-		expect(responseData).toBe("binary_data_1024_bytes");
+		const bodyBytes = response.bytes();
+		expect(bodyBytes.length).toBe(1024);
+		expect(bodyBytes.toString("utf-8").startsWith("binary_data_1024_bytes")).toBe(true);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["content-length"]).toBe("1024");
-		expect(responseHeaders["content-range"]).toBe("bytes 0-1023/5000");
-		expect(responseHeaders["accept-ranges"]).toBe("bytes");
 		expect(responseHeaders["content-type"]).toBe("application/pdf");
+		expect(responseHeaders["content-range"]).toBe("bytes 0-1023/5000");
+		expect(responseHeaders["content-length"]).toBe("1024");
+		expect(responseHeaders["accept-ranges"]).toBe("bytes");
 	});
 });

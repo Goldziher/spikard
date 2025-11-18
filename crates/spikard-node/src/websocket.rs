@@ -45,6 +45,7 @@ impl NodeWebSocketHandler {
 impl WebSocketHandler for NodeWebSocketHandler {
     async fn handle_message(&self, message: Value) -> Option<Value> {
         debug!("Node.js WebSocket handler '{}': handle_message", self.name);
+        println!("Node WS handler input: {}", message);
 
         // Serialize message to JSON string for JavaScript
         let json_str = match serde_json::to_string(&message) {
@@ -62,14 +63,17 @@ impl WebSocketHandler for NodeWebSocketHandler {
                 Ok(result) => result,
                 Err(e) => {
                     error!("JavaScript promise failed in handle_message: {}", e);
+                    println!("JS promise failure: {}", e);
                     return None;
                 }
             },
             Err(e) => {
                 error!("Failed to call JavaScript handle_message: {}", e);
+                println!("call_async error: {}", e);
                 return None;
             }
         };
+        println!("Node WS handler raw output: {}", json_output);
 
         // Parse the JSON response from JavaScript
         match serde_json::from_str::<Value>(&json_output) {

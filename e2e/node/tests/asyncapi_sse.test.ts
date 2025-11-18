@@ -1,12 +1,32 @@
-import { createAppSseNotifications } from "../app/main.js";
-
 /**
  * AsyncAPI SSE tests
  * @generated
  */
 
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { TestClient } from "@spikard/node";
 import { describe, expect, test } from "vitest";
+import {
+	createAppSseNotifications,
+	NotificationBatchMessageSchema,
+	StatusUpdateMessageSchema,
+	SystemAlertMessageSchema,
+	UserNotificationMessageSchema,
+} from "../app/main.js";
+
+const ROOT_DIR = path.resolve(__dirname, "../../..");
+const SSE_FIXTURE_ROOT = path.join(ROOT_DIR, "testing_data", "sse");
+
+function loadFixtureExamples(name: string): string[] {
+	const fixturePath = path.join(SSE_FIXTURE_ROOT, `${name}.json`);
+	const data = JSON.parse(readFileSync(fixturePath, "utf-8"));
+	const examples = Array.isArray(data.examples) ? data.examples : [];
+	if (examples.length === 0) {
+		return [JSON.stringify({})];
+	}
+	return examples.map((example) => JSON.stringify(example));
+}
 
 describe("asyncapi_sse", () => {
 	test("SSE /notifications", async () => {
@@ -19,14 +39,18 @@ describe("asyncapi_sse", () => {
 			.split("\n\n")
 			.filter((chunk) => chunk.startsWith("data:"))
 			.map((chunk) => chunk.slice(5).trim());
-		const expected = [
-			'{"level":"example_level","message":"example_message","source":"example_source","timestamp":"2024-01-15T10:30:00Z","type":"system_alert"}',
-			'{"body":"example_body","priority":"example_priority","timestamp":"2024-01-15T10:30:00Z","title":"example_title","type":"user_notification","userId":"example_userId"}',
-			'{"message":"example_message","metadata":{},"service":"example_service","status":"example_status","timestamp":"2024-01-15T10:30:00Z","type":"status_update"}',
+		const fixtures = [
+			{ name: "systemAlert", schema: SystemAlertMessageSchema },
+			{ name: "notificationBatch", schema: NotificationBatchMessageSchema },
+			{ name: "userNotification", schema: UserNotificationMessageSchema },
+			{ name: "statusUpdate", schema: StatusUpdateMessageSchema },
 		];
+		const expected = fixtures.flatMap(({ name, schema }) =>
+			loadFixtureExamples(name).map((payload) => schema.parse(JSON.parse(payload))),
+		);
 		expect(events.length).toBe(expected.length);
 		events.forEach((payload, index) => {
-			expect(JSON.parse(payload)).toEqual(JSON.parse(expected[index]));
+			expect(JSON.parse(payload)).toEqual(expected[index]);
 		});
 	});
 });

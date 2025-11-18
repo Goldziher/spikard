@@ -12,7 +12,8 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.6",
 		"oxlint": "^1.28.0",
-		"typescript": "^5.9.3"
+		"typescript": "^5.9.3",
+		"zod": "^4.1.12"
 	},
 	"engines": {
 		"node": ">=18",

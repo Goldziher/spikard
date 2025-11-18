@@ -34,6 +34,7 @@ impl WebSocketTestConnection {
     /// Send a JSON message
     #[napi]
     pub async fn send_json(&self, obj: serde_json::Value) -> Result<()> {
+        println!("sending json from node test websocket: {obj}");
         let mut ws = self.inner.lock().await;
         ws.send_json(&obj).await;
         Ok(())
@@ -52,6 +53,7 @@ impl WebSocketTestConnection {
     pub async fn receive_json(&self) -> Result<serde_json::Value> {
         let mut ws = self.inner.lock().await;
         let json_value: Value = ws.receive_json().await;
+        println!("received json from websocket: {json_value}");
         Ok(json_value)
     }
 

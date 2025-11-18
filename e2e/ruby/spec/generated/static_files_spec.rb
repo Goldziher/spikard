@@ -9,7 +9,7 @@ RSpec.describe "static_files" do
     client = Spikard::Testing.create_test_client(app)
     response = client.get("/public/hello.txt")
     expect(response.status_code).to eq(200)
-    expect(response.body_text).to eq("Hello from static storage\n")
+    expect(response.body_text).to eq("Hello from static storage")
     response_headers = response.headers.transform_keys { |key| key.downcase }
     expect(response_headers["cache-control"]).to eq("public, max-age=60")
     expect(response_headers["content-type"]).to eq("text/plain")
@@ -21,7 +21,7 @@ RSpec.describe "static_files" do
     client = Spikard::Testing.create_test_client(app)
     response = client.get("/app/")
     expect(response.status_code).to eq(200)
-    expect(response.body_text).to eq("<!doctype html><h1>Welcome</h1>\n")
+    expect(response.body_text).to eq("<!doctype html><h1>Welcome</h1>")
     response_headers = response.headers.transform_keys { |key| key.downcase }
     expect(response_headers["content-type"]).to eq("text/html")
     client.close

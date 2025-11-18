@@ -3,13 +3,30 @@
 	"description": "Test fixture for chatMessage message",
 	"examples": [
 		{
-			"text": "example_text",
+			"text": "Hello, everyone!",
 			"timestamp": "2024-01-15T10:30:00Z",
 			"type": "message",
-			"user": "example_user"
+			"user": "alice"
 		}
 	],
 	"name": "chatMessage",
+	"operations": [
+		{
+			"action": "send",
+			"name": "sendMessage",
+			"replies": []
+		},
+		{
+			"action": "receive",
+			"name": "receiveMessage",
+			"replies": []
+		},
+		{
+			"action": "receive",
+			"name": "publishChat",
+			"replies": ["chatAck"]
+		}
+	],
 	"protocol": "websocket",
 	"schema": {
 		"properties": {

@@ -1,0 +1,50 @@
+{
+	"channel": "/notifications",
+	"description": "Test fixture for notificationBatch message",
+	"examples": [
+		[
+			{
+				"message": "example_message",
+				"timestamp": "2024-01-15T10:30:00Z",
+				"type": "example_type"
+			},
+			{
+				"message": "example_message",
+				"timestamp": "2024-01-15T10:30:00Z",
+				"type": "example_type"
+			}
+		]
+	],
+	"name": "notificationBatch",
+	"operations": [
+		{
+			"action": "send",
+			"name": "publishNotificationBatch",
+			"replies": []
+		}
+	],
+	"protocol": "sse",
+	"schema": {
+		"items": {
+			"properties": {
+				"message": {
+					"description": "Human readable message",
+					"type": "string"
+				},
+				"timestamp": {
+					"description": "ISO timestamp of the originating event",
+					"format": "date-time",
+					"type": "string"
+				},
+				"type": {
+					"description": "Event type contained within the batch",
+					"type": "string"
+				}
+			},
+			"required": ["type", "message", "timestamp"],
+			"type": "object"
+		},
+		"minItems": 2,
+		"type": "array"
+	}
+}

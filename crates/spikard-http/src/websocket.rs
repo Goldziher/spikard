@@ -105,6 +105,7 @@ pub async fn websocket_handler<H: WebSocketHandler + 'static>(
 
 /// Handle an individual WebSocket connection
 async fn handle_socket<H: WebSocketHandler>(mut socket: WebSocket, state: WebSocketState<H>) {
+    println!("websocket handle_socket invoked");
     info!("WebSocket client connected");
 
     // Notify handler of connection
@@ -114,6 +115,7 @@ async fn handle_socket<H: WebSocketHandler>(mut socket: WebSocket, state: WebSoc
     while let Some(msg) = socket.recv().await {
         match msg {
             Ok(Message::Text(text)) => {
+                println!("received text payload: {}", text);
                 debug!("Received text message: {}", text);
 
                 // Parse JSON message

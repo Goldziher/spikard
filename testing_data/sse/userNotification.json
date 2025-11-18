@@ -3,15 +3,22 @@
 	"description": "Test fixture for userNotification message",
 	"examples": [
 		{
-			"body": "example_body",
-			"priority": "example_priority",
+			"body": "You have received a new direct message",
+			"priority": "high",
 			"timestamp": "2024-01-15T10:30:00Z",
-			"title": "example_title",
+			"title": "New message from John",
 			"type": "user_notification",
-			"userId": "example_userId"
+			"userId": "user_12345"
 		}
 	],
 	"name": "userNotification",
+	"operations": [
+		{
+			"action": "send",
+			"name": "streamNotifications",
+			"replies": []
+		}
+	],
 	"protocol": "sse",
 	"schema": {
 		"properties": {

@@ -174,7 +174,13 @@ fn generate_sse_test_module(fixtures: &[AsyncFixture]) -> Result<String> {
 
     let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
     for fixture in fixtures {
-        if let Some(channel) = fixture.channel.as_deref() {
+        if let Some(channel) = fixture.channel.as_deref()
+            && (fixture.operations.is_empty()
+                || fixture
+                    .operations
+                    .iter()
+                    .any(|op| op.action.eq_ignore_ascii_case("send")))
+        {
             grouped.entry(channel.to_string()).or_default().push(fixture);
         }
     }
@@ -192,8 +198,8 @@ fn generate_sse_test_module(fixtures: &[AsyncFixture]) -> Result<String> {
         };
         let slug = sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"));
         let factory_name = format!("create_app_sse_{}", slug);
-        let expected_literal = build_sse_expected_literal(&channel_fixtures)?;
-        test_cases.push((channel_path, slug, factory_name, expected_literal));
+        let fixture_literal = build_sse_fixture_names(&channel_fixtures);
+        test_cases.push((channel_path, slug, factory_name, fixture_literal));
     }
 
     let mut imports = String::new();
@@ -204,7 +210,7 @@ fn generate_sse_test_module(fixtures: &[AsyncFixture]) -> Result<String> {
     imports.push_str(")\n\n");
 
     let mut tests = String::new();
-    for (channel_path, slug, factory_name, expected_literal) in test_cases {
+    for (channel_path, slug, factory_name, fixture_literal) in test_cases {
         tests.push_str(&format!("async def test_sse_{slug}() -> None:\n"));
         tests.push_str(&format!("    \"\"\"SSE channel test for {channel_path}.\"\"\"\n"));
         tests.push_str(&format!("    async with TestClient({}()) as client:\n", factory_name));
@@ -215,14 +221,17 @@ fn generate_sse_test_module(fixtures: &[AsyncFixture]) -> Result<String> {
         tests.push_str(
             "        events = [chunk[5:] for chunk in normalized.split(\"\\n\\n\") if chunk.startswith(\"data:\")]\n",
         );
-        tests.push_str(&format!("        expected = {}\n", expected_literal));
+        tests.push_str(&format!("        fixture_names = {}\n", fixture_literal));
+        tests.push_str("        expected = []\n");
+        tests.push_str("        for fixture_name in fixture_names:\n");
+        tests.push_str("            expected.extend(load_fixture_examples(SSE_FIXTURE_ROOT, fixture_name))\n");
         tests.push_str("        assert len(events) == len(expected)\n");
         tests.push_str("        for payload, expected_json in zip(events, expected):\n");
         tests.push_str("            assert json.loads(payload.strip()) == json.loads(expected_json)\n\n");
     }
 
     let module = format!(
-        "\"\"\"AsyncAPI SSE tests.\"\"\"\n\nimport json\n\nfrom spikard.testing import TestClient\n{imports}{tests}",
+        "\"\"\"AsyncAPI SSE tests.\"\"\"\n\nimport json\nfrom pathlib import Path\n\nfrom spikard.testing import TestClient\n\nROOT_DIR = Path(__file__).resolve().parents[3]\nSSE_FIXTURE_ROOT = ROOT_DIR / \"testing_data\" / \"sse\"\n\n\ndef load_async_fixture(root: Path, name: str) -> dict:\n    fixture_path = root / f\"{{name}}.json\"\n    with fixture_path.open() as handle:\n        return json.load(handle)\n\n\ndef load_fixture_examples(root: Path, name: str) -> list[str]:\n    data = load_async_fixture(root, name)\n    examples = data.get(\"examples\", [])\n    if not isinstance(examples, list) or not examples:\n        return [json.dumps({{}})]\n    return [json.dumps(example) for example in examples]\n\n{imports}{tests}",
         imports = imports,
         tests = tests
     );
@@ -230,20 +239,12 @@ fn generate_sse_test_module(fixtures: &[AsyncFixture]) -> Result<String> {
     Ok(module)
 }
 
-fn build_sse_expected_literal(fixtures: &[&AsyncFixture]) -> Result<String> {
-    let mut entries = Vec::new();
-    for fixture in fixtures {
-        for example in &fixture.examples {
-            let json_str = serde_json::to_string(example).context("Failed to serialize SSE example")?;
-            entries.push(format!("\"{}\"", escape_python_string(&json_str)));
-        }
+fn build_sse_fixture_names(fixtures: &[&AsyncFixture]) -> String {
+    if fixtures.is_empty() {
+        return "[]".to_string();
     }
-
-    if entries.is_empty() {
-        entries.push("\"{}\"".to_string());
-    }
-
-    Ok(format!("[{}]", entries.join(", ")))
+    let names: Vec<String> = fixtures.iter().map(|fixture| format!("\"{}\"", fixture.name)).collect();
+    format!("[{}]", names.join(", "))
 }
 
 /// Generate a single test function
@@ -909,10 +910,6 @@ fn sanitize_identifier(s: &str) -> String {
     result.trim_matches('_').to_string()
 }
 
-fn escape_python_string(value: &str) -> String {
-    value.replace('\\', "\\\\").replace('"', "\\\"")
-}
-
 /// Checks if a string looks like a regex pattern
 fn is_regex_pattern(value: &str) -> bool {
     // Common regex metacharacters that indicate a pattern
@@ -931,12 +928,15 @@ fn is_regex_pattern(value: &str) -> bool {
 
 fn generate_websocket_test_module(fixtures: &[AsyncFixture]) -> Result<String> {
     use std::collections::BTreeMap;
+    use std::collections::HashMap;
 
     let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
+    let mut lookup: HashMap<&str, &AsyncFixture> = HashMap::new();
     for fixture in fixtures {
         if let Some(channel) = fixture.channel.as_deref() {
             grouped.entry(channel.to_string()).or_default().push(fixture);
         }
+        lookup.insert(fixture.name.as_str(), fixture);
     }
 
     if grouped.is_empty() {
@@ -953,13 +953,18 @@ fn generate_websocket_test_module(fixtures: &[AsyncFixture]) -> Result<String> {
         let slug = sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"));
         let factory_name = format!("create_app_websocket_{}", slug);
 
-        // Collect test messages from all fixtures for this channel
         let mut test_messages = Vec::new();
         for fixture in &channel_fixtures {
-            for example in &fixture.examples {
-                let json_str = serde_json::to_string(example).context("Failed to serialize WebSocket example")?;
-                test_messages.push((fixture.name.clone(), json_str));
+            let has_receive = fixture.operations.is_empty()
+                || fixture
+                    .operations
+                    .iter()
+                    .any(|op| op.action.eq_ignore_ascii_case("receive"));
+            if !has_receive {
+                continue;
             }
+            let reply_literal = websocket_reply_literal(fixture, &lookup)?;
+            test_messages.push((fixture.name.clone(), reply_literal));
         }
 
         test_cases.push((channel_path, slug, factory_name, test_messages));
@@ -981,34 +986,67 @@ fn generate_websocket_test_module(fixtures: &[AsyncFixture]) -> Result<String> {
             "        async with client.websocket(\"{channel_path}\") as ws:\n"
         ));
 
-        for (fixture_name, message_json) in test_messages {
-            let escaped_json = escape_python_string(&message_json);
-            tests.push_str(&format!("            # Send {fixture_name} message\n"));
+        for (fixture_name, reply_literal) in test_messages {
+            tests.push_str(&format!("            # {fixture_name} messages\n"));
             tests.push_str(&format!(
-                "            sent_message = json.loads(\"{}\")\n",
-                escaped_json
+                "            messages = load_fixture_examples(WEBSOCKET_FIXTURE_ROOT, \"{}\")\n",
+                fixture_name
             ));
-            tests.push_str("            await ws.send(json.dumps(sent_message))\n");
-            tests.push_str("            \n");
-            tests.push_str("            # Receive echo response\n");
-            tests.push_str("            response_str = await ws.recv()\n");
-            tests.push_str("            response = json.loads(response_str)\n");
-            tests.push_str("            assert response.get(\"validated\") is True\n");
-            tests.push_str("            \n");
-            tests.push_str("            # Verify echoed fields match sent message\n");
-            tests.push_str("            for key, value in sent_message.items():\n");
-            tests.push_str("                assert response.get(key) == value\n");
-            tests.push_str("            \n");
+            tests.push_str("            for payload in messages:\n");
+            tests.push_str("                sent_message = json.loads(payload)\n");
+            tests.push_str("                await ws.send(json.dumps(sent_message))\n");
+            tests.push_str("                response_str = await ws.recv()\n");
+            tests.push_str("                response = json.loads(response_str)\n");
+            if let Some(ref literal) = reply_literal {
+                tests.push_str(&format!("                expected = {}\n", literal));
+                tests.push_str("                assert response == expected\n");
+            } else {
+                tests.push_str("                assert response.get(\"validated\") is True\n");
+                tests.push_str("                for key, value in sent_message.items():\n");
+                tests.push_str("                    assert response.get(key) == value\n");
+            }
+            tests.push_str("                \n");
         }
 
         tests.push('\n');
     }
 
     let module = format!(
-        "\"\"\"AsyncAPI WebSocket tests.\"\"\"\n\nimport json\n\nfrom spikard.testing import TestClient\n{imports}{tests}",
+        "\"\"\"AsyncAPI WebSocket tests.\"\"\"\n\nimport json\nfrom pathlib import Path\n\nfrom spikard.testing import TestClient\n\nROOT_DIR = Path(__file__).resolve().parents[3]\nWEBSOCKET_FIXTURE_ROOT = ROOT_DIR / \"testing_data\" / \"websockets\"\n\n\ndef load_async_fixture(root: Path, name: str) -> dict:\n    fixture_path = root / f\"{{name}}.json\"\n    with fixture_path.open() as handle:\n        return json.load(handle)\n\n\ndef load_fixture_examples(root: Path, name: str) -> list[str]:\n    data = load_async_fixture(root, name)\n    examples = data.get(\"examples\", [])\n    if not isinstance(examples, list) or not examples:\n        return [json.dumps({{}})]\n    return [json.dumps(example) for example in examples]\n\n{imports}{tests}",
         imports = imports,
         tests = tests
     );
 
     Ok(module)
+}
+
+fn websocket_reply_literal(
+    fixture: &AsyncFixture,
+    lookup: &std::collections::HashMap<&str, &AsyncFixture>,
+) -> Result<Option<String>> {
+    let mut replies: Vec<serde_json::Value> = Vec::new();
+    for op in fixture
+        .operations
+        .iter()
+        .filter(|op| op.action.eq_ignore_ascii_case("receive"))
+    {
+        for reply in &op.replies {
+            if let Some(reply_fixture) = lookup.get(reply.as_str())
+                && let Some(example) = reply_fixture.examples.first()
+            {
+                replies.push(example.clone());
+            }
+        }
+    }
+
+    if replies.is_empty() {
+        return Ok(None);
+    }
+
+    if replies.len() == 1 {
+        Ok(Some(json_to_python(&replies[0])))
+    } else {
+        let literal = replies.iter().map(json_to_python).collect::<Vec<_>>().join(", ");
+        Ok(Some(format!("[{}]", literal)))
+    }
 }

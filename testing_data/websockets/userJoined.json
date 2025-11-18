@@ -3,12 +3,24 @@
 	"description": "Test fixture for userJoined message",
 	"examples": [
 		{
-			"timestamp": "2024-01-15T10:30:00Z",
+			"timestamp": "2024-01-15T10:29:55Z",
 			"type": "userJoined",
-			"user": "example_user"
+			"user": "bob"
 		}
 	],
 	"name": "userJoined",
+	"operations": [
+		{
+			"action": "receive",
+			"name": "receiveMessage",
+			"replies": []
+		},
+		{
+			"action": "send",
+			"name": "broadcastPresence",
+			"replies": []
+		}
+	],
 	"protocol": "websocket",
 	"schema": {
 		"properties": {

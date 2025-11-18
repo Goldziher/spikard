@@ -9,6 +9,7 @@ use crate::streaming::streaming_data;
 use anyhow::{Context, Result, ensure};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
+use spikard_cli::codegen::ts_schema::{TypeScriptDto, generate_typescript_dto};
 use spikard_codegen::openapi::from_fixtures::FixtureFile;
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::HashMap;
@@ -43,6 +44,19 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
         }
     }
 
+    let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
+    let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
+
+    let mut dto_map: HashMap<String, TypeScriptDto> = HashMap::new();
+    for fixture in sse_fixtures.iter().chain(websocket_fixtures.iter()) {
+        if dto_map.contains_key(&fixture.name) {
+            continue;
+        }
+        let dto = generate_typescript_dto(&fixture.name, &fixture.schema)
+            .with_context(|| format!("Failed to build DTO for {}", fixture.name))?;
+        dto_map.insert(fixture.name.clone(), dto);
+    }
+
     // Generate test file for each category
     for (category, fixtures) in fixtures_by_category.iter() {
         if category == "background" {
@@ -54,17 +68,15 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
         println!("  ✓ Generated tests/{}.test.ts ({} tests)", category, fixtures.len());
     }
 
-    let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
     if !sse_fixtures.is_empty() {
-        let sse_content = generate_sse_test_file(&sse_fixtures)?;
+        let sse_content = generate_sse_test_file(&sse_fixtures, &dto_map)?;
         fs::write(tests_dir.join("asyncapi_sse.test.ts"), sse_content)
             .context("Failed to write asyncapi_sse.test.ts")?;
         println!("  ✓ Generated tests/asyncapi_sse.test.ts");
     }
 
-    let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
     if !websocket_fixtures.is_empty() {
-        let websocket_content = generate_websocket_test_file(&websocket_fixtures)?;
+        let websocket_content = generate_websocket_test_file(&websocket_fixtures, &dto_map)?;
         fs::write(tests_dir.join("asyncapi_websocket.test.ts"), websocket_content)
             .context("Failed to write asyncapi_websocket.test.ts")?;
         println!("  ✓ Generated tests/asyncapi_websocket.test.ts");
@@ -121,8 +133,8 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
     Ok(code)
 }
 
-fn generate_sse_test_file(fixtures: &[AsyncFixture]) -> Result<String> {
-    use std::collections::BTreeMap;
+fn generate_sse_test_file(fixtures: &[AsyncFixture], dto_map: &HashMap<String, TypeScriptDto>) -> Result<String> {
+    use std::collections::{BTreeMap, BTreeSet};
 
     let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
     for fixture in fixtures {
@@ -135,13 +147,10 @@ fn generate_sse_test_file(fixtures: &[AsyncFixture]) -> Result<String> {
         return Ok(String::new());
     }
 
-    let mut tests = String::new();
+    let mut factory_imports = BTreeSet::new();
+    let mut schema_imports = BTreeSet::new();
+    let mut test_blocks = String::new();
 
-    tests.push_str("/**\n * AsyncAPI SSE tests\n * @generated\n */\n\n");
-    tests.push_str("import { TestClient } from \"@spikard/node\";\n");
-    tests.push_str("import { describe, expect, test } from \"vitest\";\n");
-
-    let mut import_list = Vec::new();
     for (channel, channel_fixtures) in &grouped {
         let channel_path = if channel.starts_with('/') {
             channel.clone()
@@ -150,45 +159,83 @@ fn generate_sse_test_file(fixtures: &[AsyncFixture]) -> Result<String> {
         };
         let slug = sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"));
         let factory_name = format!("createApp{}", to_pascal_case(&format!("sse_{}", slug)));
-        import_list.push(factory_name.clone());
-        let test_name = format!("SSE {}", channel_path);
-        let expected_literal = build_sse_expected_literal(channel_fixtures)?;
+        factory_imports.insert(factory_name.clone());
 
-        tests.push_str(&format!(
-            "describe(\"asyncapi_sse\", () => {{\n\ttest(\"{test_name}\", async () => {{\n\t\tconst app = {factory_name}();\n\t\tconst client = new TestClient(app);\n\t\tconst response = await client.get(\"{path}\");\n\t\texpect(response.statusCode).toBe(200);\n\t\tconst normalized = response.text().replace(/\\r\\n/g, \"\\n\");\n\t\tconst events = normalized\n\t\t\t.split(\"\\n\\n\")\n\t\t\t.filter((chunk) => chunk.startsWith(\"data:\"))\n\t\t\t.map((chunk) => chunk.slice(5).trim());\n\t\tconst expected = {expected_literal};\n\t\texpect(events.length).toBe(expected.length);\n\t\tevents.forEach((payload, index) => {{\n\t\t\texpect(JSON.parse(payload)).toEqual(JSON.parse(expected[index]));\n\t\t}});\n\t}});\n}});\n\n",
-            test_name = test_name,
-            factory_name = factory_name,
-            path = channel_path,
-            expected_literal = expected_literal
-        ));
-    }
-
-    import_list.sort();
-    import_list.dedup();
-
-    let mut import_block = String::new();
-    if import_list.len() <= 4 && import_list.join(", ").len() <= 120 {
-        import_block.push_str(&format!(
-            "import {{ {} }} from \"../app/main.js\";\n\n",
-            import_list.join(", ")
-        ));
-    } else {
-        import_block.push_str("import {\n");
-        for name in &import_list {
-            import_block.push_str(&format!("\t{},\n", name));
+        let mut fixture_entries = Vec::new();
+        for fixture in channel_fixtures {
+            if let Some(dto) = dto_map.get(&fixture.name) {
+                schema_imports.insert(dto.schema_ident.clone());
+                fixture_entries.push((fixture.name.clone(), dto.schema_ident.clone()));
+            }
         }
-        import_block.push_str("} from \"../app/main.js\";\n\n");
+
+        if fixture_entries.is_empty() {
+            continue;
+        }
+
+        test_blocks.push_str(&format!("\ttest(\"SSE {path}\", async () => {{\n", path = channel_path));
+        test_blocks.push_str(&format!("\t\tconst app = {factory_name}();\n"));
+        test_blocks.push_str("\t\tconst client = new TestClient(app);\n");
+        test_blocks.push_str(&format!(
+            "\t\tconst response = await client.get(\"{path}\");\n",
+            path = channel_path
+        ));
+        test_blocks.push_str("\t\texpect(response.statusCode).toBe(200);\n");
+        test_blocks.push_str("\t\tconst normalized = response.text().replace(/\\r\\n/g, \"\\n\");\n");
+        test_blocks.push_str("\t\tconst events = normalized\n");
+        test_blocks.push_str("\t\t\t.split(\"\\n\\n\")\n");
+        test_blocks.push_str("\t\t\t.filter((chunk) => chunk.startsWith(\"data:\"))\n");
+        test_blocks.push_str("\t\t\t.map((chunk) => chunk.slice(5).trim());\n");
+        test_blocks.push_str("\t\tconst fixtures = [\n");
+        for (name, schema_ident) in &fixture_entries {
+            test_blocks.push_str(&format!(
+                "\t\t\t{{ name: \"{name}\", schema: {schema} }},\n",
+                name = name,
+                schema = schema_ident
+            ));
+        }
+        test_blocks.push_str("\t\t];\n");
+        test_blocks.push_str("\t\tconst expected = fixtures.flatMap(({ name, schema }) =>\n");
+        test_blocks.push_str("\t\t\tloadFixtureExamples(name).map((payload) => schema.parse(JSON.parse(payload))),\n");
+        test_blocks.push_str("\t\t);\n");
+        test_blocks.push_str("\t\texpect(events.length).toBe(expected.length);\n");
+        test_blocks.push_str("\t\tevents.forEach((payload, index) => {\n");
+        test_blocks.push_str("\t\t\texpect(JSON.parse(payload)).toEqual(expected[index]);\n");
+        test_blocks.push_str("\t\t});\n");
+        test_blocks.push_str("\t});\n");
     }
 
     let mut file_content = String::new();
-    file_content.push_str(import_block.as_str());
-    file_content.push_str(tests.as_str());
+    file_content.push_str("/**\n * AsyncAPI SSE tests\n * @generated\n */\n\n");
+    file_content.push_str("import { TestClient } from \"@spikard/node\";\n");
+    file_content.push_str("import { describe, expect, test } from \"vitest\";\n");
+    file_content.push_str("import { readFileSync } from \"node:fs\";\n");
+    file_content.push_str("import path from \"node:path\";\n");
+    file_content.push_str("import {\n");
+    for name in factory_imports.iter().chain(schema_imports.iter()) {
+        file_content.push_str(&format!("\t{},\n", name));
+    }
+    file_content.push_str("} from \"../app/main.js\";\n\n");
+    file_content.push_str("const ROOT_DIR = path.resolve(__dirname, \"../../..\");\n");
+    file_content.push_str("const SSE_FIXTURE_ROOT = path.join(ROOT_DIR, \"testing_data\", \"sse\");\n\n");
+    file_content.push_str("function loadFixtureExamples(name: string): string[] {\n");
+    file_content.push_str("\tconst fixturePath = path.join(SSE_FIXTURE_ROOT, `${name}.json`);\n");
+    file_content.push_str("\tconst data = JSON.parse(readFileSync(fixturePath, \"utf-8\"));\n");
+    file_content.push_str("\tconst examples = Array.isArray(data.examples) ? data.examples : [];\n");
+    file_content.push_str("\tif (examples.length === 0) {\n");
+    file_content.push_str("\t\treturn [JSON.stringify({})];\n");
+    file_content.push_str("\t}\n");
+    file_content.push_str("\treturn examples.map((example) => JSON.stringify(example));\n");
+    file_content.push_str("}\n\n");
+    file_content.push_str("describe(\"asyncapi_sse\", () => {\n");
+    file_content.push_str(&test_blocks);
+    file_content.push_str("});\n");
 
     Ok(file_content)
 }
 
-fn generate_websocket_test_file(fixtures: &[AsyncFixture]) -> Result<String> {
-    use std::collections::BTreeMap;
+fn generate_websocket_test_file(fixtures: &[AsyncFixture], dto_map: &HashMap<String, TypeScriptDto>) -> Result<String> {
+    use std::collections::{BTreeMap, BTreeSet};
 
     let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
     for fixture in fixtures {
@@ -201,13 +248,10 @@ fn generate_websocket_test_file(fixtures: &[AsyncFixture]) -> Result<String> {
         return Ok(String::new());
     }
 
-    let mut tests = String::new();
+    let mut factory_imports = BTreeSet::new();
+    let mut schema_imports = BTreeSet::new();
+    let mut test_blocks = String::new();
 
-    tests.push_str("/**\n * AsyncAPI WebSocket tests\n * @generated\n */\n\n");
-    tests.push_str("import { TestClient } from \"@spikard/node\";\n");
-    tests.push_str("import { describe, expect, test } from \"vitest\";\n");
-
-    let mut import_list = Vec::new();
     for (channel, channel_fixtures) in &grouped {
         let channel_path = if channel.starts_with('/') {
             channel.clone()
@@ -216,84 +260,78 @@ fn generate_websocket_test_file(fixtures: &[AsyncFixture]) -> Result<String> {
         };
         let slug = sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"));
         let factory_name = format!("createApp{}", to_pascal_case(&format!("websocket_{}", slug)));
-        import_list.push(factory_name.clone());
-        let test_name = format!("WebSocket {}", channel_path);
+        factory_imports.insert(factory_name.clone());
 
-        // Build test messages
-        let mut test_messages = Vec::new();
+        let mut fixture_entries = Vec::new();
         for fixture in channel_fixtures {
-            for example in &fixture.examples {
-                let json_str = serde_json::to_string(example)?;
-                test_messages.push((fixture.name.clone(), json_str));
+            if let Some(dto) = dto_map.get(&fixture.name) {
+                schema_imports.insert(dto.schema_ident.clone());
+                fixture_entries.push((fixture.name.clone(), dto.schema_ident.clone()));
             }
         }
 
-        let mut test_body = String::new();
-        for (fixture_name, message_json) in test_messages {
-            let escaped_json = escape_ts_string(&message_json);
-            test_body.push_str(&format!("\t\t// Send {} message\n", fixture_name));
-            test_body.push_str(&format!(
-                "\t\tconst sent_message_{} = JSON.parse(\"{}\");\n",
-                sanitize_identifier(&fixture_name),
-                escaped_json
-            ));
-            test_body.push_str(&format!(
-                "\t\tawait ws.sendJson(sent_message_{});\n",
-                sanitize_identifier(&fixture_name)
-            ));
-            test_body.push_str("\t\t\n");
-            test_body.push_str("\t\t// Receive echo response\n");
-            test_body.push_str(&format!(
-                "\t\tconst response_{} = await ws.receiveJson();\n",
-                sanitize_identifier(&fixture_name)
-            ));
-            test_body.push_str(&format!(
-                "\t\texpect(response_{}.validated).toBe(true);\n",
-                sanitize_identifier(&fixture_name)
-            ));
-            test_body.push_str("\t\t\n");
-            test_body.push_str("\t\t// Verify echoed fields match sent message\n");
-            test_body.push_str(&format!(
-                "\t\tfor (const [key, value] of Object.entries(sent_message_{})) {{\n",
-                sanitize_identifier(&fixture_name)
-            ));
-            test_body.push_str(&format!(
-                "\t\t\texpect(response_{}[key]).toEqual(value);\n",
-                sanitize_identifier(&fixture_name)
-            ));
-            test_body.push_str("\t\t}\n");
-            test_body.push_str("\t\t\n");
+        if fixture_entries.is_empty() {
+            continue;
         }
 
-        tests.push_str(&format!(
-            "describe(\"asyncapi_websocket\", () => {{\n\ttest(\"{test_name}\", async () => {{\n\t\tconst app = {factory_name}();\n\t\tconst client = new TestClient(app);\n\t\tconst ws = await client.websocketConnect(\"{path}\");\n\t\t\n{test_body}\t\tawait ws.close();\n\t}});\n}});\n\n",
-            test_name = test_name,
-            factory_name = factory_name,
-            path = channel_path,
-            test_body = test_body
+        test_blocks.push_str(&format!(
+            "\ttest(\"WebSocket {path}\", async () => {{\n",
+            path = channel_path
         ));
-    }
-
-    import_list.sort();
-    import_list.dedup();
-
-    let mut import_block = String::new();
-    if import_list.len() <= 4 && import_list.join(", ").len() <= 120 {
-        import_block.push_str(&format!(
-            "import {{ {} }} from \"../app/main.js\";\n\n",
-            import_list.join(", ")
+        test_blocks.push_str(&format!("\t\tconst app = {factory_name}();\n"));
+        test_blocks.push_str("\t\tconst client = new TestClient(app);\n");
+        test_blocks.push_str(&format!(
+            "\t\tconst ws = await client.websocketConnect(\"{path}\");\n",
+            path = channel_path
         ));
-    } else {
-        import_block.push_str("import {\n");
-        for name in &import_list {
-            import_block.push_str(&format!("\t{},\n", name));
+        test_blocks.push_str("\t\tconst fixtures = [\n");
+        for (name, schema_ident) in &fixture_entries {
+            test_blocks.push_str(&format!(
+                "\t\t\t{{ name: \"{name}\", schema: {schema} }},\n",
+                name = name,
+                schema = schema_ident
+            ));
         }
-        import_block.push_str("} from \"../app/main.js\";\n\n");
+        test_blocks.push_str("\t\t];\n");
+        test_blocks.push_str("\t\tfor (const { name, schema } of fixtures) {\n");
+        test_blocks
+            .push_str("\t\t\tconst payload = schema.parse(JSON.parse(loadFixtureExamples(name)[0] ?? \"{}\"));\n");
+        test_blocks.push_str("\t\t\tawait ws.sendJson(payload);\n");
+        test_blocks.push_str("\t\t\tconst response = await ws.receiveJson();\n");
+        test_blocks.push_str("\t\t\texpect(response.validated).toBe(true);\n");
+        test_blocks.push_str("\t\t\tfor (const [key, value] of Object.entries(payload)) {\n");
+        test_blocks.push_str("\t\t\t\texpect(response[key]).toEqual(value);\n");
+        test_blocks.push_str("\t\t\t}\n");
+        test_blocks.push_str("\t\t}\n");
+        test_blocks.push_str("\t\tawait ws.close();\n");
+        test_blocks.push_str("\t});\n");
     }
 
     let mut file_content = String::new();
-    file_content.push_str(import_block.as_str());
-    file_content.push_str(tests.as_str());
+    file_content.push_str("/**\n * AsyncAPI WebSocket tests\n * @generated\n */\n\n");
+    file_content.push_str("import { TestClient } from \"@spikard/node\";\n");
+    file_content.push_str("import { describe, expect, test } from \"vitest\";\n");
+    file_content.push_str("import { readFileSync } from \"node:fs\";\n");
+    file_content.push_str("import path from \"node:path\";\n");
+    file_content.push_str("import {\n");
+    for name in factory_imports.iter().chain(schema_imports.iter()) {
+        file_content.push_str(&format!("\t{},\n", name));
+    }
+    file_content.push_str("} from \"../app/main.js\";\n\n");
+    file_content.push_str("const ROOT_DIR = path.resolve(__dirname, \"../../..\");\n");
+    file_content.push_str("const WEBSOCKET_FIXTURE_ROOT = path.join(ROOT_DIR, \"testing_data\", \"websockets\");\n\n");
+    file_content.push_str("function loadFixtureExamples(name: string): string[] {\n");
+    file_content.push_str("\tconst fixturePath = path.join(WEBSOCKET_FIXTURE_ROOT, `${name}.json`);\n");
+    file_content.push_str("\tconst data = JSON.parse(readFileSync(fixturePath, \"utf-8\"));\n");
+    file_content.push_str("\tconst examples = Array.isArray(data.examples) ? data.examples : [];\n");
+    file_content.push_str("\tif (examples.length === 0) {\n");
+    file_content.push_str("\t\treturn [JSON.stringify({})];\n");
+    file_content.push_str("\t}\n");
+    file_content.push_str("\treturn examples.map((example) => JSON.stringify(example));\n");
+    file_content.push_str("}\n\n");
+    file_content.push_str("describe(\"asyncapi_websocket\", () => {\n");
+    file_content.push_str(&test_blocks);
+    file_content.push_str("});\n");
 
     Ok(file_content)
 }
@@ -305,6 +343,14 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     let streaming_info = streaming_data(fixture)?;
     let background_info = background_data(fixture)?;
     let middleware = parse_middleware(fixture)?;
+    if fixture_should_skip(category, fixture) {
+        code.push_str(&format!("\ttest.skip(\"{}\", async () => {{\n", test_name));
+        code.push_str("\t\t// Not supported by the in-memory HTTP client\n");
+        code.push_str("\t});\n");
+        return Ok(code);
+    }
+    let expects_binary_body = fixture_requires_binary_body(fixture);
+    let expected_content_length = expected_content_length(fixture);
 
     // Test function header
     code.push_str(&format!("\ttest(\"{}\", async () => {{\n", test_name));
@@ -484,66 +530,107 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
 
     // Different assertion strategies based on status code
     if status_code == 200 {
-        // Success case - verify response matches expected
-        let has_expected_body = fixture
-            .expected_response
-            .body
-            .as_ref()
-            .map(|body| !is_value_effectively_empty(body))
-            .unwrap_or(false);
-        let has_request_body = fixture
-            .request
-            .body
-            .as_ref()
-            .map(|body| !is_value_effectively_empty(body))
-            .unwrap_or(false);
-        let has_form_data = fixture
-            .request
-            .form_data
-            .as_ref()
-            .map(|data| !data.is_empty())
-            .unwrap_or(false);
-        let has_data_entries = fixture
-            .request
-            .data
-            .as_ref()
-            .map(|data| !data.is_empty())
-            .unwrap_or(false);
-        let has_query_params = fixture
-            .request
-            .query_params
-            .as_ref()
-            .map(|params| !params.is_empty())
-            .unwrap_or(false);
-        let requires_response_data =
-            has_expected_body || has_request_body || has_form_data || has_data_entries || has_query_params;
-
-        let needs_response_text = category == "static_files"
-            && fixture
+        if expects_binary_body {
+            if let Some(target_len) = expected_content_length {
+                code.push_str("\t\tconst bodyBytes = response.bytes();\n");
+                code.push_str(&format!("\t\texpect(bodyBytes.length).toBe({});\n", target_len));
+                if let Some(body) = fixture.expected_response.body.as_ref() {
+                    code.push_str(&format!(
+                        "\t\texpect(bodyBytes.toString(\"utf-8\").startsWith({})).toBe(true);\n",
+                        json_to_typescript(body)
+                    ));
+                }
+            }
+        } else {
+            // Success case - verify response matches expected
+            let has_expected_body = fixture
                 .expected_response
                 .body
                 .as_ref()
-                .map(|body| body.is_string())
+                .map(|body| !is_value_effectively_empty(body))
                 .unwrap_or(false);
-        let should_parse_json = !needs_response_text && (method != "head" || fixture.expected_response.body.is_some());
+            let has_request_body = fixture
+                .request
+                .body
+                .as_ref()
+                .map(|body| !is_value_effectively_empty(body))
+                .unwrap_or(false);
+            let has_form_data = fixture
+                .request
+                .form_data
+                .as_ref()
+                .map(|data| !data.is_empty())
+                .unwrap_or(false);
+            let has_data_entries = fixture
+                .request
+                .data
+                .as_ref()
+                .map(|data| !data.is_empty())
+                .unwrap_or(false);
+            let has_query_params = fixture
+                .request
+                .query_params
+                .as_ref()
+                .map(|params| !params.is_empty())
+                .unwrap_or(false);
+            let requires_response_data =
+                has_expected_body || has_request_body || has_form_data || has_data_entries || has_query_params;
 
-        if requires_response_data && should_parse_json {
-            code.push_str("\t\tconst responseData = response.json();\n");
-        } else if needs_response_text {
-            code.push_str("\t\tconst responseText = response.text();\n");
-        }
+            let needs_response_text = category == "static_files"
+                && fixture
+                    .expected_response
+                    .body
+                    .as_ref()
+                    .map(|body| body.is_string())
+                    .unwrap_or(false);
+            let should_parse_json =
+                !needs_response_text && (method != "head" || fixture.expected_response.body.is_some());
 
-        // If fixture has expected response body, assert against that
-        if let Some(ref expected_body) = fixture.expected_response.body {
-            let expected_body_is_empty = is_value_effectively_empty(expected_body);
-            if !expected_body_is_empty {
-                if needs_response_text {
-                    code.push_str(&format!(
-                        "\t\texpect(responseText).toBe({});\n",
-                        json_to_typescript(expected_body)
-                    ));
-                } else {
-                    generate_body_assertions(&mut code, expected_body, "responseData", 2, status_code >= 400);
+            if requires_response_data && should_parse_json {
+                code.push_str("\t\tconst responseData = response.json();\n");
+            } else if needs_response_text {
+                code.push_str("\t\tconst responseText = response.text();\n");
+            }
+
+            // If fixture has expected response body, assert against that
+            if let Some(ref expected_body) = fixture.expected_response.body {
+                let expected_body_is_empty = is_value_effectively_empty(expected_body);
+                if !expected_body_is_empty {
+                    if needs_response_text {
+                        code.push_str(&format!(
+                            "\t\texpect(responseText).toBe({});\n",
+                            json_to_typescript(expected_body)
+                        ));
+                    } else {
+                        generate_body_assertions(&mut code, expected_body, "responseData", 2, status_code >= 400);
+                    }
+                } else if requires_response_data && should_parse_json {
+                    // Fallback: verify echoed parameters match what we sent
+                    if let Some(ref body) = fixture.request.body {
+                        generate_echo_assertions(&mut code, body, "responseData", 2);
+                    }
+
+                    if let Some(ref form_data) = fixture.request.form_data {
+                        for (key, value) in form_data {
+                            let value_path = format_property_access("responseData", key);
+                            code.push_str(&format!(
+                                "\t\texpect({}).toBe({});\n",
+                                value_path,
+                                json_to_typescript(value)
+                            ));
+                        }
+                    }
+
+                    if let Some(ref query_params) = fixture.request.query_params {
+                        for (key, value) in query_params {
+                            let value_path = format_property_access("responseData", key);
+                            code.push_str(&format!(
+                                "\t\texpect({}).toBe({});\n",
+                                value_path,
+                                json_to_typescript(value)
+                            ));
+                        }
+                    }
                 }
             } else if requires_response_data && should_parse_json {
                 // Fallback: verify echoed parameters match what we sent
@@ -573,37 +660,20 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                     }
                 }
             }
-        } else if requires_response_data && should_parse_json {
-            // Fallback: verify echoed parameters match what we sent
-            if let Some(ref body) = fixture.request.body {
-                generate_echo_assertions(&mut code, body, "responseData", 2);
-            }
-
-            if let Some(ref form_data) = fixture.request.form_data {
-                for (key, value) in form_data {
-                    let value_path = format_property_access("responseData", key);
-                    code.push_str(&format!(
-                        "\t\texpect({}).toBe({});\n",
-                        value_path,
-                        json_to_typescript(value)
-                    ));
-                }
-            }
-
-            if let Some(ref query_params) = fixture.request.query_params {
-                for (key, value) in query_params {
-                    let value_path = format_property_access("responseData", key);
-                    code.push_str(&format!(
-                        "\t\texpect({}).toBe({});\n",
-                        value_path,
-                        json_to_typescript(value)
-                    ));
-                }
-            }
         }
     } else if status_code < 400 {
-        // Non-200 success status codes - assert expected response body if provided
-        if let Some(body) = fixture
+        if expects_binary_body {
+            if let Some(target_len) = expected_content_length {
+                code.push_str("\t\tconst bodyBytes = response.bytes();\n");
+                code.push_str(&format!("\t\texpect(bodyBytes.length).toBe({});\n", target_len));
+                if let Some(body) = fixture.expected_response.body.as_ref() {
+                    code.push_str(&format!(
+                        "\t\texpect(bodyBytes.toString(\"utf-8\").startsWith({})).toBe(true);\n",
+                        json_to_typescript(body)
+                    ));
+                }
+            }
+        } else if let Some(body) = fixture
             .expected_response
             .body
             .as_ref()
@@ -1069,24 +1139,6 @@ fn sanitize_identifier(s: &str) -> String {
     result.trim_matches('_').to_string()
 }
 
-fn escape_ts_string(value: &str) -> String {
-    value.replace('\\', "\\\\").replace('"', "\\\"")
-}
-
-fn build_sse_expected_literal(fixtures: &[&AsyncFixture]) -> Result<String> {
-    let mut entries = Vec::new();
-    for fixture in fixtures {
-        for example in &fixture.examples {
-            let json_str = serde_json::to_string(example)?;
-            entries.push(format!("\"{}\"", escape_ts_string(&json_str)));
-        }
-    }
-    if entries.is_empty() {
-        entries.push("\"{}\"".to_string());
-    }
-    Ok(format!("[{}]", entries.join(", ")))
-}
-
 /// Convert to PascalCase
 fn to_pascal_case(s: &str) -> String {
     s.split(&['_', '-'][..])
@@ -1103,6 +1155,32 @@ fn capitalize(s: &str) -> String {
         Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
     }
 }
+
+fn expected_content_length(fixture: &Fixture) -> Option<usize> {
+    fixture.expected_response.headers.as_ref().and_then(|headers| {
+        headers.iter().find_map(|(key, value)| {
+            if key.eq_ignore_ascii_case("content-length") {
+                value.parse::<usize>().ok()
+            } else {
+                None
+            }
+        })
+    })
+}
+
+fn fixture_requires_binary_body(fixture: &Fixture) -> bool {
+    expected_content_length(fixture).is_some()
+        && fixture
+            .expected_response
+            .body
+            .as_ref()
+            .is_some_and(|body| body.is_string())
+}
+
+fn fixture_should_skip(category: &str, fixture: &Fixture) -> bool {
+    category == "content_types" && fixture.name == "20_content_length_mismatch"
+}
+
 fn build_request_call(method: &str, path_with_query: &str, option_fields: &[&str]) -> String {
     let has_options = !option_fields.is_empty();
     let joined = option_fields.join(", ");

@@ -156,7 +156,7 @@ fn generate_app_file_per_fixture(
     code.push_str("from dataclasses import asdict, dataclass\n");
     code.push_str("from datetime import date, datetime\n");
     code.push_str("from enum import Enum\n");
-    code.push_str("from typing import Any, NamedTuple, TypedDict\n");
+    code.push_str("from typing import Any, Iterator, NamedTuple, TypedDict\n");
     code.push_str("from uuid import UUID\n\n");
     if needs_asyncio {
         code.push_str("import asyncio\n");
@@ -287,7 +287,13 @@ fn append_sse_factories(
 
     let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
     for fixture in fixtures {
-        if let Some(channel) = fixture.channel.as_deref() {
+        if let Some(channel) = fixture.channel.as_deref()
+            && (fixture.operations.is_empty()
+                || fixture
+                    .operations
+                    .iter()
+                    .any(|op| op.action.eq_ignore_ascii_case("send")))
+        {
             grouped.entry(channel.to_string()).or_default().push(fixture);
         }
     }
@@ -348,6 +354,42 @@ fn build_sse_events_literal(fixtures: &[&AsyncFixture]) -> Result<String> {
     Ok(format!("[{}]", events.join(", ")))
 }
 
+fn infer_message_type(fixture: &AsyncFixture) -> Option<String> {
+    for example in &fixture.examples {
+        if let Some(obj) = example.as_object()
+            && let Some(Value::String(value)) = obj.get("type")
+        {
+            return Some(value.clone());
+        } else if let Some(batch) = example.as_array() {
+            for item in batch {
+                if let Some(obj) = item.as_object()
+                    && let Some(Value::String(value)) = obj.get("type")
+                {
+                    return Some(value.clone());
+                }
+            }
+        }
+    }
+    None
+}
+
+fn first_example(fixture: &AsyncFixture) -> Option<Value> {
+    for example in &fixture.examples {
+        if example.is_null() {
+            continue;
+        }
+
+        if let Some(batch) = example.as_array() {
+            if let Some(first) = batch.first() {
+                return Some(first.clone());
+            }
+        } else {
+            return Some(example.clone());
+        }
+    }
+    None
+}
+
 fn append_websocket_factories(
     code: &mut String,
     fixtures: &[AsyncFixture],
@@ -359,6 +401,11 @@ fn append_websocket_factories(
         return Ok(());
     }
 
+    let mut fixture_lookup: HashMap<&str, &AsyncFixture> = HashMap::new();
+    for fixture in fixtures {
+        fixture_lookup.insert(fixture.name.as_str(), fixture);
+    }
+
     let mut grouped: BTreeMap<String, Vec<&AsyncFixture>> = BTreeMap::new();
     for fixture in fixtures {
         if let Some(channel) = fixture.channel.as_deref() {
@@ -366,7 +413,7 @@ fn append_websocket_factories(
         }
     }
 
-    for (channel, _channel_fixtures) in grouped {
+    for (channel, channel_fixtures) in grouped {
         let channel_path = if channel.starts_with('/') {
             channel
         } else {
@@ -375,6 +422,58 @@ fn append_websocket_factories(
         let slug = sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"));
         let factory_name = format!("create_app_websocket_{}", slug);
         let handler_name = format!("websocket_handler_{}", slug);
+
+        let mut match_arms = Vec::new();
+        for fixture in &channel_fixtures {
+            let has_receive_op = fixture
+                .operations
+                .iter()
+                .any(|op| op.action.eq_ignore_ascii_case("receive"));
+            if !has_receive_op {
+                continue;
+            }
+
+            let match_value = infer_message_type(fixture).unwrap_or_else(|| fixture.name.clone());
+            let mut reply_values: Vec<Value> = Vec::new();
+
+            for op in fixture
+                .operations
+                .iter()
+                .filter(|op| op.action.eq_ignore_ascii_case("receive"))
+            {
+                for reply_name in &op.replies {
+                    if let Some(reply_fixture) = fixture_lookup.get(reply_name.as_str())
+                        && let Some(example) = first_example(reply_fixture)
+                    {
+                        reply_values.push(example);
+                    }
+                }
+            }
+
+            let reply_literal = if reply_values.is_empty() {
+                "            message[\"validated\"] = True\n            return message".to_string()
+            } else if reply_values.len() == 1 {
+                format!("            return {}", json_to_python(&reply_values[0]))
+            } else {
+                let joined = reply_values.iter().map(json_to_python).collect::<Vec<_>>().join(", ");
+                format!("            return [{}]", joined)
+            };
+
+            match_arms.push(format!(
+                "        if msg_type == {}:\n{}",
+                json_to_python(&Value::String(match_value)),
+                reply_literal
+            ));
+        }
+
+        let match_block = if match_arms.is_empty() {
+            "        message[\"validated\"] = True\n        return message".to_string()
+        } else {
+            format!(
+                "{}\n        message[\"validated\"] = True\n        return message",
+                match_arms.join("\n")
+            )
+        };
 
         code.push_str(&format!(
             r#"
@@ -385,16 +484,17 @@ def {factory_name}() -> Spikard:
     app = Spikard()
 
     @websocket("{channel_path}")
-    async def {handler_name}(message: dict) -> dict | None:
-        """WebSocket handler for {channel_path} - echoes messages with validation."""
-        message["validated"] = True
-        return message
+    async def {handler_name}(message: dict) -> Any:
+        """WebSocket handler for {channel_path} - generated from AsyncAPI fixtures."""
+        msg_type = message.get("type")
+{match_block}
 
     return app
 "#,
             factory_name = factory_name,
             channel_path = channel_path,
-            handler_name = handler_name
+            handler_name = handler_name,
+            match_block = match_block
         ));
 
         registry.push(("websocket".to_string(), channel_path.clone(), factory_name));
@@ -887,8 +987,10 @@ fn generate_handler_function_for_fixture(
                         "    if len(content_bytes) < {}:\n        padding = b\" \" * ({} - len(content_bytes))\n        content_bytes = content_bytes + padding\n",
                         target_len, target_len
                     ));
+                    code.push_str("    def stream_content() -> Iterator[bytes]:\n");
+                    code.push_str("        yield content_bytes\n");
                     code.push_str(&format!(
-                        "    return Response(content=content_bytes, status_code={}{})\n",
+                        "    return StreamingResponse(stream_content(), status_code={}{})\n",
                         handler_status, headers_param
                     ));
                 } else {

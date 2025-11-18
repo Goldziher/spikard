@@ -23,6 +23,8 @@ channels:
         $ref: '#/components/messages/userNotification'
       statusUpdate:
         $ref: '#/components/messages/statusUpdate'
+      notificationBatch:
+        $ref: '#/components/messages/notificationBatch'
     description: |
       Subscribe to this channel to receive real-time notifications.
       Events are sent as Server-Sent Events (SSE).
@@ -36,6 +38,22 @@ operations:
     description: |
       Connect to this endpoint to receive real-time notifications
       as Server-Sent Events.
+  streamNotifications:
+    action: send
+    channel:
+      $ref: '#/channels/~1notifications'
+    summary: Broadcast live notifications
+    messages:
+      - $ref: '#/channels/~1notifications/messages/systemAlert'
+      - $ref: '#/channels/~1notifications/messages/userNotification'
+      - $ref: '#/channels/~1notifications/messages/statusUpdate'
+  publishNotificationBatch:
+    action: send
+    channel:
+      $ref: '#/channels/~1notifications'
+    summary: Catch-up batches for reconnecting clients
+    messages:
+      - $ref: '#/components/messages/notificationBatch'
 
 components:
   messages:
@@ -182,3 +200,29 @@ components:
             metadata:
               uptime: 99.99
               region: us-east-1
+
+    notificationBatch:
+      name: notificationBatch
+      title: Notification Batch
+      summary: Batched notifications for delayed subscribers
+      contentType: application/json
+      payload:
+        type: array
+        minItems: 2
+        items:
+          type: object
+          properties:
+            type:
+              type: string
+              description: Event type contained within the batch
+            message:
+              type: string
+              description: Human readable message
+            timestamp:
+              type: string
+              format: date-time
+              description: ISO timestamp of the originating event
+          required:
+            - type
+            - message
+            - timestamp
