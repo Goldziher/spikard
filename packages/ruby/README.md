@@ -53,6 +53,25 @@ spikard generate openapi --fixtures ../../testing_data --output ./generated
 spikard generate asyncapi --fixtures ../../testing_data/sse --output ./generated
 ```
 
+## Performance
+
+Spikard-Ruby uses Magnus bindings (rb-sys) for native extension integration. Benchmarks on macOS (Darwin 24.6.0) with 50 concurrent connections:
+
+| Workload | Throughput | Mean Latency | P95 Latency | P99 Latency | Memory |
+|----------|------------|--------------|-------------|-------------|--------|
+| Baseline | *pending* | *pending* | *pending* | *pending* | *pending* |
+| JSON Bodies | *pending* | *pending* | *pending* | *pending* | *pending* |
+| Multipart Forms | *pending* | *pending* | *pending* | *pending* | *pending* |
+| URL-Encoded | *pending* | *pending* | *pending* | *pending* | *pending* |
+
+**Architecture:**
+- **Magnus/rb-sys bindings**: Native extension with direct Ruby C API integration
+- **Idiomatic Ruby**: Block-based handlers with Rack-style responses
+- **Zero-copy paths**: Efficient data transfer for common operations
+- **Tower middleware**: Shared middleware stack with other Spikard bindings
+
+Benchmark harness integration pending. See `tools/benchmark-harness/` for methodology.
+
 ## Development notes
 - Ruby-facing code lives under `lib/spikard/`; native bindings sit in `crates/spikard-rb`.
 - Keep fixture updates synchronized with the shared e2e suite in `e2e/ruby`.
