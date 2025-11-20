@@ -95,6 +95,7 @@ class MockNativeTestClient {
 
 // Mock the native TestClient
 vi.mock("../runtime/spikard_wasm.js", () => ({
+	default: () => Promise.resolve(),
 	TestClient: MockNativeTestClient,
 }));
 
@@ -103,7 +104,9 @@ describe("TestClient", () => {
 	let client: TestClient;
 
 	beforeEach(() => {
-		__setNativeClientFactory((routesJson, handlers, config) => new MockNativeTestClient(routesJson, handlers, config));
+		__setNativeClientFactory((routesJson, handlers, config) =>
+			Promise.resolve(new MockNativeTestClient(routesJson, handlers, config)),
+		);
 		app = {
 			routes: [
 				{

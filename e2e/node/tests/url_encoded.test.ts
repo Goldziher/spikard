@@ -28,7 +28,7 @@ import {
 	createAppUrlEncodedSpecialCharactersEncoding,
 	createAppUrlEncodedStringMaxLengthValidationFail,
 	createAppUrlEncodedStringMinLengthValidationFail,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 describe("url_encoded", () => {
 	test("Simple form submission - success", async () => {

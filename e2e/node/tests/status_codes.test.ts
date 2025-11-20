@@ -29,7 +29,7 @@ import {
 	createAppStatusCodes21431RequestHeaderFieldsTooLarge,
 	createAppStatusCodes22501NotImplemented,
 	createAppStatusCodes23503ServiceUnavailable,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 describe("status_codes", () => {
 	test("408 Request Timeout", async () => {
@@ -278,10 +278,10 @@ describe("status_codes", () => {
 
 		expect(response.statusCode).toBe(429);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["x-ratelimit-reset"]).toBe("1609459200");
 		expect(responseHeaders["x-ratelimit-remaining"]).toBe("0");
-		expect(responseHeaders["retry-after"]).toBe("60");
+		expect(responseHeaders["x-ratelimit-reset"]).toBe("1609459200");
 		expect(responseHeaders["x-ratelimit-limit"]).toBe("100");
+		expect(responseHeaders["retry-after"]).toBe("60");
 	});
 
 	test("200 OK - Success", async () => {
@@ -312,9 +312,9 @@ describe("status_codes", () => {
 		expect(bodyBytes.length).toBe(1024);
 		expect(bodyBytes.toString("utf-8").startsWith("binary_data_1024_bytes")).toBe(true);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["content-type"]).toBe("application/pdf");
-		expect(responseHeaders["content-range"]).toBe("bytes 0-1023/5000");
 		expect(responseHeaders["content-length"]).toBe("1024");
 		expect(responseHeaders["accept-ranges"]).toBe("bytes");
+		expect(responseHeaders["content-type"]).toBe("application/pdf");
+		expect(responseHeaders["content-range"]).toBe("bytes 0-1023/5000");
 	});
 });

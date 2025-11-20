@@ -8,7 +8,7 @@ import { describe, expect, test } from "vitest";
 import {
 	createAppRequestTimeoutRequestCompletesBeforeTimeout,
 	createAppRequestTimeoutRequestExceedsTimeout,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 describe("request_timeout", () => {
 	test("Request exceeds timeout", async () => {

@@ -5,22 +5,31 @@
 //! edge runtimes. The bindings expose a [`TestClient`] that receives the JSON
 //! route metadata and handler map that the generated E2E apps produce.
 
+mod lifecycle;
 mod matching;
 mod types;
 
-use crate::matching::{QueryParams, match_route};
-use crate::types::{HandlerResponsePayload, RequestPayload, RouteDefinition, ServerConfig, build_params};
-use brotli::CompressorWriter;
-use flate2::Compression;
-use flate2::write::GzEncoder;
-use js_sys::{Date as JsDate, Function, Object, Promise};
-use jsonschema::{Validator, validator_for};
-use serde_json::{Map as JsonMap, Number as JsonNumber, Value};
-use std::collections::{HashMap, HashSet};
-use std::io::Write;
-use time::format_description::well_known::Iso8601;
-use time::macros::format_description;
-use time::{Date, OffsetDateTime};
+use crate::lifecycle::{
+    WasmLifecycleHooks, parse_hooks, request_from_payload, request_into_payload, response_from_value,
+    response_into_value,
+};
+use crate::matching::match_route;
+use crate::types::{BodyPayload, HandlerResponsePayload, RequestPayload, RouteDefinition, ServerConfig, build_params};
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
+use http::StatusCode;
+use js_sys::{Date as JsDate, Function, JSON, Object, Promise, Reflect, Symbol, Uint8Array};
+use serde_json::{Map as JsonMap, Value};
+use spikard_core::RouteMetadata;
+use spikard_core::bindings::response::{RawResponse, StaticAsset};
+use spikard_core::lifecycle::HookResult;
+use spikard_core::parameters::ParameterValidator;
+use spikard_core::problem::ProblemDetails;
+use spikard_core::router::Route as CompiledRoute;
+use spikard_core::schema_registry::SchemaRegistry;
+use spikard_core::validation::{SchemaValidator, ValidationError};
+use std::collections::HashMap;
+use std::sync::Arc;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::future_to_promise;
@@ -36,6 +45,8 @@ pub struct TestClient {
     routes: Vec<RouteDefinition>,
     handlers: HashMap<String, Function>,
     config: ServerConfig,
+    lifecycle_hooks: Option<Arc<WasmLifecycleHooks>>,
+    route_validators: HashMap<String, RouteValidators>,
     rate_state: std::rc::Rc<std::cell::RefCell<HashMap<String, RateLimiterState>>>,
 }
 
@@ -47,11 +58,33 @@ struct RateLimiterState {
     burst: f64,
 }
 
+#[derive(Clone)]
+struct RouteValidators {
+    parameter: Option<ParameterValidator>,
+    request: Option<Arc<SchemaValidator>>,
+    response: Option<Arc<SchemaValidator>>,
+}
+
+impl Default for RouteValidators {
+    fn default() -> Self {
+        Self {
+            parameter: None,
+            request: None,
+            response: None,
+        }
+    }
+}
+
 #[wasm_bindgen]
 impl TestClient {
-    /// Build a [`TestClient`] from serialized route metadata, handler map, and server config.
+    /// Build a [`TestClient`] from serialized route metadata, handler map, server config, and lifecycle hooks.
     #[wasm_bindgen(constructor)]
-    pub fn new(routes_json: &str, handlers: JsValue, config: JsValue) -> Result<TestClient, JsValue> {
+    pub fn new(
+        routes_json: &str,
+        handlers: JsValue,
+        config: JsValue,
+        lifecycle_hooks: Option<JsValue>,
+    ) -> Result<TestClient, JsValue> {
         let routes: Vec<RouteDefinition> = serde_json::from_str(routes_json)
             .map_err(|err| JsValue::from_str(&format!("Invalid routes JSON: {err}")))?;
 
@@ -80,10 +113,31 @@ impl TestClient {
             handler_map.insert(name, func);
         }
 
+        let schema_registry = SchemaRegistry::new();
+        let mut validator_map = HashMap::new();
+        for route in &routes {
+            let metadata = route_metadata_from_definition(route);
+            let compiled = CompiledRoute::from_metadata(metadata, &schema_registry)
+                .map_err(|err| JsValue::from_str(&format!("Invalid route {}: {}", route.handler_name, err)))?;
+            validator_map.insert(
+                route.handler_name.clone(),
+                RouteValidators {
+                    parameter: compiled.parameter_validator.clone(),
+                    request: compiled.request_validator.clone(),
+                    response: compiled.response_validator.clone(),
+                },
+            );
+        }
+
+        let lifecycle_hooks_value = lifecycle_hooks.unwrap_or(JsValue::UNDEFINED);
+        let lifecycle_hooks = parse_hooks(&lifecycle_hooks_value)?.map(Arc::new);
+
         Ok(TestClient {
             routes,
             handlers: handler_map,
             config,
+            lifecycle_hooks,
+            route_validators: validator_map,
             rate_state: std::rc::Rc::new(std::cell::RefCell::new(HashMap::new())),
         })
     }
@@ -137,6 +191,8 @@ impl TestClient {
             routes: self.routes.clone(),
             handlers: self.handlers.clone(),
             config: self.config.clone(),
+            lifecycle_hooks: self.lifecycle_hooks.clone(),
+            route_validators: self.route_validators.clone(),
             rate_state: self.rate_state.clone(),
         };
 
@@ -155,7 +211,97 @@ struct RequestContext {
     routes: Vec<RouteDefinition>,
     handlers: HashMap<String, Function>,
     config: ServerConfig,
+    lifecycle_hooks: Option<Arc<WasmLifecycleHooks>>,
+    route_validators: HashMap<String, RouteValidators>,
     rate_state: std::rc::Rc<std::cell::RefCell<HashMap<String, RateLimiterState>>>,
+}
+
+enum LifecycleRequestOutcome {
+    Continue(RequestPayload),
+    Respond(Value),
+}
+
+struct LifecycleRunner {
+    hooks: Option<Arc<WasmLifecycleHooks>>,
+}
+
+impl LifecycleRunner {
+    fn new(hooks: Option<Arc<WasmLifecycleHooks>>) -> Self {
+        Self { hooks }
+    }
+
+    async fn run_before_handler(&self, payload: RequestPayload) -> Result<LifecycleRequestOutcome, JsValue> {
+        let Some(hooks) = &self.hooks else {
+            return Ok(LifecycleRequestOutcome::Continue(payload));
+        };
+
+        let mut request = request_from_payload(payload).map_err(|err| JsValue::from_str(&err))?;
+
+        request = match hooks
+            .execute_on_request(request)
+            .await
+            .map_err(|err| JsValue::from_str(&format!("onRequest hook failed: {err}")))?
+        {
+            HookResult::Continue(req) => req,
+            HookResult::ShortCircuit(resp) => {
+                let value = response_into_value(resp).map_err(|err| JsValue::from_str(&err))?;
+                return Ok(LifecycleRequestOutcome::Respond(value));
+            }
+        };
+
+        request = match hooks
+            .execute_pre_validation(request)
+            .await
+            .map_err(|err| JsValue::from_str(&format!("preValidation hook failed: {err}")))?
+        {
+            HookResult::Continue(req) => req,
+            HookResult::ShortCircuit(resp) => {
+                let value = response_into_value(resp).map_err(|err| JsValue::from_str(&err))?;
+                return Ok(LifecycleRequestOutcome::Respond(value));
+            }
+        };
+
+        request = match hooks
+            .execute_pre_handler(request)
+            .await
+            .map_err(|err| JsValue::from_str(&format!("preHandler hook failed: {err}")))?
+        {
+            HookResult::Continue(req) => req,
+            HookResult::ShortCircuit(resp) => {
+                let value = response_into_value(resp).map_err(|err| JsValue::from_str(&err))?;
+                return Ok(LifecycleRequestOutcome::Respond(value));
+            }
+        };
+
+        let payload = request_into_payload(request).map_err(|err| JsValue::from_str(&err))?;
+        Ok(LifecycleRequestOutcome::Continue(payload))
+    }
+
+    async fn run_response_hooks(&self, response: Value) -> Result<Value, JsValue> {
+        let Some(hooks) = &self.hooks else {
+            return Ok(response);
+        };
+
+        let mut response = response_from_value(response).map_err(|err| JsValue::from_str(&err))?;
+        response = hooks
+            .execute_on_response(response)
+            .await
+            .map_err(|err| JsValue::from_str(&format!("onResponse hook failed: {err}")))?;
+        response_into_value(response).map_err(|err| JsValue::from_str(&err))
+    }
+
+    async fn run_error_hooks(&self, response: Value) -> Result<Value, JsValue> {
+        let Some(hooks) = &self.hooks else {
+            return Ok(response);
+        };
+
+        let mut response = response_from_value(response).map_err(|err| JsValue::from_str(&err))?;
+        response = hooks
+            .execute_on_error(response)
+            .await
+            .map_err(|err| JsValue::from_str(&format!("onError hook failed: {err}")))?;
+        response_into_value(response).map_err(|err| JsValue::from_str(&err))
+    }
 }
 
 async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsValue> {
@@ -165,7 +311,7 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         headers.extend(request_options.headers.clone());
     }
 
-    if let Some(snapshot) = serve_static_from_manifest(&context.method, &context.path, &context.config) {
+    if let Some(snapshot) = serve_static_from_manifest(&context.method, &context.path, &headers, &context.config) {
         return Ok(snapshot);
     }
 
@@ -181,18 +327,49 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         return Ok(snapshot);
     }
 
+    let validators = context
+        .route_validators
+        .get(&route.handler_name)
+        .cloned()
+        .unwrap_or_default();
+
     let mut params = build_params(&path_params, &query.normalized, &headers);
-    if let Some(snapshot) = coerce_path_params(route.parameter_schema.as_ref(), &path_params, &mut params) {
-        return Ok(snapshot);
-    }
-    if let Some(snapshot) = validate_parameters(&route, &params) {
-        return Ok(snapshot);
+    if let Some(parameter_validator) = validators.parameter.clone() {
+        let mut query_map = JsonMap::new();
+        for (key, value) in &query.normalized {
+            query_map.insert(key.clone(), value.clone());
+        }
+        let query_value = Value::Object(query_map);
+        let raw_query_single = first_query_values(&query.raw);
+        match parameter_validator.validate_and_extract(
+            &query_value,
+            &raw_query_single,
+            &path_params,
+            &headers,
+            &HashMap::new(),
+        ) {
+            Ok(value) => {
+                params = value_to_param_map(value);
+            }
+            Err(error) => {
+                let problem = ProblemDetails::from_validation_error(&error);
+                return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
+            }
+        }
     }
 
-    let body_value = request_options.body_payload();
-    if let Some(snapshot) = validate_request_body(route.request_schema.as_ref(), body_value.as_ref()) {
-        return Ok(snapshot);
+    let body_payload = request_options.body_payload();
+    if let Some(request_validator) = validators.request.as_ref() {
+        if let Err(error) = request_validator.validate(body_payload.value.as_ref().unwrap_or(&Value::Null)) {
+            let problem = ProblemDetails::from_validation_error(&error);
+            return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
+        }
     }
+
+    let BodyPayload {
+        value: body_value,
+        metadata: body_metadata,
+    } = body_payload;
 
     let request_payload = RequestPayload::new(
         context.method.clone(),
@@ -202,7 +379,23 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
         query.clone(),
         params,
         body_value.clone(),
+        body_metadata,
     );
+
+    let lifecycle_runner = LifecycleRunner::new(context.lifecycle_hooks.clone());
+
+    let request_payload = match lifecycle_runner.run_before_handler(request_payload).await? {
+        LifecycleRequestOutcome::Continue(payload) => payload,
+        LifecycleRequestOutcome::Respond(response_value) => {
+            let finalized = lifecycle_runner.run_response_hooks(response_value).await?;
+            let response_payload = HandlerResponsePayload::from_value(finalized)?;
+            return Ok(ResponseSnapshot::from_handler(
+                response_payload,
+                &headers,
+                &context.config,
+            ));
+        }
+    };
 
     let handler_fn = context
         .handlers
@@ -211,31 +404,199 @@ async fn exec_request(context: RequestContext) -> Result<ResponseSnapshot, JsVal
 
     let request_json = serde_json::to_string(&request_payload)
         .map_err(|err| JsValue::from_str(&format!("Failed to serialize request: {err}")))?;
+    let request_value = serde_wasm_bindgen::to_value(&request_payload)
+        .map_err(|err| JsValue::from_str(&format!("Failed to build request object: {err}")))?;
+    let request_object = js_sys::Object::from(request_value);
+    Reflect::set(
+        &request_object,
+        &JsValue::from_str("__spikard_raw_request__"),
+        &JsValue::from_str(&request_json),
+    )
+    .map_err(|_| JsValue::from_str("Failed to attach raw request payload"))?;
 
-    let js_promise = handler_fn.call1(&JsValue::NULL, &JsValue::from_str(&request_json))?;
+    let js_promise = handler_fn.call1(&JsValue::NULL, &request_object.into())?;
 
     let promise: Promise = js_promise
         .dyn_into()
         .map_err(|_| JsValue::from_str("Handler must return a Promise"))?;
-    let result = wasm_bindgen_futures::JsFuture::from(promise).await?;
+    let result = wasm_bindgen_futures::JsFuture::from(promise).await;
 
-    // Handlers typically return a JSON string; fall back to object.
-    let response_value = if let Some(text) = result.as_string() {
-        serde_json::from_str::<Value>(&text)
-            .map_err(|err| JsValue::from_str(&format!("Invalid handler response JSON: {err}")))?
-    } else {
-        serde_wasm_bindgen::from_value::<Value>(result)
-            .map_err(|err| JsValue::from_str(&format!("Invalid handler response object: {err}")))?
+    let response_value = match result {
+        Ok(value) => {
+            let normalized = normalize_handler_result(value).await?;
+            lifecycle_runner.run_response_hooks(normalized).await?
+        }
+        Err(err) => {
+            let error_response = build_error_response(err);
+            lifecycle_runner.run_error_hooks(error_response).await?
+        }
     };
 
-    if let Some(snapshot) = validate_response_body(route.response_schema.as_ref(), &response_value) {
-        return Ok(snapshot);
+    if let Some(response_validator) = validators.response.as_ref() {
+        if let Err(error) = response_validator.validate(&response_value) {
+            let problem = response_validation_problem(&error);
+            return Ok(ResponseSnapshot::from_problem(problem, &headers, &context.config));
+        }
     }
 
     let response_payload = HandlerResponsePayload::from_value(response_value)?;
 
-    let snapshot = ResponseSnapshot::from_handler(response_payload, &headers, query, context.config);
+    let snapshot = ResponseSnapshot::from_handler(response_payload, &headers, &context.config);
     Ok(snapshot)
+}
+
+async fn normalize_handler_result(result: JsValue) -> Result<Value, JsValue> {
+    if let Some(streaming) = try_streaming_response(&result).await? {
+        return Ok(streaming);
+    }
+    parse_handler_value(result)
+}
+
+fn build_error_response(error: JsValue) -> Value {
+    let message = extract_error_message(&error);
+    let normalized = if message.is_empty() {
+        "Internal Server Error".to_string()
+    } else {
+        message
+    };
+    serde_json::json!({
+        "status": 500,
+        "headers": {},
+        "body": {
+            "error": normalized,
+        }
+    })
+}
+
+fn extract_error_message(error: &JsValue) -> String {
+    if let Some(text) = error.as_string() {
+        return text;
+    }
+    if let Some(js_error) = error.dyn_ref::<js_sys::Error>() {
+        return js_error.message().into();
+    }
+    JSON::stringify(error)
+        .ok()
+        .and_then(|val| val.as_string())
+        .unwrap_or_else(|| "Internal Server Error".to_string())
+}
+
+fn parse_handler_value(result: JsValue) -> Result<Value, JsValue> {
+    if let Some(text) = result.as_string() {
+        match serde_json::from_str::<Value>(&text) {
+            Ok(value) => Ok(value),
+            Err(_) => Ok(Value::String(text)),
+        }
+    } else if result.is_null() || result.is_undefined() {
+        Ok(Value::Null)
+    } else {
+        serde_wasm_bindgen::from_value::<Value>(result)
+            .map_err(|err| JsValue::from_str(&format!("Invalid handler response object: {err}")))
+    }
+}
+
+async fn try_streaming_response(value: &JsValue) -> Result<Option<Value>, JsValue> {
+    if !value.is_object() {
+        return Ok(None);
+    }
+    let symbol = Symbol::for_("spikard.streaming.handle");
+    let has_symbol = Reflect::has(value, symbol.as_ref()).unwrap_or(false);
+    let has_marker = Reflect::has(value, &JsValue::from_str("__spikard_streaming__")).unwrap_or(false);
+    let is_streaming = has_symbol || has_marker;
+    let collect = Reflect::get(value, &JsValue::from_str("collect")).unwrap_or(JsValue::UNDEFINED);
+    if collect.is_undefined() || collect.is_null() {
+        if is_streaming {
+            return Err(JsValue::from_str("StreamingResponse missing collect method"));
+        }
+        return Ok(None);
+    }
+    let collect_fn: Function = match collect.dyn_into() {
+        Ok(func) => func,
+        Err(_) => {
+            if is_streaming {
+                return Err(JsValue::from_str("StreamingResponse collect must be a function"));
+            }
+            return Ok(None);
+        }
+    };
+    let promise_value = collect_fn
+        .call0(value)
+        .map_err(|err| JsValue::from_str(&format!("Failed to collect stream: {err:?}")))?;
+    let promise: Promise = match promise_value.dyn_into() {
+        Ok(p) => p,
+        Err(_) => {
+            if is_streaming {
+                return Err(JsValue::from_str("StreamingResponse collect must return a Promise"));
+            }
+            return Ok(None);
+        }
+    };
+    let bytes_value = wasm_bindgen_futures::JsFuture::from(promise).await?;
+    let buffer = Uint8Array::new(&bytes_value);
+    let body_bytes = buffer.to_vec();
+    if body_bytes.is_empty() {
+        return Err(JsValue::from_str("StreamingResponse produced empty body"));
+    }
+    let headers = read_handler_headers(value)?;
+    let status = read_status_code(value);
+    let body_value = encode_stream_body(&body_bytes, header_value(&headers, "content-type"));
+
+    let mut response = JsonMap::new();
+    response.insert("statusCode".to_string(), serde_json::json!(status));
+    if !headers.is_empty() {
+        response.insert(
+            "headers".to_string(),
+            Value::Object(
+                headers
+                    .iter()
+                    .map(|(key, header_value)| (key.clone(), Value::String(header_value.clone())))
+                    .collect(),
+            ),
+        );
+    }
+    if let Some(body) = body_value {
+        response.insert("body".to_string(), body);
+    }
+    Ok(Some(Value::Object(response)))
+}
+
+fn read_status_code(value: &JsValue) -> u16 {
+    Reflect::get(value, &JsValue::from_str("statusCode"))
+        .ok()
+        .and_then(|val| val.as_f64())
+        .map(|num| num as u16)
+        .unwrap_or(200)
+}
+
+fn read_handler_headers(value: &JsValue) -> Result<HashMap<String, String>, JsValue> {
+    let headers_value = Reflect::get(value, &JsValue::from_str("headers")).unwrap_or(JsValue::UNDEFINED);
+    if headers_value.is_null() || headers_value.is_undefined() {
+        return Ok(HashMap::new());
+    }
+    serde_wasm_bindgen::from_value::<HashMap<String, String>>(headers_value)
+        .map_err(|err| JsValue::from_str(&format!("Invalid response headers: {err}")))
+}
+
+fn encode_stream_body(body: &[u8], content_type: Option<&str>) -> Option<Value> {
+    if body.is_empty() {
+        return None;
+    }
+    if should_encode_as_text(content_type) {
+        match String::from_utf8(body.to_vec()) {
+            Ok(text) => Some(Value::String(text)),
+            Err(_) => Some(serde_json::json!({ "__spikard_base64__": BASE64_STANDARD.encode(body) })),
+        }
+    } else {
+        Some(serde_json::json!({ "__spikard_base64__": BASE64_STANDARD.encode(body) }))
+    }
+}
+
+fn should_encode_as_text(content_type: Option<&str>) -> bool {
+    let value = match content_type {
+        Some(text) => text.to_ascii_lowercase(),
+        None => return false,
+    };
+    value.starts_with("text/") || value.contains("json") || value.contains("javascript")
 }
 
 fn read_headers(value: JsValue) -> Result<HashMap<String, String>, JsValue> {
@@ -300,60 +661,12 @@ fn enforce_rate_limit(
     None
 }
 
-fn validate_parameters(route: &RouteDefinition, params: &HashMap<String, Value>) -> Option<ResponseSnapshot> {
-    let schema = route.parameter_schema.as_ref()?;
-    let (filtered_schema, allowed_keys) = build_path_only_schema(schema)?;
-    let validator = validator_for(&filtered_schema).ok()?;
-    let params_value = Value::Object(
-        params
-            .iter()
-            .filter(|(key, _)| allowed_keys.contains(*key))
-            .map(|(key, value)| (key.clone(), value.clone()))
-            .collect(),
-    );
-    if let Some(messages) = collect_schema_errors(&validator, &params_value) {
-        return Some(ResponseSnapshot::validation_failed(messages));
-    }
-    None
-}
-
-fn validate_request_body(schema: Option<&Value>, body: Option<&Value>) -> Option<ResponseSnapshot> {
-    let schema = schema?;
-    let validator = validator_for(schema).ok()?;
-    let payload = body.unwrap_or(&Value::Null);
-    let errors = collect_schema_errors(&validator, payload)?;
-    Some(ResponseSnapshot::validation_error(
-        422,
-        "Request body validation failed",
-        errors,
-    ))
-}
-
-fn validate_response_body(schema: Option<&Value>, body: &Value) -> Option<ResponseSnapshot> {
-    let schema = schema?;
-    let validator = validator_for(schema).ok()?;
-    let errors = collect_schema_errors(&validator, body)?;
-    Some(ResponseSnapshot::validation_error(
-        500,
-        "Response validation failed",
-        errors,
-    ))
-}
-
-fn collect_schema_errors(validator: &Validator, value: &Value) -> Option<Vec<String>> {
-    let mut errors = validator.iter_errors(value);
-    let first = errors.next()?;
-    let mut messages = vec![first.to_string()];
-    for error in errors.take(2) {
-        messages.push(error.to_string());
-    }
-    Some(messages)
-}
-
-fn serve_static_from_manifest(method: &str, path: &str, config: &ServerConfig) -> Option<ResponseSnapshot> {
-    if !method.eq_ignore_ascii_case("GET") && !method.eq_ignore_ascii_case("HEAD") {
-        return None;
-    }
+fn serve_static_from_manifest(
+    method: &str,
+    path: &str,
+    request_headers: &HashMap<String, String>,
+    config: &ServerConfig,
+) -> Option<ResponseSnapshot> {
     if config.wasm_static_manifest.is_empty() {
         return None;
     }
@@ -362,143 +675,19 @@ fn serve_static_from_manifest(method: &str, path: &str, config: &ServerConfig) -
         .next()
         .filter(|segment| !segment.is_empty())
         .unwrap_or("/");
-    let asset = config
+    let entry = config
         .wasm_static_manifest
         .iter()
-        .find(|entry| entry.route == normalized_path)?;
-    let mut headers = asset.headers.clone();
-    headers
-        .entry("content-length".to_string())
-        .or_insert_with(|| asset.body.len().to_string());
-    let body = if method.eq_ignore_ascii_case("HEAD") {
-        Vec::new()
-    } else {
-        asset.body.clone()
+        .find(|asset| asset.route == normalized_path)?;
+
+    let asset = StaticAsset {
+        route: entry.route.clone(),
+        headers: entry.headers.clone(),
+        body: entry.body.clone(),
     };
-    Some(ResponseSnapshot {
-        status: 200,
-        headers,
-        body,
-    })
-}
 
-fn coerce_path_params(
-    schema: Option<&Value>,
-    path_values: &HashMap<String, String>,
-    params: &mut HashMap<String, Value>,
-) -> Option<ResponseSnapshot> {
-    let schema = schema?;
-    let properties = schema.get("properties")?.as_object()?;
-    for (key, definition) in properties.iter() {
-        let source = definition
-            .get("source")
-            .and_then(|value| value.as_str())
-            .unwrap_or_default();
-        if !source.eq_ignore_ascii_case("path") {
-            continue;
-        }
-        let raw_value = match path_values.get(key) {
-            Some(value) => value,
-            None => continue,
-        };
-        if let Some(value_type) = definition.get("type").and_then(|value| value.as_str()) {
-            let result = match value_type {
-                "integer" => match raw_value.parse::<i64>() {
-                    Ok(parsed) => {
-                        params.insert(key.clone(), Value::Number(JsonNumber::from(parsed)));
-                        Ok(())
-                    }
-                    Err(_) => Err(format!("Invalid integer for path parameter {key}")),
-                },
-                "number" => match raw_value.parse::<f64>().ok().and_then(JsonNumber::from_f64) {
-                    Some(num) => {
-                        params.insert(key.clone(), Value::Number(num));
-                        Ok(())
-                    }
-                    None => Err(format!("Invalid number for path parameter {key}")),
-                },
-                "boolean" => {
-                    let normalized = raw_value.to_ascii_lowercase();
-                    match normalized.as_str() {
-                        "true" | "1" => {
-                            params.insert(key.clone(), Value::Bool(true));
-                            Ok(())
-                        }
-                        "false" | "0" => {
-                            params.insert(key.clone(), Value::Bool(false));
-                            Ok(())
-                        }
-                        _ => Err(format!("Invalid boolean for path parameter {key}")),
-                    }
-                }
-                "string" => {
-                    if let Some(format) = definition.get("format").and_then(|value| value.as_str()) {
-                        let valid = match format {
-                            "date" => is_valid_date(raw_value),
-                            "date-time" => is_valid_datetime(raw_value),
-                            _ => true,
-                        };
-                        if !valid {
-                            Err(format!("Invalid value for path parameter {key}"))
-                        } else {
-                            Ok(())
-                        }
-                    } else {
-                        Ok(())
-                    }
-                }
-                _ => Ok(()),
-            };
-            if let Err(message) = result {
-                return Some(ResponseSnapshot::validation_failed(vec![message]));
-            }
-        }
-    }
-    None
-}
-
-fn build_path_only_schema(schema: &Value) -> Option<(Value, HashSet<String>)> {
-    let properties = schema.get("properties")?.as_object()?;
-    let mut filtered_props = JsonMap::new();
-    let mut keys = HashSet::new();
-    for (key, value) in properties.iter() {
-        let source = value.get("source").and_then(|src| src.as_str()).unwrap_or_default();
-        if source.eq_ignore_ascii_case("path") {
-            filtered_props.insert(key.clone(), value.clone());
-            keys.insert(key.clone());
-        }
-    }
-    if filtered_props.is_empty() {
-        return None;
-    }
-    let mut schema_map = JsonMap::new();
-    if let Some(ty) = schema.get("type") {
-        schema_map.insert("type".to_string(), ty.clone());
-    }
-    if let Some(additional) = schema.get("additionalProperties") {
-        schema_map.insert("additionalProperties".to_string(), additional.clone());
-    }
-    schema_map.insert("properties".to_string(), Value::Object(filtered_props));
-    if let Some(required) = schema.get("required").and_then(|value| value.as_array()) {
-        let required_values: Vec<Value> = required
-            .iter()
-            .filter_map(|entry| entry.as_str())
-            .filter(|name| keys.contains(*name))
-            .map(|name| Value::String(name.to_string()))
-            .collect();
-        if !required_values.is_empty() {
-            schema_map.insert("required".to_string(), Value::Array(required_values));
-        }
-    }
-    Some((Value::Object(schema_map), keys))
-}
-
-fn is_valid_date(value: &str) -> bool {
-    Date::parse(value, &format_description!("[year]-[month]-[day]")).is_ok()
-}
-
-fn is_valid_datetime(value: &str) -> bool {
-    OffsetDateTime::parse(value, &Iso8601::DEFAULT).is_ok()
+    let raw = asset.serve(method, normalized_path)?;
+    Some(ResponseSnapshot::from_raw(raw, request_headers, config))
 }
 
 /// HTTP response snapshot returned to JavaScript callers.
@@ -513,109 +702,39 @@ impl ResponseSnapshot {
     fn from_handler(
         payload: HandlerResponsePayload,
         request_headers: &HashMap<String, String>,
-        _query: QueryParams,
-        config: ServerConfig,
+        config: &ServerConfig,
     ) -> Self {
-        let mut snapshot = ResponseSnapshot {
-            status: payload.status,
-            headers: payload.headers,
-            body: payload.body_bytes,
-        };
-        snapshot.apply_response_filters(request_headers, &config);
-        snapshot
+        let raw = RawResponse::new(payload.status, payload.headers, payload.body_bytes);
+        ResponseSnapshot::from_raw(raw, request_headers, config)
     }
 
-    fn validation_failed(errors: Vec<String>) -> Self {
-        ResponseSnapshot::validation_error(422, "Parameter validation failed", errors)
+    fn from_problem(problem: ProblemDetails, request_headers: &HashMap<String, String>, config: &ServerConfig) -> Self {
+        let mut headers = HashMap::new();
+        headers.insert("content-type".to_string(), "application/problem+json".to_string());
+        let raw = RawResponse::new(
+            problem.status,
+            headers,
+            serde_json::to_vec(&problem).unwrap_or_default(),
+        );
+        ResponseSnapshot::from_raw(raw, request_headers, config)
     }
 
-    fn validation_error(status: u16, detail: &str, errors: Vec<String>) -> Self {
-        let payload = serde_json::json!({
-            "detail": detail,
-            "errors": errors,
-        });
-        ResponseSnapshot {
-            status,
-            headers: HashMap::new(),
-            body: serde_json::to_vec(&payload).unwrap_or_default(),
-        }
-    }
-
-    fn apply_response_filters(&mut self, request_headers: &HashMap<String, String>, config: &ServerConfig) {
+    fn from_raw(mut raw: RawResponse, request_headers: &HashMap<String, String>, config: &ServerConfig) -> Self {
         if let Some(compression) = &config.compression {
-            self.apply_compression(request_headers, compression);
+            let http_config = spikard_core::CompressionConfig {
+                gzip: compression.gzip,
+                brotli: compression.brotli,
+                min_size: compression.min_size,
+                quality: compression.quality as u32,
+            };
+            raw.apply_compression(request_headers, &http_config);
         }
-    }
 
-    fn apply_compression(
-        &mut self,
-        request_headers: &HashMap<String, String>,
-        compression: &crate::types::CompressionConfig,
-    ) {
-        if self.body.is_empty() || self.status == 206 {
-            return;
+        ResponseSnapshot {
+            status: raw.status,
+            headers: raw.headers,
+            body: raw.body,
         }
-        if self
-            .headers
-            .keys()
-            .any(|key| key.eq_ignore_ascii_case("content-encoding"))
-        {
-            return;
-        }
-        if self.body.len() < compression.min_size {
-            return;
-        }
-        let accept_encoding = header_value(request_headers, "Accept-Encoding").map(|value| value.to_ascii_lowercase());
-        let accepts_brotli = accept_encoding
-            .as_ref()
-            .map(|value| value.contains("br"))
-            .unwrap_or(false);
-        if compression.brotli && accepts_brotli && self.try_compress_brotli(compression) {
-            return;
-        }
-        let accepts_gzip = accept_encoding
-            .as_ref()
-            .map(|value| value.contains("gzip"))
-            .unwrap_or(false);
-        if compression.gzip && accepts_gzip {
-            self.try_compress_gzip(compression);
-        }
-    }
-
-    fn try_compress_brotli(&mut self, compression: &crate::types::CompressionConfig) -> bool {
-        let quality = compression.quality.min(11) as u32;
-        let mut writer = CompressorWriter::new(Vec::new(), 4096, quality, 22);
-        if writer.write_all(&self.body).is_err() || writer.flush().is_err() {
-            return false;
-        }
-        let compressed = writer.into_inner();
-        if compressed.is_empty() {
-            return false;
-        }
-        self.finalize_encoded_body("br", compressed);
-        true
-    }
-
-    fn try_compress_gzip(&mut self, compression: &crate::types::CompressionConfig) -> bool {
-        let mut encoder = GzEncoder::new(Vec::new(), Compression::new(compression.quality as u32));
-        if encoder.write_all(&self.body).is_err() {
-            return false;
-        }
-        let compressed = encoder.finish().unwrap_or_else(|_| Vec::new());
-        if compressed.is_empty() {
-            return false;
-        }
-        self.finalize_encoded_body("gzip", compressed);
-        true
-    }
-
-    fn finalize_encoded_body(&mut self, encoding: &str, compressed: Vec<u8>) {
-        self.body = compressed;
-        self.headers
-            .insert("content-encoding".to_string(), encoding.to_string());
-        self.headers.insert("vary".to_string(), "Accept-Encoding".to_string());
-        self.headers
-            .insert("content-length".to_string(), self.body.len().to_string());
     }
 }
 
@@ -627,4 +746,54 @@ fn header_value<'a>(headers: &'a HashMap<String, String>, name: &str) -> Option<
             None
         }
     })
+}
+
+fn first_query_values(raw: &HashMap<String, Vec<String>>) -> HashMap<String, String> {
+    let mut map = HashMap::new();
+    for (key, values) in raw {
+        if let Some(value) = values.first() {
+            map.insert(key.clone(), value.clone());
+        }
+    }
+    map
+}
+
+fn value_to_param_map(value: Value) -> HashMap<String, Value> {
+    match value {
+        Value::Object(map) => map.into_iter().collect(),
+        _ => HashMap::new(),
+    }
+}
+
+fn route_metadata_from_definition(def: &RouteDefinition) -> RouteMetadata {
+    RouteMetadata {
+        method: def.method.clone(),
+        path: def.path.clone(),
+        handler_name: def.handler_name.clone(),
+        request_schema: def.request_schema.clone(),
+        response_schema: def.response_schema.clone(),
+        parameter_schema: def.parameter_schema.clone(),
+        file_params: None,
+        is_async: true,
+        cors: None,
+    }
+}
+
+fn response_validation_problem(error: &ValidationError) -> ProblemDetails {
+    let error_count = error.errors.len();
+    let detail = if error_count == 1 {
+        "1 validation error in response".to_string()
+    } else {
+        format!("{error_count} validation errors in response")
+    };
+
+    let errors_json = serde_json::to_value(&error.errors).unwrap_or_else(|_| Value::Array(vec![]));
+
+    ProblemDetails::new(
+        ProblemDetails::TYPE_INTERNAL_SERVER_ERROR,
+        "Response Validation Failed",
+        StatusCode::INTERNAL_SERVER_ERROR,
+    )
+    .with_detail(detail)
+    .with_extension("errors", errors_json)
 }

@@ -9,7 +9,7 @@ import {
 	createAppRequestIdRequestIdHeaderIsPreserved,
 	createAppRequestIdRequestIdIsGeneratedWhenNotProvided,
 	createAppRequestIdRequestIdMiddlewareCanBeDisabled,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 describe("request_id", () => {
 	test("Request ID header is preserved", async () => {

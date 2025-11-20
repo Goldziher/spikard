@@ -12,7 +12,7 @@ import {
 	createAppWebsocketChat,
 	UserJoinedMessageSchema,
 	UserLeftMessageSchema,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 const ROOT_DIR = path.resolve(__dirname, "../../..");
 const WEBSOCKET_FIXTURE_ROOT = path.join(ROOT_DIR, "testing_data", "websockets");

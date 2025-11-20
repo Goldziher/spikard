@@ -4,6 +4,7 @@ members = [
     "crates/spikard",
     "crates/spikard-cli",
     "crates/spikard-codegen",
+    "crates/spikard-core",
     "crates/spikard-http",
     "crates/spikard-py",
     "crates/spikard-node",
@@ -28,6 +29,7 @@ homepage = "https://github.com/Goldziher/spikard"
 [workspace.dependencies]
 # Core library
 spikard = { version = "0.1.0", path = "crates/spikard" }
+spikard-core = { version = "0.1.0", path = "crates/spikard-core" }
 
 # Python bindings
 pyo3 = { version = "0.27", features = ["abi3-py310"] }
@@ -69,6 +71,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+http = "1.3"
 
 [profile.release]
 lto = "thin"

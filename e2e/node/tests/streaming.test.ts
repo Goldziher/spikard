@@ -9,7 +9,7 @@ import {
 	createAppStreamingBinaryLogDownload,
 	createAppStreamingChunkedCsvExport,
 	createAppStreamingStreamJsonLines,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 describe("streaming", () => {
 	test("Stream JSON lines", async () => {

@@ -43,7 +43,7 @@ import {
 	createAppPathParamsStringPathParameterWithMaxLengthFailure,
 	createAppPathParamsStringPathParameterWithMinLengthFailure,
 	createAppPathParamsUuidPathParameterSuccess,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 describe("path_params", () => {
 	test("Boolean path parameter - True", async () => {

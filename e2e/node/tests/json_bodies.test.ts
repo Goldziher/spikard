@@ -55,7 +55,7 @@ import {
 	createAppJsonBodiesStringPatternValidationSuccess,
 	createAppJsonBodiesUuidFieldInvalidFormat,
 	createAppJsonBodiesUuidFieldSuccess,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 describe("json_bodies", () => {
 	test("UUID field - invalid format", async () => {

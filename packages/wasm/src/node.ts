@@ -33,7 +33,7 @@ export type { CorsConfig, FileParam, JsonSchema, RouteMetadata, SpikardApp } fro
 export type { Body, Path, Query, QueryDefault } from "./params";
 export type { Request } from "./request";
 export { del, get, patch, post, put, type RouteOptions, route } from "./routing";
-export { runServer, type ServerOptions } from "./server";
+export { createFetchHandler, runServer, type ServerOptions } from "./server";
 export { StreamingResponse, type StreamingResponseInit } from "./streaming";
 export type { TestResponse } from "./testing";
 export type {

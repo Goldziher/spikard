@@ -30,6 +30,26 @@ export interface Request {
 	queryString: string;
 
 	/**
+	 * Normalized parameters (path/query/header mix)
+	 */
+	params?: Record<string, JsonValue>;
+
+	/**
+	 * Path parameters only
+	 */
+	pathParams?: Record<string, string>;
+
+	/**
+	 * Query parameters map
+	 */
+	query?: Record<string, JsonValue>;
+
+	/**
+	 * Attached files (when multipart/form-data)
+	 */
+	files?: Array<{ name: string; filename?: string; content?: string; contentType?: string }>;
+
+	/**
 	 * Request headers
 	 */
 	headers: Record<string, string>;
@@ -37,7 +57,7 @@ export interface Request {
 	/**
 	 * Request body (if any)
 	 */
-	body: Buffer | null;
+	body: Buffer | Uint8Array | null;
 
 	/**
 	 * Parse request body as JSON

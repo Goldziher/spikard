@@ -24,7 +24,7 @@ import {
 	createAppAuthJwtNotBeforeClaimInFuture,
 	createAppAuthJwtWithMultipleAudiences,
 	createAppAuthMultipleAuthenticationSchemesJwtPrecedence,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 describe("auth", () => {
 	test("JWT malformed token format", async () => {

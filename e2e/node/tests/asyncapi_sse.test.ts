@@ -13,7 +13,7 @@ import {
 	StatusUpdateMessageSchema,
 	SystemAlertMessageSchema,
 	UserNotificationMessageSchema,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 const ROOT_DIR = path.resolve(__dirname, "../../..");
 const SSE_FIXTURE_ROOT = path.join(ROOT_DIR, "testing_data", "sse");

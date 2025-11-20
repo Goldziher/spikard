@@ -12,6 +12,8 @@ env:
   BUILDKIT_PROGRESS: plain
   RUBY: "{{.RBENV_RUBY}}"
 
+silent: false
+
 tasks:
   setup:
     desc: "Install language dependencies, developer tooling, and hooks"
@@ -28,12 +30,41 @@ tasks:
     cmds:
       - task: python:update
       - task: rust:update
-      - corepack up
-      - corepack enable
       - task: node:update
       - task: ruby:update
       - task: build:py
       - task: pre-commit:update
+  build:
+    desc: "Build Rust core and language bindings"
+    cmds:
+      - task: build:rust
+      - task: build:py
+      - task: build:node
+      - task: build:wasm
+      - task: ruby:build
+  test:
+    desc: "Run test suites for all languages"
+    cmds:
+      - task: rust:test
+      - task: python:test
+      - task: node:test
+      - task: ruby:test
+  lint:
+    desc: "Run linters across languages"
+    cmds:
+      - task: python:lint
+      - task: clippy:rust
+      - task: node:lint
+      - task: ruby:lint
+      - task: php:lint
+      - task: pre-commit:run
+  format:
+    desc: "Format source code for supported languages"
+    cmds:
+      - task: rust:format
+      - task: python:format
+      - task: node:format
+      - task: ruby:format
 
   python:install:
     desc: "Install Python dependencies with uv"
@@ -96,6 +127,10 @@ tasks:
     desc: "Update Prek hooks"
     cmds:
       - prek autoupdate
+  pre-commit:run:
+    desc: "Run Prek hooks across the repo"
+    cmds:
+      - prek run --all-files
 
   python:test:
     desc: "Run Python integration tests"
@@ -141,12 +176,12 @@ tasks:
     cmds:
       - cargo clippy --workspace --all-features -- -D warnings
 
-  fmt:rust:
+  rust:format:
     desc: "Format Rust code"
     cmds:
       - cargo fmt --all
 
-  fmt:rust:check:
+  rust:format:check:
     desc: "Check Rust formatting without modifying files"
     cmds:
       - cargo fmt --all --check
@@ -160,6 +195,7 @@ tasks:
   node:update:
     desc: "Update Node.js dependencies with pnpm"
     cmds:
+      - corepack up
       - corepack enable
       - pnpm up --latest -r
 
@@ -185,6 +221,13 @@ tasks:
     dir: packages/ruby
     cmds:
       - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec steep check
+  ruby:format:
+    desc: "Format Ruby sources with Rubocop"
+    deps:
+      - ruby:install
+    dir: packages/ruby
+    cmds:
+      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rubocop --autocorrect-all
 
   php:lint:
     desc: "Lint PHP code with PHPStan"
@@ -217,27 +260,6 @@ tasks:
     cmds:
       - cargo build --workspace
 
-  test:
-    desc: "Run core language test suites"
-    cmds:
-      - task: test:rust
-      - task: test:python
-      - task: node:test
-      - task: ruby:test
-
-  lint:
-    desc: "Run workspace linters for Rust, Python, TypeScript, Ruby, and PHP"
-    cmds:
-      - prek run --all-files
-      - task: ruby:lint
-
-  fmt:
-    desc: "Format Python, Rust, and TypeScript code"
-    cmds:
-      - task: fmt:rust
-      - task: python:format
-      - task: node:format
-
   check:
     desc: "Fast check of Python and Rust code"
     cmds:
@@ -266,16 +288,6 @@ tasks:
     cmds:
       - cargo clean
       - rm -rf .venv/lib/python*/site-packages/_spikard
-      - task: build:py:debug
-
-  build:
-    desc: "Build Rust components for development"
-    cmds:
-      - task: build:py
-
-  build:debug:
-    desc: "Build Rust components in debug mode"
-    cmds:
       - task: build:py:debug
 
   build:cli:

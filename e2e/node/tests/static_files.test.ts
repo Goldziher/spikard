@@ -8,7 +8,7 @@ import { describe, expect, test } from "vitest";
 import {
 	createAppStaticFilesStaticFileServerReturnsTextFile,
 	createAppStaticFilesStaticServerReturnsIndexHtmlForDirectory,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 describe("static_files", () => {
 	test("Static file server returns text file", async () => {
@@ -21,8 +21,8 @@ describe("static_files", () => {
 		const responseText = response.text();
 		expect(responseText).toBe("Hello from static storage");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["cache-control"]).toBe("public, max-age=60");
 		expect(responseHeaders["content-type"]).toBe("text/plain");
+		expect(responseHeaders["cache-control"]).toBe("public, max-age=60");
 	});
 
 	test("Static server returns index html for directory", async () => {
