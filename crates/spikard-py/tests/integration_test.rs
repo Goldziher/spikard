@@ -10,12 +10,91 @@ use serde_json::json;
 use spikard_http::handler_trait::{Handler, RequestData};
 use std::collections::HashMap;
 use std::ffi::CString;
-use std::sync::Arc;
+use std::fs;
+use std::path::PathBuf;
+use std::sync::{Arc, OnceLock};
 
 /// Helper function to initialize Python for tests
 fn init_python() {
+    let package_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../packages/python")
+        .canonicalize()
+        .expect("failed to resolve python package path");
+    let stub_path = ensure_stub_dir();
+    let new_pythonpath = if let Ok(current) = std::env::var("PYTHONPATH") {
+        if current.is_empty() {
+            format!("{}:{}", stub_path.display(), package_path.display())
+        } else {
+            format!("{}:{}:{}", stub_path.display(), package_path.display(), current)
+        }
+    } else {
+        format!("{}:{}", stub_path.display(), package_path.display())
+    };
+    // SAFETY: setting an env var for the test process only; no cross-thread invariants.
+    unsafe {
+        std::env::set_var("PYTHONPATH", &new_pythonpath);
+    }
     pyo3::prepare_freethreaded_python();
     let _ = _spikard::init_python_event_loop();
+}
+
+fn ensure_stub_dir() -> PathBuf {
+    static STUB_DIR: OnceLock<PathBuf> = OnceLock::new();
+    STUB_DIR
+        .get_or_init(|| {
+            let dir = std::env::temp_dir().join("spikard_py_stub");
+            let _ = fs::create_dir_all(&dir);
+            let stub = r#"
+class Response:
+    def __init__(self, status_code: int = 200, body=None, headers=None):
+        self.status_code = status_code
+        self.body = body
+        self.headers = headers or {}
+
+class StreamingResponse(Response):
+    ...
+
+def background_run(_awaitable):
+    # Raise to force Python fallback in background.py
+    raise RuntimeError("stub")
+"#;
+            let _ = fs::write(dir.join("_spikard.py"), stub);
+            let pkg_dir = dir.join("spikard");
+            let _ = fs::create_dir_all(&pkg_dir);
+            let pkg_init = r#"
+class Route:
+    def __init__(self, method, path, handler, body_schema=None, parameter_schema=None, file_params=None):
+        self.method = method
+        self.path = path
+        self.handler = handler
+        self.handler_name = getattr(handler, "__name__", "handler")
+        self.request_schema = body_schema
+        self.response_schema = None
+        self.parameter_schema = parameter_schema
+        self.file_params = file_params
+        self.is_async = False
+
+class Spikard:
+    def __init__(self):
+        self._routes = []
+
+    def register_route(self, method, path, handler, body_schema=None, parameter_schema=None, file_params=None):
+        self._routes.append(Route(method, path, handler, body_schema, parameter_schema, file_params))
+
+    def get_routes(self):
+        return self._routes
+"#;
+            let _ = fs::write(pkg_dir.join("__init__.py"), pkg_init);
+            let internal_dir = pkg_dir.join("_internal");
+            let _ = fs::create_dir_all(&internal_dir);
+            let _ = fs::write(internal_dir.join("__init__.py"), "");
+            let _ = fs::write(
+                internal_dir.join("converters.py"),
+                "def register_decoder(_decoder):\n    return None\n\ndef clear_decoders():\n    return None\n\ndef convert_params(params, handler_func=None, strict=False):\n    return params\n",
+            );
+            dir
+        })
+        .clone()
 }
 
 fn module_from_code<'py>(py: Python<'py>, code: &str, filename: &str, module_name: &str) -> Bound<'py, PyModule> {
@@ -106,6 +185,7 @@ def sync_handler(path_params, query_params, body, headers, cookies):
 
     let response = handler.call(request, request_data).await;
 
+    eprintln!("sync handler result: {:?}", response);
     assert!(response.is_ok());
     let resp = response.unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
@@ -154,6 +234,7 @@ async def async_handler(path_params, query_params, body, headers, cookies):
 
     let response = handler.call(request, request_data).await;
 
+    eprintln!("async handler result: {:?}", response);
     assert!(response.is_ok());
     let resp = response.unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
@@ -238,6 +319,7 @@ def echo_handler(path_params, query_params, body, headers, cookies):
 
     let result = handler.call(request, request_data).await;
 
+    eprintln!("headers/cookies handler result: {:?}", result);
     assert!(result.is_ok());
     let resp = result.unwrap();
     assert_eq!(resp.status(), StatusCode::OK);

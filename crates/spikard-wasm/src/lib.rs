@@ -1,3 +1,5 @@
+#![cfg(target_arch = "wasm32")]
+
 //! WebAssembly bindings for Spikard.
 //!
 //! The goal of this crate is to provide a lightweight runtime that mirrors the

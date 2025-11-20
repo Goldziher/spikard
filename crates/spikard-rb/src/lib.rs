@@ -9,7 +9,7 @@ mod websocket;
 
 use async_stream::stream;
 use axum::body::Body;
-use axum::http::{HeaderName, HeaderValue, Method, StatusCode};
+use axum::http::{HeaderName, HeaderValue, Method, Request, Response, StatusCode};
 use axum_test::{TestServer, TestServerConfig, Transport};
 use bytes::Bytes;
 use cookie::Cookie;
@@ -1623,9 +1623,10 @@ fn run_server(
             .ok_or_else(|| Error::new(ruby.exception_arg_error(), "lifecycle_hooks parameter must be a Hash"))?;
 
         let mut hooks = spikard_http::LifecycleHooks::new();
+        type RubyHookVec = Vec<Arc<dyn spikard_http::lifecycle::LifecycleHook<Request<Body>, Response<Body>>>>;
 
         // Helper to extract hooks from an array
-        let extract_hooks = |key: &str| -> Result<Vec<Arc<dyn spikard_http::lifecycle::LifecycleHook>>, Error> {
+        let extract_hooks = |key: &str| -> Result<RubyHookVec, Error> {
             let key_sym = ruby.to_symbol(key);
             if let Some(hooks_array) = hooks_hash.get(key_sym)
                 && !hooks_array.is_nil()
@@ -1639,7 +1640,10 @@ fn run_server(
                     let hook_value: Value = array.entry(i as isize)?;
                     let name = format!("{}_{}", key, i);
                     let ruby_hook = lifecycle::RubyLifecycleHook::new(name, hook_value);
-                    result.push(Arc::new(ruby_hook) as Arc<dyn spikard_http::lifecycle::LifecycleHook>);
+                    result.push(Arc::new(ruby_hook)
+                        as Arc<
+                            dyn spikard_http::lifecycle::LifecycleHook<Request<Body>, Response<Body>>,
+                        >);
                 }
                 return Ok(result);
             }
@@ -1673,7 +1677,7 @@ fn run_server(
     };
 
     // Set lifecycle hooks in config
-    config.lifecycle_hooks = lifecycle_hooks;
+    config.lifecycle_hooks = lifecycle_hooks.map(Arc::new);
 
     // Initialize logging
     Server::init_logging();

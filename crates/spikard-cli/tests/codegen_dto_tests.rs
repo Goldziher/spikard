@@ -475,8 +475,21 @@ def route(*args, **kwargs):
 class Response:
     ...
 
-class StreamingResponse:
-    ...
+        class StreamingResponse:
+            ...
+"#,
+    )?;
+
+    fs::write(
+        root.join("msgspec.py"),
+        r#"
+class Struct:
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+    def __class_getitem__(cls, item):
+        return cls
 "#,
     )?;
 

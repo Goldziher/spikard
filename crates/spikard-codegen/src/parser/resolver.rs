@@ -33,8 +33,8 @@ fn resolve_ref_path(ref_path: &str, definitions: &HashMap<String, Value>) -> Res
     if let Some(schema_name) = ref_path.strip_prefix("#/schemas/") {
         definitions
             .get(schema_name)
-            .cloned()
-            .ok_or_else(|| CodegenError::SchemaRefNotFound(ref_path.to_string()))
+            .map(|schema| resolve_refs(schema, definitions))
+            .unwrap_or_else(|| Err(CodegenError::SchemaRefNotFound(ref_path.to_string())))
     } else {
         Err(CodegenError::SchemaRefNotFound(ref_path.to_string()))
     }

@@ -444,7 +444,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
 
     // Use the extracted config and set lifecycle hooks
     let mut server_config = server_config;
-    server_config.lifecycle_hooks = lifecycle_hooks;
+    server_config.lifecycle_hooks = lifecycle_hooks.map(Arc::new);
 
     // Create schema registry for validator deduplication
     let schema_registry = spikard_http::SchemaRegistry::new();

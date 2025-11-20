@@ -40,7 +40,7 @@ impl NodeLifecycleHook {
     }
 }
 
-impl LifecycleHook for NodeLifecycleHook {
+impl LifecycleHook<Request<Body>, Response<Body>> for NodeLifecycleHook {
     fn name(&self) -> &str {
         &self.name
     }
@@ -48,7 +48,7 @@ impl LifecycleHook for NodeLifecycleHook {
     fn execute_request<'a>(
         &'a self,
         req: Request<Body>,
-    ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>>, String>> + Send + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>> {
         let func = Arc::clone(&self.func);
         let name = self.name.clone();
 
@@ -146,7 +146,8 @@ impl LifecycleHook for NodeLifecycleHook {
                 .body(body)
                 .map_err(|e| format!("Failed to build request: {}", e))?;
 
-            let result: std::result::Result<HookResult<Request<Body>>, String> = Ok(HookResult::Continue(request));
+            let result: std::result::Result<HookResult<Request<Body>, Response<Body>>, String> =
+                Ok(HookResult::Continue(request));
             result
         })
     }
@@ -154,7 +155,7 @@ impl LifecycleHook for NodeLifecycleHook {
     fn execute_response<'a>(
         &'a self,
         resp: Response<Body>,
-    ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>>, String>> + Send + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>> {
         let func = Arc::clone(&self.func);
         let name = self.name.clone();
 
@@ -231,7 +232,8 @@ impl LifecycleHook for NodeLifecycleHook {
                 .body(Body::from(body_str))
                 .map_err(|e| format!("Failed to build response: {}", e))?;
 
-            let result: std::result::Result<HookResult<Response<Body>>, String> = Ok(HookResult::Continue(response));
+            let result: std::result::Result<HookResult<Response<Body>, Response<Body>>, String> =
+                Ok(HookResult::Continue(response));
             result
         })
     }
