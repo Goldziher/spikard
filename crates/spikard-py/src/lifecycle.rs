@@ -34,7 +34,7 @@ impl PythonHook {
     }
 }
 
-impl LifecycleHook for PythonHook {
+impl LifecycleHook<Request<Body>, Response<Body>> for PythonHook {
     fn name(&self) -> &str {
         &self.name
     }
@@ -42,7 +42,7 @@ impl LifecycleHook for PythonHook {
     fn execute_request<'a>(
         &'a self,
         req: Request<Body>,
-    ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>>, String>> + Send + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>> {
         // Clone the func for use across threads
         let func = Python::attach(|py| self.func.clone_ref(py));
         let name = self.name.clone();
@@ -50,7 +50,7 @@ impl LifecycleHook for PythonHook {
         Box::pin(async move {
             // Run Python async function in a blocking task
             let result = tokio::task::spawn_blocking(move || {
-                Python::attach(|py| -> PyResult<HookResult<Request<Body>>> {
+                Python::attach(|py| -> PyResult<HookResult<Request<Body>, Response<Body>>> {
                     // Convert Rust request to Python Request
                     let py_req = Py::new(py, PyRequest::from_request(req, py)?)?;
 
@@ -123,7 +123,7 @@ impl LifecycleHook for PythonHook {
     fn execute_response<'a>(
         &'a self,
         resp: Response<Body>,
-    ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>>, String>> + Send + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>> {
         // Clone the func for use across threads
         let func = Python::attach(|py| self.func.clone_ref(py));
         let name = self.name.clone();
@@ -139,7 +139,7 @@ impl LifecycleHook for PythonHook {
 
             // Run Python async function in a blocking task
             let result = tokio::task::spawn_blocking(move || {
-                Python::attach(|py| -> PyResult<HookResult<Response<Body>>> {
+                Python::attach(|py| -> PyResult<HookResult<Response<Body>, Response<Body>>> {
                     // Convert Rust response to Python Response with buffered body
                     let py_resp = Py::new(py, PyResponse::from_response_parts(parts, body_bytes.clone(), py)?)?;
 
@@ -203,9 +203,10 @@ impl LifecycleHook for PythonHook {
 /// Extracts hook functions from Python dict and wraps them in PythonHook instances.
 pub fn build_lifecycle_hooks(_py: Python, config: &Bound<'_, PyAny>) -> PyResult<spikard_http::LifecycleHooks> {
     let mut hooks = spikard_http::LifecycleHooks::new();
+    type PyHookVec = Vec<Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>>;
 
     // Helper to extract hooks from a list
-    let extract_hooks = |hook_list: &Bound<'_, PyAny>, hook_type: &str| -> PyResult<Vec<Arc<dyn LifecycleHook>>> {
+    let extract_hooks = |hook_list: &Bound<'_, PyAny>, hook_type: &str| -> PyResult<PyHookVec> {
         let mut result = Vec::new();
 
         if hook_list.is_none() {
@@ -218,7 +219,7 @@ pub fn build_lifecycle_hooks(_py: Python, config: &Bound<'_, PyAny>) -> PyResult
         for (i, item) in list.iter().enumerate() {
             let name = format!("{}_hook_{}", hook_type, i);
             let func = item.clone().unbind();
-            result.push(Arc::new(PythonHook::new(name, func)) as Arc<dyn LifecycleHook>);
+            result.push(Arc::new(PythonHook::new(name, func)) as Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>);
         }
 
         Ok(result)

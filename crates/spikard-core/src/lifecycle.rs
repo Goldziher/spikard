@@ -4,20 +4,15 @@
 //! Hooks operate on generic request/response carriers so higher-level crates can
 //! plug in their own types without pulling in server frameworks.
 
-use std::future::Future;
-use std::pin::Pin;
-use std::sync::Arc;
+use std::{future::Future, pin::Pin, sync::Arc};
 
-#[cfg(target_arch = "wasm32")]
-type RequestHookFuture<'a, Req, Resp> = Pin<Box<dyn Future<Output = Result<HookResult<Req, Resp>, String>> + 'a>>;
-#[cfg(not(target_arch = "wasm32"))]
-type RequestHookFuture<'a, Req, Resp> =
+type RequestHookFutureSend<'a, Req, Resp> =
     Pin<Box<dyn Future<Output = Result<HookResult<Req, Resp>, String>> + Send + 'a>>;
+type ResponseHookFutureSend<'a, Resp> =
+    Pin<Box<dyn Future<Output = Result<HookResult<Resp, Resp>, String>> + Send + 'a>>;
 
-#[cfg(target_arch = "wasm32")]
-type ResponseHookFuture<'a, Resp> = Pin<Box<dyn Future<Output = Result<HookResult<Resp, Resp>, String>> + 'a>>;
-#[cfg(not(target_arch = "wasm32"))]
-type ResponseHookFuture<'a, Resp> = Pin<Box<dyn Future<Output = Result<HookResult<Resp, Resp>, String>> + Send + 'a>>;
+type RequestHookFutureLocal<'a, Req, Resp> = Pin<Box<dyn Future<Output = Result<HookResult<Req, Resp>, String>> + 'a>>;
+type ResponseHookFutureLocal<'a, Resp> = Pin<Box<dyn Future<Output = Result<HookResult<Resp, Resp>, String>> + 'a>>;
 
 /// Result of a lifecycle hook execution
 #[derive(Debug)]
@@ -28,26 +23,52 @@ pub enum HookResult<T, U> {
     ShortCircuit(U),
 }
 
-/// Trait for lifecycle hooks
-pub trait LifecycleHook<Req, Resp>: Send + Sync {
+/// Trait for lifecycle hooks on native targets (Send + Sync, Send futures).
+pub trait NativeLifecycleHook<Req, Resp>: Send + Sync {
     /// Hook name for debugging and error messages
     fn name(&self) -> &str;
 
     /// Execute hook with a request
-    fn execute_request<'a>(&'a self, req: Req) -> RequestHookFuture<'a, Req, Resp>;
+    fn execute_request<'a>(&'a self, req: Req) -> RequestHookFutureSend<'a, Req, Resp>;
 
     /// Execute hook with a response
-    fn execute_response<'a>(&'a self, resp: Resp) -> ResponseHookFuture<'a, Resp>;
+    fn execute_response<'a>(&'a self, resp: Resp) -> ResponseHookFutureSend<'a, Resp>;
 }
+
+/// Trait for lifecycle hooks on local (wasm) targets (no Send requirements).
+pub trait LocalLifecycleHook<Req, Resp> {
+    /// Hook name for debugging and error messages
+    fn name(&self) -> &str;
+
+    /// Execute hook with a request
+    fn execute_request<'a>(&'a self, req: Req) -> RequestHookFutureLocal<'a, Req, Resp>;
+
+    /// Execute hook with a response
+    fn execute_response<'a>(&'a self, resp: Resp) -> ResponseHookFutureLocal<'a, Resp>;
+}
+
+#[cfg(target_arch = "wasm32")]
+pub use LocalLifecycleHook as LifecycleHook;
+#[cfg(not(target_arch = "wasm32"))]
+pub use NativeLifecycleHook as LifecycleHook;
+
+/// Target-specific hook alias used by the rest of the codebase.
+#[cfg(not(target_arch = "wasm32"))]
+type CoreHook<Req, Resp> = dyn NativeLifecycleHook<Req, Resp>;
+#[cfg(target_arch = "wasm32")]
+type CoreHook<Req, Resp> = dyn LocalLifecycleHook<Req, Resp>;
+
+/// Target-specific container alias to make downstream imports clearer.
+pub type TargetLifecycleHooks<Req, Resp> = LifecycleHooks<Req, Resp>;
 
 /// Container for all lifecycle hooks
 #[derive(Clone)]
 pub struct LifecycleHooks<Req, Resp> {
-    on_request: Vec<Arc<dyn LifecycleHook<Req, Resp>>>,
-    pre_validation: Vec<Arc<dyn LifecycleHook<Req, Resp>>>,
-    pre_handler: Vec<Arc<dyn LifecycleHook<Req, Resp>>>,
-    on_response: Vec<Arc<dyn LifecycleHook<Req, Resp>>>,
-    on_error: Vec<Arc<dyn LifecycleHook<Req, Resp>>>,
+    on_request: Vec<Arc<CoreHook<Req, Resp>>>,
+    pre_validation: Vec<Arc<CoreHook<Req, Resp>>>,
+    pre_handler: Vec<Arc<CoreHook<Req, Resp>>>,
+    on_response: Vec<Arc<CoreHook<Req, Resp>>>,
+    on_error: Vec<Arc<CoreHook<Req, Resp>>>,
 }
 
 impl<Req, Resp> Default for LifecycleHooks<Req, Resp> {
@@ -95,23 +116,23 @@ impl<Req, Resp> LifecycleHooks<Req, Resp> {
             && self.on_error.is_empty()
     }
 
-    pub fn add_on_request(&mut self, hook: Arc<dyn LifecycleHook<Req, Resp>>) {
+    pub fn add_on_request(&mut self, hook: Arc<CoreHook<Req, Resp>>) {
         self.on_request.push(hook);
     }
 
-    pub fn add_pre_validation(&mut self, hook: Arc<dyn LifecycleHook<Req, Resp>>) {
+    pub fn add_pre_validation(&mut self, hook: Arc<CoreHook<Req, Resp>>) {
         self.pre_validation.push(hook);
     }
 
-    pub fn add_pre_handler(&mut self, hook: Arc<dyn LifecycleHook<Req, Resp>>) {
+    pub fn add_pre_handler(&mut self, hook: Arc<CoreHook<Req, Resp>>) {
         self.pre_handler.push(hook);
     }
 
-    pub fn add_on_response(&mut self, hook: Arc<dyn LifecycleHook<Req, Resp>>) {
+    pub fn add_on_response(&mut self, hook: Arc<CoreHook<Req, Resp>>) {
         self.on_response.push(hook);
     }
 
-    pub fn add_on_error(&mut self, hook: Arc<dyn LifecycleHook<Req, Resp>>) {
+    pub fn add_on_error(&mut self, hook: Arc<CoreHook<Req, Resp>>) {
         self.on_error.push(hook);
     }
 
@@ -205,7 +226,7 @@ struct ResponseHookFn<F, Req, Resp> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl<F, Fut, Req, Resp> LifecycleHook<Req, Resp> for RequestHookFn<F, Req, Resp>
+impl<F, Fut, Req, Resp> NativeLifecycleHook<Req, Resp> for RequestHookFn<F, Req, Resp>
 where
     F: Fn(Req) -> Fut + Send + Sync,
     Fut: Future<Output = Result<HookResult<Req, Resp>, String>> + Send + 'static,
@@ -216,17 +237,17 @@ where
         &self.name
     }
 
-    fn execute_request<'a>(&'a self, req: Req) -> RequestHookFuture<'a, Req, Resp> {
+    fn execute_request<'a>(&'a self, req: Req) -> RequestHookFutureSend<'a, Req, Resp> {
         Box::pin((self.func)(req))
     }
 
-    fn execute_response<'a>(&'a self, _resp: Resp) -> ResponseHookFuture<'a, Resp> {
+    fn execute_response<'a>(&'a self, _resp: Resp) -> ResponseHookFutureSend<'a, Resp> {
         Box::pin(async move { Err("Request hook called with response - this is a bug".to_string()) })
     }
 }
 
 #[cfg(target_arch = "wasm32")]
-impl<F, Fut, Req, Resp> LifecycleHook<Req, Resp> for RequestHookFn<F, Req, Resp>
+impl<F, Fut, Req, Resp> LocalLifecycleHook<Req, Resp> for RequestHookFn<F, Req, Resp>
 where
     F: Fn(Req) -> Fut + Send + Sync,
     Fut: Future<Output = Result<HookResult<Req, Resp>, String>> + 'static,
@@ -237,17 +258,17 @@ where
         &self.name
     }
 
-    fn execute_request<'a>(&'a self, req: Req) -> RequestHookFuture<'a, Req, Resp> {
+    fn execute_request<'a>(&'a self, req: Req) -> RequestHookFutureLocal<'a, Req, Resp> {
         Box::pin((self.func)(req))
     }
 
-    fn execute_response<'a>(&'a self, _resp: Resp) -> ResponseHookFuture<'a, Resp> {
+    fn execute_response<'a>(&'a self, _resp: Resp) -> ResponseHookFutureLocal<'a, Resp> {
         Box::pin(async move { Err("Request hook called with response - this is a bug".to_string()) })
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl<F, Fut, Req, Resp> LifecycleHook<Req, Resp> for ResponseHookFn<F, Req, Resp>
+impl<F, Fut, Req, Resp> NativeLifecycleHook<Req, Resp> for ResponseHookFn<F, Req, Resp>
 where
     F: Fn(Resp) -> Fut + Send + Sync,
     Fut: Future<Output = Result<HookResult<Resp, Resp>, String>> + Send + 'static,
@@ -258,17 +279,17 @@ where
         &self.name
     }
 
-    fn execute_request<'a>(&'a self, _req: Req) -> RequestHookFuture<'a, Req, Resp> {
+    fn execute_request<'a>(&'a self, _req: Req) -> RequestHookFutureSend<'a, Req, Resp> {
         Box::pin(async move { Err("Response hook called with request - this is a bug".to_string()) })
     }
 
-    fn execute_response<'a>(&'a self, resp: Resp) -> ResponseHookFuture<'a, Resp> {
+    fn execute_response<'a>(&'a self, resp: Resp) -> ResponseHookFutureSend<'a, Resp> {
         Box::pin((self.func)(resp))
     }
 }
 
 #[cfg(target_arch = "wasm32")]
-impl<F, Fut, Req, Resp> LifecycleHook<Req, Resp> for ResponseHookFn<F, Req, Resp>
+impl<F, Fut, Req, Resp> LocalLifecycleHook<Req, Resp> for ResponseHookFn<F, Req, Resp>
 where
     F: Fn(Resp) -> Fut + Send + Sync,
     Fut: Future<Output = Result<HookResult<Resp, Resp>, String>> + 'static,
@@ -279,11 +300,11 @@ where
         &self.name
     }
 
-    fn execute_request<'a>(&'a self, _req: Req) -> RequestHookFuture<'a, Req, Resp> {
+    fn execute_request<'a>(&'a self, _req: Req) -> RequestHookFutureLocal<'a, Req, Resp> {
         Box::pin(async move { Err("Response hook called with request - this is a bug".to_string()) })
     }
 
-    fn execute_response<'a>(&'a self, resp: Resp) -> ResponseHookFuture<'a, Resp> {
+    fn execute_response<'a>(&'a self, resp: Resp) -> ResponseHookFutureLocal<'a, Resp> {
         Box::pin((self.func)(resp))
     }
 }
@@ -300,27 +321,27 @@ impl<Req, Resp> LifecycleHooksBuilder<Req, Resp> {
         }
     }
 
-    pub fn on_request(mut self, hook: Arc<dyn LifecycleHook<Req, Resp>>) -> Self {
+    pub fn on_request(mut self, hook: Arc<CoreHook<Req, Resp>>) -> Self {
         self.hooks.add_on_request(hook);
         self
     }
 
-    pub fn pre_validation(mut self, hook: Arc<dyn LifecycleHook<Req, Resp>>) -> Self {
+    pub fn pre_validation(mut self, hook: Arc<CoreHook<Req, Resp>>) -> Self {
         self.hooks.add_pre_validation(hook);
         self
     }
 
-    pub fn pre_handler(mut self, hook: Arc<dyn LifecycleHook<Req, Resp>>) -> Self {
+    pub fn pre_handler(mut self, hook: Arc<CoreHook<Req, Resp>>) -> Self {
         self.hooks.add_pre_handler(hook);
         self
     }
 
-    pub fn on_response(mut self, hook: Arc<dyn LifecycleHook<Req, Resp>>) -> Self {
+    pub fn on_response(mut self, hook: Arc<CoreHook<Req, Resp>>) -> Self {
         self.hooks.add_on_response(hook);
         self
     }
 
-    pub fn on_error(mut self, hook: Arc<dyn LifecycleHook<Req, Resp>>) -> Self {
+    pub fn on_error(mut self, hook: Arc<CoreHook<Req, Resp>>) -> Self {
         self.hooks.add_on_error(hook);
         self
     }

@@ -33,7 +33,7 @@ impl RubyLifecycleHook {
     }
 }
 
-impl LifecycleHook for RubyLifecycleHook {
+impl LifecycleHook<Request<Body>, Response<Body>> for RubyLifecycleHook {
     fn name(&self) -> &str {
         &self.name
     }
@@ -41,7 +41,7 @@ impl LifecycleHook for RubyLifecycleHook {
     fn execute_request<'a>(
         &'a self,
         req: Request<Body>,
-    ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>>, String>> + Send + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>> {
         let func = self.func;
         let name = self.name.clone();
         let name_for_error = name.clone();
@@ -168,7 +168,7 @@ impl LifecycleHook for RubyLifecycleHook {
     fn execute_response<'a>(
         &'a self,
         resp: Response<Body>,
-    ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>>, String>> + Send + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>> {
         let func = self.func;
         let name = self.name.clone();
         let name_for_error = name.clone();

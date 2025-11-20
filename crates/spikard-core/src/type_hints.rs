@@ -33,7 +33,7 @@ fn path_type_regex() -> &'static Regex {
 /// # Examples
 ///
 /// ```
-/// use spikard_http::type_hints::parse_type_hints;
+/// use spikard_core::type_hints::parse_type_hints;
 ///
 /// let hints = parse_type_hints("/items/{id:uuid}/tags/{tag_id:int}");
 /// assert_eq!(hints.get("id"), Some(&"uuid".to_string()));
@@ -61,7 +61,7 @@ pub fn parse_type_hints(route_path: &str) -> HashMap<String, String> {
 /// # Examples
 ///
 /// ```
-/// use spikard_http::type_hints::strip_type_hints;
+/// use spikard_core::type_hints::strip_type_hints;
 ///
 /// assert_eq!(strip_type_hints("/items/{id:uuid}"), "/items/{id}");
 /// assert_eq!(strip_type_hints("/files/{path:path}"), "/files/{*path}");
@@ -131,7 +131,7 @@ pub fn type_hint_to_schema(type_hint: &str) -> Value {
 /// # Examples
 ///
 /// ```
-/// use spikard_http::type_hints::auto_generate_parameter_schema;
+/// use spikard_core::type_hints::auto_generate_parameter_schema;
 /// use serde_json::json;
 ///
 /// let schema = auto_generate_parameter_schema("/items/{id:uuid}");
@@ -184,7 +184,7 @@ pub fn auto_generate_parameter_schema(route_path: &str) -> Option<Value> {
 /// # Examples
 ///
 /// ```
-/// use spikard_http::type_hints::merge_parameter_schemas;
+/// use spikard_core::type_hints::merge_parameter_schemas;
 /// use serde_json::json;
 ///
 /// let auto_schema = json!({

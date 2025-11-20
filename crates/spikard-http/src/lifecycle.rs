@@ -4,12 +4,13 @@ use axum::{
 };
 use std::sync::Arc;
 
-pub use spikard_core::lifecycle::HookResult;
+pub use spikard_core::lifecycle::{HookResult, LifecycleHook};
 
 pub type LifecycleHooks = spikard_core::lifecycle::LifecycleHooks<Request<Body>, Response<Body>>;
 pub type LifecycleHooksBuilder = spikard_core::lifecycle::LifecycleHooksBuilder<Request<Body>, Response<Body>>;
-pub use spikard_core::lifecycle::LifecycleHook;
 
+/// Create a request hook for the current target.
+#[cfg(not(target_arch = "wasm32"))]
 pub fn request_hook<F, Fut>(name: impl Into<String>, func: F) -> Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>
 where
     F: Fn(Request<Body>) -> Fut + Send + Sync + 'static,
@@ -18,10 +19,32 @@ where
     spikard_core::lifecycle::request_hook::<Request<Body>, Response<Body>, _, _>(name, func)
 }
 
+/// Create a request hook for wasm targets (no Send on futures).
+#[cfg(target_arch = "wasm32")]
+pub fn request_hook<F, Fut>(name: impl Into<String>, func: F) -> Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>
+where
+    F: Fn(Request<Body>) -> Fut + Send + Sync + 'static,
+    Fut: std::future::Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + 'static,
+{
+    spikard_core::lifecycle::request_hook::<Request<Body>, Response<Body>, _, _>(name, func)
+}
+
+/// Create a response hook for the current target.
+#[cfg(not(target_arch = "wasm32"))]
 pub fn response_hook<F, Fut>(name: impl Into<String>, func: F) -> Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>
 where
     F: Fn(Response<Body>) -> Fut + Send + Sync + 'static,
     Fut: std::future::Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'static,
+{
+    spikard_core::lifecycle::response_hook::<Request<Body>, Response<Body>, _, _>(name, func)
+}
+
+/// Create a response hook for wasm targets (no Send on futures).
+#[cfg(target_arch = "wasm32")]
+pub fn response_hook<F, Fut>(name: impl Into<String>, func: F) -> Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>
+where
+    F: Fn(Response<Body>) -> Fut + Send + Sync + 'static,
+    Fut: std::future::Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + 'static,
 {
     spikard_core::lifecycle::response_hook::<Request<Body>, Response<Body>, _, _>(name, func)
 }
@@ -39,7 +62,7 @@ mod tests {
         name: String,
     }
 
-    impl LifecycleHook for ContinueHook {
+    impl LifecycleHook<Request<Body>, Response<Body>> for ContinueHook {
         fn name(&self) -> &str {
             &self.name
         }
@@ -47,14 +70,16 @@ mod tests {
         fn execute_request<'a>(
             &'a self,
             req: Request<Body>,
-        ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>>, String>> + Send + 'a>> {
+        ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>>
+        {
             Box::pin(async move { Ok(HookResult::Continue(req)) })
         }
 
         fn execute_response<'a>(
             &'a self,
             resp: Response<Body>,
-        ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>>, String>> + Send + 'a>> {
+        ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>>
+        {
             Box::pin(async move { Ok(HookResult::Continue(resp)) })
         }
     }
@@ -64,7 +89,7 @@ mod tests {
         name: String,
     }
 
-    impl LifecycleHook for ShortCircuitHook {
+    impl LifecycleHook<Request<Body>, Response<Body>> for ShortCircuitHook {
         fn name(&self) -> &str {
             &self.name
         }
@@ -72,7 +97,8 @@ mod tests {
         fn execute_request<'a>(
             &'a self,
             _req: Request<Body>,
-        ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>>, String>> + Send + 'a>> {
+        ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>>
+        {
             Box::pin(async move {
                 let response = Response::builder()
                     .status(StatusCode::UNAUTHORIZED)
@@ -85,7 +111,8 @@ mod tests {
         fn execute_response<'a>(
             &'a self,
             _resp: Response<Body>,
-        ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>>, String>> + Send + 'a>> {
+        ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>>
+        {
             Box::pin(async move {
                 let response = Response::builder()
                     .status(StatusCode::UNAUTHORIZED)

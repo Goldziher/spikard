@@ -524,7 +524,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
     let lifecycle_hooks = crate::lifecycle::build_lifecycle_hooks(py, &hooks_dict)?;
 
     // Set lifecycle hooks in config
-    config.lifecycle_hooks = Some(lifecycle_hooks);
+    config.lifecycle_hooks = Some(Arc::new(lifecycle_hooks));
 
     // Create schema registry for deduplication across all routes
     let schema_registry = spikard_http::SchemaRegistry::new();

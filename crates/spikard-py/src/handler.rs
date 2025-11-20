@@ -466,39 +466,52 @@ fn request_data_to_py_kwargs<'py>(
 ) -> PyResult<Bound<'py, PyDict>> {
     let kwargs = PyDict::new(py);
 
-    // Add path parameters as individual kwargs
+    // Add path parameters as a dict
+    let path_params = PyDict::new(py);
     for (key, value) in request_data.path_params.iter() {
         // Try to parse as int first, fallback to string
         if let Ok(int_val) = value.parse::<i64>() {
-            kwargs.set_item(key, int_val)?;
+            path_params.set_item(key, int_val)?;
         } else if let Ok(float_val) = value.parse::<f64>() {
-            kwargs.set_item(key, float_val)?;
+            path_params.set_item(key, float_val)?;
         } else if value == "true" || value == "false" {
             let bool_val = value == "true";
-            kwargs.set_item(key, bool_val)?;
+            path_params.set_item(key, bool_val)?;
         } else {
-            kwargs.set_item(key, value)?;
+            path_params.set_item(key, value)?;
         }
+    }
+    kwargs.set_item("path_params", path_params)?;
+
+    // Add query parameters as a dict (already parsed with correct types)
+    if let Value::Object(query_map) = &request_data.query_params {
+        let query_params = PyDict::new(py);
+        for (key, value) in query_map {
+            let py_value = json_to_python(py, value)?;
+            query_params.set_item(key.as_str(), py_value)?;
+        }
+        kwargs.set_item("query_params", query_params)?;
+    } else {
+        kwargs.set_item("query_params", PyDict::new(py))?;
     }
 
-    // Add query parameters as individual kwargs (already parsed with correct types)
-    // query_params is a JSON Value from our fast parser with types already correct
-    if let Value::Object(query_map) = &request_data.query_params {
-        for (key, value) in query_map {
-            // Only add if not already present (path params take precedence)
-            if !kwargs.contains(key.as_str())? {
-                let py_value = json_to_python(py, value)?;
-                kwargs.set_item(key.as_str(), py_value)?;
-            }
-        }
+    // Propagate headers and cookies as kwargs to match handler signatures
+    let headers_dict = PyDict::new(py);
+    for (k, v) in request_data.headers.iter() {
+        headers_dict.set_item(k, v)?;
     }
+    kwargs.set_item("headers", headers_dict)?;
+
+    let cookies_dict = PyDict::new(py);
+    for (k, v) in request_data.cookies.iter() {
+        cookies_dict.set_item(k, v)?;
+    }
+    kwargs.set_item("cookies", cookies_dict)?;
 
     // Add request body if present (convert to Python dict/list)
-    if !request_data.body.is_null() {
-        // Convert JSON Value to Python object
-        let py_body = json_to_python(py, &request_data.body)?;
-        kwargs.set_item("body", py_body)?;
-    }
+    // Always include body, even if None
+    let py_body = json_to_python(py, &request_data.body)?;
+    kwargs.set_item("body", py_body)?;
 
     // Use convert_params to convert types based on handler signature
     let converter_module = py.import("spikard._internal.converters")?;

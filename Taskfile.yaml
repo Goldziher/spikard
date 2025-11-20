@@ -176,6 +176,11 @@ tasks:
     cmds:
       - cargo clippy --workspace --all-features -- -D warnings
 
+  rust:lint:
+    desc: "Alias for clippy:rust"
+    cmds:
+      - task: clippy:rust
+
   rust:format:
     desc: "Format Rust code"
     cmds:
@@ -192,6 +197,11 @@ tasks:
       - corepack enable
       - pnpm install --frozen-lockfile
 
+  js:install:
+    desc: "Alias for node:install"
+    cmds:
+      - task: node:install
+
   node:update:
     desc: "Update Node.js dependencies with pnpm"
     cmds:
@@ -199,11 +209,21 @@ tasks:
       - corepack enable
       - pnpm up --latest -r
 
+  js:update:
+    desc: "Alias for node:update"
+    cmds:
+      - task: node:update
+
   node:lint:
     desc: "Lint TypeScript code with biome and oxlint"
     cmds:
       - pnpm biome check packages/node/src crates/spikard-node/src e2e/node --log-level=warn
       - pnpm oxlint packages/node/src crates/spikard-node/src e2e/node
+
+  js:lint:
+    desc: "Alias for node:lint"
+    cmds:
+      - task: node:lint
 
   ruby:lint:
     desc: "Lint Ruby bindings with Rubocop"
@@ -239,6 +259,11 @@ tasks:
     cmds:
       - pnpm biome format --write packages/node/src crates/spikard-node/src e2e/node
 
+  js:format:
+    desc: "Alias for node:format"
+    cmds:
+      - task: node:format
+
   node:format:check:
     desc: "Check TypeScript formatting without modifying files"
     cmds:
@@ -249,6 +274,11 @@ tasks:
     dir: packages/node
     cmds:
       - pnpm test
+
+  js:test:
+    desc: "Alias for node:test"
+    cmds:
+      - task: node:test
 
   build:rust:
     desc: "Build Rust workspace in release mode"
@@ -305,6 +335,11 @@ tasks:
     dir: crates/spikard-node
     cmds:
       - pnpm run build
+
+  js:build:
+    desc: "Alias for build:node"
+    cmds:
+      - task: build:node
 
   build:wasm:
     desc: "Build WebAssembly bindings with wasm-bindgen"

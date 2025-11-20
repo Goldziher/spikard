@@ -1,3 +1,5 @@
+#![cfg(target_arch = "wasm32")]
+
 //! WASM lifecycle hook adapters bridging JavaScript hooks and Rust core.
 
 use http::{Request, Response};
