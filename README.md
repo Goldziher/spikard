@@ -78,6 +78,7 @@ Benchmarks measured on macOS (Darwin 24.6.0) with 50 concurrent connections over
 | Binding | Throughput | Mean Latency | P99 Latency |
 |---------|------------|--------------|-------------|
 | **Rust** | 160,989 req/s | 0.31ms | 0.45ms |
+| **FastAPI** (comparison) | 14,800 req/s | 3.38ms | 3.89ms |
 | **Python** | 5,796 req/s | 8.63ms | 15.32ms |
 | Node | *pending* | *pending* | *pending* |
 | Ruby | *pending* | *pending* | *pending* |
@@ -108,7 +109,9 @@ Benchmarks measured on macOS (Darwin 24.6.0) with 50 concurrent connections over
 
 **Notes:**
 - Query parameters: Rust shows ~38% higher throughput than Python (165K vs 120K req/s)
-- JSON bodies: Rust shows ~28× higher throughput than Python (161K vs 5.8K req/s)
+- JSON bodies: Rust shows ~28× higher throughput than Spikard-Python (161K vs 5.8K req/s)
+- JSON bodies: FastAPI with orjson shows 2.5× better performance than Spikard-Python (14.8K vs 5.8K req/s)
+- Spikard-Python's JSON performance gap suggests optimization opportunities in the PyO3 binding layer
 - Python binding uses PyO3 with async/await and zero-copy msgspec serialization
 - Memory footprint remains low (<30 MB) across all bindings
 - Full benchmark methodology and raw results: `tools/benchmark-harness/results/`

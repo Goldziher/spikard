@@ -127,8 +127,8 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
             cmd
         }
         "fastapi" => {
-            let mut cmd = Command::new("python");
-            cmd.arg("server.py").arg(port.to_string());
+            let mut cmd = Command::new("uv");
+            cmd.arg("run").arg("python").arg("server.py").arg(port.to_string());
             cmd
         }
         "fastify" => {
