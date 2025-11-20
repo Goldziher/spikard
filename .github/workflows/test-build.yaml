@@ -1,0 +1,298 @@
+name: Test Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - "crates/**"
+      - "packages/**"
+      - "pyproject.toml"
+      - "pnpm-lock.yaml"
+      - "Taskfile.yaml"
+      - ".github/workflows/test-build.yaml"
+      - ".github/actions/**"
+
+concurrency:
+  group: test-build-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  RUST_BACKTRACE: short
+
+jobs:
+  python-wheels:
+    name: Build Python wheels (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Build wheels
+        uses: ./.github/actions/build-wheels
+        with:
+          python-version: "3.13"
+
+  python-sdist:
+    name: Build Python sdist
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Build sdist
+        run: uv run maturin sdist --manifest-path crates/spikard-py/Cargo.toml
+
+      - name: Upload sdist
+        uses: actions/upload-artifact@v5
+        with:
+          name: python-sdist
+          path: target/wheels/*.tar.gz
+          retention-days: 7
+
+  cli-binaries:
+    name: Build CLI (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross toolchain (ARM Linux)
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+          echo 'CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc' >> $GITHUB_ENV
+
+      - name: Build CLI binary
+        run: cargo build --release --target ${{ matrix.target }} --package spikard-cli
+
+      - name: Package binary (Unix)
+        if: matrix.os != 'windows-latest'
+        run: |
+          cd target/${{ matrix.target }}/release
+          tar czf spikard-cli-${{ matrix.target }}.tar.gz spikard-cli
+          mv spikard-cli-${{ matrix.target }}.tar.gz $GITHUB_WORKSPACE/
+
+      - name: Package binary (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd target/${{ matrix.target }}/release
+          powershell Compress-Archive -Path spikard-cli.exe -DestinationPath spikard-cli-${{ matrix.target }}.zip
+          mv spikard-cli-${{ matrix.target }}.zip $GITHUB_WORKSPACE/
+
+      - name: Upload CLI artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: cli-${{ matrix.target }}
+          path: spikard-cli-${{ matrix.target }}.*
+          retention-days: 7
+
+  node-bindings:
+    name: Build Node bindings (${{ matrix.settings.target }})
+    runs-on: ${{ matrix.settings.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        settings:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.settings.target }}
+
+      - name: Install cross toolchain (Linux ARM64)
+        if: matrix.settings.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+          echo 'CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc' >> $GITHUB_ENV
+
+      - name: Build bindings
+        working-directory: crates/spikard-node
+        run: |
+          pnpm install
+          pnpm run build --target ${{ matrix.settings.target }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: napi-${{ matrix.settings.target }}
+          path: crates/spikard-node/*.node
+          retention-days: 7
+
+  smoke-tests:
+    name: Release Smoke Tests (${{ matrix.os }})
+    needs:
+      - python-wheels
+      - python-sdist
+      - node-bindings
+      - cli-binaries
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: package.json
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          check-latest: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Determine artifacts
+        id: names
+        run: |
+          case "${{ matrix.os }}" in
+            ubuntu-latest)
+              echo "wheel=wheels-Linux" >> "$GITHUB_OUTPUT"
+              echo "napi=napi-x86_64-unknown-linux-gnu" >> "$GITHUB_OUTPUT"
+              echo "cli=cli-x86_64-unknown-linux-gnu" >> "$GITHUB_OUTPUT"
+              ;;
+            macos-latest)
+              echo "wheel=wheels-macOS" >> "$GITHUB_OUTPUT"
+              echo "napi=napi-aarch64-apple-darwin" >> "$GITHUB_OUTPUT"
+              echo "cli=cli-aarch64-apple-darwin" >> "$GITHUB_OUTPUT"
+              ;;
+            windows-latest)
+              echo "wheel=wheels-Windows" >> "$GITHUB_OUTPUT"
+              echo "napi=napi-x86_64-pc-windows-msvc" >> "$GITHUB_OUTPUT"
+              echo "cli=cli-x86_64-pc-windows-msvc" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
+      - name: Download Python wheels
+        uses: actions/download-artifact@v6
+        with:
+          name: ${{ steps.names.outputs.wheel }}
+          path: artifacts/python
+
+      - name: Download Node bindings
+        uses: actions/download-artifact@v6
+        with:
+          name: ${{ steps.names.outputs.napi }}
+          path: artifacts/node
+
+      - name: Download CLI artifacts
+        uses: actions/download-artifact@v6
+        with:
+          name: ${{ steps.names.outputs.cli }}
+          path: artifacts/cli
+
+      - name: Smoke Python wheel
+        shell: bash
+        run: |
+          python -m venv venv
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            source venv/Scripts/activate
+          else
+            source venv/bin/activate
+          fi
+          pip install --upgrade pip
+          pip install artifacts/python/*.whl
+          python -c "import spikard; print('spikard', spikard.__version__)"
+
+      - name: Smoke Node binding
+        shell: bash
+        run: |
+          NODE_ARTIFACT=$(find artifacts/node -name "*.node" | head -n 1)
+          if [[ -z "$NODE_ARTIFACT" ]]; then
+            echo "No Node artifact found" >&2
+            exit 1
+          fi
+          export NAPI_RS_NATIVE_LIBRARY_PATH="$NODE_ARTIFACT"
+          node -e "const binding = require('./crates/spikard-node'); if (typeof binding !== 'object') { throw new Error('Failed to load Node addon'); } console.log('Loaded Node addon keys:', Object.keys(binding));"
+
+      - name: Smoke CLI binary (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          CLI_ARCHIVE=$(find artifacts/cli -name "*.tar.gz" | head -n 1)
+          tar -xzf "$CLI_ARCHIVE" -C artifacts/cli
+          chmod +x artifacts/cli/spikard-cli
+          artifacts/cli/spikard-cli --help
+
+      - name: Smoke CLI binary (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $archive = Get-ChildItem -Path artifacts/cli -Filter "*.zip" | Select-Object -First 1
+          if (-not $archive) { throw "CLI archive not found" }
+          Expand-Archive -Path $archive.FullName -DestinationPath artifacts/cli/extracted -Force
+          & artifacts/cli/extracted/spikard-cli.exe --help
