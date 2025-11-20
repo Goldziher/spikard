@@ -54,6 +54,25 @@ spikard generate asyncapi --fixtures ../../testing_data/websockets --output ./ge
 ```
 Generated handlers use the same routing helpers and config objects shown above.
 
+## Performance
+
+Spikard-Node uses napi-rs bindings with ThreadsafeFunction for async handler integration. Benchmarks on macOS (Darwin 24.6.0) with 50 concurrent connections:
+
+| Workload | Throughput | Mean Latency | P95 Latency | P99 Latency | Memory |
+|----------|------------|--------------|-------------|-------------|--------|
+| Baseline | *pending* | *pending* | *pending* | *pending* | *pending* |
+| JSON Bodies | *pending* | *pending* | *pending* | *pending* | *pending* |
+| Multipart Forms | *pending* | *pending* | *pending* | *pending* | *pending* |
+| URL-Encoded | *pending* | *pending* | *pending* | *pending* | *pending* |
+
+**Architecture:**
+- **NAPI-RS bindings**: Zero-copy data transfer between JavaScript and Rust
+- **TypeScript-first**: Full type safety with `.d.ts` generation
+- **ThreadsafeFunction**: Efficient async handler execution across language boundary
+- **Tower middleware**: Shares the same middleware stack as native Rust implementation
+
+Benchmark harness integration pending. See `tools/benchmark-harness/` for methodology.
+
 ## Development notes
 - Public API is under `src/`; napi bindings live in `crates/spikard-node`.
 - Keep fixtures in `testing_data/` aligned with tests under `e2e/node`.
