@@ -77,8 +77,8 @@ Benchmarks measured on macOS (Darwin 24.6.0) with 50 concurrent connections over
 #### JSON Request/Response
 | Binding | Throughput | Mean Latency | P99 Latency |
 |---------|------------|--------------|-------------|
-| Rust | *pending* | *pending* | *pending* |
-| Python | *pending* | *pending* | *pending* |
+| **Rust** | 160,989 req/s | 0.31ms | 0.45ms |
+| **Python** | 5,796 req/s | 8.63ms | 15.32ms |
 | Node | *pending* | *pending* | *pending* |
 | Ruby | *pending* | *pending* | *pending* |
 
@@ -101,14 +101,14 @@ Benchmarks measured on macOS (Darwin 24.6.0) with 50 concurrent connections over
 #### Query Parameters
 | Binding | Throughput | Mean Latency | P99 Latency |
 |---------|------------|--------------|-------------|
-| Rust | *pending* | *pending* | *pending* |
-| Python | 120,058 req/s | 0.42ms | 1.27ms |
+| **Rust** | 165,228 req/s | 0.30ms | 0.45ms |
+| **Python** | 120,058 req/s | 0.42ms | 1.27ms |
 | Node | *pending* | *pending* | *pending* |
 | Ruby | *pending* | *pending* | *pending* |
 
 **Notes:**
-- Rust native implementation shows ~38% higher throughput than Python bindings
-- Both implementations maintain sub-millisecond mean latency under load
+- Query parameters: Rust shows ~38% higher throughput than Python (165K vs 120K req/s)
+- JSON bodies: Rust shows ~28× higher throughput than Python (161K vs 5.8K req/s)
 - Python binding uses PyO3 with async/await and zero-copy msgspec serialization
 - Memory footprint remains low (<30 MB) across all bindings
 - Full benchmark methodology and raw results: `tools/benchmark-harness/results/`
