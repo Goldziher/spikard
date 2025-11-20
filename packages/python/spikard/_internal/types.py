@@ -24,5 +24,4 @@ class Empty:
         return self
 
 
-# Singleton instance
 Empty = Empty()  # type: ignore[assignment,misc]

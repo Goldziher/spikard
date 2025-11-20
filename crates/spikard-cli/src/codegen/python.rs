@@ -20,16 +20,12 @@ impl PythonGenerator {
     pub fn generate(&self) -> Result<String> {
         let mut output = String::new();
 
-        // Generate file header
         output.push_str(&self.generate_header());
 
-        // Generate schema models
         output.push_str(&self.generate_models()?);
 
-        // Generate routes
         output.push_str(&self.generate_routes()?);
 
-        // Generate main block
         output.push_str(&self.generate_main());
 
         Ok(output)
@@ -226,7 +222,6 @@ app = Spikard()
     fn extract_response_type(&self, operation: &Operation) -> String {
         use openapiv3::StatusCode;
 
-        // Try to find a successful response (200, 201, 2XX)
         let response = operation
             .responses
             .responses
@@ -250,7 +245,6 @@ app = Spikard()
             }
         }
 
-        // Default to dict[str, Any] if no schema found
         "dict[str, Any]".to_string()
     }
 
@@ -321,7 +315,6 @@ app = Spikard()
                 ReferenceOr::Reference { .. } => continue,
             };
 
-            // Generate route for each HTTP method
             if let Some(op) = &path_item.get {
                 output.push_str(&self.generate_route_handler(path, "get", op)?);
             }
@@ -345,12 +338,10 @@ app = Spikard()
     fn generate_route_handler(&self, path: &str, method: &str, operation: &Operation) -> Result<String> {
         let mut output = String::new();
 
-        // Generate docstring
         if let Some(summary) = &operation.summary {
             output.push_str(&format!("\"\"\" {} \"\"\"\n", summary));
         }
 
-        // Convert operation_id to function name, or generate one
         let func_name = operation
             .operation_id
             .as_ref()
@@ -363,7 +354,6 @@ app = Spikard()
                 )
             });
 
-        // Parse parameters
         let mut path_params = Vec::new();
         let mut query_params = Vec::new();
 
@@ -374,7 +364,7 @@ app = Spikard()
                         path_params.push((parameter_data.name.clone(), "str".to_string()));
                     }
                     Parameter::Query { parameter_data, .. } => {
-                        let type_hint = "str".to_string(); // Simplified
+                        let type_hint = "str".to_string(); 
                         query_params.push((parameter_data.name.clone(), type_hint, parameter_data.required));
                     }
                     _ => {}
@@ -382,28 +372,22 @@ app = Spikard()
             }
         }
 
-        // Extract request body type
         let body_type = self.extract_request_body_type(operation);
 
-        // Extract response type
         let return_type = self.extract_response_type(operation);
 
-        // Generate route decorator
         output.push_str(&format!(
             "@route(\"{}\", methods=[\"{}\"])\n",
             path,
             method.to_uppercase()
         ));
 
-        // Generate function signature
         output.push_str(&format!("def {}(request: Request", func_name));
 
-        // Add path parameters
         for (param_name, param_type) in &path_params {
             output.push_str(&format!(", {}: Path[{}]", param_name.to_snake_case(), param_type));
         }
 
-        // Add query parameters
         for (param_name, param_type, required) in &query_params {
             if *required {
                 output.push_str(&format!(", {}: Query[{}]", param_name.to_snake_case(), param_type));
@@ -416,14 +400,12 @@ app = Spikard()
             }
         }
 
-        // Add body parameter
         if let Some(body_type_name) = &body_type {
             output.push_str(&format!(", body: Body[{}]", body_type_name));
         }
 
         output.push_str(&format!(") -> {}:\n", return_type));
 
-        // Generate function body
         if let Some(desc) = &operation.description {
             output.push_str(&format!("    \"\"\"\n    {}\n    \"\"\"\n", desc));
         }

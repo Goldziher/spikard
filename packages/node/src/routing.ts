@@ -70,10 +70,8 @@ type RouteHandler = (...args: RouteArgument[]) => MaybePromise<HandlerResult>;
  */
 export function route(path: string, options: RouteOptions = {}): (handler: RouteHandler) => RouteHandler {
 	return (handler: RouteHandler) => {
-		// Extract methods, defaulting to GET if not specified
 		const methods = options.methods ? (Array.isArray(options.methods) ? options.methods : [options.methods]) : ["GET"];
 
-		// Store route metadata
 		const metadata: RouteMetadata = {
 			method: methods.join(","),
 			path,
@@ -82,10 +80,9 @@ export function route(path: string, options: RouteOptions = {}): (handler: Route
 			response_schema: options.responseSchema,
 			parameter_schema: options.parameterSchema,
 			cors: options.cors,
-			is_async: true, // Assume async by default
+			is_async: true, 
 		};
 
-		// Store metadata on the function
 		interface AnnotatedHandler extends RouteHandler {
 			__route_metadata__?: RouteMetadata;
 		}

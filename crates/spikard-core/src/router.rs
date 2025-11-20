@@ -23,7 +23,7 @@ pub struct Route {
     pub request_validator: Option<Arc<SchemaValidator>>,
     pub response_validator: Option<Arc<SchemaValidator>>,
     pub parameter_validator: Option<ParameterValidator>,
-    pub file_params: Option<Value>, // File parameter schema for validation
+    pub file_params: Option<Value>, 
     pub is_async: bool,
     pub cors: Option<CorsConfig>,
     /// Precomputed flag: true if this route expects a JSON request body
@@ -55,32 +55,26 @@ impl Route {
             .map(|schema| registry.get_or_compile(schema))
             .transpose()?;
 
-        // Auto-generate parameter schema from type hints if not explicitly provided
         let final_parameter_schema = match (
             crate::type_hints::auto_generate_parameter_schema(&metadata.path),
             metadata.parameter_schema,
         ) {
             (Some(auto_schema), Some(explicit_schema)) => {
-                // Both exist - merge them (explicit overrides auto)
                 Some(crate::type_hints::merge_parameter_schemas(auto_schema, explicit_schema))
             }
             (Some(auto_schema), None) => {
-                // Only auto-generated
                 Some(auto_schema)
             }
             (None, Some(explicit_schema)) => {
-                // Only explicit
                 Some(explicit_schema)
             }
             (None, None) => {
-                // No schema at all
                 None
             }
         };
 
         let parameter_validator = final_parameter_schema.map(ParameterValidator::new).transpose()?;
 
-        // Precompute: route expects JSON body if it has a request validator
         let expects_json_body = request_validator.is_some();
 
         Ok(Self {
@@ -205,7 +199,6 @@ mod tests {
             }
         });
 
-        // Create two routes with the same request schema
         let metadata1 = RouteMetadata {
             method: "POST".to_string(),
             path: "/items".to_string(),
@@ -233,16 +226,13 @@ mod tests {
         let route1 = Route::from_metadata(metadata1, &registry).unwrap();
         let route2 = Route::from_metadata(metadata2, &registry).unwrap();
 
-        // Both routes should have validators
         assert!(route1.request_validator.is_some());
         assert!(route2.request_validator.is_some());
 
-        // The validators should be the same Arc (pointer equality)
         let validator1 = route1.request_validator.as_ref().unwrap();
         let validator2 = route2.request_validator.as_ref().unwrap();
         assert!(Arc::ptr_eq(validator1, validator2));
 
-        // Registry should only have 1 schema compiled
         assert_eq!(registry.schema_count(), 1);
     }
 }

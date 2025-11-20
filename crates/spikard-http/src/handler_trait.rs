@@ -30,7 +30,6 @@ pub struct RequestData {
     pub path: String,
 }
 
-// Manual Serialize implementation to handle Arc
 impl Serialize for RequestData {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -50,7 +49,6 @@ impl Serialize for RequestData {
     }
 }
 
-// Manual Deserialize implementation to handle Arc
 impl<'de> Deserialize<'de> for RequestData {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where

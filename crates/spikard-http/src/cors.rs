@@ -33,12 +33,10 @@ fn is_method_allowed(method: &str, allowed_methods: &[String]) -> bool {
 ///
 /// Headers are case-insensitive. Supports wildcard ("*") for any header.
 fn are_headers_allowed(requested: &[&str], allowed: &[String]) -> bool {
-    // If wildcard is in allowed list, all headers are permitted
     if allowed.iter().any(|h| h == "*") {
         return true;
     }
 
-    // Check each requested header is in the allowed list (case-insensitive)
     requested.iter().all(|req_header| {
         allowed
             .iter()
@@ -51,10 +49,8 @@ fn are_headers_allowed(requested: &[&str], allowed: &[String]) -> bool {
 /// Validates the request against the CORS configuration and returns appropriate
 /// response or error. Returns 204 No Content on success, 403 Forbidden on validation failure.
 pub fn handle_preflight(headers: &HeaderMap, cors_config: &CorsConfig) -> Result<Response<Body>, Box<Response<Body>>> {
-    // Get the Origin header
     let origin = headers.get("origin").and_then(|v| v.to_str().ok()).unwrap_or("");
 
-    // Validate origin
     if origin.is_empty() || !is_origin_allowed(origin, &cors_config.allowed_origins) {
         return Err(Box::new(
             (
@@ -67,18 +63,15 @@ pub fn handle_preflight(headers: &HeaderMap, cors_config: &CorsConfig) -> Result
         ));
     }
 
-    // Get requested method
     let requested_method = headers
         .get("access-control-request-method")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
 
-    // Validate method
     if !requested_method.is_empty() && !is_method_allowed(requested_method, &cors_config.allowed_methods) {
         return Err(Box::new((StatusCode::FORBIDDEN).into_response()));
     }
 
-    // Get requested headers
     let requested_headers_str = headers
         .get("access-control-request-headers")
         .and_then(|v| v.to_str().ok());
@@ -91,33 +84,27 @@ pub fn handle_preflight(headers: &HeaderMap, cors_config: &CorsConfig) -> Result
         }
     }
 
-    // Build preflight response
     let mut response = Response::builder().status(StatusCode::NO_CONTENT);
 
-    // Add CORS headers
     let headers_mut = response.headers_mut().unwrap();
 
-    // Access-Control-Allow-Origin
     headers_mut.insert(
         "access-control-allow-origin",
         HeaderValue::from_str(origin).unwrap_or_else(|_| HeaderValue::from_static("*")),
     );
 
-    // Access-Control-Allow-Methods
     let methods = cors_config.allowed_methods.join(", ");
     headers_mut.insert(
         "access-control-allow-methods",
         HeaderValue::from_str(&methods).unwrap_or_else(|_| HeaderValue::from_static("*")),
     );
 
-    // Access-Control-Allow-Headers
     let allowed_headers = cors_config.allowed_headers.join(", ");
     headers_mut.insert(
         "access-control-allow-headers",
         HeaderValue::from_str(&allowed_headers).unwrap_or_else(|_| HeaderValue::from_static("*")),
     );
 
-    // Access-Control-Max-Age (optional)
     if let Some(max_age) = cors_config.max_age {
         headers_mut.insert(
             "access-control-max-age",
@@ -125,7 +112,6 @@ pub fn handle_preflight(headers: &HeaderMap, cors_config: &CorsConfig) -> Result
         );
     }
 
-    // Access-Control-Allow-Credentials (optional)
     if let Some(true) = cors_config.allow_credentials {
         headers_mut.insert("access-control-allow-credentials", HeaderValue::from_static("true"));
     }
@@ -140,12 +126,10 @@ pub fn handle_preflight(headers: &HeaderMap, cors_config: &CorsConfig) -> Result
 pub fn add_cors_headers(response: &mut Response<Body>, origin: &str, cors_config: &CorsConfig) {
     let headers = response.headers_mut();
 
-    // Access-Control-Allow-Origin
     if let Ok(origin_value) = HeaderValue::from_str(origin) {
         headers.insert("access-control-allow-origin", origin_value);
     }
 
-    // Access-Control-Expose-Headers (optional)
     if let Some(ref expose_headers) = cors_config.expose_headers {
         let expose = expose_headers.join(", ");
         if let Ok(expose_value) = HeaderValue::from_str(&expose) {
@@ -153,7 +137,6 @@ pub fn add_cors_headers(response: &mut Response<Body>, origin: &str, cors_config
         }
     }
 
-    // Access-Control-Allow-Credentials (optional)
     if let Some(true) = cors_config.allow_credentials {
         headers.insert("access-control-allow-credentials", HeaderValue::from_static("true"));
     }
@@ -332,7 +315,7 @@ mod tests {
     #[test]
     fn test_handle_preflight_empty_origin() {
         let config = make_cors_config();
-        let headers = HeaderMap::new(); // No origin header
+        let headers = HeaderMap::new(); 
 
         let result = handle_preflight(&headers, &config);
         assert!(result.is_err());
@@ -383,9 +366,8 @@ mod tests {
     #[test]
     fn test_validate_cors_request_no_origin() {
         let config = make_cors_config();
-        let headers = HeaderMap::new(); // No origin header
+        let headers = HeaderMap::new(); 
 
-        // No origin header is allowed (not a CORS request)
         let result = validate_cors_request(&headers, &config);
         assert!(result.is_ok());
     }

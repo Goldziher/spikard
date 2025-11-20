@@ -18,16 +18,12 @@ impl RubyGenerator {
     pub fn generate(&self) -> Result<String> {
         let mut output = String::new();
 
-        // Generate file header
         output.push_str(&self.generate_header());
 
-        // Generate schema models
         output.push_str(&self.generate_models()?);
 
-        // Generate routes
         output.push_str(&self.generate_routes()?);
 
-        // Generate main block
         output.push_str(&self.generate_main());
 
         Ok(output)
@@ -76,7 +72,6 @@ end
                         output.push('\n');
                     }
                     ReferenceOr::Reference { .. } => {
-                        // Skip references - they'll be resolved when used
                         continue;
                     }
                 }
@@ -90,11 +85,9 @@ end
         let class_name = name.to_pascal_case();
         let mut output = String::new();
 
-        // Add RDoc comment if description exists
         if let Some(description) = &schema.schema_data.description {
             output.push_str(&format!("# {}\n", description));
         } else {
-            // Add default class documentation if no description
             output.push_str(&format!("# {} model\n", class_name));
         }
 
@@ -139,7 +132,6 @@ end
     fn extract_type_from_schema_ref(&self, schema_ref: &ReferenceOr<Schema>) -> String {
         match schema_ref {
             ReferenceOr::Reference { reference } => {
-                // Extract name from #/components/schemas/Pet -> Pet
                 let ref_name = reference.split('/').next_back().unwrap();
                 ref_name.to_pascal_case()
             }
@@ -167,7 +159,6 @@ end
     fn extract_response_type(&self, operation: &Operation) -> String {
         use openapiv3::StatusCode;
 
-        // Try to find a successful response (200, 201, 2XX)
         let response = operation
             .responses
             .responses
@@ -191,7 +182,6 @@ end
             }
         }
 
-        // Default to Hash if no schema found
         "Hash".to_string()
     }
 
@@ -260,7 +250,6 @@ end
                 ReferenceOr::Reference { .. } => continue,
             };
 
-            // Generate route for each HTTP method
             if let Some(op) = &path_item.get {
                 output.push_str(&self.generate_route_handler(path, "get", op)?);
             }
@@ -286,10 +275,8 @@ end
     fn generate_route_handler(&self, path: &str, method: &str, operation: &Operation) -> Result<String> {
         let mut output = String::new();
 
-        // Convert OpenAPI path parameters {id} to Sinatra style :id
         let sinatra_path = path.replace('{', ":").replace('}', "");
 
-        // Generate RDoc comment
         if let Some(summary) = &operation.summary {
             output.push_str(&format!("  # {}\n", summary));
         } else {
@@ -300,7 +287,6 @@ end
             output.push_str(&format!("  # {}\n", description));
         }
 
-        // Add parameter documentation
         let mut has_path_params = false;
         let mut has_query_params = false;
 
@@ -332,30 +318,24 @@ end
             }
         }
 
-        // Extract request body type
         let body_type = self.extract_request_body_type(operation);
         if body_type.is_some() {
             output.push_str("  # @param body [Hash] Request body\n");
         }
 
-        // Extract response type
         let return_type = self.extract_response_type(operation);
         output.push_str(&format!("  # @return [{}] Response body\n", return_type));
 
-        // Generate route definition
         output.push_str(&format!("  {} '{}' do\n", method, sinatra_path));
 
-        // Parse path parameters
         if has_path_params {
             output.push_str("    # Path parameters available in params hash\n");
         }
 
-        // Parse query parameters
         if has_query_params {
             output.push_str("    # Query parameters available in params hash\n");
         }
 
-        // Parse request body
         if let Some(bt) = body_type {
             output.push_str("    # Parse and validate request body\n");
             output.push_str("    # TODO: body_data = JSON.parse(request.body.read)\n");
@@ -367,7 +347,6 @@ end
         // Generate TODO implementation
         output.push_str("    # TODO: Implement this endpoint\n");
 
-        // Return appropriate default based on method
         match method {
             "get" => {
                 if return_type.starts_with("Array") {

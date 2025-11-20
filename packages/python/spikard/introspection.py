@@ -39,21 +39,15 @@ def extract_parameter_schema(func: Callable[..., Any], path: str | None = None) 
     Returns:
         JSON Schema dict or None if no parameters
     """
-    # Parse the function signature into FieldDefinitions
     parsed_sig = parse_fn_signature(func)
 
-    # If no parameters, return None
     if not parsed_sig.parameters:
         return None
 
-    # Extract path parameter names from the path pattern
     path_param_names: set[str] = set()
     if path:
-        # Match {param_name} patterns in the path
         path_param_names = set(re.findall(r"\{(\w+)\}", path))
 
-    # Get function signature to check for body parameter
-    # The first parameter (after self/cls) is treated as body if it's a structured type
     sig = inspect.signature(func)
     params_list = [p for p in sig.parameters.values() if p.name not in ("self", "cls")]
     first_param_is_body = False
@@ -65,38 +59,25 @@ def extract_parameter_schema(func: Callable[..., Any], path: str | None = None) 
 
     schema: dict[str, Any] = {"type": "object", "properties": {}, "required": []}
 
-    # Convert each parameter to JSON Schema
     for idx, (param_name, field_def) in enumerate(parsed_sig.parameters.items()):
-        # Skip the first parameter if it's a structured body type
-        # (it's handled by request_schema from extract_schemas)
-        # Also skip if parameter name is "body" (even for dict[str, Any])
         if idx == 0 and (first_param_is_body or param_name in {"body", "_body"}):
             continue
 
-        # Normalize parameter name: strip leading/trailing underscores used to avoid
-        # Python linting issues (unused params, builtin shadowing)
-        # _id_ → id, _param → param, param_ → param
         normalized_name = param_name.strip("_")
 
-        # Convert FieldDefinition to JSON Schema
         param_schema = field_definition_to_json_schema(field_def)
 
-        # Determine parameter source (if not already set from Field constraints)
         if "source" not in param_schema:
             if normalized_name in path_param_names:
                 param_schema["source"] = "path"
             else:
-                # Default to query params
                 param_schema["source"] = "query"
 
-        # Use normalized name in schema (matches HTTP parameter name)
         schema["properties"][normalized_name] = param_schema
 
-        # Check if required
         if field_def.is_required:
             schema["required"].append(normalized_name)
 
-    # If no properties, return None
     if not schema["properties"]:
         return None
 
@@ -118,19 +99,15 @@ def _is_structured_type(annotation: Any) -> bool:
     if not isinstance(annotation, type):
         return False
 
-    # Check for dataclass
     if hasattr(annotation, "__dataclass_fields__"):
         return True
 
-    # Check for TypedDict
     if hasattr(annotation, "__annotations__") and hasattr(annotation, "__total__"):
         return True
 
-    # Check for NamedTuple
     if hasattr(annotation, "_fields") and hasattr(annotation, "_field_types"):
         return True
 
-    # Check for Pydantic BaseModel
     try:
         from pydantic import BaseModel  # noqa: PLC0415
 
@@ -139,7 +116,6 @@ def _is_structured_type(annotation: Any) -> bool:
     except (ImportError, TypeError):
         pass
 
-    # Check for msgspec.Struct
     try:
         import msgspec  # noqa: PLC0415
 
@@ -148,10 +124,7 @@ def _is_structured_type(annotation: Any) -> bool:
     except (ImportError, TypeError, AttributeError):
         pass
 
-    # Check for attrs class
     if hasattr(annotation, "__attrs_attrs__"):
         return True
 
-    # Duck-typing: check if it has model_dump, dict, or to_dict methods
-    # (common patterns for serializable classes)
     return bool(hasattr(annotation, "model_dump") or hasattr(annotation, "to_dict"))

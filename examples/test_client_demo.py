@@ -7,7 +7,6 @@ import pytest
 from spikard import Spikard
 from spikard.testing import TestClient
 
-# Create a simple app for testing
 app = Spikard()
 
 
@@ -35,18 +34,15 @@ async def create_user(body: dict[str, Any]) -> dict[str, Any]:
     return {"id": 123, "name": body.get("name"), "email": body.get("email")}
 
 
-# Test functions
 @pytest.mark.asyncio
 async def test_root_endpoint() -> None:
     """Test the root endpoint."""
     client = TestClient(app)
     response = await client.get("/")
 
-    # Test status code
     assert response.status_code == 200
     response.assert_status_ok()
 
-    # Test JSON response
     data = response.json()
     assert data == {"message": "Hello, World!"}
 
@@ -95,7 +91,6 @@ async def test_response_headers() -> None:
     client = TestClient(app)
     response = await client.get("/")
 
-    # Check that we have headers
     assert "content-type" in response.headers
     assert "application/json" in response.headers["content-type"]
 
@@ -106,7 +101,6 @@ async def test_response_text() -> None:
     client = TestClient(app)
     response = await client.get("/")
 
-    # Get as text
     text = response.text()
     assert "Hello, World!" in text
 
@@ -117,7 +111,6 @@ async def test_response_bytes() -> None:
     client = TestClient(app)
     response = await client.get("/")
 
-    # Get as bytes
     body_bytes = response.bytes()
     assert isinstance(body_bytes, bytes)
     assert b"Hello, World!" in body_bytes

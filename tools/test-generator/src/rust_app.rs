@@ -63,18 +63,14 @@ use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::Path;
 
-// Removed fixture_analysis - no more schema inference!
-// Fixtures MUST provide explicit schemas.
 
 pub fn generate_rust_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     println!("Generating Rust test app at {}...", output_dir.display());
 
-    // Load fixtures from all subdirectories
     let categories = discover_fixture_categories(fixtures_dir)?;
     let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
     let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
 
-    // Pre-compute middleware metadata for all fixtures (needed for imports + generation)
     let mut middleware_lookup: HashMap<String, MiddlewareMetadata> = HashMap::new();
     for (category, fixtures) in &categories {
         for fixture in fixtures {
@@ -84,31 +80,25 @@ pub fn generate_rust_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
         }
     }
 
-    // Generate directly in output_dir (no app/ subdirectory)
     fs::create_dir_all(output_dir).context("Failed to create output directory")?;
 
-    // Remove stale static assets before regenerating (fixture identifiers may change)
     let static_assets_root = output_dir.join("static_assets");
     if static_assets_root.exists() {
         fs::remove_dir_all(&static_assets_root)
             .with_context(|| format!("Failed to clear {}", static_assets_root.display()))?;
     }
 
-    // Generate Cargo.toml
     let cargo_toml = generate_cargo_toml();
     fs::write(output_dir.join("Cargo.toml"), cargo_toml).context("Failed to write Cargo.toml")?;
     println!("  ✓ Generated Cargo.toml");
 
-    // Generate src directory
     let src_dir = output_dir.join("src");
     fs::create_dir_all(&src_dir).context("Failed to create src directory")?;
 
-    // Generate main.rs
     let main_rs = generate_main_rs(&categories);
     fs::write(src_dir.join("main.rs"), main_rs).context("Failed to write main.rs")?;
     println!("  ✓ Generated src/main.rs");
 
-    // Generate lib.rs for reuse in tests
     let lib_rs = generate_lib_rs(
         &categories,
         output_dir,
@@ -223,7 +213,6 @@ fn generate_lib_rs(
     if has_sse || has_websocket {
         has_streaming = true;
     }
-    // Generate one handler per fixture (no grouping!)
     for (category, fixtures) in categories {
         for fixture in fixtures {
             let fixture_slug = format!("{}_{}", category, sanitize_name(&fixture.name));
@@ -236,7 +225,6 @@ fn generate_lib_rs(
             let (handler_code, app_fn_code) =
                 generate_fixture_handler_and_app(category, fixture, metadata, &fixture_slug);
             if handler_code.trim().is_empty() {
-                // Static-only fixtures don't need dedicated handlers
             } else {
                 handlers.push(handler_code);
             }
@@ -314,7 +302,6 @@ fn generate_fixture_handler_and_app(
     metadata: &MiddlewareMetadata,
     fixture_slug: &str,
 ) -> (String, String) {
-    // Create unique names based on category and fixture name
     let fixture_id = format!("{}_{}", category, sanitize_name(&fixture.name));
     let handler_name = format!("{}_handler", fixture_id);
     let app_fn_name = format!("create_app_{}", fixture_id);
@@ -323,7 +310,6 @@ fn generate_fixture_handler_and_app(
         return generate_background_fixture(fixture, &fixture_id, &handler_name, &app_fn_name, background);
     }
 
-    // Get route from handler or request
     let route = if let Some(handler) = &fixture.handler {
         handler.route.clone()
     } else {
@@ -664,7 +650,6 @@ fn build_parameter_schema_from_fixture(params: &Value) -> Option<Value> {
     let mut required = Vec::new();
 
     for (source_name, source_params) in params.as_object()? {
-        // File parameters are handled separately through file_params_json
         if source_name == "files" {
             continue;
         }
@@ -672,7 +657,6 @@ fn build_parameter_schema_from_fixture(params: &Value) -> Option<Value> {
         if let Some(source_obj) = source_params.as_object() {
             for (param_name, param_def) in source_obj {
                 if let Some(mut param_obj) = param_def.as_object().cloned() {
-                    // Add source field with normalized key
                     let normalized_source = match source_name.as_str() {
                         "headers" => "header",
                         "cookies" => "cookie",
@@ -680,7 +664,6 @@ fn build_parameter_schema_from_fixture(params: &Value) -> Option<Value> {
                     };
                     param_obj.insert("source".to_string(), json!(normalized_source));
 
-                    // Determine if required
                     let has_default = param_obj.contains_key("default");
                     let is_optional = param_obj.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
                     let explicitly_required = param_obj.get("required").and_then(|v| v.as_bool()).unwrap_or(false);
@@ -695,7 +678,6 @@ fn build_parameter_schema_from_fixture(params: &Value) -> Option<Value> {
                         required.push(param_name.clone());
                     }
 
-                    // Remove non-JSON-Schema fields
                     param_obj.remove("annotation");
                     param_obj.remove("required");
                     param_obj.remove("optional");
@@ -1017,7 +999,6 @@ fn validate_required_schemas(
 ) -> bool {
     let mut valid = true;
 
-    // Check if route needs parameters (has path params or query params in fixtures)
     let needs_parameters = has_path_params
         || fixtures
             .iter()
@@ -1058,7 +1039,6 @@ fn validate_required_schemas(
         }
     }
 
-    // Check if POST/PUT/PATCH needs body schema
     if has_body {
         let has_body_schema = fixtures
             .iter()
@@ -1105,7 +1085,6 @@ fn validate_required_schemas(
 fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixture) -> String {
     let mut code = String::new();
 
-    // Process on_request hooks
     if let Some(on_request) = hooks.get("on_request").and_then(|v| v.as_array()) {
         for (idx, hook) in on_request.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
@@ -1123,13 +1102,11 @@ fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixt
         }
     }
 
-    // Process pre_validation hooks
     if let Some(pre_validation) = hooks.get("pre_validation").and_then(|v| v.as_array()) {
         for (idx, hook) in pre_validation.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
             let func_name = format!("{}_{}_pre_validation_{}", fixture_id, sanitize_name(hook_name), idx);
 
-            // Check if this hook should short-circuit (e.g., rate limit exceeded)
             let should_short_circuit = hook_name.contains("rate_limit") && fixture.expected_response.status_code == 429;
 
             if should_short_circuit {
@@ -1173,13 +1150,11 @@ fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixt
         }
     }
 
-    // Process pre_handler hooks
     if let Some(pre_handler) = hooks.get("pre_handler").and_then(|v| v.as_array()) {
         for (idx, hook) in pre_handler.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
             let func_name = format!("{}_{}_pre_handler_{}", fixture_id, sanitize_name(hook_name), idx);
 
-            // Check if auth should fail
             let auth_fails = hook_name.contains("auth")
                 && (fixture.expected_response.status_code == 401 || fixture.expected_response.status_code == 403);
 
@@ -1226,13 +1201,11 @@ fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixt
         }
     }
 
-    // Process on_response hooks
     if let Some(on_response) = hooks.get("on_response").and_then(|v| v.as_array()) {
         for (idx, hook) in on_response.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
             let func_name = format!("{}_{}_on_response_{}", fixture_id, sanitize_name(hook_name), idx);
 
-            // Add security headers if requested
             if hook_name.contains("security") {
                 code.push_str(&format!(
                     r#"async fn {}(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>>, String> {{
@@ -1274,7 +1247,6 @@ fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixt
         }
     }
 
-    // Process on_error hooks
     if let Some(on_error) = hooks.get("on_error").and_then(|v| v.as_array()) {
         for (idx, hook) in on_error.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
@@ -1481,7 +1453,6 @@ fn route_builder_expression(
 fn generate_hooks_registration_rust(fixture_id: &str, hooks: &Value) -> String {
     let mut code = String::from("spikard::LifecycleHooks::builder()");
 
-    // Process on_request hooks
     if let Some(on_request) = hooks.get("on_request").and_then(|v| v.as_array()) {
         for (idx, hook) in on_request.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
@@ -1493,7 +1464,6 @@ fn generate_hooks_registration_rust(fixture_id: &str, hooks: &Value) -> String {
         }
     }
 
-    // Process pre_validation hooks
     if let Some(pre_validation) = hooks.get("pre_validation").and_then(|v| v.as_array()) {
         for (idx, hook) in pre_validation.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
@@ -1505,7 +1475,6 @@ fn generate_hooks_registration_rust(fixture_id: &str, hooks: &Value) -> String {
         }
     }
 
-    // Process pre_handler hooks
     if let Some(pre_handler) = hooks.get("pre_handler").and_then(|v| v.as_array()) {
         for (idx, hook) in pre_handler.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
@@ -1517,7 +1486,6 @@ fn generate_hooks_registration_rust(fixture_id: &str, hooks: &Value) -> String {
         }
     }
 
-    // Process on_response hooks
     if let Some(on_response) = hooks.get("on_response").and_then(|v| v.as_array()) {
         for (idx, hook) in on_response.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
@@ -1529,7 +1497,6 @@ fn generate_hooks_registration_rust(fixture_id: &str, hooks: &Value) -> String {
         }
     }
 
-    // Process on_error hooks
     if let Some(on_error) = hooks.get("on_error").and_then(|v| v.as_array()) {
         for (idx, hook) in on_error.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");

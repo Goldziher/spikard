@@ -97,7 +97,6 @@ impl Fixture {
             let path = entry.path();
 
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
-                // Skip schema files
                 if path.file_name().and_then(|s| s.to_str()) == Some("schema.json") {
                     continue;
                 }
@@ -169,7 +168,6 @@ impl FixtureManager {
     pub fn load_from_testing_data(&mut self, testing_data_dir: impl AsRef<Path>) -> Result<()> {
         let dir = testing_data_dir.as_ref();
 
-        // Load from each category directory
         let categories = [
             "query_params",
             "path_params",
@@ -190,7 +188,6 @@ impl FixtureManager {
             let category_dir = dir.join(category);
             if category_dir.exists() {
                 let mut category_fixtures = Fixture::from_dir(&category_dir)?;
-                // Set category if not already set
                 for fixture in &mut category_fixtures {
                     if fixture.category.is_none() {
                         fixture.category = Some(category.to_string());

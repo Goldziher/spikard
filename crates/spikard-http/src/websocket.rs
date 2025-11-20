@@ -108,20 +108,16 @@ async fn handle_socket<H: WebSocketHandler>(mut socket: WebSocket, state: WebSoc
     println!("websocket handle_socket invoked");
     info!("WebSocket client connected");
 
-    // Notify handler of connection
     state.handler.on_connect().await;
 
-    // Process messages
     while let Some(msg) = socket.recv().await {
         match msg {
             Ok(Message::Text(text)) => {
                 println!("received text payload: {}", text);
                 debug!("Received text message: {}", text);
 
-                // Parse JSON message
                 match serde_json::from_str::<Value>(&text) {
                     Ok(json_msg) => {
-                        // Validate incoming message if schema is provided
                         if let Some(validator) = &state.message_schema
                             && !validator.is_valid(&json_msg)
                         {
@@ -135,9 +131,7 @@ async fn handle_socket<H: WebSocketHandler>(mut socket: WebSocket, state: WebSoc
                             continue;
                         }
 
-                        // Handle the message
                         if let Some(response) = state.handler.handle_message(json_msg).await {
-                            // Validate outgoing response if schema is provided
                             if let Some(validator) = &state.response_schema
                                 && !validator.is_valid(&response)
                             {
@@ -145,7 +139,6 @@ async fn handle_socket<H: WebSocketHandler>(mut socket: WebSocket, state: WebSoc
                                 continue;
                             }
 
-                            // Send response back
                             let response_text = serde_json::to_string(&response).unwrap_or_else(|_| "{}".to_string());
 
                             if let Err(e) = socket.send(Message::Text(response_text.into())).await {
@@ -156,7 +149,6 @@ async fn handle_socket<H: WebSocketHandler>(mut socket: WebSocket, state: WebSoc
                     }
                     Err(e) => {
                         warn!("Failed to parse JSON message: {}", e);
-                        // Optionally send error response
                         let error_msg = serde_json::json!({
                             "type": "error",
                             "message": "Invalid JSON"
@@ -168,7 +160,6 @@ async fn handle_socket<H: WebSocketHandler>(mut socket: WebSocket, state: WebSoc
             }
             Ok(Message::Binary(data)) => {
                 debug!("Received binary message: {} bytes", data.len());
-                // For now, we'll echo binary messages back
                 if let Err(e) = socket.send(Message::Binary(data)).await {
                     error!("Failed to send binary response: {}", e);
                     break;
@@ -195,7 +186,6 @@ async fn handle_socket<H: WebSocketHandler>(mut socket: WebSocket, state: WebSoc
         }
     }
 
-    // Notify handler of disconnection
     state.handler.on_disconnect().await;
     info!("WebSocket client disconnected");
 }
@@ -217,7 +207,6 @@ mod tests {
         let handler = EchoHandler;
         let state = WebSocketState::new(handler);
         let cloned = state.clone();
-        // Verify state can be cloned
         assert!(Arc::ptr_eq(&state.handler, &cloned.handler));
     }
 }

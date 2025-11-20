@@ -37,12 +37,10 @@ class TestCompressionConfig:
 
     def test_compression_quality_validation(self) -> None:
         """Test compression quality validation."""
-        # Valid quality levels
-        CompressionConfig(quality=0)  # Min
-        CompressionConfig(quality=6)  # Default
-        CompressionConfig(quality=11)  # Max
+        CompressionConfig(quality=0)
+        CompressionConfig(quality=6)
+        CompressionConfig(quality=11)
 
-        # Invalid quality levels
         with pytest.raises(ValueError) as exc_info:
             CompressionConfig(quality=12)
         assert "quality" in str(exc_info.value).lower()
@@ -53,12 +51,10 @@ class TestCompressionConfig:
 
     def test_compression_min_size_validation(self) -> None:
         """Test min_size validation."""
-        # Valid sizes
         CompressionConfig(min_size=0)
         CompressionConfig(min_size=1024)
-        CompressionConfig(min_size=1048576)  # 1MB
+        CompressionConfig(min_size=1048576)
 
-        # Invalid sizes
         with pytest.raises(ValueError):
             CompressionConfig(min_size=-1)
 
@@ -82,11 +78,9 @@ class TestRateLimitConfig:
 
     def test_rate_limit_validation(self) -> None:
         """Test rate limit validation."""
-        # Valid configurations
         RateLimitConfig(per_second=1, burst=1)
         RateLimitConfig(per_second=1000, burst=2000)
 
-        # Invalid configurations
         with pytest.raises(ValueError):
             RateLimitConfig(per_second=0, burst=10)
 
@@ -126,7 +120,6 @@ class TestJwtConfig:
 
     def test_jwt_algorithm_validation(self) -> None:
         """Test JWT algorithm validation."""
-        # Valid algorithms
         valid_algorithms = [
             "HS256",
             "HS384",
@@ -145,18 +138,15 @@ class TestJwtConfig:
             config = JwtConfig(secret="test", algorithm=alg)
             assert config.algorithm == alg
 
-        # Invalid algorithms
         with pytest.raises(ValueError) as exc_info:
             JwtConfig(secret="test", algorithm="INVALID")
         assert "algorithm" in str(exc_info.value).lower()
 
     def test_jwt_leeway_validation(self) -> None:
         """Test JWT leeway validation."""
-        # Valid leeway
         JwtConfig(secret="test", leeway=0)
         JwtConfig(secret="test", leeway=60)
 
-        # Invalid leeway
         with pytest.raises(ValueError):
             JwtConfig(secret="test", leeway=-1)
 
@@ -178,11 +168,9 @@ class TestApiKeyConfig:
 
     def test_api_key_validation(self) -> None:
         """Test API key validation."""
-        # Valid configurations
         ApiKeyConfig(keys=["key1"])
         ApiKeyConfig(keys=["key1", "key2", "key3"])
 
-        # Invalid configurations - empty keys list
         with pytest.raises(ValueError) as exc_info:
             ApiKeyConfig(keys=[])
         assert "keys" in str(exc_info.value).lower()
@@ -223,7 +211,7 @@ class TestServerConfig:
         assert config.port == 8000
         assert config.workers == 1
         assert config.enable_request_id is True
-        assert config.max_body_size == 10 * 1024 * 1024  # 10MB
+        assert config.max_body_size == 10 * 1024 * 1024
         assert config.request_timeout == 30
         assert config.compression is not None
         assert config.compression.gzip is True
@@ -242,7 +230,7 @@ class TestServerConfig:
             port=8080,
             workers=4,
             enable_request_id=False,
-            max_body_size=5 * 1024 * 1024,  # 5MB
+            max_body_size=5 * 1024 * 1024,
             request_timeout=60,
             compression=CompressionConfig(quality=9),
             rate_limit=RateLimitConfig(per_second=10, burst=20),
@@ -278,7 +266,6 @@ class TestServerConfig:
         assert config.openapi.enabled is True
         assert config.openapi.title == "My API"
         assert config.openapi.version == "1.0.0"
-        # Check middleware configs (assert not None first for mypy)
         assert config.compression is not None
         assert config.rate_limit is not None
         assert config.jwt_auth is not None
@@ -286,12 +273,10 @@ class TestServerConfig:
 
     def test_server_config_port_validation(self) -> None:
         """Test port validation."""
-        # Valid ports
         ServerConfig(port=1)
         ServerConfig(port=8000)
         ServerConfig(port=65535)
 
-        # Invalid ports
         with pytest.raises(ValueError):
             ServerConfig(port=0)
 
@@ -303,12 +288,10 @@ class TestServerConfig:
 
     def test_server_config_workers_validation(self) -> None:
         """Test workers validation."""
-        # Valid worker counts
         ServerConfig(workers=1)
         ServerConfig(workers=4)
         ServerConfig(workers=16)
 
-        # Invalid worker counts
         with pytest.raises(ValueError):
             ServerConfig(workers=0)
 
@@ -317,12 +300,10 @@ class TestServerConfig:
 
     def test_server_config_timeout_validation(self) -> None:
         """Test timeout validation."""
-        # Valid timeouts
         ServerConfig(request_timeout=1)
         ServerConfig(request_timeout=30)
-        ServerConfig(request_timeout=None)  # No timeout
+        ServerConfig(request_timeout=None)
 
-        # Invalid timeouts
         with pytest.raises(ValueError):
             ServerConfig(request_timeout=0)
 
@@ -331,12 +312,10 @@ class TestServerConfig:
 
     def test_server_config_body_size_validation(self) -> None:
         """Test max_body_size validation."""
-        # Valid sizes
-        ServerConfig(max_body_size=0)  # Unlimited
+        ServerConfig(max_body_size=0)
         ServerConfig(max_body_size=1024)
-        ServerConfig(max_body_size=None)  # Unlimited
+        ServerConfig(max_body_size=None)
 
-        # Invalid sizes
         with pytest.raises(ValueError):
             ServerConfig(max_body_size=-1)
 
@@ -344,14 +323,11 @@ class TestServerConfig:
         """Test msgspec copy() for config updates."""
         config = ServerConfig(host="127.0.0.1", port=8000)
 
-        # Copy with updates
         new_config = config.copy(host="0.0.0.0", port=8080)
 
-        # Original unchanged
         assert config.host == "127.0.0.1"
         assert config.port == 8000
 
-        # New config updated
         assert new_config.host == "0.0.0.0"
         assert new_config.port == 8080
 
@@ -395,14 +371,12 @@ class TestServerConfig:
             rate_limit=RateLimitConfig(per_second=100, burst=200),
         )
 
-        # Serialize to dict
         config_dict = config.to_dict()
         assert config_dict["host"] == "0.0.0.0"
         assert config_dict["port"] == 8080
         assert config_dict["compression"]["quality"] == 9
         assert config_dict["rate_limit"]["per_second"] == 100
 
-        # Test JSON encoding (for transferring config to Rust)
         json_bytes = msgspec.json.encode(config)
         assert json_bytes is not None
         assert b'"host":"0.0.0.0"' in json_bytes

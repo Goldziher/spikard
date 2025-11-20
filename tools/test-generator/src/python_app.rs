@@ -72,7 +72,6 @@ impl BodyType {
 pub fn generate_python_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     println!("Generating Python test app...");
 
-    // Create output directory structure
     let app_dir = output_dir.join("app");
     fs::create_dir_all(&app_dir).context("Failed to create app directory")?;
     let static_root = app_dir.join("static_assets");
@@ -81,7 +80,6 @@ pub fn generate_python_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
     }
     fs::create_dir_all(&static_root).context("Failed to create static assets directory")?;
 
-    // Load all fixtures by category
     let mut fixtures_by_category: HashMap<String, Vec<Fixture>> = HashMap::new();
 
     for entry in fs::read_dir(fixtures_dir).context("Failed to read fixtures directory")? {
@@ -101,12 +99,10 @@ pub fn generate_python_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
     let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
     let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
 
-    // Generate main app file with per-fixture and SSE/WebSocket app factories
     let app_content =
         generate_app_file_per_fixture(&fixtures_by_category, &app_dir, &sse_fixtures, &websocket_fixtures)?;
     fs::write(app_dir.join("main.py"), app_content).context("Failed to write main.py")?;
 
-    // Generate __init__.py
     fs::write(app_dir.join("__init__.py"), "\"\"\"E2E test application.\"\"\"\n")
         .context("Failed to write __init__.py")?;
 
@@ -148,10 +144,9 @@ fn generate_app_file_per_fixture(
 
     let mut code = String::new();
 
-    // Imports
     code.push_str("\"\"\"Generated E2E test application with per-fixture app factories.\"\"\"\n");
-    code.push_str("# ruff: noqa: ARG001, A002\n"); // Suppress unused argument and builtin shadowing warnings
-    code.push_str("# mypy: ignore-errors\n"); // Generated code - skip type checking
+    code.push_str("# ruff: noqa: ARG001, A002\n"); 
+    code.push_str("# mypy: ignore-errors\n"); 
     code.push('\n');
     code.push_str("from dataclasses import asdict, dataclass\n");
     code.push_str("from datetime import date, datetime\n");
@@ -204,19 +199,15 @@ fn generate_app_file_per_fixture(
         code.push_str("BACKGROUND_STATE = defaultdict(list)\n\n");
     }
 
-    // Track handler names for uniqueness
     let mut handler_names = HashMap::new();
 
-    // Collect all fixtures and generate per-fixture functions
     let mut all_app_factories = Vec::new();
 
     for (category, fixtures) in fixtures_by_category.iter() {
         for (index, fixture) in fixtures.iter().enumerate() {
-            // Generate unique identifier for this fixture
             let fixture_id = sanitize_identifier(&format!("{}_{}", category, &fixture.name));
             let handler_name = make_unique_name(&fixture_id, &mut handler_names);
 
-            // Rotate through body types for comprehensive testing
             let body_type = BodyType::for_index(index);
             let background_info = background_data(fixture)?;
             let middleware_meta = parse_middleware(fixture)?;
@@ -224,7 +215,6 @@ fn generate_app_file_per_fixture(
                 write_static_assets(app_dir, &fixture_id, &middleware_meta.static_dirs)?;
             }
 
-            // Determine appropriate body type (fallback to plain dict for simple types)
             let requires_plain_dict = background_info.is_some()
                 || fixture
                     .handler
@@ -238,7 +228,6 @@ fn generate_app_file_per_fixture(
                 body_type
             };
 
-            // Generate handler and app factory for this fixture
             let (handler_code, app_factory_code) = generate_fixture_handler_and_app_python(
                 fixture,
                 &handler_name,
@@ -265,7 +254,6 @@ fn generate_app_file_per_fixture(
     append_sse_factories(&mut code, sse_fixtures, &mut all_app_factories)?;
     append_websocket_factories(&mut code, websocket_fixtures, &mut all_app_factories)?;
 
-    // Add a comment listing all app factories
     code.push_str("# App factory functions:\n");
     for (category, fixture_name, factory_fn) in all_app_factories {
         code.push_str(&format!("# - {}() for {} / {}\n", factory_fn, category, fixture_name));
@@ -513,7 +501,6 @@ fn generate_fixture_handler_and_app_python(
     background: Option<BackgroundFixtureData>,
     metadata: &MiddlewareMetadata,
 ) -> Result<(String, String)> {
-    // Get route from handler or request
     let route = if let Some(handler) = &fixture.handler {
         handler.route.clone()
     } else {
@@ -521,7 +508,6 @@ fn generate_fixture_handler_and_app_python(
     };
     let skip_route_registration = !metadata.static_dirs.is_empty();
 
-    // Strip query string from route
     let route_path = route.split('?').next().unwrap_or(&route);
     let method = fixture
         .handler
@@ -529,14 +515,12 @@ fn generate_fixture_handler_and_app_python(
         .map(|h| h.method.as_str())
         .unwrap_or_else(|| fixture.request.method.as_str());
 
-    // Generate models at module level and get the model name
     let (models_code, model_name) = if skip_route_registration {
         (String::new(), None)
     } else {
         generate_models_for_fixture_with_name(fixture, handler_name, body_type, handler_names)?
     };
 
-    // Generate handler function at module level (without decorator)
     let handler_func = if skip_route_registration {
         String::new()
     } else {
@@ -553,7 +537,6 @@ fn generate_fixture_handler_and_app_python(
         )?
     };
 
-    // Generate lifecycle hook functions if present
     let hooks_functions = if skip_route_registration {
         String::new()
     } else if let Some(handler) = &fixture.handler {
@@ -570,7 +553,6 @@ fn generate_fixture_handler_and_app_python(
         String::new()
     };
 
-    // Combine models, hooks, and handler
     let mut handler_code = String::new();
     if !models_code.is_empty() {
         handler_code.push_str(&models_code);
@@ -586,14 +568,10 @@ fn generate_fixture_handler_and_app_python(
         handler_code.push_str(&generate_background_state_handler_python(handler_name, fixture_id, bg));
     }
 
-    // Generate app factory function that registers the handler
     let app_factory_name = format!("create_app_{}", handler_name);
 
-    // Extract body_schema for registration
     let body_schema_str = if let Some(handler) = &fixture.handler {
         if let Some(schema) = &handler.body_schema {
-            // Check if schema is effectively empty (no required fields, no or empty properties)
-            // If so, treat as None to avoid requiring a body
             let is_empty_schema = schema.get("type").and_then(|v| v.as_str()) == Some("object")
                 && schema
                     .get("properties")
@@ -619,7 +597,6 @@ fn generate_fixture_handler_and_app_python(
         "None".to_string()
     };
 
-    // Extract parameter_schema for registration
     let parameter_schema_str = if let Some(handler) = &fixture.handler {
         if let Some(params) = &handler.parameters {
             build_parameter_schema_with_sources(params)?
@@ -630,7 +607,6 @@ fn generate_fixture_handler_and_app_python(
         "None".to_string()
     };
 
-    // Extract file_params for registration
     let file_params_str = if let Some(handler) = &fixture.handler {
         if let Some(params) = &handler.parameters {
             extract_file_params(params).unwrap_or_else(|| "None".to_string())
@@ -668,11 +644,9 @@ fn generate_fixture_handler_and_app_python(
         String::new()
     };
 
-    // Extract middleware configuration from metadata and raw middleware values
     let raw_middleware = fixture.handler.as_ref().and_then(|handler| handler.middleware.as_ref());
     let config_str = generate_server_config_from_metadata(metadata, raw_middleware, fixture_id)?;
 
-    // Extract lifecycle hooks configuration if present
     let hooks_code = if let Some(handler) = &fixture.handler {
         if let Some(middleware) = &handler.middleware {
             if let Some(hooks) = middleware.get("lifecycle_hooks") {
@@ -721,7 +695,6 @@ fn generate_fixture_handler_and_app_python(
         }
     }
 
-    // Generate app factory with config and hooks
 
     let app_factory_code = if config_str == "None" && hooks_code.is_empty() {
         format!(
@@ -769,7 +742,6 @@ fn generate_models_for_fixture_with_name(
     body_type: BodyType,
     handler_names: &mut HashMap<String, usize>,
 ) -> Result<(String, Option<String>)> {
-    // Extract body schema if present
     let body_schema = if let Some(handler) = &fixture.handler {
         handler.body_schema.as_ref()
     } else {
@@ -799,10 +771,8 @@ fn generate_handler_function_for_fixture(
     background: Option<&BackgroundFixtureData>,
     metadata: &MiddlewareMetadata,
 ) -> Result<String> {
-    // Extract handler info from fixture
     let handler_opt = fixture.handler.as_ref();
 
-    // Extract parameters
     let params = if let Some(handler) = handler_opt {
         if let Some(ref param_schema) = handler.parameters {
             extract_parameters(param_schema)?
@@ -813,20 +783,17 @@ fn generate_handler_function_for_fixture(
         vec![]
     };
 
-    // Extract body schema
     let body_schema = if let Some(handler) = handler_opt {
         handler.body_schema.as_ref()
     } else {
         None
     };
 
-    // Get expected response status code, body, and headers
     let expected_status = fixture.expected_response.status_code;
     let expected_body_value = fixture.expected_response.body.as_ref();
     let expected_body = expected_body_value.map(json_to_python);
     let expected_body_is_empty = expected_body_value.is_some_and(is_value_effectively_empty);
 
-    // Extract expected headers from fixture
     let validation_errors_body = if let Some(errors) = fixture.expected_response.validation_errors.as_ref() {
         if errors.is_empty() {
             None
@@ -839,18 +806,11 @@ fn generate_handler_function_for_fixture(
         None
     };
 
-    // Generate handler function
     let mut code = String::new();
 
-    // Function signature
-    // Python handlers must always be async
     let fn_prefix = "async def";
     code.push_str(&format!("{} {}(\n", fn_prefix, handler_name));
 
-    // Add body parameter if present
-    // IMPORTANT: All parameters must use their original names (no underscore prefix)
-    // because Rust FFI passes them by name in kwargs.
-    // Skip body parameter if schema is effectively empty (no properties, no required fields)
     if let Some(schema) = body_schema {
         let is_empty_schema = schema.get("type").and_then(|v| v.as_str()) == Some("object")
             && schema
@@ -873,7 +833,6 @@ fn generate_handler_function_for_fixture(
         }
     }
 
-    // Add other parameters - required first, then optional
     for (param_name, param_type, is_required) in &params {
         if *is_required {
             code.push_str(&format!("    {}: {},\n", param_name, param_type));
@@ -893,18 +852,11 @@ fn generate_handler_function_for_fixture(
         code.push_str(&format!("    await asyncio.sleep({})\n", sleep_literal));
     }
 
-    // Function body - handle different response scenarios
-    // Strategy:
-    // - Return documented expected response body when provided.
-    // - Fall back to validation errors if available.
-    // - Otherwise echo parameters for happy-path tests that expect the handler to run.
-    // - For all remaining cases, return the expected status with an empty body.
 
     let should_return_expected = expected_body.is_some() && !expected_body_is_empty;
     let should_return_validation_errors = validation_errors_body.is_some() && !should_return_expected;
     let mut headers_map = sanitized_expected_headers(fixture);
 
-    // Remove headers that will be added by on_response lifecycle hooks to avoid duplication
     if let Some(middleware) = fixture.handler.as_ref().and_then(|h| h.middleware.as_ref())
         && let Some(hooks) = middleware.get("lifecycle_hooks")
         && let Some(on_response) = hooks.get("on_response").and_then(|v| v.as_array())
@@ -912,13 +864,11 @@ fn generate_handler_function_for_fixture(
         for hook in on_response.iter() {
             if let Some(hook_name) = hook.get("name").and_then(|v| v.as_str()) {
                 if hook_name.contains("security") {
-                    // Security hook adds these headers
                     headers_map.remove("X-Content-Type-Options");
                     headers_map.remove("X-Frame-Options");
                     headers_map.remove("X-XSS-Protection");
                     headers_map.remove("Strict-Transport-Security");
                 } else if hook_name.contains("timing") || hook_name.contains("timer") {
-                    // Timing hook adds this header
                     headers_map.remove("X-Response-Time");
                 }
             }
@@ -940,7 +890,6 @@ fn generate_handler_function_for_fixture(
         && !fixture_has_expected_headers
         && !matches!(method_upper.as_str(), "HEAD" | "OPTIONS");
 
-    // For JSON responses (non-string bodies), always set Content-Type if not already set
     let is_json_response = expected_body.is_some() && !expected_body_value.is_some_and(|v| v.is_string());
     if is_json_response && !headers_map.contains_key("Content-Type") && !headers_map.contains_key("content-type") {
         headers_map.insert("Content-Type".to_string(), "application/json".to_string());
@@ -977,7 +926,6 @@ fn generate_handler_function_for_fixture(
     }
 
     if should_return_expected {
-        // Return the expected response body (business logic or documented response format)
         if let Some(body_literal) = expected_body.as_ref() {
             if expected_body_value.is_some_and(|v| v.is_string()) {
                 if let Some(target_len) = content_length_from_headers(&headers_map) {
@@ -1006,7 +954,6 @@ fn generate_handler_function_for_fixture(
                 ));
             }
         } else {
-            // No body, just status code (e.g., 204 No Content)
             code.push_str(&format!(
                 "    return Response(status_code={}{})\n",
                 handler_status, headers_param
@@ -1014,7 +961,6 @@ fn generate_handler_function_for_fixture(
         }
     } else if should_return_validation_errors {
         if let Some(body_json) = validation_errors_body.as_ref() {
-            // Pass Python dict directly - Rust side handles JSON serialization
             code.push_str(&format!(
                 "    return Response(content={}, status_code={}{})\n",
                 body_json, handler_status, headers_param
@@ -1026,7 +972,6 @@ fn generate_handler_function_for_fixture(
             ));
         }
     } else if should_echo_params {
-        // Echo parameters to prove extraction/validation worked
         code.push_str("    # Echo back parameters for testing\n");
         code.push_str("    result: dict[str, Any] = {}\n");
 
@@ -1034,23 +979,18 @@ fn generate_handler_function_for_fixture(
             code.push_str("    if body is not None:\n");
             match body_type {
                 BodyType::PlainDict | BodyType::TypedDict => {
-                    // Already a dict at runtime
                     code.push_str("        result.update(body)\n");
                 }
                 BodyType::Dataclass => {
-                    // Use dataclasses.asdict()
                     code.push_str("        result.update(asdict(body))\n");
                 }
                 BodyType::NamedTuple => {
-                    // Use ._asdict() method
                     code.push_str("        result.update(body._asdict())\n");
                 }
                 BodyType::MsgspecStruct => {
-                    // Use msgspec.to_builtins()
                     code.push_str("        result.update(msgspec.to_builtins(body))\n");
                 }
                 BodyType::Pydantic => {
-                    // Use .model_dump()
                     code.push_str("        result.update(body.model_dump())\n");
                 }
             }
@@ -1058,7 +998,6 @@ fn generate_handler_function_for_fixture(
 
         for (param_name, param_type, _) in &params {
             code.push_str(&format!("    if {} is not None:\n", param_name));
-            // Convert non-JSON-serializable types to strings
             if param_type.contains("UUID") || param_type.contains("datetime") || param_type.contains("date") {
                 code.push_str(&format!("        result[\"{}\"] = str({})\n", param_name, param_name));
             } else {
@@ -1068,7 +1007,6 @@ fn generate_handler_function_for_fixture(
 
         code.push_str("    return result\n");
     } else {
-        // Fallback: Return with just status code (e.g., 204 No Content, 3xx redirects without body)
         code.push_str(&format!(
             "    return Response(status_code={}{})\n",
             handler_status, headers_param
@@ -1244,7 +1182,6 @@ fn sanitize_identifier(s: &str) -> String {
         .to_lowercase()
         .replace(|c: char| !c.is_alphanumeric() && c != '_', "_");
 
-    // Collapse multiple consecutive underscores to single underscore
     while result.contains("__") {
         result = result.replace("__", "_");
     }
@@ -1275,7 +1212,6 @@ fn extract_parameters(schema: &Value) -> Result<Vec<(String, String, bool)>> {
     let mut params = Vec::new();
 
     if let Some(obj) = schema.as_object() {
-        // Extract path parameters
         if let Some(path_params) = obj.get("path").and_then(|v| v.as_object()) {
             for (name, param_schema) in path_params {
                 let param_type = json_type_to_python(param_schema)?;
@@ -1284,11 +1220,9 @@ fn extract_parameters(schema: &Value) -> Result<Vec<(String, String, bool)>> {
             }
         }
 
-        // Extract query parameters
         if let Some(query_params) = obj.get("query").and_then(|v| v.as_object()) {
             for (name, param_schema) in query_params {
                 let param_type = json_type_to_python(param_schema)?;
-                // Parameters are required by default unless marked optional: true
                 let is_optional = param_schema.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
                 let is_required = !is_optional;
                 let python_name = to_python_identifier(name);
@@ -1296,11 +1230,9 @@ fn extract_parameters(schema: &Value) -> Result<Vec<(String, String, bool)>> {
             }
         }
 
-        // Extract header parameters
         if let Some(headers) = obj.get("headers").and_then(|v| v.as_object()) {
             for (name, param_schema) in headers {
                 let param_type = json_type_to_python(param_schema)?;
-                // Parameters are required by default unless marked optional: true
                 let is_optional = param_schema.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
                 let is_required = !is_optional;
                 let python_name = to_python_identifier(name);
@@ -1308,11 +1240,9 @@ fn extract_parameters(schema: &Value) -> Result<Vec<(String, String, bool)>> {
             }
         }
 
-        // Extract cookie parameters
         if let Some(cookies) = obj.get("cookies").and_then(|v| v.as_object()) {
             for (name, param_schema) in cookies {
                 let param_type = json_type_to_python(param_schema)?;
-                // Parameters are required by default unless marked optional: true
                 let is_optional = param_schema.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
                 let is_required = !is_optional;
                 let python_name = to_python_identifier(name);
@@ -1350,7 +1280,6 @@ fn make_unique_name(base_name: &str, used_names: &mut HashMap<String, usize>) ->
 fn extract_body_model(schema: &Value, model_name: &str, body_type: BodyType) -> Result<String> {
     match body_type {
         BodyType::PlainDict => {
-            // No model needed - handler will use dict[str, Any]
             Ok(String::new())
         }
         BodyType::TypedDict => generate_typed_dict(schema, model_name),
@@ -1380,7 +1309,6 @@ fn generate_typed_dict(schema: &Value, model_name: &str) -> Result<String> {
         .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
         .unwrap_or_default();
 
-    // Separate required and optional fields for consistent ordering
     let mut required_props: Vec<(&String, &Value)> = Vec::new();
     let mut optional_props: Vec<(&String, &Value)> = Vec::new();
 
@@ -1392,14 +1320,12 @@ fn generate_typed_dict(schema: &Value, model_name: &str) -> Result<String> {
         }
     }
 
-    // Output required fields first
     for (prop_name, prop_schema) in required_props {
         let prop_type = json_type_to_python(prop_schema)?;
         let python_prop_name = to_python_identifier(prop_name);
         code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
     }
 
-    // Then output optional fields
     for (prop_name, prop_schema) in optional_props {
         let prop_type = json_type_to_python(prop_schema)?;
         let python_prop_name = to_python_identifier(prop_name);
@@ -1429,8 +1355,6 @@ fn generate_dataclass(schema: &Value, model_name: &str) -> Result<String> {
         .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
         .unwrap_or_default();
 
-    // Separate required and optional fields
-    // dataclass requires all fields without defaults to come before fields with defaults
     let mut required_props: Vec<(&String, &Value)> = Vec::new();
     let mut optional_props: Vec<(&String, &Value)> = Vec::new();
 
@@ -1442,14 +1366,12 @@ fn generate_dataclass(schema: &Value, model_name: &str) -> Result<String> {
         }
     }
 
-    // Output required fields first
     for (prop_name, prop_schema) in required_props {
         let prop_type = json_type_to_python(prop_schema)?;
         let python_prop_name = to_python_identifier(prop_name);
         code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
     }
 
-    // Then output optional fields
     for (prop_name, prop_schema) in optional_props {
         let prop_type = json_type_to_python(prop_schema)?;
         let python_prop_name = to_python_identifier(prop_name);
@@ -1478,8 +1400,6 @@ fn generate_namedtuple(schema: &Value, model_name: &str) -> Result<String> {
         .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
         .unwrap_or_default();
 
-    // Separate required and optional fields
-    // NamedTuple requires all fields without defaults to come before fields with defaults
     let mut required_props: Vec<(&String, &Value)> = Vec::new();
     let mut optional_props: Vec<(&String, &Value)> = Vec::new();
 
@@ -1491,14 +1411,12 @@ fn generate_namedtuple(schema: &Value, model_name: &str) -> Result<String> {
         }
     }
 
-    // Output required fields first
     for (prop_name, prop_schema) in required_props {
         let prop_type = json_type_to_python(prop_schema)?;
         let python_prop_name = to_python_identifier(prop_name);
         code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
     }
 
-    // Then output optional fields
     for (prop_name, prop_schema) in optional_props {
         let prop_type = json_type_to_python(prop_schema)?;
         let python_prop_name = to_python_identifier(prop_name);
@@ -1527,7 +1445,6 @@ fn generate_msgspec_struct(schema: &Value, model_name: &str) -> Result<String> {
         .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
         .unwrap_or_default();
 
-    // Separate required and optional fields for consistent ordering
     let mut required_props: Vec<(&String, &Value)> = Vec::new();
     let mut optional_props: Vec<(&String, &Value)> = Vec::new();
 
@@ -1539,14 +1456,12 @@ fn generate_msgspec_struct(schema: &Value, model_name: &str) -> Result<String> {
         }
     }
 
-    // Output required fields first
     for (prop_name, prop_schema) in required_props {
         let prop_type = json_type_to_python(prop_schema)?;
         let python_prop_name = to_python_identifier(prop_name);
         code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
     }
 
-    // Then output optional fields
     for (prop_name, prop_schema) in optional_props {
         let prop_type = json_type_to_python(prop_schema)?;
         let python_prop_name = to_python_identifier(prop_name);
@@ -1575,7 +1490,6 @@ fn generate_pydantic_model(schema: &Value, model_name: &str) -> Result<String> {
         .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
         .unwrap_or_default();
 
-    // Separate required and optional fields for consistent ordering
     let mut required_props: Vec<(&String, &Value)> = Vec::new();
     let mut optional_props: Vec<(&String, &Value)> = Vec::new();
 
@@ -1587,14 +1501,12 @@ fn generate_pydantic_model(schema: &Value, model_name: &str) -> Result<String> {
         }
     }
 
-    // Output required fields first
     for (prop_name, prop_schema) in required_props {
         let prop_type = json_type_to_python(prop_schema)?;
         let python_prop_name = to_python_identifier(prop_name);
         code.push_str(&format!("    {}: {}\n", python_prop_name, prop_type));
     }
 
-    // Then output optional fields
     for (prop_name, prop_schema) in optional_props {
         let prop_type = json_type_to_python(prop_schema)?;
         let python_prop_name = to_python_identifier(prop_name);
@@ -1618,7 +1530,7 @@ fn json_type_to_python(schema: &Value) -> Result<String> {
                     _ => "str",
                 }
             } else {
-                "str" // handles both enum and other string types
+                "str" 
             }
         }
         "integer" => "int",
@@ -1655,40 +1567,30 @@ fn build_parameter_schema_with_sources(params: &Value) -> Result<String> {
     let mut required = Vec::new();
 
     if let Some(obj) = params.as_object() {
-        // Skip file parameters - they're handled separately by file validation
-        // Only process path, query, header, and cookie parameters
 
-        // Process path parameters
         if let Some(path_params) = obj.get("path").and_then(|v| v.as_object()) {
             for (name, param_schema) in path_params {
                 let mut param_with_source = param_schema.clone();
                 if let Some(param_obj) = param_with_source.as_object_mut() {
                     param_obj.insert("source".to_string(), json!("path"));
-                    // Remove 'required' and 'optional' fields - these belong in top-level schema
                     param_obj.remove("required");
                     param_obj.remove("optional");
                 }
-                // Normalize parameter name to match Python identifier
                 let python_name = to_python_identifier(name);
                 properties.insert(python_name.clone(), param_with_source);
-                // Path parameters are always required
                 required.push(python_name);
             }
         }
 
-        // Process query parameters
         if let Some(query_params) = obj.get("query").and_then(|v| v.as_object()) {
             for (name, param_schema) in query_params {
-                // Check if required (default true unless optional: true)
                 let is_optional = param_schema.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
                 let mut param_with_source = param_schema.clone();
                 if let Some(param_obj) = param_with_source.as_object_mut() {
                     param_obj.insert("source".to_string(), json!("query"));
-                    // Remove 'required' and 'optional' fields - these belong in top-level schema
                     param_obj.remove("required");
                     param_obj.remove("optional");
                 }
-                // Normalize parameter name to match Python identifier
                 let python_name = to_python_identifier(name);
                 properties.insert(python_name.clone(), param_with_source);
                 if !is_optional {
@@ -1697,19 +1599,15 @@ fn build_parameter_schema_with_sources(params: &Value) -> Result<String> {
             }
         }
 
-        // Process header parameters
         if let Some(headers) = obj.get("headers").and_then(|v| v.as_object()) {
             for (name, param_schema) in headers {
-                // Check if required
                 let is_optional = param_schema.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
                 let mut param_with_source = param_schema.clone();
                 if let Some(param_obj) = param_with_source.as_object_mut() {
                     param_obj.insert("source".to_string(), json!("header"));
-                    // Remove 'required' and 'optional' fields - these belong in top-level schema
                     param_obj.remove("required");
                     param_obj.remove("optional");
                 }
-                // Normalize parameter name to match Python identifier
                 let python_name = to_python_identifier(name);
                 properties.insert(python_name.clone(), param_with_source);
                 if !is_optional {
@@ -1718,20 +1616,16 @@ fn build_parameter_schema_with_sources(params: &Value) -> Result<String> {
             }
         }
 
-        // Process cookie parameters
         if let Some(cookies) = obj.get("cookies").and_then(|v| v.as_object()) {
             for (name, param_schema) in cookies {
-                // Check if required
                 let is_optional = param_schema.get("optional").and_then(|v| v.as_bool()).unwrap_or(false);
                 let is_required = param_schema.get("required").and_then(|v| v.as_bool()).unwrap_or(true);
                 let mut param_with_source = param_schema.clone();
                 if let Some(param_obj) = param_with_source.as_object_mut() {
                     param_obj.insert("source".to_string(), json!("cookie"));
-                    // Remove 'required' and 'optional' fields - these belong in top-level schema
                     param_obj.remove("required");
                     param_obj.remove("optional");
                 }
-                // Normalize parameter name to match Python identifier
                 let python_name = to_python_identifier(name);
                 properties.insert(python_name.clone(), param_with_source);
                 if !is_optional && is_required {
@@ -1741,7 +1635,6 @@ fn build_parameter_schema_with_sources(params: &Value) -> Result<String> {
         }
     }
 
-    // Build the full schema
     let schema = json!({
         "type": "object",
         "properties": properties,
@@ -1773,7 +1666,6 @@ fn json_to_python(value: &Value) -> String {
         Value::Bool(b) => if *b { "True" } else { "False" }.to_string(),
         Value::Number(n) => n.to_string(),
         Value::String(s) => {
-            // Escape special characters
             let escaped = s
                 .replace('\\', "\\\\")
                 .replace('"', "\\\"")
@@ -2043,7 +1935,6 @@ fn generate_lifecycle_hooks_registration(hooks: &Value, handler_name: &str) -> R
     let mut code = String::new();
     code.push_str("    # Register lifecycle hooks\n");
 
-    // Process on_request hooks
     if let Some(on_request) = hooks.get("on_request").and_then(|v| v.as_array()) {
         for (idx, hook) in on_request.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
@@ -2052,7 +1943,6 @@ fn generate_lifecycle_hooks_registration(hooks: &Value, handler_name: &str) -> R
         }
     }
 
-    // Process pre_validation hooks
     if let Some(pre_validation) = hooks.get("pre_validation").and_then(|v| v.as_array()) {
         for (idx, hook) in pre_validation.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
@@ -2061,7 +1951,6 @@ fn generate_lifecycle_hooks_registration(hooks: &Value, handler_name: &str) -> R
         }
     }
 
-    // Process pre_handler hooks
     if let Some(pre_handler) = hooks.get("pre_handler").and_then(|v| v.as_array()) {
         for (idx, hook) in pre_handler.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
@@ -2070,7 +1959,6 @@ fn generate_lifecycle_hooks_registration(hooks: &Value, handler_name: &str) -> R
         }
     }
 
-    // Process on_response hooks
     if let Some(on_response) = hooks.get("on_response").and_then(|v| v.as_array()) {
         for (idx, hook) in on_response.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
@@ -2079,7 +1967,6 @@ fn generate_lifecycle_hooks_registration(hooks: &Value, handler_name: &str) -> R
         }
     }
 
-    // Process on_error hooks
     if let Some(on_error) = hooks.get("on_error").and_then(|v| v.as_array()) {
         for (idx, hook) in on_error.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
@@ -2095,7 +1982,6 @@ fn generate_lifecycle_hooks_registration(hooks: &Value, handler_name: &str) -> R
 fn generate_lifecycle_hooks_functions(hooks: &Value, handler_name: &str, fixture: &Fixture) -> Result<String> {
     let mut code = String::new();
 
-    // Process on_request hooks
     if let Some(on_request) = hooks.get("on_request").and_then(|v| v.as_array()) {
         for (idx, hook) in on_request.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
@@ -2114,13 +2000,11 @@ fn generate_lifecycle_hooks_functions(hooks: &Value, handler_name: &str, fixture
         }
     }
 
-    // Process pre_validation hooks
     if let Some(pre_validation) = hooks.get("pre_validation").and_then(|v| v.as_array()) {
         for (idx, hook) in pre_validation.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
             let func_name = format!("{}_{}_pre_validation_{}", handler_name, hook_name, idx);
 
-            // Check if this hook should short-circuit (e.g., rate limit exceeded)
             let should_short_circuit = hook_name.contains("rate_limit") && fixture.expected_response.status_code == 429;
 
             if should_short_circuit {
@@ -2153,13 +2037,11 @@ fn generate_lifecycle_hooks_functions(hooks: &Value, handler_name: &str, fixture
         }
     }
 
-    // Process pre_handler hooks
     if let Some(pre_handler) = hooks.get("pre_handler").and_then(|v| v.as_array()) {
         for (idx, hook) in pre_handler.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
             let func_name = format!("{}_{}_pre_handler_{}", handler_name, hook_name, idx);
 
-            // Check if auth should fail
             let auth_fails = hook_name.contains("auth")
                 && (fixture.expected_response.status_code == 401 || fixture.expected_response.status_code == 403);
 
@@ -2208,13 +2090,11 @@ fn generate_lifecycle_hooks_functions(hooks: &Value, handler_name: &str, fixture
         }
     }
 
-    // Process on_response hooks
     if let Some(on_response) = hooks.get("on_response").and_then(|v| v.as_array()) {
         for (idx, hook) in on_response.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
             let func_name = format!("{}_{}_on_response_{}", handler_name, hook_name, idx);
 
-            // Add security headers if requested
             if hook_name.contains("security") {
                 code.push_str(&format!(
                     r#"async def {}(response: Any) -> Any:
@@ -2257,7 +2137,6 @@ fn generate_lifecycle_hooks_functions(hooks: &Value, handler_name: &str, fixture
         }
     }
 
-    // Process on_error hooks
     if let Some(on_error) = hooks.get("on_error").and_then(|v| v.as_array()) {
         for (idx, hook) in on_error.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");

@@ -13,14 +13,12 @@ pub fn validate_config(config: &Config) -> Result<()> {
         )));
     }
 
-    // Validate service name
     if config.name.is_empty() {
         return Err(CodegenError::ValidationError(
             "Service name cannot be empty".to_string(),
         ));
     }
 
-    // Validate HTTP routes
     if let Some(ref http) = config.http {
         for route in &http.routes {
             validate_route(route)?;
@@ -35,7 +33,6 @@ pub fn validate_config(config: &Config) -> Result<()> {
 }
 
 fn validate_route(route: &crate::parser::config::HttpRoute) -> Result<()> {
-    // Validate path
     if !route.path.starts_with('/') {
         return Err(CodegenError::ValidationError(format!(
             "Route path must start with '/': {}",
@@ -43,7 +40,6 @@ fn validate_route(route: &crate::parser::config::HttpRoute) -> Result<()> {
         )));
     }
 
-    // Validate method
     let valid_methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
     if !valid_methods.contains(&route.method.as_str()) {
         return Err(CodegenError::ValidationError(format!(
@@ -53,7 +49,6 @@ fn validate_route(route: &crate::parser::config::HttpRoute) -> Result<()> {
         )));
     }
 
-    // Validate handler path
     if route.handler.is_empty() {
         return Err(CodegenError::ValidationError(
             "Handler path cannot be empty".to_string(),

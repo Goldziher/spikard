@@ -367,7 +367,6 @@ export interface StaticManifestEntry {
  * ```
  */
 export interface ServerConfig {
-	// Network configuration
 	/** Host address to bind to (default: "127.0.0.1") */
 	host?: string;
 	/** Port number to listen on (default: 8000, range: 1-65535) */
@@ -375,7 +374,6 @@ export interface ServerConfig {
 	/** Number of worker processes (default: 1) */
 	workers?: number;
 
-	// Request handling
 	/** Add X-Request-ID header to responses (default: true) */
 	enableRequestId?: boolean;
 	/** Maximum request body size in bytes (default: 10MB, 0 or null for unlimited) */
@@ -383,7 +381,6 @@ export interface ServerConfig {
 	/** Request timeout in seconds (default: 30, null for no timeout) */
 	requestTimeout?: number | null;
 
-	// Middleware
 	/** Response compression configuration */
 	compression?: CompressionConfig | null;
 	/** Rate limiting configuration */
@@ -397,13 +394,11 @@ export interface ServerConfig {
 	/** @internal Precomputed static manifest for wasm runtimes */
 	__wasmStaticManifest?: StaticManifestEntry[];
 
-	// Lifecycle
 	/** Enable graceful shutdown (default: true) */
 	gracefulShutdown?: boolean;
 	/** Graceful shutdown timeout in seconds (default: 30) */
 	shutdownTimeout?: number;
 
-	// OpenAPI/Documentation
 	/** OpenAPI documentation configuration */
 	openapi?: OpenApiConfig | null;
 }

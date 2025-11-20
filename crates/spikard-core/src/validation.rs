@@ -15,18 +15,12 @@ pub struct SchemaValidator {
 impl SchemaValidator {
     /// Create a new validator from a JSON Schema
     pub fn new(schema: Value) -> Result<Self, String> {
-        // Enable format validation (UUID, date-time, time, etc.)
-        // Use Draft 2020-12 for better format support (includes time, duration, etc.)
-        // Use the 'regex' engine instead of 'fancy-regex' for ReDoS protection
-        // The regex crate provides guaranteed linear-time matching, preventing
-        // catastrophic backtracking from malicious regex patterns in schemas
         let compiled = jsonschema::options()
             .with_draft(jsonschema::Draft::Draft202012)
             .should_validate_formats(true)
             .with_pattern_options(jsonschema::PatternOptions::regex())
             .build(&schema)
             .map_err(|e| {
-                // Use anyhow for better error context internally, then convert to String
                 anyhow::anyhow!("Invalid JSON Schema")
                     .context(format!("Schema compilation failed: {}", e))
                     .to_string()
@@ -58,29 +52,24 @@ impl SchemaValidator {
 
     #[allow(clippy::only_used_in_recursion)]
     fn preprocess_value_with_schema(&self, data: &Value, schema: &Value) -> Value {
-        // Check if this schema defines a binary field (type: "string", format: "binary")
         if let Some(schema_obj) = schema.as_object() {
             let is_string_type = schema_obj.get("type").and_then(|t| t.as_str()) == Some("string");
             let is_binary_format = schema_obj.get("format").and_then(|f| f.as_str()) == Some("binary");
 
             #[allow(clippy::collapsible_if)]
             if is_string_type && is_binary_format {
-                // This is a binary field - check if data is a file object
                 if let Some(data_obj) = data.as_object() {
                     if data_obj.contains_key("filename")
                         && data_obj.contains_key("content")
                         && data_obj.contains_key("size")
                         && data_obj.contains_key("content_type")
                     {
-                        // This is a file object - extract content for validation
                         return data_obj.get("content").unwrap_or(&Value::Null).clone();
                     }
                 }
-                // Not a file object, return as-is
                 return data.clone();
             }
 
-            // Handle arrays
             #[allow(clippy::collapsible_if)]
             if schema_obj.get("type").and_then(|t| t.as_str()) == Some("array") {
                 if let Some(items_schema) = schema_obj.get("items") {
@@ -94,7 +83,6 @@ impl SchemaValidator {
                 }
             }
 
-            // Handle objects
             #[allow(clippy::collapsible_if)]
             if schema_obj.get("type").and_then(|t| t.as_str()) == Some("object") {
                 if let Some(properties) = schema_obj.get("properties").and_then(|p| p.as_object()) {
@@ -114,16 +102,11 @@ impl SchemaValidator {
             }
         }
 
-        // No schema match, return data as-is
         data.clone()
     }
 
     /// Validate JSON data against the schema
     pub fn validate(&self, data: &Value) -> Result<(), ValidationError> {
-        // Pre-process data to handle format: "binary" fields
-        // Files uploaded via multipart/form-data are converted to objects with
-        // {filename, size, content, content_type}, but schemas expect type: "string", format: "binary"
-        // We need to convert these file objects to strings for validation
         let processed_data = self.preprocess_binary_fields(data);
 
         let validation_errors: Vec<_> = self.compiled.iter_errors(&processed_data).collect();
@@ -135,16 +118,11 @@ impl SchemaValidator {
         let errors: Vec<ValidationErrorDetail> = validation_errors
             .into_iter()
             .map(|err| {
-                // Parse jsonschema errors to FastAPI format
                 let instance_path = err.instance_path().to_string();
                 let schema_path_str = err.schema_path().as_str();
                 let error_msg = err.to_string();
 
-                // Determine the parameter name/path
-                // For required fields, extract field name and combine with instance path
-                // For additional properties, extract property name from error message
                 let param_name = if schema_path_str.ends_with("/required") {
-                    // Extract field name from error message: '"field_name" is a required property'
                     let field_name = if let Some(start) = error_msg.find('"') {
                         if let Some(end) = error_msg[start + 1..].find('"') {
                             error_msg[start + 1..start + 1 + end].to_string()
@@ -155,10 +133,8 @@ impl SchemaValidator {
                         "".to_string()
                     };
 
-                    // Combine instance_path with field_name for nested objects
-                    // e.g., instance_path="/profile", field_name="email" -> "profile/email"
                     if !instance_path.is_empty() && instance_path.starts_with('/') && instance_path.len() > 1 {
-                        let base_path = &instance_path[1..]; // Remove leading '/'
+                        let base_path = &instance_path[1..]; 
                         if !field_name.is_empty() {
                             format!("{}/{}", base_path, field_name)
                         } else {
@@ -170,14 +146,11 @@ impl SchemaValidator {
                         "body".to_string()
                     }
                 } else if schema_path_str.contains("/additionalProperties") {
-                    // For additionalProperties errors, extract property name from error message
-                    // Error message format: "Additional properties are not allowed ('field_name' was unexpected)"
                     if let Some(start) = error_msg.find('(') {
                         if let Some(quote_start) = error_msg[start..].find('\'') {
                             let abs_start = start + quote_start + 1;
                             if let Some(quote_end) = error_msg[abs_start..].find('\'') {
                                 let property_name = error_msg[abs_start..abs_start + quote_end].to_string();
-                                // Combine with instance_path if present
                                 if !instance_path.is_empty()
                                     && instance_path.starts_with('/')
                                     && instance_path.len() > 1
@@ -193,7 +166,6 @@ impl SchemaValidator {
                             instance_path[1..].to_string()
                         }
                     } else {
-                        // Fallback: use instance path if available
                         if instance_path.starts_with('/') && instance_path.len() > 1 {
                             instance_path[1..].to_string()
                         } else {
@@ -208,32 +180,22 @@ impl SchemaValidator {
                     instance_path
                 };
 
-                // Split nested paths (e.g., "profile/contact/email") into separate loc components
                 let loc_parts: Vec<String> = if param_name.contains('/') {
-                    // Build loc path: ["body", "profile", "contact", "email"]
                     let mut parts = vec!["body".to_string()];
                     parts.extend(param_name.split('/').map(|s| s.to_string()));
                     parts
                 } else if param_name == "body" {
-                    // Don't duplicate "body" - just return ["body"]
                     vec!["body".to_string()]
                 } else {
                     vec!["body".to_string(), param_name.clone()]
                 };
 
-                // Get the input value that failed validation
-                // For missing required fields, use the actual input object that was provided
-                // For other errors, use the field value that failed validation
                 let input_value = if schema_path_str == "/required" {
-                    // For required field errors, return the actual input object
                     data.clone()
                 } else {
-                    // For other validation errors, return the field value
                     err.instance().clone().into_owned()
                 };
 
-                // Build JSON Pointer path for nested properties
-                // e.g., "seller/name" -> "/properties/seller/properties/name"
                 let schema_prop_path = if param_name.contains('/') {
                     format!("/properties/{}", param_name.replace('/', "/properties/"))
                 } else {
@@ -241,7 +203,6 @@ impl SchemaValidator {
                 };
 
                 let (error_type, msg, ctx) = if schema_path_str.contains("minLength") {
-                    // Extract minimum length from schema
                     if let Some(min_len) = self
                         .schema
                         .pointer(&format!("{}/minLength", schema_prop_path))
@@ -257,7 +218,6 @@ impl SchemaValidator {
                         ("string_too_short".to_string(), "String is too short".to_string(), None)
                     }
                 } else if schema_path_str.contains("maxLength") {
-                    // Extract maximum length from schema
                     if let Some(max_len) = self
                         .schema
                         .pointer(&format!("{}/maxLength", schema_prop_path))
@@ -275,7 +235,6 @@ impl SchemaValidator {
                 } else if schema_path_str.contains("exclusiveMinimum")
                     || (error_msg.contains("less than or equal to") && error_msg.contains("minimum"))
                 {
-                    // Handle exclusive minimum (gt constraint)
                     if let Some(min_val) = self
                         .schema
                         .pointer(&format!("{}/exclusiveMinimum", schema_prop_path))
@@ -295,7 +254,6 @@ impl SchemaValidator {
                         )
                     }
                 } else if schema_path_str.contains("minimum") || error_msg.contains("less than the minimum") {
-                    // Handle inclusive minimum (ge constraint)
                     if let Some(min_val) = self
                         .schema
                         .pointer(&format!("{}/minimum", schema_prop_path))
@@ -317,7 +275,6 @@ impl SchemaValidator {
                 } else if schema_path_str.contains("exclusiveMaximum")
                     || (error_msg.contains("greater than or equal to") && error_msg.contains("maximum"))
                 {
-                    // Handle exclusive maximum (lt constraint)
                     if let Some(max_val) = self
                         .schema
                         .pointer(&format!("{}/exclusiveMaximum", schema_prop_path))
@@ -337,7 +294,6 @@ impl SchemaValidator {
                         )
                     }
                 } else if schema_path_str.contains("maximum") || error_msg.contains("greater than the maximum") {
-                    // Handle inclusive maximum (le constraint)
                     if let Some(max_val) = self
                         .schema
                         .pointer(&format!("{}/maximum", schema_prop_path))
@@ -357,13 +313,11 @@ impl SchemaValidator {
                         )
                     }
                 } else if schema_path_str.contains("enum") || error_msg.contains("is not one of") {
-                    // Handle enum validation
                     if let Some(enum_values) = self
                         .schema
                         .pointer(&format!("{}/enum", schema_prop_path))
                         .and_then(|v| v.as_array())
                     {
-                        // Format as 'value1', 'value2' or 'value3'
                         let values: Vec<String> = enum_values
                             .iter()
                             .filter_map(|v| v.as_str().map(|s| format!("'{}'", s)))
@@ -379,7 +333,6 @@ impl SchemaValidator {
                             "Input should be one of the allowed values".to_string()
                         };
 
-                        // Add ctx with expected values
                         let expected_str = if values.len() > 1 {
                             let last = values.last().unwrap();
                             let rest = &values[..values.len() - 1];
@@ -399,7 +352,6 @@ impl SchemaValidator {
                         )
                     }
                 } else if schema_path_str.contains("pattern") || error_msg.contains("does not match") {
-                    // Handle regex pattern validation
                     if let Some(pattern) = self
                         .schema
                         .pointer(&format!("{}/pattern", schema_prop_path))
@@ -416,9 +368,7 @@ impl SchemaValidator {
                         )
                     }
                 } else if schema_path_str.contains("format") {
-                    // Handle format validation (email, uuid, date, datetime, etc.)
                     if error_msg.contains("email") {
-                        // Email format validation - convert to pattern-based validation
                         let email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$";
                         let ctx = serde_json::json!({"pattern": email_pattern});
                         (
@@ -445,12 +395,9 @@ impl SchemaValidator {
                             None,
                         )
                     } else {
-                        // Generic format error
                         ("format_error".to_string(), err.to_string(), None)
                     }
                 } else if schema_path_str.contains("/type") {
-                    // Handle type validation errors
-                    // Determine the expected type from the schema
                     let expected_type = self
                         .schema
                         .pointer(&format!("{}/type", schema_prop_path))
@@ -478,15 +425,11 @@ impl SchemaValidator {
                     };
                     (error_type, msg, None)
                 } else if schema_path_str.ends_with("/required") {
-                    // Handle required field errors
                     ("missing".to_string(), "Field required".to_string(), None)
                 } else if schema_path_str.contains("/additionalProperties")
                     || error_msg.contains("Additional properties are not allowed")
                 {
-                    // Handle additionalProperties validation errors
-                    // Extract the unexpected field name from param_name (already extracted above)
                     let unexpected_field = if param_name.contains('/') {
-                        // Get the last component of the path (the actual field name)
                         param_name.split('/').next_back().unwrap_or(&param_name).to_string()
                     } else {
                         param_name.clone()
@@ -502,12 +445,9 @@ impl SchemaValidator {
                         Some(ctx),
                     )
                 } else if schema_path_str.contains("/minItems") {
-                    // Handle array minItems constraint violations
-                    // Extract minItems value from schema_path or error message
                     let min_items = if let Some(start) = schema_path_str.rfind('/') {
                         if let Some(_min_idx) = schema_path_str[..start].rfind("/minItems") {
-                            // Try to find the constraint value in the schema
-                            1 // Default to 1 for now
+                            1 
                         } else {
                             1
                         }
@@ -524,9 +464,8 @@ impl SchemaValidator {
                         Some(ctx),
                     )
                 } else if schema_path_str.contains("/maxItems") {
-                    // Handle array maxItems constraint violations
                     let ctx = serde_json::json!({
-                        "max_length": 1 // Extract from schema if needed
+                        "max_length": 1 
                     });
                     (
                         "too_long".to_string(),
@@ -547,7 +486,6 @@ impl SchemaValidator {
             })
             .collect();
 
-        // Debug logging
         debug_log_module!("validation", "Returning {} validation errors", errors.len());
         for (i, error) in errors.iter().enumerate() {
             debug_log_module!(
@@ -575,7 +513,6 @@ impl SchemaValidator {
 
     /// Validate and parse JSON bytes
     pub fn validate_json(&self, json_bytes: &[u8]) -> Result<Value, ValidationError> {
-        // Parse JSON (zero-copy where possible)
         let value: Value = serde_json::from_slice(json_bytes).map_err(|e| ValidationError {
             errors: vec![ValidationErrorDetail {
                 error_type: "json_parse_error".to_string(),
@@ -586,7 +523,6 @@ impl SchemaValidator {
             }],
         })?;
 
-        // Validate against schema
         self.validate(&value)?;
 
         Ok(value)
@@ -672,7 +608,6 @@ mod tests {
 
     #[test]
     fn test_validation_error_serialization() {
-        // Test that ValidationErrorDetail correctly serializes all fields including input and ctx
         let schema = json!({
             "type": "object",
             "properties": {
@@ -700,14 +635,12 @@ mod tests {
         assert_eq!(error_detail.input, Value::String("this_is_way_too_long".to_string()));
         assert_eq!(error_detail.ctx, Some(json!({"max_length": 10})));
 
-        // Now test JSON serialization
         let json_output = serde_json::to_value(&err.errors).unwrap();
         println!(
             "Serialized JSON: {}",
             serde_json::to_string_pretty(&json_output).unwrap()
         );
 
-        // Verify all fields are present in serialized JSON
         let serialized_error = &json_output[0];
         assert!(serialized_error.get("type").is_some());
         assert!(serialized_error.get("loc").is_some());
@@ -751,7 +684,6 @@ mod tests {
 
         let validator = SchemaValidator::new(schema).unwrap();
 
-        // Test data with violations: name too short, price negative
         let data = json!({
             "id": 1,
             "name": "X",

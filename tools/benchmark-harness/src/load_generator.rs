@@ -33,11 +33,9 @@ pub async fn run_load_test(
 
 /// Run oha load generator
 async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics)> {
-    // Check if oha is installed
     which::which("oha").map_err(|_| Error::LoadGeneratorNotFound("oha".to_string()))?;
 
     let url = if let Some(fixture) = &config.fixture {
-        // Build URL with query params
         let mut url = format!("{}{}", config.base_url, fixture.request.path);
         if !fixture.request.query_params.is_empty() {
             url.push('?');
@@ -62,16 +60,13 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
         .arg("-c")
         .arg(config.concurrency.to_string());
 
-    // Add method if specified
     if let Some(fixture) = &config.fixture {
         cmd.arg("-m").arg(&fixture.request.method);
 
-        // Add headers
         for (key, value) in &fixture.request.headers {
             cmd.arg("-H").arg(format!("{}: {}", key, value));
         }
 
-        // Add body if present
         if let Some(body) = &fixture.request.body {
             let body_json = serde_json::to_string(body)?;
             cmd.arg("-d").arg(body_json);
@@ -81,7 +76,6 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
 
     cmd.arg(&url);
 
-    // Run oha
     let output = cmd
         .output()
         .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to run oha: {}", e)))?;
@@ -91,13 +85,10 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
         return Err(Error::LoadGeneratorFailed(format!("oha exited with error: {}", stderr)));
     }
 
-    // Parse JSON output
     let stdout = String::from_utf8_lossy(&output.stdout);
     let oha_output: OhaOutput = serde_json::from_str(&stdout)
         .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to parse oha output: {}", e)))?;
 
-    // Calculate throughput metrics
-    // Note: oha's "total" field is duration in seconds, not request count
     let total_duration = oha_output.summary.total.unwrap_or(0.0);
     let requests_per_sec = oha_output.summary.requests_per_sec.unwrap_or(0.0);
     let success_rate = oha_output.summary.success_rate.unwrap_or(1.0);
@@ -119,10 +110,8 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
 
 /// Run bombardier load generator (fallback)
 async fn run_bombardier(_config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics)> {
-    // Check if bombardier is installed
     which::which("bombardier").map_err(|_| Error::LoadGeneratorNotFound("bombardier".to_string()))?;
 
-    // For now, return error - we can implement bombardier parsing later
     Err(Error::LoadGeneratorFailed(
         "Bombardier support not yet implemented".to_string(),
     ))

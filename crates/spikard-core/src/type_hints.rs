@@ -67,11 +67,9 @@ pub fn parse_type_hints(route_path: &str) -> HashMap<String, String> {
 /// assert_eq!(strip_type_hints("/files/{path:path}"), "/files/{*path}");
 /// ```
 pub fn strip_type_hints(route_path: &str) -> String {
-    // First handle {param:path} -> {*param} (Axum v0.7 wildcard syntax)
     let path_re = path_type_regex();
     let route_path = path_re.replace_all(route_path, "{*$1}");
 
-    // Then strip other type hints: {param:type} -> {param}
     let re = type_hint_regex();
     re.replace_all(&route_path, "{$1}").to_string()
 }
@@ -160,7 +158,6 @@ pub fn auto_generate_parameter_schema(route_path: &str) -> Option<Value> {
     for (param_name, type_hint) in type_hints {
         let mut param_schema = type_hint_to_schema(&type_hint);
 
-        // Add source field for validation
         if let Some(obj) = param_schema.as_object_mut() {
             obj.insert("source".to_string(), json!("path"));
         }
@@ -210,18 +207,15 @@ pub fn auto_generate_parameter_schema(route_path: &str) -> Option<Value> {
 pub fn merge_parameter_schemas(auto_schema: Value, explicit_schema: Value) -> Value {
     let mut result = auto_schema.clone();
 
-    // Get mutable references to properties
     let auto_props = result.get_mut("properties").and_then(|v| v.as_object_mut());
     let explicit_props = explicit_schema.get("properties").and_then(|v| v.as_object());
 
     if let (Some(auto_props), Some(explicit_props)) = (auto_props, explicit_props) {
-        // Explicit properties override auto-generated ones
         for (key, value) in explicit_props {
             auto_props.insert(key.clone(), value.clone());
         }
     }
 
-    // Merge required arrays
     if let Some(explicit_required) = explicit_schema.get("required").and_then(|v| v.as_array())
         && let Some(auto_required) = result.get_mut("required").and_then(|v| v.as_array_mut())
     {

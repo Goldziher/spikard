@@ -122,7 +122,6 @@ async def test_header_validation_max_length_constraint_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -134,7 +133,6 @@ async def test_x_api_key_required_header_missing() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -176,7 +174,6 @@ async def test_32_bearer_token_missing_prefix() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -203,7 +200,6 @@ async def test_header_regex_validation_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -218,7 +214,6 @@ async def test_31_bearer_token_format_invalid() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -275,7 +270,6 @@ async def test_authorization_header_missing() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -320,7 +314,6 @@ async def test_authorization_header_wrong_scheme() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -335,7 +328,6 @@ async def test_header_validation_min_length_constraint() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -364,7 +356,6 @@ async def test_bearer_token_authentication_missing() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -429,7 +420,6 @@ async def test_34_api_key_header_invalid() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 

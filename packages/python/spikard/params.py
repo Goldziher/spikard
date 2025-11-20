@@ -225,7 +225,6 @@ class Cookie(ParamBase):
         self.pattern = re.compile(pattern) if pattern else None
 
 
-# Sentinel value for required parameters
 class _Required:
     def __repr__(self) -> str:
         return "..."

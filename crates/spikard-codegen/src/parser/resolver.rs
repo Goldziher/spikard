@@ -8,12 +8,10 @@ use std::collections::HashMap;
 pub fn resolve_refs(schema: &Value, definitions: &HashMap<String, Value>) -> Result<Value> {
     match schema {
         Value::Object(obj) => {
-            // Check for $ref
             if let Some(Value::String(ref_path)) = obj.get("$ref") {
                 return resolve_ref_path(ref_path, definitions);
             }
 
-            // Recursively resolve refs in nested objects
             let mut resolved = serde_json::Map::new();
             for (key, value) in obj {
                 resolved.insert(key.clone(), resolve_refs(value, definitions)?);
@@ -29,7 +27,6 @@ pub fn resolve_refs(schema: &Value, definitions: &HashMap<String, Value>) -> Res
 }
 
 fn resolve_ref_path(ref_path: &str, definitions: &HashMap<String, Value>) -> Result<Value> {
-    // Handle #/schemas/SchemName refs
     if let Some(schema_name) = ref_path.strip_prefix("#/schemas/") {
         definitions
             .get(schema_name)
@@ -89,7 +86,6 @@ mod tests {
         let schema = json!({"$ref": "#/schemas/User"});
         let resolved = resolve_refs(&schema, &definitions).unwrap();
 
-        // Should resolve both refs
         assert_eq!(
             resolved,
             json!({

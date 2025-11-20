@@ -180,10 +180,8 @@ pub fn fixtures_to_openapi(fixtures: Vec<Fixture>, options: OpenApiOptions) -> R
     let mut spec = OpenApiSpec::new(options.title, options.version);
     spec.info.description = options.description;
 
-    // Group fixtures by route path + method
     let grouped = group_fixtures_by_route(&fixtures);
 
-    // Build path items
     for ((path, method), route_fixtures) in grouped {
         let operation = build_operation(&route_fixtures, &method)?;
 
@@ -221,7 +219,6 @@ pub fn load_fixtures_from_dir(dir: &Path) -> Result<Vec<Fixture>> {
         let entry = entry.map_err(CodegenError::IoError)?;
         let path = entry.path();
 
-        // Skip non-JSON files and schema files
         if path.extension().is_none_or(|e| e != "json") {
             continue;
         }
@@ -235,7 +232,6 @@ pub fn load_fixtures_from_dir(dir: &Path) -> Result<Vec<Fixture>> {
         match serde_json::from_str::<Fixture>(&content) {
             Ok(fixture) => fixtures.push(fixture),
             Err(e) => {
-                // Log but skip fixtures that fail to parse
                 eprintln!("Warning: Skipping {}: {}", path.display(), e);
             }
         }
@@ -276,19 +272,16 @@ fn build_operation(fixtures: &[Fixture], method: &str) -> Result<Operation> {
         tags: first.tags.clone(),
     };
 
-    // Extract parameters from fixtures
     if let Some(ref handler) = first.handler {
         if let Some(ref params) = handler.parameters {
             operation.parameters = Some(extract_parameters(params)?);
         }
 
-        // Extract request body
         if let Some(ref body_schema) = handler.body_schema {
             operation.request_body = Some(build_request_body(body_schema)?);
         }
     }
 
-    // Build responses
     let mut responses = IndexMap::new();
     for fixture in fixtures {
         let status = fixture.expected_response.status_code.to_string();
@@ -308,20 +301,18 @@ fn extract_parameters(params_schema: &Value) -> Result<Vec<Parameter>> {
     let mut parameters = Vec::new();
 
     if let Some(obj) = params_schema.as_object() {
-        // Extract path parameters
         if let Some(path_params) = obj.get("path").and_then(|v| v.as_object()) {
             for (name, schema) in path_params {
                 parameters.push(Parameter {
                     name: name.clone(),
                     location: "path".to_string(),
                     description: schema.get("description").and_then(|v| v.as_str()).map(String::from),
-                    required: Some(true), // Path params always required
+                    required: Some(true), 
                     schema: Some(json_to_schema(schema)?),
                 });
             }
         }
 
-        // Extract query parameters
         if let Some(query_params) = obj.get("query").and_then(|v| v.as_object()) {
             for (name, schema) in query_params {
                 parameters.push(Parameter {
@@ -334,7 +325,6 @@ fn extract_parameters(params_schema: &Value) -> Result<Vec<Parameter>> {
             }
         }
 
-        // Extract header parameters
         if let Some(headers) = obj.get("headers").and_then(|v| v.as_object()) {
             for (name, schema) in headers {
                 parameters.push(Parameter {
@@ -347,7 +337,6 @@ fn extract_parameters(params_schema: &Value) -> Result<Vec<Parameter>> {
             }
         }
 
-        // Extract cookie parameters
         if let Some(cookies) = obj.get("cookies").and_then(|v| v.as_object()) {
             for (name, schema) in cookies {
                 parameters.push(Parameter {

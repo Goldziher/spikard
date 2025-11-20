@@ -29,8 +29,6 @@ use std::sync::Arc;
 /// Each async handler will use asyncio.run() which creates its own event loop
 pub fn init_python_event_loop() -> PyResult<()> {
     Python::attach(|py| {
-        // Install uvloop to patch asyncio for better performance (if available)
-        // This globally replaces asyncio's event loop policy
         if let Ok(uvloop) = py.import("uvloop") {
             uvloop.call_method0("install")?;
             eprintln!("[spikard] uvloop installed - asyncio will use uvloop for all event loops");
@@ -97,11 +95,9 @@ impl PythonHandler {
     ///
     /// This runs the Python code in a blocking task to avoid blocking the Tokio runtime
     pub async fn call(&self, _req: Request<Body>, request_data: RequestData) -> HandlerResult {
-        // Validate request body in Rust if validator is present
         if let Some(validator) = &self.request_validator
             && let Err(errors) = validator.validate(&request_data.body)
         {
-            // Return RFC 9457 Problem Details format
             let problem = ProblemDetails::from_validation_error(&errors);
             let error_json = problem
                 .to_json_pretty()
@@ -109,18 +105,13 @@ impl PythonHandler {
             return Err((problem.status_code(), error_json));
         }
 
-        // Validate and extract parameters in Rust if validator is present
-        // This returns a validated JSON object with properly typed values
         let validated_params = if let Some(validator) = &self.parameter_validator {
-            // Convert raw_query_params from Vec<String> to String (take first value)
             let raw_query_strings: HashMap<String, String> = request_data
                 .raw_query_params
                 .iter()
                 .filter_map(|(k, v)| v.first().map(|first| (k.clone(), first.clone())))
                 .collect();
 
-            // Pass query params as Value directly (fast-query-parsers already did type conversion)
-            // Arc auto-derefs to &HashMap
             match validator.validate_and_extract(
                 &request_data.query_params,
                 &raw_query_strings,
@@ -130,7 +121,6 @@ impl PythonHandler {
             ) {
                 Ok(params) => Some(params),
                 Err(errors) => {
-                    // Return RFC 9457 Problem Details format
                     debug_log_module!(
                         "handler",
                         "Parameter validation failed with {} errors",
@@ -151,24 +141,20 @@ impl PythonHandler {
         let handler = self.handler.clone();
         let is_async = self.is_async;
         let response_validator = self.response_validator.clone();
-        let request_data_for_error = request_data.clone(); // Clone for error reporting
-        let validated_params_for_task = validated_params.clone(); // Clone for passing to task
+        let request_data_for_error = request_data.clone(); 
+        let validated_params_for_task = validated_params.clone(); 
 
         let result = if is_async {
-            // For async handlers, run the coroutine using asyncio.run() in a blocking task
-            // This creates a new event loop for each request and runs the coroutine to completion
             let output = tokio::task::spawn_blocking(move || {
                 Python::attach(|py| -> PyResult<Py<PyAny>> {
                     let handler_obj = handler.bind(py);
 
-                    // Convert to Python kwargs - use validated params if available
                     let kwargs = if let Some(ref validated) = validated_params_for_task {
                         validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
                     } else {
                         request_data_to_py_kwargs(py, &request_data, handler_obj.clone())?
                     };
 
-                    // Call the handler - this returns a coroutine
                     let coroutine = if kwargs.is_empty() {
                         handler_obj.call0()?
                     } else {
@@ -176,14 +162,12 @@ impl PythonHandler {
                         handler_obj.call(empty_args, Some(&kwargs))?
                     };
 
-                    // Check if it's actually a coroutine
                     if !coroutine.hasattr("__await__")? {
                         return Err(pyo3::exceptions::PyTypeError::new_err(
                             "Handler marked as async but did not return a coroutine",
                         ));
                     }
 
-                    // Run the coroutine using asyncio.run() which creates and manages the event loop
                     let asyncio = py.import("asyncio")?;
                     let result = asyncio.call_method1("run", (coroutine,))?;
 
@@ -204,7 +188,6 @@ impl PythonHandler {
                 )
             })?;
 
-            // Convert Python result back to ResponseResult
             Python::attach(|py| python_to_response_result(py, output.bind(py))).map_err(|e: PyErr| {
                 (
                     axum::http::StatusCode::INTERNAL_SERVER_ERROR,
@@ -212,12 +195,10 @@ impl PythonHandler {
                 )
             })?
         } else {
-            // For sync handlers, just call directly in blocking task
             tokio::task::spawn_blocking(move || {
                 Python::attach(|py| -> PyResult<ResponseResult> {
                     let handler_obj = handler.bind(py);
 
-                    // Convert to Python kwargs - use validated params if available
                     let kwargs = if let Some(ref validated) = validated_params_for_task {
                         validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
                     } else {
@@ -227,7 +208,6 @@ impl PythonHandler {
                     let py_result = if kwargs.is_empty() {
                         handler_obj.call0()?
                     } else {
-                        // Call with empty args tuple and kwargs
                         let empty_args = PyTuple::empty(py);
                         handler_obj.call(empty_args, Some(&kwargs))?
                     };
@@ -249,7 +229,6 @@ impl PythonHandler {
             })?
         };
 
-        // Check if this is a ResponseData (custom Response object) or just JSON
         let (json_value, status_code, headers) = match result {
             ResponseResult::Stream(handler_response) => {
                 return Ok(handler_response.into_response());
@@ -262,22 +241,17 @@ impl PythonHandler {
             ResponseResult::Json(json_value) => (json_value, 200, HashMap::new()),
         };
 
-        // Check if there's a custom content-type header
         let content_type = headers
             .get("content-type")
             .or_else(|| headers.get("Content-Type"))
             .map(|s| s.as_str())
             .unwrap_or("application/json");
 
-        // Determine response body based on content-type
         let body_bytes = if content_type.starts_with("text/") || content_type.starts_with("application/json") {
-            // For text/* and application/json, handle string content specially
             if let Value::String(s) = &json_value {
-                // If it's a plain string and non-JSON content-type, use it directly without JSON encoding
                 if !content_type.starts_with("application/json") {
                     s.as_bytes().to_vec()
                 } else {
-                    // For JSON content-type, serialize properly
                     serde_json::to_vec(&json_value).map_err(|e| {
                         (
                             StatusCode::INTERNAL_SERVER_ERROR,
@@ -286,9 +260,7 @@ impl PythonHandler {
                     })?
                 }
             } else {
-                // For non-string content with application/json, validate and serialize
                 if content_type.starts_with("application/json") {
-                    // Validate response in Rust if validator is present
                     #[allow(clippy::collapsible_if)]
                     if let Some(validator) = &response_validator {
                         if let Err(errors) = validator.validate(&json_value) {
@@ -319,7 +291,6 @@ impl PythonHandler {
                 })?
             }
         } else {
-            // For other content types, try to serialize as JSON
             serde_json::to_vec(&json_value).map_err(|e| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
@@ -332,7 +303,6 @@ impl PythonHandler {
             .status(StatusCode::from_u16(status_code).unwrap_or(StatusCode::OK))
             .header("content-type", content_type);
 
-        // Add custom headers (skip content-type since we already added it)
         for (key, value) in headers {
             if key.to_lowercase() != "content-type" {
                 response_builder = response_builder.header(key, value);
@@ -370,13 +340,9 @@ fn python_to_response_result(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult
         return Ok(ResponseResult::Stream(handler_response));
     }
 
-    // Check if this is a Response object from _spikard module
-    // Response objects have: content, status_code, headers attributes
     if obj.hasattr("status_code")? && obj.hasattr("content")? && obj.hasattr("headers")? {
-        // This is a Response object, extract its properties
         let status_code: u16 = obj.getattr("status_code")?.extract()?;
 
-        // Extract content (can be None)
         let content_attr = obj.getattr("content")?;
         let content = if content_attr.is_none() {
             Value::Null
@@ -384,11 +350,9 @@ fn python_to_response_result(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult
             python_to_json(py, &content_attr)?
         };
 
-        // Extract headers (dict)
         let headers_dict = obj.getattr("headers")?;
         let mut headers = HashMap::new();
 
-        // Convert Python dict to HashMap
         #[allow(deprecated)]
         if let Ok(dict) = headers_dict.downcast::<PyDict>() {
             for (key, value) in dict.iter() {
@@ -404,7 +368,6 @@ fn python_to_response_result(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult
             headers,
         })
     } else {
-        // Not a Response object, treat as regular JSON
         let json_value = python_to_json(py, obj)?;
         Ok(ResponseResult::Json(json_value))
     }
@@ -412,13 +375,9 @@ fn python_to_response_result(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult
 
 /// Convert Python object to JSON Value
 fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
-    // Use json.dumps to convert to JSON string, then parse
     let json_module = py.import("json")?;
     let json_str: String = json_module.call_method1("dumps", (obj,))?.extract()?;
 
-    // Replace '+00:00' with 'Z' for UTC datetimes to match FastAPI's ISO 8601 format
-    // FastAPI uses 'Z' suffix for UTC datetimes (e.g., "2023-01-01T12:00:00Z")
-    // while Python's isoformat() uses '+00:00' (e.g., "2023-01-01T12:00:00+00:00")
     let json_str = json_str.replace("+00:00", "Z");
 
     serde_json::from_str(&json_str)
@@ -434,24 +393,18 @@ fn validated_params_to_py_kwargs<'py>(
     request_data: &RequestData,
     handler: Bound<'py, PyAny>,
 ) -> PyResult<Bound<'py, PyDict>> {
-    // Convert validated params to Python dict using json.loads
     let params_dict = json_to_python(py, validated_params)?.cast_into::<PyDict>()?;
 
-    // Add request body to params BEFORE convert_params so it gets type-converted too
     if !request_data.body.is_null() {
         let py_body = json_to_python(py, &request_data.body)?;
         params_dict.set_item("body", py_body)?;
     }
 
-    // Import our converter module
     let converter_module = py.import("spikard._internal.converters")?;
     let convert_params_func = converter_module.getattr("convert_params")?;
 
-    // Call convert_params(params_dict, handler_func)
-    // This will use msgspec to convert types based on handler's signature
     let converted = convert_params_func.call1((params_dict, handler))?;
 
-    // Extract the converted dict
     let kwargs = converted.cast_into::<PyDict>()?;
 
     Ok(kwargs)
@@ -466,10 +419,8 @@ fn request_data_to_py_kwargs<'py>(
 ) -> PyResult<Bound<'py, PyDict>> {
     let kwargs = PyDict::new(py);
 
-    // Add path parameters as a dict
     let path_params = PyDict::new(py);
     for (key, value) in request_data.path_params.iter() {
-        // Try to parse as int first, fallback to string
         if let Ok(int_val) = value.parse::<i64>() {
             path_params.set_item(key, int_val)?;
         } else if let Ok(float_val) = value.parse::<f64>() {
@@ -483,7 +434,6 @@ fn request_data_to_py_kwargs<'py>(
     }
     kwargs.set_item("path_params", path_params)?;
 
-    // Add query parameters as a dict (already parsed with correct types)
     if let Value::Object(query_map) = &request_data.query_params {
         let query_params = PyDict::new(py);
         for (key, value) in query_map {
@@ -495,7 +445,6 @@ fn request_data_to_py_kwargs<'py>(
         kwargs.set_item("query_params", PyDict::new(py))?;
     }
 
-    // Propagate headers and cookies as kwargs to match handler signatures
     let headers_dict = PyDict::new(py);
     for (k, v) in request_data.headers.iter() {
         headers_dict.set_item(k, v)?;
@@ -508,12 +457,9 @@ fn request_data_to_py_kwargs<'py>(
     }
     kwargs.set_item("cookies", cookies_dict)?;
 
-    // Add request body if present (convert to Python dict/list)
-    // Always include body, even if None
     let py_body = json_to_python(py, &request_data.body)?;
     kwargs.set_item("body", py_body)?;
 
-    // Use convert_params to convert types based on handler signature
     let converter_module = py.import("spikard._internal.converters")?;
     let convert_params_func = converter_module.getattr("convert_params")?;
     let converted = convert_params_func.call1((kwargs, handler))?;
@@ -540,7 +486,6 @@ fn json_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'py, Py
             } else if let Some(f) = n.as_f64() {
                 Ok(PyFloat::new(py, f).into_any())
             } else {
-                // Fallback to string representation for exotic numbers
                 Ok(PyString::new(py, &n.to_string()).into_any())
             }
         }
@@ -567,22 +512,18 @@ fn json_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'py, Py
 /// Extract Python traceback from exception
 #[allow(dead_code)]
 fn get_python_traceback(py: Python<'_>, err: &PyErr) -> String {
-    // Try to format the full Python traceback
     let traceback_module = match py.import("traceback") {
         Ok(module) => module,
         Err(_) => return format!("{}", err),
     };
 
-    // Get the exception info
     let exc_type = err.get_type(py);
     let exc_value = err.value(py);
     let exc_traceback = err.traceback(py);
 
-    // Format the traceback
 
     match exc_traceback {
         Some(tb) => {
-            // Use traceback.format_exception to get full traceback
             match traceback_module.call_method1("format_exception", (exc_type, exc_value, tb)) {
                 Ok(lines) => {
                     if let Ok(list) = lines.extract::<Vec<String>>() {
@@ -595,7 +536,6 @@ fn get_python_traceback(py: Python<'_>, err: &PyErr) -> String {
             }
         }
         None => {
-            // No traceback available, just format the exception
             match traceback_module.call_method1("format_exception_only", (exc_type, exc_value)) {
                 Ok(lines) => {
                     if let Ok(list) = lines.extract::<Vec<String>>() {

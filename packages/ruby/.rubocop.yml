@@ -11,7 +11,6 @@ Metrics/BlockLength:
   Exclude:
     - 'Rakefile'
 
-# Allow higher complexity in App#run method for now
 # TODO: Refactor to reduce complexity
 Metrics/AbcSize:
   Max: 20
@@ -25,7 +24,6 @@ Metrics/PerceivedComplexity:
 Metrics/MethodLength:
   Max: 20
 
-# OpenAPI config classes have many parameters by design
 Metrics/ParameterLists:
   Max: 15
   CountKeywordArgs: false

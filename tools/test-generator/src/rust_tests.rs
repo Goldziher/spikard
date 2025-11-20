@@ -12,7 +12,6 @@ use std::path::Path;
 pub fn generate_rust_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     println!("Loading fixtures from {}...", fixtures_dir.display());
 
-    // Load fixtures from all subdirectories
     let categories = discover_fixture_categories(fixtures_dir)?;
     let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
 
@@ -21,7 +20,6 @@ pub fn generate_rust_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
     let tests_dir = output_dir.join("tests");
     fs::create_dir_all(&tests_dir).context("Failed to create tests directory")?;
 
-    // Generate test file for each category
     for (category, fixtures) in categories {
         let test_file = format!("{}_tests.rs", category);
         let content = generate_category_test_file(&category, &fixtures)?;
@@ -32,7 +30,6 @@ pub fn generate_rust_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
         println!("  ✓ Generated {}", test_file);
     }
 
-    // Generate common module
     let common_content = generate_common_module();
     let common_dir = tests_dir.join("common");
     fs::create_dir_all(&common_dir).context("Failed to create common directory")?;
@@ -96,7 +93,6 @@ fn discover_fixture_categories(fixtures_dir: &Path) -> Result<BTreeMap<String, V
 
             let mut fixtures_with_files = Vec::new();
 
-            // Load fixtures manually to track filenames
             for file_entry in fs::read_dir(&path).context("Failed to read category directory")? {
                 let file_entry = file_entry.context("Failed to read file entry")?;
                 let file_path = file_entry.path();
@@ -151,12 +147,10 @@ fn generate_category_test_file(category: &str, fixtures: &[(Fixture, String)]) -
             .replace(['.', ','], "_")
             .to_lowercase();
 
-        // Replace multiple consecutive underscores with single underscore
         while case_name.contains("__") {
             case_name = case_name.replace("__", "_");
         }
 
-        // Generate the fixture-specific app function name (must match rust_app.rs logic)
         let fixture_id = format!("{}_{}", category, sanitize_fixture_name(&fixture.name));
         let app_fn_name = format!("create_app_{}", fixture_id);
 
@@ -164,7 +158,6 @@ fn generate_category_test_file(category: &str, fixtures: &[(Fixture, String)]) -
         let streaming_info = streaming_data(fixture)?;
         let background_info = background_data(fixture)?;
         let method = &fixture.request.method;
-        // Extract path without query string (before '?')
         let path = fixture.request.path.split('?').next().unwrap_or(&fixture.request.path);
         let expected_status = fixture.expected_response.status_code;
 
@@ -650,7 +643,6 @@ fn generate_websocket_tests(fixtures: &[AsyncFixture]) -> Result<String> {
         };
         let channel_slug = sanitize_fixture_name(&channel_path.trim_start_matches('/').replace('/', "_"));
 
-        // Generate test for each example in the channel
         for (example_idx, fixture) in channel_fixtures.iter().enumerate() {
             for (msg_idx, example) in fixture.examples.iter().enumerate() {
                 let test_name = if channel_fixtures.len() == 1 && fixture.examples.len() == 1 {

@@ -34,7 +34,6 @@ struct ChatHandler;
 
 impl WebSocketHandler for ChatHandler {
     async fn handle_message(&self, message: Value) -> Option<Value> {
-        // Parse the incoming message
         match serde_json::from_value::<ChatMessage>(message.clone()) {
             Ok(chat_msg) => {
                 match chat_msg {
@@ -49,12 +48,10 @@ impl WebSocketHandler for ChatHandler {
                     }
                 }
 
-                // Echo the message back (in a real chat, we'd broadcast to all users)
                 Some(message)
             }
             Err(e) => {
                 warn!("Failed to parse chat message: {}", e);
-                // Send error response
                 Some(serde_json::json!({
                     "type": "error",
                     "message": format!("Invalid message format: {}", e)
@@ -74,20 +71,16 @@ impl WebSocketHandler for ChatHandler {
 
 #[tokio::main]
 async fn main() {
-    // Initialize tracing
     tracing_subscriber::fmt()
         .with_env_filter("info,websocket_chat=debug")
         .init();
 
-    // Create WebSocket state
     let ws_state = WebSocketState::new(ChatHandler);
 
-    // Build router
     let app = Router::new()
         .route("/chat", get(websocket_handler::<ChatHandler>))
         .with_state(ws_state);
 
-    // Start server
     let addr = "127.0.0.1:8000";
     info!("WebSocket chat server listening on {}", addr);
     info!("Connect at: ws://{}/chat", addr);

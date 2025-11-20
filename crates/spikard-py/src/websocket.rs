@@ -58,7 +58,6 @@ impl PythonWebSocketHandler {
 
     /// Convert Python object to JSON Value
     fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
-        // Serialize Python object to JSON string, then parse
         let json_module = py.import("json")?;
         let json_str: String = json_module.call_method1("dumps", (obj,))?.extract()?;
         serde_json::from_str(&json_str)
@@ -73,41 +72,33 @@ impl WebSocketHandler for PythonWebSocketHandler {
         let handler = Arc::clone(&self.handler);
         let message = message.clone();
 
-        // Use spawn_blocking to call Python code
         let result = tokio::task::spawn_blocking(move || {
             Python::attach(|py| -> PyResult<Option<Value>> {
-                // Convert JSON Value to Python dict
                 let py_message = Self::json_to_python(py, &message)?;
 
-                // Call the handler's handle_message method
                 let result_or_coroutine = handler.bind(py).call_method1("handle_message", (py_message,))?;
                 debug!("Python WebSocket handler: called handle_message method");
 
-                // Check if it's a coroutine or a plain value
                 let asyncio = py.import("asyncio")?;
                 let is_coroutine: bool = asyncio
                     .call_method1("iscoroutine", (result_or_coroutine.as_any(),))?
                     .extract()?;
 
                 let result = if is_coroutine {
-                    // It's async, run it with asyncio.run
                     debug!("Python WebSocket handler: result is a coroutine, running with asyncio.run");
                     asyncio.call_method1("run", (result_or_coroutine,))?
                 } else {
-                    // It's synchronous, use it directly
                     debug!("Python WebSocket handler: result is synchronous");
                     result_or_coroutine
                 };
 
                 debug!("Python WebSocket handler: handler completed");
 
-                // Check if result is None
                 if result.is_none() {
                     debug!("Python WebSocket handler: received None response");
                     return Ok(None);
                 }
 
-                // Convert Python result to JSON Value
                 let json_val = Self::python_to_json(py, &result)?;
                 Ok(Some(json_val))
             })
@@ -167,15 +158,12 @@ impl WebSocketHandler for PythonWebSocketHandler {
 pub fn create_websocket_state(
     factory: &Bound<'_, PyAny>,
 ) -> PyResult<spikard_http::WebSocketState<PythonWebSocketHandler>> {
-    // Call the factory to get a handler instance
     let handler_instance = factory.call0()?;
 
-    // Extract schemas if available
     let message_schema = handler_instance.getattr("_message_schema").ok().and_then(|attr| {
         if attr.is_none() {
             None
         } else {
-            // Convert Python object to JSON Value
             handler_instance.py().import("json").ok().and_then(|json_module| {
                 json_module
                     .call_method1("dumps", (attr,))
@@ -204,10 +192,8 @@ pub fn create_websocket_state(
         }
     });
 
-    // Create Python WebSocket handler
     let py_handler = PythonWebSocketHandler::new(handler_instance.unbind());
 
-    // Create and return WebSocket state with schemas
     if message_schema.is_some() || response_schema.is_some() {
         #[allow(clippy::redundant_closure)]
         spikard_http::WebSocketState::with_schemas(py_handler, message_schema, response_schema)

@@ -55,7 +55,6 @@ impl StreamingBenchmarkRunner {
         let base_http_url = server.base_url.clone();
         let timestamp = Utc::now();
 
-        // Optional warmup to ensure handlers are hot before the timed run.
         if self.config.warmup_secs > 0 {
             let warmup_duration = Duration::from_secs(self.config.warmup_secs);
             let _ = run_streaming_load(
@@ -67,7 +66,6 @@ impl StreamingBenchmarkRunner {
             .await;
         }
 
-        // Monitor resources while the streaming benchmark is executing.
         let monitor = ResourceMonitor::new(pid);
         let monitor_handle = monitor.start_monitoring(100);
 
@@ -313,10 +311,8 @@ async fn websocket_worker(uri: String, payload: String, deadline: Instant, captu
                         stats.responses_received += 1;
                     }
                     Ok(Some(Ok(Message::Frame(_)))) => {
-                        // Ignore raw frames (should not appear for most clients).
                     }
                     Ok(Some(Ok(Message::Ping(_)))) | Ok(Some(Ok(Message::Pong(_)))) => {
-                        // Ignore control frames.
                     }
                     Ok(Some(Ok(Message::Close(_)))) => break,
                     Ok(Some(Err(_))) => {
@@ -325,7 +321,6 @@ async fn websocket_worker(uri: String, payload: String, deadline: Instant, captu
                     }
                     Ok(None) => break,
                     Err(_) => {
-                        // Timed out waiting for a response; continue.
                     }
                 }
             }

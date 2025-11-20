@@ -329,7 +329,6 @@ fn main() -> Result<()> {
             println!("\nDocumentation: https://spikard.dev");
         }
         Commands::ValidateAsyncapi { schema } => {
-            // Parse and validate AsyncAPI spec
             let spec = codegen::parse_asyncapi_schema(&schema).context("Failed to parse AsyncAPI schema")?;
 
             println!("✓ AsyncAPI schema is valid");
@@ -337,11 +336,9 @@ fn main() -> Result<()> {
             println!("  Title: {}", spec.info.title);
             println!("  API Version: {}", spec.info.version);
 
-            // Detect protocol
             let protocol = codegen::detect_primary_protocol(&spec)?;
             println!("  Primary Protocol: {:?}", protocol);
 
-            // Count channels and messages
             let channel_count = spec.channels.len();
             println!("  Channels: {}", channel_count);
 

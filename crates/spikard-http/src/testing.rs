@@ -225,7 +225,6 @@ impl WebSocketMessage {
             WsMessage::Ping(data) => WebSocketMessage::Ping(data.to_vec()),
             WsMessage::Pong(data) => WebSocketMessage::Pong(data.to_vec()),
             WsMessage::Frame(_) => {
-                // Raw frame - treat as close for simplicity
                 WebSocketMessage::Close(None)
             }
         }
@@ -285,7 +284,6 @@ impl SseStream {
             .text()
             .map_err(|e| format!("Failed to read response body: {}", e))?;
 
-        // Parse SSE events from the body
         let events = Self::parse_events(&body);
 
         Ok(Self { body, events })
@@ -301,10 +299,8 @@ impl SseStream {
                 let data = lines[i].trim_start_matches("data:").trim().to_string();
                 events.push(SseEvent { data });
             } else if lines[i].starts_with("data") {
-                // Handle "data" without colon (edge case)
                 let data = lines[i].trim_start_matches("data").trim().to_string();
                 if !data.is_empty() || lines[i].len() == 4 {
-                    // Include if there's data or if line is exactly "data" (empty event)
                     events.push(SseEvent { data });
                 }
             }

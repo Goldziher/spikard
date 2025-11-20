@@ -80,11 +80,9 @@ impl PyRequest {
     pub fn from_request(req: Request<Body>, py: Python<'_>) -> PyResult<Self> {
         let (parts, _body) = req.into_parts();
 
-        // Extract method and path
         let method = parts.method.to_string();
         let path = parts.uri.path().to_string();
 
-        // Extract headers
         let headers_dict = PyDict::new(py);
         for (name, value) in parts.headers.iter() {
             if let Ok(value_str) = value.to_str() {
@@ -92,9 +90,6 @@ impl PyRequest {
             }
         }
 
-        // For now, we'll store the body as empty
-        // In a full implementation, we'd need to consume the body here
-        // which is complex due to async/streaming nature
         let body_bytes = None;
 
         Ok(Self {
@@ -123,7 +118,6 @@ impl PyRequest {
 
         let mut req_builder = Request::builder().method(method).uri(uri);
 
-        // Add headers from Python dict
         let headers_dict = self.headers.bind(py);
         for (key, value) in headers_dict.iter() {
             let key_str: String = key.extract()?;
@@ -131,7 +125,6 @@ impl PyRequest {
             req_builder = req_builder.header(key_str, value_str);
         }
 
-        // Create body
         let body = if let Some(ref body_bytes) = self.body {
             Body::from(body_bytes.clone())
         } else {

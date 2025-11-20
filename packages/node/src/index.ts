@@ -6,10 +6,8 @@
 
 import type { HandlerFunction, JsonValue } from "./types";
 
-// Application
 export { type LifecycleHookFunction, type LifecycleHooks, Spikard } from "./app";
 export * as background from "./background";
-// Configuration types
 export type {
 	ApiKeyConfig,
 	CompressionConfig,
@@ -23,16 +21,11 @@ export type {
 	ServerInfo,
 	StaticFilesConfig,
 } from "./config";
-// Parameter types
 export type { Body, Path, Query, QueryDefault } from "./params";
-// Request interface
 export type { Request } from "./request";
-// Routing
 export { del, get, patch, post, put, type RouteOptions, route } from "./routing";
-// Server
 export { runServer, type ServerOptions } from "./server";
 export { StreamingResponse, type StreamingResponseInit } from "./streaming";
-// Testing utilities
 export { TestClient, type TestResponse } from "./testing";
 export type {
 	Base64EncodedBody,

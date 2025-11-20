@@ -134,7 +134,6 @@ impl Response {
         if let Some(d) = domain {
             cookie_value.push_str(&format!("; Domain={}", d));
         }
-        // Default path to "/"
         let cookie_path = path.unwrap_or_else(|| "/".to_string());
         cookie_value.push_str(&format!("; Path={}", cookie_path));
 
@@ -170,7 +169,6 @@ impl Response {
 
         let status_code = parts.status.as_u16();
 
-        // Extract headers
         let headers_dict = PyDict::new(py);
         for (name, value) in parts.headers.iter() {
             if let Ok(value_str) = value.to_str() {
@@ -178,7 +176,6 @@ impl Response {
             }
         }
 
-        // Body is an async stream, cannot be accessed synchronously
         Ok(Self {
             content: None,
             status_code,
@@ -197,7 +194,6 @@ impl Response {
     ) -> PyResult<Self> {
         let status_code = parts.status.as_u16();
 
-        // Extract headers
         let headers_dict = PyDict::new(py);
         for (name, value) in parts.headers.iter() {
             if let Ok(value_str) = value.to_str() {
@@ -205,21 +201,17 @@ impl Response {
             }
         }
 
-        // Convert buffered body to Python object
         let content = if body_bytes.is_empty() {
             None
         } else {
-            // Try to parse as JSON first
             if let Ok(json_str) = std::str::from_utf8(&body_bytes) {
                 match py.import("json")?.call_method1("loads", (json_str,)) {
                     Ok(parsed) => Some(parsed.unbind()),
                     Err(_) => {
-                        // Not JSON, treat as raw string
                         Some(PyString::new(py, json_str).into_any().unbind())
                     }
                 }
             } else {
-                // Binary data, convert to bytes
                 Some(PyBytes::new(py, &body_bytes).into_any().unbind())
             }
         };
@@ -239,7 +231,6 @@ impl Response {
 
         let mut resp_builder = axum::http::Response::builder().status(status);
 
-        // Add headers from Python dict
         let headers_dict = self.headers.bind(py);
         for (key, value) in headers_dict.iter() {
             let key_str: String = key.extract()?;
@@ -247,9 +238,7 @@ impl Response {
             resp_builder = resp_builder.header(key_str, value_str);
         }
 
-        // Convert content to body
         let body = if let Some(ref content) = self.content {
-            // Convert Python object to JSON
             let json_str = py
                 .import("json")?
                 .call_method1("dumps", (content,))?
@@ -286,16 +275,12 @@ impl StreamingResponse {
 
         let bound_stream = stream.bind(py);
 
-        // Check if this is an async generator (has __anext__)
         let wrapped_stream = if bound_stream.hasattr("__anext__")? {
-            // Import AsyncGeneratorWrapper from Python
             let wrapper_module = py.import("spikard._internal.async_generator_wrapper")?;
             let wrapper_class = wrapper_module.getattr("AsyncGeneratorWrapper")?;
 
-            // Wrap the async generator to make it sync
             wrapper_class.call1((stream,))?.into()
         } else if bound_stream.hasattr("__next__")? || bound_stream.hasattr("__iter__")? {
-            // Already a sync iterator, use as-is
             stream
         } else {
             return Err(PyTypeError::new_err(
@@ -322,25 +307,19 @@ impl StreamingResponse {
         let header_pairs = extract_header_pairs(py, &self.headers)?;
         let stream_object = Python::attach(|py| self.stream.clone_ref(py));
 
-        // Create Rust stream that calls Python's __next__() method
-        // The stream is already wrapped by AsyncGeneratorWrapper if it was async
         let rust_stream = stream! {
             loop {
                 let stream_clone = Python::attach(|py| stream_object.clone_ref(py));
 
-                // Simple: just call __next__() on the (wrapped) iterator
                 let result = tokio::task::spawn_blocking(move || {
                     Python::attach(|py| -> PyResult<Option<Bytes>> {
                         let bound = stream_clone.bind(py);
 
-                        // Call __next__() - works for both sync and wrapped async generators
                         match bound.call_method0("__next__") {
                             Ok(value) => {
-                                // Convert the chunk to bytes
                                 convert_chunk_to_bytes(&value).map(Some)
                             }
                             Err(err) => {
-                                // Check if this is StopIteration (normal end)
                                 if err.is_instance_of::<pyo3::exceptions::PyStopIteration>(py) {
                                     Ok(None)
                                 } else {
@@ -356,7 +335,6 @@ impl StreamingResponse {
                         yield Ok(bytes);
                     }
                     Ok(Ok(None)) => {
-                        // Stream ended normally
                         break;
                     }
                     Ok(Err(err)) => {

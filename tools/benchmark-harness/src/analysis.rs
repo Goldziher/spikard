@@ -143,7 +143,6 @@ pub fn aggregate_runs(runs: &[BenchmarkResult]) -> Result<AggregatedResult> {
         return Err(crate::Error::InvalidInput("Cannot aggregate empty runs".to_string()));
     }
 
-    // Validate all runs are for same framework/workload
     let framework = &runs[0].framework;
     let workload = &runs[0].workload;
     for run in runs {
@@ -155,23 +154,19 @@ pub fn aggregate_runs(runs: &[BenchmarkResult]) -> Result<AggregatedResult> {
         }
     }
 
-    // Detect outliers based on requests_per_sec (primary metric)
     let rps_values: Vec<f64> = runs.iter().map(|r| r.throughput.requests_per_sec).collect();
     let outlier_runs = detect_outliers(&rps_values);
 
-    // Aggregate startup metrics
     let startup = if runs.iter().any(|r| r.startup.is_some()) {
         Some(aggregate_startup_metrics(runs))
     } else {
         None
     };
 
-    // Aggregate core metrics
     let throughput = aggregate_throughput_metrics(runs);
     let latency = aggregate_latency_metrics(runs);
     let resources = aggregate_resource_metrics(runs);
 
-    // Aggregate optional metrics
     let error_metrics = if runs.iter().any(|r| r.error_metrics.is_some()) {
         Some(aggregate_error_metrics(runs))
     } else {
@@ -223,7 +218,6 @@ fn aggregate_startup_metrics(runs: &[BenchmarkResult]) -> AggregatedStartupMetri
     let values: Vec<&StartupMetrics> = runs.iter().filter_map(|r| r.startup.as_ref()).collect();
 
     if values.is_empty() {
-        // Return zero stats if no startup metrics
         let zero_stats = MetricStats {
             mean: 0.0,
             median: 0.0,
@@ -407,7 +401,6 @@ fn aggregate_serialization_metrics(runs: &[BenchmarkResult]) -> AggregatedSerial
 /// Vector of indices identifying outlier values
 pub fn detect_outliers(values: &[f64]) -> Vec<usize> {
     if values.len() < 4 {
-        // Need at least 4 values for meaningful quartiles
         return Vec::new();
     }
 
@@ -454,30 +447,25 @@ pub fn calculate_confidence_interval(values: &[f64], confidence: f64) -> (f64, f
     let std = stddev(values);
     let n = values.len() as f64;
 
-    // Standard error of the mean
     let se = std / n.sqrt();
 
-    // Use t-distribution critical value for small samples
-    // For simplicity, use approximations based on sample size
     let t_critical = if values.len() < 30 {
-        // Approximate t-values for common confidence levels
         match values.len() {
-            2 => 12.706,      // df=1, 95% CI
-            3 => 4.303,       // df=2
-            4 => 3.182,       // df=3
-            5 => 2.776,       // df=4
-            6 => 2.571,       // df=5
-            7..=10 => 2.447,  // df=6-9, approximate
-            11..=20 => 2.228, // df=10-19, approximate
-            _ => 2.093,       // df=20-29, approximate
+            2 => 12.706,      
+            3 => 4.303,       
+            4 => 3.182,       
+            5 => 2.776,       
+            6 => 2.571,       
+            7..=10 => 2.447,  
+            11..=20 => 2.228, 
+            _ => 2.093,       
         }
     } else {
-        // For large samples, use z-score
         match confidence {
             x if x >= 0.99 => 2.576,
             x if x >= 0.95 => 1.96,
             x if x >= 0.90 => 1.645,
-            _ => 1.96, // default to 95%
+            _ => 1.96, 
         }
     };
 
@@ -510,7 +498,6 @@ pub fn coefficient_of_variation(values: &[f64]) -> f64 {
     std / mean_val
 }
 
-// Helper statistical functions
 
 fn mean(values: &[f64]) -> f64 {
     if values.is_empty() {
@@ -548,7 +535,7 @@ fn stddev(values: &[f64]) -> f64 {
             diff * diff
         })
         .sum::<f64>()
-        / (values.len() - 1) as f64; // Sample variance (n-1)
+        / (values.len() - 1) as f64; 
 
     variance.sqrt()
 }
@@ -597,16 +584,14 @@ mod tests {
     fn test_stddev() {
         let values = vec![2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0];
         let std = stddev(&values);
-        assert!((std - 2.138).abs() < 0.01); // Known stddev for this dataset
+        assert!((std - 2.138).abs() < 0.01); 
     }
 
     #[test]
     fn test_detect_outliers() {
-        // No outliers
         let values = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         assert_eq!(detect_outliers(&values), Vec::<usize>::new());
 
-        // With outliers
         let values = vec![1.0, 2.0, 3.0, 4.0, 100.0];
         let outliers = detect_outliers(&values);
         assert!(outliers.contains(&4));
@@ -618,7 +603,6 @@ mod tests {
         let cv = coefficient_of_variation(&values);
         assert!(cv > 0.0);
 
-        // Zero mean case
         assert_eq!(coefficient_of_variation(&[0.0, 0.0]), 0.0);
     }
 

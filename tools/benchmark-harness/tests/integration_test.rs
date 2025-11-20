@@ -25,7 +25,6 @@ async fn spawn_test_server() -> (u16, tokio::task::JoinHandle<()>) {
         .route("/", get(echo_handler))
         .route("/health", get(health_handler));
 
-    // Find available port - try multiple times to avoid race conditions
     let mut last_error = None;
     for attempt in 0..5 {
         let start_port = 53000 + (attempt * 100);
@@ -37,7 +36,6 @@ async fn spawn_test_server() -> (u16, tokio::task::JoinHandle<()>) {
                         axum::serve(listener, app).await.expect("Server failed to start");
                     });
 
-                    // Wait for server to be ready
                     tokio::time::sleep(Duration::from_millis(200)).await;
 
                     return (port, handle);
@@ -55,17 +53,14 @@ async fn spawn_test_server() -> (u16, tokio::task::JoinHandle<()>) {
 
 #[tokio::test]
 async fn test_full_benchmark_flow() {
-    // Skip if load generator is not available
     if find_load_generator().is_none() {
         eprintln!("Skipping test: No load generator (oha or bombardier) available");
         return;
     }
 
-    // Spawn test server
     let (port, server_handle) = spawn_test_server().await;
     let base_url = format!("http://localhost:{}", port);
 
-    // Verify server is reachable with retries
     let client = reqwest::Client::new();
     let mut attempts = 0;
     let max_attempts = 10;
@@ -80,14 +75,11 @@ async fn test_full_benchmark_flow() {
         }
     }
 
-    // Get the server process PID (use our own process as a proxy)
     let pid = std::process::id();
 
-    // Start resource monitoring
     let monitor = ResourceMonitor::new(pid);
     let monitor_handle = monitor.start_monitoring(50);
 
-    // Run load test
     let load_config = LoadTestConfig {
         base_url: base_url.clone(),
         duration_secs: 2,
@@ -98,25 +90,19 @@ async fn test_full_benchmark_flow() {
     let generator = find_load_generator().unwrap();
     let result = benchmark_harness::load_generator::run_load_test(load_config, generator).await;
 
-    // Stop monitoring
     let monitor = monitor_handle.stop().await;
     let resources = monitor.calculate_metrics();
 
-    // Verify results
     match result {
         Ok((oha_output, throughput)) => {
-            // Continue with test
             verify_benchmark_results(oha_output, throughput, resources);
-            // Cleanup
             server_handle.abort();
             return;
         }
         Err(e) => {
             eprintln!("Load test failed: {}", e);
             eprintln!("This might happen if the server isn't fully ready or if there's a connection issue");
-            // Cleanup
             server_handle.abort();
-            // Skip the test rather than fail - integration tests can be flaky
             return;
         }
     }
@@ -127,13 +113,11 @@ fn verify_benchmark_results(
     throughput: benchmark_harness::types::ThroughputMetrics,
     resources: benchmark_harness::types::ResourceMetrics,
 ) {
-    // Verify throughput metrics
     assert!(throughput.total_requests > 0);
     assert!(throughput.requests_per_sec > 0.0);
     assert!(throughput.success_rate >= 0.0);
     assert!(throughput.success_rate <= 1.0);
 
-    // Verify latency metrics
     let latency = benchmark_harness::types::LatencyMetrics::from(oha_output);
     assert!(latency.mean_ms >= 0.0);
     assert!(latency.p50_ms >= 0.0);
@@ -142,12 +126,10 @@ fn verify_benchmark_results(
     assert!(latency.max_ms >= latency.p99_ms);
     assert!(latency.min_ms <= latency.mean_ms);
 
-    // Verify resource metrics
     assert!(resources.avg_memory_mb >= 0.0);
     assert!(resources.peak_memory_mb >= resources.avg_memory_mb);
     assert!(resources.avg_cpu_percent >= 0.0);
 
-    // Create a full BenchmarkResult
     let benchmark_result = benchmark_harness::types::BenchmarkResult {
         framework: "test-framework".to_string(),
         workload: "test-workload".to_string(),
@@ -167,11 +149,9 @@ fn verify_benchmark_results(
         error: None,
     };
 
-    // Verify JSON serialization
     let json = serde_json::to_string(&benchmark_result).unwrap();
     assert!(!json.is_empty());
 
-    // Verify deserialization
     let deserialized: benchmark_harness::types::BenchmarkResult = serde_json::from_str(&json).unwrap();
     assert_eq!(deserialized.framework, "test-framework");
     assert!(deserialized.success);
@@ -179,17 +159,14 @@ fn verify_benchmark_results(
 
 #[tokio::test]
 async fn test_benchmark_with_fixture() {
-    // Skip if load generator is not available
     if find_load_generator().is_none() {
         eprintln!("Skipping test: No load generator available");
         return;
     }
 
-    // Spawn test server
     let (port, server_handle) = spawn_test_server().await;
     let base_url = format!("http://localhost:{}", port);
 
-    // Create a simple fixture
     let fixture_json = json!({
         "name": "simple_get",
         "description": "Simple GET request",
@@ -208,7 +185,6 @@ async fn test_benchmark_with_fixture() {
 
     let fixture: Fixture = serde_json::from_value(fixture_json).unwrap();
 
-    // Run load test with fixture
     let load_config = LoadTestConfig {
         base_url: base_url.clone(),
         duration_secs: 1,
@@ -219,7 +195,6 @@ async fn test_benchmark_with_fixture() {
     let generator = find_load_generator().unwrap();
     let result = benchmark_harness::load_generator::run_load_test(load_config, generator).await;
 
-    // Cleanup
     server_handle.abort();
 
     match result {
@@ -228,37 +203,29 @@ async fn test_benchmark_with_fixture() {
         }
         Err(e) => {
             eprintln!("Load test with fixture failed (expected in some environments): {}", e);
-            // Don't fail the test - integration tests can be flaky
         }
     }
 }
 
 #[tokio::test]
 async fn test_monitor_during_load() {
-    // Test that resource monitoring works correctly during a load test
     let pid = std::process::id();
     let monitor = ResourceMonitor::new(pid);
 
-    // Start monitoring
     let monitor_handle = monitor.start_monitoring(20);
 
-    // Simulate some work
     tokio::time::sleep(Duration::from_millis(500)).await;
 
-    // Do some CPU-intensive work to generate samples
     for _ in 0..10 {
         let _v: Vec<u8> = (0..100000).map(|x| (x % 256) as u8).collect();
         tokio::time::sleep(Duration::from_millis(10)).await;
     }
 
-    // Stop monitoring
     let monitor = monitor_handle.stop().await;
     let metrics = monitor.calculate_metrics();
 
-    // Should have collected many samples
     assert!(monitor.samples().len() > 10);
 
-    // Metrics should be reasonable
     assert!(metrics.avg_memory_mb > 0.0);
     assert!(metrics.peak_memory_mb >= metrics.avg_memory_mb);
     assert!(metrics.p50_memory_mb > 0.0);
@@ -268,19 +235,16 @@ async fn test_monitor_during_load() {
 
 #[tokio::test]
 async fn test_concurrent_benchmarks() {
-    // Skip if load generator is not available
     if find_load_generator().is_none() {
         eprintln!("Skipping test: No load generator available");
         return;
     }
 
-    // Spawn test server
     let (port, server_handle) = spawn_test_server().await;
     let base_url = format!("http://localhost:{}", port);
 
     let generator = find_load_generator().unwrap();
 
-    // Run two short benchmarks sequentially (not truly concurrent to avoid port conflicts)
     let mut successes = 0;
     for i in 0..2 {
         let load_config = LoadTestConfig {
@@ -298,10 +262,8 @@ async fn test_concurrent_benchmarks() {
         }
     }
 
-    // Cleanup
     server_handle.abort();
 
-    // Just log the results - concurrent benchmarks can be flaky in test environments
     if successes == 0 {
         eprintln!("Warning: No benchmarks succeeded (this can happen in constrained test environments)");
     } else {
@@ -313,7 +275,6 @@ async fn test_concurrent_benchmarks() {
 async fn test_fixture_manager_integration() {
     let mut manager = FixtureManager::new();
 
-    // Create temporary fixtures
     let temp_dir = tempfile::TempDir::new().unwrap();
     let fixture_json = json!({
         "name": "integration_test",
@@ -335,7 +296,6 @@ async fn test_fixture_manager_integration() {
     let fixture_path = temp_dir.path().join("test.json");
     std::fs::write(&fixture_path, serde_json::to_string_pretty(&fixture_json).unwrap()).unwrap();
 
-    // Load fixture
     let fixtures = Fixture::from_dir(temp_dir.path()).unwrap();
     assert_eq!(fixtures.len(), 1);
 
@@ -349,7 +309,6 @@ async fn test_fixture_manager_integration() {
 
 #[test]
 fn test_benchmark_result_output_format() {
-    // Test that BenchmarkResult serializes to expected JSON structure
     let result = benchmark_harness::types::BenchmarkResult {
         framework: "test".to_string(),
         workload: "simple".to_string(),
@@ -393,10 +352,8 @@ fn test_benchmark_result_output_format() {
         error: None,
     };
 
-    // Serialize to JSON
     let json = serde_json::to_value(&result).unwrap();
 
-    // Verify structure
     assert_eq!(json["framework"], "test");
     assert_eq!(json["workload"], "simple");
     assert_eq!(json["duration_secs"], 10);
@@ -406,7 +363,6 @@ fn test_benchmark_result_output_format() {
     assert_eq!(json["resources"]["peak_memory_mb"], 75.0);
     assert_eq!(json["success"], true);
 
-    // Verify optional fields are omitted when None
     assert!(json.get("startup").is_none());
     assert!(json.get("error_metrics").is_none());
     assert!(json.get("error").is_none());
@@ -414,16 +370,14 @@ fn test_benchmark_result_output_format() {
 
 #[tokio::test]
 async fn test_error_handling_in_benchmark() {
-    // Test that errors are properly captured and reported
 
-    // Try to run load test against a server that doesn't exist
     if find_load_generator().is_none() {
         eprintln!("Skipping test: No load generator available");
         return;
     }
 
     let load_config = LoadTestConfig {
-        base_url: "http://localhost:65534".to_string(), // Unlikely to have a server here
+        base_url: "http://localhost:65534".to_string(), 
         duration_secs: 1,
         concurrency: 1,
         fixture: None,
@@ -432,10 +386,7 @@ async fn test_error_handling_in_benchmark() {
     let generator = find_load_generator().unwrap();
     let result = benchmark_harness::load_generator::run_load_test(load_config, generator).await;
 
-    // The load test might succeed but with 0 success rate, or it might fail
-    // Either is acceptable for this edge case test
     if let Ok((_, throughput)) = result {
-        // If it succeeds, success rate should be very low
         assert!(throughput.success_rate < 0.5);
     }
 }

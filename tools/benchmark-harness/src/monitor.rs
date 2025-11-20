@@ -30,7 +30,6 @@ impl ResourceMonitor {
 
     /// Take a single sample of resource usage
     pub fn sample(&mut self) -> Option<ResourceSample> {
-        // Refresh all processes (sysinfo 0.37 doesn't have per-process refresh)
         self.system.refresh_all();
 
         let process = self.system.process(self.pid)?;
@@ -56,12 +55,10 @@ impl ResourceMonitor {
                 tokio::select! {
                     _ = ticker.tick() => {
                         if self.sample().is_none() {
-                            // Process no longer exists
                             break;
                         }
                     }
                     _ = &mut rx => {
-                        // Shutdown signal received
                         break;
                     }
                 }
@@ -90,7 +87,6 @@ impl ResourceMonitor {
             };
         }
 
-        // Sort samples by memory for percentile calculation
         let mut memory_sorted: Vec<u64> = self.samples.iter().map(|s| s.memory_bytes).collect();
         memory_sorted.sort_unstable();
 
@@ -131,27 +127,22 @@ pub struct MonitorHandle {
 impl MonitorHandle {
     /// Stop monitoring and get the final metrics
     pub async fn stop(self) -> ResourceMonitor {
-        // Use ManuallyDrop to extract values without triggering Drop
         use std::mem::ManuallyDrop;
         let mut me = ManuallyDrop::new(self);
 
-        // Take ownership of the fields
         let handle = unsafe { std::ptr::read(&me.handle) };
         let shutdown = me.shutdown.take();
 
-        // Send shutdown signal
         if let Some(tx) = shutdown {
             let _ = tx.send(());
         }
 
-        // Wait for task to complete
         handle.await.expect("Monitor task panicked")
     }
 }
 
 impl Drop for MonitorHandle {
     fn drop(&mut self) {
-        // Best effort shutdown
         if let Some(tx) = self.shutdown.take() {
             let _ = tx.send(());
         }

@@ -9,32 +9,26 @@ use anyhow::Result;
 pub fn generate(analysis: &RouteAnalysis) -> Result<String> {
     let mut output = String::new();
 
-    // Check if any route has middleware config
     let has_middleware = analysis.routes.iter().any(|r| r.has_middleware());
 
-    // Generate imports
     output.push_str(&generate_imports(has_middleware));
 
-    // Generate server config if needed
     if has_middleware {
         output.push_str(&generate_server_config(analysis));
         output.push_str("\n\n");
     }
 
-    // Create app
     if has_middleware {
         output.push_str("app = Spikard(config=config)\n\n\n");
     } else {
         output.push_str("app = Spikard()\n\n\n");
     }
 
-    // Generate handler functions
     for route in &analysis.routes {
         output.push_str(&generate_handler(route));
         output.push_str("\n\n");
     }
 
-    // Generate main block
     output.push_str(&generate_main());
 
     Ok(output)
@@ -64,7 +58,6 @@ from spikard import Spikard, delete, get, patch, post, put
 fn generate_server_config(analysis: &RouteAnalysis) -> String {
     let mut config_parts = Vec::new();
 
-    // Collect all middleware configs from routes
     let mut jwt_config = None;
     let mut api_key_config = None;
 
@@ -83,7 +76,6 @@ fn generate_server_config(analysis: &RouteAnalysis) -> String {
         }
     }
 
-    // Generate JWT config
     if let Some(jwt) = jwt_config {
         let mut jwt_params = Vec::new();
         jwt_params.push(format!("        secret=\"{}\"", jwt.secret));
@@ -111,7 +103,6 @@ fn generate_server_config(analysis: &RouteAnalysis) -> String {
         config_parts.push(format!("    jwt_auth=JwtConfig(\n{}\n    )", jwt_params.join(",\n")));
     }
 
-    // Generate API key config
     if let Some(api_key) = api_key_config {
         let keys_str = api_key
             .keys
@@ -166,16 +157,13 @@ fn generate_decorator(route: &RouteInfo) -> String {
 fn generate_handler_name(route: &RouteInfo) -> String {
     let method_prefix = route.method.to_lowercase();
 
-    // Strip query parameters from route (everything after ?)
     let path_without_query = route.route.split('?').next().unwrap_or(&route.route);
 
-    // Strip type hints like {id:int} -> {id}
     let path = path_without_query
         .trim_start_matches('/')
         .split('/')
         .map(|segment| {
             if segment.starts_with('{') && segment.ends_with('}') {
-                // Extract param name without type hint
                 let inner = &segment[1..segment.len() - 1];
                 if let Some(colon_pos) = inner.find(':') {
                     &inner[..colon_pos]
@@ -200,10 +188,8 @@ fn generate_handler_name(route: &RouteInfo) -> String {
 fn generate_parameters(route: &RouteInfo) -> String {
     let mut params = Vec::new();
 
-    // Path parameters - extract from route pattern
     let path_params = crate::analyzer::extract_path_params(&route.route);
     for param_name in &path_params {
-        // Try to get type from params.path, default to str
         let py_type = route
             .params
             .path
@@ -213,7 +199,6 @@ fn generate_parameters(route: &RouteInfo) -> String {
         params.push(format!("{}: {}", param_name, py_type));
     }
 
-    // Query parameters
     for (name, def) in &route.params.query {
         let py_type = param_to_python_type(def);
         let default = if is_required(def) {
@@ -224,7 +209,6 @@ fn generate_parameters(route: &RouteInfo) -> String {
         params.push(format!("{}: {}{}", name, py_type, default));
     }
 
-    // Body parameter (if POST/PUT/PATCH)
     if route.params.body.is_some() {
         params.push("body: dict[str, Any]".to_string());
     }
@@ -287,19 +271,16 @@ fn generate_handler_body(route: &RouteInfo) -> String {
     let mut lines = Vec::new();
     lines.push("response = {}".to_string());
 
-    // Add path params to response (extract from route pattern)
     let path_params = crate::analyzer::extract_path_params(&route.route);
     for param_name in &path_params {
         lines.push(format!("response[\"{}\"] = {}", param_name, param_name));
     }
 
-    // Add query params to response
     for (name, _) in &route.params.query {
         lines.push(format!("if {} is not None:", name));
         lines.push(format!("        response[\"{}\"] = {}", name, name));
     }
 
-    // Return body if present
     if route.params.body.is_some() {
         lines.push("response = body".to_string());
     }

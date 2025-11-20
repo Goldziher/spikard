@@ -14,7 +14,6 @@ from spikard.types import Route
 if TYPE_CHECKING:
     from spikard.sse import SseEventProducer
 
-# Type alias for HTTP methods
 HttpMethod = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "TRACE"]
 
 
@@ -66,39 +65,30 @@ class Spikard:
         """
 
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-            # For GET/DELETE/HEAD/OPTIONS requests, don't auto-extract body schema
-            # since these methods typically don't have request bodies
             methods_without_body = {"GET", "DELETE", "HEAD", "OPTIONS"}
             if method.upper() in methods_without_body:
                 request_schema = None
                 _, response_schema = extract_schemas(func)
             else:
                 request_schema, response_schema = extract_schemas(func)
-                # Explicit body_schema takes precedence over extracted request_schema
-                # Note: if body_schema is explicitly None, it will stay None
                 if body_schema is not None:
                     request_schema = body_schema
 
             extracted_parameter_schema = extract_parameter_schema(func, path)
 
-            # Explicit parameter_schema takes precedence over extracted parameter_schema
             if parameter_schema is not None:
                 extracted_parameter_schema = parameter_schema
 
-            # Wrap the handler to invoke default_factory for ParamBase defaults
             sig = inspect.signature(func)
             wrapped_func = func
 
-            # Check if any parameters have ParamBase defaults
             has_param_defaults = any(isinstance(param.default, ParamBase) for param in sig.parameters.values())
 
             if has_param_defaults:
-                # Create a wrapper that processes ParamBase defaults
                 if inspect.iscoroutinefunction(func):
 
                     @functools.wraps(func)
                     async def async_wrapper(**kwargs: Any) -> Any:
-                        # For each parameter with ParamBase default, invoke get_default() if not provided
                         for param_name, param in sig.parameters.items():
                             if isinstance(param.default, ParamBase) and param_name not in kwargs:
                                 kwargs[param_name] = param.default.get_default()
@@ -109,7 +99,6 @@ class Spikard:
 
                     @functools.wraps(func)
                     def sync_wrapper(**kwargs: Any) -> Any:
-                        # For each parameter with ParamBase default, invoke get_default() if not provided
                         for param_name, param in sig.parameters.items():
                             if isinstance(param.default, ParamBase) and param_name not in kwargs:
                                 kwargs[param_name] = param.default.get_default()
@@ -181,7 +170,6 @@ class Spikard:
         if reload:
             pass
 
-        # Import the Rust extension's run_server function
         try:
             from _spikard import run_server  # noqa: PLC0415
         except ImportError as e:
@@ -191,10 +179,8 @@ class Spikard:
                 "Or: cd packages/python && maturin develop"
             ) from e
 
-        # Determine final config - priority: method arg > __init__ arg > defaults
         final_config = config or self._config or ServerConfig()
 
-        # Override with individual parameters if provided (backwards compatibility)
         if host is not None:
             final_config = final_config.copy(host=host)
         if port is not None:
@@ -202,8 +188,6 @@ class Spikard:
         if workers is not None:
             final_config = final_config.copy(workers=workers)
 
-        # Run the server - the Rust extension handles everything
-        # including uvloop installation, route extraction, and Axum server startup
         run_server(self, config=final_config)
 
     def get_routes(self) -> list[Route]:

@@ -71,7 +71,6 @@ mod tests {
         ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
             let required = self.required_param.clone();
             Box::pin(async move {
-                // Check if required parameter exists in raw_query_params
                 if request_data.raw_query_params.contains_key(&required) {
                     let response = Response::builder()
                         .status(StatusCode::OK)
@@ -157,7 +156,6 @@ mod tests {
             required_param: "api_key".to_string(),
         });
 
-        // Test with required parameter present
         let mut raw_query_params = HashMap::new();
         raw_query_params.insert("api_key".to_string(), vec!["secret123".to_string()]);
 
@@ -181,7 +179,6 @@ mod tests {
         let result = handler.call(request, request_data).await;
         assert!(result.is_ok());
 
-        // Test with missing required parameter
         let request_data_no_param = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: Value::Null,
@@ -209,7 +206,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_request_data_serialization() {
-        // Test that RequestData can be properly serialized/deserialized
         let mut path_params = HashMap::new();
         path_params.insert("user_id".to_string(), "42".to_string());
 
@@ -227,7 +223,6 @@ mod tests {
             path: "/users/42".to_string(),
         };
 
-        // Serialize and deserialize
         let json_str = serde_json::to_string(&request_data).unwrap();
         let deserialized: RequestData = serde_json::from_str(&json_str).unwrap();
 
@@ -239,7 +234,6 @@ mod tests {
 
     #[test]
     fn test_request_data_default_values() {
-        // Test that RequestData can be created with minimal fields
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
             query_params: Value::Null,
@@ -263,7 +257,6 @@ mod tests {
 
     #[test]
     fn test_handler_is_send_sync() {
-        // Verify that Handler trait objects are Send + Sync
         fn assert_send_sync<T: Send + Sync>() {}
         assert_send_sync::<Arc<dyn Handler>>();
     }

@@ -154,7 +154,7 @@ tasks:
   python:lint:
     desc: "Run Python linters"
     cmds:
-      - uv run ruff check .
+      - uv run ruff check --fix .
       - uv run mypy benchmarks tools packages/python
 
   python:format:
@@ -553,9 +553,6 @@ tasks:
       - find crates -type d -name "dist" -exec rm -rf {} + 2>/dev/null || true
       - find crates -type d -name "node_modules" -exec rm -rf {} + 2>/dev/null || true
 
-  # ============================================================================
-  # Benchmark Generation & Execution
-  # ============================================================================
 
   bench:generator:build:
     desc: "Build the app-generator tool"
@@ -748,9 +745,6 @@ tasks:
       - task: bench:run:all
       - echo "Benchmark results in tools/benchmark-harness/results/"
 
-  # ============================================================================
-  # OpenAPI Code Generation
-  # ============================================================================
 
   codegen:python:
     desc: "Generate Python server code from OpenAPI schema"

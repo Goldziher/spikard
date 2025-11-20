@@ -63,7 +63,6 @@ class AsyncGeneratorWrapper(Iterator[T]):
         if self._exhausted:
             raise StopIteration
 
-        # Initialize loop and iterator on first call
         if self._iterator is None:
             self._init_async_iterator()
 
@@ -80,14 +79,11 @@ class AsyncGeneratorWrapper(Iterator[T]):
         creates a new event loop and sets it as the current one.
         """
         try:
-            # Try to get the running event loop
             self._loop = asyncio.get_running_loop()
         except RuntimeError:
-            # No running loop, create a new one
             self._loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self._loop)
 
-        # Create the async iterator
         self._iterator = self.async_gen.__aiter__()
 
     def _get_next_value(self) -> T:
@@ -110,11 +106,8 @@ class AsyncGeneratorWrapper(Iterator[T]):
             return await self._iterator.__anext__()
 
         try:
-            # Run the coroutine to get the next value
             return self._loop.run_until_complete(get_next())
         except StopAsyncIteration as e:
-            # Convert StopAsyncIteration to StopIteration for sync protocol
             raise StopIteration from e
         except (RuntimeError, OSError) as e:
-            # Common errors during iteration
             raise StopIteration from e

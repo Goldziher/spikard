@@ -20,11 +20,9 @@ pub fn load_config(path: &Path) -> Result<Config> {
 
     let content = fs::read_to_string(path)?;
 
-    // Determine file type by extension
     let config = if path.extension().and_then(|s| s.to_str()) == Some("json") {
         serde_json::from_str(&content)?
     } else {
-        // Default to YAML
         serde_yaml::from_str(&content)?
     };
 

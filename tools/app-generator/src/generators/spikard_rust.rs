@@ -9,10 +9,8 @@ use std::collections::HashMap;
 pub fn generate(analysis: &RouteAnalysis) -> Result<String> {
     let mut output = String::new();
 
-    // Generate imports
     output.push_str(&generate_imports());
 
-    // Generate handler structs
     let mut handler_names = HashMap::new();
     let mut handlers_code = String::new();
 
@@ -23,7 +21,6 @@ pub fn generate(analysis: &RouteAnalysis) -> Result<String> {
 
     output.push_str(&handlers_code);
 
-    // Generate main function
     output.push_str(&generate_main(analysis, &handler_names)?);
 
     Ok(output)
@@ -58,7 +55,6 @@ use std::pin::Pin;
 fn generate_handler_struct(route: &RouteInfo, handler_names: &mut HashMap<String, String>) -> (String, String) {
     let base_name = generate_base_handler_name(route);
 
-    // Handle collisions by adding a numeric suffix (no underscore for proper PascalCase)
     let mut struct_name = base_name.clone();
     let mut counter = 2;
     while handler_names.contains_key(&struct_name) {
@@ -73,17 +69,14 @@ fn generate_handler_struct(route: &RouteInfo, handler_names: &mut HashMap<String
 
     let mut code = String::new();
 
-    // Generate handler struct
     code.push_str("#[allow(dead_code)]\n");
     code.push_str(&format!("struct {} {{}}\n\n", struct_name));
 
-    // Implement Handler trait
     code.push_str(&format!("impl Handler for {} {{\n", struct_name));
     code.push_str("    fn call(\n");
     code.push_str("        &self,\n");
     code.push_str("        _request: Request<Body>,\n");
 
-    // Only use request_data if we have params, otherwise prefix with underscore
     if has_path || has_query {
         code.push_str("        request_data: RequestData,\n");
     } else {
@@ -93,14 +86,12 @@ fn generate_handler_struct(route: &RouteInfo, handler_names: &mut HashMap<String
     code.push_str("    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {\n");
     code.push_str("        Box::pin(async move {\n");
 
-    // Only make response mutable if we need to modify it
     if has_path || has_query {
         code.push_str("            let mut response = json!({});\n\n");
     } else {
         code.push_str("            let response = json!({});\n\n");
     }
 
-    // Add path parameters to response
     if has_path {
         for (name, _) in &route.params.path {
             code.push_str(&format!(
@@ -113,7 +104,6 @@ fn generate_handler_struct(route: &RouteInfo, handler_names: &mut HashMap<String
         code.push_str("\n");
     }
 
-    // Add query parameters to response
     if has_query {
         for (name, _) in &route.params.query {
             code.push_str(&format!(
@@ -160,7 +150,6 @@ fn generate_base_handler_name(route: &RouteInfo) -> String {
         format!("{}_{}", method, path)
     };
 
-    // Convert to PascalCase (capitalize first letter of each word)
     name.split('_')
         .filter(|s| !s.is_empty())
         .map(|word| {
@@ -174,8 +163,6 @@ fn generate_base_handler_name(route: &RouteInfo) -> String {
 }
 
 fn normalize_path_pattern(path: &str) -> String {
-    // Replace all path parameters with a generic {param} to detect pattern conflicts
-    // e.g., /{id}, /{lang}, /{user_id} all become /{param}
     let mut normalized = String::new();
     let mut in_param = false;
 
@@ -201,7 +188,6 @@ fn generate_main(analysis: &RouteAnalysis, handler_names: &HashMap<String, Strin
     for route in &analysis.routes {
         let base_name = generate_base_handler_name(route);
 
-        // Find the actual struct name (might have a suffix)
         let struct_name = handler_names
             .iter()
             .find(|(k, v)| v == &&route.route && k.starts_with(&base_name))
@@ -210,14 +196,11 @@ fn generate_main(analysis: &RouteAnalysis, handler_names: &HashMap<String, Strin
 
         let method = route.method.to_uppercase();
 
-        // Convert spikard route format to path (remove query params)
         let path = route.route.split('?').next().unwrap_or(&route.route);
 
-        // Normalize path to detect pattern conflicts (/{id} and /{lang} are the same pattern)
         let normalized_path = normalize_path_pattern(path);
         let route_key = format!("{} {}", method, normalized_path);
 
-        // Skip if we've already registered this pattern
         if registered_routes.contains(&route_key) {
             continue;
         }

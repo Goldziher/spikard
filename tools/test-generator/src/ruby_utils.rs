@@ -12,7 +12,6 @@ pub fn sanitize_identifier(input: &str) -> String {
             result.push('_');
         }
     }
-    // Collapse consecutive underscores.
     let mut collapsed = String::with_capacity(result.len());
     let mut prev_underscore = false;
     for ch in result.chars() {
@@ -26,7 +25,6 @@ pub fn sanitize_identifier(input: &str) -> String {
             prev_underscore = false;
         }
     }
-    // Remove leading/trailing underscores.
     let trimmed = collapsed.trim_matches('_').to_string();
     if trimmed.is_empty() {
         "fixture".to_string()
@@ -67,7 +65,6 @@ pub fn value_to_ruby(value: &Value) -> String {
             format!("[{}]", inner.join(", "))
         }
         Value::Object(map) => {
-            // Sort keys for stable output.
             let mut sorted: BTreeMap<&String, &Value> = BTreeMap::new();
             for (k, v) in map.iter() {
                 sorted.insert(k, v);

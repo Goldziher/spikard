@@ -52,7 +52,6 @@ def get_instantiable_origin(origin: Any, _annotation: Any) -> Any:
     if origin is None:
         return None
 
-    # Map abstract types to concrete implementations
     if origin is Sequence or (hasattr(origin, "__origin__") and origin.__origin__ is Sequence):
         return list
     if origin is Mapping or (hasattr(origin, "__origin__") and origin.__origin__ is Mapping):
@@ -75,7 +74,6 @@ def get_safe_generic_origin(origin: Any, _annotation: Any) -> Any:
     Returns:
         A safe generic origin
     """
-    # For most cases, just return the origin
     return origin
 
 
@@ -106,7 +104,6 @@ def is_non_string_sequence(annotation: Any) -> bool:
     """
     origin = get_origin(annotation) or annotation
 
-    # Check for list, tuple, set, frozenset, Sequence, etc.
     try:
         return is_class_and_subclass(origin, (list, tuple, set, frozenset, Sequence)) and not is_class_and_subclass(
             origin, (str, bytes)

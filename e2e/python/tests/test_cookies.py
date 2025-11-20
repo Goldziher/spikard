@@ -70,7 +70,6 @@ async def test_cookie_regex_pattern_validation_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -166,7 +165,6 @@ async def test_cookie_validation_min_length_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -181,7 +179,6 @@ async def test_cookie_validation_max_length_constraint_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -196,7 +193,6 @@ async def test_required_cookie_missing() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -220,7 +216,6 @@ async def test_apikey_cookie_authentication_missing() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 

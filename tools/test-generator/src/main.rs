@@ -110,18 +110,13 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
 
     match lang {
         "rust" => {
-            // Generate test app first
             rust_app::generate_rust_app(&fixtures, &output)?;
-            // Then generate tests
             rust_tests::generate_rust_tests(&fixtures, &output)?;
         }
         "python" => {
-            // Generate test app first
             python_app::generate_python_app(&fixtures, &output)?;
-            // Then generate tests
             python_tests::generate_python_tests(&fixtures, &output)?;
 
-            // Format generated Python code with ruff
             println!("Running ruff fix on generated Python code...");
             let ruff_fix_status = std::process::Command::new("uv")
                 .args(["run", "ruff", "check", "--fix", "--unsafe-fixes"])
@@ -152,15 +147,9 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
         }
         "typescript" => {
             println!("TODO: Generate TypeScript/Vitest test suite");
-            // Will generate:
-            // - e2e/typescript/tests/query_params.test.ts
-            // - e2e/typescript/tests/path_params.test.ts
-            // - etc.
         }
         "node" => {
-            // Generate test app first
             node_app::generate_node_app(&fixtures, &output, &ts_target::NODE_TARGET)?;
-            // Then generate tests
             node_tests::generate_node_tests(&fixtures, &output, &ts_target::NODE_TARGET)?;
         }
         "wasm" => {

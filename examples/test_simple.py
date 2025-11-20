@@ -9,7 +9,6 @@ sys.path.insert(0, "/Users/naamanhirschfeld/workspace/spikard/packages/python")
 from spikard import Spikard
 from spikard.testing import TestClient
 
-# Create a simple app for testing
 app = Spikard()
 
 
@@ -41,20 +40,17 @@ async def main() -> None:
     """Run all tests."""
     client = TestClient(app)
 
-    # Test 1: Root endpoint
     response = await client.get("/")
     assert response.status_code == 200
     data = response.json()
     assert data == {"message": "Hello, World!"}
 
-    # Test 2: Path parameters
     response = await client.get("/users/42")
     assert response.status_code == 200
     data = response.json()
     assert data["user_id"] == 42
     assert data["name"] == "User 42"
 
-    # Test 3: Query parameters
     response = await client.get("/search", query_params={"query": "rust", "limit": "3"})
     assert response.status_code == 200
     data = response.json()
@@ -62,14 +58,12 @@ async def main() -> None:
     assert data["limit"] == 3
     assert len(data["results"]) == 3
 
-    # Test 4: POST with JSON
     response = await client.post("/users", json={"name": "Alice", "email": "alice@example.com"})
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == "Alice"
     assert data["email"] == "alice@example.com"
 
-    # Test 5: Response methods
     response = await client.get("/")
     text = response.text()
     assert "Hello, World!" in text

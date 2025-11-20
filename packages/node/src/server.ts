@@ -9,16 +9,13 @@ interface NativeServerBinding {
 	runServer(app: SpikardApp, config: ServerConfig | ServerOptions): void;
 }
 
-// This will be the native binding once built
 let nativeBinding: NativeServerBinding;
 
 const loadBinding = (): NativeServerBinding => {
 	try {
-		// Try to load the native module from the package root
 		return require("../spikard-node.darwin-arm64.node") as NativeServerBinding;
 	} catch {
 		try {
-			// Fallback to platform-agnostic name
 			return require("../spikard-node.node") as NativeServerBinding;
 		} catch {
 			console.warn("[spikard-node] Native binding not found. Please run: pnpm build:native");
@@ -72,8 +69,5 @@ export interface ServerOptions {
  * ```
  */
 export function runServer(app: SpikardApp, config: ServerConfig | ServerOptions = {}): void {
-	// The Rust binding (crates/spikard-node/src/lib.rs) already handles
-	// full ServerConfig extraction. We just pass the config object through.
-	// Backwards compatibility: if only host/port provided, Rust will use defaults.
 	nativeBinding.runServer(app, config);
 }

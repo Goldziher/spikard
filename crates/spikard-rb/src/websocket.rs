@@ -43,18 +43,15 @@ impl RubyWebSocketHandler {
             return Ok(JsonValue::Null);
         }
 
-        // Get JSON module
         let json_module: Value = ruby
             .class_object()
             .const_get("JSON")
             .map_err(|e| format!("JSON module not available: {}", e))?;
 
-        // Convert Ruby value to JSON string via JSON.generate
         let json_str: String = json_module
             .funcall("generate", (value,))
             .map_err(|e| format!("Failed to generate JSON: {}", e))?;
 
-        // Parse JSON string to JsonValue
         serde_json::from_str(&json_str).map_err(|e| format!("Failed to parse JSON: {}", e))
     }
 
@@ -106,16 +103,13 @@ impl WebSocketHandler for RubyWebSocketHandler {
         match magnus::Ruby::get()
             .map_err(|e| format!("Failed to get Ruby: {}", e))
             .and_then(|ruby| {
-                // Convert message to Ruby value
                 let message_ruby = Self::json_to_ruby(&ruby, &message)?;
 
-                // Call the Ruby function
                 let proc_value = ruby.get_inner(self.handle_message_proc);
                 let result: Value = proc_value
                     .funcall("call", (message_ruby,))
                     .map_err(|e| format!("Handler '{}' call failed: {}", self.name, e))?;
 
-                // Convert result back to JSON (return nil for None)
                 if result.is_nil() {
                     Ok(None)
                 } else {
@@ -173,7 +167,6 @@ impl WebSocketHandler for RubyWebSocketHandler {
     }
 }
 
-// SAFETY: Ruby's GVL ensures thread safety for Ruby objects
 unsafe impl Send for RubyWebSocketHandler {}
 unsafe impl Sync for RubyWebSocketHandler {}
 
@@ -185,7 +178,6 @@ pub fn create_websocket_state(
     ruby: &magnus::Ruby,
     handler_obj: Value,
 ) -> Result<spikard_http::WebSocketState<RubyWebSocketHandler>, magnus::Error> {
-    // Extract the handle_message method
     let handle_message_proc: Value = handler_obj
         .funcall("method", (ruby.to_symbol("handle_message"),))
         .map_err(|e| {
@@ -195,17 +187,14 @@ pub fn create_websocket_state(
             )
         })?;
 
-    // Extract optional on_connect method
     let on_connect_proc = handler_obj
         .funcall::<_, _, Value>("method", (ruby.to_symbol("on_connect"),))
         .ok();
 
-    // Extract optional on_disconnect method
     let on_disconnect_proc = handler_obj
         .funcall::<_, _, Value>("method", (ruby.to_symbol("on_disconnect"),))
         .ok();
 
-    // Extract schemas if available
     let message_schema = handler_obj
         .funcall::<_, _, Value>("instance_variable_get", (ruby.to_symbol("@_message_schema"),))
         .ok()
@@ -228,7 +217,6 @@ pub fn create_websocket_state(
             }
         });
 
-    // Create Ruby WebSocket handler
     let ruby_handler = RubyWebSocketHandler::new(
         "WebSocketHandler".to_string(),
         handle_message_proc,
@@ -236,7 +224,6 @@ pub fn create_websocket_state(
         on_disconnect_proc,
     );
 
-    // Create and return WebSocket state with schemas
     if message_schema.is_some() || response_schema.is_some() {
         spikard_http::WebSocketState::with_schemas(ruby_handler, message_schema, response_schema)
             .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e))

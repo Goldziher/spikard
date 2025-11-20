@@ -34,7 +34,6 @@ __all__ = [
 ]
 
 
-# Global port allocator to prevent race conditions
 class PortAllocator:
     """Thread-safe port allocator to prevent port conflicts during concurrent testing."""
 
@@ -45,8 +44,7 @@ class PortAllocator:
     def allocate(self) -> int:
         """Allocate an available port."""
         with self._lock:
-            # Try to find an available port that's not already allocated
-            for _ in range(100):  # Max 100 attempts
+            for _ in range(100):
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                     s.bind(("127.0.0.1", 0))
@@ -62,7 +60,6 @@ class PortAllocator:
             self._allocated_ports.discard(port)
 
 
-# Global instance
 _port_allocator = PortAllocator()
 
 
@@ -143,17 +140,14 @@ class TestClient:
 
     async def _start_server(self) -> None:
         """Start the Spikard server in a subprocess."""
-        # Allocate an available port if not specified
         if self._requested_port == 0:
             self._port = _port_allocator.allocate()
         else:
             self._port = self._requested_port
 
-        # Serialize the app using cloudpickle
         app_bytes = cloudpickle.dumps(self._app)
         app_b64 = base64.b64encode(app_bytes).decode("ascii")
 
-        # Create a temporary Python script to run the server
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             self._server_script = Path(f.name)
             f.write(
@@ -171,26 +165,18 @@ app.run(host="127.0.0.1", port={self._port})
 """
             )
 
-        # Start the server process
         env = os.environ.copy()
-        # Ensure PYTHONPATH includes the current directory so cloudpickle can unpickle handlers
         cwd = str(Path.cwd())
         if "PYTHONPATH" in env:
-            # Append current directory to existing PYTHONPATH
             env["PYTHONPATH"] = f"{cwd}{os.pathsep}{env['PYTHONPATH']}"
         else:
-            # Set PYTHONPATH to current directory
             env["PYTHONPATH"] = cwd
-        # Use process group for better cleanup (Unix only)
-        # Note: subprocess.Popen is unavoidable for starting external processes
         # ruff: noqa: ASYNC220
         kwargs: dict[str, Any] = {
             "stdout": subprocess.PIPE,
             "stderr": subprocess.PIPE,
         }
         if hasattr(os, "setsid"):
-            # Unix: use process group for clean shutdown
-            # preexec_fn is safe here as we don't use threads before fork
             kwargs["preexec_fn"] = os.setsid
         self._process = subprocess.Popen(
             [sys.executable, str(self._server_script)],
@@ -198,20 +184,16 @@ app.run(host="127.0.0.1", port={self._port})
             **kwargs,
         )
 
-        # Wait for server to be ready
         await self._wait_for_server_ready()
 
-        # Create HTTP client
         self._http_client = httpx.AsyncClient(base_url=self.base_url, timeout=30.0)
 
     async def _stop_server(self) -> None:
         """Stop the server and clean up."""
-        # Close HTTP client
         if self._http_client is not None:
             await self._http_client.aclose()
             self._http_client = None
 
-        # Kill the server process
         if self._process is not None:
             try:
                 if hasattr(os, "killpg"):
@@ -219,11 +201,9 @@ app.run(host="127.0.0.1", port={self._port})
                 else:
                     self._process.terminate()
 
-                # Wait for graceful shutdown
                 try:
                     self._process.wait(timeout=5)
                 except subprocess.TimeoutExpired:
-                    # Force kill if graceful shutdown fails
                     if hasattr(os, "killpg"):
                         os.killpg(os.getpgid(self._process.pid), signal.SIGKILL)
                     else:
@@ -233,11 +213,9 @@ app.run(host="127.0.0.1", port={self._port})
             finally:
                 self._process = None
 
-        # Release the allocated port
         if self._port is not None and self._requested_port == 0:
             _port_allocator.release(self._port)
 
-        # Clean up temporary script
         if self._server_script is not None and self._server_script.exists():
             self._server_script.unlink()
             self._server_script = None
@@ -251,23 +229,19 @@ app.run(host="127.0.0.1", port={self._port})
 
         while time.time() - start_time < timeout:
             try:
-                # Try to connect
                 sock = socket.create_connection(("127.0.0.1", self._port), timeout=1)
                 sock.close()
-                # Server is ready, give it a moment to fully initialize
                 await asyncio.sleep(0.5)
                 return
             except (ConnectionRefusedError, OSError):
                 await asyncio.sleep(0.1)
 
-            # Check if process died
             if self._process is not None and self._process.poll() is not None:
                 stdout, stderr = self._process.communicate()
                 raise RuntimeError(
                     f"Server process died during startup:\nSTDOUT: {stdout.decode()}\nSTDERR: {stderr.decode()}"
                 )
 
-        # Timeout - kill the process
         if self._process is not None:
             try:
                 if hasattr(os, "killpg"):

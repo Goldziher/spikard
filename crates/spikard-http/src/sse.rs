@@ -152,10 +152,8 @@ impl<P: SseEventProducer + 'static> SseState<P> {
 pub async fn sse_handler<P: SseEventProducer + 'static>(State(state): State<SseState<P>>) -> impl IntoResponse {
     info!("SSE client connected");
 
-    // Notify producer of connection
     state.producer.on_connect().await;
 
-    // Create event stream
     let producer = Arc::clone(&state.producer);
     let event_schema = state.event_schema.clone();
     let stream = stream::unfold((producer, event_schema), |(producer, event_schema)| async move {
@@ -163,12 +161,10 @@ pub async fn sse_handler<P: SseEventProducer + 'static>(State(state): State<SseS
             Some(sse_event) => {
                 debug!("Sending SSE event: {:?}", sse_event.event_type);
 
-                // Validate event data if schema is provided
                 if let Some(validator) = &event_schema
                     && !validator.is_valid(&sse_event.data)
                 {
                     error!("SSE event validation failed");
-                    // Skip this event and continue to the next one
                     return Some((
                         Ok::<_, Infallible>(Event::default().data("validation_error")),
                         (producer, event_schema),
@@ -190,11 +186,9 @@ pub async fn sse_handler<P: SseEventProducer + 'static>(State(state): State<SseS
         }
     });
 
-    // Convert to SSE response with keep-alive
     let sse_response =
         Sse::new(stream).keep_alive(KeepAlive::new().interval(Duration::from_secs(15)).text("keep-alive"));
 
-    // Return the SSE response
     sse_response.into_response()
 }
 
@@ -241,7 +235,6 @@ mod tests {
         };
         let state = SseState::new(producer);
         let cloned = state.clone();
-        // Verify state can be cloned
         assert!(Arc::ptr_eq(&state.producer, &cloned.producer));
     }
 }

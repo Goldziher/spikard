@@ -24,18 +24,15 @@ lazy_static! {
 /// - Replacing '+' during decoding rather than as a separate pass
 #[inline]
 fn url_decode_optimized(input: &[u8]) -> Cow<'_, str> {
-    // Fast path: check if we need any decoding at all
     let has_encoded = input.iter().any(|&b| b == b'+' || b == b'%');
 
     if !has_encoded {
-        // No encoding - zero-copy conversion
         return match std::str::from_utf8(input) {
             Ok(s) => Cow::Borrowed(s),
             Err(_) => Cow::Owned(String::from_utf8_lossy(input).into_owned()),
         };
     }
 
-    // Need decoding - process in-place style
     let mut result = Vec::with_capacity(input.len());
     let mut i = 0;
 
@@ -46,7 +43,6 @@ fn url_decode_optimized(input: &[u8]) -> Cow<'_, str> {
                 i += 1;
             }
             b'%' if i + 2 < input.len() => {
-                // Try to decode percent-encoded byte
                 if let (Some(hi), Some(lo)) = (
                     char::from(input[i + 1]).to_digit(16),
                     char::from(input[i + 2]).to_digit(16),
@@ -54,7 +50,6 @@ fn url_decode_optimized(input: &[u8]) -> Cow<'_, str> {
                     result.push((hi * 16 + lo) as u8);
                     i += 3;
                 } else {
-                    // Invalid percent-encoding, keep as-is
                     result.push(input[i]);
                     i += 1;
                 }
@@ -95,24 +90,21 @@ pub fn parse_query_string(qs: &[u8], separator: char) -> Vec<(String, String)> {
     }
 
     let separator_byte = separator as u8;
-    let mut result = Vec::with_capacity(8); // Pre-allocate for common case
+    let mut result = Vec::with_capacity(8); 
 
     let mut start = 0;
     let mut i = 0;
 
     while i <= qs.len() {
         if i == qs.len() || qs[i] == separator_byte {
-            // Process the pair from start..i
             if i > start {
                 let pair = &qs[start..i];
 
-                // Find '=' separator
                 if let Some(eq_pos) = pair.iter().position(|&b| b == b'=') {
                     let key = url_decode_optimized(&pair[..eq_pos]);
                     let value = url_decode_optimized(&pair[eq_pos + 1..]);
                     result.push((key.into_owned(), value.into_owned()));
                 } else {
-                    // No '=' found, treat whole thing as key with empty value
                     let key = url_decode_optimized(pair);
                     result.push((key.into_owned(), String::new()));
                 }
@@ -137,7 +129,6 @@ pub fn parse_query_string(qs: &[u8], separator: char) -> Vec<(String, String)> {
 /// - Strings (fallback)
 #[inline]
 fn decode_value(json_str: String, parse_numbers: bool) -> Value {
-    // Try to parse as JSON if it looks like an object or array
     if PARENTHESES_RE.is_match(json_str.as_str()) {
         let result: Value = match from_str(json_str.as_str()) {
             Ok(value) => value,
@@ -151,7 +142,6 @@ fn decode_value(json_str: String, parse_numbers: bool) -> Value {
 
     let normalized = json_str.replace('"', "");
 
-    // Parse boolean with support for 1/0 and case-insensitive true/false
     let json_boolean = parse_boolean(&normalized);
     let json_null = Ok::<_, Infallible>(normalized == "null");
 
@@ -190,7 +180,7 @@ fn parse_boolean(s: &str) -> Result<bool, ()> {
     } else if lower == "false" || s == "0" {
         Ok(false)
     } else {
-        Err(()) // Don't coerce empty strings - let validation handle it
+        Err(()) 
     }
 }
 
@@ -289,7 +279,6 @@ mod tests {
 
     #[test]
     fn parse_query_string_to_json_parses_booleans_from_numbers() {
-        // When parse_numbers is false, 1 and 0 should be parsed as booleans
         assert_eq!(parse_query_string_to_json(b"a=1", false), json!({"a": true}));
         assert_eq!(parse_query_string_to_json(b"a=0", false), json!({"a": false}));
     }
@@ -317,14 +306,11 @@ mod tests {
 
     #[test]
     fn parse_query_string_to_json_parses_empty_string() {
-        // Empty strings are preserved as empty strings
-        // They will be coerced to boolean false later in parameters.rs if the schema type is boolean
         assert_eq!(parse_query_string_to_json(b"a=", true), json!({ "a": "" }));
     }
 
     #[test]
     fn parse_query_string_to_json_parses_empty_string_without_number_parsing() {
-        // When parse_numbers=false, empty strings are preserved as strings
         assert_eq!(parse_query_string_to_json(b"a=", false), json!({ "a": "" }));
     }
 
@@ -346,13 +332,11 @@ mod tests {
 
     #[test]
     fn parse_query_string_to_json_preserves_order_and_duplicates() {
-        // Test that order is preserved
         assert_eq!(
             parse_query_string_to_json(b"q=foo&q=bar&q=baz", true),
             json!({ "q": ["foo", "bar", "baz"] })
         );
 
-        // Test that duplicates are preserved (not deduplicated)
         assert_eq!(
             parse_query_string_to_json(b"q=foo&q=foo&q=bar", true),
             json!({ "q": ["foo", "foo", "bar"] })
@@ -361,7 +345,6 @@ mod tests {
 
     #[test]
     fn test_url_encoded_special_chars_in_values() {
-        // Test case 18: email=x%40test.com&special=%26%40A.ac
         let result = parse_query_string_to_json(b"email=x%40test.com&special=%26%40A.ac", false);
         assert_eq!(
             result,
@@ -374,14 +357,12 @@ mod tests {
 
     #[test]
     fn test_url_encoded_space() {
-        // Test case 34: name=hello%20world
         let result = parse_query_string_to_json(b"name=hello%20world", false);
         assert_eq!(result, json!({ "name": "hello world" }));
     }
 
     #[test]
     fn test_url_encoded_complex_chars() {
-        // Test case 35: name=test%26value%3D123
         let result = parse_query_string_to_json(b"name=test%26value%3D123", false);
         assert_eq!(result, json!({ "name": "test&value=123" }));
     }

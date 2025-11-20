@@ -63,7 +63,6 @@ fn load_asyncapi_fixtures(dir: PathBuf, expected_protocol: &str) -> Result<Vec<A
         let mut fixture: AsyncFixture =
             serde_json::from_str(&content).with_context(|| format!("Failed to parse {}", path.display()))?;
 
-        // Skip fixtures that don't match the expected protocol
         if let Some(protocol) = fixture.protocol.as_deref() {
             if protocol != expected_protocol {
                 continue;

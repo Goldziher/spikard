@@ -8,19 +8,15 @@ use anyhow::Result;
 pub fn generate(analysis: &RouteAnalysis) -> Result<String> {
     let mut output = String::new();
 
-    // Generate header
     output.push_str(&generate_header());
 
-    // Create app
     output.push_str("app = Spikard::App.new\n\n");
 
-    // Generate handler functions
     for route in &analysis.routes {
         output.push_str(&generate_handler(route));
         output.push_str("\n\n");
     }
 
-    // Generate main
     output.push_str(&generate_main());
 
     Ok(output)
@@ -70,7 +66,6 @@ end"#,
 fn generate_parameters(route: &RouteInfo) -> String {
     let mut params = Vec::new();
 
-    // Check what we need
     let has_path = !route.params.path.is_empty();
     let has_query = !route.params.query.is_empty();
     let has_body = route.params.body.is_some();
@@ -95,17 +90,14 @@ fn generate_parameters(route: &RouteInfo) -> String {
 fn generate_handler_body(route: &RouteInfo) -> String {
     let mut lines = Vec::new();
 
-    // Add path params to response
     for (name, _) in &route.params.path {
         lines.push(format!("response[:{}] = params[:{}]", name, name));
     }
 
-    // Add query params to response
     for (name, _) in &route.params.query {
         lines.push(format!("response[:{}] = query[:{}] if query[:{}]", name, name, name));
     }
 
-    // Return body if present
     if route.params.body.is_some() {
         lines.push("response.merge!(body) if body".to_string());
     }

@@ -36,10 +36,10 @@ fn test_latency_metrics_from_oha_output() {
     let oha_output = OhaOutput {
         summary: OhaSummary {
             success_rate: Some(1.0),
-            total: Some(10.0),    // seconds
-            slowest: Some(0.5),   // 500ms
-            fastest: Some(0.001), // 1ms
-            average: Some(0.05),  // 50ms
+            total: Some(10.0),    
+            slowest: Some(0.5),   
+            fastest: Some(0.001), 
+            average: Some(0.05),  
             requests_per_sec: Some(100.0),
             total_data: Some(10000.0),
             size_per_request: Some(100.0),
@@ -99,7 +99,6 @@ fn test_latency_metrics_from_oha_output_with_none_values() {
 
     let latency = LatencyMetrics::from(oha_output);
 
-    // All should be 0.0 when None
     assert_eq!(latency.mean_ms, 0.0);
     assert_eq!(latency.p50_ms, 0.0);
     assert_eq!(latency.p90_ms, 0.0);
@@ -191,11 +190,9 @@ fn test_benchmark_result_serialization_full() {
         error: None,
     };
 
-    // Test serialization
     let json = serde_json::to_string(&result).unwrap();
     assert!(!json.is_empty());
 
-    // Test deserialization
     let deserialized: BenchmarkResult = serde_json::from_str(&json).unwrap();
     assert_eq!(deserialized.framework, result.framework);
     assert_eq!(deserialized.workload, result.workload);
@@ -249,11 +246,9 @@ fn test_benchmark_result_serialization_minimal() {
         error: Some("Test error".to_string()),
     };
 
-    // Test serialization
     let json = serde_json::to_string(&result).unwrap();
     assert!(!json.is_empty());
 
-    // Test deserialization
     let deserialized: BenchmarkResult = serde_json::from_str(&json).unwrap();
     assert_eq!(deserialized.framework, result.framework);
     assert!(!deserialized.success);

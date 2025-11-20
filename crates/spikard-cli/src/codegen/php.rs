@@ -21,16 +21,12 @@ impl PhpGenerator {
             PhpDtoStyle::ReadonlyClass => {}
         }
 
-        // Generate file header
         output.push_str(&self.generate_header());
 
-        // Generate schema models
         output.push_str(&self.generate_models()?);
 
-        // Generate controller classes with routes
         output.push_str(&self.generate_controllers()?);
 
-        // Generate bootstrap code
         output.push_str(&self.generate_main());
 
         Ok(output)
@@ -67,7 +63,6 @@ namespace SpikardGenerated;
                         output.push('\n');
                     }
                     ReferenceOr::Reference { .. } => {
-                        // Skip references - they'll be resolved when used
                         continue;
                     }
                 }
@@ -81,7 +76,6 @@ namespace SpikardGenerated;
         let class_name = name.to_pascal_case();
         let mut output = String::new();
 
-        // Generate PHPDoc comment
         output.push_str("/**\n");
         if let Some(description) = &schema.schema_data.description {
             output.push_str(&format!(" * {}\n", description));
@@ -90,16 +84,13 @@ namespace SpikardGenerated;
         }
         output.push_str(" */\n");
 
-        // Start class definition with readonly keyword for immutability
         output.push_str(&format!("readonly class {}\n{{\n", class_name));
 
         match &schema.schema_kind {
             SchemaKind::Type(Type::Object(obj)) => {
                 if obj.properties.is_empty() {
-                    // Empty class - just add a comment
                     output.push_str("    // Empty schema\n");
                 } else {
-                    // Generate constructor with promoted properties (PHP 8.0+ feature)
                     output.push_str("    public function __construct(\n");
 
                     let mut property_lines = Vec::new();
@@ -121,10 +112,8 @@ namespace SpikardGenerated;
                             }
                         };
 
-                        // Generate PHPDoc for property
                         let mut prop_line = String::new();
 
-                        // Build property declaration
                         if is_required {
                             prop_line.push_str(&format!("        public {} ${},\n", type_hint, field_name));
                         } else if nullable {
@@ -136,7 +125,6 @@ namespace SpikardGenerated;
                         property_lines.push(prop_line);
                     }
 
-                    // Join all properties, removing trailing comma from last one
                     let props_str = property_lines.join("");
                     let props_str = props_str.trim_end_matches(",\n").to_string() + "\n";
                     output.push_str(&props_str);
@@ -182,7 +170,6 @@ namespace SpikardGenerated;
     fn extract_type_from_schema_ref(&self, schema_ref: &ReferenceOr<Schema>) -> String {
         match schema_ref {
             ReferenceOr::Reference { reference } => {
-                // Extract name from #/components/schemas/Pet -> Pet
                 let ref_name = reference.split('/').next_back().unwrap();
                 ref_name.to_pascal_case()
             }
@@ -213,7 +200,6 @@ namespace SpikardGenerated;
     fn extract_response_type(&self, operation: &Operation) -> String {
         use openapiv3::StatusCode;
 
-        // Try to find a successful response (200, 201, 2XX)
         let response = operation
             .responses
             .responses
@@ -237,7 +223,6 @@ namespace SpikardGenerated;
             }
         }
 
-        // Default to array if no schema found
         "array".to_string()
     }
 
@@ -261,7 +246,6 @@ namespace SpikardGenerated;
                     }
                     None => "mixed".to_string(),
                 };
-                // PHP uses array for all arrays, type information is in PHPDoc
                 "array"
             }
             SchemaKind::Type(Type::Object(_)) => "array",
@@ -309,8 +293,6 @@ namespace SpikardGenerated;
         let mut output = String::new();
         output.push_str("\n// Controller Classes\n\n");
 
-        // Group routes by a common prefix or create a single controller
-        // For simplicity, we'll create one controller per top-level resource
         let mut controllers: std::collections::HashMap<String, Vec<(String, String, Operation)>> =
             std::collections::HashMap::new();
 
@@ -320,10 +302,8 @@ namespace SpikardGenerated;
                 ReferenceOr::Reference { .. } => continue,
             };
 
-            // Extract controller name from path (e.g., /pets -> PetController)
             let controller_name = self.extract_controller_name(path);
 
-            // Generate route for each HTTP method
             if let Some(op) = &path_item.get {
                 controllers.entry(controller_name.clone()).or_default().push((
                     path.clone(),
@@ -361,7 +341,6 @@ namespace SpikardGenerated;
             }
         }
 
-        // Generate each controller class
         for (controller_name, routes) in controllers {
             output.push_str(&self.generate_controller_class(&controller_name, &routes)?);
             output.push('\n');
@@ -371,10 +350,6 @@ namespace SpikardGenerated;
     }
 
     fn extract_controller_name(&self, path: &str) -> String {
-        // Extract first path segment as controller name
-        // /pets -> PetController
-        // /pets/{id} -> PetController
-        // /api/v1/users -> UserController
         let segments: Vec<&str> = path
             .split('/')
             .filter(|s| !s.is_empty() && !s.starts_with('{'))
@@ -394,7 +369,6 @@ namespace SpikardGenerated;
     ) -> Result<String> {
         let mut output = String::new();
 
-        // Generate class PHPDoc
         output.push_str("/**\n");
         output.push_str(&format!(
             " * {} - Generated controller for API routes\n",
@@ -404,7 +378,6 @@ namespace SpikardGenerated;
 
         output.push_str(&format!("class {}\n{{\n", controller_name));
 
-        // Generate each route handler method
         for (path, method, operation) in routes {
             output.push_str(&self.generate_route_handler(path, method, operation)?);
         }
@@ -417,7 +390,6 @@ namespace SpikardGenerated;
     fn generate_route_handler(&self, path: &str, method: &str, operation: &Operation) -> Result<String> {
         let mut output = String::new();
 
-        // Generate PHPDoc comment
         output.push_str("    /**\n");
         if let Some(summary) = &operation.summary {
             output.push_str(&format!("     * {}\n", summary));
@@ -427,7 +399,6 @@ namespace SpikardGenerated;
         }
         output.push_str("     * \n");
 
-        // Convert operation_id to method name, or generate one
         let method_name = operation
             .operation_id
             .as_ref()
@@ -440,7 +411,6 @@ namespace SpikardGenerated;
                 ))
             });
 
-        // Parse parameters
         let mut path_params = Vec::new();
         let mut query_params = Vec::new();
 
@@ -449,7 +419,7 @@ namespace SpikardGenerated;
                 match param {
                     Parameter::Path { parameter_data, .. } => {
                         let param_name = Self::to_camel_case(&parameter_data.name);
-                        let param_type = "string".to_string(); // Simplified
+                        let param_type = "string".to_string(); 
                         path_params.push((param_name, param_type));
                         output.push_str(&format!(
                             "     * @param string ${}\n",
@@ -458,7 +428,7 @@ namespace SpikardGenerated;
                     }
                     Parameter::Query { parameter_data, .. } => {
                         let param_name = Self::to_camel_case(&parameter_data.name);
-                        let param_type = "string".to_string(); // Simplified
+                        let param_type = "string".to_string(); 
                         let required = parameter_data.required;
                         query_params.push((param_name.clone(), param_type, required));
                         if required {
@@ -472,35 +442,29 @@ namespace SpikardGenerated;
             }
         }
 
-        // Extract request body type
         let body_type = self.extract_request_body_type(operation);
         if let Some(ref body_type_name) = body_type {
             output.push_str(&format!("     * @param {} $body\n", body_type_name));
         }
 
-        // Extract response type
         let return_type = self.extract_response_type(operation);
         output.push_str(&format!("     * @return {}\n", return_type));
         output.push_str("     */\n");
 
-        // Generate Route attribute
         output.push_str(&format!(
             "    #[Route('{}', methods: ['{}'])]\n",
             path,
             method.to_uppercase()
         ));
 
-        // Generate method signature
         output.push_str(&format!("    public function {}(", method_name));
 
         let mut params = Vec::new();
 
-        // Add path parameters
         for (param_name, param_type) in &path_params {
             params.push(format!("{} ${}", param_type, param_name));
         }
 
-        // Add query parameters
         for (param_name, param_type, required) in &query_params {
             if *required {
                 params.push(format!("{} ${}", param_type, param_name));
@@ -509,7 +473,6 @@ namespace SpikardGenerated;
             }
         }
 
-        // Add body parameter
         if let Some(body_type_name) = &body_type {
             params.push(format!("{} $body", body_type_name));
         }
@@ -517,7 +480,6 @@ namespace SpikardGenerated;
         output.push_str(&params.join(", "));
         output.push_str(&format!("): {}\n    {{\n", return_type));
 
-        // Generate method body
         output.push_str("        // TODO: Implement this endpoint\n");
         output.push_str("        throw new \\RuntimeException('Not implemented');\n");
         output.push_str("    }\n\n");

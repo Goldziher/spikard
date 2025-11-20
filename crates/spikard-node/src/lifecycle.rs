@@ -53,10 +53,8 @@ impl LifecycleHook<Request<Body>, Response<Body>> for NodeLifecycleHook {
         let name = self.name.clone();
 
         Box::pin(async move {
-            // Serialize request to JSON for JavaScript
             let (parts, body) = req.into_parts();
 
-            // Read body (note: this consumes the body)
             let body_bytes = axum::body::to_bytes(body, usize::MAX)
                 .await
                 .map_err(|e| format!("Failed to read request body: {}", e))?;
@@ -80,7 +78,6 @@ impl LifecycleHook<Request<Body>, Response<Body>> for NodeLifecycleHook {
             let json_input =
                 serde_json::to_string(&request_json).map_err(|e| format!("Failed to serialize request: {}", e))?;
 
-            // Call JavaScript hook through ThreadsafeFunction
             let json_output = func
                 .call_async(json_input)
                 .await
@@ -88,13 +85,10 @@ impl LifecycleHook<Request<Body>, Response<Body>> for NodeLifecycleHook {
                 .await
                 .map_err(|e| format!("Hook '{}' promise failed: {}", name, e))?;
 
-            // Parse the response from JavaScript
             let result_data: Value =
                 serde_json::from_str(&json_output).map_err(|e| format!("Failed to parse hook response: {}", e))?;
 
-            // Check if it's a Response (short-circuit) or Request (continue)
             if let Some(status_code) = result_data.get("status_code").or_else(|| result_data.get("statusCode")) {
-                // It's a Response - short-circuit
                 let status = status_code.as_u64().unwrap_or(200) as u16;
                 let content = result_data.get("content").or_else(|| result_data.get("body"));
 
@@ -114,13 +108,10 @@ impl LifecycleHook<Request<Body>, Response<Body>> for NodeLifecycleHook {
                 return Ok(HookResult::ShortCircuit(response));
             }
 
-            // It's a Request - continue processing
-            // Reconstruct the request with possibly modified data
             let mut req_builder = Request::builder()
                 .method(result_data.get("method").and_then(|v| v.as_str()).unwrap_or("GET"))
                 .uri(result_data.get("path").and_then(|v| v.as_str()).unwrap_or("/"));
 
-            // Add headers
             if let Some(headers) = result_data.get("headers").and_then(|v| v.as_object()) {
                 for (key, value) in headers {
                     if let Some(value_str) = value.as_str() {
@@ -129,7 +120,6 @@ impl LifecycleHook<Request<Body>, Response<Body>> for NodeLifecycleHook {
                 }
             }
 
-            // Add body
             let body = if let Some(body_value) = result_data.get("body") {
                 if body_value.is_null() {
                     Body::empty()
@@ -160,10 +150,8 @@ impl LifecycleHook<Request<Body>, Response<Body>> for NodeLifecycleHook {
         let name = self.name.clone();
 
         Box::pin(async move {
-            // Serialize response to JSON for JavaScript
             let (parts, body) = resp.into_parts();
 
-            // Read body
             let body_bytes = axum::body::to_bytes(body, usize::MAX)
                 .await
                 .map_err(|e| format!("Failed to read response body: {}", e))?;
@@ -186,7 +174,6 @@ impl LifecycleHook<Request<Body>, Response<Body>> for NodeLifecycleHook {
             let json_input =
                 serde_json::to_string(&response_json).map_err(|e| format!("Failed to serialize response: {}", e))?;
 
-            // Call JavaScript hook through ThreadsafeFunction
             let json_output = func
                 .call_async(json_input)
                 .await
@@ -194,11 +181,9 @@ impl LifecycleHook<Request<Body>, Response<Body>> for NodeLifecycleHook {
                 .await
                 .map_err(|e| format!("Hook '{}' promise failed: {}", name, e))?;
 
-            // Parse the response from JavaScript
             let result_data: Value =
                 serde_json::from_str(&json_output).map_err(|e| format!("Failed to parse hook response: {}", e))?;
 
-            // Must return a Response
             let status = result_data
                 .get("status_code")
                 .or_else(|| result_data.get("statusCode"))
@@ -216,7 +201,6 @@ impl LifecycleHook<Request<Body>, Response<Body>> for NodeLifecycleHook {
             let mut response_builder =
                 Response::builder().status(StatusCode::from_u16(status).unwrap_or(StatusCode::OK));
 
-            // Add headers
             if let Some(headers) = result_data.get("headers").and_then(|v| v.as_object()) {
                 for (key, value) in headers {
                     if let Some(value_str) = value.as_str() {
@@ -225,7 +209,6 @@ impl LifecycleHook<Request<Body>, Response<Body>> for NodeLifecycleHook {
                 }
             }
 
-            // Default content-type if not set
             response_builder = response_builder.header("content-type", "application/json");
 
             let response = response_builder
@@ -239,6 +222,5 @@ impl LifecycleHook<Request<Body>, Response<Body>> for NodeLifecycleHook {
     }
 }
 
-// SAFETY: ThreadsafeFunction is designed to be Send + Sync
 unsafe impl Send for NodeLifecycleHook {}
 unsafe impl Sync for NodeLifecycleHook {}

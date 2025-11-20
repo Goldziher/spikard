@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Streaming benchmark server backed by AsyncAPI fixtures."""
 
 from __future__ import annotations
