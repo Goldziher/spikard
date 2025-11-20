@@ -1,7 +1,7 @@
 <!--
 🤖 AI-RULEZ :: GENERATED FILE — DO NOT EDIT DIRECTLY
 Project: spikard
-Generated: 2025-11-10 14:00:03
+Generated: 2025-11-20 15:32:22
 Source of truth: ai-rulez.yaml
 Target file: CLAUDE.md
 Content summary: rules=24, sections=5, agents=14
@@ -40,7 +40,7 @@ Version: 1.0.0
 ### Async-Friendly Performance
 **Priority:** medium
 
-Respect the project’s zero-copy serialization choices—keep Rust structs `serde`-ready so bindings reuse them, lean on the `msgspec` adapters documented in `docs/design/msgspec-type-conversion.md`, and wrap heavy work in async-safe boundaries (`tokio::task::spawn_blocking` in Rust, `pyo3::Python::allow_threads` when calling back into Python). Reuse fixture loaders such as `packages/python/tests/fixture_app.py` instead of re-parsing schema files per request.
+Respect the project’s zero-copy serialization choices—keep Rust structs `serde`-ready so bindings reuse them, lean on the adapters documented in `docs/adr/0003-validation-and-fixtures.md`, and wrap heavy work in async-safe boundaries (`tokio::task::spawn_blocking` in Rust, `pyo3::Python::allow_threads` when calling back into Python). Reuse fixture loaders such as `packages/python/tests/fixture_app.py` instead of re-parsing schema files per request.
 
 ### Consistent Tooling
 **Priority:** medium
@@ -60,7 +60,7 @@ Before committing, run task lint to honor the Biome settings in biome.json for J
 ### Optimized Serialization Path
 **Priority:** medium
 
-Follow the conversion patterns captured in `docs/design/msgspec-type-conversion.md` so data exchanged between Rust and Python leverages `msgspec` without extra JSON hops. Share zero-copy buffers where possible, and use `task build:rust` (release mode) when benchmarking or publishing bindings to avoid debug-performance regressions.
+Follow the conversion patterns captured in `docs/adr/0003-validation-and-fixtures.md` so data exchanged between Rust and Python leverages `msgspec` without extra JSON hops. Share zero-copy buffers where possible, and use `task build:rust` (release mode) when benchmarking or publishing bindings to avoid debug-performance regressions.
 
 ### Workspace Separation
 **Priority:** medium
@@ -95,22 +95,22 @@ Implement cross-cutting logic in `crates/spikard/src` and expose it through thin
 ### Lifecycle Hooks Implementation
 **Priority:** high
 
-Lifecycle hooks (onRequest, preValidation, preHandler, onResponse, onError) must follow the zero-cost design in `docs/design/lifecycle-hooks-implementation.md`: use Option<Arc<dyn Fn>> for conditional execution (<1ns when not registered), provide async support via pyo3_async_runtimes for Python and ThreadsafeFunction for TypeScript, and allow hooks to short-circuit with early responses. Implement HookResult enum with Continue/ShortCircuit variants.
+Lifecycle hooks (onRequest, preValidation, preHandler, onResponse, onError) must follow the zero-cost design in `docs/adr/0005-lifecycle-hooks.md`: use Option<Arc<dyn Fn>> for conditional execution (<1ns when not registered), provide async support via pyo3_async_runtimes for Python and ThreadsafeFunction for TypeScript, and allow hooks to short-circuit with early responses. Implement HookResult enum with Continue/ShortCircuit variants.
 
 ### Request Surface Security
 **Priority:** high
 
-Guard every HTTP-facing change with the validation strategy captured in `docs/design/validation-strategy.md`: enforce cookie rules via `testing_data/cookies/*.json`, headers/auth via `testing_data/headers/*.json`, and CORS expectations via `testing_data/cors/*.json`. Strip secrets from logs and ensure new handlers never bypass the existing validator layer before reaching business logic.
+Guard every HTTP-facing change with the validation strategy captured in `docs/adr/0003-validation-and-fixtures.md`: enforce cookie rules via `testing_data/cookies/*.json`, headers/auth via `testing_data/headers/*.json`, and CORS expectations via `testing_data/cors/*.json`. Strip secrets from logs and ensure new handlers never bypass the existing validator layer before reaching business logic.
 
 ### Tower-HTTP Middleware Stack
 **Priority:** high
 
-All standard middleware (compression, rate limiting, timeouts, graceful shutdown, static files, request IDs) is implemented in Rust using tower-http and exposed via typed ServerConfig. Configuration structs (CompressionConfig, RateLimitConfig, StaticFilesConfig, etc.) must be forwarded to Python/TypeScript/Ruby bindings with proper type safety. See `docs/design/middleware-lifecycle-optimization.md` for the complete middleware stack order and configuration options.
+All standard middleware (compression, rate limiting, timeouts, graceful shutdown, static files, request IDs) is implemented in Rust using tower-http and exposed via typed ServerConfig. Configuration structs (CompressionConfig, RateLimitConfig, StaticFilesConfig, etc.) must be forwarded to Python/TypeScript/Ruby bindings with proper type safety. See `docs/adr/0002-runtime-and-middleware.md` for the complete middleware stack order and configuration options.
 
 ### Workspace Organization
 **Priority:** high
 
-Place reusable domain types and logic in crates/spikard/src/ and keep feature-specific glue isolated within sibling crates (spikard-http, spikard-cli, bindings); mirror module changes across Cargo manifests and refresh the relevant docs/design/* notes whenever the layering or routing changes.
+Place reusable domain types and logic in crates/spikard/src/ and keep feature-specific glue isolated within sibling crates (spikard-http, spikard-cli, bindings); mirror module changes across Cargo manifests and refresh the relevant docs/adr/* notes whenever the layering or routing changes.
 
 ### Zero-Copy JSON to Python Conversion
 **Priority:** high
@@ -175,21 +175,23 @@ The `extension-module` feature in `crates/spikard-py/Cargo.toml` must NOT be in 
 - Pytests live in `packages/python/tests/`, using fixture helpers (`packages/python/tests/fixture_app.py`) and sample apps in `examples/`.
 
 ## Reference Docs
-- High-level design: `docs/design/architecture.md`.
-- Validation strategy: `docs/design/validation-strategy.md`.
-- Middleware & lifecycle: `docs/design/middleware-lifecycle-optimization.md` (Phase 1 COMPLETE).
-- Lifecycle hooks implementation: `docs/design/lifecycle-hooks-implementation.md` (Phase 2 PENDING).
-- Routing notes: `docs/design/axum-routing.md`.
+- High-level design: `docs/adr/0001-architecture-and-principles.md`.
+- Validation strategy: `docs/adr/0003-validation-and-fixtures.md`.
+- Middleware & lifecycle: `docs/adr/0002-runtime-and-middleware.md` and `docs/adr/0005-lifecycle-hooks.md`.
+- Streaming & async protocols: `docs/adr/0006-streaming-and-async-protocols.md`.
 
 ### Development Workflow
 **Priority:** medium
 
 ## Task Runner
-- The root `Taskfile.yaml` standardizes workflows; rely on `task build`, `task test`, and `task lint` to match CI in `.github/workflows/ci.yaml`.
+- The root `Taskfile.yaml` standardizes workflows; rely on the named tasks below to mirror CI in `.github/workflows/ci.yaml`.
 ```bash
-task build       # composite build across Rust, Python, Node, WASM
-task lint        # matches repository lint gates
-task test        # mirrors CI matrix
+task setup       # hydrate toolchains + build bindings
+task update      # refresh dependencies + hooks
+task build       # Rust + Python + JS + WASM builds
+task lint        # Rust/Python/JS/Ruby + PHPStan + Prek
+task test        # Rust + Python + JS + Ruby + e2e suites
+task format      # rustfmt + ruff + biome + rubocop
 ```
 
 ## Targeted Builds
@@ -199,13 +201,13 @@ cargo build -p spikard-http
 cargo run -p spikard-cli -- --help
 ```
 - Python examples under `examples/` assume the bindings built from `crates/spikard-py`; run them with the synced uv environment after building the crate.
-- Design docs in `docs/design/` (e.g., `docs/design/architecture.md`, `docs/design/middleware-lifecycle-optimization.md`) capture architectural decisions; update them alongside code changes.
+- Design docs live in `docs/adr/` (e.g., `docs/adr/0001-architecture-and-principles.md`, `docs/adr/0002-runtime-and-middleware.md`) and must stay in sync with code changes.
 
 ### Testing Strategy
 **Priority:** medium
 
 ## End-to-End Runs
-- Execute the full suite with the task runner so Rust, Python, and JS checks stay in parity with CI:
+- Execute the full suite with the task runner so Rust, Python, JS, Ruby, and the fixture-driven e2e suites stay in parity with CI:
 ```bash
 task test
 ```
@@ -232,11 +234,7 @@ cargo test -p spikard-http
 - `task` CLI to use `Taskfile.yaml` automation
 
 ## Install Dependencies
-```bash
-pnpm install
-uv sync
-cargo fetch
-```
+- Run `task setup` to install and verify all toolchains in one shot (wraps `pnpm install`, `uv sync`, ruby bundler install, and the initial PyO3 build).
 
 ## Verify Tooling
 ```bash
@@ -258,9 +256,9 @@ pnpm install
 uv sync
 cargo check
 ```
-- `pnpm install` hydrates JS packages, including the bindings in `crates/spikard-node/package.json` and WASM artifacts in `crates/spikard-wasm/package.json`.
-- `uv sync` respects the pinned dependencies for the bindings in `crates/spikard-py/pyproject.toml` and the Python package under `packages/python/`.
-- `cargo check` validates the Rust workspace spans (`crates/spikard-*`) before heavier builds.
+- `task setup` installs uv/pnpm/rbenv dependencies, bootstraps developer tooling, and builds the PyO3 bindings so every language stack is ready.
+- `task update` is the canonical dependency bump path; it sequentially refreshes Python (uv), Rust (cargo), JavaScript (pnpm), Ruby (bundler), rebuilds the Python bindings, and updates Prek hooks.
+- `cargo check` remains the fastest Rust-only validation when iterating on a single crate.
 
 ## Agents
 
