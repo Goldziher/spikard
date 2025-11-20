@@ -136,8 +136,8 @@ impl SchemaValidator {
             .into_iter()
             .map(|err| {
                 // Parse jsonschema errors to FastAPI format
-                let instance_path = err.instance_path.to_string();
-                let schema_path_str = err.schema_path.as_str();
+                let instance_path = err.instance_path().to_string();
+                let schema_path_str = err.schema_path().as_str();
                 let error_msg = err.to_string();
 
                 // Determine the parameter name/path
@@ -229,7 +229,7 @@ impl SchemaValidator {
                     data.clone()
                 } else {
                     // For other validation errors, return the field value
-                    err.instance.clone().into_owned()
+                    err.instance().clone().into_owned()
                 };
 
                 // Build JSON Pointer path for nested properties
