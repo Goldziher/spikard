@@ -126,12 +126,23 @@ task bench:generate:python
 task bench:generate:rust
 task bench:generate:node
 
-# Run benchmarks
+# Run baseline benchmarks
 task bench:run:ruby        # Run Ruby benchmark
 task bench:run:python      # Run Python benchmark
 task bench:run:rust        # Run Rust benchmark
 task bench:run:node        # Run Node.js benchmark
 task bench:run:all         # Run all frameworks
+
+# Run workload-specific benchmarks
+task bench:run:python:json          # JSON body workload
+task bench:run:python:multipart     # Multipart form workload
+task bench:run:python:urlencoded    # URL-encoded form workload
+task bench:run:python:websocket     # WebSocket streaming
+task bench:run:python:sse           # SSE (Server-Sent Events)
+
+# Run all workloads for a framework
+task bench:run:python:all   # All Python workloads
+task bench:run:rust:all     # All Rust workloads
 
 # Full workflow: generate, build, and run
 task bench
@@ -173,6 +184,9 @@ OPTIONS:
   -w, --workload <WORKLOAD>
           Workload name for reporting [default: default]
 
+      --category <CATEGORY>
+          Workload category to test (json_bodies, multipart, url_encoded, query_params)
+
       --variant <VARIANT>
           Optional variant name (e.g., "sync", "async")
 
@@ -187,6 +201,82 @@ OPTIONS:
 
   -o, --output <OUTPUT>
           Output file for JSON results
+
+      --fixtures-dir <FIXTURES_DIR>
+          Path to testing_data directory (for category-based benchmarks) [default: testing_data]
+
+      --fixture <FIXTURE>
+          Optional fixture to test specific endpoint
+```
+
+### Streaming Benchmarks
+
+```
+benchmark-harness stream [OPTIONS]
+
+OPTIONS:
+  -f, --framework <FRAMEWORK>
+          Framework to benchmark
+
+  -a, --app-dir <APP_DIR>
+          App directory containing server entrypoint
+
+      --fixture <FIXTURE>
+          Streaming fixture path (from testing_data/websockets or testing_data/sse)
+
+  -d, --duration <DURATION>
+          Duration in seconds [default: 30]
+
+  -c, --connections <CONNECTIONS>
+          Number of concurrent streaming connections [default: 50]
+
+      --warmup <WARMUP>
+          Warmup duration in seconds [default: 5]
+
+      --variant <VARIANT>
+          Variant name (e.g., async)
+
+  -o, --output <OUTPUT>
+          Output file for JSON results
+```
+
+### Workload Types
+
+The harness supports different workload categories to measure specific performance characteristics:
+
+#### HTTP Workloads
+
+- **query_params**: Query parameter parsing and validation
+- **json_bodies**: JSON request/response serialization (simple and nested objects)
+- **multipart**: Multipart form data handling (file uploads, mixed content)
+- **url_encoded**: URL-encoded form data parsing
+
+#### Streaming Workloads
+
+- **websocket**: WebSocket connection handling, bidirectional messaging
+- **sse**: Server-Sent Events, uni-directional event streaming
+
+Example: Test JSON body handling specifically:
+
+```bash
+./target/release/benchmark-harness run \
+  --framework spikard-python \
+  --app-dir tools/benchmark-harness/apps/spikard-python \
+  --workload json-bodies \
+  --category json_bodies \
+  --duration 10 \
+  --concurrency 50
+```
+
+Example: Test WebSocket performance:
+
+```bash
+./target/release/benchmark-harness stream \
+  --framework spikard-python \
+  --app-dir tools/benchmark-harness/apps/spikard-python \
+  --fixture testing_data/websockets/01_echo.json \
+  --duration 10 \
+  --connections 50
 ```
 
 ### Advanced Usage
