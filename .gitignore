@@ -1,91 +1,63 @@
-# Python
-*.py[cod]
 *$py.class
-*.so
-__pycache__/
 *.egg-info/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
+*.log
+*.node
+*.py[cod]
+*.rs.bk
+*.so
+*.temp
+*.tmp
+*.tsbuildinfo
+*.whl
+.cache/
+.cargo/
+.claude/
 .coverage
 .coverage*
-coverage/
+.cursorrules
+.DS_Store
+.env
+.gemini/
+.idea/
+.mcp.json
+.mypy_cache/
+.pnpm-store/
+.pytest_cache/
+.python-version
+.ruff_cache/
+.task/
+.venv/
+.vscode/
+.windsurfrules
+/*_TODO.md
+[Tt][Oo][Dd][Oo]*
+__pycache__/
+AGENTS.md
+benchmark-results/
+build/
+Cargo.lock
+CLAUDE.md
+coverage.info
 coverage.lcov
 coverage.xml
-rust-coverage.lcov
-coverage.info
-htmlcov/
-
-# TODO files in root only
-/*_TODO.md
-
-# Rust
-*.rs.bk
-target/
-Cargo.lock
-
-# Build artifacts
-build/
+coverage/
+crates/spikard-node/index.d.ts
+crates/spikard-node/index.js
 dist/
-*.whl
-
-# IDE
-.idea/
-.vscode/
-.claude/
-.cursorrules
-.windsurfrules
-
-# OS
-.DS_Store
-
-# Environment
-.env
-.venv/
-.python-version
-
-# Node.js / pnpm
+GEMINI.md
+htmlcov/
 node_modules/
 npm-debug.log*
-pnpm-debug.log*
-.pnpm-store/
-packages/wasm/runtime/
-
-# TypeScript / Build artifacts
-*.tsbuildinfo
-*.node
-temp-test-*
-
-# NAPI-RS generated files
-crates/spikard-node/index.js
-crates/spikard-node/index.d.ts
-packages/node/index.js
 packages/node/index.d.ts
-
-# Task runner
-.task/
-
-# Misc
-*.log
-*.tmp
-*.temp
-.cache/
-results/
-benchmark-results/
+packages/node/index.js
+packages/wasm/runtime/
+pnpm-debug.log*
 reports/
-
-# Generated benchmark apps
+results/
+rust-coverage.lcov
+target/
+temp-test-*
+todo.md
 tools/benchmark-harness/apps/spikard-node/
 tools/benchmark-harness/apps/spikard-python/
 tools/benchmark-harness/apps/spikard-rust/
-[Tt][Oo][Dd][Oo]*
-todo.md
-AGENTS.md
-CLAUDE.md
-GEMINI.md
-.gemini/
-.claude/
-.mcp.json
-
-# AI Rules generated files
-.claude/agents/
