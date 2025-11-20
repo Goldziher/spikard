@@ -19,42 +19,49 @@ tasks:
     desc: "Install language dependencies, developer tooling, and hooks"
     cmds:
       - task: python:install
-      - task: rust:install-tools
-      - task: node:install
+      - task: js:install
       - task: ruby:install
+      - task: rust:install-tools
       - task: pre-commit:install
-      - task: build:py
+      - task: python:build
 
   update:
     desc: "Update workspace dependencies across languages"
     cmds:
+      - echo "Updating Python dependencies..."
       - task: python:update
+      - echo "Updating Rust crates..."
       - task: rust:update
-      - task: node:update
+      - echo "Updating JavaScript packages..."
+      - task: js:update
+      - echo "Updating Ruby gems..."
       - task: ruby:update
-      - task: build:py
+      - echo "Refreshing Python bindings..."
+      - task: python:build
+      - echo "Updating Prek-managed hooks..."
       - task: pre-commit:update
   build:
     desc: "Build Rust core and language bindings"
     cmds:
-      - task: build:rust
-      - task: build:py
-      - task: build:node
-      - task: build:wasm
+      - task: rust:build
+      - task: python:build
+      - task: js:build
+      - task: wasm:build
       - task: ruby:build
   test:
     desc: "Run test suites for all languages"
     cmds:
       - task: rust:test
       - task: python:test
-      - task: node:test
+      - task: js:test
       - task: ruby:test
+      - task: test:e2e
   lint:
     desc: "Run linters across languages"
     cmds:
       - task: python:lint
-      - task: clippy:rust
-      - task: node:lint
+      - task: rust:lint
+      - task: js:lint
       - task: ruby:lint
       - task: php:lint
       - task: pre-commit:run
@@ -63,7 +70,7 @@ tasks:
     cmds:
       - task: rust:format
       - task: python:format
-      - task: node:format
+      - task: js:format
       - task: ruby:format
 
   python:install:
@@ -156,6 +163,11 @@ tasks:
       - uv run ruff check --fix .
       - uv run ruff format .
 
+  python:build:
+    desc: "Alias for build:py"
+    cmds:
+      - task: build:py
+
   rust:test:
     desc: "Run Rust workspace tests"
     cmds:
@@ -175,6 +187,11 @@ tasks:
     desc: "Run Rust linter (clippy)"
     cmds:
       - cargo clippy --workspace --all-features -- -D warnings
+
+  rust:lint:
+    desc: "Alias for clippy:rust"
+    cmds:
+      - task: clippy:rust
 
   rust:lint:
     desc: "Alias for clippy:rust"
@@ -285,6 +302,11 @@ tasks:
     cmds:
       - cargo build --workspace --release
 
+  rust:build:
+    desc: "Alias for build:rust"
+    cmds:
+      - task: build:rust
+
   build:rust:debug:
     desc: "Build Rust workspace in debug mode"
     cmds:
@@ -341,11 +363,16 @@ tasks:
     cmds:
       - task: build:node
 
-  build:wasm:
+  wasm:build:
     desc: "Build WebAssembly bindings with wasm-bindgen"
     dir: crates/spikard-wasm
     cmds:
       - pnpm run build:all
+
+  build:wasm:
+    desc: "Alias for wasm:build"
+    cmds:
+      - task: wasm:build
 
   generate:openapi:
     desc: "Generate OpenAPI spec from test fixtures"
