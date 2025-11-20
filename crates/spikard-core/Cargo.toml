@@ -1,0 +1,28 @@
+[package]
+name = "spikard-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Shared transport-agnostic primitives for Spikard runtimes"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+anyhow = "1.0"
+jsonschema = "0.37"
+regex = "1"
+flate2 = "1.1"
+brotli = "8.0"
+http.workspace = true
+base64 = "0.22"
+serde_qs = "0.15"
+url = "2.5"
+jiff = "0.2"
+uuid = "1.18"
+
+[features]
+default = []

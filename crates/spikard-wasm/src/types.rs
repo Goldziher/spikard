@@ -4,6 +4,7 @@ use serde::de::{self, Deserializer};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map as JsonMap, Value, json};
 use std::collections::HashMap;
+use url::form_urlencoded;
 use wasm_bindgen::prelude::*;
 
 #[derive(Clone, Debug, Deserialize)]
@@ -71,6 +72,115 @@ pub struct StaticManifestEntry {
     pub body: Vec<u8>,
 }
 
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum BodyKind {
+    None,
+    Json,
+    Form,
+    Multipart,
+    Binary,
+    Text,
+}
+
+impl Default for BodyKind {
+    fn default() -> Self {
+        BodyKind::None
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct BodyMetadata {
+    #[serde(default)]
+    pub kind: BodyKind,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub json: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub form: Option<HashMap<String, String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub files: Option<Vec<MultipartFile>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raw_base64: Option<String>,
+}
+
+impl BodyMetadata {
+    pub fn from_body_value(body: Option<&Value>) -> Self {
+        match body {
+            None => BodyMetadata {
+                kind: BodyKind::None,
+                ..Default::default()
+            },
+            Some(Value::String(text)) => BodyMetadata {
+                kind: BodyKind::Text,
+                text: Some(text.clone()),
+                raw_base64: Some(BASE64_STANDARD.encode(text.as_bytes())),
+                ..Default::default()
+            },
+            Some(value @ Value::Number(_)) | Some(value @ Value::Bool(_)) => {
+                let mut metadata = BodyMetadata {
+                    kind: BodyKind::Json,
+                    json: Some((*value).clone()),
+                    ..Default::default()
+                };
+                metadata.raw_base64 = Some(encode_json_base64(value));
+                metadata
+            }
+            Some(Value::Object(map)) => {
+                if let Some(Value::String(encoded)) = map.get("__spikard_base64__") {
+                    BodyMetadata {
+                        kind: BodyKind::Binary,
+                        raw_base64: Some(encoded.clone()),
+                        ..Default::default()
+                    }
+                } else if let Some(Value::Object(form_fields)) = map.get("__spikard_form__") {
+                    let form = normalize_form_values(form_fields);
+                    BodyMetadata {
+                        kind: BodyKind::Form,
+                        form: Some(form.clone()),
+                        raw_base64: Some(encode_form_bytes(&form)),
+                        ..Default::default()
+                    }
+                } else if let Some(Value::Object(multipart)) = map.get("__spikard_multipart__") {
+                    let (form, files) = normalize_multipart_payload(multipart);
+                    BodyMetadata {
+                        kind: BodyKind::Multipart,
+                        form: Some(form.clone()),
+                        files: Some(files),
+                        raw_base64: Some(encode_form_bytes(&form)),
+                        ..Default::default()
+                    }
+                } else {
+                    let json_value = Value::Object(map.clone());
+                    let mut metadata = BodyMetadata {
+                        kind: BodyKind::Json,
+                        json: Some(json_value.clone()),
+                        ..Default::default()
+                    };
+                    metadata.raw_base64 = Some(encode_json_base64(&json_value));
+                    metadata
+                }
+            }
+            Some(other) => {
+                let mut metadata = BodyMetadata {
+                    kind: BodyKind::Json,
+                    json: Some(other.clone()),
+                    ..Default::default()
+                };
+                metadata.raw_base64 = Some(encode_json_base64(other));
+                metadata
+            }
+        }
+    }
+}
+
+pub struct BodyPayload {
+    pub value: Option<Value>,
+    pub metadata: BodyMetadata,
+}
+
 #[derive(Default, Deserialize)]
 #[serde(default)]
 pub struct RequestOptions {
@@ -80,6 +190,8 @@ pub struct RequestOptions {
     #[serde(rename = "formRaw")]
     pub form_raw: Option<String>,
     pub multipart: Option<MultipartOptions>,
+    #[serde(rename = "binary")]
+    pub binary: Option<String>,
 }
 
 #[derive(Default, Deserialize)]
@@ -89,7 +201,7 @@ pub struct MultipartOptions {
     pub files: Vec<MultipartFile>,
 }
 
-#[derive(Default, Deserialize)]
+#[derive(Default, Deserialize, Serialize, Debug, Clone)]
 #[serde(default)]
 pub struct MultipartFile {
     pub name: String,
@@ -107,8 +219,8 @@ impl RequestOptions {
         serde_wasm_bindgen::from_value(value).map_err(|err| JsValue::from_str(&err.to_string()))
     }
 
-    pub fn body_payload(&self) -> Option<Value> {
-        if let Some(multipart) = &self.multipart {
+    pub fn body_payload(&self) -> BodyPayload {
+        let value = if let Some(multipart) = &self.multipart {
             let files = multipart
                 .files
                 .iter()
@@ -121,31 +233,30 @@ impl RequestOptions {
                     })
                 })
                 .collect::<Vec<_>>();
-            return Some(json!({
+            Some(json!({
                 "__spikard_multipart__": {
                     "fields": multipart.fields,
                     "files": files
                 }
-            }));
-        }
-
-        if let Some(form) = &self.form {
-            return Some(json!({
+            }))
+        } else if let Some(form) = &self.form {
+            Some(json!({
                 "__spikard_form__": form
-            }));
-        }
-
-        if let Some(raw) = &self.form_raw
+            }))
+        } else if let Some(raw) = &self.form_raw
             && let Some(parsed) = parse_form_raw(raw)
         {
-            return Some(parsed);
-        }
+            Some(parsed)
+        } else if self.json.is_some() {
+            self.json.clone()
+        } else if let Some(binary) = &self.binary {
+            Some(json!({ "__spikard_base64__": binary }))
+        } else {
+            None
+        };
 
-        if self.json.is_some() {
-            return self.json.clone();
-        }
-
-        None
+        let metadata = BodyMetadata::from_body_value(value.as_ref());
+        BodyPayload { value, metadata }
     }
 }
 
@@ -155,19 +266,69 @@ fn parse_form_raw(raw: &str) -> Option<Value> {
         .ok()
 }
 
-#[derive(Serialize)]
+fn encode_json_base64(value: &Value) -> String {
+    let json_text = serde_json::to_string(value).unwrap_or_else(|_| "null".to_string());
+    BASE64_STANDARD.encode(json_text.as_bytes())
+}
+
+fn normalize_form_values(source: &JsonMap<String, Value>) -> HashMap<String, String> {
+    let mut form = HashMap::new();
+    for (key, value) in source {
+        form.insert(key.clone(), value_to_string(value));
+    }
+    form
+}
+
+fn encode_form_bytes(form: &HashMap<String, String>) -> String {
+    let mut serializer = form_urlencoded::Serializer::new(String::new());
+    for (key, value) in form {
+        serializer.append_pair(key, value);
+    }
+    let encoded = serializer.finish();
+    BASE64_STANDARD.encode(encoded.as_bytes())
+}
+
+fn normalize_multipart_payload(map: &JsonMap<String, Value>) -> (HashMap<String, String>, Vec<MultipartFile>) {
+    let fields = map
+        .get("fields")
+        .and_then(|value| value.as_object())
+        .cloned()
+        .unwrap_or_default();
+    let form = normalize_form_values(&fields);
+    let files = map
+        .get("files")
+        .and_then(|value| serde_json::from_value::<Vec<MultipartFile>>(value.clone()).ok())
+        .unwrap_or_default();
+    (form, files)
+}
+
+fn value_to_string(value: &Value) -> String {
+    match value {
+        Value::Null => String::new(),
+        Value::String(text) => text.clone(),
+        other => serde_json::to_string(other).unwrap_or_else(|_| String::new()),
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RequestPayload {
-    method: String,
-    path: String,
-    #[serde(rename = "pathParams")]
-    path_params: HashMap<String, String>,
-    query: HashMap<String, Value>,
-    #[serde(rename = "rawQuery")]
-    raw_query: HashMap<String, Vec<String>>,
-    headers: HashMap<String, String>,
-    cookies: HashMap<String, String>,
-    params: HashMap<String, Value>,
-    body: Option<Value>,
+    pub(crate) method: String,
+    pub(crate) path: String,
+    #[serde(rename = "pathParams", default)]
+    pub(crate) path_params: HashMap<String, String>,
+    #[serde(default)]
+    pub(crate) query: HashMap<String, Value>,
+    #[serde(rename = "rawQuery", default)]
+    pub(crate) raw_query: HashMap<String, Vec<String>>,
+    #[serde(default)]
+    pub(crate) headers: HashMap<String, String>,
+    #[serde(default)]
+    pub(crate) cookies: HashMap<String, String>,
+    #[serde(default)]
+    pub(crate) params: HashMap<String, Value>,
+    pub(crate) body: Option<Value>,
+    #[serde(rename = "__spikard_body_metadata__", skip_serializing_if = "Option::is_none")]
+    pub(crate) body_metadata: Option<BodyMetadata>,
 }
 
 impl RequestPayload {
@@ -180,6 +341,7 @@ impl RequestPayload {
         query: crate::matching::QueryParams,
         params: HashMap<String, Value>,
         body: Option<Value>,
+        body_metadata: BodyMetadata,
     ) -> Self {
         RequestPayload {
             method,
@@ -191,6 +353,14 @@ impl RequestPayload {
             cookies: HashMap::new(),
             params,
             body,
+            body_metadata: Some(body_metadata),
+        }
+    }
+
+    pub fn ensure_body_metadata(&mut self) {
+        if self.body_metadata.is_none() {
+            let metadata = BodyMetadata::from_body_value(self.body.as_ref());
+            self.body_metadata = Some(metadata);
         }
     }
 }

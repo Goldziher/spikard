@@ -18,7 +18,7 @@ import {
 	createAppLifecycleHooksPrehandlerAuthorizationForbiddenShortCircuit,
 	createAppLifecycleHooksPrevalidationRateLimitExceededShortCircuit,
 	createAppLifecycleHooksPrevalidationRateLimiting,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 describe("lifecycle_hooks", () => {
 	test("onResponse - Security Headers", async () => {
@@ -32,10 +32,10 @@ describe("lifecycle_hooks", () => {
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Response with security headers");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["x-xss-protection"]).toBe("1; mode=block");
+		expect(responseHeaders["x-content-type-options"]).toBe("nosniff");
 		expect(responseHeaders["x-frame-options"]).toBe("DENY");
 		expect(responseHeaders["strict-transport-security"]).toBe("max-age=31536000; includeSubDomains");
-		expect(responseHeaders["x-content-type-options"]).toBe("nosniff");
+		expect(responseHeaders["x-xss-protection"]).toBe("1; mode=block");
 	});
 
 	test("preHandler - Authentication Failed Short Circuit", async () => {
@@ -119,8 +119,8 @@ describe("lifecycle_hooks", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			Authorization: "Bearer valid-token-12345",
 			"Content-Type": "application/json",
+			Authorization: "Bearer valid-token-12345",
 		};
 		const json = { action: "update_profile", user_id: "user-123" };
 		const response = await client.post("/api/full-lifecycle", { headers, json });
@@ -137,9 +137,9 @@ describe("lifecycle_hooks", () => {
 		expect(responseData.user_id).toBe("user-123");
 		const responseHeaders = response.headers();
 		expect(responseHeaders["x-frame-options"]).toBe("DENY");
+		expect(responseHeaders["x-content-type-options"]).toBe("nosniff");
 		expect(responseHeaders["x-request-id"]).toBe(".*");
 		expect(responseHeaders["x-response-time"]).toBe(".*ms");
-		expect(responseHeaders["x-content-type-options"]).toBe("nosniff");
 	});
 
 	test("Hook Execution Order", async () => {

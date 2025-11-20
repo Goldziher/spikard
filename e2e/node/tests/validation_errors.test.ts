@@ -28,7 +28,7 @@ import {
 	createAppValidationErrorsStringMaxLengthConstraintViolation,
 	createAppValidationErrorsStringMinLengthConstraintViolation,
 	createAppValidationErrorsStringRegexPatternMismatch,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 describe("validation_errors", () => {
 	test("Invalid UUID format", async () => {

@@ -693,7 +693,7 @@ pub fn build_router_with_handlers_and_config(
     route_metadata: Vec<crate::RouteMetadata>,
 ) -> Result<AxumRouter, String> {
     // Extract lifecycle hooks from config
-    let hooks = config.lifecycle_hooks.clone().map(Arc::new);
+    let hooks = config.lifecycle_hooks.clone();
 
     // Start with the basic router
     let mut app = build_router_with_handlers(routes, hooks)?;

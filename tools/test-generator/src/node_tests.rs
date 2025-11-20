@@ -60,9 +60,6 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
 
     // Generate test file for each category
     for (category, fixtures) in fixtures_by_category.iter() {
-        if category == "background" {
-            continue;
-        }
         let test_content = generate_test_file(category, fixtures, target)?;
         let test_file = tests_dir.join(format!("{}.test.ts", category));
         fs::write(&test_file, test_content).with_context(|| format!("Failed to write test file for {}", category))?;
@@ -103,6 +100,9 @@ fn generate_test_file(category: &str, fixtures: &[Fixture], target: &TypeScriptT
     // Import all app factories for this category
     let mut app_factories = Vec::new();
     for fixture in fixtures {
+        if fixture_should_skip(category, fixture) {
+            continue;
+        }
         let fixture_id = sanitize_identifier(&format!("{}_{}", category, &fixture.name));
         let app_factory_name = format!("createApp{}", to_pascal_case(&fixture_id));
         app_factories.push(app_factory_name.clone());
@@ -111,7 +111,7 @@ fn generate_test_file(category: &str, fixtures: &[Fixture], target: &TypeScriptT
     app_factories.dedup();
     if app_factories.len() <= 4 && app_factories.join(", ").len() <= 120 {
         code.push_str(&format!(
-            "import {{ {} }} from \"../app/main.js\";\n\n",
+            "import {{ {} }} from \"../app/main.ts\";\n\n",
             app_factories.join(", ")
         ));
     } else {
@@ -119,7 +119,7 @@ fn generate_test_file(category: &str, fixtures: &[Fixture], target: &TypeScriptT
         for factory in &app_factories {
             code.push_str(&format!("\t{},\n", factory));
         }
-        code.push_str("} from \"../app/main.js\";\n\n");
+        code.push_str("} from \"../app/main.ts\";\n\n");
     }
 
     // Generate test suite
@@ -226,7 +226,7 @@ fn generate_sse_test_file(
     for name in factory_imports.iter().chain(schema_imports.iter()) {
         file_content.push_str(&format!("\t{},\n", name));
     }
-    file_content.push_str("} from \"../app/main.js\";\n\n");
+    file_content.push_str("} from \"../app/main.ts\";\n\n");
     file_content.push_str("const ROOT_DIR = path.resolve(__dirname, \"../../..\");\n");
     file_content.push_str("const SSE_FIXTURE_ROOT = path.join(ROOT_DIR, \"testing_data\", \"sse\");\n\n");
     file_content.push_str("function loadFixtureExamples(name: string): string[] {\n");
@@ -335,7 +335,7 @@ fn generate_websocket_test_file(
     for name in factory_imports.iter().chain(schema_imports.iter()) {
         file_content.push_str(&format!("\t{},\n", name));
     }
-    file_content.push_str("} from \"../app/main.js\";\n\n");
+    file_content.push_str("} from \"../app/main.ts\";\n\n");
     file_content.push_str("const ROOT_DIR = path.resolve(__dirname, \"../../..\");\n");
     file_content.push_str("const WEBSOCKET_FIXTURE_ROOT = path.join(ROOT_DIR, \"testing_data\", \"websockets\");\n\n");
     file_content.push_str("function loadFixtureExamples(name: string): string[] {\n");

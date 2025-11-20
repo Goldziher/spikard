@@ -22,7 +22,7 @@ handlebars = "6.3"
 tera = "1.20"
 
 # JSON Schema
-jsonschema = "0.36"
+jsonschema = "0.37"
 schemars = "1.1"
 
 # Utilities
@@ -30,7 +30,7 @@ indexmap = { version = "2.12", features = ["serde"] }
 regex = "1.12"
 
 [dev-dependencies]
-insta = "1.43"  # For snapshot testing
+insta = "1.44"  # For snapshot testing
 tempfile = "3.23"
 
 [features]

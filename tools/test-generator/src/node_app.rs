@@ -102,7 +102,7 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
 		"test:watch": "vitest"
 	}},
 	"devDependencies": {{
-		"{binding}": "workspace:*",
+		"{dependency}": "workspace:*",
         "@types/node": "^24.9.2",
 		"@vitest/coverage-v8": "^4.0.6",
 		"typescript": "^5.9.3",
@@ -111,7 +111,7 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
 }}
 "#,
         name = target.e2e_package_name,
-        binding = target.binding_package
+        dependency = target.dependency_package
     )
 }
 
@@ -139,7 +139,7 @@ fn generate_tsconfig() -> String {
 fn format_generated_ts(dir: &Path) -> Result<()> {
     let status = Command::new("pnpm")
         .current_dir(dir)
-        .args(["biome", "check", "--write", "."])
+        .args(["biome", "check", "--write", "--unsafe", "."])
         .status()
         .context("Failed to run `pnpm biome check --write .` in e2e/node app")?;
     ensure!(
@@ -694,9 +694,7 @@ fn generate_handler_function(
         code.push_str("\tif (value === undefined || value === null) {\n");
         code.push_str("\t\tthrow new Error(\"background task requires request body value\");\n");
         code.push_str("\t}\n");
-        code.push_str("\tbackground.run(async () => {\n");
-        code.push_str("\t\tstate.push(value);\n");
-        code.push_str("\t});\n");
+        code.push_str("\tvoid Promise.resolve().then(() => void state.push(value));\n");
         code.push_str("\tresponse.body = null;\n");
         code.push_str("\treturn JSON.stringify(response);\n");
         code.push('}');
@@ -827,7 +825,7 @@ fn generate_streaming_handler(
     };
 
     Ok(format!(
-        "/**\n * Handler for {} {}\n */\nasync function {}(requestJson: string): Promise<StreamingResponse> {{\n\tconst stream = async function* () {{\n{}\t}};\n\n\treturn new StreamingResponse(stream(), {{\n\t\tstatusCode: {},\n\t\theaders: {}\n\t}});\n}}",
+        "/**\n * Handler for {} {}\n */\nasync function {}(_requestJson: string): Promise<StreamingResponse> {{\n\tconst stream = async function* () {{\n{}\t}};\n\n\treturn new StreamingResponse(stream(), {{\n\t\tstatusCode: {},\n\t\theaders: {}\n\t}});\n}}",
         method.to_uppercase(),
         route,
         function_name,
@@ -842,12 +840,16 @@ fn generate_background_state_handler(
     fixture_id: &str,
     background: &BackgroundFixtureData,
 ) -> String {
+    let function_name = to_camel_case(&format!("{}_background_state", handler_name));
     format!(
-        "function {name}_background_state(): Record<string, unknown> {{
+        "async function {func}(): Promise<string> {{
 \tconst state = BACKGROUND_STATE[\"{fixture}\"] ?? [];
-\treturn {{ \"{state_key}\": state }};
+\tconst response: HandlerResponse = {{ status: 200 }};
+\tresponse.headers = {{ \"content-type\": \"application/json\" }};
+\tresponse.body = {{ \"{state_key}\": state }};
+\treturn JSON.stringify(response);
 }}",
-        name = handler_name,
+        func = function_name,
         fixture = fixture_id,
         state_key = background.state_key
     )
@@ -927,7 +929,7 @@ fn append_sse_factories(
         let events_literal = format!("[\n{}\n  ]", event_entries.join(",\n"));
 
         let handler_code = format!(
-            "async function {handler_fn}(requestJson: string): Promise<StreamingResponse> {{
+            "async function {handler_fn}(_requestJson: string): Promise<StreamingResponse> {{
 \tconst events = {events_literal};
 \tasync function* eventStream() {{
 \t\tfor (const payload of events) {{

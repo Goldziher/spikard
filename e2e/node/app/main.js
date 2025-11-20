@@ -16,7 +16,7 @@ function normalizeWebsocketPayload(message) {
 			return message;
 		}
 	}
-	if (typeof Buffer !== "undefined" && Buffer.isBuffer(message)) {
+	if (Buffer?.isBuffer(message)) {
 		return JSON.parse(message.toString("utf-8"));
 	}
 	if (message instanceof ArrayBuffer) {
@@ -2520,9 +2520,9 @@ async function backgroundBackgroundEventLoggingSecondPayload(requestJson) {
 	const _params = request.params ?? {};
 	const response = { status: 202 };
 	response.headers = { "content-type": "application/json" };
-	BACKGROUND_STATE["background_background_event_logging_second_payload"] =
-		BACKGROUND_STATE["background_background_event_logging_second_payload"] ?? [];
-	const state = BACKGROUND_STATE["background_background_event_logging_second_payload"];
+	BACKGROUND_STATE.background_background_event_logging_second_payload =
+		BACKGROUND_STATE.background_background_event_logging_second_payload ?? [];
+	const state = BACKGROUND_STATE.background_background_event_logging_second_payload;
 	const value = body && typeof body === "object" ? body.event : void 0;
 	if (value === void 0 || value === null) {
 		throw new Error("background task requires request body value");
@@ -2533,8 +2533,8 @@ async function backgroundBackgroundEventLoggingSecondPayload(requestJson) {
 	response.body = null;
 	return JSON.stringify(response);
 }
-function background_background_event_logging_second_payload_background_state() {
-	const state = BACKGROUND_STATE["background_background_event_logging_second_payload"] ?? [];
+function _background_background_event_logging_second_payload_background_state() {
+	const state = BACKGROUND_STATE.background_background_event_logging_second_payload ?? [];
 	return { events: state };
 }
 function createAppBackgroundBackgroundEventLoggingSecondPayload() {
@@ -2578,9 +2578,8 @@ async function backgroundBackgroundEventLogging(requestJson) {
 	const _params = request.params ?? {};
 	const response = { status: 202 };
 	response.headers = { "content-type": "application/json" };
-	BACKGROUND_STATE["background_background_event_logging"] =
-		BACKGROUND_STATE["background_background_event_logging"] ?? [];
-	const state = BACKGROUND_STATE["background_background_event_logging"];
+	BACKGROUND_STATE.background_background_event_logging = BACKGROUND_STATE.background_background_event_logging ?? [];
+	const state = BACKGROUND_STATE.background_background_event_logging;
 	const value = body && typeof body === "object" ? body.event : void 0;
 	if (value === void 0 || value === null) {
 		throw new Error("background task requires request body value");
@@ -2591,8 +2590,8 @@ async function backgroundBackgroundEventLogging(requestJson) {
 	response.body = null;
 	return JSON.stringify(response);
 }
-function background_background_event_logging_background_state() {
-	const state = BACKGROUND_STATE["background_background_event_logging"] ?? [];
+function _background_background_event_logging_background_state() {
+	const state = BACKGROUND_STATE.background_background_event_logging ?? [];
 	return { events: state };
 }
 function createAppBackgroundBackgroundEventLogging() {
@@ -8607,7 +8606,7 @@ async function edgeCases15FloatPrecisionPreservation(requestJson) {
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
 	const response = { status: 201 };
-	const responseBody = { value: 3.141592653589793 };
+	const responseBody = { value: Math.PI };
 	response.body = responseBody;
 	return JSON.stringify(response);
 }
@@ -8724,7 +8723,7 @@ async function edgeCasesFloatPrecisionAndRounding(requestJson) {
 	const _params = request.params ?? {};
 	const response = { status: 200 };
 	const responseBody = {
-		precise_value: 3.141592653589793,
+		precise_value: Math.PI,
 		sum: 0.30000000000000004,
 		very_large: 17976931348623157e292,
 		very_small: 1e-10,
@@ -10572,7 +10571,7 @@ function createAppContentTypesBinaryResponseApplicationOctetStream() {
 		},
 	};
 }
-async function streamingStreamJsonLines(requestJson) {
+async function streamingStreamJsonLines(_requestJson) {
 	const stream = async function* () {
 		yield '{"index":0,"payload":"alpha"}\\n';
 		yield '{"index":1,"payload":"beta"}\\n';
@@ -10601,7 +10600,7 @@ function createAppStreamingStreamJsonLines() {
 		},
 	};
 }
-async function streamingBinaryLogDownload(requestJson) {
+async function streamingBinaryLogDownload(_requestJson) {
 	const stream = async function* () {
 		yield "LOG:";
 		yield Buffer.from("AAECAw==", "base64");
@@ -10632,7 +10631,7 @@ function createAppStreamingBinaryLogDownload() {
 		},
 	};
 }
-async function streamingChunkedCsvExport(requestJson) {
+async function streamingChunkedCsvExport(_requestJson) {
 	const stream = async function* () {
 		yield "id,name,value\\n";
 		yield "1,Alice,42\\n";
@@ -14499,7 +14498,7 @@ function createAppJsonBodiesArrayOfObjectsSuccess() {
 		},
 	};
 }
-async function sseHandlerNotifications(requestJson) {
+async function sseHandlerNotifications(_requestJson) {
 	const events = [
 		SystemAlertMessageSchema.parse({
 			level: "critical",

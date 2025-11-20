@@ -15,11 +15,13 @@ export class StreamingResponse {
 	public readonly statusCode: number;
 	public readonly headers: Record<string, string>;
 	public readonly [STREAM_HANDLE_PROP]: AsyncIteratorLike<StreamChunk>;
+	public readonly __spikard_streaming__: true;
 
 	constructor(stream: AsyncIterable<StreamChunk> | AsyncIterator<StreamChunk>, init?: StreamingResponseInit) {
 		this[STREAM_HANDLE_PROP] = toAsyncIterator(stream);
 		this.statusCode = init?.statusCode ?? 200;
 		this.headers = init?.headers ?? {};
+		this.__spikard_streaming__ = true;
 	}
 
 	async collect(): Promise<Uint8Array> {

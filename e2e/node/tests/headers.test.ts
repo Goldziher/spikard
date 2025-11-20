@@ -39,7 +39,7 @@ import {
 	createAppHeadersXApiKeyOptionalHeaderSuccess,
 	createAppHeadersXApiKeyRequiredHeaderMissing,
 	createAppHeadersXApiKeyRequiredHeaderSuccess,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 describe("headers", () => {
 	test("Header regex validation - success", async () => {

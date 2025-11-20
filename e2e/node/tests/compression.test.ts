@@ -8,7 +8,7 @@ import { describe, expect, test } from "vitest";
 import {
 	createAppCompressionCompressionGzipApplied,
 	createAppCompressionCompressionPayloadBelowMinSizeIsNotCompressed,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 describe("compression", () => {
 	test("Compression - payload below min_size is not compressed", async () => {
@@ -48,7 +48,7 @@ describe("compression", () => {
 			"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 		);
 		const responseHeaders = response.headers();
-		expect(responseHeaders.vary).toBe("Accept-Encoding");
 		expect(responseHeaders["content-encoding"]).toBe("gzip");
+		expect(responseHeaders.vary).toBe("Accept-Encoding");
 	});
 });

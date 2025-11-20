@@ -5,7 +5,7 @@
 
 import { TestClient } from "@spikard/node";
 import { describe, expect, test } from "vitest";
-import { createAppBodyLimitsBodyOverLimitReturns413, createAppBodyLimitsBodyUnderLimitSucceeds } from "../app/main.js";
+import { createAppBodyLimitsBodyOverLimitReturns413, createAppBodyLimitsBodyUnderLimitSucceeds } from "../app/main.ts";
 
 describe("body_limits", () => {
 	test("Body under limit succeeds", async () => {

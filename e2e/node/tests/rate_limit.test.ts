@@ -8,7 +8,7 @@ import { describe, expect, test } from "vitest";
 import {
 	createAppRateLimitRateLimitBelowThresholdSucceeds,
 	createAppRateLimitRateLimitExceededReturns429,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 describe("rate_limit", () => {
 	test("Rate limit below threshold succeeds", async () => {

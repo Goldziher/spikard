@@ -26,7 +26,7 @@ import {
 	createAppEdgeCasesLargeIntegerBoundaryValues,
 	createAppEdgeCasesSpecialStringValuesAndEscaping,
 	createAppEdgeCasesUnicodeAndEmojiHandling,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 describe("edge_cases", () => {
 	test("19_emoji_in_strings", async () => {

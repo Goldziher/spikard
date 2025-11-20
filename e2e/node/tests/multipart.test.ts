@@ -28,7 +28,7 @@ import {
 	createAppMultipartPdfFileUpload,
 	createAppMultipartRequiredFileUploadMissing,
 	createAppMultipartSimpleFileUpload,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 describe("multipart", () => {
 	test("Multiple values for same field name", async () => {

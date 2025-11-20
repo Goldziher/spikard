@@ -77,7 +77,7 @@ import {
 	createAppQueryParamsStringValidationWithRegexSuccess,
 	createAppQueryParamsUuidQueryParameterInvalidFormat,
 	createAppQueryParamsUuidQueryParameterSuccess,
-} from "../app/main.js";
+} from "../app/main.ts";
 
 describe("query_params", () => {
 	test("String validation with regex - success", async () => {
@@ -537,7 +537,7 @@ describe("query_params", () => {
 		const app = createAppQueryParamsMultipleQueryParametersWithDifferentTypes();
 		const client = new TestClient(app);
 
-		const response = await client.get("/query/multi-type?age=30&name=john&active=true&score=95.5");
+		const response = await client.get("/query/multi-type?age=30&score=95.5&name=john&active=true");
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
