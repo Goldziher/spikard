@@ -36,7 +36,7 @@ let openapi = generator.generate_openapi()?;
 
 ## Configuration Format
 
-See [docs/design/09-unified-config-format.md](../../docs/design/09-unified-config-format.md)
+See `docs/adr/0004-code-generation.md` for the current generation approach.
 for the complete specification.
 
 ### Example
