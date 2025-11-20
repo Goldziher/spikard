@@ -45,6 +45,10 @@ enum Commands {
         #[arg(short, long, default_value = "default")]
         workload: String,
 
+        /// Workload category to test (json_bodies, multipart, url_encoded, query_params)
+        #[arg(long)]
+        category: Option<String>,
+
         /// Variant name (e.g., "sync", "async") - optional
         #[arg(long)]
         variant: Option<String>,
@@ -68,6 +72,10 @@ enum Commands {
         /// Optional fixture to test specific endpoint
         #[arg(long)]
         fixture: Option<PathBuf>,
+
+        /// Path to testing_data directory (for category-based benchmarks)
+        #[arg(long, default_value = "testing_data")]
+        fixtures_dir: PathBuf,
     },
 
     /// Run a streaming benchmark (WebSocket/SSE)
@@ -161,15 +169,30 @@ async fn main() -> Result<()> {
             framework,
             app_dir,
             workload,
+            category,
             variant,
             duration,
             concurrency,
             warmup,
             output,
             fixture,
+            fixtures_dir,
         } => {
+            // Load fixture(s) based on inputs
             let fixture_obj = if let Some(path) = fixture {
+                // Single fixture specified
                 Some(Fixture::from_file(path)?)
+            } else if let Some(cat) = &category {
+                // Load a representative fixture from the category
+                let mut manager = FixtureManager::new();
+                manager.load_from_testing_data(&fixtures_dir)?;
+                let fixtures = manager.by_category(cat);
+                if fixtures.is_empty() {
+                    eprintln!("No fixtures found for category: {}", cat);
+                    std::process::exit(1);
+                }
+                // Use first fixture as representative (oha will use it for the test)
+                Some(fixtures[0].clone())
             } else {
                 None
             };
