@@ -571,7 +571,7 @@ tasks:
       - bench:generator:build
     cmds:
       - rm -rf tools/benchmark-harness/apps/spikard-python
-      - ./tools/app-generator/target/release/app-generator generate --framework spikard-python --fixtures testing_data --categories query_params,json_bodies,path_params --output tools/benchmark-harness/apps/spikard-python
+      - ./tools/app-generator/target/release/app-generator generate --framework spikard-python --fixtures testing_data --categories query_params,json_bodies,path_params,multipart,url_encoded --output tools/benchmark-harness/apps/spikard-python
       - task: bench:format:python
       - task: bench:lint:python
 
@@ -581,7 +581,7 @@ tasks:
       - bench:generator:build
     cmds:
       - rm -rf tools/benchmark-harness/apps/spikard-rust-gen
-      - ./tools/app-generator/target/release/app-generator generate --framework spikard-rust --fixtures testing_data --categories query_params,json_bodies,path_params --output tools/benchmark-harness/apps/spikard-rust-gen
+      - ./tools/app-generator/target/release/app-generator generate --framework spikard-rust --fixtures testing_data --categories query_params,json_bodies,path_params,multipart,url_encoded --output tools/benchmark-harness/apps/spikard-rust-gen
       - task: bench:format:rust:gen
       - task: bench:lint:rust:gen
 
@@ -591,7 +591,7 @@ tasks:
       - bench:generator:build
     cmds:
       - rm -rf tools/benchmark-harness/apps/spikard-node
-      - ./tools/app-generator/target/release/app-generator generate --framework spikard-node --fixtures testing_data --categories query_params,json_bodies,path_params --output tools/benchmark-harness/apps/spikard-node
+      - ./tools/app-generator/target/release/app-generator generate --framework spikard-node --fixtures testing_data --categories query_params,json_bodies,path_params,multipart,url_encoded --output tools/benchmark-harness/apps/spikard-node
       - task: bench:format:node
       - task: bench:lint:node
 
@@ -601,7 +601,7 @@ tasks:
       - bench:generator:build
     cmds:
       - rm -rf tools/benchmark-harness/apps/spikard-ruby
-      - ./tools/app-generator/target/release/app-generator generate --framework spikard-ruby --fixtures testing_data --categories query_params,json_bodies,path_params --output tools/benchmark-harness/apps/spikard-ruby
+      - ./tools/app-generator/target/release/app-generator generate --framework spikard-ruby --fixtures testing_data --categories query_params,json_bodies,path_params,multipart,url_encoded --output tools/benchmark-harness/apps/spikard-ruby
       - task: bench:lint:ruby
 
   bench:generate:all:
@@ -715,6 +715,112 @@ tasks:
       - task: bench:run:rust
       - task: bench:run:ruby
       - task: bench:run:node
+
+  # Workload-specific benchmarks (JSON bodies)
+  bench:run:python:json:
+    desc: "Run JSON body benchmark against Spikard-Python"
+    deps:
+      - bench:harness:build
+      - bench:build:python
+    cmds:
+      - ./target/release/benchmark-harness run --framework spikard-python --app-dir tools/benchmark-harness/apps/spikard-python --workload json-bodies --category json_bodies --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-python-json.json
+
+  bench:run:rust:json:
+    desc: "Run JSON body benchmark against Spikard-Rust"
+    deps:
+      - bench:harness:build
+      - bench:build:rust
+    cmds:
+      - ./target/release/benchmark-harness run --framework spikard-rust --app-dir tools/benchmark-harness/apps/spikard-rust --workload json-bodies --category json_bodies --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-rust-json.json
+
+  # Workload-specific benchmarks (Multipart forms)
+  bench:run:python:multipart:
+    desc: "Run multipart form benchmark against Spikard-Python"
+    deps:
+      - bench:harness:build
+      - bench:build:python
+    cmds:
+      - ./target/release/benchmark-harness run --framework spikard-python --app-dir tools/benchmark-harness/apps/spikard-python --workload multipart --category multipart --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-python-multipart.json
+
+  bench:run:rust:multipart:
+    desc: "Run multipart form benchmark against Spikard-Rust"
+    deps:
+      - bench:harness:build
+      - bench:build:rust
+    cmds:
+      - ./target/release/benchmark-harness run --framework spikard-rust --app-dir tools/benchmark-harness/apps/spikard-rust --workload multipart --category multipart --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-rust-multipart.json
+
+  # Workload-specific benchmarks (URL-encoded forms)
+  bench:run:python:urlencoded:
+    desc: "Run URL-encoded form benchmark against Spikard-Python"
+    deps:
+      - bench:harness:build
+      - bench:build:python
+    cmds:
+      - ./target/release/benchmark-harness run --framework spikard-python --app-dir tools/benchmark-harness/apps/spikard-python --workload url-encoded --category url_encoded --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-python-urlencoded.json
+
+  bench:run:rust:urlencoded:
+    desc: "Run URL-encoded form benchmark against Spikard-Rust"
+    deps:
+      - bench:harness:build
+      - bench:build:rust
+    cmds:
+      - ./target/release/benchmark-harness run --framework spikard-rust --app-dir tools/benchmark-harness/apps/spikard-rust --workload url-encoded --category url_encoded --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-rust-urlencoded.json
+
+  # Streaming benchmarks (WebSocket)
+  bench:run:python:websocket:
+    desc: "Run WebSocket benchmark against Spikard-Python"
+    deps:
+      - bench:harness:build
+      - bench:build:python
+    cmds:
+      - ./target/release/benchmark-harness stream --framework spikard-python --app-dir tools/benchmark-harness/apps/spikard-python --fixture testing_data/websockets/01_echo.json --duration 10 --connections 50 --warmup 3 --output tools/benchmark-harness/results/spikard-python-websocket.json
+
+  bench:run:rust:websocket:
+    desc: "Run WebSocket benchmark against Spikard-Rust"
+    deps:
+      - bench:harness:build
+      - bench:build:rust
+    cmds:
+      - ./target/release/benchmark-harness stream --framework spikard-rust --app-dir tools/benchmark-harness/apps/spikard-rust --fixture testing_data/websockets/01_echo.json --duration 10 --connections 50 --warmup 3 --output tools/benchmark-harness/results/spikard-rust-websocket.json
+
+  # Streaming benchmarks (SSE)
+  bench:run:python:sse:
+    desc: "Run SSE benchmark against Spikard-Python"
+    deps:
+      - bench:harness:build
+      - bench:build:python
+    cmds:
+      - ./target/release/benchmark-harness stream --framework spikard-python --app-dir tools/benchmark-harness/apps/spikard-python --fixture testing_data/sse/01_events.json --duration 10 --connections 50 --warmup 3 --output tools/benchmark-harness/results/spikard-python-sse.json
+
+  bench:run:rust:sse:
+    desc: "Run SSE benchmark against Spikard-Rust"
+    deps:
+      - bench:harness:build
+      - bench:build:rust
+    cmds:
+      - ./target/release/benchmark-harness stream --framework spikard-rust --app-dir tools/benchmark-harness/apps/spikard-rust --fixture testing_data/sse/01_events.json --duration 10 --connections 50 --warmup 3 --output tools/benchmark-harness/results/spikard-rust-sse.json
+
+  # Run all workload types for a framework
+  bench:run:python:all:
+    desc: "Run all benchmark workloads for Python"
+    cmds:
+      - task: bench:run:python
+      - task: bench:run:python:json
+      - task: bench:run:python:multipart
+      - task: bench:run:python:urlencoded
+      - task: bench:run:python:websocket
+      - task: bench:run:python:sse
+
+  bench:run:rust:all:
+    desc: "Run all benchmark workloads for Rust"
+    cmds:
+      - task: bench:run:rust
+      - task: bench:run:rust:json
+      - task: bench:run:rust:multipart
+      - task: bench:run:rust:urlencoded
+      - task: bench:run:rust:websocket
+      - task: bench:run:rust:sse
 
   bench:analyze:
     desc: "Analyze fixtures and show statistics"
