@@ -1,77 +1,60 @@
 # @spikard/node
 
-High-performance HTTP framework for Node.js/TypeScript. Type-safe routing, validation, and testing powered by Rust core.
+TypeScript-native bindings to Spikard’s Rust HTTP runtime. Fastify-like ergonomics with Rust-backed performance, typed routing helpers, and an in-memory test client.
 
-## Installation
-
+## Install from source
 ```bash
-npm install @spikard/node
-# or
-pnpm add @spikard/node
-# or
-yarn add @spikard/node
+cd packages/node
+pnpm install
+pnpm build   # compiles TypeScript and ensures the napi module is present
 ```
 
-## Features
-
-- 🚀 **High Performance** - Rust-powered HTTP server with native bindings
-- 🔒 **Type-Safe** - Full TypeScript support with type inference
-- ✅ **Built-in Validation** - JSON Schema validation at the framework level
-- 🧪 **Easy Testing** - TestClient for testing without starting a server
-- 🎯 **FastAPI-style** - Path parameter type hints (`/users/{id:uuid}`)
-
-## Quick Start
-
+## Quick start
 ```typescript
-import { TestClient } from '@spikard/node';
+import { Spikard, get, post, ServerConfig } from "@spikard/node";
 
-// Define your application
-const app = {
-  routes: [
-    {
-      method: 'GET',
-      path: '/users/{id:uuid}',
-      handler_name: 'getUser',
-      is_async: true
-    }
-  ],
-  handlers: {
-    getUser: async (req) => {
-      return { id: req.params.id, name: 'Alice' };
-    }
-  }
-};
+const app = new Spikard();
 
-// Test it
-const client = new TestClient(app);
-const response = await client.get('/users/550e8400-e29b-41d4-a716-446655440000');
-console.log(response.json()); // { id: '550e8400-e29b-41d4-a716-446655440000', name: 'Alice' }
+get("/hello")(async function hello(req) {
+  const params = new URLSearchParams(req.queryString);
+  const name = params.get("name") ?? "World";
+  return { message: `Hello, ${name}` };
+});
+
+post("/users/{id:int}")(async function updateUser(req) {
+  const body = req.json<Record<string, unknown>>();
+  return { id: "from-path", ...body };
+});
+
+if (require.main === module) {
+  app.run(ServerConfig.withDefaults({ host: "0.0.0.0", port: 8000 }));
+}
 ```
+- Route helpers (`get`, `post`, `del`, `route`) collect metadata for the Rust server.
+- Config objects enable compression, rate limits, timeouts, static files, request IDs, and OpenAPI metadata.
+- WebSockets and SSE share the same handler registration API.
 
 ## Testing
-
+Use the zero-network test client to exercise handlers:
 ```typescript
-import { describe, it, expect } from 'vitest';
-import { TestClient } from '@spikard/node';
+import { TestClient } from "@spikard/node";
 
-describe('User API', () => {
-  const client = new TestClient(app);
-
-  it('should get user by ID', async () => {
-    const response = await client.get('/users/123');
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({ id: '123', name: 'Alice' });
-  });
-
-  it('should create user', async () => {
-    const response = await client.post('/users', {
-      json: { name: 'Bob', email: 'bob@example.com' }
-    });
-    expect(response.statusCode).toBe(201);
-  });
-});
+const client = new TestClient(app);
+const res = await client.get("/hello?name=Ada");
+expect(res.statusCode).toBe(200);
+expect(res.json()).toEqual({ message: "Hello, Ada!" });
 ```
+Vitest config is included; run `pnpm test`.
 
-## License
+## Code generation
+The `spikard` CLI can emit Node-ready apps and tests:
+```bash
+spikard generate openapi --fixtures ../../testing_data --output ./generated
+spikard generate asyncapi --fixtures ../../testing_data/websockets --output ./generated
+```
+Generated handlers use the same routing helpers and config objects shown above.
 
-MIT
+## Development notes
+- Public API is under `src/`; napi bindings live in `crates/spikard-node`.
+- Keep fixtures in `testing_data/` aligned with tests under `e2e/node`.
+- The package ships d.ts files (`index.d.ts`) with the published build.
