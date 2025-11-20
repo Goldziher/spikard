@@ -263,6 +263,5 @@ impl LifecycleHook<Request<Body>, Response<Body>> for RubyLifecycleHook {
     }
 }
 
-// SAFETY: Ruby's GVL ensures thread safety for Ruby objects
 unsafe impl Send for RubyLifecycleHook {}
 unsafe impl Sync for RubyLifecycleHook {}

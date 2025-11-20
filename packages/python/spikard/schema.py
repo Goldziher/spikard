@@ -57,7 +57,6 @@ def is_json_schema_dict(obj: Any) -> bool:
     if not isinstance(obj, dict):
         return False
 
-    # Common JSON Schema keys
     json_schema_keys = {
         "type",
         "properties",
@@ -99,10 +98,8 @@ def resolve_msgspec_ref(schema: dict[str, Any]) -> dict[str, Any]:
         if ref_path.startswith("#/$defs/"):
             ref_name = ref_path.split("/")[-1]
             if ref_name in schema["$defs"]:
-                # Get the referenced schema
                 resolved: dict[str, Any] = schema["$defs"][ref_name].copy()
 
-                # Preserve other definitions
                 other_defs = {k: v for k, v in schema["$defs"].items() if k != ref_name}
                 if other_defs:
                     resolved["$defs"] = other_defs
@@ -128,20 +125,17 @@ def extract_schemas(
     except (AttributeError, NameError, TypeError, ValueError):
         return None, None
 
-    # Extract request schema from first parameter (after self/cls if present)
     sig = inspect.signature(func)
     params = list(sig.parameters.values())
 
     request_schema = None
     if params:
-        # Skip self/cls
         first_param = params[0]
         if first_param.name not in ("self", "cls"):
             param_type = type_hints.get(first_param.name)
             if param_type:
                 request_schema = extract_json_schema(param_type)
 
-    # Extract response schema from return annotation
     response_schema = None
     return_type = type_hints.get("return")
     if return_type:
@@ -177,15 +171,12 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C
     Raises:
         TypeError: If schema_source type is not supported
     """
-    # Handle None, primitives
     if schema_source is None or schema_source in (int, str, float, bool):
         return None
 
-    # 1. Check if plain JSON Schema dict (not TypedDict)
     if isinstance(schema_source, dict) and is_json_schema_dict(schema_source):
         return dict(schema_source)
 
-    # 2. Check if TypedDict
     if is_typeddict(schema_source):
         try:
             schema = msgspec.json.schema(schema_source)
@@ -193,44 +184,35 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C
         except Exception as e:
             raise TypeError(f"Failed to extract schema from TypedDict {schema_source.__name__}: {e}") from e
 
-    # 3. Check for Pydantic v2 (via Protocol)
     if isinstance(schema_source, type) and isinstance(schema_source, PydanticV2Model):
         try:
             return schema_source.model_json_schema()
         except Exception as e:
             raise TypeError(f"Failed to extract schema from Pydantic v2 model {schema_source.__name__}: {e}") from e
 
-    # 4. Check for Pydantic v1 (via Protocol)
     if isinstance(schema_source, type) and isinstance(schema_source, PydanticV1Model):
         try:
             return schema_source.schema()
         except Exception as e:
             raise TypeError(f"Failed to extract schema from Pydantic v1 model {schema_source.__name__}: {e}") from e
 
-    # 5. Check for dataclass
     if isinstance(schema_source, type) and dataclasses.is_dataclass(schema_source):
         try:
-            # Use Pydantic TypeAdapter for dataclass schema extraction
             adapter = TypeAdapter(schema_source)
             return adapter.json_schema()
         except Exception as e:
             raise TypeError(f"Failed to extract schema from dataclass {schema_source.__name__}: {e}") from e
 
-    # 6. Check for NamedTuple (check for _fields attribute)
     if isinstance(schema_source, type) and hasattr(schema_source, "_fields"):
         try:
-            # NamedTuple schema needs to be built manually as an object schema
-            # (msgspec and Pydantic treat it as array, but we want object semantics for HTTP)
             type_hints = get_type_hints(schema_source)
             properties = {}
-            # Only fields without defaults are required
             field_defaults = getattr(schema_source, "_field_defaults", {})
             required = [f for f in schema_source._fields if f not in field_defaults]
 
             for field_name in schema_source._fields:
                 field_type = type_hints.get(field_name)
                 if field_type:
-                    # Get basic type mapping
                     if field_type is str:
                         properties[field_name] = {"type": "string"}
                     elif field_type is int:
@@ -240,12 +222,10 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C
                     elif field_type is bool:
                         properties[field_name] = {"type": "boolean"}
                     else:
-                        # For complex types, recursively extract schema
                         field_schema = extract_json_schema(field_type)
                         if field_schema:
                             properties[field_name] = field_schema
                         else:
-                            # Fallback to generic object
                             properties[field_name] = {}
                 else:
                     properties[field_name] = {}
@@ -259,12 +239,10 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C
         except Exception as e:
             raise TypeError(f"Failed to extract schema from NamedTuple {schema_source.__name__}: {e}") from e
 
-    # 7. Try msgspec.json.schema() as fallback (for msgspec.Struct, attrs, etc.)
     try:
         schema = msgspec.json.schema(schema_source)
         return resolve_msgspec_ref(schema)
     except (TypeError, KeyError, AttributeError) as e:
-        # msgspec doesn't support this type
         raise TypeError(
             f"Unsupported schema type: {type(schema_source).__name__}. "
             f"Supported types: Pydantic v1/v2 models, msgspec.Struct, TypedDict, dataclass, NamedTuple, or plain JSON Schema dict. "

@@ -47,7 +47,6 @@ impl WebSocketHandler for NodeWebSocketHandler {
         debug!("Node.js WebSocket handler '{}': handle_message", self.name);
         println!("Node WS handler input: {}", message);
 
-        // Serialize message to JSON string for JavaScript
         let json_str = match serde_json::to_string(&message) {
             Ok(s) => s,
             Err(e) => {
@@ -56,7 +55,6 @@ impl WebSocketHandler for NodeWebSocketHandler {
             }
         };
 
-        // Call JavaScript function via ThreadsafeFunction
         let func = Arc::clone(&self.handle_message_tsfn);
         let json_output = match func.call_async(json_str).await {
             Ok(promise) => match promise.await {
@@ -75,7 +73,6 @@ impl WebSocketHandler for NodeWebSocketHandler {
         };
         println!("Node WS handler raw output: {}", json_output);
 
-        // Parse the JSON response from JavaScript
         match serde_json::from_str::<Value>(&json_output) {
             Ok(value) => Some(value),
             Err(e) => {
@@ -112,7 +109,6 @@ fn node_object_to_json(obj: &Object) -> Result<serde_json::Value> {
         .get_named_property("toJSON")
         .and_then(|func: Function<(), String>| func.call(()))
         .or_else(|_| {
-            // Fallback: use JSON.stringify
             let env_ptr = obj.env();
             let env = napi::Env::from_raw(env_ptr);
             let global = env.get_global()?;
@@ -129,15 +125,12 @@ fn node_object_to_json(obj: &Object) -> Result<serde_json::Value> {
 /// This function is designed to be called from JavaScript to register WebSocket handlers.
 #[allow(dead_code)]
 pub fn create_websocket_state(handler_instance: &Object) -> Result<spikard_http::WebSocketState<NodeWebSocketHandler>> {
-    // Extract the handleMessage function
     let handle_message_fn: Function<String, Promise<String>> = handler_instance.get_named_property("handleMessage")?;
 
-    // Build ThreadsafeFunction for handle_message
     let handle_message_tsfn = handle_message_fn
         .build_threadsafe_function()
         .build_callback(|ctx| Ok(vec![ctx.value]))?;
 
-    // Extract optional onConnect function
     let on_connect_tsfn = handler_instance
         .get_named_property::<Function<String, Promise<String>>>("onConnect")
         .ok()
@@ -147,7 +140,6 @@ pub fn create_websocket_state(handler_instance: &Object) -> Result<spikard_http:
                 .ok()
         });
 
-    // Extract optional onDisconnect function
     let on_disconnect_tsfn = handler_instance
         .get_named_property::<Function<String, Promise<String>>>("onDisconnect")
         .ok()
@@ -157,7 +149,6 @@ pub fn create_websocket_state(handler_instance: &Object) -> Result<spikard_http:
                 .ok()
         });
 
-    // Extract schemas if available
     let message_schema = handler_instance
         .get_named_property::<Object>("_messageSchema")
         .ok()
@@ -168,7 +159,6 @@ pub fn create_websocket_state(handler_instance: &Object) -> Result<spikard_http:
         .ok()
         .and_then(|obj| node_object_to_json(&obj).ok());
 
-    // Create Node WebSocket handler
     let node_handler = NodeWebSocketHandler::new(
         "WebSocketHandler".to_string(),
         handle_message_tsfn,
@@ -176,7 +166,6 @@ pub fn create_websocket_state(handler_instance: &Object) -> Result<spikard_http:
         on_disconnect_tsfn,
     );
 
-    // Create and return WebSocket state with schemas
     if message_schema.is_some() || response_schema.is_some() {
         spikard_http::WebSocketState::with_schemas(node_handler, message_schema, response_schema)
             .map_err(napi::Error::from_reason)

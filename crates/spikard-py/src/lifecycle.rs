@@ -43,27 +43,20 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PythonHook {
         &'a self,
         req: Request<Body>,
     ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>> {
-        // Clone the func for use across threads
         let func = Python::attach(|py| self.func.clone_ref(py));
         let name = self.name.clone();
 
         Box::pin(async move {
-            // Run Python async function in a blocking task
             let result = tokio::task::spawn_blocking(move || {
                 Python::attach(|py| -> PyResult<HookResult<Request<Body>, Response<Body>>> {
-                    // Convert Rust request to Python Request
                     let py_req = Py::new(py, PyRequest::from_request(req, py)?)?;
 
-                    // Call the Python function
                     let result = func.call1(py, (py_req.bind(py),))?;
 
-                    // Check if it's a coroutine (async function)
                     if result.bind(py).hasattr("__await__")? {
-                        // Run the coroutine using asyncio.run()
                         let asyncio = py.import("asyncio")?;
                         let completed_result = asyncio.call_method1("run", (result,))?;
 
-                        // Check if result is Request or Response
                         if completed_result.is_instance_of::<PyResponse>() {
                             let py_response: PyResponse = completed_result.extract()?;
                             let response = py_response.to_response(py)?;
@@ -87,7 +80,6 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PythonHook {
                         )));
                     }
 
-                    // Synchronous function - check result directly
                     if result.bind(py).is_instance_of::<PyResponse>() {
                         let py_response: PyResponse = result.extract(py)?;
                         let response = py_response.to_response(py)?;
@@ -124,35 +116,26 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PythonHook {
         &'a self,
         resp: Response<Body>,
     ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>> {
-        // Clone the func for use across threads
         let func = Python::attach(|py| self.func.clone_ref(py));
         let name = self.name.clone();
 
         Box::pin(async move {
-            // Buffer the response body BEFORE entering blocking task
-            // This is necessary because Body is an async stream
             let (parts, body) = resp.into_parts();
             use axum::body::to_bytes;
             let body_bytes = to_bytes(body, usize::MAX)
                 .await
                 .map_err(|e| format!("Failed to buffer response body: {}", e))?;
 
-            // Run Python async function in a blocking task
             let result = tokio::task::spawn_blocking(move || {
                 Python::attach(|py| -> PyResult<HookResult<Response<Body>, Response<Body>>> {
-                    // Convert Rust response to Python Response with buffered body
                     let py_resp = Py::new(py, PyResponse::from_response_parts(parts, body_bytes.clone(), py)?)?;
 
-                    // Call the Python function
                     let result = func.call1(py, (py_resp.bind(py),))?;
 
-                    // Check if it's a coroutine (async function)
                     if result.bind(py).hasattr("__await__")? {
-                        // Run the coroutine using asyncio.run()
                         let asyncio = py.import("asyncio")?;
                         let completed_result = asyncio.call_method1("run", (result,))?;
 
-                        // Must return a Response
                         if !completed_result.is_instance_of::<PyResponse>() {
                             let type_name = completed_result
                                 .get_type()
@@ -170,7 +153,6 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PythonHook {
                         return Ok(HookResult::Continue(response));
                     }
 
-                    // Synchronous function - check result directly
                     if !result.bind(py).is_instance_of::<PyResponse>() {
                         let type_name = result
                             .bind(py)
@@ -205,7 +187,6 @@ pub fn build_lifecycle_hooks(_py: Python, config: &Bound<'_, PyAny>) -> PyResult
     let mut hooks = spikard_http::LifecycleHooks::new();
     type PyHookVec = Vec<Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>>;
 
-    // Helper to extract hooks from a list
     let extract_hooks = |hook_list: &Bound<'_, PyAny>, hook_type: &str| -> PyResult<PyHookVec> {
         let mut result = Vec::new();
 
@@ -225,7 +206,6 @@ pub fn build_lifecycle_hooks(_py: Python, config: &Bound<'_, PyAny>) -> PyResult
         Ok(result)
     };
 
-    // Extract each hook type from the config dict
     if let Ok(on_request) = config.get_item("on_request") {
         for hook in extract_hooks(&on_request, "on_request")? {
             hooks.add_on_request(hook);

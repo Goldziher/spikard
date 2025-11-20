@@ -21,18 +21,14 @@ impl RustGenerator {
             RustDtoStyle::SerdeStruct => {}
         }
 
-        // Generate file header
         output.push_str(&self.generate_header());
 
-        // Generate schema models
         output.push_str(&self.generate_models()?);
 
-        // Generate handlers and builder
         let (handlers, registrations) = self.generate_handlers()?;
         output.push_str(&handlers);
         output.push_str(&self.generate_builder(&registrations));
 
-        // Generate main block
         output.push_str(&self.generate_main());
 
         Ok(output)
@@ -69,7 +65,6 @@ use spikard::{{App, AppError, RequestContext, delete, get, patch, post, put}};
                         output.push('\n');
                     }
                     ReferenceOr::Reference { .. } => {
-                        // Skip references - they'll be resolved when used
                         continue;
                     }
                 }
@@ -83,7 +78,6 @@ use spikard::{{App, AppError, RequestContext, delete, get, patch, post, put}};
         let struct_name = name.to_pascal_case();
         let mut output = String::new();
 
-        // Add doc comment if description exists
         if let Some(description) = &schema.schema_data.description {
             output.push_str(&format!("/// {}\n", description));
         }
@@ -100,7 +94,6 @@ use spikard::{{App, AppError, RequestContext, delete, get, patch, post, put}};
                         let is_required = obj.required.contains(prop_name);
                         let field_name = prop_name.to_snake_case();
 
-                        // Add serde annotation for optional fields
                         if !is_required {
                             output.push_str("    #[serde(skip_serializing_if = \"Option::is_none\")]\n");
                         }
@@ -136,7 +129,6 @@ use spikard::{{App, AppError, RequestContext, delete, get, patch, post, put}};
     fn extract_type_from_schema_ref(&self, schema_ref: &ReferenceOr<Schema>) -> String {
         match schema_ref {
             ReferenceOr::Reference { reference } => {
-                // Extract name from #/components/schemas/Pet -> Pet
                 let ref_name = reference.split('/').next_back().unwrap();
                 ref_name.to_pascal_case()
             }
@@ -164,7 +156,6 @@ use spikard::{{App, AppError, RequestContext, delete, get, patch, post, put}};
     fn extract_response_type(&self, operation: &Operation) -> Option<String> {
         use openapiv3::StatusCode;
 
-        // Try to find a successful response (200, 201, 2XX)
         let response = operation
             .responses
             .responses
@@ -196,7 +187,6 @@ use spikard::{{App, AppError, RequestContext, delete, get, patch, post, put}};
             SchemaKind::Type(Type::String(_)) => "String".to_string(),
             SchemaKind::Type(Type::Number(_)) => "f64".to_string(),
             SchemaKind::Type(Type::Integer(int_type)) => {
-                // Check format for specific integer types
                 match &int_type.format {
                     VariantOrUnknownOrEmpty::Item(IntegerFormat::Int32) => "i32".to_string(),
                     VariantOrUnknownOrEmpty::Item(IntegerFormat::Int64) => "i64".to_string(),

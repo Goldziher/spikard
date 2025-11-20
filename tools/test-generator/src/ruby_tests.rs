@@ -183,7 +183,6 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
         options.push(format!("cookies: {}", string_map_to_ruby(cookies)));
     }
 
-    // Handle file uploads for multipart requests
     if let Some(files) = fixture.request.files.as_ref()
         && !files.is_empty()
     {
@@ -205,21 +204,17 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
     } else if let Some(data) = fixture.request.data.as_ref() {
         options.push(format!("data: {}", value_map_to_ruby(data)));
     } else if let Some(body) = fixture.request.body.as_ref() {
-        // Handle body based on content type
         let use_raw_body = if let Some(ct) = content_type {
-            // For URL-encoded content with string body, use raw_body
             ct.contains("application/x-www-form-urlencoded") && matches!(body, Value::String(_))
         } else {
             false
         };
 
         if use_raw_body {
-            // URL-encoded string body should be sent as raw_body
             if let Value::String(s) = body {
                 options.push(format!("raw_body: {}", string_literal(s)));
             }
         } else {
-            // Match Python behavior: treat JSON, XML, and URL-encoded as json parameter
             let use_json = match content_type {
                 None => true,
                 Some(ct) => {
@@ -271,8 +266,6 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
 ",
     );
 
-    // Use the actual request path from the fixture (which has path params substituted)
-    // instead of the route template
     let base_path = &fixture.request.path;
     let request_path_expr = if let Some(suffix) = query_suffix.as_ref() {
         format!("\"{}{}\"", base_path, suffix)
@@ -378,7 +371,6 @@ fn value_to_query_pairs(key: &str, value: &Value) -> Vec<String> {
             pairs
         }
         Value::Object(_obj) => {
-            // Fall back to JSON encoding for nested objects.
             if let Ok(json) = serde_json::to_string(value) {
                 vec![format!("{}={}", encode(key), encode(&json))]
             } else {
@@ -468,8 +460,6 @@ fn build_expectations(
                     ));
                 }
 
-                // Only check error type if it's not the generic "validation_error"
-                // The actual implementation may return more specific error types
                 if let Some(error_type) = first.get("type").and_then(|v| v.as_str())
                     && error_type != "validation_error"
                 {
@@ -491,12 +481,9 @@ fn build_expectations(
         return expectations;
     }
 
-    // Check for body_partial (used for OpenAPI and other tests with partial matching)
     if let Some(body_partial) = expected.body_partial.as_ref() {
-        // For partial body matching, just check that body_text is not nil and contains expected keys
         expectations.push_str("    expect(response.body_text).not_to be_nil\n");
 
-        // Extract some key fields from body_partial to verify
         if let Some(obj) = body_partial.as_object() {
             for key in obj.keys() {
                 expectations.push_str(&format!(
@@ -510,14 +497,11 @@ fn build_expectations(
         return expectations;
     }
 
-    // For successful responses with content-type that indicates content (like HTML),
-    // skip the nil assertion - just check the status code
     if expected.status_code >= 200
         && expected.status_code < 300
         && let Some(content_type) = sanitized_headers.get("content-type")
         && (content_type.contains("text/html") || content_type.contains("application"))
     {
-        // Don't assert about body_text for HTML/application responses
         append_header_expectations(&mut expectations, sanitized_headers);
         return expectations;
     }
@@ -595,7 +579,6 @@ fn build_websocket_spec(fixtures: &[AsyncFixture]) -> Result<String> {
             sanitize_identifier(&channel_path.trim_start_matches('/').replace('/', "_"))
         );
 
-        // Generate test for each example in the channel
         for (example_idx, fixture) in channel_fixtures.iter().enumerate() {
             for (msg_idx, example) in fixture.examples.iter().enumerate() {
                 let test_name = if channel_fixtures.len() == 1 && fixture.examples.len() == 1 {
@@ -649,7 +632,6 @@ fn build_websocket_spec(fixtures: &[AsyncFixture]) -> Result<String> {
 fn build_files_hash(files: &[spikard_codegen::openapi::from_fixtures::FixtureFile]) -> String {
     use std::collections::HashMap;
 
-    // Group files by field_name
     let mut grouped: HashMap<String, Vec<&spikard_codegen::openapi::from_fixtures::FixtureFile>> = HashMap::new();
     for file in files {
         grouped.entry(file.field_name.clone()).or_default().push(file);
@@ -657,7 +639,6 @@ fn build_files_hash(files: &[spikard_codegen::openapi::from_fixtures::FixtureFil
 
     let mut entries = Vec::new();
 
-    // Sort by field name for consistent output
     let mut sorted_fields: Vec<_> = grouped.keys().collect();
     sorted_fields.sort();
 
@@ -665,7 +646,6 @@ fn build_files_hash(files: &[spikard_codegen::openapi::from_fixtures::FixtureFil
         let field_files = &grouped[field_name];
 
         if field_files.len() == 1 {
-            // Single file: {"field" => ["filename", "content", "type"]}
             let file = field_files[0];
             let filename = file.filename.as_deref().unwrap_or("file.txt");
             let content = file.content.as_deref().unwrap_or("");
@@ -679,7 +659,6 @@ fn build_files_hash(files: &[spikard_codegen::openapi::from_fixtures::FixtureFil
             let array_str = format!("[{}]", array_elements.join(", "));
             entries.push(format!("{} => {}", string_literal(field_name), array_str));
         } else {
-            // Multiple files: {"field" => [["file1", "content1", "type1"], ["file2", "content2", "type2"]]}
             let mut file_arrays = Vec::new();
 
             for file in field_files {

@@ -49,11 +49,9 @@ class ParsedSignature:
         """
         signature = Signature.from_callable(fn)
 
-        # Get type hints with forward references resolved
         try:
             fn_type_hints = get_type_hints(fn, include_extras=True)
         except (AttributeError, NameError, TypeError, ValueError, RecursionError):
-            # Fall back to __annotations__ if get_type_hints fails
             fn_type_hints = getattr(fn, "__annotations__", {})
 
         return cls.from_signature(signature, fn_type_hints)
@@ -78,7 +76,6 @@ class ParsedSignature:
         return_annotation = fn_type_hints.get("return", Any)
         return_type = FieldDefinition.from_annotation(return_annotation)
 
-        # If there's no return annotation, mark it as Empty
         if "return" not in fn_type_hints:
             return_type = FieldDefinition.from_annotation(Empty, name="return", default=Empty)
 

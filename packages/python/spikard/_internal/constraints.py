@@ -23,7 +23,6 @@ def _extract_from_metadata_item(item: Any) -> dict[str, Any]:
     constraints: dict[str, Any] = {}
     item_type = type(item).__name__
 
-    # Handle annotated_types constraints
     if item_type == "MinLen":
         constraints["min_length"] = item.min_length
     elif item_type == "MaxLen":
@@ -38,7 +37,6 @@ def _extract_from_metadata_item(item: Any) -> dict[str, Any]:
         constraints["le"] = item.le
     elif item_type == "MultipleOf":
         constraints["multiple_of"] = item.multiple_of
-    # Handle Pydantic's _PydanticGeneralMetadata
     elif item_type == "_PydanticGeneralMetadata":
         if hasattr(item, "pattern") and item.pattern is not None:
             constraints["pattern"] = item.pattern
@@ -64,7 +62,6 @@ def extract_constraints_from_field(field_info: Any) -> dict[str, Any]:
     if not hasattr(field_info, "metadata"):
         return constraints
 
-    # Extract source from json_schema_extra if present
     if (
         hasattr(field_info, "json_schema_extra")
         and isinstance(field_info.json_schema_extra, dict)
@@ -72,7 +69,6 @@ def extract_constraints_from_field(field_info: Any) -> dict[str, Any]:
     ):
         constraints["source"] = field_info.json_schema_extra["source"]
 
-    # Iterate through metadata items and merge constraints
     for item in field_info.metadata:
         item_constraints = _extract_from_metadata_item(item)
         constraints.update(item_constraints)
@@ -91,12 +87,10 @@ def extract_constraints_from_annotated(annotation: Any) -> dict[str, Any]:
     """
     constraints = {}
 
-    # Check if this is an Annotated type
     origin = get_origin(annotation)
-    if origin is not type(None):  # Annotated
+    if origin is not type(None):
         args = get_args(annotation)
         if len(args) > 1:
-            # args[0] is the actual type, args[1:] are metadata
             for item in args[1:]:
                 item_type = type(item).__name__
 

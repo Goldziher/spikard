@@ -46,7 +46,6 @@ impl SseEventProducer for NodeSseEventProducer {
     async fn next_event(&self) -> Option<SseEvent> {
         debug!("Node.js SSE producer '{}': next_event", self.name);
 
-        // Call JavaScript function via ThreadsafeFunction
         let func = Arc::clone(&self.next_event_tsfn);
         let json_output = match func.call_async("{}".to_string()).await {
             Ok(promise) => match promise.await {
@@ -62,17 +61,13 @@ impl SseEventProducer for NodeSseEventProducer {
             }
         };
 
-        // Check for null response (end of stream)
         if json_output == "null" || json_output.is_empty() {
             debug!("Node.js SSE producer: received null, ending stream");
             return None;
         }
 
-        // Parse the JSON response from JavaScript
-        // Expected format: { data: any, event_type?: string, id?: string, retry?: number }
         match serde_json::from_str::<Value>(&json_output) {
             Ok(value) => {
-                // Extract event fields
                 let data = value.get("data").cloned().unwrap_or(Value::Null);
 
                 let event_type = value
@@ -85,7 +80,6 @@ impl SseEventProducer for NodeSseEventProducer {
 
                 let retry = value.get("retry").and_then(|v| v.as_u64());
 
-                // Create Rust SseEvent
                 let mut event = if let Some(et) = event_type {
                     SseEvent::with_type(et, data)
                 } else {
@@ -136,7 +130,6 @@ fn node_object_to_json(obj: &Object) -> Result<serde_json::Value> {
         .get_named_property("toJSON")
         .and_then(|func: Function<(), String>| func.call(()))
         .or_else(|_| {
-            // Fallback: use JSON.stringify
             let env_ptr = obj.env();
             let env = napi::Env::from_raw(env_ptr);
             let global = env.get_global()?;
@@ -153,15 +146,12 @@ fn node_object_to_json(obj: &Object) -> Result<serde_json::Value> {
 /// This function is designed to be called from JavaScript to register SSE producers.
 #[allow(dead_code)]
 pub fn create_sse_state(producer_instance: &Object) -> Result<spikard_http::SseState<NodeSseEventProducer>> {
-    // Extract the nextEvent function
     let next_event_fn: Function<String, Promise<String>> = producer_instance.get_named_property("nextEvent")?;
 
-    // Build ThreadsafeFunction for next_event
     let next_event_tsfn = next_event_fn
         .build_threadsafe_function()
         .build_callback(|ctx| Ok(vec![ctx.value]))?;
 
-    // Extract optional onConnect function
     let on_connect_tsfn = producer_instance
         .get_named_property::<Function<String, Promise<String>>>("onConnect")
         .ok()
@@ -171,7 +161,6 @@ pub fn create_sse_state(producer_instance: &Object) -> Result<spikard_http::SseS
                 .ok()
         });
 
-    // Extract optional onDisconnect function
     let on_disconnect_tsfn = producer_instance
         .get_named_property::<Function<String, Promise<String>>>("onDisconnect")
         .ok()
@@ -181,13 +170,11 @@ pub fn create_sse_state(producer_instance: &Object) -> Result<spikard_http::SseS
                 .ok()
         });
 
-    // Extract event schema if available
     let event_schema = producer_instance
         .get_named_property::<Object>("_eventSchema")
         .ok()
         .and_then(|obj| node_object_to_json(&obj).ok());
 
-    // Create Node SSE producer
     let node_producer = NodeSseEventProducer::new(
         "SseEventProducer".to_string(),
         next_event_tsfn,
@@ -195,7 +182,6 @@ pub fn create_sse_state(producer_instance: &Object) -> Result<spikard_http::SseS
         on_disconnect_tsfn,
     );
 
-    // Create and return SSE state with schema
     if event_schema.is_some() {
         spikard_http::SseState::with_schema(node_producer, event_schema).map_err(napi::Error::from_reason)
     } else {

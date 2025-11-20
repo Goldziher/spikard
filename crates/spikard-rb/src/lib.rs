@@ -34,8 +34,6 @@ use std::pin::Pin;
 use std::sync::Arc;
 use tokio::runtime::{Builder, Runtime};
 
-// Global Tokio runtime for test client with WebSocket/SSE support
-// Use current_thread to ensure Ruby VM is accessible (Ruby::get() requires main thread)
 static GLOBAL_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
     Builder::new_current_thread()
         .enable_all()
@@ -228,7 +226,6 @@ impl NativeTestClient {
             .const_get("JSON")
             .map_err(|_| Error::new(ruby.exception_runtime_error(), "JSON module not available"))?;
 
-        // Extract ServerConfig from Ruby
         let server_config = extract_server_config(ruby, config_value)?;
 
         let schema_registry = spikard_http::SchemaRegistry::new();
@@ -247,7 +244,6 @@ impl NativeTestClient {
             route_metadata_vec.push(meta);
         }
 
-        // Use build_router_with_handlers_and_config to support OpenAPI and middleware
         let mut router = spikard_http::server::build_router_with_handlers_and_config(
             prepared_routes,
             server_config,
@@ -255,14 +251,12 @@ impl NativeTestClient {
         )
         .map_err(|err| Error::new(ruby.exception_runtime_error(), format!("Failed to build router: {err}")))?;
 
-        // Collect WebSocket handlers
         let mut ws_endpoints = Vec::new();
         if !ws_handlers.is_nil() {
             let ws_hash = RHash::from_value(ws_handlers)
                 .ok_or_else(|| Error::new(ruby.exception_arg_error(), "WebSocket handlers must be a Hash"))?;
 
             ws_hash.foreach(|path: String, factory: Value| -> Result<ForEach, Error> {
-                // Call the factory to get the handler instance
                 let handler_instance = factory.funcall::<_, _, Value>("call", ()).map_err(|e| {
                     Error::new(
                         ruby.exception_runtime_error(),
@@ -270,7 +264,6 @@ impl NativeTestClient {
                     )
                 })?;
 
-                // Create WebSocket state
                 let ws_state = crate::websocket::create_websocket_state(ruby, handler_instance)?;
 
                 ws_endpoints.push((path, ws_state));
@@ -279,14 +272,12 @@ impl NativeTestClient {
             })?;
         }
 
-        // Collect SSE producers
         let mut sse_endpoints = Vec::new();
         if !sse_producers.is_nil() {
             let sse_hash = RHash::from_value(sse_producers)
                 .ok_or_else(|| Error::new(ruby.exception_arg_error(), "SSE producers must be a Hash"))?;
 
             sse_hash.foreach(|path: String, factory: Value| -> Result<ForEach, Error> {
-                // Call the factory to get the producer instance
                 let producer_instance = factory.funcall::<_, _, Value>("call", ()).map_err(|e| {
                     Error::new(
                         ruby.exception_runtime_error(),
@@ -294,7 +285,6 @@ impl NativeTestClient {
                     )
                 })?;
 
-                // Create SSE state
                 let sse_state = crate::sse::create_sse_state(ruby, producer_instance)?;
 
                 sse_endpoints.push((path, sse_state));
@@ -303,7 +293,6 @@ impl NativeTestClient {
             })?;
         }
 
-        // Register WebSocket endpoints
         use axum::routing::get;
         for (path, ws_state) in ws_endpoints {
             router = router.route(
@@ -312,7 +301,6 @@ impl NativeTestClient {
             );
         }
 
-        // Register SSE endpoints
         for (path, sse_state) in sse_endpoints {
             router = router.route(
                 &path,
@@ -320,7 +308,6 @@ impl NativeTestClient {
             );
         }
 
-        // Prefer in-memory transport for regular HTTP requests to match other bindings and avoid HTTP Content-Length quirks.
         let http_server = GLOBAL_RUNTIME
             .block_on(async { TestServer::new(router.clone()) })
             .map_err(|err| {
@@ -330,7 +317,6 @@ impl NativeTestClient {
                 )
             })?;
 
-        // Dedicated HTTP transport server for WebSocket/SSE flows that require a TCP layer
         let ws_config = TestServerConfig {
             transport: Some(Transport::HttpRandomPort),
             ..Default::default()
@@ -398,16 +384,11 @@ impl NativeTestClient {
 
         let server = Arc::clone(&inner.transport_server);
 
-        // Drop the borrow before entering the async block
         drop(inner_borrow);
 
-        // Spawn the WebSocket connection on the runtime's worker threads (matching Python approach)
-        // This is crucial - block_on runs on the current thread, but spawn runs on worker threads
-        // where the proper async context is set up for WebSocket connections
         let handle =
             GLOBAL_RUNTIME.spawn(async move { spikard_http::testing::connect_websocket(&server, &path).await });
 
-        // Block on an async block that awaits the handle to avoid nested runtime issues
         let ws = GLOBAL_RUNTIME.block_on(async {
             handle
                 .await
@@ -489,7 +470,6 @@ impl RubyHandler {
     }
 
     fn handle(&self, request_data: RequestData) -> HandlerResult {
-        // Validate incoming body if schema provided.
         if let Some(validator) = &self.inner.request_validator
             && let Err(errors) = validator.validate(&request_data.body)
         {
@@ -499,7 +479,6 @@ impl RubyHandler {
         }
 
         let validated_params = if let Some(validator) = &self.inner.parameter_validator {
-            // Convert multimap to single-value map by taking first value
             let raw_query_strings: HashMap<String, String> = request_data
                 .raw_query_params
                 .as_ref()
@@ -769,23 +748,19 @@ fn parse_request_config(ruby: &Ruby, options: Value) -> Result<RequestConfig, Er
         HashMap::new()
     };
 
-    // Check if files are provided (for multipart)
     let files_opt = get_kw(ruby, hash, "files");
     let has_files = files_opt.is_some() && !files_opt.unwrap().is_nil();
 
     let body = if has_files {
-        // Extract files for multipart upload
         let files_value = files_opt.unwrap();
         let files = extract_files(ruby, files_value)?;
 
-        // Extract form data if provided (can have both data and files in multipart)
         let mut form_data = Vec::new();
         if let Some(data_value) = get_kw(ruby, hash, "data")
             && !data_value.is_nil()
         {
             let data_hash = RHash::try_convert(data_value)?;
 
-            // Call Ruby's .keys method to get an array of keys
             let keys_array: RArray = data_hash.funcall("keys", ())?;
 
             for i in 0..keys_array.len() {
@@ -795,16 +770,13 @@ fn parse_request_config(ruby: &Ruby, options: Value) -> Result<RequestConfig, Er
                     .get(key_val)
                     .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "Failed to get hash value"))?;
 
-                // Check if value is an array
                 if let Some(array) = RArray::from_value(value) {
-                    // Multiple values: add each array element as a separate form field
                     for j in 0..array.len() {
                         let item = array.entry::<Value>(j as isize)?;
                         let item_str = String::try_convert(item)?;
                         form_data.push((field_name.clone(), item_str));
                     }
                 } else {
-                    // Single value: convert to string
                     let value_str = String::try_convert(value)?;
                     form_data.push((field_name, value_str));
                 }
@@ -1180,7 +1152,6 @@ fn get_required_string_from_hash(hash: RHash, key: &str, ruby: &Ruby) -> Result<
 fn extract_files(ruby: &Ruby, files_value: Value) -> Result<Vec<MultipartFilePart>, Error> {
     let files_hash = RHash::try_convert(files_value)?;
 
-    // Call Ruby's .keys method to get an array of keys
     let keys_array: RArray = files_hash.funcall("keys", ())?;
     let mut result = Vec::new();
 
@@ -1191,24 +1162,20 @@ fn extract_files(ruby: &Ruby, files_value: Value) -> Result<Vec<MultipartFilePar
             .get(key_val)
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "Failed to get hash value"))?;
 
-        // Check if it's an array
         if let Some(outer_array) = RArray::from_value(value) {
             if outer_array.is_empty() {
                 continue;
             }
 
-            // Check first element to see if it's a nested array (multiple files) or single file
             let first_elem = outer_array.entry::<Value>(0)?;
 
             if RArray::from_value(first_elem).is_some() {
-                // Multiple files: [["file1", content1], ["file2", content2]]
                 for j in 0..outer_array.len() {
                     let file_array = outer_array.entry::<Value>(j as isize)?;
                     let file_data = extract_single_file(ruby, &field_name, file_array)?;
                     result.push(file_data);
                 }
             } else {
-                // Single file: ["filename", content]
                 let file_data = extract_single_file(ruby, &field_name, value)?;
                 result.push(file_data);
             }
@@ -1234,7 +1201,6 @@ fn extract_single_file(ruby: &Ruby, field_name: &str, array_value: Value) -> Res
     let content_str: String = String::try_convert(array.shift()?)?;
     let content = content_str.into_bytes();
 
-    // Optional content_type (3rd element)
     let content_type: Option<String> = if !array.is_empty() {
         String::try_convert(array.shift()?).ok()
     } else {
@@ -1257,19 +1223,14 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
     };
     use std::collections::HashMap;
 
-    // Extract host
     let host: String = config_value.funcall("host", ())?;
 
-    // Extract port
     let port: u32 = config_value.funcall("port", ())?;
 
-    // Extract workers
     let workers: usize = config_value.funcall("workers", ())?;
 
-    // Extract enable_request_id
     let enable_request_id: bool = config_value.funcall("enable_request_id", ())?;
 
-    // Extract max_body_size (can be nil)
     let max_body_size_value: Value = config_value.funcall("max_body_size", ())?;
     let max_body_size = if max_body_size_value.is_nil() {
         None
@@ -1277,7 +1238,6 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
         Some(u64::try_convert(max_body_size_value)? as usize)
     };
 
-    // Extract request_timeout (can be nil)
     let request_timeout_value: Value = config_value.funcall("request_timeout", ())?;
     let request_timeout = if request_timeout_value.is_nil() {
         None
@@ -1285,13 +1245,10 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
         Some(u64::try_convert(request_timeout_value)?)
     };
 
-    // Extract graceful_shutdown
     let graceful_shutdown: bool = config_value.funcall("graceful_shutdown", ())?;
 
-    // Extract shutdown_timeout
     let shutdown_timeout: u64 = config_value.funcall("shutdown_timeout", ())?;
 
-    // Extract compression config (can be nil)
     let compression_value: Value = config_value.funcall("compression", ())?;
     let compression = if compression_value.is_nil() {
         None
@@ -1308,7 +1265,6 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
         })
     };
 
-    // Extract rate_limit config (can be nil)
     let rate_limit_value: Value = config_value.funcall("rate_limit", ())?;
     let rate_limit = if rate_limit_value.is_nil() {
         None
@@ -1323,7 +1279,6 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
         })
     };
 
-    // Extract jwt_auth config (can be nil)
     let jwt_auth_value: Value = config_value.funcall("jwt_auth", ())?;
     let jwt_auth = if jwt_auth_value.is_nil() {
         None
@@ -1352,7 +1307,6 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
         })
     };
 
-    // Extract api_key_auth config (can be nil)
     let api_key_auth_value: Value = config_value.funcall("api_key_auth", ())?;
     let api_key_auth = if api_key_auth_value.is_nil() {
         None
@@ -1362,7 +1316,6 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
         Some(ApiKeyConfig { keys, header_name })
     };
 
-    // Extract static_files config (array)
     let static_files_value: Value = config_value.funcall("static_files", ())?;
     let static_files_array = RArray::from_value(static_files_value)
         .ok_or_else(|| Error::new(ruby.exception_type_error(), "static_files must be an Array"))?;
@@ -1387,7 +1340,6 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
         });
     }
 
-    // Extract openapi config (can be nil)
     let openapi_value: Value = config_value.funcall("openapi", ())?;
     let openapi = if openapi_value.is_nil() {
         None
@@ -1405,18 +1357,15 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
         let redoc_path: String = openapi_value.funcall("redoc_path", ())?;
         let openapi_json_path: String = openapi_value.funcall("openapi_json_path", ())?;
 
-        // Extract contact (can be nil or Hash)
         let contact_value: Value = openapi_value.funcall("contact", ())?;
         let contact = if contact_value.is_nil() {
             None
         } else if let Some(contact_hash) = RHash::from_value(contact_value) {
-            // Handle Hash case (from tests)
             let name = get_optional_string_from_hash(contact_hash, "name")?;
             let email = get_optional_string_from_hash(contact_hash, "email")?;
             let url = get_optional_string_from_hash(contact_hash, "url")?;
             Some(ContactInfo { name, email, url })
         } else {
-            // Handle object case (from normal usage)
             let name_value: Value = contact_value.funcall("name", ())?;
             let email_value: Value = contact_value.funcall("email", ())?;
             let url_value: Value = contact_value.funcall("url", ())?;
@@ -1439,17 +1388,14 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
             })
         };
 
-        // Extract license (can be nil or Hash)
         let license_value: Value = openapi_value.funcall("license", ())?;
         let license = if license_value.is_nil() {
             None
         } else if let Some(license_hash) = RHash::from_value(license_value) {
-            // Handle Hash case (from tests)
             let name = get_required_string_from_hash(license_hash, "name", ruby)?;
             let url = get_optional_string_from_hash(license_hash, "url")?;
             Some(LicenseInfo { name, url })
         } else {
-            // Handle object case (from normal usage)
             let name: String = license_value.funcall("name", ())?;
             let url_value: Value = license_value.funcall("url", ())?;
             let url = if url_value.is_nil() {
@@ -1460,7 +1406,6 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
             Some(LicenseInfo { name, url })
         };
 
-        // Extract servers (array of Hashes or objects)
         let servers_value: Value = openapi_value.funcall("servers", ())?;
         let servers_array = RArray::from_value(servers_value)
             .ok_or_else(|| Error::new(ruby.exception_type_error(), "servers must be an Array"))?;
@@ -1470,12 +1415,10 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
             let server_value = servers_array.entry::<Value>(i as isize)?;
 
             let (url, description) = if let Some(server_hash) = RHash::from_value(server_value) {
-                // Handle Hash case (from tests)
                 let url = get_required_string_from_hash(server_hash, "url", ruby)?;
                 let description = get_optional_string_from_hash(server_hash, "description")?;
                 (url, description)
             } else {
-                // Handle object case (from normal usage)
                 let url: String = server_value.funcall("url", ())?;
                 let description_value: Value = server_value.funcall("description", ())?;
                 let description = if description_value.is_nil() {
@@ -1489,8 +1432,6 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
             servers.push(ServerInfo { url, description });
         }
 
-        // Extract security_schemes (hash) - for now, return empty map
-        // Security schemes will be auto-detected from middleware
         let security_schemes = HashMap::new();
 
         Some(OpenApiConfig {
@@ -1524,7 +1465,7 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
         shutdown_timeout,
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
         openapi,
-        lifecycle_hooks: None, // Will be set in run_server
+        lifecycle_hooks: None, 
     })
 }
 
@@ -1556,17 +1497,14 @@ fn run_server(
     use spikard_http::{SchemaRegistry, Server};
     use tracing::{error, info, warn};
 
-    // Extract ServerConfig from Ruby object
     let mut config = extract_server_config(ruby, config_value)?;
 
     let host = config.host.clone();
     let port = config.port;
 
-    // Parse route metadata from JSON
     let metadata: Vec<RouteMetadata> = serde_json::from_str(&routes_json)
         .map_err(|err| Error::new(ruby.exception_arg_error(), format!("Invalid routes JSON: {}", err)))?;
 
-    // Extract handlers hash
     let handlers_hash = RHash::from_value(handlers).ok_or_else(|| {
         Error::new(
             ruby.exception_arg_error(),
@@ -1574,24 +1512,19 @@ fn run_server(
         )
     })?;
 
-    // Get JSON module for handler conversions
     let json_module = ruby
         .class_object()
         .funcall::<_, _, Value>("const_get", ("JSON",))
         .map_err(|err| Error::new(ruby.exception_name_error(), format!("JSON module not found: {}", err)))?;
 
-    // Create schema registry for validator deduplication
     let schema_registry = SchemaRegistry::new();
 
-    // Build routes with handlers
     let mut routes_with_handlers: Vec<(Route, Arc<dyn spikard_http::Handler>)> = Vec::new();
 
     for route_meta in metadata {
-        // Create Route from metadata
         let route = Route::from_metadata(route_meta.clone(), &schema_registry)
             .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("Failed to create route: {}", e)))?;
 
-        // Get handler Proc from handlers hash
         let handler_key = ruby.str_new(&route_meta.handler_name);
         let handler_value: Value = match handlers_hash.lookup(handler_key) {
             Ok(val) => val,
@@ -1603,7 +1536,6 @@ fn run_server(
             }
         };
 
-        // Create RubyHandler
         let ruby_handler = RubyHandler::new_for_server(
             ruby,
             handler_value,
@@ -1617,7 +1549,6 @@ fn run_server(
         routes_with_handlers.push((route, Arc::new(ruby_handler) as Arc<dyn spikard_http::Handler>));
     }
 
-    // Extract lifecycle hooks from Ruby hash
     let lifecycle_hooks = if !hooks_value.is_nil() {
         let hooks_hash = RHash::from_value(hooks_value)
             .ok_or_else(|| Error::new(ruby.exception_arg_error(), "lifecycle_hooks parameter must be a Hash"))?;
@@ -1625,7 +1556,6 @@ fn run_server(
         let mut hooks = spikard_http::LifecycleHooks::new();
         type RubyHookVec = Vec<Arc<dyn spikard_http::lifecycle::LifecycleHook<Request<Body>, Response<Body>>>>;
 
-        // Helper to extract hooks from an array
         let extract_hooks = |key: &str| -> Result<RubyHookVec, Error> {
             let key_sym = ruby.to_symbol(key);
             if let Some(hooks_array) = hooks_hash.get(key_sym)
@@ -1650,7 +1580,6 @@ fn run_server(
             Ok(Vec::new())
         };
 
-        // Extract each hook type
         for hook in extract_hooks("on_request")? {
             hooks.add_on_request(hook);
         }
@@ -1676,27 +1605,22 @@ fn run_server(
         None
     };
 
-    // Set lifecycle hooks in config
     config.lifecycle_hooks = lifecycle_hooks.map(Arc::new);
 
-    // Initialize logging
     Server::init_logging();
 
     info!("Starting Spikard server on {}:{}", host, port);
     info!("Registered {} routes", routes_with_handlers.len());
 
-    // Build Axum router with handlers
     let mut app_router = Server::with_handlers(config.clone(), routes_with_handlers)
         .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("Failed to build router: {}", e)))?;
 
-    // Collect WebSocket handlers
     let mut ws_endpoints = Vec::new();
     if !ws_handlers.is_nil() {
         let ws_hash = RHash::from_value(ws_handlers)
             .ok_or_else(|| Error::new(ruby.exception_arg_error(), "WebSocket handlers must be a Hash"))?;
 
         ws_hash.foreach(|path: String, factory: Value| -> Result<ForEach, Error> {
-            // Call the factory to get the handler instance
             let handler_instance = factory.funcall::<_, _, Value>("call", ()).map_err(|e| {
                 Error::new(
                     ruby.exception_runtime_error(),
@@ -1704,7 +1628,6 @@ fn run_server(
                 )
             })?;
 
-            // Create WebSocket state
             let ws_state = crate::websocket::create_websocket_state(ruby, handler_instance)?;
 
             ws_endpoints.push((path, ws_state));
@@ -1713,14 +1636,12 @@ fn run_server(
         })?;
     }
 
-    // Collect SSE producers
     let mut sse_endpoints = Vec::new();
     if !sse_producers.is_nil() {
         let sse_hash = RHash::from_value(sse_producers)
             .ok_or_else(|| Error::new(ruby.exception_arg_error(), "SSE producers must be a Hash"))?;
 
         sse_hash.foreach(|path: String, factory: Value| -> Result<ForEach, Error> {
-            // Call the factory to get the producer instance
             let producer_instance = factory.funcall::<_, _, Value>("call", ()).map_err(|e| {
                 Error::new(
                     ruby.exception_runtime_error(),
@@ -1728,7 +1649,6 @@ fn run_server(
                 )
             })?;
 
-            // Create SSE state
             let sse_state = crate::sse::create_sse_state(ruby, producer_instance)?;
 
             sse_endpoints.push((path, sse_state));
@@ -1737,7 +1657,6 @@ fn run_server(
         })?;
     }
 
-    // Register WebSocket endpoints
     use axum::routing::get;
     for (path, ws_state) in ws_endpoints {
         info!("Registered WebSocket endpoint: {}", path);
@@ -1747,7 +1666,6 @@ fn run_server(
         );
     }
 
-    // Register SSE endpoints
     for (path, sse_state) in sse_endpoints {
         info!("Registered SSE endpoint: {}", path);
         app_router = app_router.route(
@@ -1756,7 +1674,6 @@ fn run_server(
         );
     }
 
-    // Start the server on the current Ruby thread using a single-threaded Tokio runtime
     let addr = format!("{}:{}", config.host, config.port);
     let socket_addr: std::net::SocketAddr = addr.parse().map_err(|e| {
         Error::new(
@@ -1812,11 +1729,9 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
         Err(_) => spikard.define_module("Native")?,
     };
 
-    // Register run_server function (now takes 3 args: routes_json, handlers, config)
     native.define_singleton_method("run_server", function!(run_server, 6))?;
     native.define_singleton_method("background_run", function!(background::background_run, 1))?;
 
-    // Register TestClient class
     let class = native.define_class("TestClient", ruby.class_object())?;
     class.define_alloc_func::<NativeTestClient>();
     class.define_method("initialize", method!(NativeTestClient::initialize, 5))?;
@@ -1825,7 +1740,6 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     class.define_method("sse", method!(NativeTestClient::sse, 1))?;
     class.define_method("close", method!(NativeTestClient::close, 0))?;
 
-    // Initialize WebSocket and SSE test client modules
     let spikard_module = ruby.define_module("Spikard")?;
     test_websocket::init(ruby, &spikard_module)?;
     test_sse::init(ruby, &spikard_module)?;

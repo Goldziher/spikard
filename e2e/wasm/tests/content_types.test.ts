@@ -114,7 +114,6 @@ describe("content_types", () => {
 	});
 
 	test.skip("20_content_length_mismatch", async () => {
-		// Not supported by the in-memory HTTP client
 	});
 
 	test("17_vendor_json_accepted", async () => {

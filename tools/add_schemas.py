@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Add explicit schemas to all fixture files."""
 
 import json
@@ -88,7 +87,6 @@ def add_body_schema(fixture: Fixture) -> bool:
     if not fixture.get("handler"):
         return False
 
-    # Skip if already has body_schema
     if "body_schema" in fixture["handler"]:
         return False
 
@@ -96,7 +94,6 @@ def add_body_schema(fixture: Fixture) -> bool:
     if not request_body:
         return False
 
-    # Infer schema from request body
     properties: dict[str, dict[str, Any]] = {}
     required_fields: set[str] = set()
 
@@ -104,11 +101,9 @@ def add_body_schema(fixture: Fixture) -> bool:
         for key, value in request_body.items():
             properties[key] = infer_type_from_value(value)
 
-        # All fields in successful requests are assumed required
         if 200 <= fixture.get("expected_response", {}).get("status_code", 0) < 300:
             required_fields = set(request_body.keys())
 
-    # Check validation errors for required fields and constraints
     expected_response = fixture.get("expected_response", {})
     body = expected_response.get("body")
     errors: list[dict[str, Any]] = []
@@ -118,13 +113,11 @@ def add_body_schema(fixture: Fixture) -> bool:
         error_required = extract_required_fields_from_errors(errors)
         constraints = extract_constraints_from_errors(errors)
 
-        # For validation errors, infer missing required fields
         for field in error_required:
             required_fields.add(field)
             if field not in properties:
-                properties[field] = {"type": "string"}  # Default type
+                properties[field] = {"type": "string"}
 
-        # Apply constraints
         for field, field_constraints in constraints.items():
             if field in properties:
                 properties[field].update(field_constraints)
@@ -221,7 +214,6 @@ def add_parameter_schema(fixture: Fixture) -> bool:
     if not fixture.get("handler"):
         return False
 
-    # Skip if already has parameters
     if "parameters" in fixture["handler"]:
         return False
 

@@ -30,7 +30,6 @@ fn init_python() {
     } else {
         format!("{}:{}", stub_path.display(), package_path.display())
     };
-    // SAFETY: setting an env var for the test process only; no cross-thread invariants.
     unsafe {
         std::env::set_var("PYTHONPATH", &new_pythonpath);
     }
@@ -126,7 +125,6 @@ fn test_python_handler_creation() {
     init_python();
 
     Python::with_gil(|py| {
-        // Create a simple Python function
         let code = r#"
 def simple_handler(path_params, query_params, body, headers, cookies):
     return {"status_code": 200, "body": {"message": "Hello"}}
@@ -136,15 +134,13 @@ def simple_handler(path_params, query_params, body, headers, cookies):
         let handler_fn = module.getattr("simple_handler").unwrap();
         let handler_py: Py<PyAny> = handler_fn.into();
 
-        // Create PythonHandler
         let python_handler = _spikard::PythonHandler::new(
-            handler_py, false, // not async
-            None,  // no request validator
-            None,  // no response validator
-            None,  // no parameter validator
+            handler_py, false, 
+            None,  
+            None,  
+            None,  
         );
 
-        // Just verify it was created successfully
         assert!(std::mem::size_of_val(&python_handler) > 0);
     });
 }
@@ -329,11 +325,9 @@ def echo_handler(path_params, query_params, body, headers, cookies):
 fn test_event_loop_initialization() {
     init_python();
 
-    // Verify event loop is initialized
     let result = _spikard::init_python_event_loop();
     assert!(result.is_ok());
 
-    // Should be idempotent - calling again should not fail
     let result2 = _spikard::init_python_event_loop();
     assert!(result2.is_ok());
 }
@@ -343,7 +337,6 @@ fn test_extract_routes_from_app() {
     init_python();
 
     Python::with_gil(|py| {
-        // Create a minimal Spikard app with routes
         let code = r#"
 from spikard import Spikard
 
@@ -375,7 +368,6 @@ app.register_route(
 )
 "#;
 
-        // Import spikard package (assumes it's in PYTHONPATH)
         let sys = py.import("sys").unwrap();
         let sys_path = sys.getattr("path").unwrap();
         sys_path.call_method1("insert", (0, "packages/python")).unwrap();
@@ -383,14 +375,12 @@ app.register_route(
         let module = module_from_code(py, code, "test_app.py", "test_app");
         let app = module.getattr("app").unwrap();
 
-        // Extract routes
         let routes = _spikard::extract_routes_from_app(py, &app);
 
         assert!(routes.is_ok());
         let route_list = routes.unwrap();
         assert_eq!(route_list.len(), 2);
 
-        // Verify route paths
         let paths: Vec<String> = route_list.iter().map(|r| r.metadata.path.clone()).collect();
         assert!(paths.contains(&"/test1".to_string()));
         assert!(paths.contains(&"/test2".to_string()));

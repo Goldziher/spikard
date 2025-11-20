@@ -36,7 +36,6 @@ impl Generator {
 
     /// Validate the configuration
     pub fn validate(&self) -> Result<()> {
-        // Additional validation beyond basic config validation
         // TODO: Validate schema references, handler paths, etc.
         Ok(())
     }

@@ -22,7 +22,6 @@ impl PythonSseEventProducer {
 
     /// Convert Python object to JSON Value
     fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
-        // Serialize Python object to JSON string, then parse
         let json_module = py.import("json")?;
         let json_str: String = json_module.call_method1("dumps", (obj,))?.extract()?;
         serde_json::from_str(&json_str)
@@ -36,22 +35,18 @@ impl SseEventProducer for PythonSseEventProducer {
 
         let producer = Arc::clone(&self.producer);
 
-        // Run in blocking task with asyncio.run() like regular handlers
         let result = tokio::task::spawn_blocking(move || {
             Python::attach(|py| -> PyResult<Option<SseEvent>> {
                 debug!("Python SSE producer: acquired GIL");
 
-                // Call the producer's next_event method (synchronous)
                 let result = producer.bind(py).call_method0("next_event")?;
                 debug!("Python SSE producer: called next_event method");
 
-                // Check if result is None (end of stream)
                 if result.is_none() {
                     debug!("Python SSE producer: received None, ending stream");
                     return Ok(None);
                 }
 
-                // Extract SseEvent from Python object
                 let data = result.getattr("data")?;
                 let data_json = Self::python_to_json(py, &data)?;
 
@@ -70,7 +65,6 @@ impl SseEventProducer for PythonSseEventProducer {
                     .ok()
                     .and_then(|v| if v.is_none() { None } else { v.extract().ok() });
 
-                // Create Rust SseEvent
                 let mut event = if let Some(et) = event_type {
                     SseEvent::with_type(et, data_json)
                 } else {
@@ -141,12 +135,9 @@ impl SseEventProducer for PythonSseEventProducer {
 
 /// Create SseState from Python producer factory
 pub fn create_sse_state(factory: &Bound<'_, PyAny>) -> PyResult<spikard_http::SseState<PythonSseEventProducer>> {
-    // Call the factory to get a producer instance
     let producer_instance = factory.call0()?;
 
-    // Create Python SSE producer
     let py_producer = PythonSseEventProducer::new(producer_instance.unbind());
 
-    // Create and return SSE state
     Ok(spikard_http::SseState::new(py_producer))
 }

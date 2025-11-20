@@ -93,10 +93,8 @@ pub fn generate_from_openapi(
     dto: &DtoConfig,
     output_path: Option<&Path>,
 ) -> Result<String> {
-    // Parse the OpenAPI schema
     let spec = parse_openapi_schema(schema_path)?;
 
-    // Generate code based on target language
     let code = match target_lang {
         TargetLanguage::Python => {
             let generator = PythonGenerator::new(spec, dto.python);
@@ -120,7 +118,6 @@ pub fn generate_from_openapi(
         }
     };
 
-    // Write to file if output path specified, otherwise return code
     if let Some(out_path) = output_path {
         std::fs::write(out_path, &code)?;
     }

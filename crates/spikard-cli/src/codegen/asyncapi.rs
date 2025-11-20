@@ -83,17 +83,14 @@ pub fn parse_asyncapi_schema(path: &Path) -> Result<AsyncApiV3Spec> {
     let content =
         fs::read_to_string(path).with_context(|| format!("Failed to read AsyncAPI file: {}", path.display()))?;
 
-    // Try to determine format from extension
     let spec: AsyncApiSpec = if path.extension().and_then(|s| s.to_str()) == Some("json") {
         serde_json::from_str(&content)
             .with_context(|| format!("Failed to parse AsyncAPI JSON from {}", path.display()))?
     } else {
-        // Assume YAML (handles .yaml, .yml, or no extension)
         serde_yaml::from_str(&content)
             .with_context(|| format!("Failed to parse AsyncAPI YAML from {}", path.display()))?
     };
 
-    // Extract v3 spec from enum
     match spec {
         AsyncApiSpec::V3_0_0(v3_spec) => Ok(v3_spec),
     }
@@ -107,11 +104,9 @@ fn extract_message_schemas(spec: &AsyncApiV3Spec) -> Result<HashMap<String, Mess
 
     let mut schemas = HashMap::new();
 
-    // Extract from components.messages (primary source)
     for (message_name, message_ref_or) in &spec.components.messages {
         tracing::debug!("Processing message: {}", message_name);
 
-        // Handle either direct Message or reference
         match message_ref_or {
             Either::Right(message) => {
                 if let Some(definition) = build_message_definition(message, message_name)? {
@@ -119,21 +114,17 @@ fn extract_message_schemas(spec: &AsyncApiV3Spec) -> Result<HashMap<String, Mess
                 }
             }
             Either::Left(reference) => {
-                // Reference to another message
                 // TODO: Implement reference resolution
                 tracing::debug!("Skipping message reference: {}", reference.reference);
             }
         }
     }
 
-    // Extract from channels (may reference components.messages)
     for (channel_name, channel_ref_or) in &spec.channels {
         tracing::debug!("Processing channel: {}", channel_name);
 
-        // Handle either direct Channel or reference
         match channel_ref_or {
             Either::Right(channel) => {
-                // Extract messages from the channel
                 for (msg_name, msg_ref_or) in &channel.messages {
                     match msg_ref_or {
                         Either::Right(message) => {
@@ -143,7 +134,6 @@ fn extract_message_schemas(spec: &AsyncApiV3Spec) -> Result<HashMap<String, Mess
                             }
                         }
                         Either::Left(_reference) => {
-                            // References are handled from components.messages
                             tracing::debug!("Channel {} references message {}", channel_name, msg_name);
                         }
                     }
@@ -190,7 +180,6 @@ fn extract_schema_from_message(
 ) -> Result<Option<Value>> {
     use asyncapiv3::spec::common::Either;
 
-    // Check if message has a payload
     let payload = match &message.payload {
         Some(payload_ref_or) => payload_ref_or,
         None => {
@@ -199,25 +188,20 @@ fn extract_schema_from_message(
         }
     };
 
-    // Handle payload (either reference or direct schema)
     match payload {
         Either::Right(schema_or_multiformat) => {
-            // Either schemars::Schema or MultiFormatSchema
             match schema_or_multiformat {
                 Either::Left(schema) => {
-                    // schemars::Schema - convert to JSON Value
                     let schema_json =
                         serde_json::to_value(schema).context("Failed to serialize schemars::Schema to JSON")?;
                     Ok(Some(schema_json))
                 }
                 Either::Right(multi_format) => {
-                    // MultiFormatSchema - already has schema as Value
                     Ok(Some(multi_format.schema.clone()))
                 }
             }
         }
         Either::Left(reference) => {
-            // Reference to another schema
             tracing::debug!(
                 "Message {} payload is a reference: {}",
                 message_name,
@@ -272,11 +256,9 @@ impl Protocol {
 pub fn detect_primary_protocol(spec: &AsyncApiV3Spec) -> Result<Protocol> {
     use asyncapiv3::spec::common::Either;
 
-    // Check servers for protocol information
     for server_or_ref in spec.servers.values() {
         match server_or_ref {
             Either::Right(server) => {
-                // Server has protocol defined as a String (not Option)
                 let protocol = Protocol::from_protocol_string(&server.protocol);
                 tracing::debug!("Detected protocol: {:?} from '{}'", protocol, server.protocol);
                 return Ok(protocol);
@@ -288,7 +270,6 @@ pub fn detect_primary_protocol(spec: &AsyncApiV3Spec) -> Result<Protocol> {
         }
     }
 
-    // Default to WebSocket if we can't determine
     tracing::warn!("Could not determine protocol from spec, defaulting to WebSocket");
     Ok(Protocol::WebSocket)
 }
@@ -297,7 +278,6 @@ pub fn detect_primary_protocol(spec: &AsyncApiV3Spec) -> Result<Protocol> {
 ///
 /// Creates JSON fixture files in the output directory for each message type
 pub fn generate_fixtures(spec: &AsyncApiV3Spec, output_dir: &Path, protocol: Protocol) -> Result<Vec<PathBuf>> {
-    // Extract message schemas
     let schemas = extract_message_schemas(spec)?;
     let (message_channels, alias_map) = collect_message_channels(spec);
     let message_operations = collect_message_operations(spec, &alias_map);
@@ -307,7 +287,6 @@ pub fn generate_fixtures(spec: &AsyncApiV3Spec, output_dir: &Path, protocol: Pro
         return Ok(Vec::new());
     }
 
-    // Determine subdirectory based on protocol
     let subdir = match protocol {
         Protocol::WebSocket => "websockets",
         Protocol::Sse => "sse",
@@ -320,11 +299,9 @@ pub fn generate_fixtures(spec: &AsyncApiV3Spec, output_dir: &Path, protocol: Pro
 
     let mut generated_paths = Vec::new();
 
-    // Generate a fixture file for each message schema
     for (message_name, definition) in &schemas {
         let fixture_path = target_dir.join(format!("{}.json", message_name));
 
-        // Create fixture with metadata
         let channel = message_channels.get(message_name).cloned();
         let operations = message_operations
             .get(message_name)
@@ -349,7 +326,6 @@ pub fn generate_fixtures(spec: &AsyncApiV3Spec, output_dir: &Path, protocol: Pro
             "operations": operations,
         });
 
-        // Write fixture file
         let fixture_json = serde_json::to_string_pretty(&fixture).context("Failed to serialize fixture to JSON")?;
 
         fs::write(&fixture_path, fixture_json)
@@ -368,7 +344,6 @@ pub fn generate_fixtures(spec: &AsyncApiV3Spec, output_dir: &Path, protocol: Pro
 fn generate_example_from_schema(schema: &Value) -> Result<Vec<Value>> {
     let mut examples = Vec::new();
 
-    // Try to extract examples from schema
     if let Some(schema_examples) = schema.get("examples").and_then(|e| e.as_array()) {
         examples.extend(schema_examples.clone());
     }
@@ -402,20 +377,17 @@ fn generate_example_from_schema(schema: &Value) -> Result<Vec<Value>> {
         }
     }
 
-    // If no examples, generate a basic one from schema objects
     if examples.is_empty()
         && let Some(obj) = schema.get("properties").and_then(|p| p.as_object())
     {
         let mut example = serde_json::Map::new();
 
         for (prop_name, prop_schema) in obj {
-            // Generate simple example values based on type
             let example_value = if let Some(const_val) = prop_schema.get("const") {
                 const_val.clone()
             } else if let Some(type_str) = prop_schema.get("type").and_then(|t| t.as_str()) {
                 match type_str {
                     "string" => {
-                        // Check for format hints
                         if let Some(format) = prop_schema.get("format").and_then(|f| f.as_str()) {
                             match format {
                                 "date-time" => Value::String("2024-01-15T10:30:00Z".to_string()),
@@ -445,7 +417,6 @@ fn generate_example_from_schema(schema: &Value) -> Result<Vec<Value>> {
         examples.push(Value::Object(example));
     }
 
-    // Ensure at least one example
     if examples.is_empty() {
         examples.push(serde_json::json!({}));
     }
@@ -459,7 +430,6 @@ fn generate_example_from_schema(schema: &Value) -> Result<Vec<Value>> {
 pub fn generate_python_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
     let mut code = String::new();
 
-    // Imports
     code.push_str("#!/usr/bin/env python3\n");
     code.push_str("\"\"\"Test application generated from AsyncAPI specification\"\"\"\n\n");
     code.push_str("import asyncio\n");
@@ -483,10 +453,8 @@ pub fn generate_python_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Re
         }
     }
 
-    // Extract channels and operations
     let channels = extract_channel_info(spec)?;
 
-    // Generate fixture loader
     code.push_str("# Load test fixtures\n");
     code.push_str("FIXTURES_DIR = Path(__file__).parent.parent / \"testing_data\" / \"");
     code.push_str(match protocol {
@@ -504,7 +472,6 @@ pub fn generate_python_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Re
     code.push_str("    with open(fixture_path) as f:\n");
     code.push_str("        return json.load(f)\n\n\n");
 
-    // Generate message handlers based on protocol
     match protocol {
         Protocol::WebSocket => {
             code.push_str(&generate_websocket_handlers(spec, &channels)?);
@@ -515,7 +482,6 @@ pub fn generate_python_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Re
         _ => {}
     }
 
-    // Generate main function
     code.push_str("\n\nif __name__ == \"__main__\":\n");
     code.push_str("    asyncio.run(main())\n");
 
@@ -758,7 +724,6 @@ fn escape_rust_string(input: &str) -> String {
 fn generate_websocket_handlers(spec: &AsyncApiV3Spec, channels: &[ChannelInfo]) -> Result<String> {
     let mut code = String::new();
 
-    // Message validation function
     code.push_str("def validate_message(message: Dict[str, Any], fixture_name: str) -> bool:\n");
     code.push_str("    \"\"\"Validate message against fixture schema\"\"\"\n");
     code.push_str("    try:\n");
@@ -776,7 +741,6 @@ fn generate_websocket_handlers(spec: &AsyncApiV3Spec, channels: &[ChannelInfo]) 
     code.push_str("        print(f\"❌ Validation error: {e}\")\n");
     code.push_str("        return False\n\n\n");
 
-    // WebSocket handler function
     code.push_str("async def handle_websocket(uri: str) -> None:\n");
     code.push_str("    \"\"\"Connect to WebSocket and handle messages\"\"\"\n");
     code.push_str("    print(f\"Connecting to {uri}...\")\n");
@@ -785,7 +749,6 @@ fn generate_websocket_handlers(spec: &AsyncApiV3Spec, channels: &[ChannelInfo]) 
     code.push_str("        print(\"✓ Connected\")\n");
     code.push_str("        \n");
 
-    // Load message schemas
     let schemas = extract_message_schemas(spec)?;
 
     if !schemas.is_empty() {
@@ -829,7 +792,6 @@ fn generate_websocket_handlers(spec: &AsyncApiV3Spec, channels: &[ChannelInfo]) 
 
     code.push_str("\n\n");
 
-    // Main function
     code.push_str("async def main() -> None:\n");
     code.push_str("    \"\"\"Main entry point\"\"\"\n");
     code.push_str("    # Default WebSocket URI - override with environment variable WS_URI\n");
@@ -852,7 +814,6 @@ fn generate_websocket_handlers(spec: &AsyncApiV3Spec, channels: &[ChannelInfo]) 
 pub fn generate_nodejs_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
     let mut code = String::new();
 
-    // Imports and header
     code.push_str("#!/usr/bin/env node\n");
     code.push_str("/**\n");
     code.push_str(" * Test application generated from AsyncAPI specification\n");
@@ -877,10 +838,8 @@ pub fn generate_nodejs_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Re
     code.push_str("import { join, dirname } from 'node:path';\n");
     code.push_str("import { fileURLToPath } from 'node:url';\n\n");
 
-    // Extract channels and operations
     let channels = extract_channel_info(spec)?;
 
-    // Generate fixture loader
     code.push_str("// ES modules compatibility\n");
     code.push_str("const __filename = fileURLToPath(import.meta.url);\n");
     code.push_str("const __dirname = dirname(__filename);\n\n");
@@ -915,7 +874,6 @@ pub fn generate_nodejs_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Re
     code.push_str("  return JSON.parse(content) as Fixture;\n");
     code.push_str("}\n\n");
 
-    // Generate message handlers based on protocol
     match protocol {
         Protocol::WebSocket => {
             code.push_str(&generate_nodejs_websocket_handlers(spec, &channels)?);
@@ -926,7 +884,6 @@ pub fn generate_nodejs_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Re
         _ => {}
     }
 
-    // Generate main function
     code.push_str("\n// Run main function\n");
     code.push_str("main().catch(console.error);\n");
 
@@ -937,7 +894,6 @@ pub fn generate_nodejs_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Re
 fn generate_nodejs_websocket_handlers(spec: &AsyncApiV3Spec, channels: &[ChannelInfo]) -> Result<String> {
     let mut code = String::new();
 
-    // Message validation function
     code.push_str("function validateMessage(message: MessageRecord, fixtureName: string): boolean {\n");
     code.push_str("  try {\n");
     code.push_str("    const fixture = loadFixture(fixtureName);\n");
@@ -959,7 +915,6 @@ fn generate_nodejs_websocket_handlers(spec: &AsyncApiV3Spec, channels: &[Channel
     code.push_str("  }\n");
     code.push_str("}\n\n");
 
-    // WebSocket handler function
     code.push_str("async function handleWebSocket(uri: string): Promise<void> {\n");
     code.push_str("  console.log(`Connecting to ${uri}...`);\n");
     code.push_str("  \n");
@@ -970,7 +925,6 @@ fn generate_nodejs_websocket_handlers(spec: &AsyncApiV3Spec, channels: &[Channel
     code.push_str("      console.log('✓ Connected');\n");
     code.push_str("      \n");
 
-    // Load message schemas
     let schemas = extract_message_schemas(spec)?;
 
     if !schemas.is_empty() {
@@ -1021,7 +975,6 @@ fn generate_nodejs_websocket_handlers(spec: &AsyncApiV3Spec, channels: &[Channel
     code.push_str("  });\n");
     code.push_str("}\n\n");
 
-    // Main function
     code.push_str("async function main(): Promise<void> {\n");
     code.push_str("  // Default WebSocket URI - override with environment variable WS_URI\n");
     code.push_str("  const uri = process.env.WS_URI || 'ws://localhost:8000");
@@ -1041,7 +994,6 @@ fn generate_nodejs_websocket_handlers(spec: &AsyncApiV3Spec, channels: &[Channel
 fn generate_nodejs_sse_handlers(_spec: &AsyncApiV3Spec, channels: &[ChannelInfo]) -> Result<String> {
     let mut code = String::new();
 
-    // SSE handler function
     code.push_str("async function handleSSE(url: string): Promise<void> {\n");
     code.push_str("  console.log(`Connecting to ${url}...`);\n");
     code.push_str("  \n");
@@ -1072,7 +1024,6 @@ fn generate_nodejs_sse_handlers(_spec: &AsyncApiV3Spec, channels: &[ChannelInfo]
     code.push_str("  }\n");
     code.push_str("}\n\n");
 
-    // Main function
     code.push_str("async function main(): Promise<void> {\n");
     code.push_str("  // Default SSE URI - override with environment variable SSE_URI\n");
     code.push_str("  const url = process.env.SSE_URI || 'http://localhost:8000");
@@ -1094,12 +1045,10 @@ fn generate_nodejs_sse_handlers(_spec: &AsyncApiV3Spec, channels: &[ChannelInfo]
 pub fn generate_ruby_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
     let mut code = String::new();
 
-    // Shebang and header
     code.push_str("#!/usr/bin/env ruby\n");
     code.push_str("# frozen_string_literal: true\n\n");
     code.push_str("# Test application generated from AsyncAPI specification\n\n");
 
-    // Requires
     match protocol {
         Protocol::WebSocket => {
             code.push_str("require 'faye/websocket'\n");
@@ -1119,10 +1068,8 @@ pub fn generate_ruby_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Resu
     code.push_str("require 'json'\n");
     code.push_str("require 'pathname'\n\n");
 
-    // Extract channels and operations
     let channels = extract_channel_info(spec)?;
 
-    // Generate fixture loader
     code.push_str("# Load test fixtures\n");
     code.push_str("FIXTURES_DIR = Pathname.new(__FILE__).parent.parent + 'testing_data' + '");
     code.push_str(match protocol {
@@ -1138,7 +1085,6 @@ pub fn generate_ruby_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Resu
     code.push_str("  JSON.parse(fixture_path.read)\n");
     code.push_str("end\n\n");
 
-    // Generate message handlers based on protocol
     match protocol {
         Protocol::WebSocket => {
             code.push_str(&generate_ruby_websocket_handlers(spec, &channels)?);
@@ -1149,7 +1095,6 @@ pub fn generate_ruby_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Resu
         _ => {}
     }
 
-    // Generate main execution
     code.push_str("\n# Run main function\n");
     code.push_str("main\n");
 
@@ -1572,7 +1517,6 @@ pub fn generate_php_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Re
 fn generate_ruby_websocket_handlers(spec: &AsyncApiV3Spec, channels: &[ChannelInfo]) -> Result<String> {
     let mut code = String::new();
 
-    // Message validation function
     code.push_str("def validate_message(message, fixture_name)\n");
     code.push_str("  fixture = load_fixture(fixture_name)\n");
     code.push_str("  schema = fixture['schema'] || {}\n");
@@ -1593,7 +1537,6 @@ fn generate_ruby_websocket_handlers(spec: &AsyncApiV3Spec, channels: &[ChannelIn
     code.push_str("  false\n");
     code.push_str("end\n\n");
 
-    // WebSocket handler function
     code.push_str("def handle_websocket(uri)\n");
     code.push_str("  puts \"Connecting to #{uri}...\"\n");
     code.push_str("  \n");
@@ -1604,7 +1547,6 @@ fn generate_ruby_websocket_handlers(spec: &AsyncApiV3Spec, channels: &[ChannelIn
     code.push_str("      puts '✓ Connected'\n");
     code.push_str("      \n");
 
-    // Load message schemas
     let schemas = extract_message_schemas(spec)?;
 
     if !schemas.is_empty() {
@@ -1652,7 +1594,6 @@ fn generate_ruby_websocket_handlers(spec: &AsyncApiV3Spec, channels: &[ChannelIn
     code.push_str("  end\n");
     code.push_str("end\n\n");
 
-    // Main function
     code.push_str("def main\n");
     code.push_str("  # Default WebSocket URI - override with environment variable WS_URI\n");
     code.push_str("  uri = ENV['WS_URI'] || 'ws://localhost:8000");
@@ -1672,7 +1613,6 @@ fn generate_ruby_websocket_handlers(spec: &AsyncApiV3Spec, channels: &[ChannelIn
 fn generate_ruby_sse_handlers(_spec: &AsyncApiV3Spec, channels: &[ChannelInfo]) -> Result<String> {
     let mut code = String::new();
 
-    // SSE handler function
     code.push_str("def handle_sse(url)\n");
     code.push_str("  puts \"Connecting to #{url}...\"\n");
     code.push_str("  \n");
@@ -1700,7 +1640,6 @@ fn generate_ruby_sse_handlers(_spec: &AsyncApiV3Spec, channels: &[ChannelInfo]) 
     code.push_str("  end\n");
     code.push_str("end\n\n");
 
-    // Main function
     code.push_str("def main\n");
     code.push_str("  # Default SSE URI - override with environment variable SSE_URI\n");
     code.push_str("  url = ENV['SSE_URI'] || 'http://localhost:8000");
@@ -1720,7 +1659,6 @@ fn generate_ruby_sse_handlers(_spec: &AsyncApiV3Spec, channels: &[ChannelInfo]) 
 fn generate_sse_handlers(_spec: &AsyncApiV3Spec, channels: &[ChannelInfo]) -> Result<String> {
     let mut code = String::new();
 
-    // SSE handler function
     code.push_str("async def handle_sse(url: str) -> None:\n");
     code.push_str("    \"\"\"Connect to SSE endpoint and handle events\"\"\"\n");
     code.push_str("    print(f\"Connecting to {url}...\")\n");
@@ -1738,7 +1676,6 @@ fn generate_sse_handlers(_spec: &AsyncApiV3Spec, channels: &[ChannelInfo]) -> Re
     code.push_str("                    except json.JSONDecodeError:\n");
     code.push_str("                        print(f\"Received: {data}\")\n\n\n");
 
-    // Main function
     code.push_str("async def main() -> None:\n");
     code.push_str("    \"\"\"Main entry point\"\"\"\n");
     code.push_str("    # Default SSE URI - override with environment variable SSE_URI\n");

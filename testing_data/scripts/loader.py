@@ -102,7 +102,6 @@ def load_file_content(category: str, filename: str) -> bytes:
         return f.read()
 
 
-# Pytest parametrize helpers
 
 
 def pytest_parametrize_fixtures(
@@ -131,7 +130,6 @@ def pytest_parametrize_fixtures(
     return ("fixture", fixtures, {"ids": ids})
 
 
-# Example pytest usage:
 """
 import pytest
 from testing_data.scripts.loader import load_fixture, pytest_parametrize_fixtures

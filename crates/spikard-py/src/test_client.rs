@@ -19,8 +19,6 @@ use std::sync::Arc;
 use tokio::runtime::{Builder, Runtime};
 use urlencoding::encode;
 
-// Global Tokio runtime for synchronous test client creation with HTTP transport
-// Must be multi-threaded to support HTTP transport background tasks
 pub(crate) static GLOBAL_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
     Builder::new_multi_thread()
         .worker_threads(2)
@@ -40,8 +38,6 @@ pub struct TestClient {
 impl TestClient {
     /// Create a new test client from an Axum router
     pub fn from_router(router: AxumRouter) -> PyResult<Self> {
-        // Use default transport (no HTTP) since WebSocket support in axum-test
-        // seems to have issues with HTTP transport
         let server = AxumTestServer::new(router)
             .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to create test server: {}", e)))?;
 
@@ -72,16 +68,13 @@ impl TestClient {
         headers: Option<&Bound<'py, PyDict>>,
         cookies: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
-        // Extract Python data before the async block
         let path = path.to_string();
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let mut headers_vec = extract_dict_to_vec(headers)?;
 
-        // Convert cookies dict to Cookie header if present
         if let Some(cookies_dict) = cookies {
             let cookies_vec = extract_dict_to_vec(Some(cookies_dict))?;
             if !cookies_vec.is_empty() {
-                // Format as "name1=value1; name2=value2"
                 let cookie_header_value: Vec<String> =
                     cookies_vec.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
                 headers_vec.push(("cookie".to_string(), cookie_header_value.join("; ")));
@@ -91,7 +84,6 @@ impl TestClient {
         let server = Arc::clone(&self.server);
 
         let fut = async move {
-            // Build full path with query string to properly handle arrays
             let full_path = if !query_params_vec.is_empty() {
                 let query_string: Vec<String> = query_params_vec
                     .iter()
@@ -157,7 +149,6 @@ impl TestClient {
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
 
-        // Extract form data for multipart or capture raw body content
         let mut form_data = Vec::new();
         let mut raw_body: Option<Vec<u8>> = None;
         if let Some(obj) = data {
@@ -177,7 +168,6 @@ impl TestClient {
             }
         }
 
-        // Extract files data for multipart
         let files_data = extract_files(files)?;
 
         let server = Arc::clone(&self.server);
@@ -187,15 +177,12 @@ impl TestClient {
             let full_path = build_full_path(&path, &query_params_vec);
             let mut request = server.post(&full_path);
 
-            // Check if this is a multipart request (files or form data provided)
             let is_multipart = !files_data.is_empty() || !form_data.is_empty();
 
-            // Check if this is a URL-encoded form request
             let is_form_encoded = headers_vec.iter().any(|(k, v)| {
                 k.eq_ignore_ascii_case("content-type") && v.contains("application/x-www-form-urlencoded")
             });
 
-            // Add headers and body
             if is_multipart {
                 let (multipart_body, boundary) = build_multipart_body(&form_data, &files_data);
                 request = request.add_header(
@@ -227,7 +214,6 @@ impl TestClient {
                 request = request.json(&json_val);
             }
 
-            // Add remaining headers (skip Content-Type for form-encoded since we set it above)
             for (key, value) in headers_vec {
                 if is_form_encoded && key.eq_ignore_ascii_case("content-type") {
                     continue;
@@ -496,10 +482,8 @@ impl TestClient {
         let path = path.to_string();
         let server = Arc::clone(&self.server);
 
-        // Run the WebSocket connection in the GLOBAL_RUNTIME, then convert to Python
         let fut = GLOBAL_RUNTIME.spawn(async move { test_websocket::connect_websocket_for_test(&server, &path).await });
 
-        // Convert the JoinHandle into a Python awaitable
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             fut.await
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("WebSocket task failed: {}", e)))?
@@ -518,11 +502,9 @@ impl TestClient {
         let server = Arc::clone(&self.server);
 
         let fut = async move {
-            // Make GET request to SSE endpoint
             let axum_response = server.get(&path).await;
             let snapshot = snapshot_response(axum_response).await.map_err(snapshot_err_to_py)?;
 
-            // Parse SSE stream from response
             let sse_stream = test_sse::sse_stream_from_response(&snapshot)?;
 
             Ok(sse_stream)
@@ -638,14 +620,12 @@ fn extract_dict_to_vec(dict: Option<&Bound<'_, PyDict>>) -> PyResult<Vec<(String
         for (key, value) in d.iter() {
             let key: String = key.extract()?;
 
-            // Check if value is a list - if so, add multiple entries
             if let Ok(list) = value.cast::<pyo3::types::PyList>() {
                 for item in list.iter() {
                     let item_str: String = item.str()?.extract()?;
                     result.push((key.clone(), item_str));
                 }
             } else {
-                // Single value - convert to string
                 let value: String = value.str()?.extract()?;
                 result.push((key, value));
             }
@@ -675,7 +655,6 @@ fn build_full_path(path: &str, query_params: &[(String, String)]) -> String {
 
 /// Convert Python object to serde_json::Value
 fn python_to_json_value(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
-    // Use json module to convert
     let json_module = py.import("json")?;
     let json_str: String = json_module.call_method1("dumps", (obj,))?.extract()?;
 
@@ -685,7 +664,6 @@ fn python_to_json_value(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Valu
 
 /// Convert serde_json::Value to Python object
 fn json_value_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'py, PyAny>> {
-    // Use json module to convert
     let json_module = py.import("json")?;
     let json_str = serde_json::to_string(value)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Failed to serialize JSON: {}", e)))?;
@@ -709,14 +687,12 @@ fn extract_files(files_dict: Option<&Bound<'_, PyDict>>) -> PyResult<Vec<Multipa
     for (key, value) in files.iter() {
         let field_name: String = key.extract()?;
 
-        // Check if value is a list (multiple files for same field)
         if let Ok(list) = value.cast::<pyo3::types::PyList>() {
             for item in list.iter() {
                 let file_data = extract_single_file(&field_name, &item)?;
                 result.push(file_data);
             }
         } else {
-            // Single file tuple
             let file_data = extract_single_file(&field_name, &value)?;
             result.push(file_data);
         }
@@ -742,7 +718,6 @@ fn extract_single_file(field_name: &str, tuple: &Bound<'_, PyAny>) -> PyResult<M
     let filename: String = tuple.get_item(0)?.extract()?;
     let content: Vec<u8> = tuple.get_item(1)?.extract()?;
 
-    // Optional content_type (3rd element if provided)
     let content_type = if tuple.len() >= 3 {
         tuple.get_item(2).ok().and_then(|v| v.extract().ok())
     } else {

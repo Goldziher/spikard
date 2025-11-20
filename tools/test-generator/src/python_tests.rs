@@ -16,18 +16,14 @@ use std::path::Path;
 pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     println!("Generating Python tests...");
 
-    // Create tests directory
     let tests_dir = output_dir.join("tests");
     fs::create_dir_all(&tests_dir).context("Failed to create tests directory")?;
 
-    // Generate conftest.py
     let conftest_content = generate_conftest();
     fs::write(tests_dir.join("conftest.py"), conftest_content).context("Failed to write conftest.py")?;
 
-    // Generate __init__.py
     fs::write(tests_dir.join("__init__.py"), "\"\"\"E2E tests.\"\"\"\n").context("Failed to write __init__.py")?;
 
-    // Load fixtures by category
     let mut fixtures_by_category: HashMap<String, Vec<Fixture>> = HashMap::new();
 
     for entry in fs::read_dir(fixtures_dir).context("Failed to read fixtures directory")? {
@@ -46,7 +42,6 @@ pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<(
     let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
     let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
 
-    // Generate test file for each category
     for (category, fixtures) in fixtures_by_category.iter() {
         let test_content = generate_test_file(category, fixtures)?;
         let test_file = tests_dir.join(format!("test_{}.py", category));
@@ -121,7 +116,6 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
 
     let mut code = String::new();
 
-    // Collect app factory imports so we can emit them once at the top
     let mut app_factories: Vec<String> = fixtures
         .iter()
         .map(|fixture| {
@@ -132,7 +126,6 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
     app_factories.sort();
     app_factories.dedup();
 
-    // File header and imports
     code.push_str(&format!("\"\"\"E2E tests for {}.\"\"\"\n\n", category));
     if needs_pytest_import {
         code.push_str("import pytest\n");
@@ -159,7 +152,6 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
     }
     code.push('\n');
 
-    // Generate test for each fixture
     for fixture in fixtures {
         let test_function = generate_test_function(category, fixture)?;
         code.push_str(&test_function);
@@ -255,7 +247,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     let background_info = background_data(fixture)?;
     let middleware_meta = parse_middleware(fixture)?;
 
-    // No client parameter - create per-test client from app factory
     code.push_str(&format!("async def test_{}() -> None:\n", test_name));
     code.push_str(&format!("    \"\"\"{}.\"\"\"\n", fixture.description));
     code.push('\n');
@@ -267,9 +258,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         return Ok(code);
     }
 
-    // Import and create client from per-fixture app factory
-    // The app factory name matches the one generated in python_app.rs:
-    // sanitize_identifier(&format!("{}_{}", category, &fixture.name))
     let fixture_id = sanitize_identifier(&format!("{}_{}", category, &fixture.name));
     let app_factory_name = format!("create_app_{}", fixture_id);
     code.push_str(&format!(
@@ -277,14 +265,11 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         app_factory_name
     ));
 
-    // Build request
     let method = fixture.request.method.to_lowercase();
     let path = &fixture.request.path;
 
-    // Prepare request kwargs
     let mut request_kwargs = Vec::new();
 
-    // Add query params
     if let Some(ref query_params) = fixture.request.query_params
         && !query_params.is_empty()
     {
@@ -296,13 +281,11 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         request_kwargs.push("params=params");
     }
 
-    // Add headers
     if let Some(ref headers) = fixture.request.headers
         && !headers.is_empty()
     {
         code.push_str("        headers = {\n");
         for (key, value) in headers {
-            // Escape special characters in header values
             let escaped_value = value
                 .replace('\\', "\\\\")
                 .replace('"', "\\\"")
@@ -316,13 +299,11 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         request_kwargs.push("headers=headers");
     }
 
-    // Add cookies
     if let Some(ref cookies) = fixture.request.cookies
         && !cookies.is_empty()
     {
         code.push_str("        cookies = {\n");
         for (key, value) in cookies {
-            // Escape special characters in cookie values
             let escaped_value = value
                 .replace('\\', "\\\\")
                 .replace('"', "\\\"")
@@ -336,7 +317,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         request_kwargs.push("cookies=cookies");
     }
 
-    // Add body
     if let Some(ref body) = fixture.request.body {
         let content_type = fixture
             .request
@@ -353,7 +333,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         let treat_as_json = content_type
             .as_deref()
             .map(|ct| {
-                ct.contains("application/json") || ct.contains("application/xml") || ct.contains("+json") // Vendor-specific JSON types like application/vnd.api+json
+                ct.contains("application/json") || ct.contains("application/xml") || ct.contains("+json") 
             })
             .unwrap_or(true);
 
@@ -369,7 +349,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         }
     }
 
-    // Add form data (for URL-encoded forms)
     if let Some(ref form_data) = fixture.request.form_data
         && !form_data.is_empty()
     {
@@ -377,17 +356,14 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         request_kwargs.push("data=form_data");
     }
 
-    // Add form data (for multipart form data without files)
     if let Some(ref data) = fixture.request.data {
         code.push_str(&format!("        data = {}\n", hashmap_to_python(data)));
         request_kwargs.push("data=data");
     }
 
-    // Add files (for multipart form data)
     if let Some(ref files) = fixture.request.files
         && !files.is_empty()
     {
-        // Group files by field_name to handle multiple files with same name
         use std::collections::HashMap;
         let mut files_by_name: HashMap<&str, Vec<String>> = HashMap::new();
 
@@ -395,9 +371,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
             let field_name = file.field_name.as_str();
             let filename = file.filename.as_deref().unwrap_or("file.txt");
 
-            // Handle content - either direct content or magic_bytes
             let file_content = if let Some(ref content) = file.content {
-                // Text or binary content
                 let escaped = content
                     .replace("\\", "\\\\")
                     .replace("\"", "\\\"")
@@ -406,14 +380,11 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                     .replace("\t", "\\t");
                 format!("b\"{}\"", escaped)
             } else if let Some(ref magic_bytes) = file.magic_bytes {
-                // Hex-encoded binary data
                 format!("bytes.fromhex(\"{}\")", magic_bytes)
             } else {
-                // Empty file
                 "b\"\"".to_string()
             };
 
-            // Include content_type if specified (TestClient supports 3-tuple format)
             let file_tuple = if let Some(ref content_type) = file.content_type {
                 format!("(\"{}\", {}, \"{}\")", filename, file_content, content_type)
             } else {
@@ -423,11 +394,9 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
             files_by_name.entry(field_name).or_default().push(file_tuple);
         }
 
-        // Generate files (dict for single files per field, list for multiple)
         let has_multiple_files_per_field = files_by_name.values().any(|v| v.len() > 1);
 
         if has_multiple_files_per_field {
-            // Use list format for httpx: [(field_name, file_tuple), ...]
             code.push_str("        files = [\n");
             for (field_name, file_tuples) in files_by_name.iter() {
                 for file_tuple in file_tuples {
@@ -436,7 +405,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
             }
             code.push_str("        ]\n");
         } else {
-            // Use dict format for simple case
             code.push_str("        files = {\n");
             for (field_name, file_tuples) in files_by_name.iter() {
                 code.push_str(&format!("            \"{}\": {},\n", field_name, file_tuples[0]));
@@ -446,7 +414,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         request_kwargs.push("files=files");
     }
 
-    // Make request
     let kwargs_str = if request_kwargs.is_empty() {
         String::new()
     } else {
@@ -476,7 +443,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         method, path, kwargs_str
     ));
 
-    // Assert status code
     if allows_content_length_timeout(fixture) {
         code.push_str("        assert response.status_code in (400, 408)\n");
         code.push_str("        if response.status_code == 408:\n");
@@ -516,14 +482,8 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     let content_length_header = expected_content_length(fixture);
     let requires_binary_assert = expected_string_body.is_some() && content_length_header.is_some();
 
-    // Different assertion strategies based on what we're testing:
-    // - 200 success: Verify echoed parameters match sent values
-    // - 422 validation errors: Verify error structure (handler should not be reached)
-    // - Other: Verify expected response body (business logic)
 
     if status_code == 200 {
-        // Success case - verify response matches expected
-        // Check if response is text (HTML, plain text, CSV, etc.) - don't parse as JSON
         let is_text_response = fixture
             .expected_response
             .headers
@@ -532,8 +492,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
             .map(|ct| ct.starts_with("text/"))
             .unwrap_or(false);
 
-        // Skip parsing JSON for HEAD requests without expected body (HEAD has no response body)
-        // Also skip for text responses
         let should_parse_json = !requires_binary_assert
             && !is_text_response
             && (method != "HEAD" || fixture.expected_response.body.is_some());
@@ -542,7 +500,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
             code.push_str("        response_data = response.json()\n");
         }
 
-        // If fixture has expected response body, assert against that (handles type conversion)
         if let Some(ref expected_body) = fixture.expected_response.body {
             if requires_binary_assert {
                 let expected_literal = python_bytes_literal(expected_body.as_str().unwrap().as_bytes());
@@ -561,15 +518,11 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                 generate_body_assertions(&mut code, expected_body, "response_data");
             }
         } else if should_parse_json {
-            // Fallback: verify echoed parameters match what we sent
-            // (This path is for fixtures without expected_response.body)
 
-            // Verify body parameters
             if let Some(ref body) = fixture.request.body {
                 generate_echo_assertions(&mut code, body, "response_data");
             }
 
-            // Verify form data parameters
             if let Some(ref form_data) = fixture.request.form_data {
                 for (key, value) in form_data {
                     code.push_str(&format!(
@@ -580,7 +533,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                 }
             }
 
-            // Verify query parameters
             if let Some(ref query_params) = fixture.request.query_params {
                 for (key, value) in query_params {
                     code.push_str(&format!(
@@ -592,13 +544,10 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
             }
         }
     } else if status_code == 422 {
-        // Validation error - framework should reject before handler
         code.push_str("        response_data = response.json()\n");
         code.push_str("        # Validation should be done by framework, not handler\n");
         code.push_str("        assert \"errors\" in response_data or \"detail\" in response_data\n");
-        // Don't assert specific error structure - that varies by validator
     } else {
-        // Other status codes - assert expected response body
         if let Some(ref body) = fixture.expected_response.body {
             if requires_binary_assert {
                 let expected_literal = python_bytes_literal(body.as_str().unwrap().as_bytes());
@@ -615,10 +564,8 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         }
     }
 
-    // Legacy validation_errors field (deprecated in favor of status code checking)
     if let Some(ref errors) = fixture.expected_response.validation_errors {
         code.push_str("        response_data = response.json()\n");
-        // RFC 9457 format uses "errors" array, not "detail"
         code.push_str("        assert \"errors\" in response_data\n");
         code.push_str(&format!(
             "        assert len(response_data[\"errors\"]) == {}\n",
@@ -671,7 +618,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                     ));
                 }
                 _ => {
-                    // Check if the value looks like a regex pattern
                     if is_regex_pattern(value.as_str()) {
                         code.push_str(&format!(
                             "        header_value = response_headers.get(\"{}\")\n",
@@ -794,7 +740,6 @@ fn generate_body_assertions(code: &mut String, body: &serde_json::Value, path: &
 
                 match value {
                     serde_json::Value::Object(_) => {
-                        // Skip "ctx" objects in validation errors (contents vary by validator)
                         let skip_ctx = key == "ctx" && path.contains("[\"errors\"]");
                         if !skip_ctx {
                             generate_body_assertions(code, value, &new_path);
@@ -804,16 +749,11 @@ fn generate_body_assertions(code: &mut String, body: &serde_json::Value, path: &
                         generate_body_assertions(code, value, &new_path);
                     }
                     _ => {
-                        // Skip asserting on certain fields inside validation errors
-                        // because they are implementation details that vary by validator
                         let in_errors = path.contains("[\"errors\"]");
                         let skip_assertion = in_errors
                             && (
-                                // Skip input field entirely (content varies by validator)
                                 key == "input"
-                            // Skip error messages (wording varies by validator)
                             || key == "msg"
-                            // Skip error type names (naming varies by validator)
                             || key == "type"
                             );
 
@@ -855,7 +795,6 @@ fn json_to_python(value: &serde_json::Value) -> String {
         serde_json::Value::Bool(b) => if *b { "True" } else { "False" }.to_string(),
         serde_json::Value::Number(n) => n.to_string(),
         serde_json::Value::String(s) => {
-            // Escape special characters
             let escaped = s
                 .replace('\\', "\\\\")
                 .replace('"', "\\\"")
@@ -888,7 +827,6 @@ fn sanitize_test_name(name: &str) -> String {
         "_",
     );
 
-    // Collapse multiple consecutive underscores to single underscore
     while result.contains("__") {
         result = result.replace("__", "_");
     }
@@ -902,7 +840,6 @@ fn sanitize_identifier(s: &str) -> String {
         .to_lowercase()
         .replace(|c: char| !c.is_alphanumeric() && c != '_', "_");
 
-    // Collapse multiple consecutive underscores to single underscore
     while result.contains("__") {
         result = result.replace("__", "_");
     }
@@ -912,7 +849,6 @@ fn sanitize_identifier(s: &str) -> String {
 
 /// Checks if a string looks like a regex pattern
 fn is_regex_pattern(value: &str) -> bool {
-    // Common regex metacharacters that indicate a pattern
     value.contains(".*")
         || value.contains(".+")
         || value.contains("\\d")

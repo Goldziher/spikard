@@ -16,18 +16,16 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-const MAX_SAFE_INTEGER: i128 = 9007199254740991; // 2^53 - 1
+const MAX_SAFE_INTEGER: i128 = 9007199254740991; 
 
 /// Generate Node.js test application from fixtures
 pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeScriptTarget) -> Result<()> {
     println!("Generating Node.js test app...");
 
-    // Create output directory structure
     let app_dir = output_dir.join("app");
     fs::create_dir_all(&app_dir).context("Failed to create app directory")?;
     fs::create_dir_all(app_dir.join("static_assets")).context("Failed to create static assets directory")?;
 
-    // Load all fixtures by category
     let mut fixtures_by_category: HashMap<String, Vec<Fixture>> = HashMap::new();
 
     for entry in fs::read_dir(fixtures_dir).context("Failed to read fixtures directory")? {
@@ -47,7 +45,6 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
     let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
     let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
 
-    // Generate main app file with per-fixture app factories
     let mut dto_map: HashMap<String, TypeScriptDto> = HashMap::new();
     for fixture in sse_fixtures.iter().chain(websocket_fixtures.iter()) {
         if dto_map.contains_key(&fixture.name) {
@@ -68,15 +65,12 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
     )?;
     fs::write(app_dir.join("main.ts"), app_content).context("Failed to write main.ts")?;
 
-    // Generate package.json for the e2e app
     let package_json = generate_package_json(target);
     fs::write(output_dir.join("package.json"), package_json).context("Failed to write package.json")?;
 
-    // Generate tsconfig.json
     let tsconfig = generate_tsconfig();
     fs::write(output_dir.join("tsconfig.json"), tsconfig).context("Failed to write tsconfig.json")?;
 
-    // Generate vitest.config.ts
     let vitest_config = generate_vitest_config();
     fs::write(output_dir.join("vitest.config.ts"), vitest_config).context("Failed to write vitest.config.ts")?;
 
@@ -206,13 +200,11 @@ fn generate_app_file_per_fixture(
 
     let mut code = String::new();
 
-    // File header
     code.push_str("/**\n");
     code.push_str(" * Generated E2E test application with per-fixture app factories.\n");
     code.push_str(" * @generated\n");
     code.push_str(" */\n\n");
 
-    // Imports
     let mut needs_streaming_import = fixtures_by_category
         .values()
         .flat_map(|fixtures| fixtures.iter())
@@ -238,7 +230,6 @@ fn generate_app_file_per_fixture(
         ));
     }
 
-    // Check if any fixture uses middleware - if so, import ServerConfig types
     let mut type_imports = vec!["RouteMetadata".to_string(), "SpikardApp".to_string()];
     if needs_server_config_import {
         type_imports.push("ServerConfig".to_string());
@@ -315,15 +306,12 @@ fn generate_app_file_per_fixture(
         code.push_str("const BACKGROUND_STATE: Record<string, unknown[]> = {};\n\n");
     }
 
-    // Track handler names for uniqueness
     let mut handler_names = HashMap::new();
 
-    // Collect all fixtures and generate per-fixture functions
     let mut all_app_factories = Vec::new();
 
     for (category, fixtures) in fixtures_by_category.iter() {
         for fixture in fixtures.iter() {
-            // Generate unique identifier for this fixture
             let fixture_id = sanitize_identifier(&format!("{}_{}", category, &fixture.name));
             let handler_name = make_unique_name(&fixture_id, &mut handler_names);
             let metadata = parse_middleware(fixture)?;
@@ -331,7 +319,6 @@ fn generate_app_file_per_fixture(
                 write_static_assets(app_dir, &fixture_id, &metadata.static_dirs)?;
             }
 
-            // Generate handler and app factory for this fixture
             let background_info = background_data(fixture)?;
             let (handler_code, app_factory_code) =
                 generate_fixture_handler_and_app_node(fixture, &handler_name, &fixture_id, background_info, &metadata)?;
@@ -364,7 +351,6 @@ fn generate_app_file_per_fixture(
         dto_map,
     )?;
 
-    // Add a comment listing all app factories
     code.push_str("// App factory functions:\n");
     for (category, fixture_name, factory_fn) in &all_app_factories {
         code.push_str(&format!("// - {}() for {} / {}\n", factory_fn, category, fixture_name));
@@ -392,19 +378,16 @@ fn generate_fixture_handler_and_app_node(
     background: Option<BackgroundFixtureData>,
     metadata: &MiddlewareMetadata,
 ) -> Result<(String, String)> {
-    // Get route from handler or request
     let route = if let Some(handler) = &fixture.handler {
         handler.route.clone()
     } else {
         fixture.request.path.clone()
     };
 
-    // Strip query string from route
     let route_path = route.split('?').next().unwrap_or(&route);
     let method = fixture.request.method.as_str();
     let skip_route_registration = !metadata.static_dirs.is_empty();
 
-    // Generate handler function
     let handler_func = if skip_route_registration {
         String::new()
     } else {
@@ -427,7 +410,6 @@ fn generate_fixture_handler_and_app_node(
             .map(|bg| generate_background_state_handler(handler_name, fixture_id, bg))
     };
 
-    // Check for lifecycle hooks and generate if present
     let hooks_code = if skip_route_registration {
         String::new()
     } else if let Some(handler) = &fixture.handler {
@@ -460,10 +442,8 @@ fn generate_fixture_handler_and_app_node(
         String::new()
     };
 
-    // Generate app factory function
     let app_factory_name = format!("createApp{}", to_pascal_case(handler_name));
 
-    // Extract metadata for route registration
     let body_schema_str = if let Some(handler) = &fixture.handler {
         if let Some(schema) = &handler.body_schema {
             serde_json::to_string(schema)?
@@ -494,11 +474,9 @@ fn generate_fixture_handler_and_app_node(
         "undefined".to_string()
     };
 
-    // Generate ServerConfig if middleware is present
     let raw_middleware = fixture.handler.as_ref().and_then(|handler| handler.middleware.as_ref());
     let config_code = generate_server_config_ts(metadata, raw_middleware, fixture_id)?;
 
-    // Handler registrations
     let background_handler_name = if background.is_some() && !skip_route_registration {
         Some(format!("{}_background_state", handler_name))
     } else {
@@ -517,7 +495,6 @@ fn generate_fixture_handler_and_app_node(
         format!("{{\n{}\n\t\t}}", handler_entries.join(",\n"))
     };
 
-    // Optional background route declaration
     let background_route_decl = if let (Some(bg), Some(handler_name)) =
         (background.as_ref(), background_handler_name.as_ref())
     {
@@ -537,7 +514,6 @@ fn generate_fixture_handler_and_app_node(
         "[route]".to_string()
     };
 
-    // Generate app factory
     let mut app_factory_code = String::new();
     app_factory_code.push_str(&format!("export function {}(): SpikardApp {{\n", app_factory_name));
     if !config_code.is_empty() {
@@ -574,7 +550,6 @@ fn generate_fixture_handler_and_app_node(
     app_factory_code.push_str("\t};\n");
     app_factory_code.push_str("}\n");
 
-    // Combine handler and hooks code
     let mut full_handler_code = String::new();
     if !hooks_code.is_empty() {
         full_handler_code.push_str(&hooks_code);
@@ -609,10 +584,8 @@ fn generate_handler_function(
         return generate_streaming_handler(fixture, handler_name, route, method, &stream_info);
     }
 
-    // Extract handler info from fixture
     let handler_opt = fixture.handler.as_ref();
 
-    // Extract parameters
     let params = if let Some(handler) = handler_opt {
         if let Some(ref param_schema) = handler.parameters {
             extract_parameters_ts(param_schema)?
@@ -623,15 +596,12 @@ fn generate_handler_function(
         vec![]
     };
 
-    // Check if body is expected
     let has_body = handler_opt.and_then(|h| h.body_schema.as_ref()).is_some();
 
-    // Get expected response status code and body
     let expected_status = fixture.expected_response.status_code;
     let expected_body = fixture.expected_response.body.as_ref();
     let expected_body_is_empty = expected_body.is_some_and(is_value_effectively_empty);
 
-    // Generate handler function
     let mut code = String::new();
 
     code.push_str(&format!(
@@ -702,7 +672,6 @@ fn generate_handler_function(
         return Ok(code);
     }
 
-    // Function body - handle different response scenarios
     let should_echo_params = (expected_status == 200 && expected_body.is_none()) || expected_status == 422;
     let should_return_expected = expected_body.is_some() && !expected_body_is_empty && expected_status != 422;
 
@@ -1120,7 +1089,6 @@ fn sanitized_expected_headers(fixture: &Fixture) -> JsonMap<String, Value> {
         for (key, value) in expected {
             let header_name = key.to_ascii_lowercase();
             if header_name == "content-encoding" {
-                // Leave compression headers to the runtime middleware.
                 continue;
             }
             if let Some(converted) = normalize_expected_header_value(value) {
@@ -1172,7 +1140,6 @@ fn extract_parameters_ts(schema: &Value) -> Result<Vec<ParameterBinding>> {
     let mut params = Vec::new();
 
     if let Some(obj) = schema.as_object() {
-        // Extract path parameters
         if let Some(path_params) = obj.get("path").and_then(|v| v.as_object()) {
             for (name, param_schema) in path_params {
                 let param_type = json_type_to_typescript(param_schema)?;
@@ -1184,7 +1151,6 @@ fn extract_parameters_ts(schema: &Value) -> Result<Vec<ParameterBinding>> {
             }
         }
 
-        // Extract query parameters
         if let Some(query_params) = obj.get("query").and_then(|v| v.as_object()) {
             for (name, param_schema) in query_params {
                 let param_type = json_type_to_typescript(param_schema)?;
@@ -1196,7 +1162,6 @@ fn extract_parameters_ts(schema: &Value) -> Result<Vec<ParameterBinding>> {
             }
         }
 
-        // Extract header parameters
         if let Some(headers) = obj.get("headers").and_then(|v| v.as_object()) {
             for (name, param_schema) in headers {
                 let param_type = json_type_to_typescript(param_schema)?;
@@ -1208,7 +1173,6 @@ fn extract_parameters_ts(schema: &Value) -> Result<Vec<ParameterBinding>> {
             }
         }
 
-        // Extract cookie parameters
         if let Some(cookies) = obj.get("cookies").and_then(|v| v.as_object()) {
             for (name, param_schema) in cookies {
                 let param_type = json_type_to_typescript(param_schema)?;
@@ -1631,7 +1595,6 @@ fn sanitize_identifier(s: &str) -> String {
         .to_lowercase()
         .replace(|c: char| !c.is_alphanumeric() && c != '_', "_");
 
-    // Collapse multiple consecutive underscores to single underscore
     while result.contains("__") {
         result = result.replace("__", "_");
     }
@@ -1688,7 +1651,6 @@ fn make_unique_name(base_name: &str, used_names: &mut HashMap<String, usize>) ->
 fn generate_lifecycle_hooks_ts(fixture_id: &str, hooks: &Value, fixture: &Fixture) -> String {
     let mut code = String::new();
 
-    // Process on_request hooks
     if let Some(on_request) = hooks.get("on_request").and_then(|v| v.as_array()) {
         for (idx, hook) in on_request.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
@@ -1706,13 +1668,11 @@ fn generate_lifecycle_hooks_ts(fixture_id: &str, hooks: &Value, fixture: &Fixtur
         }
     }
 
-    // Process pre_validation hooks
     if let Some(pre_validation) = hooks.get("pre_validation").and_then(|v| v.as_array()) {
         for (idx, hook) in pre_validation.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
             let func_name = to_camel_case(&format!("{}_{}_pre_validation_{}", fixture_id, hook_name, idx));
 
-            // Check if this hook should short-circuit
             let should_short_circuit = hook_name.contains("rate_limit") && fixture.expected_response.status_code == 429;
 
             if should_short_circuit {
@@ -1748,13 +1708,11 @@ fn generate_lifecycle_hooks_ts(fixture_id: &str, hooks: &Value, fixture: &Fixtur
         }
     }
 
-    // Process pre_handler hooks
     if let Some(pre_handler) = hooks.get("pre_handler").and_then(|v| v.as_array()) {
         for (idx, hook) in pre_handler.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
             let func_name = to_camel_case(&format!("{}_{}_pre_handler_{}", fixture_id, hook_name, idx));
 
-            // Check if auth should fail
             let auth_fails = hook_name.contains("auth")
                 && (fixture.expected_response.status_code == 401 || fixture.expected_response.status_code == 403);
 
@@ -1794,13 +1752,11 @@ fn generate_lifecycle_hooks_ts(fixture_id: &str, hooks: &Value, fixture: &Fixtur
         }
     }
 
-    // Process on_response hooks
     if let Some(on_response) = hooks.get("on_response").and_then(|v| v.as_array()) {
         for (idx, hook) in on_response.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
             let func_name = to_camel_case(&format!("{}_{}_on_response_{}", fixture_id, hook_name, idx));
 
-            // Add security headers if requested
             if hook_name.contains("security") {
                 code.push_str(&format!(
                     r#"async function {}(response: HookResponse): Promise<HookResponse> {{
@@ -1842,7 +1798,6 @@ fn generate_lifecycle_hooks_ts(fixture_id: &str, hooks: &Value, fixture: &Fixtur
         }
     }
 
-    // Process on_error hooks
     if let Some(on_error) = hooks.get("on_error").and_then(|v| v.as_array()) {
         for (idx, hook) in on_error.iter().enumerate() {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
@@ -1869,7 +1824,6 @@ fn generate_lifecycle_hooks_ts(fixture_id: &str, hooks: &Value, fixture: &Fixtur
 fn generate_lifecycle_hooks_registration_ts(fixture_id: &str, hooks: &Value) -> String {
     let mut registrations = Vec::new();
 
-    // Process on_request hooks
     if let Some(on_request) = hooks.get("on_request").and_then(|v| v.as_array()) {
         let mut hook_funcs = Vec::new();
         for (idx, hook) in on_request.iter().enumerate() {
@@ -1882,7 +1836,6 @@ fn generate_lifecycle_hooks_registration_ts(fixture_id: &str, hooks: &Value) -> 
         }
     }
 
-    // Process pre_validation hooks
     if let Some(pre_validation) = hooks.get("pre_validation").and_then(|v| v.as_array()) {
         let mut hook_funcs = Vec::new();
         for (idx, hook) in pre_validation.iter().enumerate() {
@@ -1895,7 +1848,6 @@ fn generate_lifecycle_hooks_registration_ts(fixture_id: &str, hooks: &Value) -> 
         }
     }
 
-    // Process pre_handler hooks
     if let Some(pre_handler) = hooks.get("pre_handler").and_then(|v| v.as_array()) {
         let mut hook_funcs = Vec::new();
         for (idx, hook) in pre_handler.iter().enumerate() {
@@ -1908,7 +1860,6 @@ fn generate_lifecycle_hooks_registration_ts(fixture_id: &str, hooks: &Value) -> 
         }
     }
 
-    // Process on_response hooks
     if let Some(on_response) = hooks.get("on_response").and_then(|v| v.as_array()) {
         let mut hook_funcs = Vec::new();
         for (idx, hook) in on_response.iter().enumerate() {
@@ -1921,7 +1872,6 @@ fn generate_lifecycle_hooks_registration_ts(fixture_id: &str, hooks: &Value) -> 
         }
     }
 
-    // Process on_error hooks
     if let Some(on_error) = hooks.get("on_error").and_then(|v| v.as_array()) {
         let mut hook_funcs = Vec::new();
         for (idx, hook) in on_error.iter().enumerate() {

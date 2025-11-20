@@ -33,12 +33,11 @@ async def type_error_endpoint() -> NoReturn:
 @app.get("/deep_error/{user_id}")
 async def deep_error(user_id: int, debug: bool = False) -> NoReturn:
     """Error deep in call stack."""
-    del debug  # Parameter kept for parity with the HTTP interface.
+    del debug
 
     def level1() -> Any:
         def level2() -> Any:
             def level3() -> float:
-                # Error at level 3
                 raise ZeroDivisionError("Intentional division by zero in level3")
 
             return level3()

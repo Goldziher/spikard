@@ -423,7 +423,6 @@ impl From<OhaOutput> for LatencyMetrics {
         let s = &oha.summary;
         let p = &oha.latency_percentiles;
 
-        // Convert seconds to milliseconds, handling None
         let to_ms = |opt: Option<f64>| opt.map(|secs| secs * 1000.0).unwrap_or(0.0);
 
         Self {
@@ -435,7 +434,7 @@ impl From<OhaOutput> for LatencyMetrics {
             p999_ms: to_ms(p.p99_9),
             max_ms: to_ms(s.slowest),
             min_ms: to_ms(s.fastest),
-            stddev_ms: 0.0, // oha doesn't provide stddev
+            stddev_ms: 0.0, 
         }
     }
 }

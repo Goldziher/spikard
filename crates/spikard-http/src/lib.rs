@@ -113,7 +113,6 @@ pub struct ServerConfig {
     /// Number of worker threads (unused with tokio)
     pub workers: usize,
 
-    // Middleware configurations
     /// Enable request ID generation and propagation
     pub enable_request_id: bool,
     /// Maximum request body size in bytes (None = unlimited, not recommended)
@@ -149,17 +148,17 @@ impl Default for ServerConfig {
             port: 8000,
             workers: 1,
             enable_request_id: true,
-            max_body_size: Some(10 * 1024 * 1024), // 10MB default
-            request_timeout: Some(30),             // 30 seconds default
+            max_body_size: Some(10 * 1024 * 1024), 
+            request_timeout: Some(30),             
             compression: Some(CompressionConfig::default()),
-            rate_limit: None, // Disabled by default
+            rate_limit: None, 
             jwt_auth: None,
             api_key_auth: None,
             static_files: Vec::new(),
             graceful_shutdown: true,
             shutdown_timeout: 30,
             openapi: None,
-            lifecycle_hooks: None, // No hooks by default
+            lifecycle_hooks: None, 
             background_tasks: BackgroundTaskConfig::default(),
         }
     }

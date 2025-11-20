@@ -42,7 +42,6 @@ impl SseStream {
             .events_as_json()
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e))?;
 
-        // Convert Vec<Value> to Python list
         let list = PyList::empty(py);
         for value in json_events {
             list.append(json_to_python(py, &value)?)?;

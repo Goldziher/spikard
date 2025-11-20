@@ -9,25 +9,20 @@ use anyhow::Result;
 pub fn generate(analysis: &RouteAnalysis) -> Result<String> {
     let mut output = String::new();
 
-    // Generate file header
     output.push_str(&generate_header());
 
-    // Generate route registration helpers
     output.push_str(&generate_helpers());
 
-    // Generate handler functions
     for route in &analysis.routes {
         output.push_str(&generate_handler(route));
         output.push_str("\n\n");
     }
 
-    // Generate route registrations
     for route in &analysis.routes {
         output.push_str(&generate_route_registration(route));
         output.push_str("\n");
     }
 
-    // Generate app object and server startup
     output.push_str(&generate_main());
 
     Ok(output)
@@ -137,19 +132,16 @@ fn generate_handler(route: &RouteInfo) -> String {
 fn generate_handler_body(route: &RouteInfo) -> String {
     let mut lines = Vec::new();
 
-    // Add path params to response
     for (name, _) in &route.params.path {
         lines.push(format!("  response['{}'] = request.path_params.{};", name, name));
     }
 
-    // Add query params to response
     for (name, _) in &route.params.query {
         lines.push(format!("  if (request.query_params.{} !== undefined) {{", name));
         lines.push(format!("    response['{}'] = request.query_params.{};", name, name));
         lines.push("  }".to_string());
     }
 
-    // Return body if present
     if route.params.body.is_some() {
         lines.push("  Object.assign(response, request.body);".to_string());
     }
@@ -161,7 +153,6 @@ fn generate_route_registration(route: &RouteInfo) -> String {
     let method = route.method.to_lowercase();
     let handler_name = sanitize_handler_name(route);
 
-    // Use 'del' for DELETE since 'delete' is a reserved keyword in JavaScript
     let method_func = if method == "delete" { "del" } else { &method };
 
     format!("{}('{}')({});", method_func, route.route, handler_name)

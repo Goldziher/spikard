@@ -101,7 +101,6 @@ impl WebSocketTestConnection {
 
     /// Close the WebSocket connection
     fn close(&self) -> Result<(), Error> {
-        // Drop the inner connection
         self.inner.borrow_mut().take();
         Ok(())
     }

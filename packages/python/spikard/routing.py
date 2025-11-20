@@ -239,15 +239,12 @@ def route(
                 "No Spikard app instance found. Create a Spikard() instance before using route decorators."
             )
 
-        # Handle both http_method and methods parameters (methods takes precedence)
         method_value = methods if methods is not None else http_method
         if method_value is None:
-            method_value = "GET"  # Default to GET
+            method_value = "GET"
 
-        # Normalize to list of methods
         method_list = [method_value] if isinstance(method_value, str) else list(method_value)
 
-        # Register the route for each method
         for method in method_list:
             method_upper = cast("HttpMethod", method.upper())
             app.register_route(method_upper, path, body_schema=body_schema)(func)

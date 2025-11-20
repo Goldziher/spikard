@@ -65,20 +65,15 @@ pub fn analyze_fixtures(fixtures: &[Fixture]) -> RouteAnalysis {
     let mut by_category: IndexMap<String, usize> = IndexMap::new();
 
     for fixture in fixtures {
-        // Count by method
         *by_method.entry(fixture.handler.method.clone()).or_insert(0) += 1;
 
-        // Count by category
         if let Some(cat) = &fixture.category {
             *by_category.entry(cat.clone()).or_insert(0) += 1;
         }
 
-        // Normalize and canonicalize the route
         let normalized = normalize_route(&fixture.handler.route);
         let canonical = canonicalize_route(&normalized);
 
-        // Check if we've seen this canonical path before - if so, use the first normalized version
-        // This ensures all methods for /items/{id} and /items/{item_id} use the same parameter name
         let consistent_normalized = canonical_paths
             .entry(canonical.clone())
             .or_insert_with(|| normalized.clone())
@@ -89,7 +84,6 @@ pub fn analyze_fixtures(fixtures: &[Fixture]) -> RouteAnalysis {
             method: fixture.handler.method.clone(),
         };
 
-        // Insert route with the consistent normalized path and middleware config
         route_map
             .entry(sig)
             .or_insert_with(|| {
@@ -104,7 +98,6 @@ pub fn analyze_fixtures(fixtures: &[Fixture]) -> RouteAnalysis {
             .push(fixture.name.clone());
     }
 
-    // Convert to RouteInfo
     let routes: Vec<RouteInfo> = route_map
         .into_iter()
         .map(
@@ -132,23 +125,18 @@ pub fn analyze_fixtures(fixtures: &[Fixture]) -> RouteAnalysis {
 
 /// Normalize route patterns to Axum format and extract path parameter names
 fn normalize_route(route: &str) -> String {
-    // Convert FastAPI :param to Axum {param}
-    // Also strip type hints: {param:int} -> {param}
     let mut result = route.to_string();
 
     if result.contains(':') || result.contains('{') {
         result = result
             .split('/')
             .map(|segment| {
-                // Handle FastAPI style :param
                 if let Some(param) = segment.strip_prefix(':') {
                     format!("{{{}}}", param)
                 }
-                // Handle Axum/FastAPI style {param:type}
                 else if segment.starts_with('{') && segment.ends_with('}') {
                     let inner = &segment[1..segment.len() - 1];
                     if let Some(colon_pos) = inner.find(':') {
-                        // Strip type hint
                         format!("{{{}}}", &inner[..colon_pos])
                     } else {
                         segment.to_string()
@@ -188,7 +176,6 @@ pub fn extract_path_params(route: &str) -> Vec<String> {
         .filter_map(|segment| {
             if segment.starts_with('{') && segment.ends_with('}') {
                 let inner = &segment[1..segment.len() - 1];
-                // Strip type hints
                 let param_name = if let Some(colon_pos) = inner.find(':') {
                     &inner[..colon_pos]
                 } else {

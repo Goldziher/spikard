@@ -91,7 +91,6 @@ fn test_fixture_from_file_missing() {
 fn test_fixture_from_dir() {
     let temp_dir = TempDir::new().unwrap();
 
-    // Create multiple fixture files
     for i in 1..=3 {
         let fixture_json = json!({
             "name": format!("fixture_{}", i),
@@ -113,20 +112,18 @@ fn test_fixture_from_dir() {
         std::fs::write(&path, serde_json::to_string_pretty(&fixture_json).unwrap()).unwrap();
     }
 
-    // Create a schema.json file (should be skipped)
     let schema_json = json!({"type": "object"});
     let schema_path = temp_dir.path().join("schema.json");
     std::fs::write(&schema_path, serde_json::to_string_pretty(&schema_json).unwrap()).unwrap();
 
     let fixtures = Fixture::from_dir(temp_dir.path()).unwrap();
-    assert_eq!(fixtures.len(), 3); // schema.json should be skipped
+    assert_eq!(fixtures.len(), 3); 
 }
 
 #[test]
 fn test_fixture_from_glob() {
     let temp_dir = TempDir::new().unwrap();
 
-    // Create fixtures in subdirectories
     let query_dir = temp_dir.path().join("query_params");
     std::fs::create_dir(&query_dir).unwrap();
 
@@ -166,10 +163,8 @@ fn test_fixture_category() {
     }))
     .unwrap();
 
-    // No category set
     assert_eq!(fixture.category(), "unknown");
 
-    // Set category
     fixture.category = Some("test_category".to_string());
     assert_eq!(fixture.category(), "test_category");
 }
@@ -306,11 +301,9 @@ fn test_fixture_manager_all() {
 fn test_fixture_manager_load_from_testing_data_nonexistent() {
     let mut manager = FixtureManager::new();
 
-    // Try to load from a directory that doesn't exist
     let temp_dir = TempDir::new().unwrap();
     let result = manager.load_from_testing_data(temp_dir.path().join("nonexistent"));
 
-    // Should not error, just not load any fixtures
     assert!(result.is_ok());
     assert!(manager.is_empty());
 }

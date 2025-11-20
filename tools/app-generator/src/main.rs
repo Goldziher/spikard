@@ -73,22 +73,18 @@ fn main() -> Result<()> {
             output,
             categories,
         } => {
-            // Load fixtures
             let mut loaded_fixtures = fixture::load_fixtures(&fixture_dir)?;
             eprintln!("Loaded {} fixtures", loaded_fixtures.len());
 
-            // Filter by categories if specified
             if let Some(cats) = categories {
                 let filter_set: Vec<_> = cats.split(',').map(|s| s.trim().to_string()).collect();
                 loaded_fixtures.retain(|f| f.category.as_ref().map(|c| filter_set.contains(c)).unwrap_or(false));
                 eprintln!("Filtered to {} fixtures in categories: {}", loaded_fixtures.len(), cats);
             }
 
-            // Analyze
             let analysis = analyzer::analyze_fixtures(&loaded_fixtures);
             eprintln!("Found {} unique routes", analysis.stats.unique_routes);
 
-            // Generate code
             let (code, extension, needs_manifest) = match framework.as_str() {
                 "spikard-rust" | "rust" => (generators::spikard_rust::generate(&analysis)?, "rs", true),
                 "spikard-python" | "python" => (generators::spikard_python::generate(&analysis)?, "py", false),
@@ -102,14 +98,12 @@ fn main() -> Result<()> {
                 }
             };
 
-            // Write output
             fs::create_dir_all(&output)?;
             let code_len = code.len();
             let main_file = output.join(format!("server.{}", extension));
             fs::write(&main_file, code)?;
             eprintln!("Generated {} ({} bytes)", main_file.display(), code_len);
 
-            // Generate Cargo.toml for Rust
             if needs_manifest {
                 let cargo_toml = generate_cargo_toml();
                 fs::write(output.join("Cargo.toml"), cargo_toml)?;

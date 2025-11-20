@@ -25,12 +25,9 @@ use std::sync::Arc;
 /// - CallJsBackArgs: Vec<String> (from build_callback)
 pub struct NodeHandler {
     handler_name: String,
-    // ThreadsafeFunction signature:
-    // <Input, Return, CallJsBackArgs, ErrorStatus, CalleeHandled>
     handler_fn: Arc<ThreadsafeFunction<String, Promise<HandlerReturnValue>, Vec<String>, napi::Status, false>>,
 }
 
-// SAFETY: ThreadsafeFunction is designed to be Send + Sync
 unsafe impl Send for NodeHandler {}
 unsafe impl Sync for NodeHandler {}
 
@@ -54,7 +51,6 @@ impl Handler for NodeHandler {
         request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            // Serialize request data to JSON for JS handler
             let request_json = serde_json::json!({
                 "path": request_data.path,
                 "method": request_data.method,
@@ -72,8 +68,6 @@ impl Handler for NodeHandler {
                 )
             })?;
 
-            // Call JavaScript handler through ThreadsafeFunction
-            // Pattern from kreuzberg: call_async().await.await
             let handler_output = self
                 .handler_fn
                 .call_async(json_input)
@@ -107,7 +101,6 @@ impl Handler for NodeHandler {
                 HandlerReturnValue::Streaming(_) => unreachable!(),
             };
 
-            // Parse the response from JavaScript
             let response_data: Value = serde_json::from_str(&json_body).map_err(|e| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
@@ -115,7 +108,6 @@ impl Handler for NodeHandler {
                 )
             })?;
 
-            // Convert JS response to HTTP response
             let body_str = serde_json::to_string(&response_data).map_err(|e| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,

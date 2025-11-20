@@ -93,7 +93,6 @@ class MockNativeTestClient {
 	}
 }
 
-// Mock the native TestClient
 vi.mock("../runtime/spikard_wasm.js", () => ({
 	default: () => Promise.resolve(),
 	TestClient: MockNativeTestClient,

@@ -44,11 +44,9 @@ pub struct FrameworkComparison {
 /// Values < 1.0 indicate worse performance than baseline
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RelativeMetrics {
-    // Throughput (higher is better)
     pub throughput_ratio: f64,
     pub throughput_percent_diff: f64,
 
-    // Latency (lower is better, so we invert: baseline/comparison)
     pub latency_p50_ratio: f64,
     pub latency_p50_percent_diff: f64,
 
@@ -58,22 +56,18 @@ pub struct RelativeMetrics {
     pub latency_p99_ratio: f64,
     pub latency_p99_percent_diff: f64,
 
-    // Memory (lower is better, so we invert: baseline/comparison)
     pub memory_avg_ratio: f64,
     pub memory_avg_percent_diff: f64,
 
     pub memory_peak_ratio: f64,
     pub memory_peak_percent_diff: f64,
 
-    // CPU (lower is better, so we invert: baseline/comparison)
     pub cpu_avg_ratio: f64,
     pub cpu_avg_percent_diff: f64,
 
-    // Success rate (higher is better)
     pub success_rate_ratio: f64,
     pub success_rate_percent_diff: f64,
 
-    // Startup time (lower is better, so we invert: baseline/comparison)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub startup_time_ratio: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -163,14 +157,12 @@ pub fn compare_frameworks(baseline: &BenchmarkResult, comparisons: &[BenchmarkRe
 
 /// Calculate relative performance metrics
 fn calculate_relative_metrics(baseline: &BenchmarkResult, comparison: &BenchmarkResult) -> RelativeMetrics {
-    // Throughput: higher is better (comparison/baseline)
     let throughput_ratio = safe_divide(
         comparison.throughput.requests_per_sec,
         baseline.throughput.requests_per_sec,
     );
     let throughput_percent_diff = (throughput_ratio - 1.0) * 100.0;
 
-    // Latency: lower is better (baseline/comparison)
     let latency_p50_ratio = safe_divide(baseline.latency.p50_ms, comparison.latency.p50_ms);
     let latency_p50_percent_diff = (latency_p50_ratio - 1.0) * 100.0;
 
@@ -180,22 +172,18 @@ fn calculate_relative_metrics(baseline: &BenchmarkResult, comparison: &Benchmark
     let latency_p99_ratio = safe_divide(baseline.latency.p99_ms, comparison.latency.p99_ms);
     let latency_p99_percent_diff = (latency_p99_ratio - 1.0) * 100.0;
 
-    // Memory: lower is better (baseline/comparison)
     let memory_avg_ratio = safe_divide(baseline.resources.avg_memory_mb, comparison.resources.avg_memory_mb);
     let memory_avg_percent_diff = (memory_avg_ratio - 1.0) * 100.0;
 
     let memory_peak_ratio = safe_divide(baseline.resources.peak_memory_mb, comparison.resources.peak_memory_mb);
     let memory_peak_percent_diff = (memory_peak_ratio - 1.0) * 100.0;
 
-    // CPU: lower is better (baseline/comparison)
     let cpu_avg_ratio = safe_divide(baseline.resources.avg_cpu_percent, comparison.resources.avg_cpu_percent);
     let cpu_avg_percent_diff = (cpu_avg_ratio - 1.0) * 100.0;
 
-    // Success rate: higher is better (comparison/baseline)
     let success_rate_ratio = safe_divide(comparison.throughput.success_rate, baseline.throughput.success_rate);
     let success_rate_percent_diff = (success_rate_ratio - 1.0) * 100.0;
 
-    // Startup time: lower is better (baseline/comparison)
     let (startup_time_ratio, startup_time_percent_diff) =
         if let (Some(baseline_startup), Some(comparison_startup)) = (&baseline.startup, &comparison.startup) {
             let ratio = safe_divide(baseline_startup.total_startup_ms, comparison_startup.total_startup_ms);
@@ -229,16 +217,13 @@ fn calculate_relative_metrics(baseline: &BenchmarkResult, comparison: &Benchmark
 
 /// Classify overall performance based on relative metrics
 fn classify_performance(relative: &RelativeMetrics) -> PerformanceSummary {
-    // Calculate weighted score
-    // Positive score = better, negative = worse
-    let throughput_score = (relative.throughput_ratio - 1.0) * 100.0 * 0.4; // 40% weight
-    let latency_score = (relative.latency_p99_ratio - 1.0) * 100.0 * 0.3; // 30% weight
-    let memory_score = (relative.memory_peak_ratio - 1.0) * 100.0 * 0.2; // 20% weight
-    let cpu_score = (relative.cpu_avg_ratio - 1.0) * 100.0 * 0.1; // 10% weight
+    let throughput_score = (relative.throughput_ratio - 1.0) * 100.0 * 0.4; 
+    let latency_score = (relative.latency_p99_ratio - 1.0) * 100.0 * 0.3; 
+    let memory_score = (relative.memory_peak_ratio - 1.0) * 100.0 * 0.2; 
+    let cpu_score = (relative.cpu_avg_ratio - 1.0) * 100.0 * 0.1; 
 
     let total_score = throughput_score + latency_score + memory_score + cpu_score;
 
-    // Classify based on total score
     match total_score {
         s if s > 20.0 => PerformanceSummary::MuchBetter,
         s if s > 5.0 => PerformanceSummary::Better,
@@ -264,7 +249,6 @@ pub fn detect_regressions(comparison: &ComparisonReport, threshold_pct: f64) -> 
     for comp in &comparison.comparisons {
         let rel = &comp.relative;
 
-        // Check throughput (lower is worse)
         if rel.throughput_percent_diff < -threshold_pct {
             warnings.push(RegressionWarning {
                 framework: comp.framework.clone(),
@@ -275,7 +259,6 @@ pub fn detect_regressions(comparison: &ComparisonReport, threshold_pct: f64) -> 
             });
         }
 
-        // Check latency p99 (higher ratio is worse for latency, since we inverted)
         if rel.latency_p99_percent_diff < -threshold_pct {
             warnings.push(RegressionWarning {
                 framework: comp.framework.clone(),
@@ -286,7 +269,6 @@ pub fn detect_regressions(comparison: &ComparisonReport, threshold_pct: f64) -> 
             });
         }
 
-        // Check memory (higher ratio is worse for memory, since we inverted)
         if rel.memory_peak_percent_diff < -threshold_pct {
             warnings.push(RegressionWarning {
                 framework: comp.framework.clone(),
@@ -297,7 +279,6 @@ pub fn detect_regressions(comparison: &ComparisonReport, threshold_pct: f64) -> 
             });
         }
 
-        // Check CPU (higher ratio is worse for CPU, since we inverted)
         if rel.cpu_avg_percent_diff < -threshold_pct {
             warnings.push(RegressionWarning {
                 framework: comp.framework.clone(),
@@ -308,7 +289,6 @@ pub fn detect_regressions(comparison: &ComparisonReport, threshold_pct: f64) -> 
             });
         }
 
-        // Check success rate (lower is worse)
         if rel.success_rate_percent_diff < -threshold_pct {
             warnings.push(RegressionWarning {
                 framework: comp.framework.clone(),
@@ -319,7 +299,6 @@ pub fn detect_regressions(comparison: &ComparisonReport, threshold_pct: f64) -> 
             });
         }
 
-        // Check startup time if available
         if let Some(startup_percent_diff) = rel.startup_time_percent_diff.filter(|&d| d < -threshold_pct) {
             warnings.push(RegressionWarning {
                 framework: comp.framework.clone(),
@@ -523,24 +502,22 @@ mod tests {
 
         assert_eq!(report.comparisons.len(), 2);
 
-        // Check "better" framework
         let better_comp = &report.comparisons[0];
         assert!(better_comp.relative.throughput_ratio > 1.0);
-        assert!(better_comp.relative.latency_p99_ratio > 1.0); // baseline/comparison = 10/8 > 1
+        assert!(better_comp.relative.latency_p99_ratio > 1.0); 
 
-        // Check "worse" framework
         let worse_comp = &report.comparisons[1];
         assert!(worse_comp.relative.throughput_ratio < 1.0);
-        assert!(worse_comp.relative.latency_p99_ratio < 1.0); // baseline/comparison = 10/15 < 1
+        assert!(worse_comp.relative.latency_p99_ratio < 1.0); 
     }
 
     #[test]
     fn test_detect_regressions() {
         let baseline = create_test_result("baseline", 1000.0, 10.0);
-        let regressed = create_test_result("regressed", 800.0, 15.0); // 20% worse throughput
+        let regressed = create_test_result("regressed", 800.0, 15.0); 
 
         let report = compare_frameworks(&baseline, &[regressed]);
-        let warnings = detect_regressions(&report, 5.0); // 5% threshold
+        let warnings = detect_regressions(&report, 5.0); 
 
         assert!(!warnings.is_empty());
         assert!(warnings.iter().any(|w| w.metric == "throughput"));
@@ -554,9 +531,8 @@ mod tests {
 
     #[test]
     fn test_classify_performance() {
-        // Create metrics for different scenarios
         let much_better = RelativeMetrics {
-            throughput_ratio: 1.3, // 30% better
+            throughput_ratio: 1.3, 
             throughput_percent_diff: 30.0,
             latency_p50_ratio: 1.2,
             latency_p50_percent_diff: 20.0,

@@ -66,7 +66,6 @@ async def test_uuid_field_invalid_format() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -79,7 +78,6 @@ async def test_44_const_validation_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -226,7 +224,6 @@ async def test_47_maxproperties_validation_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -239,7 +236,6 @@ async def test_46_minproperties_validation_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -255,7 +251,6 @@ async def test_string_min_length_validation_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -271,7 +266,6 @@ async def test_field_type_validation_invalid_type() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -284,7 +278,6 @@ async def test_36_oneof_schema_multiple_match_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -337,7 +330,6 @@ async def test_string_max_length_validation_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -390,7 +382,6 @@ async def test_30_nested_object_missing_field() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -457,7 +448,6 @@ async def test_40_anyof_schema_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -510,7 +500,6 @@ async def test_numeric_ge_validation_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -523,7 +512,6 @@ async def test_37_oneof_schema_no_match_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -539,7 +527,6 @@ async def test_empty_array_validation_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -587,7 +574,6 @@ async def test_string_pattern_validation_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -600,7 +586,6 @@ async def test_49_dependencies_validation_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -638,7 +623,6 @@ async def test_required_field_missing_validation_error() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -664,7 +648,6 @@ async def test_enum_field_invalid_value() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -739,7 +722,6 @@ async def test_42_not_schema_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -782,7 +764,6 @@ async def test_34_additional_properties_false() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 

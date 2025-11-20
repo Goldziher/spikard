@@ -244,14 +244,10 @@ class FieldDefinition:
     @property
     def is_required(self) -> bool:
         """Check if the field should be marked as a required parameter."""
-        # Check if the default value is a Pydantic FieldInfo
         if hasattr(self.default, "is_required") and callable(self.default.is_required):
-            # It's a Pydantic Field() - use its is_required() method
             return bool(self.default.is_required())
 
-        # Check if the default value is a Spikard Query/Body/Path parameter wrapper
         if hasattr(self.default, "has_default") and callable(self.default.has_default):
-            # It's a Query/Body/Path/etc wrapper
             return not self.default.has_default()
 
         return bool(not self.is_optional and not self.is_any and not self.has_default)
@@ -323,7 +319,6 @@ class FieldDefinition:
 
         annotation_args = () if origin is abc.Callable else get_args(unwrapped)
 
-        # Extract constraints from metadata (annotated_types)
         if metadata:
             is_sequence_container = is_non_string_sequence(annotation)
             extra_constraints = kwargs.get("extra", {}).copy()
@@ -335,7 +330,6 @@ class FieldDefinition:
             if extra_constraints:
                 kwargs["extra"] = extra_constraints
 
-        # Also check if the default is a Pydantic Field and extract its constraints
         if hasattr(kwargs.get("default"), "metadata"):
             field_info = kwargs["default"]
             extra_constraints = kwargs.get("extra", {}).copy()
@@ -345,13 +339,11 @@ class FieldDefinition:
             if extra_constraints:
                 kwargs["extra"] = extra_constraints
 
-        # Check if the default is a ParamBase (Header, Cookie, Query, etc.) and extract source
         default_val = kwargs.get("default")
         if default_val is not Empty and hasattr(default_val, "__class__"):
             class_name = default_val.__class__.__name__
             if class_name in ("Header", "Cookie", "Query", "Path", "Body"):
                 extra_constraints = kwargs.get("extra", {}).copy()
-                # Map class name to source type
                 source_map = {
                     "Header": "header",
                     "Cookie": "cookie",
@@ -361,7 +353,6 @@ class FieldDefinition:
                 }
                 extra_constraints["source"] = source_map.get(class_name, "query")
 
-                # Also extract schema if present
                 if hasattr(default_val, "schema") and getattr(default_val, "schema", None):
                     schema_dict = default_val.schema  # type: ignore[union-attr]
                     if schema_dict:

@@ -10,7 +10,6 @@ use tokio::time::sleep;
 /// Find the workspace root by looking for Cargo.toml
 #[allow(dead_code)]
 fn find_workspace_root() -> Result<PathBuf> {
-    // Start from the current executable's directory
     let exe_path =
         env::current_exe().map_err(|e| Error::ServerStartFailed(format!("Failed to get executable path: {}", e)))?;
 
@@ -18,11 +17,9 @@ fn find_workspace_root() -> Result<PathBuf> {
         .parent()
         .ok_or_else(|| Error::ServerStartFailed("Failed to get executable parent directory".to_string()))?;
 
-    // Walk up the directory tree looking for workspace Cargo.toml
     loop {
         let cargo_toml = current.join("Cargo.toml");
         if cargo_toml.exists() {
-            // Check if this is the workspace root by looking for [workspace] section
             if let Ok(contents) = std::fs::read_to_string(&cargo_toml)
                 && contents.contains("[workspace]")
             {
@@ -30,7 +27,6 @@ fn find_workspace_root() -> Result<PathBuf> {
             }
         }
 
-        // Move up one directory
         current = current.parent().ok_or_else(|| {
             Error::ServerStartFailed("Could not find workspace root (no Cargo.toml with [workspace])".to_string())
         })?;
@@ -54,12 +50,10 @@ impl ServerHandle {
     pub fn kill(mut self) -> Result<()> {
         #[cfg(unix)]
         {
-            // Try SIGTERM first
             unsafe {
                 libc::kill(self.process.id() as i32, libc::SIGTERM);
             }
 
-            // Wait up to 5 seconds for graceful shutdown
             for _ in 0..50 {
                 match self.process.try_wait() {
                     Ok(Some(_)) => return Ok(()),
@@ -68,7 +62,6 @@ impl ServerHandle {
                 }
             }
 
-            // Force kill if still running
             self.process.kill()?;
         }
 
@@ -83,7 +76,6 @@ impl ServerHandle {
 
 impl Drop for ServerHandle {
     fn drop(&mut self) {
-        // Best effort kill
         let _ = self.process.kill();
     }
 }
@@ -102,9 +94,7 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     let port = config.port;
     let base_url = format!("http://localhost:{}", port);
 
-    // Determine command based on framework
     let mut cmd = match config.framework.as_str() {
-        // Rust server is a standalone binary, not using the CLI
         "spikard-rust" => {
             let server_binary = config.app_dir.join("target/release/server");
             let mut cmd = Command::new(server_binary);
@@ -134,7 +124,6 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
             cmd.arg(server_path).arg("--port").arg(port.to_string());
             cmd
         }
-        // Spikard Ruby runs directly with ruby interpreter
         "spikard-ruby" => {
             let mut cmd = Command::new("ruby");
             cmd.arg("server.rb").arg(port.to_string());
@@ -155,13 +144,9 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
         }
     };
 
-    // Set working directory and spawn process
-    // Spikard Python/Node use absolute paths via CLI, but Ruby runs directly
-    // fastapi, fastify, and spikard-ruby need the working directory set
     if !config.framework.starts_with("spikard-") || config.framework == "spikard-ruby" {
         cmd.current_dir(&config.app_dir);
     }
-    // Discard output to avoid blocking when buffers fill up
     cmd.stdout(Stdio::null()).stderr(Stdio::null());
 
     let process = cmd
@@ -174,12 +159,10 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
         base_url: base_url.clone(),
     };
 
-    // Wait for server to be ready
-    let max_attempts = 30; // 30 seconds
+    let max_attempts = 30; 
     for attempt in 1..=max_attempts {
         sleep(Duration::from_secs(1)).await;
 
-        // Check if process is still running
         match handle.process.try_wait() {
             Ok(Some(status)) => {
                 return Err(Error::ServerStartFailed(format!(
@@ -188,7 +171,6 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
                 )));
             }
             Ok(None) => {
-                // Still running, check health
                 if health_check(&base_url).await {
                     return Ok(handle);
                 }
@@ -217,7 +199,6 @@ async fn health_check(base_url: &str) -> bool {
         .build()
         .unwrap();
 
-    // Try /health first, then fallback to /
     for path in ["/health", "/"] {
         let url = format!("{}{}", base_url, path);
         if matches!(client.get(&url).send().await, Ok(r) if r.status().is_success()) {

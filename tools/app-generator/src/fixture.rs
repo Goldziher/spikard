@@ -132,7 +132,6 @@ pub fn load_fixtures(dir: &Path) -> Result<Vec<Fixture>> {
     for entry in paths {
         let path = entry?;
 
-        // Skip non-fixture files
         if path.to_string_lossy().contains("/scripts/") || path.to_string_lossy().contains("/research/") {
             continue;
         }
@@ -155,7 +154,6 @@ fn load_fixture(path: &Path) -> Result<Fixture> {
     let mut fixture: Fixture =
         serde_json::from_str(&content).with_context(|| format!("Failed to parse JSON in {}", path.display()))?;
 
-    // Infer category from path if not specified
     if fixture.category.is_none() {
         if let Some(parent) = path.parent() {
             if let Some(category) = parent.file_name().and_then(|s| s.to_str()) {

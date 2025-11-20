@@ -27,11 +27,9 @@ from pydantic.fields import FieldInfo
 __all__ = ("clear_decoders", "convert_params", "register_decoder")
 
 
-# Type alias for decoder functions
 DecoderFunc = Callable[[type, Any], Any]
 
 
-# Global registry of custom decoders
 _CUSTOM_DECODERS: list[DecoderFunc] = []
 
 
@@ -74,7 +72,6 @@ def _pydantic_decoder(type_: type, obj: Any) -> Any:
     Uses model_validate which trusts the data has already been validated
     by Rust, so it won't re-validate.
     """
-    # Check if it's a Pydantic model
     if hasattr(type_, "model_validate"):
         return type_.model_validate(obj)
     raise NotImplementedError
@@ -100,18 +97,15 @@ def _default_dec_hook(type_: type, obj: Any) -> Any:
     Note: msgspec natively handles dataclass, NamedTuple, and msgspec.Struct,
     so those types won't reach this hook.
     """
-    # Try custom decoders first
     for decoder in _CUSTOM_DECODERS:
         with suppress(NotImplementedError):
             return decoder(type_, obj)
 
-    # Try Pydantic decoder
     try:
         return _pydantic_decoder(type_, obj)
     except NotImplementedError:
         pass
 
-    # Let msgspec handle it or error
     raise NotImplementedError
 
 
@@ -148,54 +142,40 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
         # Result: {"date_param": date(2023, 7, 15), "count": 42}
         ```
     """
-    # Get type hints from handler function
     try:
         type_hints = get_type_hints(handler_func)
     except (AttributeError, NameError, TypeError, ValueError):
-        # If we can't get type hints, just return params as-is
         return params
 
-    # Get function signature to handle default values
     try:
         sig = inspect.signature(handler_func)
     except (ValueError, TypeError, AttributeError):
         sig = None
 
-    # Get function signature to know which parameters the handler accepts
     handler_params = set()
     if sig:
         handler_params = set(sig.parameters.keys())
 
-    # Convert each parameter based on its type hint
     converted = {}
     for key, value in params.items():
-        # Skip parameters that the handler doesn't accept
         if sig and key not in handler_params:
             continue
 
         if key not in type_hints:
-            # No type hint, keep as-is
             converted[key] = value
             continue
 
         target_type = type_hints[key]
         origin = get_origin(target_type)
 
-        # FAST PATH 1: Plain dict types (no conversion needed)
-        # Examples: dict, dict[str, Any], Dict[str, int]
         if dict in (target_type, origin):
             converted[key] = value
             continue
 
-        # FAST PATH 2: TypedDict (no runtime conversion, just type hints)
-        # TypedDict is a dict at runtime - no conversion needed
         if _is_typed_dict(target_type):
             converted[key] = value
             continue
 
-        # FAST PATH 3: dataclass (construct from dict using **kwargs)
-        # msgspec.convert has issues with dataclasses in Python 3.14+
-        # Use direct construction which is reliable and equally fast
         if is_dataclass(target_type) and isinstance(value, dict):
             try:
                 converted[key] = target_type(**value)  # type: ignore[operator]
@@ -206,9 +186,6 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                 converted[key] = value
                 continue
 
-        # FAST PATH 4: NamedTuple (construct from dict using **kwargs)
-        # NamedTuple can't be constructed by msgspec from objects, only arrays
-        # But we can construct it directly from a dict using **kwargs
         if isinstance(target_type, type) and hasattr(target_type, "_fields") and isinstance(value, dict):
             try:
                 converted[key] = target_type(**value)
@@ -219,14 +196,7 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                 converted[key] = value
                 continue
 
-        # FAST PATH 5+: Use msgspec for all other types
-        # msgspec natively supports:
-        # - msgspec.Struct: Fastest (C implementation)
-        # - Pydantic: Via _default_dec_hook calling model_validate
-        # Note: dataclass is now handled above via direct construction
         try:
-            # Use msgspec.convert for type conversion
-            # builtin_types tells msgspec that these types can be constructed from strings
             converted[key] = msgspec.convert(
                 value,
                 type=target_type,
@@ -235,19 +205,13 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                 dec_hook=_default_dec_hook,
             )
         except (msgspec.DecodeError, msgspec.ValidationError, TypeError, ValueError) as err:
-            # If conversion fails and we're not strict, keep the original value
             if strict:
                 raise ValueError(f"Failed to convert parameter '{key}' to type {target_type}: {err}") from err
             converted[key] = value
 
-    # Handle parameters with Field() defaults that weren't in params
-    # This is critical because Field() creates a FieldInfo object as the default,
-    # and if we don't explicitly pass None, Python will use the FieldInfo object!
     if sig:
         for param_name, param in sig.parameters.items():
             if param_name not in converted and isinstance(param.default, FieldInfo):
-                # Extract the actual default value from the FieldInfo object
-                # FieldInfo.default is the real default value (e.g., None)
                 converted[param_name] = param.default.default
 
     return converted

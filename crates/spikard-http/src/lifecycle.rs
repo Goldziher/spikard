@@ -167,7 +167,6 @@ mod tests {
     async fn test_multiple_hooks_in_order() {
         let mut hooks = LifecycleHooks::new();
 
-        // Add two continue hooks
         hooks.add_on_request(Arc::new(ContinueHook {
             name: "first".to_string(),
         }));
@@ -184,8 +183,6 @@ mod tests {
     async fn test_short_circuit_stops_execution() {
         let mut hooks = LifecycleHooks::new();
 
-        // Add short-circuit hook first, then continue hook
-        // The continue hook should never execute
         hooks.add_on_request(Arc::new(ShortCircuitHook {
             name: "short_circuit".to_string(),
         }));
@@ -197,7 +194,7 @@ mod tests {
         let result = hooks.execute_on_request(req).await.unwrap();
 
         match result {
-            HookResult::ShortCircuit(_) => { /* Expected */ }
+            HookResult::ShortCircuit(_) => {  }
             HookResult::Continue(_) => panic!("Expected ShortCircuit, got Continue"),
         }
     }
@@ -215,9 +212,6 @@ mod tests {
         assert_eq!(result.status(), StatusCode::OK);
     }
 
-    // ========================================================================
-    // Builder API Tests
-    // ========================================================================
 
     #[tokio::test]
     async fn test_request_hook_builder() {
@@ -303,10 +297,8 @@ mod tests {
             }))
             .build();
 
-        // Test that hooks are registered
         assert!(!hooks.is_empty());
 
-        // Test execution
         let req = Request::builder().body(Body::empty()).unwrap();
         let result = hooks.execute_on_request(req).await.unwrap();
         assert!(matches!(result, HookResult::Continue(_)));
@@ -354,7 +346,6 @@ mod tests {
                 Ok(HookResult::ShortCircuit(response))
             }))
             .on_request(request_hook("never_called", |mut req| async move {
-                // This should never execute
                 req.headers_mut()
                     .insert("X-Should-Not-Exist", axum::http::HeaderValue::from_static("value"));
                 Ok(HookResult::Continue(req))
@@ -394,7 +385,6 @@ mod tests {
 
         assert!(!hooks.is_empty());
 
-        // Test each hook type
         let req = Request::builder().body(Body::empty()).unwrap();
         assert!(matches!(
             hooks.execute_on_request(req).await.unwrap(),
@@ -430,7 +420,6 @@ mod tests {
         let hooks = LifecycleHooks::builder().build();
         assert!(hooks.is_empty());
 
-        // Should work fine with no hooks
         let req = Request::builder().body(Body::empty()).unwrap();
         let result = hooks.execute_on_request(req).await.unwrap();
         assert!(matches!(result, HookResult::Continue(_)));

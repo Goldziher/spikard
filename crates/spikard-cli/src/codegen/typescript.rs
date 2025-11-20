@@ -18,16 +18,12 @@ impl TypeScriptGenerator {
     pub fn generate(&self) -> Result<String> {
         let mut output = String::new();
 
-        // Generate file header
         output.push_str(&self.generate_header());
 
-        // Generate Zod schemas
         output.push_str(&self.generate_schemas()?);
 
-        // Generate routes
         output.push_str(&self.generate_routes()?);
 
-        // Generate main block
         output.push_str(&self.generate_main());
 
         Ok(output)
@@ -63,7 +59,6 @@ import {{ z }} from "zod";
                         output.push('\n');
                     }
                     ReferenceOr::Reference { .. } => {
-                        // Skip references - they'll be resolved when used
                         continue;
                     }
                 }
@@ -78,12 +73,10 @@ import {{ z }} from "zod";
         let type_name = name.to_pascal_case();
         let mut output = String::new();
 
-        // Add JSDoc comment if description exists
         if let Some(description) = &schema.schema_data.description {
             output.push_str(&format!("/** {} */\n", description));
         }
 
-        // Generate Zod schema body
         let mut schema_expr = match &schema.schema_kind {
             SchemaKind::Type(Type::Object(obj)) => {
                 let mut expr = String::from("z.object({\n");
@@ -120,7 +113,6 @@ import {{ z }} from "zod";
 
         output.push_str(&format!("export const {} = {};\n", schema_name, schema_expr));
 
-        // Generate TypeScript type from Zod schema
         output.push_str(&format!(
             "\nexport type {} = z.infer<typeof {}>;\n",
             type_name, schema_name
@@ -133,7 +125,6 @@ import {{ z }} from "zod";
     fn extract_type_from_schema_ref(&self, schema_ref: &ReferenceOr<Schema>) -> String {
         match schema_ref {
             ReferenceOr::Reference { reference } => {
-                // Extract name from #/components/schemas/Pet -> Pet
                 let ref_name = reference.split('/').next_back().unwrap();
                 ref_name.to_pascal_case()
             }
@@ -172,7 +163,6 @@ import {{ z }} from "zod";
     fn extract_response_type(&self, operation: &Operation) -> String {
         use openapiv3::StatusCode;
 
-        // Try to find a successful response (200, 201, 2XX)
         let response = operation
             .responses
             .responses
@@ -196,7 +186,6 @@ import {{ z }} from "zod";
             }
         }
 
-        // Default to Record<string, unknown> if no schema found
         "Record<string, unknown>".to_string()
     }
 
@@ -273,7 +262,6 @@ import {{ z }} from "zod";
                 ReferenceOr::Reference { .. } => continue,
             };
 
-            // Generate route for each HTTP method
             if let Some(op) = &path_item.get {
                 output.push_str(&self.generate_route_handler(path, "get", op)?);
             }
@@ -297,7 +285,6 @@ import {{ z }} from "zod";
     fn generate_route_handler(&self, path: &str, method: &str, operation: &Operation) -> Result<String> {
         let mut output = String::new();
 
-        // Generate JSDoc comment with route info
         if let Some(summary) = &operation.summary {
             output.push_str(&format!("/**\n * {}\n", summary));
         } else {
@@ -306,7 +293,6 @@ import {{ z }} from "zod";
         output.push_str(&format!(" * Route: {} {}\n", method.to_uppercase(), path));
         output.push_str(" */\n");
 
-        // Convert operation_id to function name, or generate one
         let func_name = operation
             .operation_id
             .as_ref()
@@ -319,7 +305,6 @@ import {{ z }} from "zod";
                 )
             });
 
-        // Parse parameters
         let mut path_params = Vec::new();
         let mut query_params = Vec::new();
 
@@ -330,7 +315,7 @@ import {{ z }} from "zod";
                         path_params.push((parameter_data.name.clone(), "string".to_string()));
                     }
                     Parameter::Query { parameter_data, .. } => {
-                        let type_hint = "string".to_string(); // Simplified
+                        let type_hint = "string".to_string(); 
                         query_params.push((parameter_data.name.clone(), type_hint, parameter_data.required));
                     }
                     _ => {}
@@ -338,21 +323,16 @@ import {{ z }} from "zod";
             }
         }
 
-        // Extract request body schema
         let body_schema = self.extract_request_body_schema(operation);
 
-        // Extract response type
         let return_type = self.extract_response_type(operation);
 
-        // Generate function signature
         output.push_str(&format!("export function {}(_request: Request", func_name));
 
-        // Add path parameters
         for (param_name, param_type) in &path_params {
             output.push_str(&format!(", _{}: Path<{}>", param_name.to_snake_case(), param_type));
         }
 
-        // Add query parameters
         for (param_name, param_type, required) in &query_params {
             if *required {
                 output.push_str(&format!(", _{}: Query<{}>", param_name.to_snake_case(), param_type));
@@ -365,9 +345,7 @@ import {{ z }} from "zod";
             }
         }
 
-        // Add body parameter
         if let Some(body_schema_name) = &body_schema {
-            // Extract the type name from the schema name
             let body_type = if body_schema_name.ends_with("Schema") {
                 body_schema_name.strip_suffix("Schema").unwrap_or(body_schema_name)
             } else {
@@ -378,7 +356,6 @@ import {{ z }} from "zod";
 
         output.push_str(&format!("): {} {{\n", return_type));
 
-        // Generate function body with description if present
         if let Some(desc) = &operation.description {
             output.push_str(&format!("\t/**\n\t * {}\n\t */\n", desc));
         }
@@ -386,7 +363,6 @@ import {{ z }} from "zod";
         output.push_str("\tthrow new Error(\"TODO: Implement this endpoint\");\n");
         output.push_str("}\n");
 
-        // Add route registration call
         output.push_str(&format!(
             "route(\"{}\", {{ methods: [\"{}\"] }})({});\n\n",
             path,

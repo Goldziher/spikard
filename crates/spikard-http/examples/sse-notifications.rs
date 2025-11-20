@@ -87,12 +87,10 @@ impl NotificationProducer {
 
 impl SseEventProducer for NotificationProducer {
     async fn next_event(&self) -> Option<SseEvent> {
-        // Wait a bit between events to simulate real-world timing
         sleep(Duration::from_secs(2)).await;
 
         let count = self.counter.fetch_add(1, Ordering::Relaxed);
 
-        // Generate 10 events then stop
         if count >= 10 {
             info!("Completed sending 10 notifications");
             return None;
@@ -107,14 +105,12 @@ impl SseEventProducer for NotificationProducer {
 
         info!("Sending notification #{}: {}", count + 1, event_type);
 
-        // Convert to JSON
         let data = serde_json::to_value(notification).unwrap();
 
-        // Create SSE event with type and ID
         Some(
             SseEvent::with_type(event_type, data)
                 .with_id(format!("event_{}", count))
-                .with_retry(3000), // 3 seconds retry on disconnect
+                .with_retry(3000), 
         )
     }
 
@@ -129,21 +125,17 @@ impl SseEventProducer for NotificationProducer {
 
 #[tokio::main]
 async fn main() {
-    // Initialize tracing
     tracing_subscriber::fmt()
         .with_env_filter("info,sse_notifications=debug")
         .init();
 
-    // Create SSE state
     let producer = NotificationProducer::new();
     let sse_state = SseState::new(producer);
 
-    // Build router
     let app = Router::new()
         .route("/notifications", get(sse_handler::<NotificationProducer>))
         .with_state(sse_state);
 
-    // Start server
     let addr = "127.0.0.1:8000";
     info!("SSE notifications server listening on {}", addr);
     info!("Connect at: http://{}/notifications", addr);

@@ -1,7 +1,5 @@
 """Spikard - High-performance HTTP framework with Rust core."""
 
-# Import Response from the Rust module (_spikard)
-# This is installed as a separate package via maturin
 from _spikard import Response, StreamingResponse
 
 from spikard import background

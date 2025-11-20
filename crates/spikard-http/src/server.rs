@@ -139,8 +139,6 @@ fn extract_query_params(uri: &axum::http::Uri) -> Value {
     if query_string.is_empty() {
         Value::Object(serde_json::Map::new())
     } else {
-        // parse_numbers=true: Auto-convert numeric strings to numbers (e.g., "123" → 123)
-        // This is essential for array parameters like ?device_ids=1&device_ids=2 → [1, 2]
         parse_query_string_to_json(query_string.as_bytes(), true)
     }
 }
@@ -152,8 +150,6 @@ fn extract_raw_query_params(uri: &axum::http::Uri) -> HashMap<String, Vec<String
     if query_string.is_empty() {
         HashMap::new()
     } else {
-        // Parse without number conversion to get raw string values
-        // Collect all values for each key (supports repeated params like ?a=1&a=2)
         crate::query_parser::parse_query_string(query_string.as_bytes(), '&')
             .into_iter()
             .fold(HashMap::new(), |mut acc, (k, v)| {
@@ -168,7 +164,6 @@ fn extract_headers(headers: &axum::http::HeaderMap) -> HashMap<String, String> {
     let mut map = HashMap::new();
     for (name, value) in headers.iter() {
         if let Ok(val_str) = value.to_str() {
-            // Convert header name to lowercase for consistent access
             map.insert(name.as_str().to_lowercase(), val_str.to_string());
         }
     }
@@ -179,9 +174,7 @@ fn extract_headers(headers: &axum::http::HeaderMap) -> HashMap<String, String> {
 fn extract_cookies(headers: &axum::http::HeaderMap) -> HashMap<String, String> {
     let mut cookies = HashMap::new();
 
-    // Look for Cookie header
     if let Some(cookie_str) = headers.get(axum::http::header::COOKIE).and_then(|h| h.to_str().ok()) {
-        // Parse cookies using the cookie crate for RFC 6265 compliance and proper percent-decoding
         for cookie in cookie::Cookie::split_parse(cookie_str).flatten() {
             cookies.insert(cookie.name().to_string(), cookie.value().to_string());
         }
@@ -230,7 +223,6 @@ async fn create_request_data_with_body(
         })?
         .to_bytes();
 
-    // Note: Content-Type and Content-Length validation is handled by middleware
 
     let body_value = if !body_bytes.is_empty() {
         serde_json::from_slice::<Value>(&body_bytes)
@@ -268,17 +260,14 @@ async fn execute_with_lifecycle_hooks(
     use crate::lifecycle::HookResult;
     use axum::http::StatusCode;
 
-    // If no hooks registered, fast path
     let Some(hooks) = hooks else {
         return handler.call(req, request_data).await;
     };
 
-    // Fast path: if hooks are empty, skip hook execution
     if hooks.is_empty() {
         return handler.call(req, request_data).await;
     }
 
-    // 1. preValidation hooks (before validation)
     let req = match hooks.execute_pre_validation(req).await {
         Ok(HookResult::Continue(r)) => r,
         Ok(HookResult::ShortCircuit(response)) => return Ok(response),
@@ -291,7 +280,6 @@ async fn execute_with_lifecycle_hooks(
                 )))
                 .unwrap();
 
-            // Execute onError hooks
             return match hooks.execute_on_error(error_response).await {
                 Ok(resp) => Ok(resp),
                 Err(_) => Ok(axum::http::Response::builder()
@@ -302,8 +290,6 @@ async fn execute_with_lifecycle_hooks(
         }
     };
 
-    // 2. preHandler hooks (after validation, before handler)
-    // Note: Validation happens inside handler.call()
     let req = match hooks.execute_pre_handler(req).await {
         Ok(HookResult::Continue(r)) => r,
         Ok(HookResult::ShortCircuit(response)) => return Ok(response),
@@ -313,7 +299,6 @@ async fn execute_with_lifecycle_hooks(
                 .body(Body::from(format!("{{\"error\":\"preHandler hook failed: {}\"}}", e)))
                 .unwrap();
 
-            // Execute onError hooks
             return match hooks.execute_on_error(error_response).await {
                 Ok(resp) => Ok(resp),
                 Err(_) => Ok(axum::http::Response::builder()
@@ -324,11 +309,9 @@ async fn execute_with_lifecycle_hooks(
         }
     };
 
-    // 3. Execute handler
     let response = match handler.call(req, request_data).await {
         Ok(resp) => resp,
         Err((status, message)) => {
-            // Handler failed - create error response and run onError hooks
             let error_response = axum::http::Response::builder()
                 .status(status)
                 .body(Body::from(message))
@@ -344,7 +327,6 @@ async fn execute_with_lifecycle_hooks(
         }
     };
 
-    // 4. onResponse hooks (after successful handler execution)
     match hooks.execute_on_response(response).await {
         Ok(resp) => Ok(resp),
         Err(e) => Ok(axum::http::Response::builder()
@@ -361,7 +343,6 @@ pub fn build_router_with_handlers(
 ) -> Result<AxumRouter, String> {
     let mut app = AxumRouter::new();
 
-    // Build route registry for middleware lookup
     let mut registry = HashMap::new();
     for (route, _) in &routes {
         let axum_path = crate::type_hints::strip_type_hints(&route.path);
@@ -379,7 +360,6 @@ pub fn build_router_with_handlers(
     }
     let route_registry: crate::middleware::RouteRegistry = Arc::new(registry);
 
-    // Group routes by path to support multiple methods on same route
     let mut routes_by_path: HashMap<String, Vec<RouteHandlerPair>> = HashMap::new();
     for (route, handler) in routes {
         routes_by_path
@@ -402,13 +382,11 @@ pub fn build_router_with_handlers(
             handlers_by_method.insert(route.method.clone(), (route, validating_handler));
         }
 
-        // Check if any route on this path has CORS config
         let cors_config: Option<CorsConfig> = handlers_by_method
             .values()
             .find_map(|(route, _)| route.cors.as_ref())
             .cloned();
 
-        // Check if there's an explicit OPTIONS handler
         let has_options_handler = handlers_by_method.keys().any(|m| m.as_str() == "OPTIONS");
 
         let mut combined_router: Option<MethodRouter> = None;
@@ -504,7 +482,6 @@ pub fn build_router_with_handlers(
                     }
                 }
                 "OPTIONS" => {
-                    // If this route has CORS config, use CORS preflight logic instead of handler
                     if let Some(ref cors_cfg) = route.cors {
                         let cors_config = cors_cfg.clone();
                         axum::routing::options(move |req: axum::extract::Request| async move {
@@ -647,7 +624,6 @@ pub fn build_router_with_handlers(
             tracing::info!("Registered route: {} {}", route.method.as_str(), path);
         }
 
-        // If CORS config exists but no explicit OPTIONS handler, auto-generate one
         if let Some(ref cors_cfg) = cors_config
             && !has_options_handler
         {
@@ -666,7 +642,6 @@ pub fn build_router_with_handlers(
 
         if let Some(router) = combined_router {
             let mut axum_path = crate::type_hints::strip_type_hints(&path);
-            // Ensure path starts with / for Axum compatibility
             if !axum_path.starts_with('/') {
                 axum_path = format!("/{}", axum_path);
             }
@@ -679,8 +654,6 @@ pub fn build_router_with_handlers(
     ));
     app = app.layer(TraceLayer::new_for_http());
 
-    // Inject route registry as extension for middleware lookup
-    // This must be added AFTER middleware so it runs FIRST (layers run in reverse order)
     app = app.layer(axum::Extension(route_registry));
 
     Ok(app)
@@ -692,22 +665,16 @@ pub fn build_router_with_handlers_and_config(
     config: ServerConfig,
     route_metadata: Vec<crate::RouteMetadata>,
 ) -> Result<AxumRouter, String> {
-    // Extract lifecycle hooks from config
     let hooks = config.lifecycle_hooks.clone();
 
-    // Start with the basic router
     let mut app = build_router_with_handlers(routes, hooks)?;
 
-    // Apply middleware layers directly (they're applied in reverse order)
-    // Layer order: last added = first executed
 
-    // 1. Sensitive headers (hide auth tokens from logs)
     app = app.layer(SetSensitiveRequestHeadersLayer::new([
         axum::http::header::AUTHORIZATION,
         axum::http::header::COOKIE,
     ]));
 
-    // 2. Compression (should compress final responses)
     if let Some(ref compression) = config.compression {
         let mut compression_layer = CompressionLayer::new();
         if !compression.gzip {
@@ -717,7 +684,6 @@ pub fn build_router_with_handlers_and_config(
             compression_layer = compression_layer.br(false);
         }
 
-        // Respect configurable minimum compression size while preserving default predicate behavior.
         let min_threshold = compression.min_size.min(u16::MAX as usize) as u16;
         let predicate = SizeAbove::new(min_threshold)
             .and(NotForContentType::GRPC)
@@ -728,7 +694,6 @@ pub fn build_router_with_handlers_and_config(
         app = app.layer(compression_layer);
     }
 
-    // 3. Rate limiting (before other processing to reject early)
     if let Some(ref rate_limit) = config.rate_limit {
         if rate_limit.ip_based {
             let governor_conf = Arc::new(
@@ -752,7 +717,6 @@ pub fn build_router_with_handlers_and_config(
         }
     }
 
-    // 3a. JWT authentication (after rate limiting, before business logic)
     if let Some(ref jwt_config) = config.jwt_auth {
         let jwt_config_clone = jwt_config.clone();
         app = app.layer(axum::middleware::from_fn(move |headers, req, next| {
@@ -760,7 +724,6 @@ pub fn build_router_with_handlers_and_config(
         }));
     }
 
-    // 3b. API key authentication (after rate limiting, before business logic)
     if let Some(ref api_key_config) = config.api_key_auth {
         let api_key_config_clone = api_key_config.clone();
         app = app.layer(axum::middleware::from_fn(move |headers, req, next| {
@@ -768,27 +731,22 @@ pub fn build_router_with_handlers_and_config(
         }));
     }
 
-    // 4. Timeout layer (should wrap everything except request ID)
     if let Some(timeout_secs) = config.request_timeout {
         app = app.layer(TimeoutLayer::new(Duration::from_secs(timeout_secs)));
     }
 
-    // 5. Request ID (outermost - should be first to execute)
     if config.enable_request_id {
         app = app
             .layer(PropagateRequestIdLayer::x_request_id())
             .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid));
     }
 
-    // 6. Body size limit (applied directly as it's not a tower::Layer)
     if let Some(max_size) = config.max_body_size {
         app = app.layer(DefaultBodyLimit::max(max_size));
     } else {
-        // Disable body limit if None (not recommended for production)
         app = app.layer(DefaultBodyLimit::disable());
     }
 
-    // 7. Add static file serving routes
     for static_config in &config.static_files {
         let mut serve_dir = ServeDir::new(&static_config.directory);
         if static_config.index_file {
@@ -814,29 +772,24 @@ pub fn build_router_with_handlers_and_config(
         );
     }
 
-    // 8. Add OpenAPI documentation routes (without authentication)
     if let Some(ref openapi_config) = config.openapi
         && openapi_config.enabled
     {
         use axum::response::{Html, Json};
 
-        // Generate OpenAPI spec from routes with auto-detected security schemes
         let schema_registry = crate::SchemaRegistry::new();
         let openapi_spec =
             crate::openapi::generate_openapi_spec(&route_metadata, openapi_config, &schema_registry, Some(&config))
                 .map_err(|e| format!("Failed to generate OpenAPI spec: {}", e))?;
 
-        // Serialize to JSON once
         let spec_json =
             serde_json::to_string(&openapi_spec).map_err(|e| format!("Failed to serialize OpenAPI spec: {}", e))?;
         let spec_value = serde_json::from_str::<serde_json::Value>(&spec_json)
             .map_err(|e| format!("Failed to parse OpenAPI spec: {}", e))?;
 
-        // OpenAPI JSON endpoint
         let openapi_json_path = openapi_config.openapi_json_path.clone();
         app = app.route(&openapi_json_path, get(move || async move { Json(spec_value) }));
 
-        // Swagger UI endpoint
         let swagger_html = format!(
             r#"<!DOCTYPE html>
 <html>
@@ -860,7 +813,6 @@ pub fn build_router_with_handlers_and_config(
         let swagger_ui_path = openapi_config.swagger_ui_path.clone();
         app = app.route(&swagger_ui_path, get(move || async move { Html(swagger_html) }));
 
-        // Redoc endpoint
         let redoc_html = format!(
             r#"<!DOCTYPE html>
 <html>
@@ -905,16 +857,15 @@ impl Server {
         config: ServerConfig,
         routes: Vec<(crate::Route, Arc<dyn Handler>)>,
     ) -> Result<AxumRouter, String> {
-        // Extract metadata from routes for backward compatibility
         let metadata: Vec<crate::RouteMetadata> = routes
             .iter()
             .map(|(route, _)| crate::RouteMetadata {
                 method: route.method.to_string(),
                 path: route.path.clone(),
                 handler_name: route.handler_name.clone(),
-                request_schema: None,   // Lost in compilation
-                response_schema: None,  // Lost in compilation
-                parameter_schema: None, // Lost in compilation
+                request_schema: None,   
+                response_schema: None,  
+                parameter_schema: None, 
                 file_params: route.file_params.clone(),
                 is_async: route.is_async,
                 cors: route.cors.clone(),
@@ -966,17 +917,14 @@ impl Server {
     pub async fn serve(self) -> Result<(), Box<dyn std::error::Error>> {
         tracing::info!("Starting server with {} routes", self.router.route_count());
 
-        // Build Axum router
         let app = self.build_axum_router();
 
-        // Bind to address
         let addr = format!("{}:{}", self.config.host, self.config.port);
         let socket_addr: SocketAddr = addr.parse()?;
         let listener = TcpListener::bind(socket_addr).await?;
 
         tracing::info!("Listening on http://{}", socket_addr);
 
-        // Start server
         axum::serve(listener, app).await?;
 
         Ok(())
@@ -986,13 +934,10 @@ impl Server {
     fn build_axum_router(&self) -> AxumRouter {
         let mut app = AxumRouter::new();
 
-        // Add health check endpoint
         app = app.route("/health", get(|| async { "OK" }));
 
         // TODO: Add routes from self.router
-        // For now, we'll need Python FFI integration to call handlers
 
-        // Add middleware
         app = app.layer(TraceLayer::new_for_http());
 
         app
@@ -1009,6 +954,5 @@ mod tests {
         let router = Router::new();
         let _server = Server::new(config, router);
 
-        // Test passes if we get here without panic
     }
 }

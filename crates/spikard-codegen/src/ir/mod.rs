@@ -86,7 +86,6 @@ impl IntermediateRepresentation {
     pub fn from_config(config: Config) -> Result<Self> {
         let mut routes = Vec::new();
 
-        // Convert HTTP routes
         if let Some(http) = config.http {
             for route in http.routes {
                 routes.push(RouteIR::from_config_route(route)?);

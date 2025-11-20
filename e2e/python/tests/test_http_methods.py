@@ -101,7 +101,6 @@ async def test_put_validation_error() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -145,7 +144,6 @@ async def test_put_missing_required_field() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
-        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 

@@ -40,10 +40,8 @@ impl SchemaRegistry {
     /// # Returns
     /// Arc-wrapped compiled validator that can be cheaply cloned
     pub fn get_or_compile(&self, schema: &Value) -> Result<Arc<SchemaValidator>, String> {
-        // Use schema as key (serialize to stable JSON string for deduplication)
         let key = serde_json::to_string(schema).map_err(|e| format!("Failed to serialize schema: {}", e))?;
 
-        // Fast path: schema already compiled (read lock - allows concurrent access)
         {
             let schemas = self.schemas.read().unwrap();
             if let Some(validator) = schemas.get(&key) {
@@ -51,13 +49,10 @@ impl SchemaRegistry {
             }
         }
 
-        // Slow path: compile schema (write lock - exclusive access)
         let validator = Arc::new(SchemaValidator::new(schema.clone())?);
 
-        // Store in registry for future reuse
         {
             let mut schemas = self.schemas.write().unwrap();
-            // Double-check: another thread might have inserted while we waited for write lock
             if let Some(existing) = schemas.get(&key) {
                 return Ok(Arc::clone(existing));
             }
@@ -114,14 +109,11 @@ mod tests {
             }
         });
 
-        // Compile same schema twice
         let validator1 = registry.get_or_compile(&schema1).unwrap();
         let validator2 = registry.get_or_compile(&schema2).unwrap();
 
-        // Should be the same Arc (pointer equality)
         assert!(Arc::ptr_eq(&validator1, &validator2));
 
-        // Registry should have exactly 1 schema
         assert_eq!(registry.schema_count(), 1);
     }
 
@@ -140,10 +132,8 @@ mod tests {
         let validator1 = registry.get_or_compile(&schema1).unwrap();
         let validator2 = registry.get_or_compile(&schema2).unwrap();
 
-        // Should be different Arcs
         assert!(!Arc::ptr_eq(&validator1, &validator2));
 
-        // Registry should have 2 schemas
         assert_eq!(registry.schema_count(), 2);
     }
 
@@ -174,7 +164,6 @@ mod tests {
             }
         });
 
-        // Spawn multiple threads that all try to compile the same schema
         let handles: Vec<_> = (0..10)
             .map(|_| {
                 let registry = StdArc::clone(&registry);
@@ -183,15 +172,12 @@ mod tests {
             })
             .collect();
 
-        // All threads should get the same validator
         let validators: Vec<_> = handles.into_iter().map(|h| h.join().unwrap()).collect();
 
-        // All should point to the same validator
         for i in 1..validators.len() {
             assert!(Arc::ptr_eq(&validators[0], &validators[i]));
         }
 
-        // Registry should have exactly 1 schema despite 10 concurrent compilations
         assert_eq!(registry.schema_count(), 1);
     }
 }

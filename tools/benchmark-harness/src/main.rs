@@ -168,14 +168,12 @@ async fn main() -> Result<()> {
             output,
             fixture,
         } => {
-            // Load fixture if specified
             let fixture_obj = if let Some(path) = fixture {
                 Some(Fixture::from_file(path)?)
             } else {
                 None
             };
 
-            // Create runner config
             let config = RunnerConfig {
                 framework: framework.clone(),
                 app_dir,
@@ -186,11 +184,9 @@ async fn main() -> Result<()> {
                 variant,
             };
 
-            // Run benchmark
             let runner = BenchmarkRunner::new(config)?;
             let result = runner.run(fixture_obj.as_ref()).await?;
 
-            // Print summary
             println!("\n{}", "=".repeat(60));
             println!("Benchmark Results");
             println!("{}", "=".repeat(60));
@@ -233,7 +229,6 @@ async fn main() -> Result<()> {
 
             println!("\n{}", "=".repeat(60));
 
-            // Write JSON output
             if let Some(output_path) = output {
                 let json = serde_json::to_string_pretty(&result)?;
                 std::fs::write(&output_path, json)?;

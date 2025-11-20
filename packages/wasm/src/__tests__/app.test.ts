@@ -109,7 +109,6 @@ describe("Spikard", () => {
 		app.addRoute(metadata1, handler1);
 		app.addRoute(metadata2, handler2);
 
-		// Last handler wins
 		expect(app.handlers.shared).toBe(handler2);
 	});
 });

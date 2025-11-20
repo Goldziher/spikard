@@ -80,7 +80,6 @@ class SseEventProducer:
     def on_connect(self) -> None:
         """Called when a client connects. Initializes the generator and event loop."""
 
-        # Create a new event loop in a background thread
         def run_loop() -> None:
             self._loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self._loop)
@@ -89,13 +88,11 @@ class SseEventProducer:
         self._loop_thread = threading.Thread(target=run_loop, daemon=True)
         self._loop_thread.start()
 
-        # Wait for loop to be ready
         while self._loop is None:
             time.sleep(0.001)
 
-        # Create the generator in the event loop
         future = asyncio.run_coroutine_threadsafe(self._create_generator(), self._loop)
-        future.result()  # Wait for generator creation
+        future.result()
 
     async def _create_generator(self) -> None:
         """Create the generator (must run in the event loop)."""
@@ -119,10 +116,9 @@ class SseEventProducer:
         if self._generator is None or self._loop is None:
             return None
 
-        # Run the async operation in the persistent event loop
         try:
             future = asyncio.run_coroutine_threadsafe(self._get_next_event(), self._loop)
-            return future.result(timeout=30.0)  # 30 second timeout
+            return future.result(timeout=30.0)
         except (TimeoutError, asyncio.CancelledError, RuntimeError):
             return None
 
@@ -179,7 +175,6 @@ def sse(
     """
 
     def decorator(func: F) -> F:
-        # Import here to avoid circular dependency
         from spikard.app import Spikard  # noqa: PLC0415
         from spikard.schema import extract_json_schema  # noqa: PLC0415
 
@@ -189,7 +184,6 @@ def sse(
                 "No Spikard app instance found. Create a Spikard() instance before using @sse decorator."
             )
 
-        # Extract event schema from return type hint if not explicitly provided
         extracted_event_schema = event_schema
 
         if extracted_event_schema is None:
@@ -197,18 +191,14 @@ def sse(
                 type_hints = get_type_hints(func)
                 return_type = type_hints.get("return")
 
-                # AsyncIterator[EventType] -> extract EventType
                 if return_type:
                     origin = get_origin(return_type)
-                    # Check for AsyncIterator, AsyncGenerator, or Iterator
                     if origin is not None:
                         args = get_args(return_type)
                         if args and args[0] is not dict:
-                            # Extract schema from the yielded type
                             extracted_event_schema = extract_json_schema(args[0])
 
             except (AttributeError, NameError, TypeError, ValueError):
-                # Schema extraction failed, continue without schema
                 pass
 
         @wraps(func)
@@ -216,17 +206,14 @@ def sse(
             async for event in func(*args, **kwargs):
                 yield event
 
-        # Store SSE metadata
         wrapper._sse_path = path  # type: ignore[attr-defined]  # noqa: SLF001
         wrapper._is_sse_handler = True  # type: ignore[attr-defined]  # noqa: SLF001
         wrapper._sse_func = func  # type: ignore[attr-defined]  # noqa: SLF001
         wrapper._event_schema = extracted_event_schema  # type: ignore[attr-defined]  # noqa: SLF001
 
-        # Register with the app as a factory that returns an SseEventProducer
         def producer_factory() -> SseEventProducer:
             """Factory that creates an SseEventProducer instance."""
             producer = SseEventProducer(lambda: wrapper(), event_schema=extracted_event_schema)
-            # Store the schema on the producer instance so Rust can extract it
             producer._event_schema = extracted_event_schema  # noqa: SLF001
             return producer
 

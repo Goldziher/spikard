@@ -7,9 +7,5 @@ use std::path::Path;
 /// Generate Python code
 pub fn generate(_ir: &IntermediateRepresentation, _output_dir: &Path) -> Result<()> {
     // TODO: Implement Python code generation
-    // 1. Generate route handlers
-    // 2. Generate Pydantic models from schemas
-    // 3. Generate app factory
-    // 4. Generate middleware configuration
     Ok(())
 }

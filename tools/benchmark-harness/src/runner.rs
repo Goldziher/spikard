@@ -42,16 +42,13 @@ impl BenchmarkRunner {
     pub async fn run(&self, fixture: Option<&Fixture>) -> Result<BenchmarkResult> {
         println!("Starting benchmark for {}", self.config.framework);
 
-        // Find available port
         let port =
             find_available_port(8000).ok_or_else(|| Error::ServerStartFailed("No available ports".to_string()))?;
 
         println!("Starting server on port {}", port);
 
-        // Start timing for startup metrics
         let spawn_start = Instant::now();
 
-        // Start server
         let server_config = ServerConfig {
             framework: self.config.framework.clone(),
             port,
@@ -63,36 +60,28 @@ impl BenchmarkRunner {
         let pid = server.pid();
         let base_url = server.base_url.clone();
 
-        // Measure startup time (spawn + health check)
         let total_startup_ms = spawn_start.elapsed().as_secs_f64() * 1000.0;
 
         println!("Server started with PID {} (startup: {:.2}ms)", pid, total_startup_ms);
 
-        // Start monitoring immediately to capture initialization memory
         let init_monitor = ResourceMonitor::new(pid);
-        let init_monitor_handle = init_monitor.start_monitoring(50); // Sample every 50ms
+        let init_monitor_handle = init_monitor.start_monitoring(50); 
 
-        // Give monitor a moment to capture initial samples
         sleep(Duration::from_millis(200)).await;
 
-        // Stop initial monitoring to get baseline memory
         let init_monitor = init_monitor_handle.stop().await;
         let init_samples = init_monitor.samples();
 
-        // Calculate initialization memory (average of first few samples)
         let initialization_memory_mb = if !init_samples.is_empty() {
-            let sample_count = init_samples.len().min(5); // Use first 5 samples or all if fewer
+            let sample_count = init_samples.len().min(5); 
             let total_memory: u64 = init_samples.iter().take(sample_count).map(|s| s.memory_bytes).sum();
             crate::types::bytes_to_mb(total_memory / sample_count as u64)
         } else {
             0.0
         };
 
-        // Create startup metrics
-        // Note: process_spawn_ms is approximated as a small fraction of total startup
-        // In the future, we could instrument start_server to return separate timings
         let startup_metrics = StartupMetrics {
-            process_spawn_ms: total_startup_ms * 0.1, // Approximate: 10% for spawn, 90% for health check
+            process_spawn_ms: total_startup_ms * 0.1, 
             time_to_first_response_ms: total_startup_ms * 0.9,
             initialization_memory_mb,
             total_startup_ms,
@@ -100,13 +89,12 @@ impl BenchmarkRunner {
 
         println!("Initialization memory: {:.2} MB", initialization_memory_mb);
 
-        // Warm-up phase
         if self.config.warmup_secs > 0 {
             println!("Warming up for {} seconds...", self.config.warmup_secs);
             let warmup_config = LoadTestConfig {
                 base_url: base_url.clone(),
                 duration_secs: self.config.warmup_secs,
-                concurrency: 10, // Low concurrency for warmup
+                concurrency: 10, 
                 fixture: fixture.cloned(),
             };
 
@@ -119,11 +107,9 @@ impl BenchmarkRunner {
             self.config.duration_secs, self.config.concurrency
         );
 
-        // Start monitoring
         let monitor = ResourceMonitor::new(pid);
-        let monitor_handle = monitor.start_monitoring(100); // Sample every 100ms
+        let monitor_handle = monitor.start_monitoring(100); 
 
-        // Run load test
         let load_config = LoadTestConfig {
             base_url: base_url.clone(),
             duration_secs: self.config.duration_secs,
@@ -135,21 +121,17 @@ impl BenchmarkRunner {
 
         let load_result = run_load_test(load_config, self.load_generator).await;
 
-        // Stop monitoring
         let monitor = monitor_handle.stop().await;
         let resources = monitor.calculate_metrics();
 
-        // Stop server
         server.kill()?;
 
         println!("Benchmark completed");
 
-        // Build result
         match load_result {
             Ok((oha_output, throughput)) => {
                 let latency = LatencyMetrics::from(oha_output);
 
-                // Create route type metrics if we have fixture information
                 let route_types = if let Some(fixture) = fixture {
                     let route_type = classify_route_type(fixture);
                     vec![RouteTypeMetrics {
@@ -159,8 +141,6 @@ impl BenchmarkRunner {
                         latency: latency.clone(),
                         success_rate: throughput.success_rate,
                         avg_memory_delta_mb: 0.0, // TODO: Calculate memory delta per request
-                                                  // This requires comparing memory samples before/during load test
-                                                  // Could be: (peak_memory - initialization_memory) / total_requests
                     }]
                 } else {
                     vec![]
@@ -179,29 +159,10 @@ impl BenchmarkRunner {
                     resources,
                     route_types,
                     // TODO: Error Metrics Collection
-                    // To collect error metrics, we need to:
-                    // 1. Run separate benchmark scenarios with error-inducing requests
-                    // 2. Test validation errors (400) - send invalid payloads
-                    // 3. Test not found errors (404) - send requests to non-existent routes
-                    // 4. Test server errors (500) - trigger error conditions in handlers
-                    // 5. Measure p99 latency for each error type
-                    // 6. Track memory impact during error handling
-                    // 7. Calculate error rate and throughput
-                    // This should be done in a separate error_metrics benchmarking phase
                     error_metrics: None,
                     // TODO: Serialization Metrics Collection
-                    // To collect serialization metrics, we need to:
-                    // 1. Instrument the application with timing hooks OR
-                    // 2. Use profiling tools to measure time spent in:
-                    //    - JSON parsing (serde_json::from_str or msgspec.decode)
-                    //    - JSON serialization (serde_json::to_string or msgspec.encode)
-                    //    - Schema validation (pydantic validation, etc.)
-                    // 3. Calculate average overhead per request
-                    // 4. Express as percentage of total latency
-                    // This likely requires framework-specific instrumentation
-                    // or integration with tracing/profiling tools
                     serialization: None,
-                    patterns: vec![], // Deprecated
+                    patterns: vec![], 
                     success: true,
                     error: None,
                 })
@@ -259,7 +220,6 @@ fn classify_route_type(fixture: &Fixture) -> RouteType {
             (false, false) => RouteType::GetSimple,
         },
         "POST" => {
-            // Check for multipart based on content-type header
             let is_multipart = fixture
                 .request
                 .headers
@@ -272,13 +232,9 @@ fn classify_route_type(fixture: &Fixture) -> RouteType {
                 return RouteType::PostMultipart;
             }
 
-            // Classify based on body characteristics
             if body_size_bytes > 10 * 1024 {
-                // Large payload (>10KB)
                 RouteType::PostJsonLarge
             } else if let Some(body) = &fixture.request.body {
-                // Check for validation constraints
-                // This is heuristic - we look for common validation keywords in the fixture
                 let body_str = body.to_string();
                 let has_validation_keywords = body_str.contains("validation")
                     || fixture.name.to_lowercase().contains("validation")
@@ -287,10 +243,8 @@ fn classify_route_type(fixture: &Fixture) -> RouteType {
                 if has_validation_keywords {
                     RouteType::PostValidated
                 } else if is_nested_json(body, 0) {
-                    // Nested structure (3+ levels deep)
                     RouteType::PostJsonNested
                 } else {
-                    // Simple flat JSON
                     RouteType::PostJsonSimple
                 }
             } else {
@@ -438,19 +392,15 @@ mod tests {
 
     #[test]
     fn test_is_nested_json() {
-        // Simple flat object - not nested
         let flat = serde_json::json!({"a": 1, "b": 2});
         assert!(!is_nested_json(&flat, 0));
 
-        // 2 levels - not nested enough
         let two_levels = serde_json::json!({"a": {"b": 1}});
         assert!(!is_nested_json(&two_levels, 0));
 
-        // 3 levels - nested
         let three_levels = serde_json::json!({"a": {"b": {"c": 1}}});
         assert!(is_nested_json(&three_levels, 0));
 
-        // Array with nested objects
         let nested_array = serde_json::json!([{"a": {"b": {"c": 1}}}]);
         assert!(is_nested_json(&nested_array, 0));
     }

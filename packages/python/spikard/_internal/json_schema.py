@@ -26,52 +26,40 @@ def field_definition_to_json_schema(field: FieldDefinition) -> dict[str, Any]:
     """
     schema: dict[str, Any] = {}
 
-    # Handle union types (including Optional)
     if field.is_optional:
-        # For Optional[T], get the non-None type and make it nullable
         non_none_types = [arg for arg in field.args if arg is not type(None)]
         if len(non_none_types) == 1:
-            # Simple Optional[T]
             inner_field = (
                 field.inner_types[0]
                 if field.inner_types and field.inner_types[0].annotation is not type(None)
                 else None
             )
             if inner_field:
-                # Recursively convert the inner type
                 schema = field_definition_to_json_schema(inner_field)
             else:
-                # Fallback to basic type
                 schema = _annotation_to_json_schema(non_none_types[0])
 
-            # Apply constraints from the parent field (which may have Pydantic Field constraints)
             _apply_constraints(schema, field.extra)
 
-            # Optional fields are handled by not including them in required array
             return schema
 
-    # Handle union types (non-Optional)
     if field.is_union and not field.is_optional:
-        # Use anyOf for union types
         schema["anyOf"] = [
             field_definition_to_json_schema(inner) for inner in field.inner_types if not inner.is_none_type
         ]
         return schema
 
-    # Handle list/array types
     if field.is_non_string_sequence:
         schema["type"] = "array"
         if field.inner_types:
             schema["items"] = field_definition_to_json_schema(field.inner_types[0])
         else:
-            schema["items"] = {"type": "string"}  # Default to string items
+            schema["items"] = {"type": "string"}
 
-        # Apply array-specific constraints from extra
         if "min_items" in field.extra:
             schema["minItems"] = field.extra["min_items"]
         if "max_items" in field.extra:
             schema["maxItems"] = field.extra["max_items"]
-        # Note: min_length/max_length on arrays should also be treated as minItems/maxItems
         if "min_length" in field.extra and "min_items" not in field.extra:
             schema["minItems"] = field.extra["min_length"]
         if "max_length" in field.extra and "max_items" not in field.extra:
@@ -79,26 +67,20 @@ def field_definition_to_json_schema(field: FieldDefinition) -> dict[str, Any]:
 
         return schema
 
-    # Handle literal types
     if field.is_literal:
         schema["enum"] = list(field.args)
         return schema
 
-    # Handle enum types
     if field.is_subclass_of(Enum):
         try:
-            # Get enum values
             enum_class = field.annotation
             schema["enum"] = [item.value for item in enum_class]
         except (AttributeError, TypeError, ValueError):
-            # If we can't get enum values, just use string type
             schema["type"] = "string"
         return schema
 
-    # Convert base type to JSON Schema
     schema.update(_annotation_to_json_schema(field.annotation))
 
-    # Apply constraints from field.extra
     _apply_constraints(schema, field.extra)
 
     return schema
@@ -158,11 +140,9 @@ def _apply_constraints(schema: dict[str, Any], constraints: dict[str, Any]) -> N
         schema: The JSON Schema dict to modify
         constraints: Dictionary of constraint names to values
     """
-    # Parameter source (cookie, header, query, path, body)
     if "source" in constraints:
         schema["source"] = constraints["source"]
 
-    # String constraints
     if "min_length" in constraints:
         schema["minLength"] = constraints["min_length"]
     if "max_length" in constraints:
@@ -170,7 +150,6 @@ def _apply_constraints(schema: dict[str, Any], constraints: dict[str, Any]) -> N
     if "pattern" in constraints:
         schema["pattern"] = constraints["pattern"]
 
-    # Numeric constraints
     if "gt" in constraints:
         schema["exclusiveMinimum"] = constraints["gt"]
     if "ge" in constraints:
@@ -182,7 +161,6 @@ def _apply_constraints(schema: dict[str, Any], constraints: dict[str, Any]) -> N
     if "multiple_of" in constraints:
         schema["multipleOf"] = constraints["multiple_of"]
 
-    # Case constraints (pattern-based)
     if constraints.get("lower_case"):
         schema["pattern"] = "^[a-z]*$"
     if constraints.get("upper_case"):

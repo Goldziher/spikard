@@ -79,7 +79,6 @@ def websocket(
     """
 
     def decorator(func: F) -> F:
-        # Import here to avoid circular dependency
         from spikard.app import Spikard  # noqa: PLC0415
         from spikard.schema import extract_json_schema  # noqa: PLC0415
 
@@ -89,7 +88,6 @@ def websocket(
                 "No Spikard app instance found. Create a Spikard() instance before using @websocket decorator."
             )
 
-        # Extract schemas from type hints if not explicitly provided
         extracted_message_schema = message_schema
         extracted_response_schema = response_schema
 
@@ -99,7 +97,6 @@ def websocket(
                 sig = inspect.signature(func)
                 params = list(sig.parameters.values())
 
-                # Extract message schema from 'message' parameter
                 if extracted_message_schema is None and params:
                     for param in params:
                         if param.name == "message":
@@ -108,17 +105,14 @@ def websocket(
                                 extracted_message_schema = extract_json_schema(param_type)
                             break
 
-                # Extract response schema from return type
                 if extracted_response_schema is None:
                     return_type = type_hints.get("return")
                     if return_type and return_type is not dict:
                         extracted_response_schema = extract_json_schema(return_type)
 
             except (AttributeError, NameError, TypeError, ValueError):
-                # Schema extraction failed, continue without schemas
                 pass
 
-        # Create a handler class that Rust expects
         class WebSocketHandlerWrapper:
             """Wrapper class that provides the interface Rust expects."""
 
@@ -138,10 +132,8 @@ def websocket(
             async def on_disconnect(self) -> None:
                 """Called when WebSocket connection is closed."""
 
-        # Register with the app as a factory that returns a handler instance
         app._websocket_handlers[path] = lambda: WebSocketHandlerWrapper()  # noqa: SLF001
 
-        # Return the original function (for documentation/inspection purposes)
         return func
 
     return decorator

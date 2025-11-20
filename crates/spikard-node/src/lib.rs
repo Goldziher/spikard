@@ -62,31 +62,22 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
     };
     use std::collections::HashMap;
 
-    // Extract host (default: "127.0.0.1")
     let host = config.get::<String>("host")?.unwrap_or_else(|| "127.0.0.1".to_string());
 
-    // Extract port (default: 8000)
     let port = config.get::<u32>("port")?.unwrap_or(8000) as u16;
 
-    // Extract workers (default: 1)
     let workers = config.get::<u32>("workers")?.unwrap_or(1) as usize;
 
-    // Extract enableRequestId (default: true)
     let enable_request_id = config.get::<bool>("enableRequestId")?.unwrap_or(true);
 
-    // Extract optional maxBodySize
     let max_body_size = config.get::<u32>("maxBodySize")?.map(|v| v as usize);
 
-    // Extract optional requestTimeout
     let request_timeout = config.get::<u32>("requestTimeout")?.map(|v| v as u64);
 
-    // Extract gracefulShutdown (default: true)
     let graceful_shutdown = config.get::<bool>("gracefulShutdown")?.unwrap_or(true);
 
-    // Extract shutdownTimeout (default: 30)
     let shutdown_timeout = config.get::<u32>("shutdownTimeout")?.unwrap_or(30) as u64;
 
-    // Extract compression config
     let compression = config.get::<Object>("compression")?.and_then(|comp| {
         let gzip = comp.get::<bool>("gzip").ok()?.unwrap_or(true);
         let brotli = comp.get::<bool>("brotli").ok()?.unwrap_or(true);
@@ -101,7 +92,6 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
         })
     });
 
-    // Extract rate limit config
     let rate_limit = config.get::<Object>("rateLimit")?.and_then(|rl| {
         let per_second = rl.get::<u32>("perSecond").ok()?? as u64;
         let burst = rl.get::<u32>("burst").ok()??;
@@ -113,7 +103,6 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
         })
     });
 
-    // Extract JWT auth config
     let jwt_auth = config.get::<Object>("jwtAuth")?.and_then(|jwt| {
         let secret = jwt.get::<String>("secret").ok()??;
         let algorithm = jwt
@@ -132,7 +121,6 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
         })
     });
 
-    // Extract API key auth config
     let api_key_auth = config.get::<Object>("apiKeyAuth")?.and_then(|api| {
         let keys: Vec<String> = api.get::<Vec<String>>("keys").ok()??;
         let header_name = api
@@ -142,7 +130,6 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
         Some(ApiKeyConfig { keys, header_name })
     });
 
-    // Extract static files config (array)
     let static_files = config
         .get::<Object>("staticFiles")?
         .and_then(|arr| {
@@ -165,7 +152,6 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
         })
         .unwrap_or_default();
 
-    // Extract OpenAPI config
     let openapi = config.get::<Object>("openapi")?.and_then(|api| {
         let enabled = api.get::<bool>("enabled").ok()?.unwrap_or(false);
         let title = api.get::<String>("title").ok()?.unwrap_or_else(|| "API".to_string());
@@ -187,7 +173,6 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
             .ok()?
             .unwrap_or_else(|| "/openapi.json".to_string());
 
-        // Extract contact info
         let contact = api.get::<Object>("contact").ok()?.and_then(|c| {
             let name: Option<String> = c.get::<String>("name").ok()?;
             let email: Option<String> = c.get::<String>("email").ok()?;
@@ -195,14 +180,12 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
             Some(ContactInfo { name, email, url })
         });
 
-        // Extract license info
         let license = api.get::<Object>("license").ok()?.and_then(|l| {
             let name = l.get::<String>("name").ok()??;
             let url: Option<String> = l.get::<String>("url").ok()?;
             Some(LicenseInfo { name, url })
         });
 
-        // Extract servers (array)
         let servers = api
             .get::<Object>("servers")
             .ok()?
@@ -219,8 +202,6 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
             })
             .unwrap_or_default();
 
-        // Extract security schemes (Record<string, SecuritySchemeInfo>)
-        // For now, return empty map - security schemes will be auto-detected from middleware
         let security_schemes = HashMap::new();
 
         Some(OpenApiConfig {
@@ -254,7 +235,7 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
         shutdown_timeout,
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
         openapi,
-        lifecycle_hooks: None, // Will be set later in run_server
+        lifecycle_hooks: None, 
     })
 }
 
@@ -302,7 +283,6 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
 /// ```
 #[napi]
 pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> {
-    // Extract config or use defaults
     let server_config = if let Some(cfg) = config {
         extract_server_config(&cfg)?
     } else {
@@ -312,19 +292,16 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
     let host = server_config.host.clone();
     let port = server_config.port;
 
-    // Extract routes from the app object
     let routes_array: Object = app
         .get_named_property("routes")
         .map_err(|e| Error::from_reason(format!("Failed to get routes from app: {}", e)))?;
 
-    // Convert routes array to Vec<RouteMetadata>
     let routes_length = routes_array.get_array_length()?;
     let mut routes = Vec::new();
 
     for i in 0..routes_length {
         let route_obj: Object = routes_array.get_element(i)?;
 
-        // Extract route metadata fields
         let method: String = route_obj.get_named_property("method")?;
 
         let path: String = route_obj.get_named_property("path")?;
@@ -348,26 +325,21 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
         routes.push(route_meta);
     }
 
-    // Extract handlers map from app
     let handlers_obj: Object = app
         .get_named_property("handlers")
         .map_err(|e| Error::from_reason(format!("Failed to get handlers from app: {}", e)))?;
 
-    // Separate regular routes from WebSocket routes
     let (regular_routes, websocket_routes): (Vec<_>, Vec<_>) = routes
         .into_iter()
         .partition(|route| !route.handler_name.to_lowercase().starts_with("websocket"));
 
-    // Build handler map for regular handlers only
     let mut handler_map = std::collections::HashMap::new();
 
     for route in &regular_routes {
-        // Get the JS handler function from the handlers object
         let js_handler: Function<String, Promise<HandlerReturnValue>> = handlers_obj
             .get_named_property(&route.handler_name)
             .map_err(|e| Error::from_reason(format!("Failed to get handler '{}': {}", route.handler_name, e)))?;
 
-        // Build ThreadsafeFunction following kreuzberg pattern
         let tsfn = js_handler
             .build_threadsafe_function()
             .build_callback(|ctx| Ok(vec![ctx.value]))
@@ -378,17 +350,14 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                 ))
             })?;
 
-        // Create Node handler
         let handler = Arc::new(handler::NodeHandler::new(route.handler_name.clone(), tsfn));
 
         handler_map.insert(route.handler_name.clone(), handler);
     }
 
-    // Extract lifecycle hooks from app if they exist
     let lifecycle_hooks = if let Ok(hooks_obj) = app.get_named_property::<Object>("lifecycleHooks") {
         let mut hooks = spikard_http::LifecycleHooks::new();
 
-        // Helper function to extract and wrap hook functions
         let extract_hooks = |hooks_obj: &Object, hook_type: &str| -> Result<Vec<lifecycle::NodeLifecycleHook>> {
             let hook_array: Result<Object> = hooks_obj.get_named_property(hook_type);
             if let Ok(arr) = hook_array {
@@ -399,7 +368,6 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                     let js_fn: Function<String, Promise<String>> = arr.get_element(i)?;
                     let name = format!("{}_{}", hook_type, i);
 
-                    // Build ThreadsafeFunction for the hook
                     let tsfn = js_fn
                         .build_threadsafe_function()
                         .build_callback(|ctx| Ok(vec![ctx.value]))
@@ -416,7 +384,6 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
             }
         };
 
-        // Extract each hook type
         for hook in extract_hooks(&hooks_obj, "onRequest")? {
             hooks.add_on_request(std::sync::Arc::new(hook));
         }
@@ -442,14 +409,11 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
         None
     };
 
-    // Use the extracted config and set lifecycle hooks
     let mut server_config = server_config;
     server_config.lifecycle_hooks = lifecycle_hooks.map(Arc::new);
 
-    // Create schema registry for validator deduplication
     let schema_registry = spikard_http::SchemaRegistry::new();
 
-    // Build routes with compiled validators for regular handlers
     let routes_with_handlers: Vec<(spikard_http::Route, Arc<dyn spikard_http::Handler>)> = regular_routes
         .iter()
         .map(|metadata| {
@@ -461,27 +425,22 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                 .ok_or_else(|| Error::from_reason(format!("Handler not found: {}", metadata.handler_name)))?
                 .clone();
 
-            // Explicitly upcast to Arc<dyn Handler>
             Ok::<_, Error>((route, handler as Arc<dyn spikard_http::Handler>))
         })
         .collect::<Result<Vec<_>>>()?;
 
-    // Initialize logging
     Server::init_logging();
 
     info!("Starting Spikard server on {}:{}", host, port);
     info!("Registered {} HTTP routes", routes_with_handlers.len());
 
-    // Build Axum router with regular handlers
     let mut app_router =
         Server::with_handlers_and_metadata(server_config.clone(), routes_with_handlers, regular_routes)
             .map_err(|e| Error::from_reason(format!("Failed to build router: {}", e)))?;
 
-    // Add WebSocket routes
     for ws_metadata in websocket_routes {
         let path = ws_metadata.path.clone();
 
-        // Get the JS handler function
         let js_handler: Function<String, Promise<String>> = handlers_obj
             .get_named_property(&ws_metadata.handler_name)
             .map_err(|e| {
@@ -491,7 +450,6 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                 ))
             })?;
 
-        // Build ThreadsafeFunction for message handling
         let handle_message_tsfn = js_handler
             .build_threadsafe_function()
             .build_callback(|ctx| Ok(vec![ctx.value]))
@@ -502,18 +460,15 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                 ))
             })?;
 
-        // Create WebSocket handler
         let ws_handler = websocket::NodeWebSocketHandler::new(
             ws_metadata.handler_name.clone(),
             handle_message_tsfn,
-            None, // on_connect
-            None, // on_disconnect
+            None, 
+            None, 
         );
 
-        // Create WebSocket state
         let ws_state = spikard_http::WebSocketState::new(ws_handler);
 
-        // Add WebSocket route to the router
         use axum::routing::get;
         app_router = app_router.route(
             &path,
@@ -525,8 +480,6 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
 
     let background_config = server_config.background_tasks.clone();
 
-    // Start the server in a background thread with its own Tokio runtime
-    // This keeps the Node.js event loop free to process ThreadsafeFunction calls
     let addr = format!("{}:{}", server_config.host, server_config.port);
     let socket_addr: std::net::SocketAddr = addr
         .parse()

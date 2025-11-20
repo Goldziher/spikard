@@ -40,7 +40,6 @@ impl WebSocketTestConnection {
 
     /// Send a JSON message
     fn send_json<'py>(&self, py: Python<'py>, obj: &Bound<'py, PyAny>) -> PyResult<Bound<'py, PyAny>> {
-        // Convert Python object to JSON
         let json_value = python_to_json(py, obj)?;
         let inner = Arc::clone(&self.inner);
 
@@ -69,7 +68,6 @@ impl WebSocketTestConnection {
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let mut ws = inner.lock().await;
             let json_value: Value = ws.receive_json().await;
-            // Convert JSON to Python dict/object
             Python::attach(|py| json_to_python(py, &json_value).map(|obj| obj.unbind()))
         })
     }
@@ -101,11 +99,8 @@ impl WebSocketTestConnection {
         let inner = Arc::clone(&self.inner);
 
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            // Take ownership to close
             {
                 let guard = inner.lock().await;
-                // We can't move out of the mutex, so we'll just let it drop
-                // The connection will be closed when the last Arc is dropped
                 drop(guard);
             };
             Ok(())
@@ -202,7 +197,6 @@ fn json_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'py, Py
 
 /// Connect to a WebSocket endpoint for testing
 pub async fn connect_websocket_for_test(server: &AxumTestServer, path: &str) -> PyResult<WebSocketTestConnection> {
-    // Just call connect_websocket directly - it will use the current runtime
     let ws = connect_websocket(server, path).await;
     Ok(WebSocketTestConnection::new(ws))
 }

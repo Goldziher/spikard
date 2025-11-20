@@ -206,7 +206,6 @@ fn build_fixture_function(
         function.push_str("    app = Spikard::App.new\n");
     }
 
-    // Generate lifecycle hooks if present
     let hooks = fixture
         .handler
         .as_ref()
@@ -219,8 +218,6 @@ fn build_fixture_function(
             function.push_str(&format!("{}\n", hook_code));
         }
         // TODO: Register hooks with app when Ruby API is implemented
-        // function.push_str("    app.on_request(on_request_proc)\n");
-        // etc.
     }
 
     let args_joined = args.join(", ");
@@ -488,7 +485,6 @@ fn build_parameter_schema(params: &Value) -> Option<Value> {
     schema.insert("type".to_string(), Value::String("object".to_string()));
     schema.insert("properties".to_string(), Value::Object(properties));
 
-    // Always include required field, even if empty, for consistency
     schema.insert("required".to_string(), Value::Array(required_fields));
 
     Some(Value::Object(schema))
@@ -510,7 +506,6 @@ fn build_response_expression(
         string_map_to_ruby(sanitized_headers)
     };
 
-    // If validation_errors is present, build a validation error response
     let body_code = if let Some(ref validation_errors) = expected.validation_errors {
         let count = validation_errors.len();
         let detail = if count == 1 {
@@ -519,7 +514,6 @@ fn build_response_expression(
             &format!("{} validation errors in request", count)
         };
 
-        // Build errors array
         let mut errors = Vec::new();
         for err in validation_errors {
             let mut error_map = Map::new();
@@ -619,7 +613,6 @@ fn build_streaming_headers_ruby(fixture: &Fixture, sanitized_headers: &HashMap<S
 fn generate_lifecycle_hooks_ruby(hooks: &Value, fixture: &Fixture) -> Vec<String> {
     let mut hook_code = Vec::new();
 
-    // Process on_request hooks
     if let Some(on_request) = hooks.get("on_request").and_then(|v| v.as_array()) {
         for hook in on_request {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
@@ -635,7 +628,6 @@ fn generate_lifecycle_hooks_ruby(hooks: &Value, fixture: &Fixture) -> Vec<String
         }
     }
 
-    // Process pre_validation hooks
     if let Some(pre_validation) = hooks.get("pre_validation").and_then(|v| v.as_array()) {
         for hook in pre_validation {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
@@ -667,7 +659,6 @@ fn generate_lifecycle_hooks_ruby(hooks: &Value, fixture: &Fixture) -> Vec<String
         }
     }
 
-    // Process pre_handler hooks
     if let Some(pre_handler) = hooks.get("pre_handler").and_then(|v| v.as_array()) {
         for hook in pre_handler {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
@@ -705,7 +696,6 @@ fn generate_lifecycle_hooks_ruby(hooks: &Value, fixture: &Fixture) -> Vec<String
         }
     }
 
-    // Process on_response hooks
     if let Some(on_response) = hooks.get("on_response").and_then(|v| v.as_array()) {
         for hook in on_response {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
@@ -744,7 +734,6 @@ fn generate_lifecycle_hooks_ruby(hooks: &Value, fixture: &Fixture) -> Vec<String
         }
     }
 
-    // Process on_error hooks
     if let Some(on_error) = hooks.get("on_error").and_then(|v| v.as_array()) {
         for hook in on_error {
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");

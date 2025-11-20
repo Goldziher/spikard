@@ -18,17 +18,15 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-const MAX_SAFE_INTEGER: i128 = 9007199254740991; // 2^53 - 1
+const MAX_SAFE_INTEGER: i128 = 9007199254740991; 
 
 /// Generate Node.js test suite from fixtures
 pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &TypeScriptTarget) -> Result<()> {
     println!("Generating Node.js tests...");
 
-    // Create tests directory
     let tests_dir = output_dir.join("tests");
     fs::create_dir_all(&tests_dir).context("Failed to create tests directory")?;
 
-    // Load fixtures by category
     let mut fixtures_by_category: HashMap<String, Vec<Fixture>> = HashMap::new();
 
     for entry in fs::read_dir(fixtures_dir).context("Failed to read fixtures directory")? {
@@ -58,7 +56,6 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
         dto_map.insert(fixture.name.clone(), dto);
     }
 
-    // Generate test file for each category
     for (category, fixtures) in fixtures_by_category.iter() {
         let test_content = generate_test_file(category, fixtures, target)?;
         let test_file = tests_dir.join(format!("{}.test.ts", category));
@@ -89,7 +86,6 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
 fn generate_test_file(category: &str, fixtures: &[Fixture], target: &TypeScriptTarget) -> Result<String> {
     let mut code = String::new();
 
-    // File header
     code.push_str(&format!("/**\n * E2E tests for {}\n * @generated\n */\n\n", category));
     code.push_str(&format!(
         "import {{ TestClient }} from \"{}\";\n",
@@ -97,7 +93,6 @@ fn generate_test_file(category: &str, fixtures: &[Fixture], target: &TypeScriptT
     ));
     code.push_str("import { describe, expect, test } from \"vitest\";\n");
 
-    // Import all app factories for this category
     let mut app_factories = Vec::new();
     for fixture in fixtures {
         if fixture_should_skip(category, fixture) {
@@ -122,10 +117,8 @@ fn generate_test_file(category: &str, fixtures: &[Fixture], target: &TypeScriptT
         code.push_str("} from \"../app/main.ts\";\n\n");
     }
 
-    // Generate test suite
     code.push_str(&format!("describe(\"{}\", () => {{\n", category));
 
-    // Generate test for each fixture
     for fixture in fixtures {
         let test_function = generate_test_function(category, fixture)?;
         code.push_str(&test_function);
@@ -370,20 +363,16 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     let expects_binary_body = fixture_requires_binary_body(fixture);
     let expected_content_length = expected_content_length(fixture);
 
-    // Test function header
     code.push_str(&format!("\ttest(\"{}\", async () => {{\n", test_name));
 
-    // Import and create client from per-fixture app factory
     let fixture_id = sanitize_identifier(&format!("{}_{}", category, &fixture.name));
     let app_factory_name = format!("createApp{}", to_pascal_case(&fixture_id));
     code.push_str(&format!("\t\tconst app = {}();\n", app_factory_name));
     code.push_str("\t\tconst client = new TestClient(app);\n\n");
 
-    // Build request
     let method = fixture.request.method.to_lowercase();
     let path = &fixture.request.path;
 
-    // Prepare request options
     let mut option_fields: Vec<&str> = Vec::new();
 
     let mut header_entries: Vec<(String, String)> = Vec::new();
@@ -425,7 +414,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     });
 
     let content_type_lc = content_type.as_ref().map(|s| s.to_ascii_lowercase());
-    // Check if fixture has files field (even if empty - needed for optional file params)
     let has_files_field = fixture.request.files.is_some();
     let has_files = fixture
         .request
@@ -439,7 +427,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         .map(|ct| ct.contains("multipart/form-data"))
         .unwrap_or(false)
         || has_files
-        || has_files_field; // Include even empty files array for optional params
+        || has_files_field; 
 
     let has_form_data_field = fixture.request.form_data.is_some();
     let has_form_data = fixture
@@ -471,7 +459,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         option_fields.push("json");
     }
 
-    // Build query params string if present
     let path_with_query = if let Some(ref query_params) = fixture.request.query_params {
         if !query_params.is_empty() {
             build_path_with_query(path, query_params)
@@ -522,7 +509,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         return Ok(code);
     }
 
-    // Assert status code
     code.push_str(&format!(
         "\t\texpect(response.statusCode).toBe({});\n",
         fixture.expected_response.status_code
@@ -546,7 +532,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         return Ok(code);
     }
 
-    // Different assertion strategies based on status code
     if status_code == 200 {
         if expects_binary_body {
             if let Some(target_len) = expected_content_length {
@@ -560,7 +545,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                 }
             }
         } else {
-            // Success case - verify response matches expected
             let has_expected_body = fixture
                 .expected_response
                 .body
@@ -610,7 +594,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                 code.push_str("\t\tconst responseText = response.text();\n");
             }
 
-            // If fixture has expected response body, assert against that
             if let Some(ref expected_body) = fixture.expected_response.body {
                 let expected_body_is_empty = is_value_effectively_empty(expected_body);
                 if !expected_body_is_empty {
@@ -623,7 +606,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                         generate_body_assertions(&mut code, expected_body, "responseData", 2, status_code >= 400);
                     }
                 } else if requires_response_data && should_parse_json {
-                    // Fallback: verify echoed parameters match what we sent
                     if let Some(ref body) = fixture.request.body {
                         generate_echo_assertions(&mut code, body, "responseData", 2);
                     }
@@ -651,7 +633,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                     }
                 }
             } else if requires_response_data && should_parse_json {
-                // Fallback: verify echoed parameters match what we sent
                 if let Some(ref body) = fixture.request.body {
                     generate_echo_assertions(&mut code, body, "responseData", 2);
                 }
@@ -758,13 +739,10 @@ fn build_form_definition(fixture: &Fixture) -> Result<Option<String>> {
 }
 
 fn build_multipart_definition(fixture: &Fixture) -> Result<Option<String>> {
-    // Check if fixture explicitly has files, form_data, or data fields
-    // (even if they're empty - we need to send an empty multipart request for validation)
     let has_files_field = fixture.request.files.is_some();
     let has_form_data_field = fixture.request.form_data.is_some();
     let has_data_field = fixture.request.data.is_some();
 
-    // If none of these fields are present, don't generate multipart
     if !has_files_field && !has_form_data_field && !has_data_field {
         return Ok(None);
     }
@@ -795,8 +773,6 @@ fn build_multipart_definition(fixture: &Fixture) -> Result<Option<String>> {
         parts.push(format!("files: [{}]", entries.join(", ")));
     }
 
-    // Always generate multipart if files or form_data fields are present
-    // (even if parts is empty - this handles optional file parameters)
     if !parts.iter().any(|part| part.starts_with("files:")) {
         parts.push("files: []".to_string());
     }
@@ -871,7 +847,7 @@ fn json_to_query_literal(value: &serde_json::Value) -> String {
         serde_json::Value::Null => String::new(),
         serde_json::Value::Bool(b) => b.to_string(),
         serde_json::Value::Number(n) => {
-            const MAX_SAFE: i128 = 9007199254740991; // 2^53 - 1
+            const MAX_SAFE: i128 = 9007199254740991; 
             if let Some(i) = n.as_i64() {
                 let magnitude = i128::from(i).abs();
                 if magnitude > MAX_SAFE {
@@ -962,7 +938,6 @@ fn generate_body_assertions(
 
                 match value {
                     serde_json::Value::Object(_) => {
-                        // Skip "ctx" objects in validation errors
                         if !(in_errors_path && key == "ctx") {
                             generate_body_assertions(code, value, &new_path, indent_level, skip_error_fields);
                         }
@@ -974,7 +949,6 @@ fn generate_body_assertions(
                         code.push_str(&format!("{}expect({}).toBe(\"{}\");\n", indent, new_path, n));
                     }
                     _ => {
-                        // Skip certain fields inside validation errors
                         let skip_assertion = (in_errors_path && (key == "input" || key == "msg" || key == "type"))
                             || (skip_error_fields && path == "responseData" && key == "detail");
 
@@ -1135,7 +1109,6 @@ fn sanitize_test_name(name: &str) -> String {
         " ",
     );
 
-    // Collapse multiple consecutive spaces
     while result.contains("  ") {
         result = result.replace("  ", " ");
     }
@@ -1149,7 +1122,6 @@ fn sanitize_identifier(s: &str) -> String {
         .to_lowercase()
         .replace(|c: char| !c.is_alphanumeric() && c != '_', "_");
 
-    // Collapse multiple consecutive underscores
     while result.contains("__") {
         result = result.replace("__", "_");
     }

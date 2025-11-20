@@ -325,11 +325,11 @@ class SecuritySchemeInfo:
         ```
     """
 
-    type: str  # "http" or "apiKey"
-    scheme: str | None = None  # For HTTP: "bearer", "basic", etc.
-    bearer_format: str | None = None  # For HTTP Bearer: "JWT"
-    location: str | None = None  # For API key: "header", "query", "cookie"
-    name: str | None = None  # For API key: parameter name
+    type: str
+    scheme: str | None = None
+    bearer_format: str | None = None
+    location: str | None = None
+    name: str | None = None
 
     def __post_init__(self) -> None:
         """Validate configuration after initialization."""
@@ -543,28 +543,23 @@ class ServerConfig:
         ```
     """
 
-    # Network configuration
     host: str = "127.0.0.1"
     port: int = 8000
     workers: int = 1
 
-    # Request handling
     enable_request_id: bool = True
-    max_body_size: int | None = 10 * 1024 * 1024  # 10MB default
-    request_timeout: int | None = 30  # 30 seconds default
+    max_body_size: int | None = 10 * 1024 * 1024
+    request_timeout: int | None = 30
 
-    # Middleware
     compression: CompressionConfig | None = field(default_factory=CompressionConfig)
     rate_limit: RateLimitConfig | None = None
     jwt_auth: JwtConfig | None = None
     api_key_auth: ApiKeyConfig | None = None
     static_files: list[StaticFilesConfig] = field(default_factory=list)
 
-    # Lifecycle
     graceful_shutdown: bool = True
     shutdown_timeout: int = 30
 
-    # OpenAPI/Documentation
     openapi: OpenApiConfig | None = None
 
     def __post_init__(self) -> None:
@@ -602,5 +597,4 @@ class ServerConfig:
             new_config = config.copy(host="0.0.0.0", port=8080)
             ```
         """
-        # Use dataclasses.replace() for efficient copying
         return replace(self, **updates)

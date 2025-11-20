@@ -134,7 +134,6 @@ pub fn generate_openapi_spec(
     _schema_registry: &SchemaRegistry,
     server_config: Option<&crate::ServerConfig>,
 ) -> Result<OpenApi, String> {
-    // Build Info section
     let mut info = Info::new(&config.title, &config.version);
     if let Some(desc) = &config.description {
         info.description = Some(desc.clone());
@@ -160,7 +159,6 @@ pub fn generate_openapi_spec(
         info.license = Some(license);
     }
 
-    // Build servers
     let servers = if config.servers.is_empty() {
         None
     } else {
@@ -179,20 +177,16 @@ pub fn generate_openapi_spec(
         )
     };
 
-    // Build paths from routes
     let mut paths = Paths::new();
     for route in routes {
         let path_item = route_to_path_item(route)?;
         paths.paths.insert(route.path.clone(), path_item);
     }
 
-    // Build components (schemas + security schemes)
     let mut components = Components::new();
     let mut global_security = Vec::new();
 
-    // Auto-detect security schemes from ServerConfig
     if let Some(server_cfg) = server_config {
-        // Detect JWT authentication
         if let Some(_jwt_cfg) = &server_cfg.jwt_auth {
             let jwt_scheme = SecurityScheme::Http(
                 utoipa::openapi::security::HttpBuilder::new()
@@ -202,12 +196,10 @@ pub fn generate_openapi_spec(
             );
             components.add_security_scheme("bearerAuth", jwt_scheme);
 
-            // Add to global security requirements
             let security_req = utoipa::openapi::security::SecurityRequirement::new("bearerAuth", Vec::<String>::new());
             global_security.push(security_req);
         }
 
-        // Detect API key authentication
         if let Some(api_key_cfg) = &server_cfg.api_key_auth {
             use utoipa::openapi::security::ApiKey;
             let api_key_scheme = SecurityScheme::ApiKey(ApiKey::Header(utoipa::openapi::security::ApiKeyValue::new(
@@ -215,13 +207,11 @@ pub fn generate_openapi_spec(
             )));
             components.add_security_scheme("apiKeyAuth", api_key_scheme);
 
-            // Add to global security requirements
             let security_req = utoipa::openapi::security::SecurityRequirement::new("apiKeyAuth", Vec::<String>::new());
             global_security.push(security_req);
         }
     }
 
-    // Also add any manually configured security schemes
     if !config.security_schemes.is_empty() {
         for (name, scheme_info) in &config.security_schemes {
             let scheme = security_scheme_info_to_openapi(scheme_info);
@@ -229,7 +219,6 @@ pub fn generate_openapi_spec(
         }
     }
 
-    // Build OpenAPI spec
     let mut openapi = OpenApiBuilder::new()
         .info(info)
         .paths(paths)
@@ -240,7 +229,6 @@ pub fn generate_openapi_spec(
         openapi.servers = Some(servers);
     }
 
-    // Add global security requirements if any were detected
     if !global_security.is_empty() {
         openapi.security = Some(global_security);
     }
@@ -252,10 +240,8 @@ pub fn generate_openapi_spec(
 fn route_to_path_item(route: &RouteMetadata) -> Result<PathItem, String> {
     use utoipa::openapi::HttpMethod;
 
-    // Create operation for this route's method
     let operation = route_to_operation(route)?;
 
-    // Determine HTTP method from string
     let http_method = match route.method.to_uppercase().as_str() {
         "GET" => HttpMethod::Get,
         "POST" => HttpMethod::Post,
@@ -267,7 +253,6 @@ fn route_to_path_item(route: &RouteMetadata) -> Result<PathItem, String> {
         _ => return Err(format!("Unsupported HTTP method: {}", route.method)),
     };
 
-    // Create path item with the operation
     let path_item = PathItem::new(http_method, operation);
 
     Ok(path_item)
@@ -277,13 +262,9 @@ fn route_to_path_item(route: &RouteMetadata) -> Result<PathItem, String> {
 fn route_to_operation(route: &RouteMetadata) -> Result<utoipa::openapi::path::Operation, String> {
     let mut operation = utoipa::openapi::path::Operation::new();
 
-    // Add parameters from parameter_schema if available
     if let Some(param_schema) = &route.parameter_schema {
         let parameters = extract_parameters_from_schema(param_schema, &route.path)?;
         if !parameters.is_empty() {
-            // Convert Vec<RefOr<Parameter>> to Vec<Parameter>
-            // Note: utoipa expects non-RefOr parameters in operation.parameters
-            // but we're building them as RefOr for consistency. We'll unwrap them here.
             let unwrapped: Vec<_> = parameters
                 .into_iter()
                 .filter_map(|p| if let RefOr::T(param) = p { Some(param) } else { None })
@@ -292,19 +273,16 @@ fn route_to_operation(route: &RouteMetadata) -> Result<utoipa::openapi::path::Op
         }
     }
 
-    // Add request body from request_schema if available
     if let Some(request_schema) = &route.request_schema {
         let request_body = json_schema_to_request_body(request_schema)?;
         operation.request_body = Some(request_body);
     }
 
-    // Add response from response_schema if available
     let mut responses = Responses::new();
     if let Some(response_schema) = &route.response_schema {
         let response = json_schema_to_response(response_schema)?;
         responses.responses.insert("200".to_string(), RefOr::T(response));
     } else {
-        // Default 200 response
         responses
             .responses
             .insert("200".to_string(), RefOr::T(Response::new("Successful response")));
@@ -323,10 +301,8 @@ fn extract_parameters_from_schema(
 
     let mut parameters = Vec::new();
 
-    // Extract path parameters from route pattern
     let path_params = extract_path_param_names(route_path);
 
-    // Get parameter properties from schema
     let properties = param_schema
         .get("properties")
         .and_then(|p| p.as_object())
@@ -343,11 +319,9 @@ fn extract_parameters_from_schema(
         let param_in = if path_params.contains(&name.as_str()) {
             ParameterIn::Path
         } else {
-            // Default to query parameters
             ParameterIn::Query
         };
 
-        // Convert JSON Schema to OpenAPI Schema
         let openapi_schema = json_value_to_schema(schema)?;
 
         let is_path_param = matches!(param_in, ParameterIn::Path);
@@ -389,17 +363,13 @@ fn json_schema_to_request_body(
 ) -> Result<utoipa::openapi::request_body::RequestBody, String> {
     use utoipa::openapi::content::ContentBuilder;
 
-    // Convert JSON Schema to OpenAPI Schema
     let openapi_schema = json_value_to_schema(schema)?;
 
-    // Build content for application/json
     let content = ContentBuilder::new().schema(Some(openapi_schema)).build();
 
-    // Build request body
     let mut request_body = utoipa::openapi::request_body::RequestBody::new();
     request_body.content.insert("application/json".to_string(), content);
 
-    // Check if schema marks this as required
     request_body.required = Some(utoipa::openapi::Required::True);
 
     Ok(request_body)
@@ -409,13 +379,10 @@ fn json_schema_to_request_body(
 fn json_schema_to_response(schema: &serde_json::Value) -> Result<Response, String> {
     use utoipa::openapi::content::ContentBuilder;
 
-    // Convert JSON Schema to OpenAPI Schema
     let openapi_schema = json_value_to_schema(schema)?;
 
-    // Build content for application/json
     let content = ContentBuilder::new().schema(Some(openapi_schema)).build();
 
-    // Build response
     let mut response = Response::new("Successful response");
     response.content.insert("application/json".to_string(), content);
 
@@ -425,15 +392,12 @@ fn json_schema_to_response(schema: &serde_json::Value) -> Result<Response, Strin
 /// Convert serde_json::Value (JSON Schema) to utoipa Schema
 /// OpenAPI 3.1.0 is fully compatible with JSON Schema Draft 2020-12
 fn json_value_to_schema(value: &serde_json::Value) -> Result<RefOr<Schema>, String> {
-    // Since OpenAPI 3.1.0 IS JSON Schema Draft 2020-12, we can use the schema directly
-    // We just need to convert it to utoipa's Schema type
 
     if let Some(type_str) = value.get("type").and_then(|t| t.as_str()) {
         match type_str {
             "object" => {
                 let mut object_schema = utoipa::openapi::ObjectBuilder::new();
 
-                // Add properties if present
                 if let Some(properties) = value.get("properties").and_then(|p| p.as_object()) {
                     for (prop_name, prop_schema) in properties {
                         let prop_openapi_schema = json_value_to_schema(prop_schema)?;
@@ -441,7 +405,6 @@ fn json_value_to_schema(value: &serde_json::Value) -> Result<RefOr<Schema>, Stri
                     }
                 }
 
-                // Add required fields if present
                 if let Some(required) = value.get("required").and_then(|r| r.as_array()) {
                     for field in required {
                         if let Some(field_name) = field.as_str() {
@@ -455,7 +418,6 @@ fn json_value_to_schema(value: &serde_json::Value) -> Result<RefOr<Schema>, Stri
             "array" => {
                 let mut array_schema = utoipa::openapi::ArrayBuilder::new();
 
-                // Add items schema if present
                 if let Some(items) = value.get("items") {
                     let items_schema = json_value_to_schema(items)?;
                     array_schema = array_schema.items(items_schema);
@@ -466,7 +428,6 @@ fn json_value_to_schema(value: &serde_json::Value) -> Result<RefOr<Schema>, Stri
             "string" => {
                 let mut schema_type = utoipa::openapi::schema::Type::String;
 
-                // Check for format
                 if let Some(format) = value.get("format").and_then(|f| f.as_str()) {
                     match format {
                         "date-time" => schema_type = utoipa::openapi::schema::Type::String,
@@ -499,7 +460,6 @@ fn json_value_to_schema(value: &serde_json::Value) -> Result<RefOr<Schema>, Stri
             _ => Err(format!("Unsupported schema type: {}", type_str)),
         }
     } else {
-        // No type specified, create a generic schema
         Ok(RefOr::T(Schema::Object(utoipa::openapi::ObjectBuilder::new().build())))
     }
 }
@@ -674,7 +634,6 @@ mod tests {
         }
     }
 
-    // Tests for newly implemented schema conversion functions
 
     #[test]
     fn test_extract_path_param_names() {
@@ -742,7 +701,6 @@ mod tests {
         let result = json_value_to_schema(&schema_json);
         assert!(result.is_ok());
 
-        // Verify it's an object schema
         if let Ok(RefOr::T(Schema::Object(obj))) = result {
             assert!(obj.properties.contains_key("name"));
             assert!(obj.properties.contains_key("age"));
@@ -764,9 +722,7 @@ mod tests {
         let result = json_value_to_schema(&schema_json);
         assert!(result.is_ok());
 
-        // Verify it's an array schema
         if let Ok(RefOr::T(Schema::Array(_))) = result {
-            // Success
         } else {
             panic!("Expected Array schema");
         }
@@ -880,7 +836,6 @@ mod tests {
         let params = result.unwrap();
         assert_eq!(params.len(), 2);
 
-        // Check that parameters are correctly identified as path params
         for param in params {
             if let RefOr::T(p) = param {
                 assert!(matches!(p.parameter_in, utoipa::openapi::path::ParameterIn::Path));
@@ -907,14 +862,12 @@ mod tests {
         let params = result.unwrap();
         assert_eq!(params.len(), 3);
 
-        // Verify we have query parameters
         for param in &params {
             if let RefOr::T(p) = param {
                 assert!(matches!(p.parameter_in, utoipa::openapi::path::ParameterIn::Query));
             }
         }
 
-        // Check that required status is correct
         for param in params {
             if let RefOr::T(p) = param {
                 if p.name == "page" {
@@ -944,7 +897,6 @@ mod tests {
         let params = result.unwrap();
         assert_eq!(params.len(), 3);
 
-        // user_id should be path param, others should be query params
         for param in params {
             if let RefOr::T(p) = param {
                 if p.name == "user_id" {
@@ -984,7 +936,6 @@ mod tests {
     fn test_extract_parameters_error_on_missing_properties() {
         let param_schema = serde_json::json!({
             "type": "object"
-            // Missing "properties" field
         });
 
         let result = extract_parameters_from_schema(&param_schema, "/users");

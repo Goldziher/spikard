@@ -1,4 +1,3 @@
-// ! WebSocket test client bindings for Node.js
 
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
@@ -76,7 +75,6 @@ impl WebSocketTestConnection {
     /// Close the WebSocket connection
     #[napi]
     pub async fn close(&self) -> Result<()> {
-        // The connection will be closed when dropped
         Ok(())
     }
 }
