@@ -194,7 +194,7 @@ mod tests {
         let result = hooks.execute_on_request(req).await.unwrap();
 
         match result {
-            HookResult::ShortCircuit(_) => {  }
+            HookResult::ShortCircuit(_) => {}
             HookResult::Continue(_) => panic!("Expected ShortCircuit, got Continue"),
         }
     }
@@ -211,7 +211,6 @@ mod tests {
         let result = hooks.execute_on_response(resp).await.unwrap();
         assert_eq!(result.status(), StatusCode::OK);
     }
-
 
     #[tokio::test]
     async fn test_request_hook_builder() {

@@ -110,7 +110,7 @@ impl SseEventProducer for NotificationProducer {
         Some(
             SseEvent::with_type(event_type, data)
                 .with_id(format!("event_{}", count))
-                .with_retry(3000), 
+                .with_retry(3000),
         )
     }
 

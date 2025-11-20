@@ -315,7 +315,7 @@ mod tests {
     #[test]
     fn test_handle_preflight_empty_origin() {
         let config = make_cors_config();
-        let headers = HeaderMap::new(); 
+        let headers = HeaderMap::new();
 
         let result = handle_preflight(&headers, &config);
         assert!(result.is_err());
@@ -366,7 +366,7 @@ mod tests {
     #[test]
     fn test_validate_cors_request_no_origin() {
         let config = make_cors_config();
-        let headers = HeaderMap::new(); 
+        let headers = HeaderMap::new();
 
         let result = validate_cors_request(&headers, &config);
         assert!(result.is_ok());

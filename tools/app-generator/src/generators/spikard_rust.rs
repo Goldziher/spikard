@@ -14,8 +14,29 @@ pub fn generate(analysis: &RouteAnalysis) -> Result<String> {
     let mut handler_names = HashMap::new();
     let mut handlers_code = String::new();
 
+    // Add health check handler
+    handlers_code.push_str("#[allow(dead_code)]\nstruct HealthHandler {}\n\n");
+    handlers_code.push_str("impl Handler for HealthHandler {\n");
+    handlers_code.push_str("    fn call(\n");
+    handlers_code.push_str("        &self,\n");
+    handlers_code.push_str("        _request: Request<Body>,\n");
+    handlers_code.push_str("        _request_data: RequestData,\n");
+    handlers_code.push_str("    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {\n");
+    handlers_code.push_str("        Box::pin(async move {\n");
+    handlers_code.push_str("            let response = json!({\"status\": \"ok\"});\n");
+    handlers_code.push_str("            let body = serde_json::to_vec(&response)\n");
+    handlers_code.push_str("                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;\n");
+    handlers_code.push_str("            Response::builder()\n");
+    handlers_code.push_str("                .status(StatusCode::OK)\n");
+    handlers_code.push_str("                .header(\"content-type\", \"application/json\")\n");
+    handlers_code.push_str("                .body(Body::from(body))\n");
+    handlers_code.push_str("                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))\n");
+    handlers_code.push_str("        })\n");
+    handlers_code.push_str("    }\n");
+    handlers_code.push_str("}\n\n");
+
     for route in &analysis.routes {
-        let (struct_name, handler_code) = generate_handler_struct(route, &mut handler_names);
+        let (_struct_name, handler_code) = generate_handler_struct(route, &mut handler_names);
         handlers_code.push_str(&handler_code);
     }
 
@@ -38,6 +59,7 @@ use spikard_http::{
     router::Route,
     server::build_router_with_handlers,
     RouteMetadata,
+    SchemaRegistry,
 };
 use axum::{
     body::Body,
@@ -218,7 +240,7 @@ fn generate_main(analysis: &RouteAnalysis, handler_names: &HashMap<String, Strin
             file_params: None,
             is_async: true,
             cors: None,
-        }})?,
+        }}, &registry)?,
         Arc::new({} {{}}) as Arc<dyn Handler>,
     ));"#,
             method, path, struct_name, struct_name
@@ -235,11 +257,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {{
 
     eprintln!("Starting Spikard-Rust server on port {{}}", port);
 
+    let registry = SchemaRegistry::new();
     let mut routes: Vec<(Route, Arc<dyn Handler>)> = Vec::new();
+
+    // Health check route
+    routes.push((
+        Route::from_metadata(RouteMetadata {{
+            method: "GET".to_string(),
+            path: "/health".to_string(),
+            handler_name: "HealthHandler".to_string(),
+            request_schema: None,
+            response_schema: None,
+            parameter_schema: None,
+            file_params: None,
+            is_async: true,
+            cors: None,
+        }}, &registry)?,
+        Arc::new(HealthHandler {{}}) as Arc<dyn Handler>,
+    ));
 
 {}
 
-    let app = build_router_with_handlers(routes)?;
+    let app = build_router_with_handlers(routes, None)?;
 
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
     let listener = tokio::net::TcpListener::bind(addr).await?;

@@ -18,7 +18,7 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-const MAX_SAFE_INTEGER: i128 = 9007199254740991; 
+const MAX_SAFE_INTEGER: i128 = 9007199254740991;
 
 /// Generate Node.js test suite from fixtures
 pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &TypeScriptTarget) -> Result<()> {
@@ -427,7 +427,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         .map(|ct| ct.contains("multipart/form-data"))
         .unwrap_or(false)
         || has_files
-        || has_files_field; 
+        || has_files_field;
 
     let has_form_data_field = fixture.request.form_data.is_some();
     let has_form_data = fixture
@@ -847,7 +847,7 @@ fn json_to_query_literal(value: &serde_json::Value) -> String {
         serde_json::Value::Null => String::new(),
         serde_json::Value::Bool(b) => b.to_string(),
         serde_json::Value::Number(n) => {
-            const MAX_SAFE: i128 = 9007199254740991; 
+            const MAX_SAFE: i128 = 9007199254740991;
             if let Some(i) = n.as_i64() {
                 let magnitude = i128::from(i).abs();
                 if magnitude > MAX_SAFE {

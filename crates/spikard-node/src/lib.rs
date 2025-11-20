@@ -235,7 +235,7 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
         shutdown_timeout,
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
         openapi,
-        lifecycle_hooks: None, 
+        lifecycle_hooks: None,
     })
 }
 
@@ -460,12 +460,8 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                 ))
             })?;
 
-        let ws_handler = websocket::NodeWebSocketHandler::new(
-            ws_metadata.handler_name.clone(),
-            handle_message_tsfn,
-            None, 
-            None, 
-        );
+        let ws_handler =
+            websocket::NodeWebSocketHandler::new(ws_metadata.handler_name.clone(), handle_message_tsfn, None, None);
 
         let ws_state = spikard_http::WebSocketState::new(ws_handler);
 

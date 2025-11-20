@@ -145,8 +145,8 @@ fn generate_app_file_per_fixture(
     let mut code = String::new();
 
     code.push_str("\"\"\"Generated E2E test application with per-fixture app factories.\"\"\"\n");
-    code.push_str("# ruff: noqa: ARG001, A002\n"); 
-    code.push_str("# mypy: ignore-errors\n"); 
+    code.push_str("# ruff: noqa: ARG001, A002\n");
+    code.push_str("# mypy: ignore-errors\n");
     code.push('\n');
     code.push_str("from dataclasses import asdict, dataclass\n");
     code.push_str("from datetime import date, datetime\n");
@@ -695,7 +695,6 @@ fn generate_fixture_handler_and_app_python(
         }
     }
 
-
     let app_factory_code = if config_str == "None" && hooks_code.is_empty() {
         format!(
             r#"def {}() -> Spikard:
@@ -851,7 +850,6 @@ fn generate_handler_function_for_fixture(
         let sleep_literal = format_sleep_seconds(sleep_ms);
         code.push_str(&format!("    await asyncio.sleep({})\n", sleep_literal));
     }
-
 
     let should_return_expected = expected_body.is_some() && !expected_body_is_empty;
     let should_return_validation_errors = validation_errors_body.is_some() && !should_return_expected;
@@ -1279,9 +1277,7 @@ fn make_unique_name(base_name: &str, used_names: &mut HashMap<String, usize>) ->
 /// Extract body model definition - generates code for different type systems
 fn extract_body_model(schema: &Value, model_name: &str, body_type: BodyType) -> Result<String> {
     match body_type {
-        BodyType::PlainDict => {
-            Ok(String::new())
-        }
+        BodyType::PlainDict => Ok(String::new()),
         BodyType::TypedDict => generate_typed_dict(schema, model_name),
         BodyType::Dataclass => generate_dataclass(schema, model_name),
         BodyType::NamedTuple => generate_namedtuple(schema, model_name),
@@ -1530,7 +1526,7 @@ fn json_type_to_python(schema: &Value) -> Result<String> {
                     _ => "str",
                 }
             } else {
-                "str" 
+                "str"
             }
         }
         "integer" => "int",
@@ -1567,7 +1563,6 @@ fn build_parameter_schema_with_sources(params: &Value) -> Result<String> {
     let mut required = Vec::new();
 
     if let Some(obj) = params.as_object() {
-
         if let Some(path_params) = obj.get("path").and_then(|v| v.as_object()) {
             for (name, param_schema) in path_params {
                 let mut param_with_source = param_schema.clone();

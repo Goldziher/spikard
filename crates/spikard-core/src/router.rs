@@ -23,7 +23,7 @@ pub struct Route {
     pub request_validator: Option<Arc<SchemaValidator>>,
     pub response_validator: Option<Arc<SchemaValidator>>,
     pub parameter_validator: Option<ParameterValidator>,
-    pub file_params: Option<Value>, 
+    pub file_params: Option<Value>,
     pub is_async: bool,
     pub cors: Option<CorsConfig>,
     /// Precomputed flag: true if this route expects a JSON request body
@@ -62,15 +62,9 @@ impl Route {
             (Some(auto_schema), Some(explicit_schema)) => {
                 Some(crate::type_hints::merge_parameter_schemas(auto_schema, explicit_schema))
             }
-            (Some(auto_schema), None) => {
-                Some(auto_schema)
-            }
-            (None, Some(explicit_schema)) => {
-                Some(explicit_schema)
-            }
-            (None, None) => {
-                None
-            }
+            (Some(auto_schema), None) => Some(auto_schema),
+            (None, Some(explicit_schema)) => Some(explicit_schema),
+            (None, None) => None,
         };
 
         let parameter_validator = final_parameter_schema.map(ParameterValidator::new).transpose()?;

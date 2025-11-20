@@ -137,7 +137,7 @@ impl ParameterValidator {
 
         let mut params_map = serde_json::Map::new();
         let mut errors = Vec::new();
-        let mut raw_values_map: HashMap<String, String> = HashMap::new(); 
+        let mut raw_values_map: HashMap<String, String> = HashMap::new();
 
         for param_def in &self.parameter_defs {
             tracing::debug!(
@@ -174,19 +174,13 @@ impl ParameterValidator {
             }
 
             let raw_value_string = match param_def.source {
-                ParameterSource::Query => {
-                    raw_query_params.get(&param_def.name)
-                }
-                ParameterSource::Path => {
-                    path_params.get(&param_def.name)
-                }
+                ParameterSource::Query => raw_query_params.get(&param_def.name),
+                ParameterSource::Path => path_params.get(&param_def.name),
                 ParameterSource::Header => {
                     let header_name = param_def.name.replace('_', "-").to_lowercase();
                     headers.get(&header_name)
                 }
-                ParameterSource::Cookie => {
-                    cookies.get(&param_def.name)
-                }
+                ParameterSource::Cookie => cookies.get(&param_def.name),
             };
 
             tracing::debug!("raw_value_string for {}: {:?}", param_def.name, raw_value_string);
@@ -429,7 +423,7 @@ impl ParameterValidator {
                     Err(format!("Invalid boolean: {}", value))
                 }
             }
-            _ => Ok(json!(value)), 
+            _ => Ok(json!(value)),
         }
     }
 

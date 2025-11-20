@@ -11,7 +11,6 @@ use std::sync::Arc;
 /// Test that NodeHandler properly serializes RequestData for JavaScript
 #[tokio::test]
 async fn test_request_data_serialization() {
-
     let mut path_params = HashMap::new();
     path_params.insert("id".to_string(), "123".to_string());
 

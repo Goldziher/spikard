@@ -1465,7 +1465,7 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
         shutdown_timeout,
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
         openapi,
-        lifecycle_hooks: None, 
+        lifecycle_hooks: None,
     })
 }
 

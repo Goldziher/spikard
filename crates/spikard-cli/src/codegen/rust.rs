@@ -186,13 +186,11 @@ use spikard::{{App, AppError, RequestContext, delete, get, patch, post, put}};
         let base_type = match &schema.schema_kind {
             SchemaKind::Type(Type::String(_)) => "String".to_string(),
             SchemaKind::Type(Type::Number(_)) => "f64".to_string(),
-            SchemaKind::Type(Type::Integer(int_type)) => {
-                match &int_type.format {
-                    VariantOrUnknownOrEmpty::Item(IntegerFormat::Int32) => "i32".to_string(),
-                    VariantOrUnknownOrEmpty::Item(IntegerFormat::Int64) => "i64".to_string(),
-                    _ => "i64".to_string(),
-                }
-            }
+            SchemaKind::Type(Type::Integer(int_type)) => match &int_type.format {
+                VariantOrUnknownOrEmpty::Item(IntegerFormat::Int32) => "i32".to_string(),
+                VariantOrUnknownOrEmpty::Item(IntegerFormat::Int64) => "i64".to_string(),
+                _ => "i64".to_string(),
+            },
             SchemaKind::Type(Type::Boolean(_)) => "bool".to_string(),
             SchemaKind::Type(Type::Array(arr)) => {
                 let item_type = match &arr.items {

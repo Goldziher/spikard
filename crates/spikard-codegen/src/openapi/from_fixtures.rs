@@ -307,7 +307,7 @@ fn extract_parameters(params_schema: &Value) -> Result<Vec<Parameter>> {
                     name: name.clone(),
                     location: "path".to_string(),
                     description: schema.get("description").and_then(|v| v.as_str()).map(String::from),
-                    required: Some(true), 
+                    required: Some(true),
                     schema: Some(json_to_schema(schema)?),
                 });
             }

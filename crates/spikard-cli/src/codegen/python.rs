@@ -364,7 +364,7 @@ app = Spikard()
                         path_params.push((parameter_data.name.clone(), "str".to_string()));
                     }
                     Parameter::Query { parameter_data, .. } => {
-                        let type_hint = "str".to_string(); 
+                        let type_hint = "str".to_string();
                         query_params.push((parameter_data.name.clone(), type_hint, parameter_data.required));
                     }
                     _ => {}

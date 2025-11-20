@@ -451,21 +451,21 @@ pub fn calculate_confidence_interval(values: &[f64], confidence: f64) -> (f64, f
 
     let t_critical = if values.len() < 30 {
         match values.len() {
-            2 => 12.706,      
-            3 => 4.303,       
-            4 => 3.182,       
-            5 => 2.776,       
-            6 => 2.571,       
-            7..=10 => 2.447,  
-            11..=20 => 2.228, 
-            _ => 2.093,       
+            2 => 12.706,
+            3 => 4.303,
+            4 => 3.182,
+            5 => 2.776,
+            6 => 2.571,
+            7..=10 => 2.447,
+            11..=20 => 2.228,
+            _ => 2.093,
         }
     } else {
         match confidence {
             x if x >= 0.99 => 2.576,
             x if x >= 0.95 => 1.96,
             x if x >= 0.90 => 1.645,
-            _ => 1.96, 
+            _ => 1.96,
         }
     };
 
@@ -497,7 +497,6 @@ pub fn coefficient_of_variation(values: &[f64]) -> f64 {
     let std = stddev(values);
     std / mean_val
 }
-
 
 fn mean(values: &[f64]) -> f64 {
     if values.is_empty() {
@@ -535,7 +534,7 @@ fn stddev(values: &[f64]) -> f64 {
             diff * diff
         })
         .sum::<f64>()
-        / (values.len() - 1) as f64; 
+        / (values.len() - 1) as f64;
 
     variance.sqrt()
 }
@@ -584,7 +583,7 @@ mod tests {
     fn test_stddev() {
         let values = vec![2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0];
         let std = stddev(&values);
-        assert!((std - 2.138).abs() < 0.01); 
+        assert!((std - 2.138).abs() < 0.01);
     }
 
     #[test]
