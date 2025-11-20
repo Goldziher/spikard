@@ -965,8 +965,8 @@ wheels = [
 
 [[package]]
 name = "uv-bump"
-version = "0.1.2"
-source = { git = "https://github.com/Goldziher/uv-bump#2fb74a6ffe83e0daa9d343cf0d2877b4adac8e0b" }
+version = "0.2.0"
+source = { git = "https://github.com/Goldziher/uv-bump#9f2fab20b190a64da9ae0a1df74ceda1509c6bb1" }
 dependencies = [
     { name = "tomli", marker = "python_full_version < '3.11'" },
 ]
