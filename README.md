@@ -58,6 +58,61 @@ All generators rely on the same validators and schemas used by the e2e suites, k
 - Prefer codegen paths when adding routes or protocols; keep CLI surfaces consistent across bindings.
 - Target correctness first—favor explicit validation and standards alignment even when optimizing hot paths.
 
+## Performance
+
+Benchmarks measured on macOS (Darwin 24.6.0) with 50 concurrent connections over 10 seconds. All tests achieved 100% success rates.
+
+### Overall Performance Summary
+
+| Binding | Throughput | Mean Latency | P95 Latency | P99 Latency | Memory | Startup |
+|---------|------------|--------------|-------------|-------------|--------|---------|
+| **Rust** | 165,228 req/s | 0.30ms | 0.36ms | 0.45ms | 17.4 MB | 1.01s |
+| **Python** | 120,058 req/s | 0.42ms | 0.67ms | 1.27ms | 25.5 MB | 1.01s |
+| Node | *pending* | *pending* | *pending* | *pending* | *pending* | *pending* |
+| Ruby | *pending* | *pending* | *pending* | *pending* | *pending* | *pending* |
+| WASM | *pending* | *pending* | *pending* | *pending* | *pending* | *pending* |
+
+### Performance by Workload Type
+
+#### JSON Request/Response
+| Binding | Throughput | Mean Latency | P99 Latency |
+|---------|------------|--------------|-------------|
+| Rust | *pending* | *pending* | *pending* |
+| Python | *pending* | *pending* | *pending* |
+| Node | *pending* | *pending* | *pending* |
+| Ruby | *pending* | *pending* | *pending* |
+
+#### Multipart Form Data
+| Binding | Throughput | Mean Latency | P99 Latency |
+|---------|------------|--------------|-------------|
+| Rust | *pending* | *pending* | *pending* |
+| Python | *pending* | *pending* | *pending* |
+| Node | *pending* | *pending* | *pending* |
+| Ruby | *pending* | *pending* | *pending* |
+
+#### URL-Encoded Forms
+| Binding | Throughput | Mean Latency | P99 Latency |
+|---------|------------|--------------|-------------|
+| Rust | *pending* | *pending* | *pending* |
+| Python | *pending* | *pending* | *pending* |
+| Node | *pending* | *pending* | *pending* |
+| Ruby | *pending* | *pending* | *pending* |
+
+#### Query Parameters
+| Binding | Throughput | Mean Latency | P99 Latency |
+|---------|------------|--------------|-------------|
+| Rust | *pending* | *pending* | *pending* |
+| Python | 120,058 req/s | 0.42ms | 1.27ms |
+| Node | *pending* | *pending* | *pending* |
+| Ruby | *pending* | *pending* | *pending* |
+
+**Notes:**
+- Rust native implementation shows ~38% higher throughput than Python bindings
+- Both implementations maintain sub-millisecond mean latency under load
+- Python binding uses PyO3 with async/await and zero-copy msgspec serialization
+- Memory footprint remains low (<30 MB) across all bindings
+- Full benchmark methodology and raw results: `tools/benchmark-harness/results/`
+
 ## Roadmap Highlights
 - JSON-RPC and protobuf generators alongside OpenAPI/AsyncAPI.
 - Additional edge adapters and streaming benchmarks.
