@@ -11,66 +11,6 @@ require 'spikard'
 
 app = Spikard::App.new
 
-app.post '/', handler_name: 'post_' do
-  response = {}
-
-  response
-end
-
-app.post '/api/{id}', handler_name: 'post_api_id' do
-  response = {}
-
-  response
-end
-
-app.post '/{lang}', handler_name: 'post_lang' do
-  response = {}
-
-  response
-end
-
-app.get '/', handler_name: 'get_' do
-  response = {}
-
-  response
-end
-
-app.get '/undefinedBody/{id}', handler_name: 'get_undefinedBody_id' do
-  response = {}
-
-  response
-end
-
-app.get '/test/{id}', handler_name: 'get_test_id' do
-  response = {}
-
-  response
-end
-
-app.get '/second/{id}', handler_name: 'get_second_id' do
-  response = {}
-
-  response
-end
-
-app.get '/http', handler_name: 'get_http' do
-  response = {}
-
-  response
-end
-
-app.get '/test', handler_name: 'get_test' do
-  response = {}
-
-  response
-end
-
-app.get '/{lang}', handler_name: 'get_lang' do |query|
-  response = {}
-  response[:self] = query[:self] if query[:self]
-  response
-end
-
 app.post '/items/', handler_name: 'post_items' do
   response = {}
 
@@ -191,7 +131,7 @@ app.get '/path/float/{item_id}', handler_name: 'get_path_float_item_id' do |para
   response
 end
 
-app.get '/items/{id}', handler_name: 'get_items_id' do |params|
+app.get '/items/{item_id}', handler_name: 'get_items_item_id' do |params|
   response = {}
   response[:item_id] = params[:item_id]
   response
@@ -223,10 +163,10 @@ end
 
 app.get '/{version}/{service_id}/{user_id}/{order_id}', handler_name: 'get_version_service_id_user_id_order_id' do |params|
   response = {}
+  response[:user_id] = params[:user_id]
   response[:version] = params[:version]
   response[:order_id] = params[:order_id]
   response[:service_id] = params[:service_id]
-  response[:user_id] = params[:user_id]
   response
 end
 
@@ -304,8 +244,8 @@ end
 
 app.get '/repos/{owner}/{repo}', handler_name: 'get_repos_owner_repo' do |params|
   response = {}
-  response[:repo] = params[:repo]
   response[:owner] = params[:owner]
+  response[:repo] = params[:repo]
   response
 end
 
@@ -384,6 +324,13 @@ end
 app.get '/items/', handler_name: 'get_items' do |query|
   response = {}
   response[:q] = query[:q] if query[:q]
+  response
+end
+
+app.get '/test', handler_name: 'get_test' do |query|
+  response = {}
+  response[:email] = query[:email] if query[:email]
+  response[:special] = query[:special] if query[:special]
   response
 end
 
@@ -467,10 +414,10 @@ end
 
 app.get '/query/multi-type', handler_name: 'get_query_multi-type' do |query|
   response = {}
-  response[:age] = query[:age] if query[:age]
-  response[:active] = query[:active] if query[:active]
-  response[:score] = query[:score] if query[:score]
   response[:name] = query[:name] if query[:name]
+  response[:active] = query[:active] if query[:active]
+  response[:age] = query[:age] if query[:age]
+  response[:score] = query[:score] if query[:score]
   response
 end
 

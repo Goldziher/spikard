@@ -24,6 +24,12 @@ pub fn generate(analysis: &RouteAnalysis) -> Result<String> {
         output.push_str("app = Spikard()\n\n\n");
     }
 
+    // Add health check endpoint first
+    output.push_str("@get(\"/health\")\n");
+    output.push_str("async def health() -> dict[str, Any]:\n");
+    output.push_str("    \"\"\"Health check endpoint.\"\"\"\n");
+    output.push_str("    return {\"status\": \"ok\"}\n\n\n");
+
     for route in &analysis.routes {
         output.push_str(&generate_handler(route));
         output.push_str("\n\n");

@@ -63,7 +63,6 @@ use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::Path;
 
-
 pub fn generate_rust_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     println!("Generating Rust test app at {}...", output_dir.display());
 

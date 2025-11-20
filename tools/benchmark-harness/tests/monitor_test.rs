@@ -6,7 +6,7 @@ use std::time::Duration;
 #[test]
 fn test_resource_sample_creation() {
     let sample = ResourceSample {
-        memory_bytes: 1024 * 1024 * 50, 
+        memory_bytes: 1024 * 1024 * 50,
         cpu_percent: 25.5,
     };
 
@@ -145,7 +145,6 @@ async fn test_monitor_handle_drop() {
     tokio::time::sleep(Duration::from_millis(100)).await;
 
     drop(handle);
-
 }
 
 #[tokio::test]

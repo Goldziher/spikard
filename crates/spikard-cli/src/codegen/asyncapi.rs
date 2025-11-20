@@ -189,18 +189,14 @@ fn extract_schema_from_message(
     };
 
     match payload {
-        Either::Right(schema_or_multiformat) => {
-            match schema_or_multiformat {
-                Either::Left(schema) => {
-                    let schema_json =
-                        serde_json::to_value(schema).context("Failed to serialize schemars::Schema to JSON")?;
-                    Ok(Some(schema_json))
-                }
-                Either::Right(multi_format) => {
-                    Ok(Some(multi_format.schema.clone()))
-                }
+        Either::Right(schema_or_multiformat) => match schema_or_multiformat {
+            Either::Left(schema) => {
+                let schema_json =
+                    serde_json::to_value(schema).context("Failed to serialize schemars::Schema to JSON")?;
+                Ok(Some(schema_json))
             }
-        }
+            Either::Right(multi_format) => Ok(Some(multi_format.schema.clone())),
+        },
         Either::Left(reference) => {
             tracing::debug!(
                 "Message {} payload is a reference: {}",

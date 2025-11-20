@@ -419,7 +419,7 @@ namespace SpikardGenerated;
                 match param {
                     Parameter::Path { parameter_data, .. } => {
                         let param_name = Self::to_camel_case(&parameter_data.name);
-                        let param_type = "string".to_string(); 
+                        let param_type = "string".to_string();
                         path_params.push((param_name, param_type));
                         output.push_str(&format!(
                             "     * @param string ${}\n",
@@ -428,7 +428,7 @@ namespace SpikardGenerated;
                     }
                     Parameter::Query { parameter_data, .. } => {
                         let param_name = Self::to_camel_case(&parameter_data.name);
-                        let param_type = "string".to_string(); 
+                        let param_type = "string".to_string();
                         let required = parameter_data.required;
                         query_params.push((param_name.clone(), param_type, required));
                         if required {

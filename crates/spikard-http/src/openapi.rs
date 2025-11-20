@@ -392,7 +392,6 @@ fn json_schema_to_response(schema: &serde_json::Value) -> Result<Response, Strin
 /// Convert serde_json::Value (JSON Schema) to utoipa Schema
 /// OpenAPI 3.1.0 is fully compatible with JSON Schema Draft 2020-12
 fn json_value_to_schema(value: &serde_json::Value) -> Result<RefOr<Schema>, String> {
-
     if let Some(type_str) = value.get("type").and_then(|t| t.as_str()) {
         match type_str {
             "object" => {
@@ -633,7 +632,6 @@ mod tests {
             _ => panic!("Expected ApiKey security scheme"),
         }
     }
-
 
     #[test]
     fn test_extract_path_param_names() {

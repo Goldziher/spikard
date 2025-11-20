@@ -134,12 +134,7 @@ def simple_handler(path_params, query_params, body, headers, cookies):
         let handler_fn = module.getattr("simple_handler").unwrap();
         let handler_py: Py<PyAny> = handler_fn.into();
 
-        let python_handler = _spikard::PythonHandler::new(
-            handler_py, false, 
-            None,  
-            None,  
-            None,  
-        );
+        let python_handler = _spikard::PythonHandler::new(handler_py, false, None, None, None);
 
         assert!(std::mem::size_of_val(&python_handler) > 0);
     });

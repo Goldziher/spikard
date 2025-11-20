@@ -224,9 +224,7 @@ impl WebSocketMessage {
             WsMessage::Close(frame) => WebSocketMessage::Close(frame.map(|f| f.reason.to_string())),
             WsMessage::Ping(data) => WebSocketMessage::Ping(data.to_vec()),
             WsMessage::Pong(data) => WebSocketMessage::Pong(data.to_vec()),
-            WsMessage::Frame(_) => {
-                WebSocketMessage::Close(None)
-            }
+            WsMessage::Frame(_) => WebSocketMessage::Close(None),
         }
     }
 

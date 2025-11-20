@@ -144,7 +144,8 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     if !config.framework.starts_with("spikard-") || config.framework == "spikard-ruby" {
         cmd.current_dir(&config.app_dir);
     }
-    cmd.stdout(Stdio::null()).stderr(Stdio::null());
+    // Temporarily enable output for debugging
+    cmd.stdout(Stdio::inherit()).stderr(Stdio::inherit());
 
     let process = cmd
         .spawn()

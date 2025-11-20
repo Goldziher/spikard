@@ -90,7 +90,7 @@ pub fn parse_query_string(qs: &[u8], separator: char) -> Vec<(String, String)> {
     }
 
     let separator_byte = separator as u8;
-    let mut result = Vec::with_capacity(8); 
+    let mut result = Vec::with_capacity(8);
 
     let mut start = 0;
     let mut i = 0;
@@ -180,7 +180,7 @@ fn parse_boolean(s: &str) -> Result<bool, ()> {
     } else if lower == "false" || s == "0" {
         Ok(false)
     } else {
-        Err(()) 
+        Err(())
     }
 }
 

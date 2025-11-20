@@ -10,7 +10,7 @@ use axum::{
 };
 use serde_json::json;
 use spikard_http::{
-    RouteMetadata,
+    RouteMetadata, SchemaRegistry,
     handler_trait::{Handler, HandlerResult, RequestData},
     router::Route,
     server::build_router_with_handlers,
@@ -20,23 +20,17 @@ use std::pin::Pin;
 use std::sync::Arc;
 
 #[allow(dead_code)]
-struct GetAcceptTestId {}
+struct HealthHandler {}
 
-impl Handler for GetAcceptTestId {
+impl Handler for HealthHandler {
     fn call(
         &self,
         _request: Request<Body>,
-        request_data: RequestData,
+        _request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let mut response = json!({});
-
-            if let Some(val) = request_data.path_params.get("id") {
-                response["id"] = json!(val);
-            }
-
+            let response = json!({"status": "ok"});
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
             Response::builder()
                 .status(StatusCode::OK)
                 .header("content-type", "application/json")
@@ -50,167 +44,6 @@ impl Handler for GetAcceptTestId {
 struct PostItems {}
 
 impl Handler for PostItems {
-    fn call(
-        &self,
-        _request: Request<Body>,
-        _request_data: RequestData,
-    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
-        Box::pin(async move {
-            let response = json!({});
-
-            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-            Response::builder()
-                .status(StatusCode::OK)
-                .header("content-type", "application/json")
-                .body(Body::from(body))
-                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-        })
-    }
-}
-
-#[allow(dead_code)]
-struct PostData {}
-
-impl Handler for PostData {
-    fn call(
-        &self,
-        _request: Request<Body>,
-        _request_data: RequestData,
-    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
-        Box::pin(async move {
-            let response = json!({});
-
-            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-            Response::builder()
-                .status(StatusCode::OK)
-                .header("content-type", "application/json")
-                .body(Body::from(body))
-                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-        })
-    }
-}
-
-#[allow(dead_code)]
-struct PostUpload {}
-
-impl Handler for PostUpload {
-    fn call(
-        &self,
-        _request: Request<Body>,
-        _request_data: RequestData,
-    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
-        Box::pin(async move {
-            let response = json!({});
-
-            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-            Response::builder()
-                .status(StatusCode::OK)
-                .header("content-type", "application/json")
-                .body(Body::from(body))
-                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-        })
-    }
-}
-
-#[allow(dead_code)]
-struct PostApiV1Resource {}
-
-impl Handler for PostApiV1Resource {
-    fn call(
-        &self,
-        _request: Request<Body>,
-        _request_data: RequestData,
-    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
-        Box::pin(async move {
-            let response = json!({});
-
-            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-            Response::builder()
-                .status(StatusCode::OK)
-                .header("content-type", "application/json")
-                .body(Body::from(body))
-                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-        })
-    }
-}
-
-#[allow(dead_code)]
-struct PostRoot {}
-
-impl Handler for PostRoot {
-    fn call(
-        &self,
-        _request: Request<Body>,
-        _request_data: RequestData,
-    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
-        Box::pin(async move {
-            let response = json!({});
-
-            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-            Response::builder()
-                .status(StatusCode::OK)
-                .header("content-type", "application/json")
-                .body(Body::from(body))
-                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-        })
-    }
-}
-
-#[allow(dead_code)]
-struct PostApiId {}
-
-impl Handler for PostApiId {
-    fn call(
-        &self,
-        _request: Request<Body>,
-        _request_data: RequestData,
-    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
-        Box::pin(async move {
-            let response = json!({});
-
-            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-            Response::builder()
-                .status(StatusCode::OK)
-                .header("content-type", "application/json")
-                .body(Body::from(body))
-                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-        })
-    }
-}
-
-#[allow(dead_code)]
-struct PostLang {}
-
-impl Handler for PostLang {
-    fn call(
-        &self,
-        _request: Request<Body>,
-        _request_data: RequestData,
-    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
-        Box::pin(async move {
-            let response = json!({});
-
-            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-            Response::builder()
-                .status(StatusCode::OK)
-                .header("content-type", "application/json")
-                .body(Body::from(body))
-                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-        })
-    }
-}
-
-#[allow(dead_code)]
-struct PostId {}
-
-impl Handler for PostId {
     fn call(
         &self,
         _request: Request<Body>,
@@ -369,33 +202,6 @@ impl Handler for PostEvents {
 }
 
 #[allow(dead_code)]
-struct PostItems2 {}
-
-impl Handler for PostItems2 {
-    fn call(
-        &self,
-        _request: Request<Body>,
-        request_data: RequestData,
-    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
-        Box::pin(async move {
-            let mut response = json!({});
-
-            if let Some(val) = request_data.query_params.get("limit") {
-                response["limit"] = val.clone();
-            }
-
-            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-            Response::builder()
-                .status(StatusCode::OK)
-                .header("content-type", "application/json")
-                .body(Body::from(body))
-                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-        })
-    }
-}
-
-#[allow(dead_code)]
 struct PatchItemsId {}
 
 impl Handler for PatchItemsId {
@@ -469,9 +275,9 @@ impl Handler for PostProducts {
 }
 
 #[allow(dead_code)]
-struct PostItems3 {}
+struct PostItems2 {}
 
-impl Handler for PostItems3 {
+impl Handler for PostItems2 {
     fn call(
         &self,
         _request: Request<Body>,
@@ -607,9 +413,9 @@ impl Handler for PostBilling {
 }
 
 #[allow(dead_code)]
-struct PostFilesOptional {}
+struct PostData {}
 
-impl Handler for PostFilesOptional {
+impl Handler for PostData {
     fn call(
         &self,
         _request: Request<Body>,
@@ -630,9 +436,669 @@ impl Handler for PostFilesOptional {
 }
 
 #[allow(dead_code)]
-struct PostFilesList {}
+struct GetPathStrItemId {}
 
-impl Handler for PostFilesList {
+impl Handler for GetPathStrItemId {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("item_id") {
+                response["item_id"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetPathIntItemId {}
+
+impl Handler for GetPathIntItemId {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("item_id") {
+                response["item_id"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetPathFloatItemId {}
+
+impl Handler for GetPathFloatItemId {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("item_id") {
+                response["item_id"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetItemsId {}
+
+impl Handler for GetItemsId {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("item_id") {
+                response["item_id"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetPathParamGtItemId {}
+
+impl Handler for GetPathParamGtItemId {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("item_id") {
+                response["item_id"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetPathParamMinlengthItemId {}
+
+impl Handler for GetPathParamMinlengthItemId {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("item_id") {
+                response["item_id"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetModelsModelName {}
+
+impl Handler for GetModelsModelName {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("model_name") {
+                response["model_name"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetFilesFilePath {}
+
+impl Handler for GetFilesFilePath {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("file_path") {
+                response["file_path"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetVersionServiceIdUserIdOrderId {}
+
+impl Handler for GetVersionServiceIdUserIdOrderId {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("service_id") {
+                response["service_id"] = json!(val);
+            }
+            if let Some(val) = request_data.path_params.get("order_id") {
+                response["order_id"] = json!(val);
+            }
+            if let Some(val) = request_data.path_params.get("user_id") {
+                response["user_id"] = json!(val);
+            }
+            if let Some(val) = request_data.path_params.get("version") {
+                response["version"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetPathBoolItemId {}
+
+impl Handler for GetPathBoolItemId {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("item_id") {
+                response["item_id"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetPathParamGeItemId {}
+
+impl Handler for GetPathParamGeItemId {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("item_id") {
+                response["item_id"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetPathParamLeItemId {}
+
+impl Handler for GetPathParamLeItemId {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("item_id") {
+                response["item_id"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetPathParamLtItemId {}
+
+impl Handler for GetPathParamLtItemId {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("item_id") {
+                response["item_id"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetPathParamLtGtItemId {}
+
+impl Handler for GetPathParamLtGtItemId {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("item_id") {
+                response["item_id"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetPathParamMaxlengthItemId {}
+
+impl Handler for GetPathParamMaxlengthItemId {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("item_id") {
+                response["item_id"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetDateDateParam {}
+
+impl Handler for GetDateDateParam {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("date_param") {
+                response["date_param"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetEventsDate {}
+
+impl Handler for GetEventsDate {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("date") {
+                response["date"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetBookingsTimestamp {}
+
+impl Handler for GetBookingsTimestamp {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("timestamp") {
+                response["timestamp"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetDelaysDuration {}
+
+impl Handler for GetDelaysDuration {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("duration") {
+                response["duration"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetPricesAmount {}
+
+impl Handler for GetPricesAmount {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("amount") {
+                response["amount"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetUsersUsername {}
+
+impl Handler for GetUsersUsername {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("username") {
+                response["username"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetReposOwnerRepo {}
+
+impl Handler for GetReposOwnerRepo {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("repo") {
+                response["repo"] = json!(val);
+            }
+            if let Some(val) = request_data.path_params.get("owner") {
+                response["owner"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetReposOwner {}
+
+impl Handler for GetReposOwner {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("owner") {
+                response["owner"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetOffsetValue {}
+
+impl Handler for GetOffsetValue {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("value") {
+                response["value"] = json!(val);
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetTypeSyntaxItemsId {}
+
+impl Handler for GetTypeSyntaxItemsId {
     fn call(
         &self,
         _request: Request<Body>,
@@ -653,9 +1119,9 @@ impl Handler for PostFilesList {
 }
 
 #[allow(dead_code)]
-struct PostFilesUpload {}
+struct GetTypeSyntaxUsersUserId {}
 
-impl Handler for PostFilesUpload {
+impl Handler for GetTypeSyntaxUsersUserId {
     fn call(
         &self,
         _request: Request<Body>,
@@ -676,16 +1142,20 @@ impl Handler for PostFilesUpload {
 }
 
 #[allow(dead_code)]
-struct PostFilesImage {}
+struct GetTypeSyntaxItemsCountCount {}
 
-impl Handler for PostFilesImage {
+impl Handler for GetTypeSyntaxItemsCountCount {
     fn call(
         &self,
         _request: Request<Body>,
-        _request_data: RequestData,
+        request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let response = json!({});
+            let mut response = json!({});
+
+            if let Some(val) = request_data.path_params.get("count") {
+                response["count"] = json!(val);
+            }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -699,16 +1169,20 @@ impl Handler for PostFilesImage {
 }
 
 #[allow(dead_code)]
-struct PostFilesDocument {}
+struct GetQuery {}
 
-impl Handler for PostFilesDocument {
+impl Handler for GetQuery {
     fn call(
         &self,
         _request: Request<Body>,
-        _request_data: RequestData,
+        request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let response = json!({});
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("query") {
+                response["query"] = val.clone();
+            }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -722,16 +1196,20 @@ impl Handler for PostFilesDocument {
 }
 
 #[allow(dead_code)]
-struct PostFilesValidated {}
+struct GetQueryInt {}
 
-impl Handler for PostFilesValidated {
+impl Handler for GetQueryInt {
     fn call(
         &self,
         _request: Request<Body>,
-        _request_data: RequestData,
+        request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let response = json!({});
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("query") {
+                response["query"] = val.clone();
+            }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -745,16 +1223,20 @@ impl Handler for PostFilesValidated {
 }
 
 #[allow(dead_code)]
-struct PostFilesImagesOnly {}
+struct GetQueryOptional {}
 
-impl Handler for PostFilesImagesOnly {
+impl Handler for GetQueryOptional {
     fn call(
         &self,
         _request: Request<Body>,
-        _request_data: RequestData,
+        request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let response = json!({});
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("query") {
+                response["query"] = val.clone();
+            }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -768,16 +1250,20 @@ impl Handler for PostFilesImagesOnly {
 }
 
 #[allow(dead_code)]
-struct PostFilesRequired {}
+struct GetQueryIntOptional {}
 
-impl Handler for PostFilesRequired {
+impl Handler for GetQueryIntOptional {
     fn call(
         &self,
         _request: Request<Body>,
-        _request_data: RequestData,
+        request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let response = json!({});
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("query") {
+                response["query"] = val.clone();
+            }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -791,16 +1277,20 @@ impl Handler for PostFilesRequired {
 }
 
 #[allow(dead_code)]
-struct PostLogin {}
+struct GetQueryIntDefault {}
 
-impl Handler for PostLogin {
+impl Handler for GetQueryIntDefault {
     fn call(
         &self,
         _request: Request<Body>,
-        _request_data: RequestData,
+        request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let response = json!({});
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("query") {
+                response["query"] = val.clone();
+            }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -814,16 +1304,20 @@ impl Handler for PostLogin {
 }
 
 #[allow(dead_code)]
-struct PostRegister {}
+struct GetQueryList {}
 
-impl Handler for PostRegister {
+impl Handler for GetQueryList {
     fn call(
         &self,
         _request: Request<Body>,
-        _request_data: RequestData,
+        request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let response = json!({});
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("device_ids") {
+                response["device_ids"] = val.clone();
+            }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -837,16 +1331,20 @@ impl Handler for PostRegister {
 }
 
 #[allow(dead_code)]
-struct PostForm {}
+struct GetQueryListDefault {}
 
-impl Handler for PostForm {
+impl Handler for GetQueryListDefault {
     fn call(
         &self,
         _request: Request<Body>,
-        _request_data: RequestData,
+        request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let response = json!({});
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("tags") {
+                response["tags"] = val.clone();
+            }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -860,16 +1358,20 @@ impl Handler for PostForm {
 }
 
 #[allow(dead_code)]
-struct PostFormValidated {}
+struct GetItems {}
 
-impl Handler for PostFormValidated {
+impl Handler for GetItems {
     fn call(
         &self,
         _request: Request<Body>,
-        _request_data: RequestData,
+        request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let response = json!({});
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("q") {
+                response["q"] = val.clone();
+            }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -883,16 +1385,23 @@ impl Handler for PostFormValidated {
 }
 
 #[allow(dead_code)]
-struct PostFormTags {}
+struct GetTest {}
 
-impl Handler for PostFormTags {
+impl Handler for GetTest {
     fn call(
         &self,
         _request: Request<Body>,
-        _request_data: RequestData,
+        request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let response = json!({});
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("email") {
+                response["email"] = val.clone();
+            }
+            if let Some(val) = request_data.query_params.get("special") {
+                response["special"] = val.clone();
+            }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -906,16 +1415,20 @@ impl Handler for PostFormTags {
 }
 
 #[allow(dead_code)]
-struct PostToken {}
+struct GetQueryBool {}
 
-impl Handler for PostToken {
+impl Handler for GetQueryBool {
     fn call(
         &self,
         _request: Request<Body>,
-        _request_data: RequestData,
+        request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let response = json!({});
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("flag") {
+                response["flag"] = val.clone();
+            }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -929,16 +1442,20 @@ impl Handler for PostToken {
 }
 
 #[allow(dead_code)]
-struct PostRegister2 {}
+struct GetQueryUuid {}
 
-impl Handler for PostRegister2 {
+impl Handler for GetQueryUuid {
     fn call(
         &self,
         _request: Request<Body>,
-        _request_data: RequestData,
+        request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let response = json!({});
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("item_id") {
+                response["item_id"] = val.clone();
+            }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -952,16 +1469,20 @@ impl Handler for PostRegister2 {
 }
 
 #[allow(dead_code)]
-struct PostProfile {}
+struct GetQueryEnum {}
 
-impl Handler for PostProfile {
+impl Handler for GetQueryEnum {
     fn call(
         &self,
         _request: Request<Body>,
-        _request_data: RequestData,
+        request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let response = json!({});
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("model") {
+                response["model"] = val.clone();
+            }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -975,16 +1496,20 @@ impl Handler for PostProfile {
 }
 
 #[allow(dead_code)]
-struct PostAccounts {}
+struct GetQueryIntGe {}
 
-impl Handler for PostAccounts {
+impl Handler for GetQueryIntGe {
     fn call(
         &self,
         _request: Request<Body>,
-        _request_data: RequestData,
+        request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let response = json!({});
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("value") {
+                response["value"] = val.clone();
+            }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -998,16 +1523,20 @@ impl Handler for PostAccounts {
 }
 
 #[allow(dead_code)]
-struct PostTags {}
+struct GetQueryIntLe {}
 
-impl Handler for PostTags {
+impl Handler for GetQueryIntLe {
     fn call(
         &self,
         _request: Request<Body>,
-        _request_data: RequestData,
+        request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let response = json!({});
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("value") {
+                response["value"] = val.clone();
+            }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -1021,16 +1550,20 @@ impl Handler for PostTags {
 }
 
 #[allow(dead_code)]
-struct PostSubscribe {}
+struct GetQueryIntLt {}
 
-impl Handler for PostSubscribe {
+impl Handler for GetQueryIntLt {
     fn call(
         &self,
         _request: Request<Body>,
-        _request_data: RequestData,
+        request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let response = json!({});
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("value") {
+                response["value"] = val.clone();
+            }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -1044,16 +1577,515 @@ impl Handler for PostSubscribe {
 }
 
 #[allow(dead_code)]
-struct PostSettings {}
+struct GetQueryIntGt {}
 
-impl Handler for PostSettings {
+impl Handler for GetQueryIntGt {
     fn call(
         &self,
         _request: Request<Body>,
-        _request_data: RequestData,
+        request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let response = json!({});
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("value") {
+                response["value"] = val.clone();
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetQueryStrMaxLength {}
+
+impl Handler for GetQueryStrMaxLength {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("name") {
+                response["name"] = val.clone();
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetQueryStrMinLength {}
+
+impl Handler for GetQueryStrMinLength {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("name") {
+                response["name"] = val.clone();
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetQueryDate {}
+
+impl Handler for GetQueryDate {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("event_date") {
+                response["event_date"] = val.clone();
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetQueryDatetime {}
+
+impl Handler for GetQueryDatetime {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("timestamp") {
+                response["timestamp"] = val.clone();
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetQueryPattern {}
+
+impl Handler for GetQueryPattern {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("code") {
+                response["code"] = val.clone();
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetQueryBasic {}
+
+impl Handler for GetQueryBasic {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("name") {
+                response["name"] = val.clone();
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetQueryMultiType {}
+
+impl Handler for GetQueryMultiType {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("name") {
+                response["name"] = val.clone();
+            }
+            if let Some(val) = request_data.query_params.get("age") {
+                response["age"] = val.clone();
+            }
+            if let Some(val) = request_data.query_params.get("score") {
+                response["score"] = val.clone();
+            }
+            if let Some(val) = request_data.query_params.get("active") {
+                response["active"] = val.clone();
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetQueryOptionalDefault {}
+
+impl Handler for GetQueryOptionalDefault {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("limit") {
+                response["limit"] = val.clone();
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetQueryFloatGe {}
+
+impl Handler for GetQueryFloatGe {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("price") {
+                response["price"] = val.clone();
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetItemsNegative {}
+
+impl Handler for GetItemsNegative {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("offset") {
+                response["offset"] = val.clone();
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetStats {}
+
+impl Handler for GetStats {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("threshold") {
+                response["threshold"] = val.clone();
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetSearch {}
+
+impl Handler for GetSearch {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("term") {
+                response["term"] = val.clone();
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetSubscribe {}
+
+impl Handler for GetSubscribe {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("email") {
+                response["email"] = val.clone();
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetItems2 {}
+
+impl Handler for GetItems2 {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("limit") {
+                response["limit"] = val.clone();
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetNetwork {}
+
+impl Handler for GetNetwork {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("ip") {
+                response["ip"] = val.clone();
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetNetworkIpv6 {}
+
+impl Handler for GetNetworkIpv6 {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("ip") {
+                response["ip"] = val.clone();
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetRedirect {}
+
+impl Handler for GetRedirect {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("url") {
+                response["url"] = val.clone();
+            }
+
+            let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        })
+    }
+}
+
+#[allow(dead_code)]
+struct GetDns {}
+
+impl Handler for GetDns {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let mut response = json!({});
+
+            if let Some(val) = request_data.query_params.get("host") {
+                response["host"] = val.clone();
+            }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -1072,15 +2104,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     eprintln!("Starting Spikard-Rust server on port {}", port);
 
-    let schema_registry = spikard_http::SchemaRegistry::new();
+    let registry = SchemaRegistry::new();
     let mut routes: Vec<(Route, Arc<dyn Handler>)> = Vec::new();
 
+    // Health check route
     routes.push((
         Route::from_metadata(
             RouteMetadata {
                 method: "GET".to_string(),
-                path: "/accept-test/{id}".to_string(),
-                handler_name: "GetAcceptTestId".to_string(),
+                path: "/health".to_string(),
+                handler_name: "HealthHandler".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1088,9 +2121,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(GetAcceptTestId {}) as Arc<dyn Handler>,
+        Arc::new(HealthHandler {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
@@ -1106,117 +2139,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
         Arc::new(PostItems {}) as Arc<dyn Handler>,
-    ));
-
-    routes.push((
-        Route::from_metadata(
-            RouteMetadata {
-                method: "POST".to_string(),
-                path: "/data".to_string(),
-                handler_name: "PostData".to_string(),
-                request_schema: None,
-                response_schema: None,
-                parameter_schema: None,
-                file_params: None,
-                is_async: true,
-                cors: None,
-            },
-            &schema_registry,
-        )?,
-        Arc::new(PostData {}) as Arc<dyn Handler>,
-    ));
-
-    routes.push((
-        Route::from_metadata(
-            RouteMetadata {
-                method: "POST".to_string(),
-                path: "/upload".to_string(),
-                handler_name: "PostUpload".to_string(),
-                request_schema: None,
-                response_schema: None,
-                parameter_schema: None,
-                file_params: None,
-                is_async: true,
-                cors: None,
-            },
-            &schema_registry,
-        )?,
-        Arc::new(PostUpload {}) as Arc<dyn Handler>,
-    ));
-
-    routes.push((
-        Route::from_metadata(
-            RouteMetadata {
-                method: "POST".to_string(),
-                path: "/api/v1/resource".to_string(),
-                handler_name: "PostApiV1Resource".to_string(),
-                request_schema: None,
-                response_schema: None,
-                parameter_schema: None,
-                file_params: None,
-                is_async: true,
-                cors: None,
-            },
-            &schema_registry,
-        )?,
-        Arc::new(PostApiV1Resource {}) as Arc<dyn Handler>,
-    ));
-
-    routes.push((
-        Route::from_metadata(
-            RouteMetadata {
-                method: "POST".to_string(),
-                path: "/".to_string(),
-                handler_name: "PostRoot".to_string(),
-                request_schema: None,
-                response_schema: None,
-                parameter_schema: None,
-                file_params: None,
-                is_async: true,
-                cors: None,
-            },
-            &schema_registry,
-        )?,
-        Arc::new(PostRoot {}) as Arc<dyn Handler>,
-    ));
-
-    routes.push((
-        Route::from_metadata(
-            RouteMetadata {
-                method: "POST".to_string(),
-                path: "/api/{id}".to_string(),
-                handler_name: "PostApiId".to_string(),
-                request_schema: None,
-                response_schema: None,
-                parameter_schema: None,
-                file_params: None,
-                is_async: true,
-                cors: None,
-            },
-            &schema_registry,
-        )?,
-        Arc::new(PostApiId {}) as Arc<dyn Handler>,
-    ));
-
-    routes.push((
-        Route::from_metadata(
-            RouteMetadata {
-                method: "POST".to_string(),
-                path: "/{lang}".to_string(),
-                handler_name: "PostLang".to_string(),
-                request_schema: None,
-                response_schema: None,
-                parameter_schema: None,
-                file_params: None,
-                is_async: true,
-                cors: None,
-            },
-            &schema_registry,
-        )?,
-        Arc::new(PostLang {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
@@ -1232,7 +2157,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
         Arc::new(PostItemsNested {}) as Arc<dyn Handler>,
     ));
@@ -1250,7 +2175,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
         Arc::new(PostItemsList {}) as Arc<dyn Handler>,
     ));
@@ -1268,7 +2193,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
         Arc::new(PostItemsValidated {}) as Arc<dyn Handler>,
     ));
@@ -1286,7 +2211,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
         Arc::new(PostItemsOptionalAll {}) as Arc<dyn Handler>,
     ));
@@ -1304,7 +2229,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
         Arc::new(PostItemsListValidated {}) as Arc<dyn Handler>,
     ));
@@ -1322,7 +2247,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
         Arc::new(PostEvents {}) as Arc<dyn Handler>,
     ));
@@ -1340,7 +2265,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
         Arc::new(PatchItemsId {}) as Arc<dyn Handler>,
     ));
@@ -1358,7 +2283,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
         Arc::new(PostUsers {}) as Arc<dyn Handler>,
     ));
@@ -1376,7 +2301,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
         Arc::new(PostProducts {}) as Arc<dyn Handler>,
     ));
@@ -1386,7 +2311,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             RouteMetadata {
                 method: "POST".to_string(),
                 path: "/items".to_string(),
-                handler_name: "PostItems3".to_string(),
+                handler_name: "PostItems2".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1394,9 +2319,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostItems3 {}) as Arc<dyn Handler>,
+        Arc::new(PostItems2 {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
@@ -1412,7 +2337,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
         Arc::new(PostPayment {}) as Arc<dyn Handler>,
     ));
@@ -1430,7 +2355,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
         Arc::new(PostContact {}) as Arc<dyn Handler>,
     ));
@@ -1448,7 +2373,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
         Arc::new(PostApiV1Data {}) as Arc<dyn Handler>,
     ));
@@ -1466,7 +2391,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
         Arc::new(PostConfig {}) as Arc<dyn Handler>,
     ));
@@ -1484,7 +2409,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
         Arc::new(PostBilling {}) as Arc<dyn Handler>,
     ));
@@ -1493,8 +2418,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Route::from_metadata(
             RouteMetadata {
                 method: "POST".to_string(),
-                path: "/files/optional".to_string(),
-                handler_name: "PostFilesOptional".to_string(),
+                path: "/data".to_string(),
+                handler_name: "PostData".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1502,17 +2427,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostFilesOptional {}) as Arc<dyn Handler>,
+        Arc::new(PostData {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
-                path: "/files/list".to_string(),
-                handler_name: "PostFilesList".to_string(),
+                method: "GET".to_string(),
+                path: "/path/str/{item_id}".to_string(),
+                handler_name: "GetPathStrItemId".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1520,17 +2445,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostFilesList {}) as Arc<dyn Handler>,
+        Arc::new(GetPathStrItemId {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
-                path: "/files/upload".to_string(),
-                handler_name: "PostFilesUpload".to_string(),
+                method: "GET".to_string(),
+                path: "/path/int/{item_id}".to_string(),
+                handler_name: "GetPathIntItemId".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1538,17 +2463,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostFilesUpload {}) as Arc<dyn Handler>,
+        Arc::new(GetPathIntItemId {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
-                path: "/files/image".to_string(),
-                handler_name: "PostFilesImage".to_string(),
+                method: "GET".to_string(),
+                path: "/path/float/{item_id}".to_string(),
+                handler_name: "GetPathFloatItemId".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1556,17 +2481,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostFilesImage {}) as Arc<dyn Handler>,
+        Arc::new(GetPathFloatItemId {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
-                path: "/files/document".to_string(),
-                handler_name: "PostFilesDocument".to_string(),
+                method: "GET".to_string(),
+                path: "/items/{id}".to_string(),
+                handler_name: "GetItemsId".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1574,17 +2499,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostFilesDocument {}) as Arc<dyn Handler>,
+        Arc::new(GetItemsId {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
-                path: "/files/validated".to_string(),
-                handler_name: "PostFilesValidated".to_string(),
+                method: "GET".to_string(),
+                path: "/path/param-gt/{item_id}".to_string(),
+                handler_name: "GetPathParamGtItemId".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1592,17 +2517,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostFilesValidated {}) as Arc<dyn Handler>,
+        Arc::new(GetPathParamGtItemId {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
-                path: "/files/images-only".to_string(),
-                handler_name: "PostFilesImagesOnly".to_string(),
+                method: "GET".to_string(),
+                path: "/path/param-minlength/{item_id}".to_string(),
+                handler_name: "GetPathParamMinlengthItemId".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1610,17 +2535,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostFilesImagesOnly {}) as Arc<dyn Handler>,
+        Arc::new(GetPathParamMinlengthItemId {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
-                path: "/files/required".to_string(),
-                handler_name: "PostFilesRequired".to_string(),
+                method: "GET".to_string(),
+                path: "/models/{model_name}".to_string(),
+                handler_name: "GetModelsModelName".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1628,17 +2553,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostFilesRequired {}) as Arc<dyn Handler>,
+        Arc::new(GetModelsModelName {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
-                path: "/login/".to_string(),
-                handler_name: "PostLogin".to_string(),
+                method: "GET".to_string(),
+                path: "/files/{file_path}".to_string(),
+                handler_name: "GetFilesFilePath".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1646,17 +2571,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostLogin {}) as Arc<dyn Handler>,
+        Arc::new(GetFilesFilePath {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
-                path: "/register/".to_string(),
-                handler_name: "PostRegister".to_string(),
+                method: "GET".to_string(),
+                path: "/{version}/{service_id}/{user_id}/{order_id}".to_string(),
+                handler_name: "GetVersionServiceIdUserIdOrderId".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1664,17 +2589,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostRegister {}) as Arc<dyn Handler>,
+        Arc::new(GetVersionServiceIdUserIdOrderId {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
-                path: "/form/".to_string(),
-                handler_name: "PostForm".to_string(),
+                method: "GET".to_string(),
+                path: "/path/bool/{item_id}".to_string(),
+                handler_name: "GetPathBoolItemId".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1682,17 +2607,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostForm {}) as Arc<dyn Handler>,
+        Arc::new(GetPathBoolItemId {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
-                path: "/form/validated".to_string(),
-                handler_name: "PostFormValidated".to_string(),
+                method: "GET".to_string(),
+                path: "/path/param-ge/{item_id}".to_string(),
+                handler_name: "GetPathParamGeItemId".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1700,17 +2625,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostFormValidated {}) as Arc<dyn Handler>,
+        Arc::new(GetPathParamGeItemId {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
-                path: "/form/tags".to_string(),
-                handler_name: "PostFormTags".to_string(),
+                method: "GET".to_string(),
+                path: "/path/param-le/{item_id}".to_string(),
+                handler_name: "GetPathParamLeItemId".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1718,17 +2643,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostFormTags {}) as Arc<dyn Handler>,
+        Arc::new(GetPathParamLeItemId {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
-                path: "/token".to_string(),
-                handler_name: "PostToken".to_string(),
+                method: "GET".to_string(),
+                path: "/path/param-lt/{item_id}".to_string(),
+                handler_name: "GetPathParamLtItemId".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1736,17 +2661,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostToken {}) as Arc<dyn Handler>,
+        Arc::new(GetPathParamLtItemId {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
-                path: "/register".to_string(),
-                handler_name: "PostRegister2".to_string(),
+                method: "GET".to_string(),
+                path: "/path/param-lt-gt/{item_id}".to_string(),
+                handler_name: "GetPathParamLtGtItemId".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1754,17 +2679,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostRegister2 {}) as Arc<dyn Handler>,
+        Arc::new(GetPathParamLtGtItemId {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
-                path: "/profile".to_string(),
-                handler_name: "PostProfile".to_string(),
+                method: "GET".to_string(),
+                path: "/path/param-maxlength/{item_id}".to_string(),
+                handler_name: "GetPathParamMaxlengthItemId".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1772,17 +2697,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostProfile {}) as Arc<dyn Handler>,
+        Arc::new(GetPathParamMaxlengthItemId {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
-                path: "/accounts".to_string(),
-                handler_name: "PostAccounts".to_string(),
+                method: "GET".to_string(),
+                path: "/date/{date_param}".to_string(),
+                handler_name: "GetDateDateParam".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1790,17 +2715,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostAccounts {}) as Arc<dyn Handler>,
+        Arc::new(GetDateDateParam {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
-                path: "/tags".to_string(),
-                handler_name: "PostTags".to_string(),
+                method: "GET".to_string(),
+                path: "/events/{date}".to_string(),
+                handler_name: "GetEventsDate".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1808,17 +2733,701 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostTags {}) as Arc<dyn Handler>,
+        Arc::new(GetEventsDate {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
+                method: "GET".to_string(),
+                path: "/bookings/{timestamp}".to_string(),
+                handler_name: "GetBookingsTimestamp".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetBookingsTimestamp {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/delays/{duration}".to_string(),
+                handler_name: "GetDelaysDuration".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetDelaysDuration {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/prices/{amount}".to_string(),
+                handler_name: "GetPricesAmount".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetPricesAmount {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/users/{username}".to_string(),
+                handler_name: "GetUsersUsername".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetUsersUsername {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/repos/{owner}/{repo}".to_string(),
+                handler_name: "GetReposOwnerRepo".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetReposOwnerRepo {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/repos/{owner}".to_string(),
+                handler_name: "GetReposOwner".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetReposOwner {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/offset/{value}".to_string(),
+                handler_name: "GetOffsetValue".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetOffsetValue {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/type-syntax/items/{id}".to_string(),
+                handler_name: "GetTypeSyntaxItemsId".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetTypeSyntaxItemsId {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/type-syntax/users/{user_id}".to_string(),
+                handler_name: "GetTypeSyntaxUsersUserId".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetTypeSyntaxUsersUserId {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/type-syntax/items-count/{count}".to_string(),
+                handler_name: "GetTypeSyntaxItemsCountCount".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetTypeSyntaxItemsCountCount {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query".to_string(),
+                handler_name: "GetQuery".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQuery {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/int".to_string(),
+                handler_name: "GetQueryInt".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryInt {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/optional".to_string(),
+                handler_name: "GetQueryOptional".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryOptional {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/int/optional".to_string(),
+                handler_name: "GetQueryIntOptional".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryIntOptional {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/int/default".to_string(),
+                handler_name: "GetQueryIntDefault".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryIntDefault {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/list".to_string(),
+                handler_name: "GetQueryList".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryList {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/list-default".to_string(),
+                handler_name: "GetQueryListDefault".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryListDefault {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/items/".to_string(),
+                handler_name: "GetItems".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetItems {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/test".to_string(),
+                handler_name: "GetTest".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetTest {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/bool".to_string(),
+                handler_name: "GetQueryBool".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryBool {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/uuid".to_string(),
+                handler_name: "GetQueryUuid".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryUuid {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/enum".to_string(),
+                handler_name: "GetQueryEnum".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryEnum {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/int-ge".to_string(),
+                handler_name: "GetQueryIntGe".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryIntGe {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/int-le".to_string(),
+                handler_name: "GetQueryIntLe".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryIntLe {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/int-lt".to_string(),
+                handler_name: "GetQueryIntLt".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryIntLt {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/int-gt".to_string(),
+                handler_name: "GetQueryIntGt".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryIntGt {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/str-max-length".to_string(),
+                handler_name: "GetQueryStrMaxLength".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryStrMaxLength {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/str-min-length".to_string(),
+                handler_name: "GetQueryStrMinLength".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryStrMinLength {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/date".to_string(),
+                handler_name: "GetQueryDate".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryDate {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/datetime".to_string(),
+                handler_name: "GetQueryDatetime".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryDatetime {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/pattern".to_string(),
+                handler_name: "GetQueryPattern".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryPattern {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/basic".to_string(),
+                handler_name: "GetQueryBasic".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryBasic {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/multi-type".to_string(),
+                handler_name: "GetQueryMultiType".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryMultiType {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/optional-default".to_string(),
+                handler_name: "GetQueryOptionalDefault".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryOptionalDefault {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/query/float-ge".to_string(),
+                handler_name: "GetQueryFloatGe".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetQueryFloatGe {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/items/negative".to_string(),
+                handler_name: "GetItemsNegative".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetItemsNegative {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/stats".to_string(),
+                handler_name: "GetStats".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetStats {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/search".to_string(),
+                handler_name: "GetSearch".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetSearch {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
                 path: "/subscribe".to_string(),
-                handler_name: "PostSubscribe".to_string(),
+                handler_name: "GetSubscribe".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1826,17 +3435,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostSubscribe {}) as Arc<dyn Handler>,
+        Arc::new(GetSubscribe {}) as Arc<dyn Handler>,
     ));
 
     routes.push((
         Route::from_metadata(
             RouteMetadata {
-                method: "POST".to_string(),
-                path: "/settings".to_string(),
-                handler_name: "PostSettings".to_string(),
+                method: "GET".to_string(),
+                path: "/items".to_string(),
+                handler_name: "GetItems2".to_string(),
                 request_schema: None,
                 response_schema: None,
                 parameter_schema: None,
@@ -1844,12 +3453,84 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
             },
-            &schema_registry,
+            &registry,
         )?,
-        Arc::new(PostSettings {}) as Arc<dyn Handler>,
+        Arc::new(GetItems2 {}) as Arc<dyn Handler>,
     ));
 
-    let app = build_router_with_handlers(routes)?;
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/network".to_string(),
+                handler_name: "GetNetwork".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetNetwork {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/network/ipv6".to_string(),
+                handler_name: "GetNetworkIpv6".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetNetworkIpv6 {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/redirect".to_string(),
+                handler_name: "GetRedirect".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetRedirect {}) as Arc<dyn Handler>,
+    ));
+
+    routes.push((
+        Route::from_metadata(
+            RouteMetadata {
+                method: "GET".to_string(),
+                path: "/dns".to_string(),
+                handler_name: "GetDns".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+            },
+            &registry,
+        )?,
+        Arc::new(GetDns {}) as Arc<dyn Handler>,
+    ));
+
+    let app = build_router_with_handlers(routes, None)?;
 
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
     let listener = tokio::net::TcpListener::bind(addr).await?;

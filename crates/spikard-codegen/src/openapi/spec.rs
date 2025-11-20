@@ -88,7 +88,7 @@ pub struct Parameter {
     pub name: String,
 
     #[serde(rename = "in")]
-    pub location: String, 
+    pub location: String,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,

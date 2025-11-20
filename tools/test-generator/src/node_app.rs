@@ -16,7 +16,7 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-const MAX_SAFE_INTEGER: i128 = 9007199254740991; 
+const MAX_SAFE_INTEGER: i128 = 9007199254740991;
 
 /// Generate Node.js test application from fixtures
 pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeScriptTarget) -> Result<()> {

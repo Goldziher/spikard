@@ -434,7 +434,7 @@ impl From<OhaOutput> for LatencyMetrics {
             p999_ms: to_ms(p.p99_9),
             max_ms: to_ms(s.slowest),
             min_ms: to_ms(s.fastest),
-            stddev_ms: 0.0, 
+            stddev_ms: 0.0,
         }
     }
 }

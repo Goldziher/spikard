@@ -310,18 +310,15 @@ async fn websocket_worker(uri: String, payload: String, deadline: Instant, captu
                     Ok(Some(Ok(Message::Binary(_)))) => {
                         stats.responses_received += 1;
                     }
-                    Ok(Some(Ok(Message::Frame(_)))) => {
-                    }
-                    Ok(Some(Ok(Message::Ping(_)))) | Ok(Some(Ok(Message::Pong(_)))) => {
-                    }
+                    Ok(Some(Ok(Message::Frame(_)))) => {}
+                    Ok(Some(Ok(Message::Ping(_)))) | Ok(Some(Ok(Message::Pong(_)))) => {}
                     Ok(Some(Ok(Message::Close(_)))) => break,
                     Ok(Some(Err(_))) => {
                         stats.errors += 1;
                         break;
                     }
                     Ok(None) => break,
-                    Err(_) => {
-                    }
+                    Err(_) => {}
                 }
             }
 

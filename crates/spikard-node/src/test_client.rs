@@ -413,12 +413,8 @@ impl TestClient {
                     ))
                 })?;
 
-            let ws_handler = crate::websocket::NodeWebSocketHandler::new(
-                handler_name.clone(),
-                handle_message_tsfn,
-                None, 
-                None, 
-            );
+            let ws_handler =
+                crate::websocket::NodeWebSocketHandler::new(handler_name.clone(), handle_message_tsfn, None, None);
 
             let ws_state = spikard_http::WebSocketState::new(ws_handler);
 

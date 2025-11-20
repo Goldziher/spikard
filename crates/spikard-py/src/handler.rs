@@ -141,8 +141,8 @@ impl PythonHandler {
         let handler = self.handler.clone();
         let is_async = self.is_async;
         let response_validator = self.response_validator.clone();
-        let request_data_for_error = request_data.clone(); 
-        let validated_params_for_task = validated_params.clone(); 
+        let request_data_for_error = request_data.clone();
+        let validated_params_for_task = validated_params.clone();
 
         let result = if is_async {
             let output = tokio::task::spawn_blocking(move || {
@@ -521,31 +521,26 @@ fn get_python_traceback(py: Python<'_>, err: &PyErr) -> String {
     let exc_value = err.value(py);
     let exc_traceback = err.traceback(py);
 
-
     match exc_traceback {
-        Some(tb) => {
-            match traceback_module.call_method1("format_exception", (exc_type, exc_value, tb)) {
-                Ok(lines) => {
-                    if let Ok(list) = lines.extract::<Vec<String>>() {
-                        list.join("")
-                    } else {
-                        format!("{}", err)
-                    }
+        Some(tb) => match traceback_module.call_method1("format_exception", (exc_type, exc_value, tb)) {
+            Ok(lines) => {
+                if let Ok(list) = lines.extract::<Vec<String>>() {
+                    list.join("")
+                } else {
+                    format!("{}", err)
                 }
-                Err(_) => format!("{}", err),
             }
-        }
-        None => {
-            match traceback_module.call_method1("format_exception_only", (exc_type, exc_value)) {
-                Ok(lines) => {
-                    if let Ok(list) = lines.extract::<Vec<String>>() {
-                        list.join("")
-                    } else {
-                        format!("{}", err)
-                    }
+            Err(_) => format!("{}", err),
+        },
+        None => match traceback_module.call_method1("format_exception_only", (exc_type, exc_value)) {
+            Ok(lines) => {
+                if let Ok(list) = lines.extract::<Vec<String>>() {
+                    list.join("")
+                } else {
+                    format!("{}", err)
                 }
-                Err(_) => format!("{}", err),
             }
-        }
+            Err(_) => format!("{}", err),
+        },
     }
 }

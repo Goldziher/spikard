@@ -14,7 +14,6 @@ fn test_find_available_port() {
     let port = port.unwrap();
     assert!(port >= 50000);
     assert!(port < 50100);
-
 }
 
 #[test]
@@ -104,7 +103,6 @@ fn test_server_handle_drop() {
             port: 8000,
             base_url: "http://localhost:8000".to_string(),
         };
-
     }
 
     std::thread::sleep(Duration::from_millis(200));
@@ -112,7 +110,7 @@ fn test_server_handle_drop() {
     #[cfg(unix)]
     {
         let status = unsafe { libc::kill(pid as i32, 0) };
-        let _ = status; 
+        let _ = status;
     }
 }
 
@@ -197,7 +195,7 @@ if __name__ == '__main__':
     let port = find_available_port(45000).expect("No available port");
 
     let config = ServerConfig {
-        framework: "fastapi".to_string(), 
+        framework: "fastapi".to_string(),
         port,
         app_dir: temp_dir.path().to_path_buf(),
         variant: None,

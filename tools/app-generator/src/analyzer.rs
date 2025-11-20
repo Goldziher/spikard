@@ -61,6 +61,7 @@ pub fn analyze_fixtures(fixtures: &[Fixture]) -> RouteAnalysis {
     let mut route_map: IndexMap<RouteSignature, (String, Parameters, Option<MiddlewareConfig>, Vec<String>)> =
         IndexMap::new();
     let mut canonical_paths: IndexMap<String, String> = IndexMap::new();
+    let mut method_canonical_seen: std::collections::HashSet<String> = std::collections::HashSet::new();
     let mut by_method: IndexMap<String, usize> = IndexMap::new();
     let mut by_category: IndexMap<String, usize> = IndexMap::new();
 
@@ -74,10 +75,21 @@ pub fn analyze_fixtures(fixtures: &[Fixture]) -> RouteAnalysis {
         let normalized = normalize_route(&fixture.handler.route);
         let canonical = canonicalize_route(&normalized);
 
+        // Use just the canonical form (without method) to ensure all methods
+        // for the same path pattern use consistent parameter names
+        // e.g., PATCH /items/{id} and GET /items/{item_id} both use /items/{id}
         let consistent_normalized = canonical_paths
             .entry(canonical.clone())
             .or_insert_with(|| normalized.clone())
             .clone();
+
+        // Skip if we've already seen this method + canonical combination
+        // e.g., skip second POST /{} (whether it's /{id} or /{lang})
+        let method_canonical_key = format!("{} {}", fixture.handler.method, canonical);
+        if method_canonical_seen.contains(&method_canonical_key) {
+            continue;
+        }
+        method_canonical_seen.insert(method_canonical_key);
 
         let sig = RouteSignature {
             route: consistent_normalized.clone(),
@@ -133,8 +145,7 @@ fn normalize_route(route: &str) -> String {
             .map(|segment| {
                 if let Some(param) = segment.strip_prefix(':') {
                     format!("{{{}}}", param)
-                }
-                else if segment.starts_with('{') && segment.ends_with('}') {
+                } else if segment.starts_with('{') && segment.ends_with('}') {
                     let inner = &segment[1..segment.len() - 1];
                     if let Some(colon_pos) = inner.find(':') {
                         format!("{{{}}}", &inner[..colon_pos])

@@ -117,7 +117,7 @@ fn test_fixture_from_dir() {
     std::fs::write(&schema_path, serde_json::to_string_pretty(&schema_json).unwrap()).unwrap();
 
     let fixtures = Fixture::from_dir(temp_dir.path()).unwrap();
-    assert_eq!(fixtures.len(), 3); 
+    assert_eq!(fixtures.len(), 3);
 }
 
 #[test]

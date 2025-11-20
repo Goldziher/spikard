@@ -370,14 +370,13 @@ fn test_benchmark_result_output_format() {
 
 #[tokio::test]
 async fn test_error_handling_in_benchmark() {
-
     if find_load_generator().is_none() {
         eprintln!("Skipping test: No load generator available");
         return;
     }
 
     let load_config = LoadTestConfig {
-        base_url: "http://localhost:65534".to_string(), 
+        base_url: "http://localhost:65534".to_string(),
         duration_secs: 1,
         concurrency: 1,
         fixture: None,

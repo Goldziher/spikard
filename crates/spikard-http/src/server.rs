@@ -223,7 +223,6 @@ async fn create_request_data_with_body(
         })?
         .to_bytes();
 
-
     let body_value = if !body_bytes.is_empty() {
         serde_json::from_slice::<Value>(&body_bytes)
             .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?
@@ -669,7 +668,6 @@ pub fn build_router_with_handlers_and_config(
 
     let mut app = build_router_with_handlers(routes, hooks)?;
 
-
     app = app.layer(SetSensitiveRequestHeadersLayer::new([
         axum::http::header::AUTHORIZATION,
         axum::http::header::COOKIE,
@@ -863,9 +861,9 @@ impl Server {
                 method: route.method.to_string(),
                 path: route.path.clone(),
                 handler_name: route.handler_name.clone(),
-                request_schema: None,   
-                response_schema: None,  
-                parameter_schema: None, 
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
                 file_params: route.file_params.clone(),
                 is_async: route.is_async,
                 cors: route.cors.clone(),
@@ -953,6 +951,5 @@ mod tests {
         let config = ServerConfig::default();
         let router = Router::new();
         let _server = Server::new(config, router);
-
     }
 }

@@ -65,7 +65,7 @@ impl BenchmarkRunner {
         println!("Server started with PID {} (startup: {:.2}ms)", pid, total_startup_ms);
 
         let init_monitor = ResourceMonitor::new(pid);
-        let init_monitor_handle = init_monitor.start_monitoring(50); 
+        let init_monitor_handle = init_monitor.start_monitoring(50);
 
         sleep(Duration::from_millis(200)).await;
 
@@ -73,7 +73,7 @@ impl BenchmarkRunner {
         let init_samples = init_monitor.samples();
 
         let initialization_memory_mb = if !init_samples.is_empty() {
-            let sample_count = init_samples.len().min(5); 
+            let sample_count = init_samples.len().min(5);
             let total_memory: u64 = init_samples.iter().take(sample_count).map(|s| s.memory_bytes).sum();
             crate::types::bytes_to_mb(total_memory / sample_count as u64)
         } else {
@@ -81,7 +81,7 @@ impl BenchmarkRunner {
         };
 
         let startup_metrics = StartupMetrics {
-            process_spawn_ms: total_startup_ms * 0.1, 
+            process_spawn_ms: total_startup_ms * 0.1,
             time_to_first_response_ms: total_startup_ms * 0.9,
             initialization_memory_mb,
             total_startup_ms,
@@ -94,7 +94,7 @@ impl BenchmarkRunner {
             let warmup_config = LoadTestConfig {
                 base_url: base_url.clone(),
                 duration_secs: self.config.warmup_secs,
-                concurrency: 10, 
+                concurrency: 10,
                 fixture: fixture.cloned(),
             };
 
@@ -108,7 +108,7 @@ impl BenchmarkRunner {
         );
 
         let monitor = ResourceMonitor::new(pid);
-        let monitor_handle = monitor.start_monitoring(100); 
+        let monitor_handle = monitor.start_monitoring(100);
 
         let load_config = LoadTestConfig {
             base_url: base_url.clone(),
@@ -162,7 +162,7 @@ impl BenchmarkRunner {
                     error_metrics: None,
                     // TODO: Serialization Metrics Collection
                     serialization: None,
-                    patterns: vec![], 
+                    patterns: vec![],
                     success: true,
                     error: None,
                 })

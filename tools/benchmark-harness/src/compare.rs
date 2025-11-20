@@ -217,10 +217,10 @@ fn calculate_relative_metrics(baseline: &BenchmarkResult, comparison: &Benchmark
 
 /// Classify overall performance based on relative metrics
 fn classify_performance(relative: &RelativeMetrics) -> PerformanceSummary {
-    let throughput_score = (relative.throughput_ratio - 1.0) * 100.0 * 0.4; 
-    let latency_score = (relative.latency_p99_ratio - 1.0) * 100.0 * 0.3; 
-    let memory_score = (relative.memory_peak_ratio - 1.0) * 100.0 * 0.2; 
-    let cpu_score = (relative.cpu_avg_ratio - 1.0) * 100.0 * 0.1; 
+    let throughput_score = (relative.throughput_ratio - 1.0) * 100.0 * 0.4;
+    let latency_score = (relative.latency_p99_ratio - 1.0) * 100.0 * 0.3;
+    let memory_score = (relative.memory_peak_ratio - 1.0) * 100.0 * 0.2;
+    let cpu_score = (relative.cpu_avg_ratio - 1.0) * 100.0 * 0.1;
 
     let total_score = throughput_score + latency_score + memory_score + cpu_score;
 
@@ -504,20 +504,20 @@ mod tests {
 
         let better_comp = &report.comparisons[0];
         assert!(better_comp.relative.throughput_ratio > 1.0);
-        assert!(better_comp.relative.latency_p99_ratio > 1.0); 
+        assert!(better_comp.relative.latency_p99_ratio > 1.0);
 
         let worse_comp = &report.comparisons[1];
         assert!(worse_comp.relative.throughput_ratio < 1.0);
-        assert!(worse_comp.relative.latency_p99_ratio < 1.0); 
+        assert!(worse_comp.relative.latency_p99_ratio < 1.0);
     }
 
     #[test]
     fn test_detect_regressions() {
         let baseline = create_test_result("baseline", 1000.0, 10.0);
-        let regressed = create_test_result("regressed", 800.0, 15.0); 
+        let regressed = create_test_result("regressed", 800.0, 15.0);
 
         let report = compare_frameworks(&baseline, &[regressed]);
-        let warnings = detect_regressions(&report, 5.0); 
+        let warnings = detect_regressions(&report, 5.0);
 
         assert!(!warnings.is_empty());
         assert!(warnings.iter().any(|w| w.metric == "throughput"));
@@ -532,7 +532,7 @@ mod tests {
     #[test]
     fn test_classify_performance() {
         let much_better = RelativeMetrics {
-            throughput_ratio: 1.3, 
+            throughput_ratio: 1.3,
             throughput_percent_diff: 30.0,
             latency_p50_ratio: 1.2,
             latency_p50_percent_diff: 20.0,
