@@ -138,7 +138,5 @@ task test:e2e:python
 
 ## Related Documentation
 
-- Design: `docs/design/lifecycle-hooks-api-design.md`
-- Implementation: `docs/design/lifecycle-hooks-implementation.md`
-- Quick Reference: `docs/design/lifecycle-hooks-quickstart.md`
+- Design & implementation: `docs/adr/0005-lifecycle-hooks.md`
 - Rust Example: `examples/rust-lifecycle-hooks/`

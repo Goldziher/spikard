@@ -642,9 +642,9 @@ sub_interpreter.run(handler)?;
 
 ## Related Documentation
 
-- **Architecture:** `docs/design/00-architecture.md`
-- **Validation Strategy:** `docs/design/01-validation-strategy.md`
-- **msgspec Integration:** `docs/design/msgspec-type-conversion.md`
+- **Architecture:** `docs/adr/0001-architecture-and-principles.md`
+- **Validation Strategy:** `docs/adr/0003-validation-and-fixtures.md`
+- **msgspec Integration:** `docs/adr/0003-validation-and-fixtures.md`
 - **HTTP Core:** `crates/spikard-http/README.md`
 - **Python Package:** `packages/python/README.md`
 

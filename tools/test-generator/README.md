@@ -73,4 +73,4 @@ All generated code can be safely deleted and regenerated.
 
 ## Architecture
 
-See [docs/design/codegen-strategy.md](../../docs/design/codegen-strategy.md) for complete design.
+See `docs/adr/0004-code-generation.md` for the current codegen strategy.

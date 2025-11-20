@@ -164,4 +164,4 @@ To integrate this with a real server:
 3. Hook into error handling middleware
 4. Add response transformation middleware
 
-See the [design documentation](../../docs/design/lifecycle-hooks-api-design.md) for the complete API specification.
+See the lifecycle hooks ADR at `docs/adr/0005-lifecycle-hooks.md` for the complete API specification.

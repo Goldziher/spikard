@@ -72,7 +72,7 @@ rules:
     - content: Handlers under `crates/spikard-http/src` must validate headers, cookies, and payloads against the schemas in `testing_data/headers`, `testing_data/cookies`, and `testing_data/json_bodies`. Reject unexpected or malformed values with structured errors returned to the caller, and cover each guard with an integration test tied to the corresponding fixture set.
       name: HTTP Input Validation
       priority: high
-    - content: Follow the conversion patterns captured in `docs/design/msgspec-type-conversion.md` so data exchanged between Rust and Python leverages `msgspec` without extra JSON hops. Share zero-copy buffers where possible, and use `task build:rust` (release mode) when benchmarking or publishing bindings to avoid debug-performance regressions.
+    - content: Follow the conversion patterns captured in `docs/adr/0003-validation-and-fixtures.md` so data exchanged between Rust and Python leverages `msgspec` without extra JSON hops. Share zero-copy buffers where possible, and use `task build:rust` (release mode) when benchmarking or publishing bindings to avoid debug-performance regressions.
       name: Optimized Serialization Path
       priority: medium
     - content: Keep language-neutral logic inside `crates/spikard/src` and limit each binding crate (`spikard-py`, `spikard-node`, `spikard-wasm`) to thin adapters over that core. When introducing new modules, register them in the relevant `Cargo.toml`, mirror usage in `examples/`, and avoid duplicating business rules across bindings.
@@ -87,10 +87,10 @@ rules:
     - content: When adding behavior, introduce or update fixtures under the relevant `testing_data/*` directory and extend the parametrized suites in `packages/python/tests/test_all_fixtures.py`, `packages/python/tests/test_integration_query_params.py`, and peers. Do not ship without running `task test` plus the language targets (`task test:rust`, `task test:python`) so local runs match CI.
       name: Fixture-First Testing
       priority: critical
-    - content: 'Guard every HTTP-facing change with the validation strategy captured in `docs/design/validation-strategy.md`: enforce cookie rules via `testing_data/cookies/*.json`, headers/auth via `testing_data/headers/*.json`, and CORS expectations via `testing_data/cors/*.json`. Strip secrets from logs and ensure new handlers never bypass the existing validator layer before reaching business logic.'
+    - content: 'Guard every HTTP-facing change with the validation strategy captured in `docs/adr/0003-validation-and-fixtures.md`: enforce cookie rules via `testing_data/cookies/*.json`, headers/auth via `testing_data/headers/*.json`, and CORS expectations via `testing_data/cors/*.json`. Strip secrets from logs and ensure new handlers never bypass the existing validator layer before reaching business logic.'
       name: Request Surface Security
       priority: high
-    - content: Respect the project’s zero-copy serialization choices—keep Rust structs `serde`-ready so bindings reuse them, lean on the `msgspec` adapters documented in `docs/design/msgspec-type-conversion.md`, and wrap heavy work in async-safe boundaries (`tokio::task::spawn_blocking` in Rust, `pyo3::Python::allow_threads` when calling back into Python). Reuse fixture loaders such as `packages/python/tests/fixture_app.py` instead of re-parsing schema files per request.
+    - content: Respect the project’s zero-copy serialization choices—keep Rust structs `serde`-ready so bindings reuse them, lean on the adapters documented in `docs/adr/0003-validation-and-fixtures.md`, and wrap heavy work in async-safe boundaries (`tokio::task::spawn_blocking` in Rust, `pyo3::Python::allow_threads` when calling back into Python). Reuse fixture loaders such as `packages/python/tests/fixture_app.py` instead of re-parsing schema files per request.
       name: Async-Friendly Performance
       priority: medium
     - content: Implement cross-cutting logic in `crates/spikard/src` and expose it through thin adapters in `crates/spikard-http`, `crates/spikard-py`, `crates/spikard-node`, `crates/spikard-rb`, and `crates/spikard-wasm`. Keep build metadata confined to each binding's manifest (`pyproject.toml`, `crates/spikard-node/package.json`, `crates/spikard-wasm/package.json`) and register new workflows in `Taskfile.yaml` so `task build`/`task lint` continue to orchestrate the monorepo.
@@ -108,7 +108,7 @@ rules:
     - content: Consolidate heavy computation inside the shared Rust core (crates/spikard) and expose thin bindings in crates/spikard-py, packages/python, crates/spikard-node, crates/spikard-rb, and crates/spikard-wasm; stress-test large or deeply nested payloads with testing_data/edge_cases and verify optimized builds via task build:rust, task build:py, task build:node, and task build:ruby.
       name: Cross-Target Performance
       priority: medium
-    - content: Place reusable domain types and logic in crates/spikard/src/ and keep feature-specific glue isolated within sibling crates (spikard-http, spikard-cli, bindings); mirror module changes across Cargo manifests and refresh the relevant docs/design/* notes whenever the layering or routing changes.
+    - content: Place reusable domain types and logic in crates/spikard/src/ and keep feature-specific glue isolated within sibling crates (spikard-http, spikard-cli, bindings); mirror module changes across Cargo manifests and refresh the relevant docs/adr/* notes whenever the layering or routing changes.
       name: Workspace Organization
       priority: high
     - content: Before committing, run task lint to honor the Biome settings in biome.json for JS/TS, format Rust with cargo fmt --manifest-path Cargo.toml configured by rustfmt.toml, and sync Python dependencies with uv so pyproject.toml and uv.lock stay consistent—avoid introducing divergent toolchains or unchecked formatting drift.
@@ -126,10 +126,10 @@ rules:
     - content: 'In `crates/spikard-http`, define language-agnostic Handler trait with `Pin<Box<dyn Future<Output = HandlerResult> + Send>>` return type. Language bindings (`spikard-py`, `spikard-node`, `spikard-rb`) implement this trait with Arc<dyn Handler> wrappers. The HTTP server accepts `Vec<(Route, Arc<dyn Handler>)>` enabling clean separation: spikard-http has zero FFI dependencies, all Python/Node/Ruby/WASM code lives in binding crates.'
       name: Handler Trait Abstraction
       priority: critical
-    - content: 'All standard middleware (compression, rate limiting, timeouts, graceful shutdown, static files, request IDs) is implemented in Rust using tower-http and exposed via typed ServerConfig. Configuration structs (CompressionConfig, RateLimitConfig, StaticFilesConfig, etc.) must be forwarded to Python/TypeScript/Ruby bindings with proper type safety. See `docs/design/middleware-lifecycle-optimization.md` for the complete middleware stack order and configuration options.'
+    - content: 'All standard middleware (compression, rate limiting, timeouts, graceful shutdown, static files, request IDs) is implemented in Rust using tower-http and exposed via typed ServerConfig. Configuration structs (CompressionConfig, RateLimitConfig, StaticFilesConfig, etc.) must be forwarded to Python/TypeScript/Ruby bindings with proper type safety. See `docs/adr/0002-runtime-and-middleware.md` for the complete middleware stack order and configuration options.'
       name: Tower-HTTP Middleware Stack
       priority: high
-    - content: 'Lifecycle hooks (onRequest, preValidation, preHandler, onResponse, onError) must follow the zero-cost design in `docs/design/lifecycle-hooks-implementation.md`: use Option<Arc<dyn Fn>> for conditional execution (<1ns when not registered), provide async support via pyo3_async_runtimes for Python and ThreadsafeFunction for TypeScript, and allow hooks to short-circuit with early responses. Implement HookResult enum with Continue/ShortCircuit variants.'
+    - content: 'Lifecycle hooks (onRequest, preValidation, preHandler, onResponse, onError) must follow the zero-cost design in `docs/adr/0005-lifecycle-hooks.md`: use Option<Arc<dyn Fn>> for conditional execution (<1ns when not registered), provide async support via pyo3_async_runtimes for Python and ThreadsafeFunction for TypeScript, and allow hooks to short-circuit with early responses. Implement HookResult enum with Continue/ShortCircuit variants.'
       name: Lifecycle Hooks Implementation
       priority: high
     - content: 'Language bindings (spikard-py, spikard-node, spikard-rb) must NOT duplicate middleware logic. All middleware lives in Rust (tower-http). Bindings only expose configuration APIs that construct ServerConfig and pass it to the Rust server. Ruby bindings use magnus for FFI, TypeScript uses napi-rs, Python uses PyO3. Future PHP bindings will use ext-php-rs.'
@@ -173,7 +173,7 @@ sections:
         cargo run -p spikard-cli -- --help
         ```
         - Python examples under `examples/` assume the bindings built from `crates/spikard-py`; run them with the synced uv environment after building the crate.
-        - Design docs in `docs/design/` (e.g., `docs/design/architecture.md`, `docs/design/middleware-lifecycle-optimization.md`) capture architectural decisions; update them alongside code changes.
+        - Design docs live in `docs/adr/` (e.g., `docs/adr/0001-architecture-and-principles.md`, `docs/adr/0002-runtime-and-middleware.md`) and must stay in sync with code changes.
       name: Development Workflow
       priority: medium
     - content: |-
@@ -226,10 +226,9 @@ sections:
         - Pytests live in `packages/python/tests/`, using fixture helpers (`packages/python/tests/fixture_app.py`) and sample apps in `examples/`.
 
         ## Reference Docs
-        - High-level design: `docs/design/architecture.md`.
-        - Validation strategy: `docs/design/validation-strategy.md`.
-        - Middleware & lifecycle: `docs/design/middleware-lifecycle-optimization.md` (Phase 1 COMPLETE).
-        - Lifecycle hooks implementation: `docs/design/lifecycle-hooks-implementation.md` (Phase 2 PENDING).
-        - Routing notes: `docs/design/axum-routing.md`.
+        - High-level design: `docs/adr/0001-architecture-and-principles.md`.
+        - Validation strategy: `docs/adr/0003-validation-and-fixtures.md`.
+        - Middleware & lifecycle: `docs/adr/0002-runtime-and-middleware.md` and `docs/adr/0005-lifecycle-hooks.md`.
+        - Streaming & async protocols: `docs/adr/0006-streaming-and-async-protocols.md`.
       name: Architecture Overview
       priority: medium
