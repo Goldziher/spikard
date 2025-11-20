@@ -1,9 +1,8 @@
 parameters:
     level: 9
-    paths:
-        - crates/spikard-cli/src/codegen/php.rs
+    paths: []
     # Ignore generated test files
     excludePaths:
-        - vendor/
+        - vendor (?)
         - node_modules/
         - target/

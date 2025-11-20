@@ -332,9 +332,7 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
 
         let treat_as_json = content_type
             .as_deref()
-            .map(|ct| {
-                ct.contains("application/json") || ct.contains("application/xml") || ct.contains("+json") 
-            })
+            .map(|ct| ct.contains("application/json") || ct.contains("application/xml") || ct.contains("+json"))
             .unwrap_or(true);
 
         if is_form_urlencoded {
@@ -482,7 +480,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
     let content_length_header = expected_content_length(fixture);
     let requires_binary_assert = expected_string_body.is_some() && content_length_header.is_some();
 
-
     if status_code == 200 {
         let is_text_response = fixture
             .expected_response
@@ -518,7 +515,6 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                 generate_body_assertions(&mut code, expected_body, "response_data");
             }
         } else if should_parse_json {
-
             if let Some(ref body) = fixture.request.body {
                 generate_echo_assertions(&mut code, body, "response_data");
             }
@@ -547,20 +543,18 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         code.push_str("        response_data = response.json()\n");
         code.push_str("        # Validation should be done by framework, not handler\n");
         code.push_str("        assert \"errors\" in response_data or \"detail\" in response_data\n");
-    } else {
-        if let Some(ref body) = fixture.expected_response.body {
-            if requires_binary_assert {
-                let expected_literal = python_bytes_literal(body.as_str().unwrap().as_bytes());
-                code.push_str("        body_bytes = response.content\n");
-                code.push_str(&format!(
-                    "        assert len(body_bytes) == {}\n",
-                    content_length_header.unwrap()
-                ));
-                code.push_str(&format!("        assert body_bytes.startswith({})\n", expected_literal));
-            } else {
-                code.push_str("        response_data = response.json()\n");
-                generate_body_assertions(&mut code, body, "response_data");
-            }
+    } else if let Some(ref body) = fixture.expected_response.body {
+        if requires_binary_assert {
+            let expected_literal = python_bytes_literal(body.as_str().unwrap().as_bytes());
+            code.push_str("        body_bytes = response.content\n");
+            code.push_str(&format!(
+                "        assert len(body_bytes) == {}\n",
+                content_length_header.unwrap()
+            ));
+            code.push_str(&format!("        assert body_bytes.startswith({})\n", expected_literal));
+        } else {
+            code.push_str("        response_data = response.json()\n");
+            generate_body_assertions(&mut code, body, "response_data");
         }
     }
 
@@ -750,12 +744,7 @@ fn generate_body_assertions(code: &mut String, body: &serde_json::Value, path: &
                     }
                     _ => {
                         let in_errors = path.contains("[\"errors\"]");
-                        let skip_assertion = in_errors
-                            && (
-                                key == "input"
-                            || key == "msg"
-                            || key == "type"
-                            );
+                        let skip_assertion = in_errors && (key == "input" || key == "msg" || key == "type");
 
                         if !skip_assertion {
                             code.push_str(&format!("        assert {} == {}\n", new_path, json_to_python(value)));

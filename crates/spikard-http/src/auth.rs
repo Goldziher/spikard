@@ -100,7 +100,7 @@ pub async fn jwt_auth_middleware(
         validation.set_issuer(std::slice::from_ref(iss));
     }
     validation.leeway = config.leeway;
-    validation.validate_nbf = true; 
+    validation.validate_nbf = true;
 
     let decoding_key = DecodingKey::from_secret(config.secret.as_bytes());
     let _token_data = decode::<Claims>(token, &decoding_key, &validation).map_err(|e| {
@@ -199,10 +199,10 @@ fn extract_api_key_from_query(uri: &Uri) -> Option<&str> {
     let query = uri.query()?;
 
     for param in query.split('&') {
-        if let Some((key, value)) = param.split_once('=') {
-            if key == "api_key" || key == "apiKey" || key == "key" {
-                return Some(value);
-            }
+        if let Some((key, value)) = param.split_once('=')
+            && (key == "api_key" || key == "apiKey" || key == "key")
+        {
+            return Some(value);
         }
     }
 

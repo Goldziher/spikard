@@ -134,7 +134,7 @@ impl SchemaValidator {
                     };
 
                     if !instance_path.is_empty() && instance_path.starts_with('/') && instance_path.len() > 1 {
-                        let base_path = &instance_path[1..]; 
+                        let base_path = &instance_path[1..];
                         if !field_name.is_empty() {
                             format!("{}/{}", base_path, field_name)
                         } else {
@@ -165,12 +165,10 @@ impl SchemaValidator {
                         } else {
                             instance_path[1..].to_string()
                         }
+                    } else if instance_path.starts_with('/') && instance_path.len() > 1 {
+                        instance_path[1..].to_string()
                     } else {
-                        if instance_path.starts_with('/') && instance_path.len() > 1 {
-                            instance_path[1..].to_string()
-                        } else {
-                            "body".to_string()
-                        }
+                        "body".to_string()
                     }
                 } else if instance_path.starts_with('/') && instance_path.len() > 1 {
                     instance_path[1..].to_string()
@@ -447,7 +445,7 @@ impl SchemaValidator {
                 } else if schema_path_str.contains("/minItems") {
                     let min_items = if let Some(start) = schema_path_str.rfind('/') {
                         if let Some(_min_idx) = schema_path_str[..start].rfind("/minItems") {
-                            1 
+                            1
                         } else {
                             1
                         }
@@ -465,7 +463,7 @@ impl SchemaValidator {
                     )
                 } else if schema_path_str.contains("/maxItems") {
                     let ctx = serde_json::json!({
-                        "max_length": 1 
+                        "max_length": 1
                     });
                     (
                         "too_long".to_string(),

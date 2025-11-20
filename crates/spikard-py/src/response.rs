@@ -203,17 +203,13 @@ impl Response {
 
         let content = if body_bytes.is_empty() {
             None
-        } else {
-            if let Ok(json_str) = std::str::from_utf8(&body_bytes) {
-                match py.import("json")?.call_method1("loads", (json_str,)) {
-                    Ok(parsed) => Some(parsed.unbind()),
-                    Err(_) => {
-                        Some(PyString::new(py, json_str).into_any().unbind())
-                    }
-                }
-            } else {
-                Some(PyBytes::new(py, &body_bytes).into_any().unbind())
+        } else if let Ok(json_str) = std::str::from_utf8(&body_bytes) {
+            match py.import("json")?.call_method1("loads", (json_str,)) {
+                Ok(parsed) => Some(parsed.unbind()),
+                Err(_) => Some(PyString::new(py, json_str).into_any().unbind()),
             }
+        } else {
+            Some(PyBytes::new(py, &body_bytes).into_any().unbind())
         };
 
         Ok(Self {

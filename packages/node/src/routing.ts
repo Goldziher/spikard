@@ -80,7 +80,7 @@ export function route(path: string, options: RouteOptions = {}): (handler: Route
 			response_schema: options.responseSchema,
 			parameter_schema: options.parameterSchema,
 			cors: options.cors,
-			is_async: true, 
+			is_async: true,
 		};
 
 		interface AnnotatedHandler extends RouteHandler {

@@ -266,11 +266,6 @@ tasks:
     cmds:
       - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rubocop --autocorrect-all
 
-  php:lint:
-    desc: "Lint PHP code with PHPStan"
-    cmds:
-      - phpstan analyse --memory-limit=2G
-
   node:format:
     desc: "Format TypeScript code with biome"
     cmds:

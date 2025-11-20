@@ -150,7 +150,15 @@ exclude_lines = [
 
 [tool.mypy]
 mypy_path = "packages/python"
-exclude = [ "examples", "testing_data", "e2e" ]
+exclude = [
+  "examples",
+  "testing_data",
+  "e2e",
+  "tools/benchmark-harness/apps/spikard-python",
+  "tools/benchmark-harness/apps/spikard-streaming",
+  "tools/benchmark-harness/apps",
+  "tools/app-generator/tools/benchmark-harness/apps",
+]
 python_version = "3.10"
 implicit_reexport = false
 show_error_codes = true

@@ -113,8 +113,7 @@ describe("content_types", () => {
 		expect(responseHeaders["content-type"]).toBe("application/pdf");
 	});
 
-	test.skip("20_content_length_mismatch", async () => {
-	});
+	test.skip("20_content_length_mismatch", async () => {});
 
 	test("17_vendor_json_accepted", async () => {
 		const app = createAppContentTypes17VendorJsonAccepted();

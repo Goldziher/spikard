@@ -19,12 +19,11 @@ fn find_workspace_root() -> Result<PathBuf> {
 
     loop {
         let cargo_toml = current.join("Cargo.toml");
-        if cargo_toml.exists() {
-            if let Ok(contents) = std::fs::read_to_string(&cargo_toml)
-                && contents.contains("[workspace]")
-            {
-                return Ok(current.to_path_buf());
-            }
+        if cargo_toml.exists()
+            && let Ok(contents) = std::fs::read_to_string(&cargo_toml)
+            && contents.contains("[workspace]")
+        {
+            return Ok(current.to_path_buf());
         }
 
         current = current.parent().ok_or_else(|| {
@@ -111,11 +110,9 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
             };
             let server_path = config.app_dir.join(server_file);
             let mut cmd = Command::new("uv");
-            cmd.arg("run")
-                .arg("python")
-                .arg(server_path)
-                .arg("--port")
-                .arg(port.to_string());
+            cmd.arg("run").arg("python").arg(server_path).arg(port.to_string()); // Positional arg, not --port
+            // Set PYTHONPATH to packages/python relative to workspace root
+            cmd.env("PYTHONPATH", "packages/python");
             cmd
         }
         "spikard-node" => {
@@ -159,7 +156,7 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
         base_url: base_url.clone(),
     };
 
-    let max_attempts = 30; 
+    let max_attempts = 30;
     for attempt in 1..=max_attempts {
         sleep(Duration::from_secs(1)).await;
 
