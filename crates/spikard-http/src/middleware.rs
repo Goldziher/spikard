@@ -27,31 +27,29 @@ pub type RouteRegistry = Arc<HashMap<(String, String), RouteInfo>>;
 fn validate_json_content_type(headers: &HeaderMap) -> Result<(), Response> {
     if let Some(content_type_header) = headers.get(axum::http::header::CONTENT_TYPE)
         && let Ok(content_type_str) = content_type_header.to_str()
+        && let Ok(parsed_mime) = content_type_str.parse::<mime::Mime>()
     {
-        if let Ok(parsed_mime) = content_type_str.parse::<mime::Mime>() {
-            let is_json = (parsed_mime.type_() == mime::APPLICATION && parsed_mime.subtype() == mime::JSON)
-                || parsed_mime.suffix() == Some(mime::JSON);
+        let is_json = (parsed_mime.type_() == mime::APPLICATION && parsed_mime.subtype() == mime::JSON)
+            || parsed_mime.suffix() == Some(mime::JSON);
 
-            let is_form = (parsed_mime.type_() == mime::APPLICATION
-                && parsed_mime.subtype() == "x-www-form-urlencoded")
-                || (parsed_mime.type_() == mime::MULTIPART && parsed_mime.subtype() == "form-data");
+        let is_form = (parsed_mime.type_() == mime::APPLICATION && parsed_mime.subtype() == "x-www-form-urlencoded")
+            || (parsed_mime.type_() == mime::MULTIPART && parsed_mime.subtype() == "form-data");
 
-            if !is_json && !is_form {
-                let problem = ProblemDetails::new(
-                    "https://spikard.dev/errors/unsupported-media-type",
-                    "Unsupported Media Type",
-                    StatusCode::UNSUPPORTED_MEDIA_TYPE,
-                )
-                .with_detail("Unsupported media type");
+        if !is_json && !is_form {
+            let problem = ProblemDetails::new(
+                "https://spikard.dev/errors/unsupported-media-type",
+                "Unsupported Media Type",
+                StatusCode::UNSUPPORTED_MEDIA_TYPE,
+            )
+            .with_detail("Unsupported media type");
 
-                let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
-                return Err((
-                    StatusCode::UNSUPPORTED_MEDIA_TYPE,
-                    [(axum::http::header::CONTENT_TYPE, CONTENT_TYPE_PROBLEM_JSON)],
-                    body,
-                )
-                    .into_response());
-            }
+            let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+            return Err((
+                StatusCode::UNSUPPORTED_MEDIA_TYPE,
+                [(axum::http::header::CONTENT_TYPE, CONTENT_TYPE_PROBLEM_JSON)],
+                body,
+            )
+                .into_response());
         }
     }
     Ok(())
@@ -407,7 +405,7 @@ fn convert_types_recursive(value: &mut serde_json::Value) {
 
 /// Size threshold for streaming vs buffering multipart fields
 /// Fields larger than this will be streamed chunk-by-chunk
-const MULTIPART_STREAMING_THRESHOLD: usize = 1024 * 1024; 
+const MULTIPART_STREAMING_THRESHOLD: usize = 1024 * 1024;
 
 /// Parse multipart/form-data to JSON
 ///
@@ -442,9 +440,8 @@ async fn parse_multipart_to_json(
             let bytes = field.bytes().await?;
             let size = bytes.len();
 
-            let content = if content_type.starts_with("text/") || content_type == "application/json" {
-                String::from_utf8_lossy(&bytes).to_string()
-            } else if size <= MULTIPART_STREAMING_THRESHOLD {
+            let is_text_like = content_type.starts_with("text/") || content_type == "application/json";
+            let content = if is_text_like || size <= MULTIPART_STREAMING_THRESHOLD {
                 String::from_utf8_lossy(&bytes).to_string()
             } else {
                 format!("<binary data, {} bytes>", size)

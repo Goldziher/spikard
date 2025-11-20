@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Benchmark different approaches for validation error input field handling.
 
 Compares three approaches:
@@ -218,7 +219,6 @@ def main() -> None:
     """Run benchmarks for all approaches."""
     iterations = 100000
 
-
     results_happy: list[BenchmarkResult] = []
     for approach_name, approach_func in [
         ("Approach 1: Pre-validation", approach_1_pre_validation),
@@ -227,7 +227,6 @@ def main() -> None:
     ]:
         result = benchmark_approach(approach_name, approach_func, [VALID_QUERY], iterations)
         results_happy.append(result)
-
 
     results_error: list[BenchmarkResult] = []
     for approach_name, approach_func in [
