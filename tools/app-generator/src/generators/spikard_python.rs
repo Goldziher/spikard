@@ -301,8 +301,8 @@ fn generate_main() -> String {
     import sys
 
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
-    print(f"Starting Spikard-Python server on port {port}", file=sys.stderr)
-    app.run(host="0.0.0.0", port=port)
+    print(f"Starting Spikard-Python server on port {port}", file=sys.stderr)  # noqa: T201
+    app.run(host="0.0.0.0", port=port)  # noqa: S104
 "#
     .to_string()
 }
