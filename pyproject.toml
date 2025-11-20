@@ -111,6 +111,9 @@ lint.per-file-ignores."tests/*.py" = [
   "PLR0915",
   "SIM108",
 ]
+lint.per-file-ignores."tools/benchmark-harness/apps/**/*.py" = [
+  "ALL", # Generated benchmark code - disable all linting
+]
 lint.isort.known-first-party = [ "spikard" ]
 lint.mccabe.max-complexity = 15
 lint.pydocstyle.convention = "google"
