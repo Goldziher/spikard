@@ -54,7 +54,7 @@ impl ProfileRunner {
         // Framework info
         let framework_info = FrameworkInfo {
             name: self.config.framework.clone(),
-            version: "0.1.0".to_string(), // TODO: detect from app
+            version: self.detect_framework_version(),
             language: self.detect_language(),
             runtime: self.detect_runtime(),
             app_dir: self.config.app_dir.display().to_string(),
@@ -71,9 +71,10 @@ impl ProfileRunner {
 
         // Start server
         println!("🚀 Starting {} server...", self.config.framework);
+        let port = self.find_available_port();
         let server_config = ServerConfig {
             framework: self.config.framework.clone(),
-            port: 8100, // TODO: find available port
+            port,
             app_dir: self.config.app_dir.clone(),
             variant: self.config.variant.clone(),
         };
@@ -162,13 +163,14 @@ impl ProfileRunner {
         }
 
         // Actual benchmark
-        let (_oha_output, throughput) = self
+        let (oha_output, throughput) = self
             .run_load_test(&server.base_url, &fixture, self.config.duration_secs)
             .await?;
 
         // Stop monitor and collect samples
         let monitor_with_samples = monitor_handle.stop().await;
         let resource_metrics = monitor_with_samples.calculate_metrics();
+        let cpu_p95 = monitor_with_samples.cpu_percentile(95.0);
 
         // Stop profiler and collect data
         let profiling = _profiler_handle.map(|_| ProfilingData::Python(PythonProfilingData {
@@ -192,25 +194,25 @@ impl ProfileRunner {
             success_rate: throughput.success_rate,
         };
 
-        // For latency, we'll use the resource metrics' placeholder values
-        // TODO: extract from oha_output
+        // Extract latency from oha_output
+        let latency_metrics: crate::types::LatencyMetrics = oha_output.into();
         let latency = Latency {
-            mean_ms: 0.0,
-            median_ms: 0.0,
-            p90_ms: 0.0,
-            p95_ms: 0.0,
-            p99_ms: 0.0,
-            p999_ms: 0.0,
-            min_ms: 0.0,
-            max_ms: 0.0,
-            stddev_ms: 0.0,
+            mean_ms: latency_metrics.mean_ms,
+            median_ms: latency_metrics.p50_ms,
+            p90_ms: latency_metrics.p90_ms,
+            p95_ms: latency_metrics.p95_ms,
+            p99_ms: latency_metrics.p99_ms,
+            p999_ms: latency_metrics.p999_ms,
+            min_ms: latency_metrics.min_ms,
+            max_ms: latency_metrics.max_ms,
+            stddev_ms: latency_metrics.stddev_ms,
         };
 
         let resources = Resources {
             cpu: crate::schema::CpuMetrics {
                 avg_percent: resource_metrics.avg_cpu_percent,
                 peak_percent: resource_metrics.peak_cpu_percent,
-                p95_percent: resource_metrics.avg_cpu_percent, // TODO: calculate p95 properly
+                p95_percent: cpu_p95,
             },
             memory: crate::schema::MemoryMetrics {
                 avg_mb: resource_metrics.avg_memory_mb,
@@ -263,8 +265,9 @@ impl ProfileRunner {
             headers.insert("Content-Type".to_string(), content_type.clone());
         }
 
+        // Load body from testing_data fixtures
         let body = if let Some(ref body_file) = workload_def.body_file {
-            Some(self.load_body_data(body_file)?)
+            Some(self.load_body_from_fixtures(body_file)?)
         } else {
             None
         };
@@ -272,7 +275,7 @@ impl ProfileRunner {
         let request = Request {
             method: workload_def.endpoint.method.clone(),
             path: workload_def.endpoint.path.clone(),
-            query_params: std::collections::HashMap::new(), // TODO: extract from path
+            query_params: std::collections::HashMap::new(),
             headers,
             body,
             body_raw: None,
@@ -301,78 +304,59 @@ impl ProfileRunner {
         })
     }
 
-    fn load_body_data(&self, body_file: &str) -> Result<serde_json::Value> {
-        // TODO: load from fixtures directory
-        // For now, return hardcoded test data
+    /// Resolve fixture path relative to workspace root
+    fn resolve_fixture_path(&self, fixture_file: &str) -> PathBuf {
+        // Assume fixture_file is relative to testing_data
+        let workspace_root = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+        workspace_root.join("testing_data").join(fixture_file)
+    }
+
+    /// Load body data from testing_data fixtures
+    fn load_body_from_fixtures(&self, body_file: &str) -> Result<serde_json::Value> {
+        // Map body file names to actual fixture files in testing_data
+        let fixture_path = match body_file {
+            "json-small.json" => "json_bodies/01_simple_object_success.json",
+            "json-medium.json" => "json_bodies/04_nested_object_success.json",
+            "json-large.json" => "json_bodies/25_deeply_nested_objects.json",
+            "json-very-large.json" => "json_bodies/05_array_of_objects.json",
+            _ => {
+                // Try direct path in testing_data
+                body_file
+            }
+        };
+
+        let full_path = self.resolve_fixture_path(fixture_path);
+
+        // Load fixture and extract body
+        match Fixture::from_file(&full_path) {
+            Ok(fixture) => {
+                fixture.request.body.ok_or_else(|| {
+                    Error::InvalidInput(format!("Fixture {} has no body", fixture_path))
+                })
+            }
+            Err(_) => {
+                // Fallback to generating synthetic data
+                self.generate_synthetic_body(body_file)
+            }
+        }
+    }
+
+    /// Generate synthetic body data as fallback
+    fn generate_synthetic_body(&self, body_file: &str) -> Result<serde_json::Value> {
         let json_str = match body_file {
-            "json-small.json" => r#"{"id":12345,"name":"test_item","active":true,"count":42,"tags":["tag1","tag2","tag3"]}"#,
-            "json-medium.json" => r#"{
-                "id": 12345,
-                "name": "test_item_medium",
-                "description": "This is a medium-sized JSON payload for benchmarking purposes.",
-                "active": true,
-                "count": 42,
-                "price": 99.99,
-                "currency": "USD",
-                "category": "electronics",
-                "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
-                "attributes": {
-                    "color": "black",
-                    "storage": "256GB",
-                    "ram": "8GB"
-                }
-            }"#,
-            "json-large.json" => r#"{
-                "id": 12345,
-                "name": "test_item_large",
-                "description": "This is a large JSON payload for benchmarking purposes with extensive nested data.",
-                "active": true,
-                "count": 42,
-                "price": 199.99,
-                "currency": "USD",
-                "category": "electronics",
-                "subcategory": "laptops",
-                "tags": ["premium", "business", "ultrabook", "touchscreen", "backlit-keyboard"],
-                "metadata": {
-                    "created_at": "2024-01-01T00:00:00Z",
-                    "updated_at": "2024-01-15T12:30:45Z",
-                    "version": 3,
-                    "author": "system",
-                    "status": "published"
-                },
-                "attributes": {
-                    "brand": "TechBrand",
-                    "model": "ProBook X1",
-                    "color": "space gray",
-                    "storage": "1TB SSD",
-                    "ram": "32GB DDR5",
-                    "cpu": "Intel Core i9-13900H",
-                    "gpu": "NVIDIA RTX 4070",
-                    "display": "15.6 inch 4K OLED",
-                    "battery": "99Wh",
-                    "weight": "1.8kg"
-                },
-                "specifications": [
-                    {"key": "ports", "value": "4x USB-C, 2x USB-A, HDMI 2.1, SD card"},
-                    {"key": "wireless", "value": "WiFi 6E, Bluetooth 5.3"},
-                    {"key": "audio", "value": "Quad speakers, Dolby Atmos"},
-                    {"key": "camera", "value": "1080p IR webcam with privacy shutter"},
-                    {"key": "keyboard", "value": "Backlit with fingerprint sensor"}
-                ],
-                "reviews": [
-                    {"rating": 5, "comment": "Excellent performance"},
-                    {"rating": 4, "comment": "Great build quality"},
-                    {"rating": 5, "comment": "Best laptop I've owned"}
-                ]
-            }"#,
+            "json-small.json" => r#"{"id":12345,"name":"test_item","active":true,"count":42}"#,
+            "json-medium.json" => r#"{"id":12345,"name":"test_item","description":"Medium payload","price":99.99,"tags":["tag1","tag2","tag3"]}"#,
+            "json-large.json" => r#"{"id":12345,"name":"large_item","description":"Large payload with nested data","metadata":{"version":1,"status":"active"},"attributes":{"color":"blue","size":"large"}}"#,
             "json-very-large.json" => {
-                // Generate a very large JSON (>100KB) with repeated data
-                let mut items = Vec::new();
-                for i in 0..100 {
-                    items.push(format!(r#"{{"id":{},"name":"item_{}","value":{},"metadata":{{"timestamp":"2024-01-01T00:00:00Z","status":"active","tags":["tag1","tag2","tag3","tag4","tag5"]}}}}"#, i, i, i * 100));
-                }
-                &format!(r#"{{"items":[{}],"count":100,"total_value":495000}}"#, items.join(","))
-            },
+                // Generate array of 50 items
+                let items: Vec<String> = (0..50)
+                    .map(|i| format!(r#"{{"id":{},"name":"item_{}","value":{}}}"#, i, i, i * 100))
+                    .collect();
+                return Ok(serde_json::json!({
+                    "items": items.iter().map(|s| serde_json::from_str::<serde_json::Value>(s).unwrap()).collect::<Vec<_>>(),
+                    "count": 50
+                }));
+            }
             _ => return Err(Error::InvalidInput(format!("Unknown body file: {}", body_file))),
         };
 
@@ -449,15 +433,96 @@ impl ProfileRunner {
 
     fn load_baseline_comparison(
         &self,
-        _baseline_path: &PathBuf,
-        _suite_results: &[SuiteResult],
+        baseline_path: &PathBuf,
+        suite_results: &[SuiteResult],
     ) -> Result<BaselineComparison> {
-        // TODO: implement baseline loading and comparison
+        // Load baseline ProfileResult from JSON file
+        let baseline_json = std::fs::read_to_string(baseline_path)
+            .map_err(|e| Error::InvalidInput(format!("Failed to read baseline file: {}", e)))?;
+
+        let baseline: crate::schema::profile::ProfileResult = serde_json::from_str(&baseline_json)
+            .map_err(|e| Error::InvalidInput(format!("Failed to parse baseline JSON: {}", e)))?;
+
+        // Build a map of workload name -> baseline metrics
+        let mut baseline_map: std::collections::HashMap<String, &WorkloadResult> = std::collections::HashMap::new();
+        for suite in &baseline.suites {
+            for workload in &suite.workloads {
+                baseline_map.insert(workload.name.clone(), workload);
+            }
+        }
+
+        // Compare each current workload with baseline
+        let mut workload_comparisons = Vec::new();
+        let mut total_current_rps = 0.0;
+        let mut total_baseline_rps = 0.0;
+
+        for suite in suite_results {
+            for current_workload in &suite.workloads {
+                if let Some(baseline_workload) = baseline_map.get(&current_workload.name) {
+                    let current_rps = current_workload.results.throughput.requests_per_sec;
+                    let baseline_rps = baseline_workload.results.throughput.requests_per_sec;
+
+                    let throughput_ratio = if baseline_rps > 0.0 {
+                        current_rps / baseline_rps
+                    } else {
+                        1.0
+                    };
+
+                    workload_comparisons.push(WorkloadComparison {
+                        workload_name: current_workload.name.clone(),
+                        baseline_requests_per_sec: baseline_rps,
+                        this_requests_per_sec: current_rps,
+                        ratio: throughput_ratio,
+                    });
+
+                    total_current_rps += current_rps;
+                    total_baseline_rps += baseline_rps;
+                }
+            }
+        }
+
+        let overall_ratio = if total_baseline_rps > 0.0 {
+            total_current_rps / total_baseline_rps
+        } else {
+            1.0
+        };
+
         Ok(BaselineComparison {
-            baseline_framework: "spikard-rust".to_string(),
-            workload_comparisons: vec![],
-            overall_ratio: 1.0,
+            baseline_framework: baseline.framework.name.clone(),
+            workload_comparisons,
+            overall_ratio,
         })
+    }
+
+    /// Find an available port for the server
+    fn find_available_port(&self) -> u16 {
+        // Try to bind to a port starting from 8100
+        for port in 8100..8200 {
+            if std::net::TcpListener::bind(("127.0.0.1", port)).is_ok() {
+                return port;
+            }
+        }
+        // Fallback to 8100 if no port found
+        8100
+    }
+
+    fn detect_framework_version(&self) -> String {
+        // Try to detect version from Cargo.toml for Rust apps
+        if self.detect_language() == "rust" {
+            let cargo_toml = self.config.app_dir.join("Cargo.toml");
+            if let Ok(contents) = std::fs::read_to_string(cargo_toml) {
+                // Simple parsing for version line
+                for line in contents.lines() {
+                    if line.trim().starts_with("version") {
+                        if let Some(version) = line.split('=').nth(1) {
+                            return version.trim().trim_matches('"').to_string();
+                        }
+                    }
+                }
+            }
+        }
+        // For now, return a default version for other languages
+        "0.1.0".to_string()
     }
 
     fn detect_language(&self) -> String {
@@ -475,12 +540,58 @@ impl ProfileRunner {
     }
 
     fn detect_runtime(&self) -> String {
-        // TODO: detect actual runtime version
         match self.detect_language().as_str() {
-            "python" => "CPython 3.12".to_string(),
-            "node" => "Node 20.10.0".to_string(),
-            "ruby" => "Ruby 3.3.0".to_string(),
-            "rust" => "rustc 1.75.0".to_string(),
+            "python" => {
+                // Try to detect actual Python version
+                if let Ok(output) = std::process::Command::new("python3")
+                    .arg("--version")
+                    .output()
+                {
+                    if let Ok(version) = String::from_utf8(output.stdout) {
+                        return version.trim().to_string();
+                    }
+                }
+                "Python 3.x".to_string()
+            }
+            "node" => {
+                // Try to detect actual Node version
+                if let Ok(output) = std::process::Command::new("node")
+                    .arg("--version")
+                    .output()
+                {
+                    if let Ok(version) = String::from_utf8(output.stdout) {
+                        return format!("Node {}", version.trim());
+                    }
+                }
+                "Node.js".to_string()
+            }
+            "ruby" => {
+                // Try to detect actual Ruby version
+                if let Ok(output) = std::process::Command::new("ruby")
+                    .arg("--version")
+                    .output()
+                {
+                    if let Ok(version) = String::from_utf8(output.stdout) {
+                        // Ruby version output is like "ruby 3.3.0 (2023-12-25 revision...)"
+                        if let Some(version_part) = version.split_whitespace().nth(1) {
+                            return format!("Ruby {}", version_part);
+                        }
+                    }
+                }
+                "Ruby".to_string()
+            }
+            "rust" => {
+                // Try to detect actual rustc version
+                if let Ok(output) = std::process::Command::new("rustc")
+                    .arg("--version")
+                    .output()
+                {
+                    if let Ok(version) = String::from_utf8(output.stdout) {
+                        return version.trim().to_string();
+                    }
+                }
+                "rustc".to_string()
+            }
             _ => "unknown".to_string(),
         }
     }

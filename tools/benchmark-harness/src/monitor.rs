@@ -90,7 +90,7 @@ impl ResourceMonitor {
         let mut memory_sorted: Vec<u64> = self.samples.iter().map(|s| s.memory_bytes).collect();
         memory_sorted.sort_unstable();
 
-        let percentile = |p: f64| -> u64 {
+        let memory_percentile = |p: f64| -> u64 {
             let index = ((memory_sorted.len() as f64) * p / 100.0) as usize;
             memory_sorted[index.min(memory_sorted.len() - 1)]
         };
@@ -104,12 +104,25 @@ impl ResourceMonitor {
         ResourceMetrics {
             avg_memory_mb: bytes_to_mb(avg_memory as u64),
             peak_memory_mb: bytes_to_mb(peak_memory),
-            p50_memory_mb: bytes_to_mb(percentile(50.0)),
-            p95_memory_mb: bytes_to_mb(percentile(95.0)),
-            p99_memory_mb: bytes_to_mb(percentile(99.0)),
+            p50_memory_mb: bytes_to_mb(memory_percentile(50.0)),
+            p95_memory_mb: bytes_to_mb(memory_percentile(95.0)),
+            p99_memory_mb: bytes_to_mb(memory_percentile(99.0)),
             avg_cpu_percent: avg_cpu,
             peak_cpu_percent: peak_cpu,
         }
+    }
+
+    /// Calculate CPU percentile from samples
+    pub fn cpu_percentile(&self, p: f64) -> f64 {
+        if self.samples.is_empty() {
+            return 0.0;
+        }
+
+        let mut cpu_sorted: Vec<f64> = self.samples.iter().map(|s| s.cpu_percent).collect();
+        cpu_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+
+        let index = ((cpu_sorted.len() as f64) * p / 100.0) as usize;
+        cpu_sorted[index.min(cpu_sorted.len() - 1)]
     }
 
     /// Get all samples
