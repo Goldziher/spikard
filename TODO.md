@@ -167,9 +167,15 @@
 - Phase 2: Workload suite system (15 workloads, 5 suites)
 - Documentation: `docs/benchmarks/harness-design.md`
 - Metadata collection (git, host info)
+- Documentation reorganization (kebab-case, TODO.md tracking)
 
 **🚧 In Progress:**
-- None (ready to start Phase 3)
+- Phase 3: Profile runner module (started, needs API alignment)
+  - Created `src/profile/mod.rs`, `runner.rs`, `python.rs`
+  - Need to align with existing `load_generator` and `monitor` APIs
+  - Compilation errors to fix before continuing
 
 **📋 Next Up:**
-- Phase 3: Profile runner module
+- Fix API mismatches in profile runner
+- Complete profile runner implementation
+- Add profile CLI subcommand

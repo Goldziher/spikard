@@ -10,6 +10,7 @@ pub mod fixture;
 pub mod generators;
 pub mod load_generator;
 pub mod monitor;
+pub mod profile; // Profile mode runner
 pub mod runner;
 pub mod schema; // New structured schema system
 pub mod server;
