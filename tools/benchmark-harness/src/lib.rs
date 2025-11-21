@@ -11,6 +11,7 @@ pub mod generators;
 pub mod load_generator;
 pub mod monitor;
 pub mod runner;
+pub mod schema; // New structured schema system
 pub mod server;
 pub mod streaming;
 pub mod types;
