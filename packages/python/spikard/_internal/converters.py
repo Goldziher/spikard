@@ -15,6 +15,7 @@ and supports multiple type systems:
 from __future__ import annotations
 
 import inspect
+import typing
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import is_dataclass
@@ -24,13 +25,17 @@ from typing import Any, get_origin, get_type_hints
 import msgspec
 from pydantic.fields import FieldInfo
 
-__all__ = ("clear_decoders", "convert_params", "register_decoder", "needs_conversion")
+__all__ = ("clear_decoders", "convert_params", "needs_conversion", "register_decoder")
 
 
 DecoderFunc = Callable[[type, Any], Any]
 
 
 _CUSTOM_DECODERS: list[DecoderFunc] = []
+
+# Cache of msgspec.json.Decoder instances per type
+# Performance optimization: reuse decoders instead of creating new ones per request
+_MSGSPEC_DECODER_CACHE: dict[type, msgspec.json.Decoder[typing.Any]] = {}
 
 
 def register_decoder(decoder: DecoderFunc) -> None:
@@ -85,6 +90,20 @@ def _is_typed_dict(type_: type) -> bool:
     return hasattr(type_, "__annotations__") and hasattr(type_, "__total__") and hasattr(type_, "__required_keys__")
 
 
+def _get_or_create_decoder(target_type: type) -> msgspec.json.Decoder[typing.Any]:
+    """Get or create a cached msgspec.json.Decoder for the given type.
+
+    Performance optimization: reusing decoders avoids repeated internal state allocation.
+    See: https://jcristharif.com/msgspec/perf-tips.html
+    """
+    if target_type not in _MSGSPEC_DECODER_CACHE:
+        _MSGSPEC_DECODER_CACHE[target_type] = msgspec.json.Decoder(
+            type=target_type,
+            dec_hook=_default_dec_hook,
+        )
+    return _MSGSPEC_DECODER_CACHE[target_type]
+
+
 def _default_dec_hook(type_: type, obj: Any) -> Any:
     """Default decoder hook that tries custom decoders, then Pydantic.
 
@@ -133,7 +152,7 @@ def needs_conversion(handler_func: Callable[..., Any]) -> bool:
         return False
 
     # Check if any parameter needs conversion (not dict/Any)
-    for param_name, param in sig.parameters.items():
+    for param_name in sig.parameters:
         if param_name not in type_hints:
             continue
         target_type = type_hints[param_name]
@@ -227,7 +246,8 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
 
             try:
                 parsed_json = msgspec.json.decode(value)
-                value = parsed_json
+                converted[key] = parsed_json
+                continue
             except (msgspec.DecodeError, ValueError):
                 if strict:
                     raise
@@ -259,6 +279,28 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
             except (TypeError, ValueError) as err:
                 if strict:
                     raise ValueError(f"Failed to convert parameter '{key}' to NamedTuple {target_type}: {err}") from err
+                converted[key] = value
+                continue
+
+        # Handle msgspec.Struct: use fast decoder path if we have raw JSON bytes
+        if isinstance(target_type, type) and isinstance(value, (dict, bytes)):
+            try:
+                if issubclass(target_type, msgspec.Struct):
+                    # Fast path: decode directly from JSON bytes using cached decoder
+                    if isinstance(value, bytes) and params.get("_raw_json"):
+                        decoder = _get_or_create_decoder(target_type)
+                        converted[key] = decoder.decode(value)
+                    # Fallback: construct from dict (after Rust validation)
+                    elif isinstance(value, dict):
+                        converted[key] = target_type(**value)
+                    else:
+                        converted[key] = value
+                    continue
+            except (TypeError, ValueError, msgspec.DecodeError) as err:
+                if strict:
+                    raise ValueError(
+                        f"Failed to convert parameter '{key}' to msgspec.Struct {target_type}: {err}"
+                    ) from err
                 converted[key] = value
                 continue
 

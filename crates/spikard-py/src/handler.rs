@@ -46,19 +46,19 @@ pub fn init_python_event_loop() -> PyResult<()> {
         let event_loop = asyncio.call_method0("new_event_loop")?;
 
         // Store the event loop
-        PYTHON_EVENT_LOOP.set(event_loop.into()).map_err(|_| {
-            pyo3::exceptions::PyRuntimeError::new_err("Event loop already initialized")
-        })?;
+        PYTHON_EVENT_LOOP
+            .set(event_loop.into())
+            .map_err(|_| pyo3::exceptions::PyRuntimeError::new_err("Event loop already initialized"))?;
 
         // Start the event loop in a dedicated Python thread
         let threading = py.import("threading")?;
-        let builtins = py.import("builtins")?;
 
         // Create a Python function that runs the event loop
         let globals = pyo3::types::PyDict::new(py);
         globals.set_item("asyncio", asyncio)?;
 
-        let run_loop_code = pyo3::ffi::c_str!("def run_loop(loop):\n    asyncio.set_event_loop(loop)\n    loop.run_forever()\n");
+        let run_loop_code =
+            pyo3::ffi::c_str!("def run_loop(loop):\n    asyncio.set_event_loop(loop)\n    loop.run_forever()\n");
         py.run(run_loop_code, Some(&globals), None)?;
         let run_loop_fn = globals.get_item("run_loop")?.unwrap();
 
@@ -109,9 +109,6 @@ pub struct PythonHandler {
     request_validator: Option<Arc<SchemaValidator>>,
     response_validator: Option<Arc<SchemaValidator>>,
     parameter_validator: Option<ParameterValidator>,
-    /// Cache whether this handler needs parameter type conversion
-    /// False for handlers with no params or only dict/Any params (skips Python introspection)
-    needs_param_conversion: bool,
 }
 
 impl PythonHandler {
@@ -123,26 +120,12 @@ impl PythonHandler {
         response_validator: Option<Arc<SchemaValidator>>,
         parameter_validator: Option<ParameterValidator>,
     ) -> Self {
-        // Check if this handler needs parameter conversion (cached for performance)
-        let needs_param_conversion = Python::with_gil(|py| {
-            let handler_obj = handler.bind(py);
-            let converter_module = py.import("spikard._internal.converters").ok()?;
-            let needs_conversion_func = converter_module.getattr("needs_conversion").ok()?;
-            needs_conversion_func
-                .call1((handler_obj,))
-                .ok()?
-                .extract::<bool>()
-                .ok()
-        })
-        .unwrap_or(true); // Default to true if check fails (be conservative)
-
         Self {
             handler: Arc::new(handler),
             is_async,
             request_validator,
             response_validator,
             parameter_validator,
-            needs_param_conversion,
         }
     }
 
@@ -198,7 +181,6 @@ impl PythonHandler {
         let response_validator = self.response_validator.clone();
         let request_data_for_error = request_data.clone();
         let validated_params_for_task = validated_params.clone();
-        let needs_conversion = self.needs_param_conversion;
 
         let result = if is_async {
             // Get the global event loop
@@ -207,7 +189,7 @@ impl PythonHandler {
                     axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                     "Python event loop not initialized".to_string(),
                 )
-            })?.clone();
+            })?;
 
             // Submit coroutine to the dedicated event loop thread using run_coroutine_threadsafe
             let output = tokio::task::spawn_blocking(move || {
@@ -216,9 +198,9 @@ impl PythonHandler {
                     let asyncio = py.import("asyncio")?;
 
                     let kwargs = if let Some(ref validated) = validated_params_for_task {
-                        validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone(), needs_conversion)?
+                        validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
                     } else {
-                        request_data_to_py_kwargs(py, &request_data, handler_obj.clone(), needs_conversion)?
+                        request_data_to_py_kwargs(py, &request_data, handler_obj.clone())?
                     };
 
                     let coroutine = if kwargs.is_empty() {
@@ -271,9 +253,9 @@ impl PythonHandler {
                     let handler_obj = handler.bind(py);
 
                     let kwargs = if let Some(ref validated) = validated_params_for_task {
-                        validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone(), needs_conversion)?
+                        validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
                     } else {
-                        request_data_to_py_kwargs(py, &request_data, handler_obj.clone(), needs_conversion)?
+                        request_data_to_py_kwargs(py, &request_data, handler_obj.clone())?
                     };
 
                     let py_result = if kwargs.is_empty() {
@@ -454,7 +436,7 @@ fn python_to_response_result(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult
 ///
 /// Performance improvement: ~40-60% faster than json.dumps() → serde_json::from_str()
 fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
-    use pyo3::types::{PyBool, PyDict, PyFloat, PyList, PyNone, PyString};
+    use pyo3::types::{PyDict, PyList};
 
     // Fast path: already a builtin type, convert directly
     if obj.is_none() {
@@ -481,6 +463,7 @@ fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
     }
 
     // Handle dict
+    #[allow(deprecated)]
     if let Ok(dict) = obj.downcast::<PyDict>() {
         let mut map = serde_json::Map::new();
         for (key, value) in dict.iter() {
@@ -492,6 +475,7 @@ fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
     }
 
     // Handle list
+    #[allow(deprecated)]
     if let Ok(list) = obj.downcast::<PyList>() {
         let mut arr = Vec::new();
         for item in list.iter() {
@@ -519,11 +503,16 @@ fn validated_params_to_py_kwargs<'py>(
     validated_params: &Value,
     request_data: &RequestData,
     handler: Bound<'py, PyAny>,
-    needs_conversion: bool,
 ) -> PyResult<Bound<'py, PyDict>> {
     let params_dict = json_to_python(py, validated_params)?.cast_into::<PyDict>()?;
 
-    if !request_data.body.is_null() {
+    // Optimization: Pass raw JSON bytes to Python for msgspec to parse directly
+    // This avoids double-parsing (Rust serde + Python msgspec)
+    if let Some(raw_bytes) = &request_data.raw_body {
+        // Pass raw bytes as PyBytes for msgspec.json.decode() to handle
+        params_dict.set_item("body", pyo3::types::PyBytes::new(py, raw_bytes))?;
+        params_dict.set_item("_raw_json", true)?; // Flag for converter
+    } else if !request_data.body.is_null() {
         let py_body = json_to_python(py, &request_data.body)?;
         params_dict.set_item("body", py_body)?;
     }
@@ -546,7 +535,6 @@ fn request_data_to_py_kwargs<'py>(
     py: Python<'py>,
     request_data: &RequestData,
     handler: Bound<'py, PyAny>,
-    needs_conversion: bool,
 ) -> PyResult<Bound<'py, PyDict>> {
     let kwargs = PyDict::new(py);
 
@@ -588,8 +576,16 @@ fn request_data_to_py_kwargs<'py>(
     }
     kwargs.set_item("cookies", cookies_dict)?;
 
-    let py_body = json_to_python(py, &request_data.body)?;
-    kwargs.set_item("body", py_body)?;
+    // Optimization: Pass raw JSON bytes to Python for msgspec to parse directly
+    // This avoids double-parsing (Rust serde + Python msgspec)
+    if let Some(raw_bytes) = &request_data.raw_body {
+        // Pass raw bytes as PyBytes for msgspec.json.decode() to handle
+        kwargs.set_item("body", pyo3::types::PyBytes::new(py, raw_bytes))?;
+        kwargs.set_item("_raw_json", true)?; // Flag for converter
+    } else {
+        let py_body = json_to_python(py, &request_data.body)?;
+        kwargs.set_item("body", py_body)?;
+    }
 
     // Always call convert_params to filter parameters to match handler signature
     // When needs_conversion=False, it will skip type conversion but still filter params

@@ -395,23 +395,34 @@ async fn main() -> Result<()> {
 
             // Print summary
             println!("\n{}", "=".repeat(70));
-            println!("Profile Results: {} - {}", result.framework.name, result.framework.runtime);
+            println!(
+                "Profile Results: {} - {}",
+                result.framework.name, result.framework.runtime
+            );
             println!("{}", "=".repeat(70));
             println!("\nSuites: {}", result.suites.len());
             println!("Total workloads: {}", result.summary.total_workloads);
             println!("Total requests: {}", result.summary.total_requests);
-            println!("Overall success rate: {:.2}%", result.summary.overall_success_rate * 100.0);
+            println!(
+                "Overall success rate: {:.2}%",
+                result.summary.overall_success_rate * 100.0
+            );
             println!("Average RPS: {:.2}", result.summary.avg_requests_per_sec);
 
             println!("\n--- Category Breakdown ---");
             for cat in &result.summary.category_breakdown {
-                println!("  {}: {} workloads, {:.2} RPS avg, {:.2}ms latency avg",
-                    cat.category, cat.workload_count, cat.avg_requests_per_sec, cat.avg_latency_ms);
+                println!(
+                    "  {}: {} workloads, {:.2} RPS avg, {:.2}ms latency avg",
+                    cat.category, cat.workload_count, cat.avg_requests_per_sec, cat.avg_latency_ms
+                );
             }
 
             if let Some(comparison) = &result.comparison {
                 println!("\n--- Baseline Comparison ---");
-                println!("  vs {}: {:.2}x", comparison.baseline_framework, comparison.overall_ratio);
+                println!(
+                    "  vs {}: {:.2}x",
+                    comparison.baseline_framework, comparison.overall_ratio
+                );
             }
 
             println!("\n{}", "=".repeat(70));

@@ -14,10 +14,10 @@ pub struct Endpoint {
 pub struct WorkloadDef {
     pub name: String,
     pub description: String,
-    pub category: String,           // "json-bodies", "path-params", etc.
+    pub category: String, // "json-bodies", "path-params", etc.
     pub endpoint: Endpoint,
     pub payload_size_bytes: Option<u64>,
-    pub body_file: Option<String>,  // Path to request body
+    pub body_file: Option<String>,    // Path to request body
     pub content_type: Option<String>, // "application/json", etc.
 }
 
@@ -55,10 +55,10 @@ impl WorkloadSuite {
                 // URL-Encoded Forms
                 Self::urlencoded_simple(),
                 Self::urlencoded_complex(),
-                // Multipart (TODO: needs proper body generation)
-                // Self::multipart_small(),
-                // Self::multipart_medium(),
-                // Self::multipart_large(),
+                // Multipart File Uploads
+                Self::multipart_small(),
+                Self::multipart_medium(),
+                Self::multipart_large(),
             ],
         }
     }
@@ -98,11 +98,7 @@ impl WorkloadSuite {
         Self {
             name: "query-params".to_string(),
             description: "Query string parsing".to_string(),
-            workloads: vec![
-                Self::query_few(),
-                Self::query_medium(),
-                Self::query_many(),
-            ],
+            workloads: vec![Self::query_few(), Self::query_medium(), Self::query_many()],
         }
     }
 
@@ -111,9 +107,19 @@ impl WorkloadSuite {
         Self {
             name: "forms".to_string(),
             description: "Form data handling".to_string(),
+            workloads: vec![Self::urlencoded_simple(), Self::urlencoded_complex()],
+        }
+    }
+
+    /// Multipart suite
+    pub fn multipart() -> Self {
+        Self {
+            name: "multipart".to_string(),
+            description: "Multipart file uploads".to_string(),
             workloads: vec![
-                Self::urlencoded_simple(),
-                Self::urlencoded_complex(),
+                Self::multipart_small(),
+                Self::multipart_medium(),
+                Self::multipart_large(),
             ],
         }
     }
@@ -345,6 +351,51 @@ impl WorkloadSuite {
         }
     }
 
+    fn multipart_small() -> WorkloadDef {
+        WorkloadDef {
+            name: "multipart-small".to_string(),
+            description: "Small multipart file upload (~1 KB)".to_string(),
+            category: "multipart".to_string(),
+            endpoint: Endpoint {
+                method: "POST".to_string(),
+                path: "/multipart/small".to_string(),
+            },
+            payload_size_bytes: Some(1024),
+            body_file: Some("multipart-small.bin".to_string()),
+            content_type: Some("multipart/form-data".to_string()),
+        }
+    }
+
+    fn multipart_medium() -> WorkloadDef {
+        WorkloadDef {
+            name: "multipart-medium".to_string(),
+            description: "Medium multipart file upload (~10 KB)".to_string(),
+            category: "multipart".to_string(),
+            endpoint: Endpoint {
+                method: "POST".to_string(),
+                path: "/multipart/medium".to_string(),
+            },
+            payload_size_bytes: Some(10240),
+            body_file: Some("multipart-medium.bin".to_string()),
+            content_type: Some("multipart/form-data".to_string()),
+        }
+    }
+
+    fn multipart_large() -> WorkloadDef {
+        WorkloadDef {
+            name: "multipart-large".to_string(),
+            description: "Large multipart file upload (~100 KB)".to_string(),
+            category: "multipart".to_string(),
+            endpoint: Endpoint {
+                method: "POST".to_string(),
+                path: "/multipart/large".to_string(),
+            },
+            payload_size_bytes: Some(102400),
+            body_file: Some("multipart-large.bin".to_string()),
+            content_type: Some("multipart/form-data".to_string()),
+        }
+    }
+
     /// Load suite by name
     pub fn by_name(name: &str) -> Option<Self> {
         match name {
@@ -353,6 +404,7 @@ impl WorkloadSuite {
             "path-params" => Some(Self::path_params()),
             "query-params" => Some(Self::query_params()),
             "forms" => Some(Self::forms()),
+            "multipart" => Some(Self::multipart()),
             _ => None,
         }
     }

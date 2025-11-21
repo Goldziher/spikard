@@ -6,12 +6,20 @@ use crate::{
     load_generator::{self, LoadGeneratorType, LoadTestConfig},
     monitor::ResourceMonitor,
     schema::{
-        profile::*, workload::WorkloadSuite, Configuration, FrameworkInfo, Latency, Metadata, ProfilingData,
-        PythonProfilingData, Resources, Throughput,
+        Configuration, FrameworkInfo, Latency, Metadata, NodeProfilingData, ProfilingData, PythonProfilingData,
+        Resources, RubyProfilingData, RustProfilingData, Throughput, profile::*, workload::WorkloadSuite,
     },
     server::{ServerConfig, ServerHandle, start_server},
 };
 use std::path::PathBuf;
+
+/// Unified profiler handle for different languages
+enum ProfilerHandle {
+    Python(crate::profile::python::PythonProfiler),
+    Node(crate::profile::node::NodeProfiler),
+    Ruby(crate::profile::ruby::RubyProfiler),
+    Rust(crate::profile::rust::RustProfiler),
+}
 
 /// Profile mode configuration
 pub struct ProfileRunnerConfig {
@@ -118,7 +126,12 @@ impl ProfileRunner {
         let mut workload_results = Vec::new();
 
         for (i, workload_def) in self.suite.workloads.iter().enumerate() {
-            println!("[{}/{}] Testing: {}", i + 1, self.suite.workloads.len(), workload_def.name);
+            println!(
+                "[{}/{}] Testing: {}",
+                i + 1,
+                self.suite.workloads.len(),
+                workload_def.name
+            );
 
             let result = self.run_workload(workload_def, server).await?;
             workload_results.push(result);
@@ -143,10 +156,24 @@ impl ProfileRunner {
         let fixture = self.create_fixture_from_workload(workload_def)?;
 
         // Start profiler if configured
-        let _profiler_handle = if let Some(ref profiler_type) = self.config.profiler {
+        let profiler_handle = if let Some(ref profiler_type) = self.config.profiler {
             match profiler_type.as_str() {
-                "python" => Some(crate::profile::python::start_profiler(server.pid())?),
-                _ => None,
+                "python" => Some(ProfilerHandle::Python(crate::profile::python::start_profiler(
+                    server.pid(),
+                )?)),
+                "node" => Some(ProfilerHandle::Node(crate::profile::node::start_profiler(
+                    server.pid(),
+                )?)),
+                "ruby" => Some(ProfilerHandle::Ruby(crate::profile::ruby::start_profiler(
+                    server.pid(),
+                )?)),
+                "rust" => Some(ProfilerHandle::Rust(crate::profile::rust::start_profiler(
+                    server.pid(),
+                )?)),
+                _ => {
+                    eprintln!("  ⚠ Unknown profiler type: {}", profiler_type);
+                    None
+                }
             }
         } else {
             None
@@ -173,16 +200,48 @@ impl ProfileRunner {
         let cpu_p95 = monitor_with_samples.cpu_percentile(95.0);
 
         // Stop profiler and collect data
-        let profiling = _profiler_handle.map(|_| ProfilingData::Python(PythonProfilingData {
-                gil_wait_time_ms: None,
-                gil_contention_percent: None,
-                ffi_overhead_ms: None,
-                handler_time_ms: None,
-                serialization_time_ms: None,
-                gc_collections: None,
-                gc_time_ms: None,
-                flamegraph_path: None,
-            }));
+        let profiling = profiler_handle.map(|profiler| match profiler {
+            ProfilerHandle::Python(p) => {
+                let data = p.stop();
+                ProfilingData::Python(PythonProfilingData {
+                    gil_wait_time_ms: data.gil_wait_time_ms,
+                    gil_contention_percent: data.gil_contention_percent,
+                    ffi_overhead_ms: data.ffi_overhead_ms,
+                    handler_time_ms: data.handler_time_ms,
+                    serialization_time_ms: data.serialization_time_ms,
+                    gc_collections: data.gc_collections,
+                    gc_time_ms: data.gc_time_ms,
+                    flamegraph_path: data.flamegraph_path,
+                })
+            }
+            ProfilerHandle::Node(n) => {
+                let data = n.stop();
+                ProfilingData::Node(NodeProfilingData {
+                    v8_heap_used_mb: data.v8_heap_used_mb,
+                    v8_heap_total_mb: data.v8_heap_total_mb,
+                    event_loop_lag_ms: data.event_loop_lag_ms,
+                    gc_time_ms: data.gc_time_ms,
+                    flamegraph_path: data.flamegraph_path,
+                })
+            }
+            ProfilerHandle::Ruby(r) => {
+                let data = r.stop();
+                ProfilingData::Ruby(RubyProfilingData {
+                    gc_count: data.gc_count,
+                    gc_time_ms: data.gc_time_ms,
+                    heap_allocated_pages: data.heap_allocated_pages,
+                    heap_live_slots: data.heap_live_slots,
+                    flamegraph_path: data.flamegraph_path,
+                })
+            }
+            ProfilerHandle::Rust(r) => {
+                let data = r.stop();
+                ProfilingData::Rust(RustProfilingData {
+                    heap_allocated_mb: data.heap_allocated_mb,
+                    flamegraph_path: data.flamegraph_path,
+                })
+            }
+        });
 
         // Convert to schema types
         let throughput_schema = Throughput {
@@ -254,11 +313,8 @@ impl ProfileRunner {
         load_generator::run_load_test(config, LoadGeneratorType::Oha).await
     }
 
-    fn create_fixture_from_workload(
-        &self,
-        workload_def: &crate::schema::workload::WorkloadDef,
-    ) -> Result<Fixture> {
-        use crate::fixture::{Handler, Request, ExpectedResponse, Parameters};
+    fn create_fixture_from_workload(&self, workload_def: &crate::schema::workload::WorkloadDef) -> Result<Fixture> {
+        use crate::fixture::{ExpectedResponse, Handler, Parameters, Request};
 
         let mut headers = std::collections::HashMap::new();
         if let Some(ref content_type) = workload_def.content_type {
@@ -329,11 +385,10 @@ impl ProfileRunner {
 
         // Load fixture and extract body
         match Fixture::from_file(&full_path) {
-            Ok(fixture) => {
-                fixture.request.body.ok_or_else(|| {
-                    Error::InvalidInput(format!("Fixture {} has no body", fixture_path))
-                })
-            }
+            Ok(fixture) => fixture
+                .request
+                .body
+                .ok_or_else(|| Error::InvalidInput(format!("Fixture {} has no body", fixture_path))),
             Err(_) => {
                 // Fallback to generating synthetic data
                 self.generate_synthetic_body(body_file)
@@ -343,10 +398,43 @@ impl ProfileRunner {
 
     /// Generate synthetic body data as fallback
     fn generate_synthetic_body(&self, body_file: &str) -> Result<serde_json::Value> {
+        // Handle URL-encoded bodies
+        if body_file.ends_with(".txt") {
+            let urlencoded_str = match body_file {
+                "urlencoded-simple.txt" => "name=John+Doe&email=john%40example.com&age=30&subscribe=true",
+                "urlencoded-complex.txt" => {
+                    "username=testuser&password=secret123&email=test%40example.com&first_name=John&last_name=Doe&age=30&country=US&state=CA&city=San+Francisco&zip=94102&phone=%2B1-555-1234&company=Acme+Corp&job_title=Engineer&subscribe=true&newsletter=weekly&terms_accepted=true&privacy_accepted=true&marketing_consent=false&two_factor_enabled=true"
+                }
+                _ => return Err(Error::InvalidInput(format!("Unknown body file: {}", body_file))),
+            };
+            // Return URL-encoded string as JSON string value for load generator
+            return Ok(serde_json::Value::String(urlencoded_str.to_string()));
+        }
+
+        // Handle multipart bodies
+        if body_file.ends_with(".bin") {
+            let (file_count, total_bytes) = match body_file {
+                "multipart-small.bin" => (1, 1024),
+                "multipart-medium.bin" => (2, 10240),
+                "multipart-large.bin" => (5, 102400),
+                _ => return Err(Error::InvalidInput(format!("Unknown body file: {}", body_file))),
+            };
+            // Return multipart metadata as JSON for the server to validate
+            return Ok(serde_json::json!({
+                "files_received": file_count,
+                "total_bytes": total_bytes
+            }));
+        }
+
+        // Handle JSON bodies
         let json_str = match body_file {
             "json-small.json" => r#"{"id":12345,"name":"test_item","active":true,"count":42}"#,
-            "json-medium.json" => r#"{"id":12345,"name":"test_item","description":"Medium payload","price":99.99,"tags":["tag1","tag2","tag3"]}"#,
-            "json-large.json" => r#"{"id":12345,"name":"large_item","description":"Large payload with nested data","metadata":{"version":1,"status":"active"},"attributes":{"color":"blue","size":"large"}}"#,
+            "json-medium.json" => {
+                r#"{"id":12345,"name":"test_item","description":"Medium payload","price":99.99,"tags":["tag1","tag2","tag3"]}"#
+            }
+            "json-large.json" => {
+                r#"{"id":12345,"name":"large_item","description":"Large payload with nested data","metadata":{"version":1,"status":"active"},"attributes":{"color":"blue","size":"large"}}"#
+            }
             "json-very-large.json" => {
                 // Generate array of 50 items
                 let items: Vec<String> = (0..50)
@@ -398,19 +486,27 @@ impl ProfileRunner {
         let total_duration_secs = self.config.duration_secs * total_workloads as u64;
 
         // Category breakdown
-        let mut category_map: std::collections::HashMap<String, Vec<&WorkloadResult>> = std::collections::HashMap::new();
+        let mut category_map: std::collections::HashMap<String, Vec<&WorkloadResult>> =
+            std::collections::HashMap::new();
         for suite in suite_results {
             for workload in &suite.workloads {
-                category_map.entry(workload.category.clone()).or_default().push(workload);
+                category_map
+                    .entry(workload.category.clone())
+                    .or_default()
+                    .push(workload);
             }
         }
 
         let category_breakdown: Vec<CategorySummary> = category_map
             .into_iter()
             .map(|(category, workloads)| {
-                let avg_rps = workloads.iter().map(|w| w.results.throughput.requests_per_sec).sum::<f64>()
+                let avg_rps = workloads
+                    .iter()
+                    .map(|w| w.results.throughput.requests_per_sec)
+                    .sum::<f64>()
                     / workloads.len() as f64;
-                let avg_latency = workloads.iter().map(|w| w.results.latency.mean_ms).sum::<f64>() / workloads.len() as f64;
+                let avg_latency =
+                    workloads.iter().map(|w| w.results.latency.mean_ms).sum::<f64>() / workloads.len() as f64;
 
                 CategorySummary {
                     category,
@@ -543,10 +639,7 @@ impl ProfileRunner {
         match self.detect_language().as_str() {
             "python" => {
                 // Try to detect actual Python version
-                if let Ok(output) = std::process::Command::new("python3")
-                    .arg("--version")
-                    .output()
-                {
+                if let Ok(output) = std::process::Command::new("python3").arg("--version").output() {
                     if let Ok(version) = String::from_utf8(output.stdout) {
                         return version.trim().to_string();
                     }
@@ -555,10 +648,7 @@ impl ProfileRunner {
             }
             "node" => {
                 // Try to detect actual Node version
-                if let Ok(output) = std::process::Command::new("node")
-                    .arg("--version")
-                    .output()
-                {
+                if let Ok(output) = std::process::Command::new("node").arg("--version").output() {
                     if let Ok(version) = String::from_utf8(output.stdout) {
                         return format!("Node {}", version.trim());
                     }
@@ -567,10 +657,7 @@ impl ProfileRunner {
             }
             "ruby" => {
                 // Try to detect actual Ruby version
-                if let Ok(output) = std::process::Command::new("ruby")
-                    .arg("--version")
-                    .output()
-                {
+                if let Ok(output) = std::process::Command::new("ruby").arg("--version").output() {
                     if let Ok(version) = String::from_utf8(output.stdout) {
                         // Ruby version output is like "ruby 3.3.0 (2023-12-25 revision...)"
                         if let Some(version_part) = version.split_whitespace().nth(1) {
@@ -582,10 +669,7 @@ impl ProfileRunner {
             }
             "rust" => {
                 // Try to detect actual rustc version
-                if let Ok(output) = std::process::Command::new("rustc")
-                    .arg("--version")
-                    .output()
-                {
+                if let Ok(output) = std::process::Command::new("rustc").arg("--version").output() {
                     if let Ok(version) = String::from_utf8(output.stdout) {
                         return version.trim().to_string();
                     }
