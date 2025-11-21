@@ -22,11 +22,15 @@
   - [x] Verify JSON output structure
   - [x] Validate performance metrics collection
 
-- [ ] **Complete profile runner implementation**
-  - [ ] Extract latency metrics from OhaOutput (currently placeholder zeros)
-  - [ ] Calculate CPU p95 properly (currently using avg as fallback)
-  - [ ] Load body data from fixtures directory (currently hardcoded)
-  - [ ] Extract query parameters from URL path
+- [x] **Complete profile runner implementation**
+  - [x] Extract latency metrics from OhaOutput (From<OhaOutput> trait)
+  - [x] Calculate CPU p95 properly (ResourceMonitor::cpu_percentile)
+  - [x] Load body data from testing_data fixtures (load_body_from_fixtures)
+  - [x] Runtime version detection (python3/node/ruby/rustc --version)
+  - [x] Framework version detection (parse Cargo.toml)
+  - [x] Dynamic port allocation (scan 8100-8199)
+  - [x] Baseline comparison (load_baseline_comparison)
+  - [ ] Extract query parameters from URL path (future enhancement)
 
 - [ ] **Python profiler integration** (`src/profile/python.rs`)
   - [x] Basic py-spy integration structure
@@ -52,12 +56,6 @@
   - [ ] Instruments integration (macOS)
   - [ ] Heap allocation tracking
   - [ ] Flamegraph generation
-
-- [ ] **Baseline comparison** (`src/profile/baseline.rs`)
-  - [ ] Load baseline ProfileResult from file
-  - [ ] Calculate per-workload ratios
-  - [ ] Compute overall performance ratio
-  - [ ] Generate comparison analysis
 
 ### Phase 4: Compare Mode Implementation
 
