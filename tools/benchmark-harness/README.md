@@ -47,7 +47,7 @@ This tool is designed for:
 | `query-params` | 3 | Query string parsing (few, medium, many) |
 | `forms` | 2 | Form data (urlencoded-simple, urlencoded-complex) |
 
-See [docs/DESIGN.md](docs/DESIGN.md) for complete schema documentation and implementation plan.
+See [docs/benchmarks/harness-design.md](../../docs/benchmarks/harness-design.md) for complete schema documentation and implementation plan.
 
 ## CLI Usage (Planned - Phase 3/4)
 
@@ -132,16 +132,10 @@ The bash script (`comprehensive_benchmark.sh`) will be replaced by type-safe Rus
 
 ## Related Documentation
 
-- **[docs/DESIGN.md](docs/DESIGN.md)** - Complete design document with schemas
+- **[docs/benchmarks/harness-design.md](../../docs/benchmarks/harness-design.md)** - Complete design document with schemas
 - **[BENCHMARK_RESULTS.md](../../BENCHMARK_RESULTS.md)** - Current benchmark results
+- **[TODO.md](../../TODO.md)** - Implementation roadmap and progress tracking
 
 ## Contributing
 
-Current priorities:
-1. Implement profile mode runner (Phase 3)
-2. Add profiler integrations (py-spy, etc.)
-3. Implement compare mode runner (Phase 4)
-4. Add statistical analysis
-5. Create CI workflow (Phase 5)
-
-See `docs/DESIGN.md` for complete implementation plan.
+See [TODO.md](../../TODO.md) for current priorities and implementation progress.
