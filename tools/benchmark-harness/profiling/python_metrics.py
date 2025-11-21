@@ -1,0 +1,239 @@
+"""Python profiling metrics collection module.
+
+This module provides instrumentation to collect GIL, GC, and timing metrics
+during benchmark runs. It's designed to be imported by benchmark applications
+and writes metrics to a JSON file that the Rust benchmark harness can read.
+"""
+
+import builtins
+import gc
+import json
+import os
+import time
+from contextlib import contextmanager, suppress
+from dataclasses import dataclass
+from threading import Lock
+from typing import Optional
+
+
+@dataclass
+class GCMetrics:
+    """Garbage collection metrics."""
+
+    collections_gen0: int = 0
+    collections_gen1: int = 0
+    collections_gen2: int = 0
+    total_collections: int = 0
+    gc_time_ms: float = 0.0
+
+
+@dataclass
+class TimingMetrics:
+    """Request timing breakdown."""
+
+    handler_time_ms: float = 0.0
+    serialization_time_ms: float = 0.0
+    ffi_overhead_ms: float = 0.0
+
+
+@dataclass
+class ProfileMetrics:
+    """Complete profiling metrics for a benchmark run."""
+
+    gc: GCMetrics
+    timing: TimingMetrics
+    sample_count: int = 0
+
+
+class MetricsCollector:
+    """Collects profiling metrics during benchmark execution.
+
+    Thread-safe singleton that accumulates metrics and writes them
+    to a JSON file on shutdown.
+    """
+
+    _instance: Optional["MetricsCollector"] = None
+    _lock = Lock()
+
+    def __init__(self) -> None:
+        self.metrics = ProfileMetrics(gc=GCMetrics(), timing=TimingMetrics())
+        self.gc_enabled = gc.isenabled()
+        self.initial_gc_counts = gc.get_count()
+        self.request_count = 0
+
+        # Get output path from environment or use default
+        self.output_path = os.environ.get("SPIKARD_METRICS_FILE", f"/tmp/python-metrics-{os.getpid()}.json")
+
+    @classmethod
+    def instance(cls) -> "MetricsCollector":
+        """Get the singleton instance."""
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = cls()
+        return cls._instance
+
+    def record_gc_metrics(self) -> None:
+        """Record current GC statistics."""
+        if not self.gc_enabled:
+            return
+
+        stats = gc.get_stats()
+        if stats:
+            gen0 = stats[0].get("collections", 0)
+            gen1 = stats[1].get("collections", 0) if len(stats) > 1 else 0
+            gen2 = stats[2].get("collections", 0) if len(stats) > 2 else 0
+
+            self.metrics.gc.collections_gen0 = gen0
+            self.metrics.gc.collections_gen1 = gen1
+            self.metrics.gc.collections_gen2 = gen2
+            self.metrics.gc.total_collections = gen0 + gen1 + gen2
+
+    @contextmanager
+    def measure_handler(self):
+        """Context manager to measure handler execution time."""
+        start = time.perf_counter()
+        try:
+            yield
+        finally:
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            with self._lock:
+                self.request_count += 1
+                # Running average
+                n = self.request_count
+                self.metrics.timing.handler_time_ms = (self.metrics.timing.handler_time_ms * (n - 1) + elapsed_ms) / n
+
+    @contextmanager
+    def measure_serialization(self):
+        """Context manager to measure serialization time."""
+        start = time.perf_counter()
+        try:
+            yield
+        finally:
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            with self._lock:
+                n = self.request_count
+                if n > 0:
+                    self.metrics.timing.serialization_time_ms = (
+                        self.metrics.timing.serialization_time_ms * (n - 1) + elapsed_ms
+                    ) / n
+
+    def finalize(self) -> None:
+        """Finalize metrics collection and write to file."""
+        # Always collect GC metrics at finalization
+        if self.gc_enabled:
+            stats = gc.get_stats()
+            if stats and len(stats) >= 3:
+                self.metrics.gc.collections_gen0 = stats[0].get("collections", 0)
+                self.metrics.gc.collections_gen1 = stats[1].get("collections", 0)
+                self.metrics.gc.collections_gen2 = stats[2].get("collections", 0)
+                self.metrics.gc.total_collections = (
+                    self.metrics.gc.collections_gen0
+                    + self.metrics.gc.collections_gen1
+                    + self.metrics.gc.collections_gen2
+                )
+
+        self.metrics.sample_count = self.request_count
+
+        # Write metrics to JSON file
+        output = {
+            "gc_collections": self.metrics.gc.total_collections,
+            "gc_collections_gen0": self.metrics.gc.collections_gen0,
+            "gc_collections_gen1": self.metrics.gc.collections_gen1,
+            "gc_collections_gen2": self.metrics.gc.collections_gen2,
+            "gc_time_ms": self.metrics.gc.gc_time_ms,
+            "handler_time_ms": self.metrics.timing.handler_time_ms if self.request_count > 0 else None,
+            "serialization_time_ms": self.metrics.timing.serialization_time_ms if self.request_count > 0 else None,
+            "ffi_overhead_ms": self.metrics.timing.ffi_overhead_ms,
+            "sample_count": self.metrics.sample_count,
+        }
+
+        try:
+            with open(self.output_path, "w") as f:
+                json.dump(output, f, indent=2)
+        except Exception:
+            pass
+
+    def __del__(self) -> None:
+        """Ensure metrics are written on collector destruction."""
+        with suppress(builtins.BaseException):
+            self.finalize()
+
+
+# Global instance
+_collector = None
+
+
+def get_collector() -> MetricsCollector:
+    """Get or create the global metrics collector."""
+    global _collector
+    if _collector is None:
+        _collector = MetricsCollector.instance()
+    return _collector
+
+
+def enable_profiling():
+    """Enable profiling for this process.
+
+    Call this at application startup to initialize metrics collection.
+    """
+    collector = get_collector()
+
+    # Register cleanup on exit
+    import atexit
+
+    atexit.register(collector.finalize)
+
+    return collector
+
+
+def measure_handler(func):
+    """Decorator to measure handler execution time.
+
+    Usage:
+        @measure_handler
+        def my_handler(request):
+            return {"status": "ok"}
+    """
+
+    def wrapper(*args, **kwargs):
+        collector = get_collector()
+        with collector.measure_handler():
+            return func(*args, **kwargs)
+
+    return wrapper
+
+
+def measure_serialization(func):
+    """Decorator to measure serialization time.
+
+    Usage:
+        @measure_serialization
+        def serialize_response(data):
+            return json.dumps(data)
+    """
+
+    def wrapper(*args, **kwargs):
+        collector = get_collector()
+        with collector.measure_serialization():
+            return func(*args, **kwargs)
+
+    return wrapper
+
+
+if __name__ == "__main__":
+    # Test the metrics collector
+    collector = enable_profiling()
+
+    # Simulate some work
+    for i in range(100):
+        with collector.measure_handler():
+            time.sleep(0.001)
+            with collector.measure_serialization():
+                _ = json.dumps({"iteration": i})
+
+    collector.finalize()
+
+    # Read back the metrics
+    with open(collector.output_path) as f:
+        metrics = json.load(f)

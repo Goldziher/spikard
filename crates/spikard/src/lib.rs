@@ -456,7 +456,13 @@ impl RequestContext {
 
     /// Deserialize the JSON request body into the provided type.
     pub fn json<T: DeserializeOwned>(&self) -> std::result::Result<T, AppError> {
-        serde_json::from_value(self.data.body.clone()).map_err(|err| AppError::Decode(err.to_string()))
+        // Try to deserialize from raw_body first (direct from request bytes)
+        if let Some(raw_bytes) = &self.data.raw_body {
+            serde_json::from_slice(raw_bytes).map_err(|err| AppError::Decode(err.to_string()))
+        } else {
+            // Fallback to deserializing from body (pre-parsed JSON Value)
+            serde_json::from_value(self.data.body.clone()).map_err(|err| AppError::Decode(err.to_string()))
+        }
     }
 
     /// Deserialize query parameters into the provided type.

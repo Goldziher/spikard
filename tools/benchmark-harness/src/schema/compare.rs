@@ -1,6 +1,6 @@
 //! Compare mode result schema
 
-use super::{workload::*, Configuration, FrameworkInfo, Latency, Metadata, Resources, Throughput};
+use super::{Configuration, FrameworkInfo, Latency, Metadata, Resources, Throughput, workload::*};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -46,7 +46,7 @@ pub struct FrameworkResult {
 /// Statistical analysis of workload comparison
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkloadComparisonAnalysis {
-    pub winner: String, // Framework name
+    pub winner: String,                           // Framework name
     pub performance_ratios: HashMap<String, f64>, // "framework_a_vs_framework_b" -> ratio
     pub statistical_significance: Option<super::StatisticalSignificance>,
 }
@@ -56,6 +56,6 @@ pub struct WorkloadComparisonAnalysis {
 pub struct CompareSummary {
     pub overall_winner: String,
     pub avg_performance_gain: f64,
-    pub workloads_won: HashMap<String, usize>, // Framework -> count
+    pub workloads_won: HashMap<String, usize>,     // Framework -> count
     pub category_winners: HashMap<String, String>, // Category -> winner
 }

@@ -32,30 +32,38 @@
   - [x] Baseline comparison (load_baseline_comparison)
   - [ ] Extract query parameters from URL path (future enhancement)
 
-- [ ] **Python profiler integration** (`src/profile/python.rs`)
+- [x] **Python profiler integration** (`src/profile/python.rs`)
   - [x] Basic py-spy integration structure
-  - [ ] Capture gil_wait_time_ms, gil_contention_percent
-  - [ ] Measure ffi_overhead_ms, handler_time_ms
-  - [ ] Generate flamegraph (optional)
-  - [ ] Collect GC metrics (gc_collections, gc_time_ms)
+  - [x] py-spy flamegraph generation (speedscope format)
+  - [x] Application instrumentation module (`profiling/python_metrics.py`)
+  - [x] Collect GC metrics (gc_collections with gen0/gen1/gen2 breakdown)
+  - [x] Measure handler_time_ms, serialization_time_ms (when instrumented)
+  - [x] Automatic metrics file writing on shutdown
+  - [x] Graceful fallback when py-spy not installed
+  - [ ] GIL metrics extraction from py-spy data (future enhancement)
+  - [ ] FFI overhead measurement (requires deeper instrumentation)
 
-- [ ] **Node profiler integration** (`src/profile/node.rs`)
-  - [ ] Node --prof integration
-  - [ ] V8 heap metrics (v8_heap_used_mb, v8_heap_total_mb)
-  - [ ] Event loop lag measurement
-  - [ ] Flamegraph generation
+- [x] **Node profiler integration** (`src/profile/node.rs`)
+  - [x] Application instrumentation module structure
+  - [x] V8 heap metrics collection (v8_heap_used_mb, v8_heap_total_mb)
+  - [x] Event loop lag measurement support
+  - [x] GC metrics (gc_time_ms)
+  - [x] Graceful fallback without instrumentation
+  - [ ] Node --prof integration (future enhancement)
 
-- [ ] **Ruby profiler integration** (`src/profile/ruby.rs`)
-  - [ ] stackprof integration
-  - [ ] GC metrics (gc_count, gc_time_ms)
-  - [ ] Heap metrics (heap_allocated_pages, heap_live_slots)
-  - [ ] Flamegraph generation
+- [x] **Ruby profiler integration** (`src/profile/ruby.rs`)
+  - [x] Application instrumentation module structure
+  - [x] GC metrics collection (gc_count, gc_time_ms)
+  - [x] Heap metrics collection (heap_allocated_pages, heap_live_slots)
+  - [x] Graceful fallback without instrumentation
+  - [ ] stackprof integration (future enhancement)
 
-- [ ] **Rust profiler integration** (`src/profile/rust.rs`)
-  - [ ] perf integration (Linux)
-  - [ ] Instruments integration (macOS)
-  - [ ] Heap allocation tracking
-  - [ ] Flamegraph generation
+- [x] **Rust profiler integration** (`src/profile/rust.rs`)
+  - [x] Application instrumentation module structure
+  - [x] Heap allocation tracking support
+  - [x] Platform-specific profiler detection (perf on Linux, Instruments on macOS)
+  - [x] Graceful fallback without instrumentation
+  - [ ] Automatic profiler attachment (future enhancement)
 
 ### Phase 4: Compare Mode Implementation
 
@@ -148,18 +156,21 @@
 
 ## Priority Order
 
-**Immediate (Week 1):**
-1. Phase 3: Profile runner module
-2. Phase 3: Python profiler (py-spy)
-3. Phase 3: Profile CLI subcommand
-4. Test profile mode end-to-end
+**CURRENT PRIORITY - End-to-End Testing:**
+1. ✅ Profile runner module - COMPLETE
+2. ✅ All language profilers (Python/Node/Ruby/Rust) - COMPLETE
+3. ✅ Profile CLI subcommand - COMPLETE
+4. ⏳ Test Python binding end-to-end - IN PROGRESS
+5. ⏳ Test Node/Ruby/Rust bindings
+6. ⏳ Fix integration issues
+7. ⏳ Verify all 4 bindings work perfectly
 
-**Next (Week 2):**
-5. Phase 4: Compare runner module
-6. Phase 4: Statistical analysis
-7. Phase 4: Report generation
-8. Phase 4: Compare CLI subcommand
-9. Test compare mode end-to-end
+**Next (After Testing Complete):**
+8. Phase 4: Compare runner module
+9. Phase 4: Statistical analysis
+10. Phase 4: Report generation
+11. Phase 4: Compare CLI subcommand
+12. Test compare mode end-to-end
 
 **Future (Week 3+):**
 10. Phase 3: Node/Ruby/Rust profilers
@@ -174,17 +185,42 @@
 **✅ Completed:**
 - Phase 1: Schema & data model (`src/schema/`)
 - Phase 2: Workload suite system (15 workloads, 5 suites)
+- Phase 3: Profile runner module
+  - Complete ProfileRunner implementation with all metrics
+  - Profile CLI subcommand
+  - End-to-end testing with json-bodies suite
+  - Python profiler integration with GC metrics collection
+  - Application instrumentation module for Python (`profiling/python_metrics.py`)
+  - Fixture loading from `testing_data/` directory
+  - Baseline comparison functionality
+  - Runtime and framework version detection
+  - Dynamic port allocation
 - Documentation: `docs/benchmarks/harness-design.md`
 - Metadata collection (git, host info)
 - Documentation reorganization (kebab-case, TODO.md tracking)
 
 **🚧 In Progress:**
-- Phase 3: Profile runner module (started, needs API alignment)
-  - Created `src/profile/mod.rs`, `runner.rs`, `python.rs`
-  - Need to align with existing `load_generator` and `monitor` APIs
-  - Compilation errors to fix before continuing
+- Phase 3: End-to-end testing and validation (CURRENT PRIORITY)
 
-**📋 Next Up:**
-- Fix API mismatches in profile runner
-- Complete profile runner implementation
-- Add profile CLI subcommand
+**📋 Next Up (Phase 3 Completion):**
+1. Test Python binding with profile mode (`spikard-python-workloads`)
+2. Verify Node binding works with benchmark harness
+3. Verify Ruby binding works with benchmark harness
+4. Verify Rust binding works with benchmark harness
+5. Run full json-bodies suite on all 4 bindings
+6. Fix any integration issues discovered
+7. Document profiler usage and setup
+
+**📋 After Testing (Phase 4):**
+- Create compare runner module (`src/compare/mod.rs`)
+- Implement statistical analysis (t-test, p-values)
+- Generate markdown comparison reports
+- Add Compare CLI subcommand
+
+**✅ Recently Completed:**
+- Phase 3: All language-specific profilers (with code review and cleanup)
+  - ✅ Python profiler (py-spy + GC/timing metrics)
+  - ✅ Node profiler (V8 heap + event loop metrics)
+  - ✅ Ruby profiler (GC + heap metrics)
+  - ✅ Rust profiler (heap tracking + platform profilers)
+  - ✅ Code review: Removed dead code, fixed unsafe blocks, zero warnings

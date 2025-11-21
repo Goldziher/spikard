@@ -31,12 +31,12 @@ pub struct Metadata {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HostInfo {
-    pub os: String,            // "darwin", "linux", "windows"
-    pub arch: String,          // "arm64", "x86_64"
-    pub cpu_model: String,     // "Apple M2 Pro"
-    pub cpu_cores: usize,      // Physical cores
-    pub cpu_threads: usize,    // Logical threads
-    pub memory_gb: f64,        // Total RAM
+    pub os: String,         // "darwin", "linux", "windows"
+    pub arch: String,       // "arm64", "x86_64"
+    pub cpu_model: String,  // "Apple M2 Pro"
+    pub cpu_cores: usize,   // Physical cores
+    pub cpu_threads: usize, // Logical threads
+    pub memory_gb: f64,     // Total RAM
     pub hostname: String,
 }
 
@@ -46,17 +46,17 @@ pub struct Configuration {
     pub duration_secs: u64,
     pub concurrency: usize,
     pub warmup_secs: u64,
-    pub load_tool: String,  // "oha", "bombardier", etc.
+    pub load_tool: String, // "oha", "bombardier", etc.
 }
 
 /// Framework information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FrameworkInfo {
-    pub name: String,          // "spikard-python", "fastapi"
-    pub version: String,       // "0.1.0"
-    pub language: String,      // "python", "rust", "node", "ruby"
-    pub runtime: String,       // "CPython 3.12.1", "Node 20.10.0"
-    pub app_dir: String,       // Relative path
+    pub name: String,            // "spikard-python", "fastapi"
+    pub version: String,         // "0.1.0"
+    pub language: String,        // "python", "rust", "node", "ruby"
+    pub runtime: String,         // "CPython 3.12.1", "Node 20.10.0"
+    pub app_dir: String,         // Relative path
     pub variant: Option<String>, // "sync", "async"
 }
 
@@ -156,7 +156,7 @@ pub struct RustProfilingData {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StatisticalSignificance {
     pub p_value: f64,
-    pub significant: bool,    // p < 0.05
+    pub significant: bool,     // p < 0.05
     pub confidence_level: f64, // 0.95
 }
 
@@ -232,7 +232,8 @@ impl HostInfo {
             std::fs::read_to_string("/proc/cpuinfo")
                 .ok()
                 .and_then(|content| {
-                    content.lines()
+                    content
+                        .lines()
                         .find(|line| line.starts_with("model name"))
                         .and_then(|line| line.split(':').nth(1))
                         .map(|s| s.trim().to_string())
@@ -268,7 +269,8 @@ impl HostInfo {
             std::fs::read_to_string("/proc/meminfo")
                 .ok()
                 .and_then(|content| {
-                    content.lines()
+                    content
+                        .lines()
                         .find(|line| line.starts_with("MemTotal"))
                         .and_then(|line| line.split_whitespace().nth(1))
                         .and_then(|s| s.parse::<u64>().ok())

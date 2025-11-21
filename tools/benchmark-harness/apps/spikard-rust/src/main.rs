@@ -3,12 +3,12 @@
 //! This server uses the actual Spikard Rust crate to test performance
 //! with Rust handlers (no FFI overhead).
 
-use axum::http::{Response, StatusCode};
 use axum::body::Body;
+use axum::http::{Response, StatusCode};
 use clap::Parser;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use spikard::{post, get, App, RequestContext, ServerConfig};
+use spikard::{App, RequestContext, ServerConfig, get, post};
 use std::collections::HashMap;
 
 #[derive(Parser, Debug)]
@@ -25,17 +25,71 @@ struct Args {
 // ============================================================================
 
 #[derive(Debug, Serialize, Deserialize)]
-struct SmallJson {
-    id: u64,
+struct SmallPayload {
     name: String,
-    active: bool,
-    count: i32,
-    tags: Vec<String>,
+    description: String,
+    price: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tax: Option<f64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Seller {
+    name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    email: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct MediumPayload {
+    name: String,
+    description: String,
+    price: f64,
+    seller: Seller,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Country {
+    name: String,
+    code: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Address {
+    street: String,
+    city: String,
+    country: Country,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct SellerWithAddress {
+    name: String,
+    address: Address,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct LargePayload {
+    name: String,
+    price: f64,
+    seller: SellerWithAddress,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Tag {
+    name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct VeryLargePayload {
+    name: String,
+    description: String,
+    price: f64,
+    tags: Vec<Tag>,
 }
 
 // JSON handlers
 async fn post_json_small(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let body: SmallJson = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+    let body: SmallPayload = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Ok(Response::builder()
         .status(StatusCode::OK)
@@ -45,7 +99,7 @@ async fn post_json_small(ctx: RequestContext) -> Result<Response<Body>, (StatusC
 }
 
 async fn post_json_medium(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let body: Value = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+    let body: MediumPayload = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Ok(Response::builder()
         .status(StatusCode::OK)
@@ -55,7 +109,7 @@ async fn post_json_medium(ctx: RequestContext) -> Result<Response<Body>, (Status
 }
 
 async fn post_json_large(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let body: Value = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+    let body: LargePayload = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Ok(Response::builder()
         .status(StatusCode::OK)
@@ -65,7 +119,7 @@ async fn post_json_large(ctx: RequestContext) -> Result<Response<Body>, (StatusC
 }
 
 async fn post_json_very_large(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let body: Value = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+    let body: VeryLargePayload = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Ok(Response::builder()
         .status(StatusCode::OK)
@@ -331,8 +385,10 @@ async fn main() {
 
     // Path parameter workloads
     app.route(get("/path/simple/{id}"), get_path_simple).unwrap();
-    app.route(get("/path/multiple/{user_id}/{post_id}"), get_path_multiple).unwrap();
-    app.route(get("/path/deep/{org}/{team}/{project}/{resource}/{id}"), get_path_deep).unwrap();
+    app.route(get("/path/multiple/{user_id}/{post_id}"), get_path_multiple)
+        .unwrap();
+    app.route(get("/path/deep/{org}/{team}/{project}/{resource}/{id}"), get_path_deep)
+        .unwrap();
     app.route(get("/path/int/{id}"), get_path_int).unwrap();
     app.route(get("/path/uuid/{uuid}"), get_path_uuid).unwrap();
     app.route(get("/path/date/{date}"), get_path_date).unwrap();
