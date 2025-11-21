@@ -131,9 +131,34 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
             cmd.arg("run").arg("python").arg("server.py").arg(port.to_string());
             cmd
         }
+        "fastapi-granian" => {
+            let mut cmd = Command::new("uv");
+            cmd.arg("run").arg("python").arg("server.py").arg(port.to_string());
+            // Set PYTHONPATH to packages/python relative to workspace root
+            cmd.env("PYTHONPATH", "packages/python");
+            cmd
+        }
+        "robyn" => {
+            let mut cmd = Command::new(".venv/bin/python");
+            cmd.arg("server.py").arg(port.to_string());
+            cmd
+        }
         "fastify" => {
             let mut cmd = Command::new("node");
             cmd.arg("server.js").arg(port.to_string());
+            cmd
+        }
+        "spikard-rust-workloads" => {
+            let server_binary = config.app_dir.join("target/release/spikard-rust-bench");
+            let mut cmd = Command::new(server_binary);
+            cmd.arg(port.to_string());
+            cmd
+        }
+        "spikard-python-workloads" => {
+            let server_path = config.app_dir.join("server.py");
+            let mut cmd = Command::new("uv");
+            cmd.arg("run").arg("python").arg(server_path).arg(port.to_string());
+            cmd.env("PYTHONPATH", "packages/python");
             cmd
         }
         _ => {
@@ -141,7 +166,11 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
         }
     };
 
-    if !config.framework.starts_with("spikard-") || config.framework == "spikard-ruby" {
+    if !config.framework.starts_with("spikard-")
+        || config.framework == "spikard-ruby"
+        || config.framework == "spikard-rust-workloads"
+        || config.framework == "robyn"
+    {
         cmd.current_dir(&config.app_dir);
     }
     // Temporarily enable output for debugging

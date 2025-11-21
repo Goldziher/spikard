@@ -1,17 +1,21 @@
+[package]
+name = "spikard-rust-bench"
+version = "0.1.0"
+edition = "2021"
+
 [workspace]
 
-[package]
-name = "benchmark-server"
-version = "0.1.0"
-edition = "2024"
-
-[[bin]]
-name = "server"
-path = "server.rs"
-
 [dependencies]
-spikard-http = { path = "../../../../crates/spikard-http" }
+axum = { version = "0.8", features = ["multipart"] }
 tokio = { version = "1", features = ["full"] }
-axum = "0.8"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["trace", "cors"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_urlencoded = "0.7"
+multer = "3.1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+clap = { version = "4.5", features = ["derive"] }
+uuid = { version = "1.0", features = ["serde", "v4"] }
+chrono = { version = "0.4", features = ["serde"] }

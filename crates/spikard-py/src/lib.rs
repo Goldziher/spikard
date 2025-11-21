@@ -443,7 +443,7 @@ fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyRes
 /// Run Spikard server from Python
 ///
 /// This function enables Python to run Spikard, rather than having the Rust CLI embed Python.
-/// This allows Python to manage its own event loop, enabling natural async/await support.
+/// A dedicated Python thread is created to run an asyncio event loop for async handlers.
 ///
 /// Args:
 ///     app: Spikard application instance
@@ -480,6 +480,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
         eprintln!("⚠️  Multi-worker mode not yet implemented, using single worker");
     }
 
+    // Initialize dedicated event loop thread for async handlers
     init_python_event_loop()?;
 
     let routes_with_handlers = extract_routes_from_app(py, app)?;
