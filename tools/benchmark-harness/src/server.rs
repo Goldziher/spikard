@@ -95,7 +95,7 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
 
     let mut cmd = match config.framework.as_str() {
         "spikard-rust" => {
-            let server_binary = config.app_dir.join("target/release/server");
+            let server_binary = config.app_dir.join("target/release/spikard-rust-bench");
             let mut cmd = Command::new(server_binary);
             cmd.arg(port.to_string());
             cmd

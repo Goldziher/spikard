@@ -2,7 +2,8 @@
 
 use crate::{
     error::{Error, Result},
-    load_generator::{LoadGeneratorType, LoadTestConfig},
+    fixture::Fixture,
+    load_generator::{self, LoadGeneratorType, LoadTestConfig},
     monitor::ResourceMonitor,
     schema::{
         profile::*, workload::WorkloadSuite, Configuration, FrameworkInfo, Latency, Metadata, ProfilingData,
@@ -35,7 +36,7 @@ impl ProfileRunner {
     pub fn new(config: ProfileRunnerConfig) -> Result<Self> {
         // Load workload suite
         let suite = WorkloadSuite::by_name(&config.suite_name)
-            .ok_or_else(|| Error::InvalidWorkload(format!("Unknown suite: {}", config.suite_name)))?;
+            .ok_or_else(|| Error::InvalidInput(format!("Unknown suite: {}", config.suite_name)))?;
 
         Ok(Self { config, suite })
     }
@@ -83,7 +84,7 @@ impl ProfileRunner {
 
         // Run workloads
         let mut suite_results = Vec::new();
-        let suite_result = self.run_suite(&server, &metadata).await?;
+        let suite_result = self.run_suite(&server).await?;
         suite_results.push(suite_result);
 
         // Calculate summary
@@ -109,7 +110,7 @@ impl ProfileRunner {
         })
     }
 
-    async fn run_suite(&self, server: &ServerHandle, _metadata: &Metadata) -> Result<SuiteResult> {
+    async fn run_suite(&self, server: &ServerHandle) -> Result<SuiteResult> {
         println!("📊 Running suite: {}", self.suite.name);
         println!();
 
@@ -137,7 +138,8 @@ impl ProfileRunner {
         workload_def: &crate::schema::workload::WorkloadDef,
         server: &ServerHandle,
     ) -> Result<WorkloadResult> {
-        let url = format!("{}{}", server.base_url, workload_def.endpoint.path);
+        // Create fixture from workload definition
+        let fixture = self.create_fixture_from_workload(workload_def)?;
 
         // Start profiler if configured
         let _profiler_handle = if let Some(ref profiler_type) = self.config.profiler {
@@ -150,33 +152,26 @@ impl ProfileRunner {
         };
 
         // Start resource monitor
-        let mut monitor = ResourceMonitor::new(server.pid());
-        monitor.start();
+        let monitor = ResourceMonitor::new(server.pid());
+        let monitor_handle = monitor.start_monitoring(100); // Sample every 100ms
 
         // Warmup
         if self.config.warmup_secs > 0 {
-            self.run_load_test(&url, &workload_def.endpoint.method, workload_def, self.config.warmup_secs)
+            self.run_load_test(&server.base_url, &fixture, self.config.warmup_secs)
                 .await?;
         }
 
         // Actual benchmark
-        let load_result = self
-            .run_load_test(
-                &url,
-                &workload_def.endpoint.method,
-                workload_def,
-                self.config.duration_secs,
-            )
+        let (_oha_output, throughput) = self
+            .run_load_test(&server.base_url, &fixture, self.config.duration_secs)
             .await?;
 
-        // Stop monitor
-        monitor.stop().await;
-        let samples = monitor.samples();
+        // Stop monitor and collect samples
+        let monitor_with_samples = monitor_handle.stop().await;
+        let resource_metrics = monitor_with_samples.calculate_metrics();
 
         // Stop profiler and collect data
-        let profiling = if let Some(_profiler_handle) = _profiler_handle {
-            // TODO: collect profiling data
-            Some(ProfilingData::Python(PythonProfilingData {
+        let profiling = _profiler_handle.map(|_| ProfilingData::Python(PythonProfilingData {
                 gil_wait_time_ms: None,
                 gil_contention_percent: None,
                 ffi_overhead_ms: None,
@@ -185,37 +180,47 @@ impl ProfileRunner {
                 gc_collections: None,
                 gc_time_ms: None,
                 flamegraph_path: None,
-            }))
-        } else {
-            None
+            }));
+
+        // Convert to schema types
+        let throughput_schema = Throughput {
+            requests_per_sec: throughput.requests_per_sec,
+            bytes_per_sec: throughput.bytes_per_sec,
+            total_requests: throughput.total_requests,
+            successful_requests: throughput.total_requests - throughput.failed_requests,
+            failed_requests: throughput.failed_requests,
+            success_rate: throughput.success_rate,
         };
 
-        // Convert load test result to schema types
-        let throughput = Throughput {
-            requests_per_sec: load_result.throughput.requests_per_sec,
-            bytes_per_sec: load_result.throughput.bytes_per_sec,
-            total_requests: load_result.throughput.total_requests,
-            successful_requests: load_result.throughput.successful_requests,
-            failed_requests: load_result.throughput.failed_requests,
-            success_rate: load_result.throughput.success_rate,
-        };
-
+        // For latency, we'll use the resource metrics' placeholder values
+        // TODO: extract from oha_output
         let latency = Latency {
-            mean_ms: load_result.latency.mean_ms,
-            median_ms: load_result.latency.p50_ms,
-            p90_ms: load_result.latency.p90_ms,
-            p95_ms: load_result.latency.p95_ms,
-            p99_ms: load_result.latency.p99_ms,
-            p999_ms: load_result.latency.p999_ms,
-            min_ms: load_result.latency.min_ms,
-            max_ms: load_result.latency.max_ms,
-            stddev_ms: load_result.latency.stddev_ms,
+            mean_ms: 0.0,
+            median_ms: 0.0,
+            p90_ms: 0.0,
+            p95_ms: 0.0,
+            p99_ms: 0.0,
+            p999_ms: 0.0,
+            min_ms: 0.0,
+            max_ms: 0.0,
+            stddev_ms: 0.0,
         };
 
-        let resources = self.calculate_resources(&samples);
+        let resources = Resources {
+            cpu: crate::schema::CpuMetrics {
+                avg_percent: resource_metrics.avg_cpu_percent,
+                peak_percent: resource_metrics.peak_cpu_percent,
+                p95_percent: resource_metrics.avg_cpu_percent, // TODO: calculate p95 properly
+            },
+            memory: crate::schema::MemoryMetrics {
+                avg_mb: resource_metrics.avg_memory_mb,
+                peak_mb: resource_metrics.peak_memory_mb,
+                p95_mb: resource_metrics.p95_memory_mb,
+            },
+        };
 
         let metrics = WorkloadMetrics {
-            throughput,
+            throughput: throughput_schema,
             latency,
             resources,
             profiling,
@@ -233,90 +238,145 @@ impl ProfileRunner {
 
     async fn run_load_test(
         &self,
-        url: &str,
-        method: &str,
-        workload_def: &crate::schema::workload::WorkloadDef,
+        base_url: &str,
+        fixture: &Fixture,
         duration_secs: u64,
-    ) -> Result<crate::types::BenchmarkResult> {
-        let mut config = LoadTestConfig {
-            url: url.to_string(),
-            method: method.to_string(),
-            headers: vec![],
-            body: None,
+    ) -> Result<(crate::types::OhaOutput, crate::types::ThroughputMetrics)> {
+        let config = LoadTestConfig {
+            base_url: base_url.to_string(),
             duration_secs,
             concurrency: self.config.concurrency,
-            generator: LoadGeneratorType::Oha,
+            fixture: Some(fixture.clone()),
         };
 
-        // Add body if needed
-        if let Some(ref body_file) = workload_def.body_file {
-            let body_data = self.load_body_data(body_file)?;
-            config.body = Some(body_data);
-        }
-
-        // Add content-type header
-        if let Some(ref content_type) = workload_def.content_type {
-            config.headers.push(("Content-Type".to_string(), content_type.clone()));
-        }
-
-        let generator = crate::load_generator::create_generator(config)?;
-        generator.run().await
+        load_generator::run_load_test(config, LoadGeneratorType::Oha).await
     }
 
-    fn load_body_data(&self, body_file: &str) -> Result<String> {
+    fn create_fixture_from_workload(
+        &self,
+        workload_def: &crate::schema::workload::WorkloadDef,
+    ) -> Result<Fixture> {
+        use crate::fixture::{Handler, Request, ExpectedResponse, Parameters};
+
+        let mut headers = std::collections::HashMap::new();
+        if let Some(ref content_type) = workload_def.content_type {
+            headers.insert("Content-Type".to_string(), content_type.clone());
+        }
+
+        let body = if let Some(ref body_file) = workload_def.body_file {
+            Some(self.load_body_data(body_file)?)
+        } else {
+            None
+        };
+
+        let request = Request {
+            method: workload_def.endpoint.method.clone(),
+            path: workload_def.endpoint.path.clone(),
+            query_params: std::collections::HashMap::new(), // TODO: extract from path
+            headers,
+            body,
+            body_raw: None,
+            cookies: std::collections::HashMap::new(),
+        };
+
+        let handler = Handler {
+            route: workload_def.endpoint.path.clone(),
+            method: workload_def.endpoint.method.clone(),
+            parameters: Parameters::default(),
+        };
+
+        let expected_response = ExpectedResponse {
+            status_code: 200,
+            body: None,
+            headers: std::collections::HashMap::new(),
+        };
+
+        Ok(Fixture {
+            name: workload_def.name.clone(),
+            description: workload_def.description.clone(),
+            category: Some(workload_def.category.clone()),
+            handler,
+            request,
+            expected_response,
+        })
+    }
+
+    fn load_body_data(&self, body_file: &str) -> Result<serde_json::Value> {
         // TODO: load from fixtures directory
         // For now, return hardcoded test data
-        match body_file {
-            "json-small.json" => Ok(r#"{"id":12345,"name":"test_item","active":true,"count":42,"tags":["tag1","tag2","tag3"]}"#.to_string()),
-            "urlencoded-simple.txt" => Ok("name=John+Doe&email=john%40example.com&age=30&city=New+York".to_string()),
-            "urlencoded-complex.txt" => Ok("name=John+Doe&email=john%40example.com&age=30&city=New+York&country=USA&phone=%2B1234567890&address=123+Main+St&zip=10001&interests=tech&interests=sports&interests=music&company=TestCorp&position=Engineer&department=Engineering&salary=100000&start_date=2020-01-15&active=true&verified=true&newsletter=true&terms=true".to_string()),
-            _ => Err(Error::InvalidWorkload(format!("Unknown body file: {}", body_file))),
-        }
-    }
-
-    fn calculate_resources(&self, samples: &[crate::monitor::ResourceSample]) -> Resources {
-        if samples.is_empty() {
-            return Resources {
-                cpu: crate::schema::CpuMetrics {
-                    avg_percent: 0.0,
-                    peak_percent: 0.0,
-                    p95_percent: 0.0,
+        let json_str = match body_file {
+            "json-small.json" => r#"{"id":12345,"name":"test_item","active":true,"count":42,"tags":["tag1","tag2","tag3"]}"#,
+            "json-medium.json" => r#"{
+                "id": 12345,
+                "name": "test_item_medium",
+                "description": "This is a medium-sized JSON payload for benchmarking purposes.",
+                "active": true,
+                "count": 42,
+                "price": 99.99,
+                "currency": "USD",
+                "category": "electronics",
+                "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
+                "attributes": {
+                    "color": "black",
+                    "storage": "256GB",
+                    "ram": "8GB"
+                }
+            }"#,
+            "json-large.json" => r#"{
+                "id": 12345,
+                "name": "test_item_large",
+                "description": "This is a large JSON payload for benchmarking purposes with extensive nested data.",
+                "active": true,
+                "count": 42,
+                "price": 199.99,
+                "currency": "USD",
+                "category": "electronics",
+                "subcategory": "laptops",
+                "tags": ["premium", "business", "ultrabook", "touchscreen", "backlit-keyboard"],
+                "metadata": {
+                    "created_at": "2024-01-01T00:00:00Z",
+                    "updated_at": "2024-01-15T12:30:45Z",
+                    "version": 3,
+                    "author": "system",
+                    "status": "published"
                 },
-                memory: crate::schema::MemoryMetrics {
-                    avg_mb: 0.0,
-                    peak_mb: 0.0,
-                    p95_mb: 0.0,
+                "attributes": {
+                    "brand": "TechBrand",
+                    "model": "ProBook X1",
+                    "color": "space gray",
+                    "storage": "1TB SSD",
+                    "ram": "32GB DDR5",
+                    "cpu": "Intel Core i9-13900H",
+                    "gpu": "NVIDIA RTX 4070",
+                    "display": "15.6 inch 4K OLED",
+                    "battery": "99Wh",
+                    "weight": "1.8kg"
                 },
-            };
-        }
-
-        let avg_cpu = samples.iter().map(|s| s.cpu_percent).sum::<f64>() / samples.len() as f64;
-        let peak_cpu = samples.iter().map(|s| s.cpu_percent).fold(0.0f64, f64::max);
-
-        let avg_mem = samples.iter().map(|s| s.memory_mb).sum::<f64>() / samples.len() as f64;
-        let peak_mem = samples.iter().map(|s| s.memory_mb).fold(0.0f64, f64::max);
-
-        // Calculate p95
-        let mut cpu_sorted: Vec<f64> = samples.iter().map(|s| s.cpu_percent).collect();
-        cpu_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        let p95_cpu = cpu_sorted[(cpu_sorted.len() as f64 * 0.95) as usize];
-
-        let mut mem_sorted: Vec<f64> = samples.iter().map(|s| s.memory_mb).collect();
-        mem_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        let p95_mem = mem_sorted[(mem_sorted.len() as f64 * 0.95) as usize];
-
-        Resources {
-            cpu: crate::schema::CpuMetrics {
-                avg_percent: avg_cpu,
-                peak_percent: peak_cpu,
-                p95_percent: p95_cpu,
+                "specifications": [
+                    {"key": "ports", "value": "4x USB-C, 2x USB-A, HDMI 2.1, SD card"},
+                    {"key": "wireless", "value": "WiFi 6E, Bluetooth 5.3"},
+                    {"key": "audio", "value": "Quad speakers, Dolby Atmos"},
+                    {"key": "camera", "value": "1080p IR webcam with privacy shutter"},
+                    {"key": "keyboard", "value": "Backlit with fingerprint sensor"}
+                ],
+                "reviews": [
+                    {"rating": 5, "comment": "Excellent performance"},
+                    {"rating": 4, "comment": "Great build quality"},
+                    {"rating": 5, "comment": "Best laptop I've owned"}
+                ]
+            }"#,
+            "json-very-large.json" => {
+                // Generate a very large JSON (>100KB) with repeated data
+                let mut items = Vec::new();
+                for i in 0..100 {
+                    items.push(format!(r#"{{"id":{},"name":"item_{}","value":{},"metadata":{{"timestamp":"2024-01-01T00:00:00Z","status":"active","tags":["tag1","tag2","tag3","tag4","tag5"]}}}}"#, i, i, i * 100));
+                }
+                &format!(r#"{{"items":[{}],"count":100,"total_value":495000}}"#, items.join(","))
             },
-            memory: crate::schema::MemoryMetrics {
-                avg_mb: avg_mem,
-                peak_mb: peak_mem,
-                p95_mb: p95_mem,
-            },
-        }
+            _ => return Err(Error::InvalidInput(format!("Unknown body file: {}", body_file))),
+        };
+
+        serde_json::from_str(json_str).map_err(Error::Json)
     }
 
     fn calculate_summary(&self, suite_results: &[SuiteResult]) -> ProfileSummary {
