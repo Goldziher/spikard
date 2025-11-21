@@ -3,6 +3,7 @@
 use benchmark_harness::{
     BenchmarkRunner, Fixture, FixtureManager, Result, RunnerConfig, StreamingBenchmarkRunner, StreamingFixture,
     StreamingRunnerConfig,
+    profile::{ProfileRunner, ProfileRunnerConfig},
 };
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
@@ -109,6 +110,49 @@ enum Commands {
         variant: Option<String>,
 
         /// Output file for JSON results
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+    },
+
+    /// Profile mode - Deep analysis of a single framework with profiling
+    Profile {
+        /// Framework to profile (e.g., spikard-python, spikard-rust)
+        #[arg(short, long)]
+        framework: String,
+
+        /// App directory containing the server
+        #[arg(short, long)]
+        app_dir: PathBuf,
+
+        /// Workload suite to run (all, json-bodies, path-params, query-params, forms, streaming)
+        #[arg(short, long, default_value = "all")]
+        suite: String,
+
+        /// Duration in seconds per workload
+        #[arg(short, long, default_value = "30")]
+        duration: u64,
+
+        /// Concurrency level
+        #[arg(short, long, default_value = "100")]
+        concurrency: usize,
+
+        /// Warmup duration in seconds
+        #[arg(long, default_value = "10")]
+        warmup: u64,
+
+        /// Profiler to use (python, node, ruby, perf)
+        #[arg(long)]
+        profiler: Option<String>,
+
+        /// Baseline ProfileResult JSON to compare against
+        #[arg(long)]
+        baseline: Option<PathBuf>,
+
+        /// Framework variant (e.g., async, uvloop)
+        #[arg(long)]
+        variant: Option<String>,
+
+        /// Output file for ProfileResult JSON
         #[arg(short, long)]
         output: Option<PathBuf>,
     },
@@ -317,6 +361,66 @@ async fn main() -> Result<()> {
                 let json = serde_json::to_string_pretty(&result)?;
                 std::fs::write(&output_path, json)?;
                 println!("\nResults written to: {}", output_path.display());
+            }
+
+            Ok(())
+        }
+
+        Commands::Profile {
+            framework,
+            app_dir,
+            suite,
+            duration,
+            concurrency,
+            warmup,
+            profiler,
+            baseline,
+            variant,
+            output,
+        } => {
+            let config = ProfileRunnerConfig {
+                framework: framework.clone(),
+                app_dir,
+                suite_name: suite,
+                duration_secs: duration,
+                concurrency,
+                warmup_secs: warmup,
+                profiler,
+                baseline_path: baseline,
+                variant,
+            };
+
+            let runner = ProfileRunner::new(config)?;
+            let result = runner.run().await?;
+
+            // Print summary
+            println!("\n{}", "=".repeat(70));
+            println!("Profile Results: {} - {}", result.framework.name, result.framework.runtime);
+            println!("{}", "=".repeat(70));
+            println!("\nSuites: {}", result.suites.len());
+            println!("Total workloads: {}", result.summary.total_workloads);
+            println!("Total requests: {}", result.summary.total_requests);
+            println!("Overall success rate: {:.2}%", result.summary.overall_success_rate * 100.0);
+            println!("Average RPS: {:.2}", result.summary.avg_requests_per_sec);
+
+            println!("\n--- Category Breakdown ---");
+            for cat in &result.summary.category_breakdown {
+                println!("  {}: {} workloads, {:.2} RPS avg, {:.2}ms latency avg",
+                    cat.category, cat.workload_count, cat.avg_requests_per_sec, cat.avg_latency_ms);
+            }
+
+            if let Some(comparison) = &result.comparison {
+                println!("\n--- Baseline Comparison ---");
+                println!("  vs {}: {:.2}x", comparison.baseline_framework, comparison.overall_ratio);
+            }
+
+            println!("\n{}", "=".repeat(70));
+
+            // Write JSON output
+            if let Some(output_path) = output {
+                let json = serde_json::to_string_pretty(&result)?;
+                std::fs::write(&output_path, json)?;
+                println!("\n✓ Results written to: {}", output_path.display());
             }
 
             Ok(())
