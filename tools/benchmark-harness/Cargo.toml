@@ -40,6 +40,8 @@ chrono = { version = "0.4", features = ["serde"] }
 glob = "0.3"
 futures-util = "0.3"
 tokio-tungstenite = "0.28"
+rand = "0.9"
+urlencoding = "2.1"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

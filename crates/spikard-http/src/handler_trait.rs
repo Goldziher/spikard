@@ -18,12 +18,17 @@ use std::pin::Pin;
 ///
 /// Uses Arc for HashMaps to enable cheap cloning without duplicating data.
 /// When RequestData is cloned, only the Arc pointers are cloned, not the underlying data.
+///
+/// Performance optimization: raw_body stores the unparsed request body bytes.
+/// Language bindings should use raw_body when possible to avoid double-parsing.
+/// The body field is lazily parsed only when needed for validation.
 #[derive(Debug, Clone)]
 pub struct RequestData {
     pub path_params: std::sync::Arc<HashMap<String, String>>,
     pub query_params: Value,
     pub raw_query_params: std::sync::Arc<HashMap<String, Vec<String>>>,
     pub body: Value,
+    pub raw_body: Option<bytes::Bytes>,
     pub headers: std::sync::Arc<HashMap<String, String>>,
     pub cookies: std::sync::Arc<HashMap<String, String>>,
     pub method: String,
@@ -36,11 +41,12 @@ impl Serialize for RequestData {
         S: serde::Serializer,
     {
         use serde::ser::SerializeStruct;
-        let mut state = serializer.serialize_struct("RequestData", 8)?;
+        let mut state = serializer.serialize_struct("RequestData", 9)?;
         state.serialize_field("path_params", &*self.path_params)?;
         state.serialize_field("query_params", &self.query_params)?;
         state.serialize_field("raw_query_params", &*self.raw_query_params)?;
         state.serialize_field("body", &self.body)?;
+        state.serialize_field("raw_body", &self.raw_body.as_ref().map(|b| b.as_ref()))?;
         state.serialize_field("headers", &*self.headers)?;
         state.serialize_field("cookies", &*self.cookies)?;
         state.serialize_field("method", &self.method)?;
@@ -61,6 +67,7 @@ impl<'de> Deserialize<'de> for RequestData {
             QueryParams,
             RawQueryParams,
             Body,
+            RawBody,
             Headers,
             Cookies,
             Method,
@@ -84,6 +91,7 @@ impl<'de> Deserialize<'de> for RequestData {
                 let mut query_params = None;
                 let mut raw_query_params = None;
                 let mut body = None;
+                let mut raw_body = None;
                 let mut headers = None;
                 let mut cookies = None;
                 let mut method = None;
@@ -102,6 +110,10 @@ impl<'de> Deserialize<'de> for RequestData {
                         }
                         Field::Body => {
                             body = Some(map.next_value()?);
+                        }
+                        Field::RawBody => {
+                            let bytes_vec: Option<Vec<u8>> = map.next_value()?;
+                            raw_body = bytes_vec.map(bytes::Bytes::from);
                         }
                         Field::Headers => {
                             headers = Some(std::sync::Arc::new(map.next_value()?));
@@ -124,6 +136,7 @@ impl<'de> Deserialize<'de> for RequestData {
                     raw_query_params: raw_query_params
                         .ok_or_else(|| serde::de::Error::missing_field("raw_query_params"))?,
                     body: body.ok_or_else(|| serde::de::Error::missing_field("body"))?,
+                    raw_body,
                     headers: headers.ok_or_else(|| serde::de::Error::missing_field("headers"))?,
                     cookies: cookies.ok_or_else(|| serde::de::Error::missing_field("cookies"))?,
                     method: method.ok_or_else(|| serde::de::Error::missing_field("method"))?,
@@ -137,6 +150,7 @@ impl<'de> Deserialize<'de> for RequestData {
             "query_params",
             "raw_query_params",
             "body",
+            "raw_body",
             "headers",
             "cookies",
             "method",

@@ -24,7 +24,7 @@ from typing import Any, get_origin, get_type_hints
 import msgspec
 from pydantic.fields import FieldInfo
 
-__all__ = ("clear_decoders", "convert_params", "register_decoder")
+__all__ = ("clear_decoders", "convert_params", "register_decoder", "needs_conversion")
 
 
 DecoderFunc = Callable[[type, Any], Any]
@@ -109,6 +109,51 @@ def _default_dec_hook(type_: type, obj: Any) -> Any:
     raise NotImplementedError
 
 
+def needs_conversion(handler_func: Callable[..., Any]) -> bool:
+    """Check if a handler needs parameter type conversion.
+
+    Returns False for handlers with no parameters or only dict/Any parameters,
+    avoiding unnecessary conversion overhead.
+
+    Args:
+        handler_func: The handler function to check
+
+    Returns:
+        True if the handler needs type conversion, False to skip it
+    """
+    try:
+        sig = inspect.signature(handler_func)
+        type_hints = get_type_hints(handler_func)
+    except (AttributeError, NameError, TypeError, ValueError):
+        # Can't inspect - be conservative and convert
+        return True
+
+    # If no parameters, no conversion needed
+    if not sig.parameters:
+        return False
+
+    # Check if any parameter needs conversion (not dict/Any)
+    for param_name, param in sig.parameters.items():
+        if param_name not in type_hints:
+            continue
+        target_type = type_hints[param_name]
+        origin = get_origin(target_type)
+
+        # dict and Any don't need conversion
+        if target_type in (dict, Any) or origin is dict:
+            continue
+
+        # TypedDict doesn't need conversion (runtime is dict)
+        if _is_typed_dict(target_type):
+            continue
+
+        # If we get here, parameter needs conversion
+        return True
+
+    # All parameters are dict/Any or no parameters
+    return False
+
+
 def convert_params(  # noqa: C901, PLR0912, PLR0915
     params: dict[str, Any],
     handler_func: Callable[..., Any],
@@ -120,6 +165,9 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
     This function takes a dictionary of validated parameters from Rust
     and converts them to the appropriate Python types based on the
     handler function's type annotations.
+
+    Performance optimization: When body is passed as raw bytes from Rust,
+    this function parses JSON in Python using msgspec for maximum performance.
 
     Args:
         params: Dictionary of validated parameters (already validated by Rust)
@@ -167,6 +215,24 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
 
         target_type = type_hints[key]
         origin = get_origin(target_type)
+
+        if key == "body" and isinstance(value, bytes):
+            if not value:
+                converted[key] = None if target_type in (type(None), None) else {}
+                continue
+
+            if target_type is bytes:
+                converted[key] = value
+                continue
+
+            try:
+                parsed_json = msgspec.json.decode(value)
+                value = parsed_json
+            except (msgspec.DecodeError, ValueError):
+                if strict:
+                    raise
+                converted[key] = value
+                continue
 
         if dict in (target_type, origin):
             converted[key] = value

@@ -7,12 +7,14 @@ pub mod analysis;
 pub mod compare;
 pub mod error;
 pub mod fixture;
+pub mod generators;
 pub mod load_generator;
 pub mod monitor;
 pub mod runner;
 pub mod server;
 pub mod streaming;
 pub mod types;
+pub mod workload;
 
 pub use analysis::{AggregatedResult, MetricStats, aggregate_runs};
 pub use compare::{
@@ -29,4 +31,8 @@ pub use streaming::{StreamingBenchmarkRunner, StreamingFixture, StreamingRunnerC
 pub use types::{
     BenchmarkResult, LatencyMetrics, ResourceMetrics, StreamingBenchmarkResult, StreamingLatencyMetrics,
     StreamingMetrics, StreamingProtocol, ThroughputMetrics,
+};
+pub use workload::{
+    JsonBodyWorkload, MultipartWorkload, ParamType, PathComplexity, PathParamWorkload, PayloadSize, QueryParamWorkload,
+    UrlEncodedWorkload, Workload, WorkloadCategory, WorkloadPresets,
 };

@@ -55,19 +55,25 @@ impl Handler for ValidatingHandler {
     fn call(
         &self,
         req: axum::http::Request<Body>,
-        request_data: RequestData,
+        mut request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         let inner = self.inner.clone();
         let request_validator = self.request_validator.clone();
         let parameter_validator = self.parameter_validator.clone();
 
         Box::pin(async move {
-            if let Some(validator) = request_validator
-                && let Err(errors) = validator.validate(&request_data.body)
-            {
-                let problem = ProblemDetails::from_validation_error(&errors);
-                let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
-                return Err((problem.status_code(), body));
+            if let Some(validator) = request_validator {
+                if request_data.body.is_null() && request_data.raw_body.is_some() {
+                    let raw_bytes = request_data.raw_body.as_ref().unwrap();
+                    request_data.body = serde_json::from_slice::<Value>(raw_bytes)
+                        .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?;
+                }
+
+                if let Err(errors) = validator.validate(&request_data.body) {
+                    let problem = ProblemDetails::from_validation_error(&errors);
+                    let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                    return Err((problem.status_code(), body));
+                }
             }
 
             if let Some(validator) = parameter_validator {
@@ -199,6 +205,7 @@ fn create_request_data_without_body(
         headers: Arc::new(extract_headers(headers)),
         cookies: Arc::new(extract_cookies(headers)),
         body: Value::Null,
+        raw_body: None,
         method: method.as_str().to_string(),
         path: uri.path().to_string(),
     }
@@ -207,6 +214,8 @@ fn create_request_data_without_body(
 /// Create RequestData from request parts (for requests with body)
 ///
 /// Wraps HashMaps in Arc to enable cheap cloning without duplicating data.
+/// Performance optimization: stores raw body bytes without parsing JSON.
+/// JSON parsing is deferred until actually needed (e.g., for validation).
 async fn create_request_data_with_body(
     parts: &axum::http::request::Parts,
     path_params: HashMap<String, String>,
@@ -223,20 +232,14 @@ async fn create_request_data_with_body(
         })?
         .to_bytes();
 
-    let body_value = if !body_bytes.is_empty() {
-        serde_json::from_slice::<Value>(&body_bytes)
-            .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?
-    } else {
-        Value::Null
-    };
-
     Ok(RequestData {
         path_params: Arc::new(path_params),
         query_params: extract_query_params(&parts.uri),
         raw_query_params: Arc::new(extract_raw_query_params(&parts.uri)),
         headers: Arc::new(extract_headers(&parts.headers)),
         cookies: Arc::new(extract_cookies(&parts.headers)),
-        body: body_value,
+        body: Value::Null,
+        raw_body: if body_bytes.is_empty() { None } else { Some(body_bytes) },
         method: parts.method.as_str().to_string(),
         path: parts.uri.path().to_string(),
     })
