@@ -4,14 +4,32 @@
 
 ### Phase 3: Profile Mode Implementation
 
-- [ ] **Create profile runner module** (`tools/benchmark-harness/src/profile/mod.rs`)
-  - [ ] Implement `ProfileRunner` struct
-  - [ ] Orchestrate workload suite execution
-  - [ ] Collect structured results per `ProfileResult` schema
-  - [ ] Integrate with existing server/load_generator modules
+- [x] **Create profile runner module** (`tools/benchmark-harness/src/profile/mod.rs`)
+  - [x] Implement `ProfileRunner` struct
+  - [x] Orchestrate workload suite execution
+  - [x] Collect structured results per `ProfileResult` schema
+  - [x] Integrate with existing server/load_generator modules
+
+- [x] **Profile CLI subcommand** (`src/main.rs`)
+  - [x] Add `profile` subcommand to CLI
+  - [x] Parse options (framework, app-dir, suite, profiler, baseline, output)
+  - [x] Invoke ProfileRunner
+  - [x] Write structured JSON output
+  - [x] Print summary to console
+
+- [x] **End-to-end testing**
+  - [x] Test with json-bodies suite (4 workloads)
+  - [x] Verify JSON output structure
+  - [x] Validate performance metrics collection
+
+- [ ] **Complete profile runner implementation**
+  - [ ] Extract latency metrics from OhaOutput (currently placeholder zeros)
+  - [ ] Calculate CPU p95 properly (currently using avg as fallback)
+  - [ ] Load body data from fixtures directory (currently hardcoded)
+  - [ ] Extract query parameters from URL path
 
 - [ ] **Python profiler integration** (`src/profile/python.rs`)
-  - [ ] py-spy integration for GIL profiling
+  - [x] Basic py-spy integration structure
   - [ ] Capture gil_wait_time_ms, gil_contention_percent
   - [ ] Measure ffi_overhead_ms, handler_time_ms
   - [ ] Generate flamegraph (optional)
@@ -40,13 +58,6 @@
   - [ ] Calculate per-workload ratios
   - [ ] Compute overall performance ratio
   - [ ] Generate comparison analysis
-
-- [ ] **Profile CLI subcommand** (`src/main.rs`)
-  - [ ] Add `profile` subcommand to CLI
-  - [ ] Parse options (framework, app-dir, suite, profiler, baseline, output)
-  - [ ] Invoke ProfileRunner
-  - [ ] Write structured JSON output
-  - [ ] Print summary to console
 
 ### Phase 4: Compare Mode Implementation
 
