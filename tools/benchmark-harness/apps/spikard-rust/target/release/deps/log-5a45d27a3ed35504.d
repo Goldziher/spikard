@@ -1,0 +1,10 @@
+/Users/naamanhirschfeld/workspace/spikard/tools/benchmark-harness/apps/spikard-rust/target/release/deps/log-5a45d27a3ed35504.d: /Users/naamanhirschfeld/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.28/src/lib.rs /Users/naamanhirschfeld/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.28/src/macros.rs /Users/naamanhirschfeld/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.28/src/serde.rs /Users/naamanhirschfeld/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.28/src/__private_api.rs
+
+/Users/naamanhirschfeld/workspace/spikard/tools/benchmark-harness/apps/spikard-rust/target/release/deps/liblog-5a45d27a3ed35504.rlib: /Users/naamanhirschfeld/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.28/src/lib.rs /Users/naamanhirschfeld/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.28/src/macros.rs /Users/naamanhirschfeld/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.28/src/serde.rs /Users/naamanhirschfeld/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.28/src/__private_api.rs
+
+/Users/naamanhirschfeld/workspace/spikard/tools/benchmark-harness/apps/spikard-rust/target/release/deps/liblog-5a45d27a3ed35504.rmeta: /Users/naamanhirschfeld/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.28/src/lib.rs /Users/naamanhirschfeld/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.28/src/macros.rs /Users/naamanhirschfeld/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.28/src/serde.rs /Users/naamanhirschfeld/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.28/src/__private_api.rs
+
+/Users/naamanhirschfeld/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.28/src/lib.rs:
+/Users/naamanhirschfeld/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.28/src/macros.rs:
+/Users/naamanhirschfeld/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.28/src/serde.rs:
+/Users/naamanhirschfeld/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.28/src/__private_api.rs:
