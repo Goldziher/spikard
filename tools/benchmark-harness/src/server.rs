@@ -154,6 +154,12 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
             cmd.arg(port.to_string());
             cmd
         }
+        "axum-baseline" => {
+            let server_binary = config.app_dir.join("target/release/spikard-rust-bench");
+            let mut cmd = Command::new(server_binary);
+            cmd.arg(port.to_string());
+            cmd
+        }
         "spikard-python-workloads" => {
             let server_path = config.app_dir.join("server.py");
             let mut cmd = Command::new("uv");
@@ -169,6 +175,7 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     if !config.framework.starts_with("spikard-")
         || config.framework == "spikard-ruby"
         || config.framework == "spikard-rust-workloads"
+        || config.framework == "axum-baseline"
         || config.framework == "robyn"
     {
         cmd.current_dir(&config.app_dir);

@@ -4,7 +4,8 @@
 set -e
 
 WORKSPACE_ROOT="/Users/naamanhirschfeld/workspace/spikard"
-RUST_SERVER="$WORKSPACE_ROOT/tools/benchmark-harness/apps/spikard-rust/target/release/spikard-rust-bench"
+SPIKARD_RUST_SERVER="$WORKSPACE_ROOT/tools/benchmark-harness/apps/spikard-rust/target/release/spikard-rust-bench"
+AXUM_SERVER="$WORKSPACE_ROOT/tools/benchmark-harness/apps/axum-baseline/target/release/spikard-rust-bench"
 PYTHON_SERVER="$WORKSPACE_ROOT/tools/benchmark-harness/apps/spikard-python-workloads/server.py"
 
 # JSON payload for testing
@@ -13,34 +14,34 @@ JSON_SMALL='{"id":12345,"name":"test_item","active":true,"count":42,"tags":["tag
 echo "=== Workload Benchmark Test ==="
 echo ""
 
-# Test Rust server
-echo "Starting Rust server on port 8100..."
-$RUST_SERVER 8100 > /tmp/rust-server.log 2>&1 &
-RUST_PID=$!
+# Test Spikard-Rust server
+echo "Starting Spikard-Rust server on port 8100..."
+$SPIKARD_RUST_SERVER 8100 > /tmp/spikard-rust-server.log 2>&1 &
+SPIKARD_RUST_PID=$!
 sleep 2
 
-echo "Testing Rust server health..."
+echo "Testing Spikard-Rust server health..."
 if curl -sf http://localhost:8100/health > /dev/null; then
-    echo "✓ Rust server healthy"
+    echo "✓ Spikard-Rust server healthy"
 else
-    echo "✗ Rust server failed to start"
-    kill $RUST_PID 2>/dev/null || true
+    echo "✗ Spikard-Rust server failed to start"
+    kill $SPIKARD_RUST_PID 2>/dev/null || true
     exit 1
 fi
 
-echo "Running benchmark against Rust server..."
+echo "Running benchmark against Spikard-Rust server..."
 oha -z 10s -c 50 \
     -m POST \
     -H "Content-Type: application/json" \
     -d "$JSON_SMALL" \
     --output-format json \
     http://localhost:8100/json/small \
-    > /tmp/rust-bench.json
+    > /tmp/spikard-rust-bench.json
 
-echo "Rust results:"
-cat /tmp/rust-bench.json | jq '.summary'
+echo "Spikard-Rust results:"
+cat /tmp/spikard-rust-bench.json | jq '.summary'
 
-kill $RUST_PID 2>/dev/null || true
+kill $SPIKARD_RUST_PID 2>/dev/null || true
 sleep 1
 
 echo ""
@@ -75,17 +76,17 @@ kill $PYTHON_PID 2>/dev/null || true
 
 echo ""
 echo "=== Comparison ==="
-echo -n "Rust RPS:   "
-cat /tmp/rust-bench.json | jq -r '.summary.requestsPerSec'
-echo -n "Python RPS: "
+echo -n "Spikard-Rust RPS: "
+cat /tmp/spikard-rust-bench.json | jq -r '.summary.requestsPerSec'
+echo -n "Python RPS:       "
 cat /tmp/python-bench.json | jq -r '.summary.requestsPerSec'
 
-RUST_RPS=$(cat /tmp/rust-bench.json | jq -r '.summary.requestsPerSec')
+SPIKARD_RUST_RPS=$(cat /tmp/spikard-rust-bench.json | jq -r '.summary.requestsPerSec')
 PYTHON_RPS=$(cat /tmp/python-bench.json | jq -r '.summary.requestsPerSec')
-RATIO=$(echo "scale=2; $RUST_RPS / $PYTHON_RPS" | bc)
-echo "Ratio: ${RATIO}x (Rust/Python)"
+RATIO=$(echo "scale=2; $SPIKARD_RUST_RPS / $PYTHON_RPS" | bc)
+echo "Ratio: ${RATIO}x (Spikard-Rust/Python)"
 
 echo ""
 echo "Full results saved to:"
-echo "  - /tmp/rust-bench.json"
+echo "  - /tmp/spikard-rust-bench.json"
 echo "  - /tmp/python-bench.json"
