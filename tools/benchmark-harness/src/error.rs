@@ -31,7 +31,9 @@ pub enum Error {
     #[error("Load generator failed: {0}")]
     LoadGeneratorFailed(String),
 
-    #[error("Framework not found: {0}")]
+    #[error(
+        "Framework not found: {0}\n\nEnsure the framework app directory exists in one of:\n  - benchmarks/{0}\n  - e2e/{{language}}\n  - examples/{0}\n\nFor Spikard bindings, check e2e/python, e2e/node, e2e/ruby"
+    )]
     FrameworkNotFound(String),
 
     #[error("Benchmark failed: {0}")]
@@ -39,4 +41,18 @@ pub enum Error {
 
     #[error("Invalid input: {0}")]
     InvalidInput(String),
+
+    #[error(
+        "Workload suite '{0}' not found\n\nAvailable suites:\n  - all (all workloads)\n  - baseline (basic HTTP requests)\n  - json-bodies (JSON request/response)\n  - path-params (path parameters)\n  - query-params (query string parameters)\n  - forms (form submissions)\n  - streaming (WebSocket/SSE)"
+    )]
+    WorkloadNotFound(String),
+
+    #[error(
+        "Framework '{framework}' execution failed: {source}\n\nTroubleshooting:\n  1. Check that dependencies are installed\n  2. Verify the server starts manually\n  3. Check port availability\n  4. Review server logs for errors"
+    )]
+    FrameworkExecutionFailed {
+        framework: String,
+        #[source]
+        source: Box<Error>,
+    },
 }

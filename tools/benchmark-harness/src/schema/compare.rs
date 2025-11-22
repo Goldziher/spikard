@@ -4,6 +4,41 @@ use super::{Configuration, FrameworkInfo, Latency, Metadata, Resources, Throughp
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Statistical test result from hypothesis testing
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StatisticalTest {
+    /// Name of the statistical test performed
+    pub test_name: String,
+
+    /// Metric being tested (e.g., "requests_per_sec", "latency_p50_ms")
+    pub metric: String,
+
+    /// Test statistic value (e.g., t-statistic for Welch's t-test)
+    pub statistic: f64,
+
+    /// Two-tailed p-value indicating probability of observing this difference by chance
+    pub p_value: f64,
+
+    /// Whether the result is statistically significant at the configured threshold
+    pub is_significant: bool,
+
+    /// 95% confidence interval for the mean difference (baseline - comparison)
+    pub confidence_interval: (f64, f64),
+}
+
+/// Effect size measurement using Cohen's d
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EffectSize {
+    /// Metric being measured
+    pub metric: String,
+
+    /// Cohen's d value (positive = baseline better, negative = comparison better)
+    pub cohens_d: f64,
+
+    /// Magnitude classification: "small", "medium", "large", "very_large"
+    pub magnitude: String,
+}
+
 /// Complete compare mode result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompareResult {
@@ -41,6 +76,18 @@ pub struct FrameworkResult {
     pub throughput: Throughput,
     pub latency: Latency,
     pub resources: Resources,
+
+    /// Statistical tests comparing to baseline (optional, only for non-baseline frameworks)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub statistical_tests: Option<Vec<StatisticalTest>>,
+
+    /// Effect sizes comparing to baseline (optional, only for non-baseline frameworks)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub effect_sizes: Option<Vec<EffectSize>>,
+
+    /// Overall verdict: "baseline", "significantly_better", "significantly_worse", "similar"
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub verdict: Option<String>,
 }
 
 /// Statistical analysis of workload comparison
