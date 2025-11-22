@@ -94,10 +94,16 @@ jobs:
           ruby-version: "3.3"
           bundler-cache: false
 
+      - name: Setup Python for PyO3
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
       - name: Run unit tests
         env:
           RUST_BACKTRACE: full
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
+          PYO3_PYTHON: python
         run: |
           cargo test --workspace --release --all-features --exclude spikard-py
           cargo test -p spikard-py --release
@@ -259,8 +265,8 @@ jobs:
         run: |
           cd target/${{ matrix.target }}/release
           $artifact = "spikard-cli-${{ matrix.target }}"
-          Copy-Item spikard.exe "$artifact.exe"
-          Compress-Archive -Path "$artifact.exe" -DestinationPath "$artifact.zip"
+          Copy-Item spikard.exe "spikard-cli.exe"
+          Compress-Archive -Path "spikard-cli.exe" -DestinationPath "$artifact.zip"
           Move-Item "$artifact.zip" "$Env:GITHUB_WORKSPACE/$artifact.zip" -Force
 
       - name: Upload CLI artifact
