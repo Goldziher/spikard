@@ -110,7 +110,6 @@ jobs:
             MSYS_INCLUDE="$(echo "${RUBY_PREFIX}/msys64/ucrt64/include" | sed 's#\\\\#/#g')"
             export BINDGEN_EXTRA_CLANG_ARGS="-I${MSYS_INCLUDE}"
             export BINDGEN_EXTRA_CLANG_ARGS_x86_64_pc_windows_msvc="${BINDGEN_EXTRA_CLANG_ARGS}"
-            export BINDGEN_EXTRA_CLANG_ARGS_x86_64-pc-windows-msvc="${BINDGEN_EXTRA_CLANG_ARGS}"
           fi
           cargo test --workspace --release --all-features --exclude spikard-py
           cargo test -p spikard-py --release
