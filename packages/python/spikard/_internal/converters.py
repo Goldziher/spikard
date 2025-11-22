@@ -14,16 +14,20 @@ and supports multiple type systems:
 
 from __future__ import annotations
 
+import base64
+import dataclasses
 import inspect
 import typing
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import is_dataclass
 from datetime import date, datetime, time, timedelta
-from typing import Any, get_origin, get_type_hints
+from typing import Any, Union, get_args, get_origin, get_type_hints
 
 import msgspec
 from pydantic.fields import FieldInfo
+
+from spikard.datastructures import UploadFile
 
 __all__ = ("clear_decoders", "convert_params", "needs_conversion", "register_decoder")
 
@@ -128,6 +132,116 @@ def _default_dec_hook(type_: type, obj: Any) -> Any:
     raise NotImplementedError
 
 
+def _is_upload_file_type(type_hint: type) -> bool:
+    """Check if a type annotation is UploadFile or Optional[UploadFile] or list[UploadFile].
+
+    Args:
+        type_hint: The type to check
+
+    Returns:
+        True if it's an UploadFile-related type
+    """
+    if type_hint is UploadFile:
+        return True
+
+    origin = get_origin(type_hint)
+
+    if origin is list:
+        args = get_args(type_hint)
+        if args and args[0] is UploadFile:
+            return True
+
+    if origin is Union:
+        args = get_args(type_hint)
+        return any(arg is UploadFile for arg in args if arg is not type(None))
+
+    return False
+
+
+def _get_upload_file_fields(target_type: type) -> dict[str, bool]:
+    """Detect which fields in a dataclass/Pydantic model are UploadFile fields.
+
+    Args:
+        target_type: The type to analyze (dataclass, Pydantic model, msgspec.Struct, etc.)
+
+    Returns:
+        Dict mapping field names to whether they're UploadFile types
+        Example: {"avatar": True, "username": False}
+    """
+    # Only analyze structured types
+    if not (is_dataclass(target_type) or hasattr(target_type, "model_fields") or isinstance(target_type, type)):
+        return {}
+
+    try:
+        type_hints = get_type_hints(target_type)
+    except (AttributeError, NameError, TypeError):
+        return {}
+
+    return {field_name: _is_upload_file_type(field_type) for field_name, field_type in type_hints.items()}
+
+
+def _convert_file_json_to_upload_file(file_data: dict[str, Any]) -> Any:
+    """Convert JSON file representation to UploadFile instance.
+
+    Args:
+        file_data: Dict with keys: filename, content, size, content_type, content_encoding
+
+    Returns:
+        UploadFile instance
+    """
+    content = file_data.get("content", b"")
+
+    if isinstance(content, str):
+        content_encoding = file_data.get("content_encoding", "text")
+        content = base64.b64decode(content) if content_encoding == "base64" else content.encode("utf-8")
+    elif not isinstance(content, bytes):
+        content = str(content).encode("utf-8")
+
+    return UploadFile(
+        filename=file_data.get("filename", "unknown"),
+        content=content,
+        content_type=file_data.get("content_type"),
+        size=file_data.get("size"),
+    )
+
+
+def _process_upload_file_fields(value: Any, file_fields: dict[str, bool]) -> Any:
+    """Convert JSON file representations to UploadFile instances in a structured object.
+
+    Args:
+        value: The dict or object containing file fields
+        file_fields: Map of field names to whether they're UploadFile types
+
+    Returns:
+        Modified value with UploadFile instances
+    """
+    if not isinstance(value, dict):
+        return value
+
+    result = value.copy()
+
+    for field_name, is_file_field in file_fields.items():
+        if not is_file_field or field_name not in result:
+            continue
+
+        field_value = result[field_name]
+
+        # Skip None values
+        if field_value is None:
+            continue
+
+        # Handle list[UploadFile]
+        if isinstance(field_value, list):
+            result[field_name] = [
+                _convert_file_json_to_upload_file(f) if isinstance(f, dict) else f for f in field_value
+            ]
+        # Handle single UploadFile
+        elif isinstance(field_value, dict) and "filename" in field_value:
+            result[field_name] = _convert_file_json_to_upload_file(field_value)
+
+    return result
+
+
 def needs_conversion(handler_func: Callable[..., Any]) -> bool:
     """Check if a handler needs parameter type conversion.
 
@@ -220,22 +334,38 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
         sig = None
 
     handler_params = set()
+    first_param_name = None
     if sig:
         handler_params = set(sig.parameters.keys())
+        # Find the first non-self/non-cls parameter (this is the body parameter)
+        for param_name in sig.parameters:
+            if param_name not in ("self", "cls"):
+                first_param_name = param_name
+                break
+
+    # If Rust passed "body" but handler uses a different parameter name,
+    # rename it to match the handler's first parameter
+    if "body" in params and first_param_name and first_param_name != "body" and first_param_name not in params:
+        params = params.copy()
+        params[first_param_name] = params.pop("body")
 
     converted = {}
-    for key, value in params.items():
+    for key, raw_value in params.items():
         if sig and key not in handler_params:
             continue
 
         if key not in type_hints:
-            converted[key] = value
+            converted[key] = raw_value
             continue
 
         target_type = type_hints[key]
         origin = get_origin(target_type)
+        value = raw_value
 
-        if key == "body" and isinstance(value, bytes):
+        # For body parameter with bytes, decode JSON first
+        # Body parameter is the first non-self/non-cls parameter
+        is_body_param = key == first_param_name and isinstance(value, bytes)
+        if is_body_param:
             if not value:
                 converted[key] = None if target_type in (type(None), None) else {}
                 continue
@@ -244,15 +374,42 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                 converted[key] = value
                 continue
 
+            # Decode JSON bytes to dict/list for further processing
             try:
-                parsed_json = msgspec.json.decode(value)
-                converted[key] = parsed_json
-                continue
+                decoded_value = msgspec.json.decode(value)
+
+                # For raw UploadFile/list[UploadFile], unwrap from {"param_name": value} wrapper
+                # Rust wraps multipart form fields in an object: {"files": [...]}
+                if isinstance(decoded_value, dict) and key in decoded_value and _is_upload_file_type(target_type):
+                    value = decoded_value[key]
+                else:
+                    value = decoded_value
+
+                # Don't continue - fall through to UploadFile/dataclass processing
             except (msgspec.DecodeError, ValueError):
                 if strict:
                     raise
                 converted[key] = value
                 continue
+
+        # Handle direct UploadFile or list[UploadFile] parameters
+        if _is_upload_file_type(target_type):
+            if target_type is UploadFile and isinstance(value, dict):
+                converted[key] = _convert_file_json_to_upload_file(value)
+                continue
+            if origin is list:
+                args = get_args(target_type)
+                if args and args[0] is UploadFile and isinstance(value, list):
+                    converted[key] = [_convert_file_json_to_upload_file(f) if isinstance(f, dict) else f for f in value]
+                    continue
+
+        # Now check if this type has UploadFile fields (for multipart/form data)
+        # This happens AFTER JSON decoding so value is a dict
+        file_fields = _get_upload_file_fields(target_type)
+        if file_fields and isinstance(value, dict):
+            # Process file fields: convert JSON file representations to UploadFile instances
+            processed_value = _process_upload_file_fields(value, file_fields)
+            value = processed_value
 
         if dict in (target_type, origin):
             converted[key] = value
@@ -264,7 +421,18 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
 
         if is_dataclass(target_type) and isinstance(value, dict):
             try:
-                converted[key] = target_type(**value)  # type: ignore[operator]
+                # Add missing optional fields with None
+                type_hints_for_dc = get_type_hints(target_type)
+                value_with_defaults = value.copy()
+
+                for field in dataclasses.fields(target_type):
+                    if field.name not in value_with_defaults:
+                        field_type = type_hints_for_dc.get(field.name, field.type)
+                        # Check if field is Optional
+                        if get_origin(field_type) is Union and type(None) in get_args(field_type):
+                            value_with_defaults[field.name] = None
+
+                converted[key] = target_type(**value_with_defaults)  # type: ignore[operator]
                 continue
             except (TypeError, ValueError) as err:
                 if strict:

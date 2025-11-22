@@ -870,6 +870,7 @@ impl Server {
                 file_params: route.file_params.clone(),
                 is_async: route.is_async,
                 cors: route.cors.clone(),
+                body_param_name: None,
             })
             .collect();
         build_router_with_handlers_and_config(routes, config, metadata)

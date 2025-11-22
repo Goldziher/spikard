@@ -18,3 +18,4 @@ class Route:
     parameter_schema: dict[str, Any] | None = None
     file_params: dict[str, Any] | None = None
     is_async: bool = False
+    body_param_name: str | None = None  # Name of the body parameter (default: "body")

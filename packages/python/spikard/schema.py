@@ -3,10 +3,11 @@
 import dataclasses
 import inspect
 from collections.abc import Callable
-from typing import Any, Protocol, get_type_hints, runtime_checkable
+from typing import Any, Protocol, Union, get_args, get_origin, get_type_hints, runtime_checkable
 
 import msgspec
-from pydantic import TypeAdapter
+
+from spikard.datastructures import UploadFile
 
 
 @runtime_checkable
@@ -134,7 +135,13 @@ def extract_schemas(
         if first_param.name not in ("self", "cls"):
             param_type = type_hints.get(first_param.name)
             if param_type:
-                request_schema = extract_json_schema(param_type)
+                is_upload_file = param_type is UploadFile
+                is_list_upload_file = (
+                    get_origin(param_type) is list and get_args(param_type) and get_args(param_type)[0] is UploadFile
+                )
+
+                if not (is_upload_file or is_list_upload_file):
+                    request_schema = extract_json_schema(param_type)
 
     response_schema = None
     return_type = type_hints.get("return")
@@ -171,6 +178,22 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C
     Raises:
         TypeError: If schema_source type is not supported
     """
+
+    def schema_hook(type_: type) -> dict[str, Any]:
+        """Hook to provide JSON schema for custom types."""
+        if type_ is UploadFile:
+            return {
+                "type": "object",
+                "properties": {
+                    "filename": {"type": "string"},
+                    "content": {"type": "string"},
+                    "size": {"type": "integer"},
+                    "content_type": {"type": "string"},
+                },
+                "required": ["filename", "content"],
+            }
+        raise TypeError(f"No schema available for {type_}")
+
     if schema_source is None or schema_source in (int, str, float, bool):
         return None
 
@@ -198,8 +221,41 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C
 
     if isinstance(schema_source, type) and dataclasses.is_dataclass(schema_source):
         try:
-            adapter = TypeAdapter(schema_source)
-            return adapter.json_schema()
+            # Build schema manually using resolved type hints
+            # This avoids msgspec's issues with forward references
+            type_hints = get_type_hints(schema_source)
+            properties = {}
+            required = []
+
+            for field in dataclasses.fields(schema_source):
+                field_type = type_hints.get(field.name, field.type)
+
+                # Check if field is optional (has default or default_factory)
+                has_default = (
+                    field.default is not dataclasses.MISSING or field.default_factory is not dataclasses.MISSING
+                )
+
+                # Check if type is Optional (Union with None)
+                is_optional_type = False
+                if get_origin(field_type) is Union:
+                    args = get_args(field_type)
+                    is_optional_type = type(None) in args
+
+                # Extract schema for the field type
+                field_schema = extract_json_schema(field_type)
+                if field_schema:
+                    properties[field.name] = field_schema
+
+                # Field is required if it has no default AND is not Optional type
+                if not has_default and not is_optional_type:
+                    required.append(field.name)
+
+            return {
+                "type": "object",
+                "properties": properties,
+                "required": required,
+                "title": schema_source.__name__,
+            }
         except Exception as e:
             raise TypeError(f"Failed to extract schema from dataclass {schema_source.__name__}: {e}") from e
 
@@ -240,7 +296,7 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C
             raise TypeError(f"Failed to extract schema from NamedTuple {schema_source.__name__}: {e}") from e
 
     try:
-        schema = msgspec.json.schema(schema_source)
+        schema = msgspec.json.schema(schema_source, schema_hook=schema_hook)
         return resolve_msgspec_ref(schema)
     except (TypeError, KeyError, AttributeError) as e:
         raise TypeError(

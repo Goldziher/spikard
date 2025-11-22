@@ -82,6 +82,13 @@ class Spikard:
             sig = inspect.signature(func)
             wrapped_func = func
 
+            # Extract body parameter name (first non-self/non-cls parameter)
+            body_param_name = None
+            for param_name in sig.parameters:
+                if param_name not in ("self", "cls"):
+                    body_param_name = param_name
+                    break
+
             has_param_defaults = any(isinstance(param.default, ParamBase) for param in sig.parameters.values())
 
             if has_param_defaults:
@@ -116,6 +123,7 @@ class Spikard:
                 parameter_schema=extracted_parameter_schema,
                 file_params=file_params,
                 is_async=inspect.iscoroutinefunction(func),
+                body_param_name=body_param_name,
             )
 
             self._routes.append(route)
@@ -197,6 +205,118 @@ class Spikard:
             List of routes
         """
         return self._routes.copy()
+
+    # HTTP verb decorators (FastAPI/Litestar pattern)
+    def get(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register a GET route.
+
+        Args:
+            path: URL path pattern
+            **kwargs: Additional arguments passed to register_route
+
+        Returns:
+            Decorator function
+        """
+        return self.register_route("GET", path, **kwargs)
+
+    def post(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register a POST route.
+
+        Args:
+            path: URL path pattern
+            **kwargs: Additional arguments passed to register_route
+
+        Returns:
+            Decorator function
+        """
+        return self.register_route("POST", path, **kwargs)
+
+    def put(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register a PUT route.
+
+        Args:
+            path: URL path pattern
+            **kwargs: Additional arguments passed to register_route
+
+        Returns:
+            Decorator function
+        """
+        return self.register_route("PUT", path, **kwargs)
+
+    def patch(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register a PATCH route.
+
+        Args:
+            path: URL path pattern
+            **kwargs: Additional arguments passed to register_route
+
+        Returns:
+            Decorator function
+        """
+        return self.register_route("PATCH", path, **kwargs)
+
+    def delete(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register a DELETE route.
+
+        Args:
+            path: URL path pattern
+            **kwargs: Additional arguments passed to register_route
+
+        Returns:
+            Decorator function
+        """
+        return self.register_route("DELETE", path, **kwargs)
+
+    def head(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register a HEAD route.
+
+        Args:
+            path: URL path pattern
+            **kwargs: Additional arguments passed to register_route
+
+        Returns:
+            Decorator function
+        """
+        return self.register_route("HEAD", path, **kwargs)
+
+    def options(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register an OPTIONS route.
+
+        Args:
+            path: URL path pattern
+            **kwargs: Additional arguments passed to register_route
+
+        Returns:
+            Decorator function
+        """
+        return self.register_route("OPTIONS", path, **kwargs)
+
+    def trace(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register a TRACE route.
+
+        Args:
+            path: URL path pattern
+            **kwargs: Additional arguments passed to register_route
+
+        Returns:
+            Decorator function
+        """
+        return self.register_route("TRACE", path, **kwargs)
+
+    def route(
+        self, path: str, method: HttpMethod = "GET", **kwargs: Any
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register a route with explicit method.
+
+        Args:
+            path: URL path pattern
+            method: HTTP method
+            **kwargs: Additional arguments passed to register_route
+
+        Returns:
+            Decorator function
+        """
+        return self.register_route(method, path, **kwargs)
 
     def on_request(self, hook: Callable[..., Any]) -> Callable[..., Any]:
         """Register an onRequest lifecycle hook.

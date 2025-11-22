@@ -81,6 +81,9 @@ pub struct RouteMetadata {
     pub file_params: Option<Value>,
     pub is_async: bool,
     pub cors: Option<CorsConfig>,
+    /// Name of the body parameter (defaults to "body" if not specified)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub body_param_name: Option<String>,
 }
 
 /// Compression configuration shared across runtimes

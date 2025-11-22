@@ -7,12 +7,13 @@ and converting them to JSON Schema for validation in Rust.
 import inspect
 import re
 from collections.abc import Callable
-from typing import Any
+from typing import Any, get_args, get_origin
 
 from spikard._internal import (
     field_definition_to_json_schema,
     parse_fn_signature,
 )
+from spikard.datastructures import UploadFile
 
 
 def extract_parameter_schema(func: Callable[..., Any], path: str | None = None) -> dict[str, Any] | None:
@@ -54,7 +55,9 @@ def extract_parameter_schema(func: Callable[..., Any], path: str | None = None) 
     if params_list:
         first_param_name = params_list[0].name
         first_field_def = parsed_sig.parameters.get(first_param_name)
-        if first_field_def and _is_structured_type(first_field_def.annotation):
+        if first_field_def and (
+            _is_structured_type(first_field_def.annotation) or _is_upload_file_type(first_field_def.annotation)
+        ):
             first_param_is_body = True
 
     schema: dict[str, Any] = {"type": "object", "properties": {}, "required": []}
@@ -82,6 +85,26 @@ def extract_parameter_schema(func: Callable[..., Any], path: str | None = None) 
         return None
 
     return schema
+
+
+def _is_upload_file_type(annotation: Any) -> bool:
+    """Check if an annotation is UploadFile or list[UploadFile].
+
+    Args:
+        annotation: The type annotation to check
+
+    Returns:
+        True if it's UploadFile or list[UploadFile]
+    """
+    if annotation is UploadFile:
+        return True
+
+    if get_origin(annotation) is list:
+        args = get_args(annotation)
+        if args and args[0] is UploadFile:
+            return True
+
+    return False
 
 
 def _is_structured_type(annotation: Any) -> bool:
