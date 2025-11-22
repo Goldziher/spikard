@@ -1,6 +1,8 @@
 default_install_hook_types:
   - pre-commit
   - commit-msg
+exclude: |
+  ^(tools/benchmark-harness/|benchmark-results/|results/|target/)
 
 repos:
   - repo: https://github.com/compilerla/conventional-pre-commit
@@ -12,7 +14,11 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
+        exclude: |
+          benchmark-harness/|benchmark-results/|results/|target/
       - id: end-of-file-fixer
+        exclude: |
+          benchmark-harness/|benchmark-results/|results/|target/
       - id: check-toml
       - id: check-case-conflict
   - repo: https://github.com/abravalheri/validate-pyproject
@@ -27,11 +33,15 @@ repos:
     rev: v2.3.7
     hooks:
       - id: biome-check
+        exclude: |
+          benchmark-harness/|benchmark-results/|results/|target/
   - repo: https://github.com/oxc-project/mirrors-oxlint
     rev: v1.29.0
     hooks:
       - id: oxlint
         args: ["--fix"]
+        exclude: |
+          benchmark-harness/|benchmark-results/|results/|target/
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.6
     hooks:
@@ -44,8 +54,36 @@ repos:
     rev: v1.0
     hooks:
       - id: fmt
+        args:
+          [
+            "-p",
+            "spikard",
+            "-p",
+            "spikard-cli",
+            "-p",
+            "spikard-codegen",
+            "-p",
+            "spikard-core",
+            "-p",
+            "spikard-http",
+            "-p",
+            "spikard-py",
+            "-p",
+            "spikard-node",
+            "-p",
+            "spikard-wasm",
+            "-p",
+            "spikard-rb",
+            "-p",
+            "test-generator",
+          ]
+        pass_filenames: false
       - id: cargo-check
+        args: ["--workspace", "--exclude", "benchmark-harness"]
+        pass_filenames: false
       - id: clippy
+        args: ["--workspace", "--exclude", "benchmark-harness"]
+        pass_filenames: false
   - repo: https://github.com/rubocop/rubocop
     rev: v1.81.7
     hooks:

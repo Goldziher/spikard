@@ -118,62 +118,75 @@ fn generate_handler(route: &RouteInfo) -> String {
     let method = route.method.to_lowercase();
     let method_func = if method == "delete" { "delete" } else { &method };
 
-    // Check for path params by looking at the route string itself
     let path_params = crate::analyzer::extract_path_params(&route.route);
     let has_path_params = !path_params.is_empty();
     let has_body = route.params.body.is_some();
+    let has_query = !route.params.query.is_empty();
 
-    // Choose wrapper based on what we need:
-    // - wrapHandler if we have path params (provides pathParams, queryParams, body, etc.)
-    // - wrapBodyHandler if we only need the body
-    if has_path_params {
-        let body = generate_handler_body(route);
-        format!(
-            r#"app.{}('{}', wrapHandler(async ({{ pathParams, body }}) => {{
-  {}
-}}));"#,
-            method_func, route.route, body
-        )
-    } else if has_body {
+    // If the route only needs the body, use wrapBodyHandler for a simpler signature.
+    if has_body && !has_path_params && !has_query {
         let interface_name = generate_interface_name(route);
-        let body = generate_handler_body(route);
+        let body = generate_handler_body(route, has_query, has_body);
 
-        format!(
+        return format!(
             r#"app.{}('{}', wrapBodyHandler<{}>(async (body) => {{
   {}
 }}));"#,
             method_func, route.route, interface_name, body
-        )
-    } else {
-        let body = generate_handler_body_simple(route);
+        );
+    }
 
-        format!(
-            r#"app.{}('{}', wrapBodyHandler(async () => {{
+    // For all other cases, use wrapHandler and destructure only the parameters we need.
+    let mut destructured: Vec<&str> = Vec::new();
+    if has_path_params {
+        destructured.push("pathParams");
+    }
+    if has_query {
+        destructured.push("queryParams");
+    }
+    if has_body {
+        destructured.push("body");
+    }
+
+    let signature = if destructured.is_empty() {
+        "()".to_string()
+    } else {
+        format!("({{ {} }})", destructured.join(", "))
+    };
+
+    let body = generate_handler_body(route, has_query, has_body);
+
+    format!(
+        r#"app.{}('{}', wrapHandler(async {} => {{
   {}
 }}));"#,
-            method_func, route.route, body
-        )
-    }
+        method_func, route.route, signature, body
+    )
 }
 
-fn generate_handler_body(route: &RouteInfo) -> String {
+fn generate_handler_body(route: &RouteInfo, has_query: bool, has_body: bool) -> String {
     let mut lines = Vec::new();
     lines.push("const response: Record<string, unknown> = {};".to_string());
 
     let path_params = crate::analyzer::extract_path_params(&route.route);
     for param_name in &path_params {
         lines.push(format!("  if (pathParams['{}'] !== undefined) {{", param_name));
-        lines.push(format!("    response['{}'] = pathParams['{}'];", param_name, param_name));
+        lines.push(format!(
+            "    response['{}'] = pathParams['{}'];",
+            param_name, param_name
+        ));
         lines.push("  }".to_string());
     }
 
-    for (name, _) in &route.params.query {
-        lines.push(format!("  if (body.{} !== undefined) {{", name));
-        lines.push(format!("    response['{}'] = body.{};", name, name));
-        lines.push("  }".to_string());
+    if has_query {
+        for (name, _) in &route.params.query {
+            lines.push(format!("  if (queryParams['{}'] !== undefined) {{", name));
+            lines.push(format!("    response['{}'] = queryParams['{}'];", name, name));
+            lines.push("  }".to_string());
+        }
     }
 
-    if route.params.body.is_some() {
+    if has_body {
         lines.push("  Object.assign(response, body);".to_string());
     }
 
@@ -189,7 +202,10 @@ fn generate_handler_body_simple(route: &RouteInfo) -> String {
     let path_params = crate::analyzer::extract_path_params(&route.route);
     for param_name in &path_params {
         lines.push(format!("  if (pathParams['{}'] !== undefined) {{", param_name));
-        lines.push(format!("    response['{}'] = pathParams['{}'];", param_name, param_name));
+        lines.push(format!(
+            "    response['{}'] = pathParams['{}'];",
+            param_name, param_name
+        ));
         lines.push("  }".to_string());
     }
 

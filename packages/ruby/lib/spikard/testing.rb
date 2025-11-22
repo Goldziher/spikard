@@ -160,7 +160,7 @@ module Spikard
 
       private
 
-      # rubocop:disable Metrics/AbcSize
+      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
       def parsed_chunks
         raw = body.to_s.gsub("\r\n", "\n")
         events = []
@@ -186,7 +186,7 @@ module Spikard
 
         events
       end
-      # rubocop:enable Metrics/AbcSize
+      # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
     end
 
     # SSE event wrapper

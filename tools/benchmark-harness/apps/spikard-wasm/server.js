@@ -15,35 +15,35 @@ const app = new Spikard();
 // JSON Body Workloads
 // ============================================================================
 
-app.post("/json/small", async (body) => {
-	return body;
+app.post("/json/small", async (_body) => {
+	return _body;
 });
 
-app.post("/json/medium", async (body) => {
-	return body;
+app.post("/json/medium", async (_body) => {
+	return _body;
 });
 
-app.post("/json/large", async (body) => {
-	return body;
+app.post("/json/large", async (_body) => {
+	return _body;
 });
 
-app.post("/json/very-large", async (body) => {
-	return body;
+app.post("/json/very-large", async (_body) => {
+	return _body;
 });
 
 // ============================================================================
 // Multipart Form Workloads
 // ============================================================================
 
-app.post("/multipart/small", async (body) => {
+app.post("/multipart/small", async (_body) => {
 	return { files_received: 1, total_bytes: 1024 };
 });
 
-app.post("/multipart/medium", async (body) => {
+app.post("/multipart/medium", async (_body) => {
 	return { files_received: 2, total_bytes: 10240 };
 });
 
-app.post("/multipart/large", async (body) => {
+app.post("/multipart/large", async (_body) => {
 	return { files_received: 5, total_bytes: 102400 };
 });
 
@@ -51,12 +51,12 @@ app.post("/multipart/large", async (body) => {
 // URL Encoded Form Workloads
 // ============================================================================
 
-app.post("/urlencoded/simple", async (body) => {
-	return body;
+app.post("/urlencoded/simple", async (_body) => {
+	return _body;
 });
 
-app.post("/urlencoded/complex", async (body) => {
-	return body;
+app.post("/urlencoded/complex", async (_body) => {
+	return _body;
 });
 
 // ============================================================================
@@ -82,7 +82,7 @@ app.get("/path/deep/:org/:team/:project/:api/:item", async (params) => {
 });
 
 app.get("/path/int/:id", async (params) => {
-	return { id: parseInt(params.id) };
+	return { id: parseInt(params.id, 10) };
 });
 
 app.get("/path/uuid/:id", async (params) => {
@@ -122,6 +122,6 @@ app.get("/", async () => {
 });
 
 // Start server
-const port = process.argv[2] ? parseInt(process.argv[2]) : 8000;
+const port = process.argv[2] ? parseInt(process.argv[2], 10) : 8000;
 app.listen(port, "0.0.0.0");
 console.error(`[spikard-wasm-workloads] Server listening on port ${port}`);
