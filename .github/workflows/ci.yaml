@@ -49,8 +49,7 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.3"
-          bundler-cache: true
-          working-directory: packages/ruby
+          bundler-cache: false
 
       - name: Sync Python deps
         run: uv sync --all-extras --all-groups --no-install-project
@@ -59,8 +58,9 @@ jobs:
         run: pnpm --filter @spikard/node lint
 
       - name: Run Rubocop
-        working-directory: packages/ruby
-        run: bundle exec rubocop --config .rubocop.yml
+        run: |
+          gem install rubocop:1.81.1 rubocop-performance:1.26.1 rubocop-rspec:2.22.0 --no-document
+          rubocop --config packages/ruby/.rubocop.yml packages/ruby
 
       - name: Check Rust formatting
         run: cargo fmt --all --check
