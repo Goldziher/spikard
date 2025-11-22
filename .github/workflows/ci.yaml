@@ -98,7 +98,9 @@ jobs:
         env:
           RUST_BACKTRACE: full
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
-        run: cargo test --workspace --release --all-features
+        run: |
+          cargo test --workspace --release --all-features --exclude spikard-py
+          cargo test -p spikard-py --release
 
   python-wheels:
     name: Python Wheels (${{ matrix.platform }})
