@@ -99,6 +99,14 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Configure Ruby headers for bindgen (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $msysInclude = Join-Path "${{ steps.setup-ruby.outputs.ruby-prefix }}" "msys64/ucrt64/include"
+          "BINDGEN_EXTRA_CLANG_ARGS_x86_64_pc_windows_msvc=-I$msysInclude" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "BINDGEN_EXTRA_CLANG_ARGS_x86_64-pc-windows-msvc=-I$msysInclude" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
       - name: Run unit tests
         env:
           RUST_BACKTRACE: full
