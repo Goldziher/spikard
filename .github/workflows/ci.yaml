@@ -120,13 +120,6 @@ jobs:
       - name: Build wheels
         uses: ./.github/actions/build-wheels
 
-      - name: Upload wheels
-        uses: actions/upload-artifact@v5
-        with:
-          name: wheels-${{ matrix.platform }}
-          path: wheelhouse/*.whl
-          retention-days: 7
-
   python-sdist:
     name: Python Sdist
     needs: validate
@@ -263,7 +256,7 @@ jobs:
           $artifact = "spikard-cli-${{ matrix.target }}"
           Copy-Item spikard.exe "$artifact.exe"
           Compress-Archive -Path "$artifact.exe" -DestinationPath "$artifact.zip"
-          Move-Item "$artifact.zip" "$Env:GITHUB_WORKSPACE/$artifact.zip"
+          Move-Item "$artifact.zip" "$Env:GITHUB_WORKSPACE/$artifact.zip" -Force
 
       - name: Upload CLI artifact
         uses: actions/upload-artifact@v5
