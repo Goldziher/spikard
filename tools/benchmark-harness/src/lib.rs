@@ -4,7 +4,8 @@
 //! and comparing against external frameworks.
 
 pub mod analysis;
-pub mod compare;
+pub mod compare; // Compare mode orchestrator (multi-framework)
+pub mod comparison; // Comparison utilities (post-processing)
 pub mod error;
 pub mod fixture;
 pub mod framework;
@@ -20,7 +21,8 @@ pub mod types;
 pub mod workload;
 
 pub use analysis::{AggregatedResult, MetricStats, aggregate_runs};
-pub use compare::{
+pub use compare::{CompareConfig, CompareResult, CompareRunner, CompareSummary};
+pub use comparison::{
     ComparisonReport, FrameworkComparison, RegressionWarning, RelativeMetrics, compare_frameworks, detect_regressions,
     generate_json_report, generate_markdown_report,
 };

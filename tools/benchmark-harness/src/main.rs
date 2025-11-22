@@ -3,6 +3,7 @@
 use benchmark_harness::{
     BenchmarkRunner, Fixture, FixtureManager, Result, RunnerConfig, StreamingBenchmarkRunner, StreamingFixture,
     StreamingRunnerConfig,
+    compare::{CompareConfig, CompareRunner},
     framework::detect_framework,
     profile::{ProfileRunner, ProfileRunnerConfig},
 };
@@ -159,6 +160,61 @@ enum Commands {
         /// Output file for ProfileResult JSON
         #[arg(short, long)]
         output: Option<PathBuf>,
+    },
+
+    /// Compare multiple frameworks with statistical analysis
+    ///
+    /// Runs the same workload suite against multiple frameworks sequentially,
+    /// performs statistical significance testing (Welch's t-test), and calculates
+    /// effect sizes (Cohen's d) to determine which framework performs best.
+    ///
+    /// Examples:
+    ///   # Compare Spikard Python binding against FastAPI and Flask
+    ///   benchmark-harness compare --frameworks spikard-python,fastapi,flask
+    ///
+    ///   # Compare with custom duration and concurrency
+    ///   benchmark-harness compare \
+    ///     --frameworks spikard-python,robyn \
+    ///     --duration 60 \
+    ///     --concurrency 200 \
+    ///     --suite json-bodies
+    ///
+    ///   # Use custom significance threshold (stricter)
+    ///   benchmark-harness compare \
+    ///     --frameworks spikard-python,fastapi \
+    ///     --significance 0.01
+    Compare {
+        /// Comma-separated framework names (e.g., "spikard-python,fastapi,robyn")
+        #[arg(short, long, value_delimiter = ',', required = true)]
+        frameworks: Vec<String>,
+
+        /// Workload suite to run (default: "all")
+        #[arg(short = 's', long, default_value = "all")]
+        suite: String,
+
+        /// Base output directory for reports
+        #[arg(short, long, default_value = "./benchmark-results")]
+        output: PathBuf,
+
+        /// Statistical significance threshold (p-value, default: 0.05)
+        #[arg(long, default_value = "0.05")]
+        significance: f64,
+
+        /// Base port for servers (each framework gets port + index*10)
+        #[arg(short, long, default_value = "8100")]
+        port: u16,
+
+        /// Benchmark duration per workload in seconds
+        #[arg(short, long, default_value = "30")]
+        duration: u64,
+
+        /// Number of concurrent connections
+        #[arg(short, long, default_value = "100")]
+        concurrency: usize,
+
+        /// Number of warmup requests per framework
+        #[arg(short, long, default_value = "100")]
+        warmup: usize,
     },
 }
 
@@ -470,6 +526,79 @@ async fn main() -> Result<()> {
                 std::fs::write(&output_path, json)?;
                 println!("\n✓ Results written to: {}", output_path.display());
             }
+
+            Ok(())
+        }
+
+        Commands::Compare {
+            frameworks,
+            suite,
+            output,
+            significance,
+            port,
+            duration,
+            concurrency,
+            warmup,
+        } => {
+            // Validation
+            if frameworks.len() < 2 {
+                eprintln!("❌ Error: Compare mode requires at least 2 frameworks");
+                eprintln!("   Provided: {} framework(s)", frameworks.len());
+                eprintln!();
+                eprintln!("Example usage:");
+                eprintln!("  benchmark-harness compare --frameworks spikard-python,fastapi,robyn");
+                std::process::exit(1);
+            }
+
+            if !(0.0..=1.0).contains(&significance) {
+                eprintln!("❌ Error: Significance threshold must be between 0.0 and 1.0");
+                eprintln!("   Provided: {}", significance);
+                std::process::exit(1);
+            }
+
+            // Create output directory if needed
+            std::fs::create_dir_all(&output)?;
+
+            // Build configuration
+            let config = CompareConfig {
+                frameworks,
+                workload_suite: suite.clone(),
+                port,
+                warmup_requests: warmup,
+                output_dir: output.clone(),
+                significance_threshold: significance,
+                duration_secs: duration,
+                concurrency,
+            };
+
+            // Execute comparison
+            println!("🚀 Starting framework comparison");
+            println!("   Frameworks: {}", config.frameworks.join(", "));
+            println!("   Suite: {}", config.workload_suite);
+            println!("   Duration: {}s per workload", config.duration_secs);
+            println!("   Concurrency: {}", config.concurrency);
+            println!();
+
+            let runner = CompareRunner::new(config.clone())?;
+            let (result, profile_results) = runner.run().await?;
+
+            // Save JSON report
+            let json_path = output.join("compare_results.json");
+            let json_content = serde_json::to_string_pretty(&result)?;
+            std::fs::write(&json_path, json_content)?;
+
+            // Generate and save markdown report
+            let md_path =
+                CompareRunner::save_markdown_report(&result, &profile_results, &output, significance, &suite)?;
+
+            println!();
+            println!("✓ Comparison complete!");
+            println!("   Baseline: {}", result.frameworks[0].name);
+            println!("   Overall winner: {}", result.summary.overall_winner);
+            println!();
+            println!("📄 Reports saved:");
+            println!("   JSON: {}", json_path.display());
+            println!("   Markdown: {}", md_path.display());
 
             Ok(())
         }
