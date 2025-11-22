@@ -6,6 +6,8 @@
 //! by the shared `spikard-http` runtime, ensuring identical validation and
 //! middleware behaviour across languages.
 
+pub mod upload;
+
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
@@ -33,6 +35,7 @@ use spikard_http::{
     sse::{SseState, sse_handler},
     websocket::{WebSocketState, websocket_handler},
 };
+pub use upload::UploadFile;
 
 pub mod testing {
     use super::{App, AppError};
