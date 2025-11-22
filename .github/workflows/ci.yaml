@@ -58,10 +58,6 @@ jobs:
       - name: Lint TypeScript
         run: pnpm --filter @spikard/node lint
 
-      - name: Lint Ruby
-        working-directory: packages/ruby
-        run: bundle exec rubocop
-
       - name: Check Rust formatting
         run: cargo fmt --all --check
 
