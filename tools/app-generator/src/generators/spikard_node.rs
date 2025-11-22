@@ -48,8 +48,8 @@ fn generate_header() -> String {
 }
 
 fn generate_imports(_has_body_handlers: bool) -> String {
-    // Always import wrapBodyHandler since we use it for all routes
-    let imports = "import { Spikard, wrapBodyHandler, type UploadFile } from \"@spikard/node\";\n";
+    // Import both wrapHandler and wrapBodyHandler for flexibility
+    let imports = "import { Spikard, wrapHandler, wrapBodyHandler, type UploadFile } from \"@spikard/node\";\n";
 
     format!("{}\nconst app = new Spikard();", imports)
 }
@@ -118,8 +118,23 @@ fn generate_handler(route: &RouteInfo) -> String {
     let method = route.method.to_lowercase();
     let method_func = if method == "delete" { "delete" } else { &method };
 
-    // Generate based on whether there's a body
-    if route.params.body.is_some() {
+    // Check for path params by looking at the route string itself
+    let path_params = crate::analyzer::extract_path_params(&route.route);
+    let has_path_params = !path_params.is_empty();
+    let has_body = route.params.body.is_some();
+
+    // Choose wrapper based on what we need:
+    // - wrapHandler if we have path params (provides pathParams, queryParams, body, etc.)
+    // - wrapBodyHandler if we only need the body
+    if has_path_params {
+        let body = generate_handler_body(route);
+        format!(
+            r#"app.{}('{}', wrapHandler(async ({{ pathParams, body }}) => {{
+  {}
+}}));"#,
+            method_func, route.route, body
+        )
+    } else if has_body {
         let interface_name = generate_interface_name(route);
         let body = generate_handler_body(route);
 
@@ -147,7 +162,9 @@ fn generate_handler_body(route: &RouteInfo) -> String {
 
     let path_params = crate::analyzer::extract_path_params(&route.route);
     for param_name in &path_params {
-        lines.push(format!("  response['{}'] = /* path param */;", param_name));
+        lines.push(format!("  if (pathParams['{}'] !== undefined) {{", param_name));
+        lines.push(format!("    response['{}'] = pathParams['{}'];", param_name, param_name));
+        lines.push("  }".to_string());
     }
 
     for (name, _) in &route.params.query {
@@ -171,7 +188,9 @@ fn generate_handler_body_simple(route: &RouteInfo) -> String {
 
     let path_params = crate::analyzer::extract_path_params(&route.route);
     for param_name in &path_params {
-        lines.push(format!("  response['{}'] = /* path param */;", param_name));
+        lines.push(format!("  if (pathParams['{}'] !== undefined) {{", param_name));
+        lines.push(format!("    response['{}'] = pathParams['{}'];", param_name, param_name));
+        lines.push("  }".to_string());
     }
 
     for (name, _) in &route.params.query {

@@ -3,12 +3,12 @@ import { defineConfig } from "tsup";
 export default defineConfig({
 	entry: ["src/index.ts"],
 	format: ["cjs", "esm"],
-	dts: false, 
+	dts: false,
 	splitting: false,
 	sourcemap: true,
 	clean: true,
 	minify: false,
-	shims: true, 
+	shims: true,
 	external: [/^\.\./, "ws"],
 	noExternal: [],
 });

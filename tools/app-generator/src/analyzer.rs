@@ -1,6 +1,6 @@
 //! Analyze fixtures and extract route definitions
 
-use crate::fixture::{Fixture, Handler, MiddlewareConfig, Parameters};
+use crate::fixture::{Fixture, MiddlewareConfig, Parameters};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 

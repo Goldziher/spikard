@@ -102,8 +102,6 @@ def load_file_content(category: str, filename: str) -> bytes:
         return f.read()
 
 
-
-
 def pytest_parametrize_fixtures(
     category: str, fixture_names: list[str] | None = None
 ) -> tuple[str, list[dict[str, Any]], dict[str, Any]]:

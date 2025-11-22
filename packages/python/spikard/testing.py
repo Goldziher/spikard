@@ -20,7 +20,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-import cloudpickle  # type: ignore[import-untyped]
+import cloudpickle
 import httpx
 from httpx_sse import ServerSentEvent, aconnect_sse
 from websockets.asyncio.client import ClientConnection

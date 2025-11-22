@@ -851,7 +851,6 @@ function applyBodyMetadata(
 				buffer = buildBuffer(textEncoder.encode(textValue));
 			}
 			break;
-		case "binary":
 		default:
 			break;
 	}

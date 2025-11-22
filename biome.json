@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.3.5/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.3.7/schema.json",
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
@@ -42,14 +42,15 @@
 			}
 		},
 		{
-			"includes": ["e2e/node/app/main.ts"],
+			"includes": ["e2e/node/app/main.ts", "e2e/node/app/server.ts"],
 			"linter": {
 				"rules": {
 					"complexity": {
 						"useLiteralKeys": "off"
 					},
 					"correctness": {
-						"noPrecisionLoss": "off"
+						"noPrecisionLoss": "off",
+						"noUnusedFunctionParameters": "off"
 					}
 				}
 			}
