@@ -109,14 +109,14 @@ jobs:
         if: matrix.os != 'windows-latest'
         run: |
           cd target/${{ matrix.target }}/release
-          tar czf spikard-cli-${{ matrix.target }}.tar.gz spikard-cli
+          tar czf spikard-cli-${{ matrix.target }}.tar.gz spikard
           mv spikard-cli-${{ matrix.target }}.tar.gz $GITHUB_WORKSPACE/
 
       - name: Package binary (Windows)
         if: matrix.os == 'windows-latest'
         run: |
           cd target/${{ matrix.target }}/release
-          powershell Compress-Archive -Path spikard-cli.exe -DestinationPath spikard-cli-${{ matrix.target }}.zip
+          powershell Compress-Archive -Path spikard.exe -DestinationPath spikard-cli-${{ matrix.target }}.zip
           mv spikard-cli-${{ matrix.target }}.zip $GITHUB_WORKSPACE/
 
       - name: Upload CLI artifact
