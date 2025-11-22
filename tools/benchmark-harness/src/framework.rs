@@ -312,8 +312,14 @@ mod tests {
         assert!(names.contains(&"fastapi-granian"));
         assert!(names.contains(&"robyn"));
         assert!(names.contains(&"fastify"));
+        assert!(names.contains(&"litestar"));
+        assert!(names.contains(&"litestar-granian"));
+        assert!(names.contains(&"express"));
+        assert!(names.contains(&"hono"));
+        assert!(names.contains(&"hanami-api"));
+        assert!(names.contains(&"roda"));
 
-        assert_eq!(registry.len(), 10);
+        assert_eq!(registry.len(), 16);
     }
 
     #[test]
@@ -372,7 +378,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        assert_eq!(frameworks.len(), 10);
+        assert_eq!(frameworks.len(), 16);
     }
 
     #[test]
