@@ -49,27 +49,26 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.3"
-          bundler-cache: false
+          bundler-cache: true
           working-directory: packages/ruby
 
-      - name: Install Task
-        run: |
-          sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
+      - name: Sync Python deps
+        run: uv sync --all-extras --all-groups --no-install-project
 
-      - name: Cache Prek
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/prek/
-          key: prek|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Lint TypeScript
+        run: pnpm --filter @spikard/node lint
 
-      - name: Run unified lint
+      - name: Lint Ruby
+        working-directory: packages/ruby
+        run: bundle exec rubocop
+
+      - name: Check Rust formatting
+        run: cargo fmt --all --check
+
+      - name: Run Clippy
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
-        run: |
-          uv sync --all-extras --all-groups --no-install-project
-          uv tool install prek
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-          task lint
+        run: cargo clippy --workspace --all-features -- -D warnings
 
   rust-tests:
     name: Rust Unit Tests (${{ matrix.os }})
