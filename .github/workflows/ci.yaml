@@ -75,6 +75,8 @@ jobs:
         run: cargo fmt --all --check
 
       - name: Run Clippy
+        env:
+          RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
         run: cargo clippy --workspace --all-features -- -D warnings
 
   rust-tests:
