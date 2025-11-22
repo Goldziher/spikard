@@ -251,6 +251,7 @@ jobs:
 
       - name: Package CLI (Windows)
         if: matrix.os == 'windows-latest'
+        shell: pwsh
         run: |
           cd target/${{ matrix.target }}/release
           $artifact = "spikard-cli-${{ matrix.target }}"
@@ -354,6 +355,7 @@ jobs:
           cache-key-prefix: ruby-tests-${{ matrix.os }}
 
       - name: Setup Ruby
+        id: setup-ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.3"
@@ -364,10 +366,13 @@ jobs:
         working-directory: packages/ruby
         env:
           RB_SYS_CARGO_PROFILE: release
+          RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
         run: bundle exec rake ext:build
 
       - name: Run Ruby specs
         working-directory: packages/ruby
+        env:
+          RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
         run: bundle exec rspec
 
   smoke-cli:
