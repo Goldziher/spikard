@@ -14118,5 +14118,3 @@ def create_app_websocket_chat() -> Spikard:
         return message
 
     return app
-
-
