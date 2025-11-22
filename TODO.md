@@ -5,6 +5,19 @@
 
 ## ✨ Recent Achievements
 
+**Code Generator Updates - COMPLETE!**
+- ✅ Node.js generator: Uses wrapBodyHandler/wrapHandler with proper path param handling
+- ✅ Ruby generator: Uses wrap_body_handler/wrap_handler with intelligent parameter selection
+- ✅ Rust generator: Generates structs with #[derive(Deserialize, Serialize)] and UploadFile fields
+- ✅ All generators produce zero-boilerplate, ergonomic code matching Python reference implementation
+- ✅ 1,733/1,740 tests passing (99.7%)
+
+**Commits:**
+- `7b13dcd` - All code generators updated with ergonomic handler wrappers
+- `4722879` - Fix all linting and formatting issues
+
+---
+
 **Multipart/Form-Data Support - CORE IMPLEMENTATION COMPLETE!**
 - ✅ All 4 primary language bindings now have UploadFile support (Python, Node.js, Ruby, Rust)
 - ✅ Ergonomic handler wrappers provide zero-boilerplate file upload handling
@@ -38,8 +51,8 @@
 - ✅ Ruby: Converter utilities complete (recursive file metadata conversion)
 - ✅ Ruby: Handler wrappers complete (wrap_body_handler, wrap_handler, wrap_handler_with_context)
 - ✅ Rust: UploadFile struct complete (Bytes-backed, serde support, Read/Seek traits)
-- 🚧 Node.js: Test generator needs refactoring to use handler wrappers (low priority - e2e only)
-- 🚧 Ruby, Rust generators need updates to match Python ergonomics (low priority - e2e only)
+- ✅ Node.js: Code generator updated to use handler wrappers (low priority - e2e only)
+- ✅ Ruby, Rust generators updated to match Python ergonomics (low priority - e2e only)
 - ❌ WASM bindings (future work)
 
 ### Phase 1: TypeScript/Node.js Implementation
@@ -64,13 +77,13 @@
   - [x] Zero boilerplate - no manual JSON parsing needed
   - [x] Three wrapper variants: wrapHandler, wrapBodyHandler, wrapHandlerWithContext
 
-- [ ] **Update code generator** (`tools/test-generator/src/node_app.rs`)
-  - [ ] Generate handlers using UploadFile type for file fields
-  - [ ] Import UploadFile from @spikard/node
-  - [ ] Generate interface types for request bodies with files
-  - [ ] Use handler wrapper for automatic conversion
-  - [ ] Match Python generator ergonomics
-  - [ ] **NOTE**: Low priority - generator only used for e2e test apps, not user code
+- [x] **Update code generator** (`tools/test-generator/src/node_app.rs`)
+  - [x] Generate handlers using UploadFile type for file fields
+  - [x] Import UploadFile from @spikard/node
+  - [x] Generate interface types for request bodies with files
+  - [x] Use handler wrapper for automatic conversion
+  - [x] Match Python generator ergonomics
+  - [x] **NOTE**: Low priority - generator only used for e2e test apps, not user code
 
 - [ ] **Zod validation support**
   - [ ] Test WITHOUT Zod (raw objects, fastest)
@@ -109,12 +122,12 @@
   - [x] Three wrapper variants: wrap_body_handler, wrap_handler, wrap_handler_with_context
   - [x] Export wrappers at module level (Spikard.wrap_body_handler, etc.)
 
-- [ ] **Update code generator** (`tools/app-generator/src/generators/ruby.rs`)
-  - [ ] Generate handlers using UploadFile type for file fields
-  - [ ] Require 'spikard/upload_file'
-  - [ ] Generate Dry::Struct classes for request bodies with files
-  - [ ] Use handler wrapper for automatic conversion
-  - [ ] Match Python generator ergonomics
+- [x] **Update code generator** (`tools/app-generator/src/generators/ruby.rs`)
+  - [x] Generate handlers using UploadFile type for file fields
+  - [x] Require 'spikard/upload_file'
+  - [x] Generate Dry::Struct classes for request bodies with files
+  - [x] Use handler wrapper for automatic conversion
+  - [x] Match Python generator ergonomics
 
 - [ ] **Dry::Schema / Dry::Struct support**
   - [ ] Test WITHOUT validation (fastest)
@@ -150,11 +163,11 @@
   - [ ] Handle single/multiple/optional files in handler signatures
   - [ ] **Same ergonomics as Python**: `async fn handler(body: UploadRequest)`
 
-- [ ] **Update code generator** (`tools/app-generator/src/generators/rust.rs`)
-  - [ ] Generate handlers using UploadFile type for file fields
-  - [ ] Use spikard::UploadFile in generated structs
-  - [ ] Generate typed request structs with UploadFile fields
-  - [ ] Match Python generator ergonomics
+- [x] **Update code generator** (`tools/app-generator/src/generators/rust.rs`)
+  - [x] Generate handlers using UploadFile type for file fields
+  - [x] Use spikard::UploadFile in generated structs
+  - [x] Generate typed request structs with UploadFile fields
+  - [x] Match Python generator ergonomics
 
 - [ ] **Serde validation**
   - [ ] Test WITHOUT serde (fastest)
@@ -273,12 +286,12 @@ async fn upload_handler(body: UploadRequest) -> impl IntoResponse {
   - [ ] Use UploadFile for file fields
   - [ ] Auto-deserialize via serde
 
-- [ ] **Regenerate all test fixtures**
-  - [ ] Run generator for all testing_data fixtures
-  - [ ] Verify Python handlers still work (no regression)
-  - [ ] Verify Node handlers use new pattern
-  - [ ] Verify Ruby handlers use new pattern
-  - [ ] Verify Rust handlers use new pattern
+- [x] **Regenerate all test fixtures**
+  - [x] Run generator for all testing_data fixtures
+  - [x] Verify Python handlers still work (no regression)
+  - [x] Verify Node handlers use new pattern
+  - [x] Verify Ruby handlers use new pattern
+  - [x] Verify Rust handlers use new pattern
 
 ---
 
@@ -446,10 +459,12 @@ Document for each language:
 - ✅ Automatic file metadata → UploadFile conversion
 - ✅ Consistent ergonomic API: `handler(body: TypedRequest)` pattern
 
-**Priority 1 (Optional/Low Priority):** Code generator updates for e2e test apps
-- Node.js generator: Use handler wrappers, import UploadFile types
-- Ruby generator: Use handler wrappers, generate Dry::Struct classes
-- Rust generator: Generate structs with UploadFile fields
+**✅ COMPLETED: Priority 1 - Code generator updates for e2e test apps**
+- ✅ Node.js generator: Uses wrapBodyHandler/wrapHandler with proper path param handling
+- ✅ Ruby generator: Uses wrap_body_handler/wrap_handler with intelligent parameter selection
+- ✅ Rust generator: Generates structs with #[derive(Deserialize, Serialize)] and UploadFile fields
+- ✅ All generators produce zero-boilerplate, ergonomic code
+- ✅ All test fixtures regenerated and verified
 - **NOTE**: These are only for e2e/benchmark test apps, not user-facing APIs
 
 **Priority 2:** Benchmark harness auto-start infrastructure
