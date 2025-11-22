@@ -36,7 +36,7 @@ runs:
         path: |
           ~/.cache/uv
           .venv
-        key: ${{ inputs.cache-prefix }}-${{ runner.os }}-${{ inputs.python-version }}-${{ hashFiles('uv.lock') }}
+        key: ${{ inputs.cache-prefix }}-${{ runner.os }}-${{ inputs.python-version }}
         restore-keys: |
           ${{ inputs.cache-prefix }}-${{ runner.os }}-${{ inputs.python-version }}-
 
