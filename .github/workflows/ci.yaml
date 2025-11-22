@@ -121,6 +121,8 @@ jobs:
 
       - name: Build wheels
         uses: ./.github/actions/build-wheels
+        env:
+          CIBW_ARCHS_LINUX: ${{ matrix.os == 'ubuntu-latest' && 'x86_64' || env.CIBW_ARCHS_LINUX }}
 
   python-sdist:
     name: Python Sdist
