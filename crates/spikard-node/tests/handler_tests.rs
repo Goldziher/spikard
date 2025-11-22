@@ -32,6 +32,7 @@ async fn test_request_data_serialization() {
         cookies: Arc::new(cookies),
         raw_query_params: Arc::new(HashMap::new()),
         body,
+        raw_body: None,
     };
 
     let expected = json!({
