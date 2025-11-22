@@ -121,8 +121,7 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     let framework_config = match &config.framework {
         Some(name) => {
             // Explicit framework name provided - look it up in registry
-            get_framework(name)
-                .ok_or_else(|| Error::FrameworkNotFound(name.clone()))?
+            get_framework(name).ok_or_else(|| Error::FrameworkNotFound(name.clone()))?
         }
         None => {
             // Auto-detect framework from app directory
@@ -145,12 +144,9 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
             build.current_dir(&config.app_dir);
 
             // Build output is normally visible since it's a one-time operation
-            let status = build
-                .status()
-                .map_err(|e| Error::ServerStartFailed(format!(
-                    "Failed to execute build command '{}': {}",
-                    build_cmd, e
-                )))?;
+            let status = build.status().map_err(|e| {
+                Error::ServerStartFailed(format!("Failed to execute build command '{}': {}", build_cmd, e))
+            })?;
 
             if !status.success() {
                 return Err(Error::ServerStartFailed(format!(
@@ -168,7 +164,7 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     let parts: Vec<&str> = start_cmd.split_whitespace().collect();
     if parts.is_empty() {
         return Err(Error::ServerStartFailed(
-            "Empty start command from framework config".to_string()
+            "Empty start command from framework config".to_string(),
         ));
     }
 
@@ -191,12 +187,12 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     cmd.stdout(Stdio::null()).stderr(Stdio::null());
 
     // Step 5: Spawn server process
-    let process = cmd
-        .spawn()
-        .map_err(|e| Error::ServerStartFailed(format!(
+    let process = cmd.spawn().map_err(|e| {
+        Error::ServerStartFailed(format!(
             "Failed to spawn process for {} with command '{}': {}",
             framework_config.name, start_cmd, e
-        )))?;
+        ))
+    })?;
 
     let mut handle = ServerHandle {
         process,
@@ -420,4 +416,3 @@ mod tests {
         assert_eq!(config.variant, Some("async".to_string()));
     }
 }
-

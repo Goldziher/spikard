@@ -50,9 +50,7 @@ impl FrameworkConfig {
 
     /// Checks if all detect_files exist in the given directory
     fn matches(&self, app_dir: &Path) -> bool {
-        self.detect_files
-            .iter()
-            .all(|file| app_dir.join(file).exists())
+        self.detect_files.iter().all(|file| app_dir.join(file).exists())
     }
 }
 
@@ -175,10 +173,7 @@ pub fn detect_framework(app_dir: &Path) -> Result<FrameworkConfig> {
     // 1. First, check for more specific frameworks (those with more detect_files)
     // 2. Then fall back to less specific ones
     // This avoids false positives when a directory could match multiple frameworks
-    let mut matches: Vec<FrameworkConfig> = registry
-        .into_iter()
-        .filter(|fw| fw.matches(app_dir))
-        .collect();
+    let mut matches: Vec<FrameworkConfig> = registry.into_iter().filter(|fw| fw.matches(app_dir)).collect();
 
     if matches.is_empty() {
         return Err(crate::Error::InvalidInput(format!(
@@ -235,9 +230,7 @@ pub fn list_frameworks() -> Vec<FrameworkConfig> {
 /// }
 /// ```
 pub fn get_framework(name: &str) -> Option<FrameworkConfig> {
-    framework_registry()
-        .into_iter()
-        .find(|fw| fw.name == name)
+    framework_registry().into_iter().find(|fw| fw.name == name)
 }
 
 #[cfg(test)]
@@ -287,10 +280,7 @@ mod tests {
         let result = detect_framework(temp_dir.path());
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("No framework detected"));
+        assert!(result.unwrap_err().to_string().contains("No framework detected"));
     }
 
     #[test]
