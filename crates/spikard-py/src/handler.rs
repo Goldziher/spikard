@@ -535,7 +535,7 @@ fn validated_params_to_py_kwargs<'py>(
     let convert_params_func = converter_module.getattr("convert_params")?;
     let converted = convert_params_func.call1((params_dict, handler))?;
 
-    converted.extract()
+    Ok(converted.cast_into::<PyDict>()?)
 }
 
 /// Convert request data (path params, query params, body) to Python keyword arguments

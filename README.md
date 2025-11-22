@@ -60,28 +60,37 @@ All generators rely on the same validators and schemas used by the e2e suites, k
 
 ## Performance
 
-Benchmarks measured on macOS (Darwin 24.6.0) with 50 concurrent connections over 10 seconds. All tests achieved 100% success rates.
+Benchmarks measured on Apple M4 Pro (14 cores, 48GB RAM) with 100 concurrent connections over 10 seconds per workload (40 seconds total per suite). All tests achieved 100% success rates.
 
-### Overall Performance Summary
+### JSON Request/Response Performance
 
-| Binding | Throughput | Mean Latency | P95 Latency | P99 Latency | Memory | Startup |
-|---------|------------|--------------|-------------|-------------|--------|---------|
-| **Rust** | 165,228 req/s | 0.30ms | 0.36ms | 0.45ms | 17.4 MB | 1.01s |
-| **Python** | 120,058 req/s | 0.42ms | 0.67ms | 1.27ms | 25.5 MB | 1.01s |
-| Node | *pending* | *pending* | *pending* | *pending* | *pending* | *pending* |
-| Ruby | *pending* | *pending* | *pending* | *pending* | *pending* | *pending* |
-| WASM | *pending* | *pending* | *pending* | *pending* | *pending* | *pending* |
+Tests measure JSON serialization/deserialization across varying payload sizes (86 bytes to 150 KB).
 
-### Performance by Workload Type
+| Binding | Avg Throughput | Mean Latency | P95 Latency | P99 Latency | Avg Memory |
+|---------|----------------|--------------|-------------|-------------|------------|
+| **Rust** | 165,454 req/s | 0.60ms | 0.95ms | 1.53ms | 26.9 MB |
+| **Python** | 17,584 req/s | 5.69ms | 8.14ms | 9.76ms | 26.8 MB |
+| Node | *pending* | *pending* | *pending* | *pending* | *pending* |
+| Ruby | *pending* | *pending* | *pending* | *pending* | *pending* |
 
-#### JSON Request/Response
-| Binding | Throughput | Mean Latency | P99 Latency |
-|---------|------------|--------------|-------------|
-| **Rust** | 160,989 req/s | 0.31ms | 0.45ms |
-| **FastAPI** (comparison) | 14,800 req/s | 3.38ms | 3.89ms |
-| **Python** | 5,796 req/s | 8.63ms | 15.32ms |
-| Node | *pending* | *pending* | *pending* |
-| Ruby | *pending* | *pending* | *pending* |
+**Detailed Breakdown by Payload Size:**
+
+| Payload Size | Rust RPS | Python RPS | Ratio |
+|--------------|----------|------------|-------|
+| Small (86 bytes) | 159,147 | 17,699 | 9.0x |
+| Medium (1.5 KB) | 166,860 | 17,904 | 9.3x |
+| Large (15 KB) | 167,793 | 17,775 | 9.4x |
+| Very Large (150 KB) | 168,016 | 16,958 | 9.9x |
+
+**Key Findings:**
+- Rust consistently outperforms Python by ~9.4x in throughput
+- Performance remains stable across payload sizes for both implementations
+- Python shows excellent memory stability (~27 MB across all workloads)
+- Both bindings use zero-copy serialization (serde for Rust, msgspec for Python)
+- Rust uses optimized JSON with minimal allocations
+- Python uses PyO3 with async/await and direct msgspec integration
+
+### Other Workload Types
 
 #### Multipart Form Data
 | Binding | Throughput | Mean Latency | P99 Latency |
@@ -102,19 +111,19 @@ Benchmarks measured on macOS (Darwin 24.6.0) with 50 concurrent connections over
 #### Query Parameters
 | Binding | Throughput | Mean Latency | P99 Latency |
 |---------|------------|--------------|-------------|
-| **Rust** | 165,228 req/s | 0.30ms | 0.45ms |
-| **Python** | 120,058 req/s | 0.42ms | 1.27ms |
+| Rust | *pending* | *pending* | *pending* |
+| Python | *pending* | *pending* | *pending* |
 | Node | *pending* | *pending* | *pending* |
 | Ruby | *pending* | *pending* | *pending* |
 
-**Notes:**
-- Query parameters: Rust shows ~38% higher throughput than Python (165K vs 120K req/s)
-- JSON bodies: Rust shows ~28× higher throughput than Spikard-Python (161K vs 5.8K req/s)
-- JSON bodies: FastAPI with orjson shows 2.5× better performance than Spikard-Python (14.8K vs 5.8K req/s)
-- Spikard-Python's JSON performance gap suggests optimization opportunities in the PyO3 binding layer
-- Python binding uses PyO3 with async/await and zero-copy msgspec serialization
-- Memory footprint remains low (<30 MB) across all bindings
-- Full benchmark methodology and raw results: `tools/benchmark-harness/results/`
+**Test Environment:**
+- Hardware: Apple M4 Pro (14 cores, 14 threads, 48GB RAM)
+- OS: macOS (Darwin 24.6.0, aarch64)
+- Rust: rustc 1.91.1
+- Python: 3.12.8
+- Load Tool: oha with 100 concurrent connections
+- Duration: 10 seconds per workload + 10 seconds warmup
+- Full results: `results/spikard-{rust,python}-json-fresh.json`
 
 ## Roadmap Highlights
 - JSON-RPC and protobuf generators alongside OpenAPI/AsyncAPI.
