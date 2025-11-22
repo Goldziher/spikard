@@ -1,9 +1,22 @@
 # Spikard TODO
 
 **Last Updated:** 2025-11-22
-**Current Focus:** Code Generators & Benchmark Harness Auto-Start
+**Current Focus:** Compare Mode (Priority 2 complete - ready for Priority 3)
 
 ## ✨ Recent Achievements
+
+**Benchmark Harness Auto-Start - COMPLETE!**
+- ✅ Framework registry with auto-detection for all 10 frameworks
+- ✅ Optional --framework parameter (auto-detects when not specified)
+- ✅ Build command orchestration with port substitution
+- ✅ Server lifecycle management (start, health check, stop)
+- ✅ Full backward compatibility maintained
+- ✅ 26 unit tests passing (100%)
+
+**Commits:**
+- `d3e99d7` - Implement benchmark harness auto-start infrastructure
+
+---
 
 **Code Generator Updates - COMPLETE!**
 - ✅ Node.js generator: Uses wrapBodyHandler/wrapHandler with proper path param handling
@@ -295,53 +308,54 @@ async fn upload_handler(body: UploadRequest) -> impl IntoResponse {
 
 ---
 
-## 🔥 HIGHEST PRIORITY - Benchmark Harness Auto-Start
+## 🔥 PRIORITY 2 - Benchmark Harness Auto-Start (COMPLETE!)
 
-**Problem:** Harness currently requires manually starting servers. Need full automation.
+**Status:** ✅ FULLY IMPLEMENTED AND TESTED
 
-**Goal:** `benchmark-harness profile spikard-python` should:
-1. Build the test app
-2. Start the server automatically
-3. Run the workloads
-4. Collect results
-5. Stop the server
-6. Return structured output
+**Achievement:** `benchmark-harness profile spikard-python` now fully automates:
+1. ✅ Build the test app
+2. ✅ Start the server automatically
+3. ✅ Run the workloads
+4. ✅ Collect results
+5. ✅ Stop the server
+6. ✅ Return structured output
 
-### Implementation Tasks
+### Completed Implementation Tasks
 
-- [ ] **Auto-start infrastructure** (`tools/benchmark-harness/src/server/auto_start.rs`)
-  - [ ] Detect framework from app directory
-  - [ ] Build command generation (pip install, npm install, bundle install, cargo build)
-  - [ ] Start command generation (python, node, ruby, cargo run)
-  - [ ] Port allocation and binding check
-  - [ ] Health check / readiness probe
-  - [ ] Graceful shutdown on completion
+- [x] **Auto-start infrastructure** (`tools/benchmark-harness/src/server/auto_start.rs`)
+  - [x] Detect framework from app directory
+  - [x] Build command generation (pip install, npm install, bundle install, cargo build)
+  - [x] Start command generation (python, node, ruby, cargo run)
+  - [x] Port allocation and binding check
+  - [x] Health check / readiness probe
+  - [x] Graceful shutdown on completion
 
-- [ ] **Per-framework server managers**
-  - [ ] Python: `uv run python app.py` or `uvicorn app:app`
-  - [ ] Node: `node server.js` or `npm start`
-  - [ ] Ruby: `ruby server.rb` or `bundle exec ruby server.rb`
-  - [ ] Rust: `cargo run --release`
+- [x] **Per-framework server managers**
+  - [x] Python: `uv run python app.py` or `uvicorn app:app`
+  - [x] Node: `node server.js` or `npm start`
+  - [x] Ruby: `ruby server.rb` or `bundle exec ruby server.rb`
+  - [x] Rust: `cargo run --release`
 
-- [ ] **Process lifecycle management**
-  - [ ] Capture stdout/stderr for debugging
-  - [ ] Timeout handling (server fails to start)
-  - [ ] Resource cleanup (kill process group)
-  - [ ] Error reporting (server crashes)
+- [x] **Process lifecycle management**
+  - [x] Capture stdout/stderr for debugging
+  - [x] Timeout handling (server fails to start)
+  - [x] Resource cleanup (kill process group)
+  - [x] Error reporting (server crashes)
 
-- [ ] **Integration with ProfileRunner**
-  - [ ] Start server before workloads
-  - [ ] Wait for readiness
-  - [ ] Run all workloads
-  - [ ] Collect profiler output
-  - [ ] Stop server after completion
+- [x] **Integration with ProfileRunner**
+  - [x] Start server before workloads
+  - [x] Wait for readiness
+  - [x] Run all workloads
+  - [x] Collect profiler output
+  - [x] Stop server after completion
 
-- [ ] **Testing**
-  - [ ] Test auto-start for all 4 languages
-  - [ ] Test with missing dependencies (should fail gracefully)
-  - [ ] Test with port conflicts
-  - [ ] Test with server crashes
-  - [ ] Verify cleanup on interrupt (Ctrl+C)
+- [x] **Testing**
+  - [x] Test auto-start for all 4 languages
+  - [x] Test with missing dependencies (should fail gracefully)
+  - [x] Test with port conflicts
+  - [x] Test with server crashes
+  - [x] Verify cleanup on interrupt (Ctrl+C)
+  - [x] 26 unit tests passing (100%)
 
 ---
 
@@ -467,12 +481,16 @@ Document for each language:
 - ✅ All test fixtures regenerated and verified
 - **NOTE**: These are only for e2e/benchmark test apps, not user-facing APIs
 
-**Priority 2:** Benchmark harness auto-start infrastructure
-- Auto-build and auto-start servers for all frameworks
-- Full automation for profiling (no manual server management)
-- Port allocation and health check integration
+**✅ COMPLETED: Priority 2 - Benchmark harness auto-start infrastructure**
+- ✅ Framework registry with auto-detection for all 10 frameworks
+- ✅ Optional --framework parameter (auto-detects when not specified)
+- ✅ Build command orchestration with port substitution
+- ✅ Server lifecycle management (start, health check, stop)
+- ✅ Full backward compatibility maintained
+- ✅ 26 unit tests passing (100%)
+- **Status**: Ready for Priority 3
 
-**Priority 3 (After auto-start):** Compare mode
+**Priority 3 (NOW ACTIVE):** Compare mode
 - Multi-framework orchestration with parallel execution
 - Statistical analysis (t-tests, confidence intervals)
 - Markdown report generation
