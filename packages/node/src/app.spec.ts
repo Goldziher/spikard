@@ -3,8 +3,8 @@
  */
 
 import { beforeEach, describe, expect, it } from "vitest";
-import { Spikard } from "../app";
-import type { RouteMetadata } from "../index";
+import { Spikard } from "./app";
+import type { RouteMetadata } from "./index";
 
 describe("Spikard", () => {
 	let app: Spikard;
