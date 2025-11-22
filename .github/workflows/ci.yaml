@@ -58,6 +58,12 @@ jobs:
       - name: Lint TypeScript
         run: pnpm --filter @spikard/node lint
 
+      - name: Run Rubocop
+        uses: reclaim-the-stack/rubocop-action@v1.1.0
+        with:
+          rubocop_arguments: --config packages/ruby/.rubocop.yml packages/ruby
+          gem_versions: "rubocop:1.50.0 rubocop-performance:1.18.0 rubocop-rspec:2.22.0"
+
       - name: Check Rust formatting
         run: cargo fmt --all --check
 
