@@ -1,0 +1,15 @@
+{
+  "name": "fastify-benchmark",
+  "version": "1.0.0",
+  "description": "Fastify comparison server for benchmarking",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "fastify": "5.6.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

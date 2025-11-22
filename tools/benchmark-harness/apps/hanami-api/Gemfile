@@ -1,0 +1,9 @@
+# frozen_string_literal: true
+
+source 'https://rubygems.org'
+
+gem 'hanami-api', '~> 0.3'
+gem 'dry-schema', '~> 1.14'
+gem 'puma', '~> 7.1'
+gem 'rack', '~> 3.2'
+gem 'rackup', '~> 2.2'
