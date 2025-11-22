@@ -1,0 +1,358 @@
+name: Benchmarks
+
+on:
+  workflow_dispatch:
+    inputs:
+      bindings:
+        description: 'Bindings to benchmark (comma-separated: python,node,ruby,rust or "all")'
+        required: false
+        default: 'all'
+        type: string
+      workload-suite:
+        description: 'Workload suite to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - json-bodies
+          - path-params
+          - query-params
+          - forms
+      duration:
+        description: 'Duration per workload in seconds'
+        required: false
+        default: '30'
+        type: string
+      concurrency:
+        description: 'Concurrent connections per workload'
+        required: false
+        default: '100'
+        type: string
+      warmup:
+        description: 'Warmup requests per framework'
+        required: false
+        default: '100'
+        type: string
+      significance-threshold:
+        description: 'Statistical significance threshold (p-value)'
+        required: false
+        default: '0.05'
+        type: string
+
+concurrency:
+  group: benchmarks-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  RUST_BACKTRACE: short
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_RELEASE_DEBUG: 0
+
+jobs:
+  setup:
+    name: Build Benchmark Harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      timestamp: ${{ steps.metadata.outputs.timestamp }}
+      short-sha: ${{ steps.metadata.outputs.short-sha }}
+      run-python: ${{ steps.check-bindings.outputs.run-python }}
+      run-node: ${{ steps.check-bindings.outputs.run-node }}
+      run-ruby: ${{ steps.check-bindings.outputs.run-ruby }}
+      run-rust: ${{ steps.check-bindings.outputs.run-rust }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check which bindings to run
+        id: check-bindings
+        run: |
+          bindings="${{ inputs.bindings }}"
+          echo "run-python=${{ contains(inputs.bindings, 'python') || inputs.bindings == 'all' }}" >> $GITHUB_OUTPUT
+          echo "run-node=${{ contains(inputs.bindings, 'node') || inputs.bindings == 'all' }}" >> $GITHUB_OUTPUT
+          echo "run-ruby=${{ contains(inputs.bindings, 'ruby') || inputs.bindings == 'all' }}" >> $GITHUB_OUTPUT
+          echo "run-rust=${{ contains(inputs.bindings, 'rust') || inputs.bindings == 'all' }}" >> $GITHUB_OUTPUT
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: benchmark-harness
+
+      - name: Build benchmark harness
+        run: cargo build --manifest-path tools/benchmark-harness/Cargo.toml --release
+
+      - name: Generate metadata
+        id: metadata
+        run: |
+          echo "timestamp=$(date +%Y-%m-%d-%H-%M)" >> $GITHUB_OUTPUT
+          echo "short-sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
+
+      - name: Upload harness binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-harness-binary
+          path: target/release/benchmark-harness
+          retention-days: 1
+
+  benchmark-python:
+    name: Benchmark Python
+    needs: setup
+    if: needs.setup.outputs.run-python == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-benchmark-harness
+        with:
+          timestamp: ${{ needs.setup.outputs.timestamp }}
+
+      - uses: ./.github/actions/build-python-binding
+
+      - uses: ./.github/actions/run-benchmarks
+        with:
+          language: python
+          spikard-framework: spikard-python
+          comparison-frameworks: fastapi,fastapi-granian,litestar,litestar-granian,robyn
+          workload-suite: ${{ inputs.workload-suite }}
+          duration: ${{ inputs.duration }}
+          concurrency: ${{ inputs.concurrency }}
+          warmup: ${{ inputs.warmup }}
+          significance: ${{ inputs.significance-threshold }}
+          port: '8100'
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-raw-python-${{ needs.setup.outputs.timestamp }}
+          path: results/python/**/*.json
+          retention-days: 1
+
+  benchmark-node:
+    name: Benchmark Node.js
+    needs: setup
+    if: needs.setup.outputs.run-node == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-benchmark-harness
+        with:
+          timestamp: ${{ needs.setup.outputs.timestamp }}
+
+      - uses: ./.github/actions/build-node-binding
+
+      - uses: ./.github/actions/run-benchmarks
+        with:
+          language: node
+          spikard-framework: spikard-node
+          comparison-frameworks: fastify,express,hono
+          workload-suite: ${{ inputs.workload-suite }}
+          duration: ${{ inputs.duration }}
+          concurrency: ${{ inputs.concurrency }}
+          warmup: ${{ inputs.warmup }}
+          significance: ${{ inputs.significance-threshold }}
+          port: '8200'
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-raw-node-${{ needs.setup.outputs.timestamp }}
+          path: results/node/**/*.json
+          retention-days: 1
+
+  benchmark-ruby:
+    name: Benchmark Ruby
+    needs: setup
+    if: needs.setup.outputs.run-ruby == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-benchmark-harness
+        with:
+          timestamp: ${{ needs.setup.outputs.timestamp }}
+
+      - uses: ./.github/actions/build-ruby-binding
+
+      - uses: ./.github/actions/run-benchmarks
+        with:
+          language: ruby
+          spikard-framework: spikard-ruby
+          comparison-frameworks: hanami-api,roda
+          workload-suite: ${{ inputs.workload-suite }}
+          duration: ${{ inputs.duration }}
+          concurrency: ${{ inputs.concurrency }}
+          warmup: ${{ inputs.warmup }}
+          significance: ${{ inputs.significance-threshold }}
+          port: '8300'
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-raw-ruby-${{ needs.setup.outputs.timestamp }}
+          path: results/ruby/**/*.json
+          retention-days: 1
+
+  benchmark-rust:
+    name: Benchmark Rust
+    needs: setup
+    if: needs.setup.outputs.run-rust == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-benchmark-harness
+        with:
+          timestamp: ${{ needs.setup.outputs.timestamp }}
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: benchmark-rust
+
+      - uses: ./.github/actions/run-benchmarks
+        with:
+          language: rust
+          spikard-framework: spikard-rust
+          comparison-frameworks: axum-baseline
+          workload-suite: ${{ inputs.workload-suite }}
+          duration: ${{ inputs.duration }}
+          concurrency: ${{ inputs.concurrency }}
+          warmup: ${{ inputs.warmup }}
+          significance: ${{ inputs.significance-threshold }}
+          port: '8400'
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-raw-rust-${{ needs.setup.outputs.timestamp }}
+          path: results/rust/**/*.json
+          retention-days: 1
+
+  aggregate:
+    name: Aggregate Results
+    needs: [setup, benchmark-python, benchmark-node, benchmark-ruby, benchmark-rust]
+    if: always() && needs.setup.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download all results
+        uses: actions/download-artifact@v4
+        with:
+          path: raw-results
+          pattern: benchmark-raw-*
+          merge-multiple: false
+
+      - name: Create consolidated structure
+        env:
+          TIMESTAMP: ${{ needs.setup.outputs.timestamp }}
+          SHORT_SHA: ${{ needs.setup.outputs.short-sha }}
+        run: |
+          result_dir="benchmark-results-${TIMESTAMP}-${SHORT_SHA}"
+          mkdir -p "$result_dir"/{python,node,ruby,rust}
+
+          # Copy results from each language
+          for lang in python node ruby rust; do
+            if [ -d "raw-results/benchmark-raw-${lang}-${TIMESTAMP}" ]; then
+              find "raw-results/benchmark-raw-${lang}-${TIMESTAMP}" -name "*.json" -exec cp {} "$result_dir/${lang}/" \; 2>/dev/null || true
+            fi
+          done
+
+          # Create metadata JSON
+          cat > "$result_dir/metadata.json" << 'EOF'
+          {
+            "workflow_run": {
+              "run_id": "${{ github.run_id }}",
+              "run_number": "${{ github.run_number }}",
+              "triggered_by": "${{ github.actor }}",
+              "timestamp": "${{ github.event.repository.updated_at }}"
+            },
+            "repository": {
+              "name": "${{ github.repository }}",
+              "ref": "${{ github.ref }}",
+              "sha": "${{ github.sha }}",
+              "short_sha": "${{ env.SHORT_SHA }}"
+            },
+            "inputs": {
+              "bindings": "${{ inputs.bindings }}",
+              "workload_suite": "${{ inputs.workload-suite }}",
+              "duration": "${{ inputs.duration }}",
+              "concurrency": "${{ inputs.concurrency }}",
+              "warmup": "${{ inputs.warmup }}",
+              "significance_threshold": "${{ inputs.significance-threshold }}"
+            }
+          }
+          EOF
+
+          echo "Created consolidated results in $result_dir"
+          find "$result_dir" -type f
+
+      - name: Upload consolidated results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-${{ needs.setup.outputs.timestamp }}-${{ needs.setup.outputs.short-sha }}
+          path: benchmark-results-*/**
+          retention-days: 90
+
+  report:
+    name: Generate Report
+    needs: [setup, aggregate]
+    if: always() && needs.aggregate.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download consolidated results
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-results-${{ needs.setup.outputs.timestamp }}-${{ needs.setup.outputs.short-sha }}
+          path: results
+
+      - name: Create summary
+        run: |
+          cat > benchmark-summary.md << 'EOF'
+          # Benchmark Results
+
+          **Run ID:** ${{ github.run_id }}
+          **Commit:** ${{ github.sha }}
+          **Timestamp:** ${{ github.event.repository.updated_at }}
+          **Triggered by:** @${{ github.actor }}
+
+          ## Configuration
+
+          - **Workload Suite:** ${{ inputs.workload-suite }}
+          - **Duration:** ${{ inputs.duration }}s per workload
+          - **Concurrency:** ${{ inputs.concurrency }} connections
+          - **Warmup:** ${{ inputs.warmup }} requests
+
+          ## Results
+
+          Results are available in the artifacts.
+
+          ---
+          *Generated by Spikard Benchmark Harness*
+          EOF
+
+          cat benchmark-summary.md
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-summary-${{ needs.setup.outputs.timestamp }}
+          path: benchmark-summary.md
+          retention-days: 90
+
+      - name: Add to job summary
+        run: cat benchmark-summary.md >> $GITHUB_STEP_SUMMARY

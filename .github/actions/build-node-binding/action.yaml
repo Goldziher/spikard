@@ -1,0 +1,20 @@
+name: Build Node Binding
+description: Build spikard-node binding with napi-rs
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node
+      uses: ./.github/actions/setup-node-workspace
+      with:
+        node-version: "20"
+
+    - name: Setup Rust
+      uses: ./.github/actions/setup-rust
+      with:
+        cache-key-prefix: benchmark-node-binding
+
+    - name: Build spikard-node
+      shell: bash
+      working-directory: crates/spikard-node
+      run: pnpm build

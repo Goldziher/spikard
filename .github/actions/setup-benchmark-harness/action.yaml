@@ -1,0 +1,24 @@
+name: Setup Benchmark Harness
+description: Download and setup the benchmark harness binary
+
+inputs:
+  timestamp:
+    description: 'Timestamp for artifact name'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Download harness binary
+      uses: actions/download-artifact@v4
+      with:
+        name: benchmark-harness-binary
+        path: ${{ github.workspace }}/bin
+
+    - name: Make harness executable
+      shell: bash
+      run: chmod +x ${{ github.workspace }}/bin/benchmark-harness
+
+    - name: Add to PATH
+      shell: bash
+      run: echo "${{ github.workspace }}/bin" >> $GITHUB_PATH

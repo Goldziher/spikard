@@ -214,6 +214,16 @@ impl CompareRunner {
         let workspace_root = std::env::current_dir()
             .map_err(|e| Error::InvalidInput(format!("Cannot determine workspace root: {}", e)))?;
 
+        // Try tools/benchmark-harness/apps/{framework} first
+        let apps_dir = workspace_root
+            .join("tools")
+            .join("benchmark-harness")
+            .join("apps")
+            .join(framework);
+        if apps_dir.exists() {
+            return Ok(apps_dir);
+        }
+
         // Try benchmarks/{framework}
         let benchmark_dir = workspace_root.join("benchmarks").join(framework);
         if benchmark_dir.exists() {
