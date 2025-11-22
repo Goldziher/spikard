@@ -32,7 +32,8 @@ runs:
       shell: bash
       run: python -m cibuildwheel crates/spikard-py --output-dir wheelhouse
       env:
-        CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-*"
+        # Using abi3; a single cp310 build produces the universal wheel. Avoid duplicate names.
+        CIBW_BUILD: "cp310-*"
 
         CIBW_ARCHS_LINUX: x86_64 aarch64
         CIBW_ARCHS_MACOS: x86_64 arm64
