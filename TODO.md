@@ -81,12 +81,14 @@
   - [x] process_upload_file_fields for recursive conversion
   - [x] convert_handler_body main entry point
 
-- [ ] **Ergonomic handler wrapper** (`packages/ruby/lib/spikard/handler_wrapper.rb`)
-  - [ ] Create typed handler wrapper
-  - [ ] Auto-convert file metadata → UploadFile instances
-  - [ ] Support Dry::Struct for typed bodies
-  - [ ] **Same ergonomics as Python**: `def handler(body)`
-  - [ ] Zero boilerplate - automatic conversion
+- [x] **Ergonomic handler wrapper** (`packages/ruby/lib/spikard/handler_wrapper.rb`)
+  - [x] Create typed handler wrapper
+  - [x] Auto-convert file metadata → UploadFile instances
+  - [x] Support Dry::Struct for typed bodies
+  - [x] **Same ergonomics as Python**: `def handler(body)`
+  - [x] Zero boilerplate - automatic conversion
+  - [x] Three wrapper variants: wrap_body_handler, wrap_handler, wrap_handler_with_context
+  - [x] Export wrappers at module level (Spikard.wrap_body_handler, etc.)
 
 - [ ] **Update code generator** (`tools/app-generator/src/generators/ruby.rs`)
   - [ ] Generate handlers using UploadFile type for file fields
