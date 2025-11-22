@@ -20,6 +20,7 @@ require_relative 'spikard/websocket'
 require_relative 'spikard/sse'
 require_relative 'spikard/upload_file'
 require_relative 'spikard/converters'
+require_relative 'spikard/handler_wrapper'
 require_relative 'spikard/app'
 require_relative 'spikard/testing'
 
@@ -32,7 +33,10 @@ rescue LoadError => e
   MSG
 end
 
-# Convenience alias for test client at top level
+# Convenience aliases and methods at top level
 module Spikard
   TestClient = Testing::TestClient
+
+  # Handler wrapper utilities
+  extend HandlerWrapper
 end
