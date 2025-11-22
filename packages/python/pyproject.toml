@@ -31,7 +31,7 @@ dependencies = [
 ]
 
 optional-dependencies.uvloop = [
-  "uvloop>=0.22",
+  "uvloop>=0.22; sys_platform!='win32'",
 ]
 
 [tool.hatch.build.targets.wheel]
