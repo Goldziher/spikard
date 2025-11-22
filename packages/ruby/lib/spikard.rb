@@ -18,6 +18,8 @@ require_relative 'spikard/background'
 require_relative 'spikard/schema'
 require_relative 'spikard/websocket'
 require_relative 'spikard/sse'
+require_relative 'spikard/upload_file'
+require_relative 'spikard/converters'
 require_relative 'spikard/app'
 require_relative 'spikard/testing'
 

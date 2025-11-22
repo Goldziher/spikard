@@ -70,16 +70,16 @@
 
 ### Phase 2: Ruby Implementation
 
-- [ ] **Create UploadFile class** (`packages/ruby/lib/spikard/upload_file.rb`)
-  - [ ] Properties: filename, size, content_type, headers
-  - [ ] Methods: read, rewind, close, seek, tell
-  - [ ] Tempfile-based backend
-  - [ ] Ruby idiomatic API (snake_case, blocks)
+- [x] **Create UploadFile class** (`packages/ruby/lib/spikard/upload_file.rb`)
+  - [x] Properties: filename, size, content_type, headers
+  - [x] Methods: read, rewind, close, seek, tell, text
+  - [x] StringIO-based backend
+  - [x] Ruby idiomatic API (snake_case, attr_reader)
 
-- [ ] **Create converter utilities** (`packages/ruby/lib/spikard/converters.rb`)
-  - [ ] convert_file_metadata_to_upload_file method
-  - [ ] process_upload_file_fields for recursive conversion
-  - [ ] convert_handler_body main entry point
+- [x] **Create converter utilities** (`packages/ruby/lib/spikard/converters.rb`)
+  - [x] convert_file_metadata_to_upload_file method
+  - [x] process_upload_file_fields for recursive conversion
+  - [x] convert_handler_body main entry point
 
 - [ ] **Ergonomic handler wrapper** (`packages/ruby/lib/spikard/handler_wrapper.rb`)
   - [ ] Create typed handler wrapper
