@@ -3,7 +3,7 @@
 	"title": "Content Types Test Fixture",
 	"description": "Schema for content type and media type test fixtures",
 	"type": "object",
-	"required": ["name", "description", "source", "request", "expected_response"],
+	"required": ["name", "description", "request", "expected_response"],
 	"properties": {
 		"name": {
 			"type": "string",
@@ -15,11 +15,10 @@
 		},
 		"source": {
 			"type": "object",
-			"required": ["framework", "test_file", "test_function"],
 			"properties": {
 				"framework": {
 					"type": "string",
-					"enum": ["fastapi", "starlette", "litestar"]
+					"enum": ["fastapi", "starlette", "litestar", "spikard"]
 				},
 				"test_file": {
 					"type": "string"
@@ -27,7 +26,8 @@
 				"test_function": {
 					"type": "string"
 				}
-			}
+			},
+			"additionalProperties": true
 		},
 		"request": {
 			"type": "object",
@@ -72,6 +72,29 @@
 		"notes": {
 			"type": "string",
 			"description": "Additional notes about the test case"
+		},
+		"handler": {
+			"type": "object",
+			"description": "Handler configuration"
+		},
+		"tags": {
+			"type": "array",
+			"description": "Tags for filtering/organization",
+			"items": {
+				"type": "string"
+			}
+		},
+		"skip": {
+			"type": "boolean",
+			"description": "Whether to skip this test"
+		},
+		"skip_reason": {
+			"type": "string",
+			"description": "Reason for skipping"
+		},
+		"category": {
+			"type": "string",
+			"description": "Test category"
 		}
 	}
 }

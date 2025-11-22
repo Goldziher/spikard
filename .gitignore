@@ -61,3 +61,5 @@ todo.md
 tools/benchmark-harness/apps/spikard-node/
 tools/benchmark-harness/apps/spikard-python/
 tools/benchmark-harness/apps/spikard-rust/
+# AI Rules generated files
+.claude/agents/

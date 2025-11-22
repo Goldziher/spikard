@@ -1090,7 +1090,7 @@ fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixt
             let func_name = format!("{}_{}_on_request_{}", fixture_id, sanitize_name(hook_name), idx);
 
             code.push_str(&format!(
-                r#"async fn {}(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {{
+                r#"async fn {}(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {{
     // Mock onRequest hook: {}
     Ok(spikard::HookResult::Continue(req))
 }}
@@ -1119,7 +1119,7 @@ fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixt
                     .unwrap_or_default();
 
                 code.push_str(&format!(
-                    r#"async fn {}(_req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {{
+                    r#"async fn {}(_req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {{
     // preValidation hook: {} - Short circuits with 429
     use axum::response::IntoResponse;
     let mut response = (
@@ -1137,7 +1137,7 @@ fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixt
                 ));
             } else {
                 code.push_str(&format!(
-                    r#"async fn {}(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {{
+                    r#"async fn {}(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {{
     // Mock preValidation hook: {}
     Ok(spikard::HookResult::Continue(req))
 }}
@@ -1169,7 +1169,7 @@ fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixt
                 };
 
                 code.push_str(&format!(
-                    r#"async fn {}(_req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {{
+                    r#"async fn {}(_req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {{
     // preHandler hook: {} - Short circuits with {}
     use axum::response::IntoResponse;
     let response = (
@@ -1188,7 +1188,7 @@ fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixt
                 ));
             } else {
                 code.push_str(&format!(
-                    r#"async fn {}(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {{
+                    r#"async fn {}(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {{
     // Mock preHandler hook: {}
     Ok(spikard::HookResult::Continue(req))
 }}
@@ -1207,7 +1207,7 @@ fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixt
 
             if hook_name.contains("security") {
                 code.push_str(&format!(
-                    r#"async fn {}(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>>, String> {{
+                    r#"async fn {}(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {{
     // onResponse hook: {} - Adds security headers
     resp.headers_mut().insert("X-Content-Type-Options", "nosniff".parse().unwrap());
     resp.headers_mut().insert("X-Frame-Options", "DENY".parse().unwrap());
@@ -1223,7 +1223,7 @@ fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixt
                 let timing_value =
                     expected_header_value(fixture, "x-response-time").unwrap_or_else(|| "0ms".to_string());
                 code.push_str(&format!(
-                    r#"async fn {}(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>>, String> {{
+                    r#"async fn {}(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {{
     // onResponse hook: {} - Adds timing header
     resp.headers_mut().insert("X-Response-Time", "{}".parse().unwrap());
     Ok(spikard::HookResult::Continue(resp))
@@ -1234,7 +1234,7 @@ fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixt
                 ));
             } else {
                 code.push_str(&format!(
-                    r#"async fn {}(resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>>, String> {{
+                    r#"async fn {}(resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {{
     // Mock onResponse hook: {}
     Ok(spikard::HookResult::Continue(resp))
 }}
@@ -1252,7 +1252,7 @@ fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixt
             let func_name = format!("{}_{}_on_error_{}", fixture_id, sanitize_name(hook_name), idx);
 
             code.push_str(&format!(
-                r#"async fn {}(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>>, String> {{
+                r#"async fn {}(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {{
     // onError hook: {} - Format error response
     resp.headers_mut().insert("Content-Type", "application/json".parse().unwrap());
     Ok(spikard::HookResult::Continue(resp))
@@ -1371,7 +1371,7 @@ fn generate_server_config(
 
     if let Some(expr) = hooks_registration {
         config_lines.push(format!(
-            "    config.lifecycle_hooks = Some({}.build());
+            "    config.lifecycle_hooks = Some(Arc::new({}.build()));
 ",
             expr
         ));

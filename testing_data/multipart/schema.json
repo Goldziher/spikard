@@ -17,7 +17,7 @@
 			"properties": {
 				"framework": {
 					"type": "string",
-					"enum": ["starlette", "fastapi", "litestar"]
+					"enum": ["starlette", "fastapi", "litestar", "spikard"]
 				},
 				"test_file": {
 					"type": "string",
@@ -28,7 +28,7 @@
 					"description": "Original test function name"
 				}
 			},
-			"required": ["framework", "test_file", "test_function"]
+			"additionalProperties": true
 		},
 		"request": {
 			"type": "object",
@@ -63,6 +63,10 @@
 								"type": "string",
 								"description": "File content (base64 encoded for binary, plain text otherwise)"
 							},
+							"magic_bytes": {
+								"type": "string",
+								"description": "Hex-encoded magic bytes for file validation"
+							},
 							"content_encoding": {
 								"type": "string",
 								"enum": ["text", "base64"],
@@ -80,7 +84,7 @@
 								}
 							}
 						},
-						"required": ["field_name", "content"]
+						"required": ["field_name"]
 					}
 				},
 				"data": {
@@ -88,12 +92,20 @@
 					"description": "Form data fields (non-file fields)",
 					"additionalProperties": {
 						"oneOf": [
-							{ "type": "string" },
-							{ "type": "number" },
-							{ "type": "boolean" },
+							{
+								"type": "string"
+							},
+							{
+								"type": "number"
+							},
+							{
+								"type": "boolean"
+							},
 							{
 								"type": "array",
-								"items": { "type": ["string", "number", "boolean"] }
+								"items": {
+									"type": ["string", "number", "boolean"]
+								}
 							}
 						]
 					}
@@ -118,7 +130,30 @@
 				}
 			},
 			"required": ["status_code"]
+		},
+		"handler": {
+			"type": "object",
+			"description": "Handler configuration"
+		},
+		"tags": {
+			"type": "array",
+			"description": "Tags for filtering/organization",
+			"items": {
+				"type": "string"
+			}
+		},
+		"skip": {
+			"type": "boolean",
+			"description": "Whether to skip this test"
+		},
+		"skip_reason": {
+			"type": "string",
+			"description": "Reason for skipping"
+		},
+		"category": {
+			"type": "string",
+			"description": "Test category"
 		}
 	},
-	"required": ["name", "description", "source", "request", "expected_response"]
+	"required": ["name", "description", "request", "expected_response"]
 }

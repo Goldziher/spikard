@@ -6,3 +6,5 @@ parameters:
         - vendor (?)
         - node_modules/
         - target/
+    checkMissingIterableValueType: true
+    checkGenericClassInNonGenericObjectType: true

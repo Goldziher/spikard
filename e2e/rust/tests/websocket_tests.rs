@@ -12,7 +12,7 @@ mod websocket {
 
         let mut ws = server.connect_websocket("/chat").await;
 
-        let message: Value = serde_json::from_str("{\"text\":\"example_text\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"message\",\"user\":\"example_user\"}").expect("valid JSON");
+        let message: Value = serde_json::from_str("{\"text\":\"Hello, everyone!\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"message\",\"user\":\"alice\"}").expect("valid JSON");
 
         ws.send_json(&message).await;
 
@@ -40,10 +40,9 @@ mod websocket {
 
         let mut ws = server.connect_websocket("/chat").await;
 
-        let message: Value = serde_json::from_str(
-            "{\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"userLeft\",\"user\":\"example_user\"}",
-        )
-        .expect("valid JSON");
+        let message: Value =
+            serde_json::from_str("{\"timestamp\":\"2024-01-15T10:35:00Z\",\"type\":\"userLeft\",\"user\":\"charlie\"}")
+                .expect("valid JSON");
 
         ws.send_json(&message).await;
 
@@ -71,10 +70,9 @@ mod websocket {
 
         let mut ws = server.connect_websocket("/chat").await;
 
-        let message: Value = serde_json::from_str(
-            "{\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"userJoined\",\"user\":\"example_user\"}",
-        )
-        .expect("valid JSON");
+        let message: Value =
+            serde_json::from_str("{\"timestamp\":\"2024-01-15T10:29:55Z\",\"type\":\"userJoined\",\"user\":\"bob\"}")
+                .expect("valid JSON");
 
         ws.send_json(&message).await;
 

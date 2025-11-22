@@ -23,9 +23,10 @@ mod sse {
         let events: Vec<&str> = body.split("\n\n").filter(|chunk| chunk.starts_with("data:")).collect();
 
         let expected_events = vec![
-            "{\"level\":\"example_level\",\"message\":\"example_message\",\"source\":\"example_source\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"system_alert\"}",
-            "{\"body\":\"example_body\",\"priority\":\"example_priority\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"title\":\"example_title\",\"type\":\"user_notification\",\"userId\":\"example_userId\"}",
-            "{\"message\":\"example_message\",\"metadata\":{},\"service\":\"example_service\",\"status\":\"example_status\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"status_update\"}",
+            "{\"level\":\"critical\",\"message\":\"Database connection pool exhausted\",\"source\":\"database-service\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"system_alert\"}",
+            "[{\"message\":\"example_message\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"example_type\"},{\"message\":\"example_message\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"example_type\"}]",
+            "{\"body\":\"You have received a new direct message\",\"priority\":\"high\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"title\":\"New message from John\",\"type\":\"user_notification\",\"userId\":\"user_12345\"}",
+            "{\"message\":\"All systems operational\",\"metadata\":{\"region\":\"us-east-1\",\"uptime\":99.99},\"service\":\"payment-gateway\",\"status\":\"operational\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"status_update\"}",
         ];
         assert_eq!(
             events.len(),

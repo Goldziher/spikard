@@ -61,10 +61,12 @@ use spikard_http::{
     RouteMetadata,
     SchemaRegistry,
 };
+use spikard::UploadFile;
 use axum::{
     body::Body,
     http::{Response, StatusCode, Request},
 };
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::sync::Arc;
 use std::future::Future;
@@ -88,8 +90,25 @@ fn generate_handler_struct(route: &RouteInfo, handler_names: &mut HashMap<String
 
     let has_query = !route.params.query.is_empty();
     let has_path = !route.params.path.is_empty();
+    let has_body = route.params.body.is_some();
 
     let mut code = String::new();
+
+    // Generate request struct if there's a body
+    if has_body {
+        let request_struct_name = format!("{}Request", struct_name);
+        code.push_str("#[derive(Deserialize, Serialize)]\n");
+        code.push_str(&format!("struct {} {{\n", request_struct_name));
+
+        if let Some(body_def) = &route.params.body {
+            for (prop_name, prop_def) in &body_def.properties {
+                let rust_type = param_to_rust_type(&prop_def.type_name);
+                code.push_str(&format!("    {}: {},\n", prop_name, rust_type));
+            }
+        }
+
+        code.push_str("}\n\n");
+    }
 
     code.push_str("#[allow(dead_code)]\n");
     code.push_str(&format!("struct {} {{}}\n\n", struct_name));
@@ -99,7 +118,7 @@ fn generate_handler_struct(route: &RouteInfo, handler_names: &mut HashMap<String
     code.push_str("        &self,\n");
     code.push_str("        _request: Request<Body>,\n");
 
-    if has_path || has_query {
+    if has_path || has_query || has_body {
         code.push_str("        request_data: RequestData,\n");
     } else {
         code.push_str("        _request_data: RequestData,\n");
@@ -108,13 +127,23 @@ fn generate_handler_struct(route: &RouteInfo, handler_names: &mut HashMap<String
     code.push_str("    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {\n");
     code.push_str("        Box::pin(async move {\n");
 
-    if has_path || has_query {
+    if has_body {
+        let request_struct_name = format!("{}Request", struct_name);
+        code.push_str(&format!(
+            "            let body: {} = serde_json::from_value(request_data.body.clone())\n",
+            request_struct_name
+        ));
+        code.push_str("                .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;\n\n");
+        code.push_str("            let mut response = json!({});\n");
+        code.push_str("            response = serde_json::to_value(&body).unwrap();\n");
+    } else if has_path || has_query {
         code.push_str("            let mut response = json!({});\n\n");
     } else {
         code.push_str("            let response = json!({});\n\n");
     }
 
     if has_path {
+        code.push_str("\n");
         for (name, _) in &route.params.path {
             code.push_str(&format!(
                 "            if let Some(val) = request_data.path_params.get(\"{}\") {{\n",
@@ -123,10 +152,10 @@ fn generate_handler_struct(route: &RouteInfo, handler_names: &mut HashMap<String
             code.push_str(&format!("                response[\"{}\"] = json!(val);\n", name));
             code.push_str("            }\n");
         }
-        code.push_str("\n");
     }
 
     if has_query {
+        code.push_str("\n");
         for (name, _) in &route.params.query {
             code.push_str(&format!(
                 "            if let Some(val) = request_data.query_params.get(\"{}\") {{\n",
@@ -135,9 +164,9 @@ fn generate_handler_struct(route: &RouteInfo, handler_names: &mut HashMap<String
             code.push_str(&format!("                response[\"{}\"] = val.clone();\n", name));
             code.push_str("            }\n");
         }
-        code.push_str("\n");
     }
 
+    code.push_str("\n");
     code.push_str("            let body = serde_json::to_vec(&response)\n");
     code.push_str("                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;\n\n");
     code.push_str("            Response::builder()\n");
@@ -182,6 +211,19 @@ fn generate_base_handler_name(route: &RouteInfo) -> String {
             }
         })
         .collect()
+}
+
+fn param_to_rust_type(type_name: &str) -> String {
+    match type_name {
+        "string" | "str" => "String",
+        "integer" | "int" => "i64",
+        "number" | "float" => "f64",
+        "boolean" | "bool" => "bool",
+        "file" | "upload" => "UploadFile",
+        "array" => "Vec<serde_json::Value>",
+        _ => "serde_json::Value",
+    }
+    .to_string()
 }
 
 fn normalize_path_pattern(path: &str) -> String {
@@ -240,6 +282,7 @@ fn generate_main(analysis: &RouteAnalysis, handler_names: &HashMap<String, Strin
             file_params: None,
             is_async: true,
             cors: None,
+            body_param_name: None,
         }}, &registry)?,
         Arc::new({} {{}}) as Arc<dyn Handler>,
     ));"#,
@@ -272,6 +315,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {{
             file_params: None,
             is_async: true,
             cors: None,
+            body_param_name: None,
         }}, &registry)?,
         Arc::new(HealthHandler {{}}) as Arc<dyn Handler>,
     ));

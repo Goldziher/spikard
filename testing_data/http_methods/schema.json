@@ -3,7 +3,7 @@
 	"title": "HTTP Methods Test Fixture",
 	"description": "Test fixture for various HTTP methods (PUT, PATCH, DELETE, OPTIONS, HEAD)",
 	"type": "object",
-	"required": ["name", "description", "source", "request", "expected_response"],
+	"required": ["name", "description", "request", "expected_response"],
 	"properties": {
 		"name": {
 			"type": "string",
@@ -20,7 +20,7 @@
 			"properties": {
 				"framework": {
 					"type": "string",
-					"enum": ["fastapi", "starlette", "litestar"]
+					"enum": ["fastapi", "starlette", "litestar", "spikard"]
 				},
 				"test_file": {
 					"type": "string"
@@ -72,6 +72,29 @@
 		},
 		"notes": {
 			"type": "string"
+		},
+		"handler": {
+			"type": "object",
+			"description": "Handler configuration"
+		},
+		"tags": {
+			"type": "array",
+			"description": "Tags for filtering/organization",
+			"items": {
+				"type": "string"
+			}
+		},
+		"skip": {
+			"type": "boolean",
+			"description": "Whether to skip this test"
+		},
+		"skip_reason": {
+			"type": "string",
+			"description": "Reason for skipping"
+		},
+		"category": {
+			"type": "string",
+			"description": "Test category"
 		}
 	}
 }

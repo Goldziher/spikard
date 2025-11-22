@@ -16,30 +16,32 @@ silent: false
 
 tasks:
   setup:
-    desc: "Install language dependencies, developer tooling, and hooks"
+    desc: "Install all dependencies and initialize project (idempotent)"
     cmds:
+      - task: rust:install
       - task: python:install
       - task: js:install
       - task: ruby:install
-      - task: rust:install-tools
       - task: pre-commit:install
       - task: python:build
+      - echo "Setup complete - safe to re-run anytime"
 
   update:
-    desc: "Update workspace dependencies across languages"
+    desc: "Update all dependencies to latest versions"
     cmds:
+      - echo "Updating Rust dependencies..."
+      - task: rust:update
       - echo "Updating Python dependencies..."
       - task: python:update
-      - echo "Updating Rust crates..."
-      - task: rust:update
       - echo "Updating JavaScript packages..."
       - task: js:update
       - echo "Updating Ruby gems..."
       - task: ruby:update
       - echo "Refreshing Python bindings..."
       - task: python:build
-      - echo "Updating Prek-managed hooks..."
+      - echo "Updating pre-commit hooks..."
       - task: pre-commit:update
+      - echo "All dependencies updated"
   build:
     desc: "Build Rust core and language bindings"
     cmds:
@@ -56,22 +58,45 @@ tasks:
       - task: js:test
       - task: ruby:test
       - task: test:e2e
-  lint:
-    desc: "Run linters across languages"
+  check:
+    desc: "Run all checks without modifications (lint + format checks)"
     cmds:
-      - task: python:lint
+      - task: lint:check
+      - task: format:check
+
+  lint:
+    desc: "Run all linters with auto-fix enabled"
+    cmds:
       - task: rust:lint
+      - task: python:lint
       - task: js:lint
       - task: ruby:lint
       - task: php:lint
-      - task: pre-commit:run
+
+  lint:check:
+    desc: "Run all linters in check-only mode (no modifications)"
+    cmds:
+      - task: rust:lint:check
+      - task: python:lint:check
+      - task: js:lint:check
+      - task: ruby:lint:check
+      - task: php:lint:check
+
   format:
-    desc: "Format source code for supported languages"
+    desc: "Format all code with modifications"
     cmds:
       - task: rust:format
       - task: python:format
       - task: js:format
       - task: ruby:format
+
+  format:check:
+    desc: "Check code formatting without modifications"
+    cmds:
+      - task: rust:format:check
+      - task: python:format:check
+      - task: js:format:check
+      - task: ruby:format:check
 
   python:install:
     desc: "Install Python dependencies with uv"
@@ -84,8 +109,8 @@ tasks:
       - uv run uv-bump
       - uv sync --all-extras --all-groups --upgrade
 
-  rust:install-tools:
-    desc: "Install Rust developer tooling"
+  rust:install:
+    desc: "Install Rust toolchain and developer tools"
     cmds:
       - uv tool install cargo-binstall
       - uv tool install cargo-upgrade
@@ -152,16 +177,26 @@ tasks:
       - task: python:test
 
   python:lint:
-    desc: "Run Python linters"
+    desc: "Run Python linters with auto-fix"
     cmds:
       - uv run ruff check --fix .
+      - uv run mypy benchmarks tools packages/python
+
+  python:lint:check:
+    desc: "Check Python linters without auto-fix"
+    cmds:
+      - uv run ruff check .
       - uv run mypy benchmarks tools packages/python
 
   python:format:
     desc: "Format Python code with Ruff"
     cmds:
-      - uv run ruff check --fix .
       - uv run ruff format .
+
+  python:format:check:
+    desc: "Check Python formatting without modifications"
+    cmds:
+      - uv run ruff format --check .
 
   python:build:
     desc: "Alias for build:py"
@@ -183,20 +218,17 @@ tasks:
     cmds:
       - cargo check --workspace --all-features
 
-  clippy:rust:
-    desc: "Run Rust linter (clippy)"
+  rust:lint:
+    desc: "Run Rust linter with auto-fix (clippy + format)"
     cmds:
+      - cargo fmt --all
       - cargo clippy --workspace --all-features -- -D warnings
 
-  rust:lint:
-    desc: "Alias for clippy:rust"
+  rust:lint:check:
+    desc: "Check Rust code without auto-fix (clippy + format check)"
     cmds:
-      - task: clippy:rust
-
-  rust:lint:
-    desc: "Alias for clippy:rust"
-    cmds:
-      - task: clippy:rust
+      - cargo fmt --all --check
+      - cargo clippy --workspace --all-features -- -D warnings
 
   rust:format:
     desc: "Format Rust code"
@@ -232,7 +264,13 @@ tasks:
       - task: node:update
 
   node:lint:
-    desc: "Lint TypeScript code with biome and oxlint"
+    desc: "Lint TypeScript code with auto-fix (biome + oxlint)"
+    cmds:
+      - pnpm biome check --write packages/node/src crates/spikard-node/src e2e/node --log-level=warn
+      - pnpm oxlint packages/node/src crates/spikard-node/src e2e/node
+
+  node:lint:check:
+    desc: "Check TypeScript linting without auto-fix"
     cmds:
       - pnpm biome check packages/node/src crates/spikard-node/src e2e/node --log-level=warn
       - pnpm oxlint packages/node/src crates/spikard-node/src e2e/node
@@ -242,8 +280,22 @@ tasks:
     cmds:
       - task: node:lint
 
+  js:lint:check:
+    desc: "Alias for node:lint:check"
+    cmds:
+      - task: node:lint:check
+
   ruby:lint:
-    desc: "Lint Ruby bindings with Rubocop"
+    desc: "Lint Ruby code with auto-fix (rubocop + typecheck)"
+    deps:
+      - ruby:install
+    dir: packages/ruby
+    cmds:
+      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rubocop --autocorrect-all
+      - task: ruby:typecheck
+
+  ruby:lint:check:
+    desc: "Check Ruby linting without auto-fix (rubocop + typecheck)"
     deps:
       - ruby:install
     dir: packages/ruby
@@ -258,28 +310,42 @@ tasks:
     dir: packages/ruby
     cmds:
       - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec steep check
+
   ruby:format:
-    desc: "Format Ruby sources with Rubocop"
+    desc: "Format Ruby code with Rubocop"
     deps:
       - ruby:install
     dir: packages/ruby
     cmds:
       - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rubocop --autocorrect-all
 
+  ruby:format:check:
+    desc: "Check Ruby formatting without modifications"
+    deps:
+      - ruby:install
+    dir: packages/ruby
+    cmds:
+      - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rubocop
+
   node:format:
     desc: "Format TypeScript code with biome"
     cmds:
       - pnpm biome format --write packages/node/src crates/spikard-node/src e2e/node
+
+  node:format:check:
+    desc: "Check TypeScript formatting without modifying files"
+    cmds:
+      - pnpm biome format --check packages/node/src crates/spikard-node/src e2e/node
 
   js:format:
     desc: "Alias for node:format"
     cmds:
       - task: node:format
 
-  node:format:check:
-    desc: "Check TypeScript formatting without modifying files"
+  js:format:check:
+    desc: "Alias for node:format:check"
     cmds:
-      - pnpm biome format packages/node/src crates/spikard-node/src e2e/node
+      - task: node:format:check
 
   node:test:
     desc: "Run vitest unit tests in packages/node"
@@ -291,6 +357,26 @@ tasks:
     desc: "Alias for node:test"
     cmds:
       - task: node:test
+
+  php:lint:
+    desc: "Lint PHP code with auto-fix (phpstan + phpcbf)"
+    cmds:
+      - echo "PHP linting (placeholder for future PHP binding integration)"
+
+  php:lint:check:
+    desc: "Check PHP code without auto-fix (phpstan + phpcs)"
+    cmds:
+      - echo "PHP linting check (placeholder for future PHP binding integration)"
+
+  php:format:
+    desc: "Format PHP code"
+    cmds:
+      - echo "PHP formatting (placeholder for future PHP binding integration)"
+
+  php:format:check:
+    desc: "Check PHP formatting without modifications"
+    cmds:
+      - echo "PHP format check (placeholder for future PHP binding integration)"
 
   build:rust:
     desc: "Build Rust workspace in release mode"
@@ -306,12 +392,6 @@ tasks:
     desc: "Build Rust workspace in debug mode"
     cmds:
       - cargo build --workspace
-
-  check:
-    desc: "Fast check of Python and Rust code"
-    cmds:
-      - task: check:rust
-      - uv run ruff check .
 
   build:py:
     desc: "Build Python bindings for development"
