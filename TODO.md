@@ -109,12 +109,14 @@
 
 ### Phase 3: Rust Implementation
 
-- [ ] **Create UploadFile struct** (`crates/spikard/src/upload.rs`)
-  - [ ] Fields: filename, size, content_type, content (Bytes)
-  - [ ] Methods: read(), read_to_string(), as_bytes()
-  - [ ] Implement `serde::Deserialize` for JSON metadata
-  - [ ] Implement `AsyncRead` trait
-  - [ ] Clone, Debug, Send, Sync traits
+- [x] **Create UploadFile struct** (`crates/spikard/src/upload.rs`)
+  - [x] Fields: filename, size, content_type, content (Bytes)
+  - [x] Methods: read(), read_to_string(), as_bytes(), content_type_or_default()
+  - [x] Implement `serde::Deserialize` and `serde::Serialize`
+  - [x] Implement `Read` and `Seek` traits
+  - [x] Clone, Debug, Send, Sync traits
+  - [x] Automatic base64 decoding support
+  - [x] Comprehensive test suite (7 tests passing)
 
 - [ ] **Create converter utilities** (`crates/spikard/src/converters.rs`)
   - [ ] convert_file_metadata_to_upload_file function
