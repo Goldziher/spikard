@@ -99,6 +99,13 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
         })?)
     };
 
+    let body_param_name = route.getattr("body_param_name")?;
+    let body_param_name_value = if body_param_name.is_none() {
+        None
+    } else {
+        Some(body_param_name.extract()?)
+    };
+
     Ok(RouteMetadata {
         method,
         path,
@@ -109,6 +116,7 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
         file_params: file_params_value,
         is_async,
         cors: None,
+        body_param_name: body_param_name_value,
     })
 }
 
@@ -187,13 +195,14 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
 
     let handler_routes: Vec<(spikard_http::Route, std::sync::Arc<dyn spikard_http::Handler>)> = routes
         .into_iter()
-        .map(|(route, _metadata, py_handler)| {
+        .map(|(route, metadata, py_handler)| {
             let python_handler = PythonHandler::new(
                 py_handler,
                 route.is_async,
                 route.request_validator.clone(),
                 route.response_validator.clone(),
                 route.parameter_validator.clone(),
+                metadata.body_param_name.clone(),
             );
             let arc_handler: std::sync::Arc<dyn spikard_http::Handler> = std::sync::Arc::new(python_handler);
             (route, arc_handler)
@@ -504,6 +513,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
                         route.request_validator.clone(),
                         route.response_validator.clone(),
                         route.parameter_validator.clone(),
+                        rwh.metadata.body_param_name.clone(),
                     );
                     let arc_handler: Arc<dyn spikard_http::Handler> = Arc::new(python_handler);
                     (route, arc_handler)
@@ -627,5 +637,6 @@ fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(create_test_client, m)?)?;
     m.add_function(wrap_pyfunction!(process, m)?)?;
     m.add_function(wrap_pyfunction!(run_server, m)?)?;
+
     Ok(())
 }

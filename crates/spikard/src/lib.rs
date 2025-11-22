@@ -348,6 +348,7 @@ impl RouteBuilder {
             file_params: self.file_params,
             is_async: self.is_async,
             cors: self.cors,
+            body_param_name: None,
         }
     }
 }

@@ -109,6 +109,7 @@ pub struct PythonHandler {
     request_validator: Option<Arc<SchemaValidator>>,
     response_validator: Option<Arc<SchemaValidator>>,
     parameter_validator: Option<ParameterValidator>,
+    body_param_name: String,
 }
 
 impl PythonHandler {
@@ -119,6 +120,7 @@ impl PythonHandler {
         request_validator: Option<Arc<SchemaValidator>>,
         response_validator: Option<Arc<SchemaValidator>>,
         parameter_validator: Option<ParameterValidator>,
+        body_param_name: Option<String>,
     ) -> Self {
         Self {
             handler: Arc::new(handler),
@@ -126,6 +128,7 @@ impl PythonHandler {
             request_validator,
             response_validator,
             parameter_validator,
+            body_param_name: body_param_name.unwrap_or_else(|| "body".to_string()),
         }
     }
 
@@ -181,6 +184,7 @@ impl PythonHandler {
         let response_validator = self.response_validator.clone();
         let request_data_for_error = request_data.clone();
         let validated_params_for_task = validated_params.clone();
+        let body_param_name = self.body_param_name.clone();
 
         let result = if is_async {
             // Get the global event loop
@@ -200,7 +204,7 @@ impl PythonHandler {
                     let kwargs = if let Some(ref validated) = validated_params_for_task {
                         validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
                     } else {
-                        request_data_to_py_kwargs(py, &request_data, handler_obj.clone())?
+                        request_data_to_py_kwargs(py, &request_data, handler_obj.clone(), &body_param_name)?
                     };
 
                     let coroutine = if kwargs.is_empty() {
@@ -248,6 +252,11 @@ impl PythonHandler {
                 )
             })?
         } else {
+            // Use spawn_blocking for sync handlers
+            // Note: block_in_place was tested but is 6% slower under load due to:
+            // 1. Limited worker threads (8-10) vs blocking pool (512)
+            // 2. Python GIL serialization means more threads waiting = better utilization
+            // 3. High concurrency (50+ connections) starves worker threads with block_in_place
             tokio::task::spawn_blocking(move || {
                 Python::attach(|py| -> PyResult<ResponseResult> {
                     let handler_obj = handler.bind(py);
@@ -255,7 +264,7 @@ impl PythonHandler {
                     let kwargs = if let Some(ref validated) = validated_params_for_task {
                         validated_params_to_py_kwargs(py, validated, &request_data, handler_obj.clone())?
                     } else {
-                        request_data_to_py_kwargs(py, &request_data, handler_obj.clone())?
+                        request_data_to_py_kwargs(py, &request_data, handler_obj.clone(), &body_param_name)?
                     };
 
                     let py_result = if kwargs.is_empty() {
@@ -495,38 +504,38 @@ fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
     python_to_json(py, &builtin_obj)
 }
 
-/// Convert validated parameters to Python keyword arguments using msgspec converter
-/// This uses already-validated parameter values and relies on Python's msgspec
-/// for type conversion based on the handler's type annotations.
+/// Convert validated parameters to Python keyword arguments using pythonize
+/// This uses already-validated parameter values and converts them directly to Python
+/// objects using the optimized pythonize crate, then lets Python's convert_params
+/// filter and convert based on handler signature.
+///
+/// OPTIMIZATION: Use pythonize to convert serde_json::Value → Python objects directly,
+/// which is faster than manual conversion or JSON round-trip.
 fn validated_params_to_py_kwargs<'py>(
     py: Python<'py>,
     validated_params: &Value,
     request_data: &RequestData,
     handler: Bound<'py, PyAny>,
 ) -> PyResult<Bound<'py, PyDict>> {
-    let params_dict = json_to_python(py, validated_params)?.cast_into::<PyDict>()?;
+    // Convert validated params to Python dict using pythonize (optimized)
+    let params_dict = pythonize::pythonize(py, validated_params)?;
+    let params_dict: Bound<'_, PyDict> = params_dict.extract()?;
 
-    // Optimization: Pass raw JSON bytes to Python for msgspec to parse directly
-    // This avoids double-parsing (Rust serde + Python msgspec)
+    // Add raw body bytes if present (for msgspec to parse directly)
     if let Some(raw_bytes) = &request_data.raw_body {
-        // Pass raw bytes as PyBytes for msgspec.json.decode() to handle
         params_dict.set_item("body", pyo3::types::PyBytes::new(py, raw_bytes))?;
-        params_dict.set_item("_raw_json", true)?; // Flag for converter
+        params_dict.set_item("_raw_json", true)?;
     } else if !request_data.body.is_null() {
-        let py_body = json_to_python(py, &request_data.body)?;
+        let py_body = pythonize::pythonize(py, &request_data.body)?;
         params_dict.set_item("body", py_body)?;
     }
 
-    // Always call convert_params to filter parameters to match handler signature
-    // When needs_conversion=False, it will skip type conversion but still filter params
+    // Call convert_params to filter parameters to match handler signature
     let converter_module = py.import("spikard._internal.converters")?;
     let convert_params_func = converter_module.getattr("convert_params")?;
-
     let converted = convert_params_func.call1((params_dict, handler))?;
 
-    let kwargs = converted.cast_into::<PyDict>()?;
-
-    Ok(kwargs)
+    converted.extract()
 }
 
 /// Convert request data (path params, query params, body) to Python keyword arguments
@@ -535,6 +544,7 @@ fn request_data_to_py_kwargs<'py>(
     py: Python<'py>,
     request_data: &RequestData,
     handler: Bound<'py, PyAny>,
+    body_param_name: &str,
 ) -> PyResult<Bound<'py, PyDict>> {
     let kwargs = PyDict::new(py);
 
@@ -580,11 +590,11 @@ fn request_data_to_py_kwargs<'py>(
     // This avoids double-parsing (Rust serde + Python msgspec)
     if let Some(raw_bytes) = &request_data.raw_body {
         // Pass raw bytes as PyBytes for msgspec.json.decode() to handle
-        kwargs.set_item("body", pyo3::types::PyBytes::new(py, raw_bytes))?;
+        kwargs.set_item(body_param_name, pyo3::types::PyBytes::new(py, raw_bytes))?;
         kwargs.set_item("_raw_json", true)?; // Flag for converter
     } else {
         let py_body = json_to_python(py, &request_data.body)?;
-        kwargs.set_item("body", py_body)?;
+        kwargs.set_item(body_param_name, py_body)?;
     }
 
     // Always call convert_params to filter parameters to match handler signature

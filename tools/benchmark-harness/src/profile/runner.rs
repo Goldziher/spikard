@@ -609,10 +609,10 @@ impl ProfileRunner {
             if let Ok(contents) = std::fs::read_to_string(cargo_toml) {
                 // Simple parsing for version line
                 for line in contents.lines() {
-                    if line.trim().starts_with("version") {
-                        if let Some(version) = line.split('=').nth(1) {
-                            return version.trim().trim_matches('"').to_string();
-                        }
+                    if line.trim().starts_with("version")
+                        && let Some(version) = line.split('=').nth(1)
+                    {
+                        return version.trim().trim_matches('"').to_string();
                     }
                 }
             }
@@ -639,40 +639,40 @@ impl ProfileRunner {
         match self.detect_language().as_str() {
             "python" => {
                 // Try to detect actual Python version
-                if let Ok(output) = std::process::Command::new("python3").arg("--version").output() {
-                    if let Ok(version) = String::from_utf8(output.stdout) {
-                        return version.trim().to_string();
-                    }
+                if let Ok(output) = std::process::Command::new("python3").arg("--version").output()
+                    && let Ok(version) = String::from_utf8(output.stdout)
+                {
+                    return version.trim().to_string();
                 }
                 "Python 3.x".to_string()
             }
             "node" => {
                 // Try to detect actual Node version
-                if let Ok(output) = std::process::Command::new("node").arg("--version").output() {
-                    if let Ok(version) = String::from_utf8(output.stdout) {
-                        return format!("Node {}", version.trim());
-                    }
+                if let Ok(output) = std::process::Command::new("node").arg("--version").output()
+                    && let Ok(version) = String::from_utf8(output.stdout)
+                {
+                    return format!("Node {}", version.trim());
                 }
                 "Node.js".to_string()
             }
             "ruby" => {
                 // Try to detect actual Ruby version
-                if let Ok(output) = std::process::Command::new("ruby").arg("--version").output() {
-                    if let Ok(version) = String::from_utf8(output.stdout) {
-                        // Ruby version output is like "ruby 3.3.0 (2023-12-25 revision...)"
-                        if let Some(version_part) = version.split_whitespace().nth(1) {
-                            return format!("Ruby {}", version_part);
-                        }
+                if let Ok(output) = std::process::Command::new("ruby").arg("--version").output()
+                    && let Ok(version) = String::from_utf8(output.stdout)
+                {
+                    // Ruby version output is like "ruby 3.3.0 (2023-12-25 revision...)"
+                    if let Some(version_part) = version.split_whitespace().nth(1) {
+                        return format!("Ruby {}", version_part);
                     }
                 }
                 "Ruby".to_string()
             }
             "rust" => {
                 // Try to detect actual rustc version
-                if let Ok(output) = std::process::Command::new("rustc").arg("--version").output() {
-                    if let Ok(version) = String::from_utf8(output.stdout) {
-                        return version.trim().to_string();
-                    }
+                if let Ok(output) = std::process::Command::new("rustc").arg("--version").output()
+                    && let Ok(version) = String::from_utf8(output.stdout)
+                {
+                    return version.trim().to_string();
                 }
                 "rustc".to_string()
             }

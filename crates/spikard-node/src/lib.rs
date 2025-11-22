@@ -320,6 +320,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
             file_params: None,
             is_async,
             cors: None,
+            body_param_name: None,
         };
 
         routes.push(route_meta);
