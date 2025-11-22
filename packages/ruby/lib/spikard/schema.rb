@@ -106,6 +106,7 @@ module Spikard
       end
 
       # Extract JSON Schema from Dry::Struct class
+      # rubocop:disable Metrics/MethodLength
       def extract_from_dry_struct(struct_class)
         # Dry::Struct doesn't have built-in JSON Schema export
         # We need to manually build it from the attribute schema
@@ -135,6 +136,7 @@ module Spikard
         warn "Spikard: Failed to extract JSON Schema from Dry::Struct: #{e.message}"
         nil
       end
+      # rubocop:enable Metrics/MethodLength
 
       # Convert Dry::Types type to JSON Schema type
       def dry_type_to_json_schema(type_def)
@@ -144,6 +146,7 @@ module Spikard
         { 'type' => 'object' }
       end
 
+      # rubocop:disable Metrics/MethodLength
       def base_schema_for(type_def)
         type_class = type_def.primitive.to_s
         case type_class
@@ -163,6 +166,7 @@ module Spikard
           { 'type' => 'object' }
         end
       end
+      # rubocop:enable Metrics/MethodLength
 
       def infer_array_items_schema(type_def)
         if type_def.respond_to?(:member) && type_def.member
@@ -194,6 +198,7 @@ module Spikard
         schema
       end
 
+      # rubocop:disable Metrics/MethodLength
       def apply_numeric_constraints(schema, metadata)
         mapping = {
           min_size: 'minLength',
@@ -216,6 +221,7 @@ module Spikard
         end
         schema
       end
+      # rubocop:enable Metrics/MethodLength
 
       def extract_metadata(type_def)
         return {} unless type_def.respond_to?(:meta) || type_def.respond_to?(:options)

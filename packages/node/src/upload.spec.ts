@@ -879,28 +879,31 @@ describe.skip("UploadFile Handler Integration", () => {
 
 			client = new TestClient(app);
 
-			const response = await client.post("/upload-no-parse", {
-				multipart: {
-					files: [
-						{
-							name: "file",
-							filename: "test.txt",
-							content: "data",
+			try {
+				const response = await client.post("/upload-no-parse", {
+					multipart: {
+						files: [
+							{
+								name: "file",
+								filename: "test.txt",
+								content: "data",
+							},
+						],
+						fields: {
+							description: "Test description",
 						},
-					],
-					fields: {
-						description: "Test description",
 					},
-				},
-			});
+				});
 
-			expect(response.statusCode).toBe(200);
-			const body = response.json();
-			expect(body.filename).toBe("test.txt");
-			expect(body.description).toBe("Test description");
-
-			// Restore original JSON.parse
-			JSON.parse = originalParse;
+				expect(response.statusCode).toBe(200);
+				const body = response.json();
+				expect(body.filename).toBe("test.txt");
+				expect(body.description).toBe("Test description");
+				expect(jsonParseWasCalled).toBe(false);
+			} finally {
+				// Restore original JSON.parse
+				JSON.parse = originalParse;
+			}
 		});
 
 		it("should provide type-safe file instances", async () => {

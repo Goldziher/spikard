@@ -5,15 +5,20 @@ during benchmark runs. It's designed to be imported by benchmark applications
 and writes metrics to a JSON file that the Rust benchmark harness can read.
 """
 
+import atexit
 import builtins
 import gc
 import json
 import os
+import tempfile
 import time
+from collections.abc import Callable, Generator
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
+from functools import wraps
+from pathlib import Path
 from threading import Lock
-from typing import Optional
+from typing import Optional, ParamSpec, TypeVar
 
 
 @dataclass
@@ -62,7 +67,9 @@ class MetricsCollector:
         self.request_count = 0
 
         # Get output path from environment or use default
-        self.output_path = os.environ.get("SPIKARD_METRICS_FILE", f"/tmp/python-metrics-{os.getpid()}.json")
+        env_path = os.environ.get("SPIKARD_METRICS_FILE")
+        default_path = Path(tempfile.gettempdir()) / f"python-metrics-{os.getpid()}.json"
+        self.output_path = Path(env_path) if env_path else default_path
 
     @classmethod
     def instance(cls) -> "MetricsCollector":
@@ -90,7 +97,7 @@ class MetricsCollector:
             self.metrics.gc.total_collections = gen0 + gen1 + gen2
 
     @contextmanager
-    def measure_handler(self):
+    def measure_handler(self) -> Generator[None, None, None]:
         """Context manager to measure handler execution time."""
         start = time.perf_counter()
         try:
@@ -104,7 +111,7 @@ class MetricsCollector:
                 self.metrics.timing.handler_time_ms = (self.metrics.timing.handler_time_ms * (n - 1) + elapsed_ms) / n
 
     @contextmanager
-    def measure_serialization(self):
+    def measure_serialization(self) -> Generator[None, None, None]:
         """Context manager to measure serialization time."""
         start = time.perf_counter()
         try:
@@ -149,8 +156,9 @@ class MetricsCollector:
         }
 
         try:
-            with open(self.output_path, "w") as f:
-                json.dump(output, f, indent=2)
+            self.output_path.parent.mkdir(parents=True, exist_ok=True)
+            with self.output_path.open("w") as file_handle:
+                json.dump(output, file_handle, indent=2)
         except Exception:
             pass
 
@@ -160,19 +168,16 @@ class MetricsCollector:
             self.finalize()
 
 
-# Global instance
-_collector = None
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 def get_collector() -> MetricsCollector:
     """Get or create the global metrics collector."""
-    global _collector
-    if _collector is None:
-        _collector = MetricsCollector.instance()
-    return _collector
+    return MetricsCollector.instance()
 
 
-def enable_profiling():
+def enable_profiling() -> MetricsCollector:
     """Enable profiling for this process.
 
     Call this at application startup to initialize metrics collection.
@@ -180,14 +185,12 @@ def enable_profiling():
     collector = get_collector()
 
     # Register cleanup on exit
-    import atexit
-
     atexit.register(collector.finalize)
 
     return collector
 
 
-def measure_handler(func):
+def measure_handler(func: Callable[P, R]) -> Callable[P, R]:
     """Decorator to measure handler execution time.
 
     Usage:
@@ -196,7 +199,8 @@ def measure_handler(func):
             return {"status": "ok"}
     """
 
-    def wrapper(*args, **kwargs):
+    @wraps(func)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
         collector = get_collector()
         with collector.measure_handler():
             return func(*args, **kwargs)
@@ -204,7 +208,7 @@ def measure_handler(func):
     return wrapper
 
 
-def measure_serialization(func):
+def measure_serialization(func: Callable[P, R]) -> Callable[P, R]:
     """Decorator to measure serialization time.
 
     Usage:
@@ -213,7 +217,8 @@ def measure_serialization(func):
             return json.dumps(data)
     """
 
-    def wrapper(*args, **kwargs):
+    @wraps(func)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
         collector = get_collector()
         with collector.measure_serialization():
             return func(*args, **kwargs)
@@ -235,5 +240,4 @@ if __name__ == "__main__":
     collector.finalize()
 
     # Read back the metrics
-    with open(collector.output_path) as f:
-        metrics = json.load(f)
+    metrics = json.loads(collector.output_path.read_text())

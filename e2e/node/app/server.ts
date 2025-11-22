@@ -82,7 +82,7 @@ app.get(
 
 app.get(
 	"/accept-test/{id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["id"] !== undefined) {
 			response["id"] = pathParams["id"];
@@ -519,7 +519,7 @@ app.get(
 
 app.put(
 	"/items/{id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["id"] !== undefined) {
 			response["id"] = pathParams["id"];
@@ -530,7 +530,7 @@ app.put(
 
 app.patch(
 	"/items/{id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["id"] !== undefined) {
 			response["id"] = pathParams["id"];
@@ -541,7 +541,7 @@ app.patch(
 
 app.delete(
 	"/items/{id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["id"] !== undefined) {
 			response["id"] = pathParams["id"];
@@ -552,7 +552,7 @@ app.delete(
 
 app.head(
 	"/items/{id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["id"] !== undefined) {
 			response["id"] = pathParams["id"];
@@ -827,7 +827,7 @@ app.post(
 
 app.get(
 	"/path/str/{item_id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["item_id"] !== undefined) {
 			response["item_id"] = pathParams["item_id"];
@@ -838,7 +838,7 @@ app.get(
 
 app.get(
 	"/path/int/{item_id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["item_id"] !== undefined) {
 			response["item_id"] = pathParams["item_id"];
@@ -849,7 +849,7 @@ app.get(
 
 app.get(
 	"/path/float/{item_id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["item_id"] !== undefined) {
 			response["item_id"] = pathParams["item_id"];
@@ -860,7 +860,7 @@ app.get(
 
 app.get(
 	"/items/{id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["id"] !== undefined) {
 			response["id"] = pathParams["id"];
@@ -871,7 +871,7 @@ app.get(
 
 app.get(
 	"/path/param-gt/{item_id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["item_id"] !== undefined) {
 			response["item_id"] = pathParams["item_id"];
@@ -882,7 +882,7 @@ app.get(
 
 app.get(
 	"/path/param-minlength/{item_id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["item_id"] !== undefined) {
 			response["item_id"] = pathParams["item_id"];
@@ -893,7 +893,7 @@ app.get(
 
 app.get(
 	"/models/{model_name}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["model_name"] !== undefined) {
 			response["model_name"] = pathParams["model_name"];
@@ -904,7 +904,7 @@ app.get(
 
 app.get(
 	"/files/{file_path}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["file_path"] !== undefined) {
 			response["file_path"] = pathParams["file_path"];
@@ -915,7 +915,7 @@ app.get(
 
 app.get(
 	"/{version}/{service_id}/{user_id}/{order_id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["version"] !== undefined) {
 			response["version"] = pathParams["version"];
@@ -935,7 +935,7 @@ app.get(
 
 app.get(
 	"/path/bool/{item_id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["item_id"] !== undefined) {
 			response["item_id"] = pathParams["item_id"];
@@ -946,7 +946,7 @@ app.get(
 
 app.get(
 	"/path/param-ge/{item_id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["item_id"] !== undefined) {
 			response["item_id"] = pathParams["item_id"];
@@ -957,7 +957,7 @@ app.get(
 
 app.get(
 	"/path/param-le/{item_id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["item_id"] !== undefined) {
 			response["item_id"] = pathParams["item_id"];
@@ -968,7 +968,7 @@ app.get(
 
 app.get(
 	"/path/param-lt/{item_id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["item_id"] !== undefined) {
 			response["item_id"] = pathParams["item_id"];
@@ -979,7 +979,7 @@ app.get(
 
 app.get(
 	"/path/param-lt-gt/{item_id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["item_id"] !== undefined) {
 			response["item_id"] = pathParams["item_id"];
@@ -990,7 +990,7 @@ app.get(
 
 app.get(
 	"/path/param-maxlength/{item_id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["item_id"] !== undefined) {
 			response["item_id"] = pathParams["item_id"];
@@ -1001,7 +1001,7 @@ app.get(
 
 app.get(
 	"/date/{date_param}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["date_param"] !== undefined) {
 			response["date_param"] = pathParams["date_param"];
@@ -1012,7 +1012,7 @@ app.get(
 
 app.get(
 	"/events/{date}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["date"] !== undefined) {
 			response["date"] = pathParams["date"];
@@ -1023,7 +1023,7 @@ app.get(
 
 app.get(
 	"/bookings/{timestamp}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["timestamp"] !== undefined) {
 			response["timestamp"] = pathParams["timestamp"];
@@ -1034,7 +1034,7 @@ app.get(
 
 app.get(
 	"/delays/{duration}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["duration"] !== undefined) {
 			response["duration"] = pathParams["duration"];
@@ -1045,7 +1045,7 @@ app.get(
 
 app.get(
 	"/prices/{amount}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["amount"] !== undefined) {
 			response["amount"] = pathParams["amount"];
@@ -1056,7 +1056,7 @@ app.get(
 
 app.get(
 	"/users/{username}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["username"] !== undefined) {
 			response["username"] = pathParams["username"];
@@ -1067,7 +1067,7 @@ app.get(
 
 app.get(
 	"/repos/{owner}/{repo}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["owner"] !== undefined) {
 			response["owner"] = pathParams["owner"];
@@ -1081,7 +1081,7 @@ app.get(
 
 app.get(
 	"/repos/{owner}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["owner"] !== undefined) {
 			response["owner"] = pathParams["owner"];
@@ -1092,7 +1092,7 @@ app.get(
 
 app.get(
 	"/offset/{value}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["value"] !== undefined) {
 			response["value"] = pathParams["value"];
@@ -1103,7 +1103,7 @@ app.get(
 
 app.get(
 	"/type-syntax/items/{id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["id"] !== undefined) {
 			response["id"] = pathParams["id"];
@@ -1114,7 +1114,7 @@ app.get(
 
 app.get(
 	"/type-syntax/users/{user_id}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["user_id"] !== undefined) {
 			response["user_id"] = pathParams["user_id"];
@@ -1125,7 +1125,7 @@ app.get(
 
 app.get(
 	"/type-syntax/items-count/{count}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["count"] !== undefined) {
 			response["count"] = pathParams["count"];
@@ -1491,7 +1491,7 @@ app.get(
 
 app.get(
 	"/status-test/{code}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["code"] !== undefined) {
 			response["code"] = pathParams["code"];
@@ -1510,7 +1510,7 @@ app.post(
 
 app.delete(
 	"/status-test/{code}",
-	wrapHandler(async ({ pathParams, body }) => {
+	wrapHandler(async ({ pathParams }) => {
 		const response: Record<string, unknown> = {};
 		if (pathParams["code"] !== undefined) {
 			response["code"] = pathParams["code"];

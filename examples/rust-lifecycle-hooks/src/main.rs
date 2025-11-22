@@ -79,7 +79,7 @@ impl RateLimiter {
 
 
 fn build_lifecycle_hooks() -> LifecycleHooks {
-    let rate_limiter = Arc::new(RateLimiter::new(10, 60)); 
+    let rate_limiter = Arc::new(RateLimiter::new(10, 60));
 
     LifecycleHooks::builder()
         .on_request(request_hook("request_logger", |req| async move {
@@ -234,7 +234,7 @@ fn build_lifecycle_hooks() -> LifecycleHooks {
         .on_response(response_hook("response_timing", |mut resp| async move {
             resp.headers_mut().insert(
                 "X-Response-Time",
-                HeaderValue::from_static("0ms"), 
+                HeaderValue::from_static("0ms"),
             );
 
             println!("  📤 Response sent with status: {}", resp.status());
@@ -285,7 +285,7 @@ async fn public_handler() -> Json<Value> {
 }
 
 async fn protected_handler(Extension(ctx): Extension<RequestContext>) -> Json<Value> {
-    let user = ctx.user.as_ref().unwrap(); 
+    let user = ctx.user.as_ref().unwrap();
     Json(json!({
         "message": "Welcome to the protected area",
         "user": {
