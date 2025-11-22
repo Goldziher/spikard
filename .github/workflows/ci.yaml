@@ -97,9 +97,17 @@ jobs:
         with:
           cache-key-prefix: rust-tests-${{ matrix.os }}
 
+      - name: Setup Ruby for rb-sys
+        id: setup-ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: false
+
       - name: Run Rust tests
         env:
           RUST_BACKTRACE: full
+          RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
         run: cargo test --workspace --release --all-features
 
       - name: Generate coverage (Linux)

@@ -3,9 +3,9 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { SpikardApp } from "../index";
-import { __setNativeClientFactory, TestClient } from "../testing";
-import type { JsonValue } from "../types";
+import type { SpikardApp } from "./index";
+import { __setNativeClientFactory, TestClient } from "./testing";
+import type { JsonValue } from "./types";
 
 type NativeFactory = Parameters<typeof __setNativeClientFactory>[0];
 
