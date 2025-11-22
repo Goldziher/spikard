@@ -101,13 +101,35 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
             cmd
         }
         "spikard-python" => {
-            let workspace_root = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+            // Try to find workspace root
+            let workspace_root = if let Ok(cwd) = std::env::current_dir() {
+                // If we're in tools/benchmark-harness/apps/spikard-python, go up to workspace root
+                let mut current = cwd;
+                loop {
+                    let cargo_toml = current.join("Cargo.toml");
+                    if cargo_toml.exists()
+                        && let Ok(contents) = std::fs::read_to_string(&cargo_toml)
+                        && contents.contains("[workspace]")
+                    {
+                        break;
+                    }
+                    if let Some(parent) = current.parent() {
+                        current = parent.to_path_buf();
+                    } else {
+                        break;
+                    }
+                }
+                current
+            } else {
+                PathBuf::from(".")
+            };
+
             let pythonpath = workspace_root.join("packages/python");
             // Try to find uv in common locations
             let uv_path = which::which("uv").unwrap_or_else(|_| PathBuf::from("/opt/homebrew/bin/uv"));
             let mut cmd = Command::new(uv_path);
             cmd.arg("run").arg("python").arg("server.py").arg(port.to_string());
-            cmd.env("PYTHONPATH", pythonpath);
+            cmd.env("PYTHONPATH", &pythonpath);
             cmd
         }
         "spikard-node" => {
