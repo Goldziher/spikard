@@ -1,0 +1,16 @@
+{
+  "name": "express-benchmark",
+  "version": "1.0.0",
+  "description": "Express comparison server for benchmarking",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "5.1.0",
+    "zod": "4.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
