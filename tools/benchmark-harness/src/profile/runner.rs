@@ -81,7 +81,7 @@ impl ProfileRunner {
         println!("🚀 Starting {} server...", self.config.framework);
         let port = self.find_available_port();
         let server_config = ServerConfig {
-            framework: self.config.framework.clone(),
+            framework: Some(self.config.framework.clone()),
             port,
             app_dir: self.config.app_dir.clone(),
             variant: self.config.variant.clone(),

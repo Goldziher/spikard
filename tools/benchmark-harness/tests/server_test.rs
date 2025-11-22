@@ -117,7 +117,7 @@ fn test_server_handle_drop() {
 #[tokio::test]
 async fn test_start_server_framework_not_found() {
     let config = ServerConfig {
-        framework: "nonexistent-framework".to_string(),
+        framework: Some("nonexistent-framework".to_string()),
         port: 9999,
         app_dir: PathBuf::from("/tmp"),
         variant: None,
@@ -134,7 +134,7 @@ async fn test_start_server_framework_not_found() {
 #[tokio::test]
 async fn test_start_server_process_spawn_failure() {
     let config = ServerConfig {
-        framework: "fastapi".to_string(),
+        framework: Some("fastapi".to_string()),
         port: 9999,
         app_dir: PathBuf::from("/nonexistent/directory/that/does/not/exist"),
         variant: None,
@@ -147,13 +147,13 @@ async fn test_start_server_process_spawn_failure() {
 #[test]
 fn test_server_config_creation() {
     let config = ServerConfig {
-        framework: "spikard-python".to_string(),
+        framework: Some("spikard-python".to_string()),
         port: 8000,
         app_dir: PathBuf::from("/tmp/app"),
         variant: None,
     };
 
-    assert_eq!(config.framework, "spikard-python");
+    assert_eq!(config.framework, Some("spikard-python".to_string()));
     assert_eq!(config.port, 8000);
     assert_eq!(config.app_dir, PathBuf::from("/tmp/app"));
 }
@@ -195,7 +195,7 @@ if __name__ == '__main__':
     let port = find_available_port(45000).expect("No available port");
 
     let config = ServerConfig {
-        framework: "fastapi".to_string(),
+        framework: Some("fastapi".to_string()),
         port,
         app_dir: temp_dir.path().to_path_buf(),
         variant: None,

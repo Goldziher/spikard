@@ -7,6 +7,7 @@ pub mod analysis;
 pub mod compare;
 pub mod error;
 pub mod fixture;
+pub mod framework;
 pub mod generators;
 pub mod load_generator;
 pub mod monitor;
@@ -25,6 +26,7 @@ pub use compare::{
 };
 pub use error::{Error, Result};
 pub use fixture::{Fixture, FixtureManager};
+pub use framework::{detect_framework, get_framework, list_frameworks, FrameworkConfig};
 pub use load_generator::{LoadGeneratorType, LoadTestConfig};
 pub use monitor::{ResourceMonitor, ResourceSample};
 pub use runner::{BenchmarkRunner, RunnerConfig};

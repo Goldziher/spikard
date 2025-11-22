@@ -3,6 +3,7 @@
 use benchmark_harness::{
     BenchmarkRunner, Fixture, FixtureManager, Result, RunnerConfig, StreamingBenchmarkRunner, StreamingFixture,
     StreamingRunnerConfig,
+    framework::detect_framework,
     profile::{ProfileRunner, ProfileRunnerConfig},
 };
 use clap::{Parser, Subcommand};
@@ -34,9 +35,10 @@ enum Commands {
 
     /// Run a benchmark
     Run {
-        /// Framework to benchmark (e.g., spikard-python, fastapi)
+        /// Framework to benchmark (e.g., spikard-python, fastapi).
+        /// If not specified, framework will be auto-detected from app_dir.
         #[arg(short, long)]
-        framework: String,
+        framework: Option<String>,
 
         /// App directory containing server.py/server.js
         #[arg(short, long)]
@@ -81,9 +83,10 @@ enum Commands {
 
     /// Run a streaming benchmark (WebSocket/SSE)
     Stream {
-        /// Framework to benchmark (e.g., spikard-python)
+        /// Framework to benchmark (e.g., spikard-python).
+        /// If not specified, framework will be auto-detected from app_dir.
         #[arg(short, long)]
-        framework: String,
+        framework: Option<String>,
 
         /// App directory containing server entrypoint
         #[arg(short, long)]
@@ -116,9 +119,10 @@ enum Commands {
 
     /// Profile mode - Deep analysis of a single framework with profiling
     Profile {
-        /// Framework to profile (e.g., spikard-python, spikard-rust)
+        /// Framework to profile (e.g., spikard-python, spikard-rust).
+        /// If not specified, framework will be auto-detected from app_dir.
         #[arg(short, long)]
-        framework: String,
+        framework: Option<String>,
 
         /// App directory containing the server
         #[arg(short, long)]
@@ -222,6 +226,17 @@ async fn main() -> Result<()> {
             fixture,
             fixtures_dir,
         } => {
+            // Resolve framework - either use provided or auto-detect
+            let framework_name = match framework {
+                Some(fw) => fw,
+                None => {
+                    println!("🔍 Auto-detecting framework in {}...", app_dir.display());
+                    let detected = detect_framework(&app_dir)?;
+                    println!("✓ Detected framework: {}", detected.name);
+                    detected.name
+                }
+            };
+
             // Load fixture(s) based on inputs
             let fixture_obj = if let Some(path) = fixture {
                 // Single fixture specified
@@ -242,7 +257,7 @@ async fn main() -> Result<()> {
             };
 
             let config = RunnerConfig {
-                framework: framework.clone(),
+                framework: framework_name,
                 app_dir,
                 workload_name: workload,
                 duration_secs: duration,
@@ -315,9 +330,20 @@ async fn main() -> Result<()> {
             variant,
             output,
         } => {
+            // Resolve framework - either use provided or auto-detect
+            let framework_name = match framework {
+                Some(fw) => fw,
+                None => {
+                    println!("🔍 Auto-detecting framework in {}...", app_dir.display());
+                    let detected = detect_framework(&app_dir)?;
+                    println!("✓ Detected framework: {}", detected.name);
+                    detected.name
+                }
+            };
+
             let streaming_fixture = StreamingFixture::from_file(&fixture)?;
             let config = StreamingRunnerConfig {
-                framework: framework.clone(),
+                framework: framework_name,
                 app_dir,
                 duration_secs: duration,
                 connections,
@@ -378,8 +404,19 @@ async fn main() -> Result<()> {
             variant,
             output,
         } => {
+            // Resolve framework - either use provided or auto-detect
+            let framework_name = match framework {
+                Some(fw) => fw,
+                None => {
+                    println!("🔍 Auto-detecting framework in {}...", app_dir.display());
+                    let detected = detect_framework(&app_dir)?;
+                    println!("✓ Detected framework: {}", detected.name);
+                    detected.name
+                }
+            };
+
             let config = ProfileRunnerConfig {
-                framework: framework.clone(),
+                framework: framework_name,
                 app_dir,
                 suite_name: suite,
                 duration_secs: duration,
