@@ -21,6 +21,14 @@ export type {
 	ServerInfo,
 	StaticFilesConfig,
 } from "./config";
+export {
+	type HandlerPayload,
+	type RequestData,
+	type TypedHandler,
+	wrapBodyHandler,
+	wrapHandler,
+	wrapHandlerWithContext,
+} from "./handler-wrapper";
 export type { Body, Path, Query, QueryDefault } from "./params";
 export type { Request } from "./request";
 export { del, get, patch, post, put, type RouteOptions, route } from "./routing";
@@ -38,6 +46,7 @@ export type {
 	MaybePromise,
 	StructuredHandlerResponse,
 } from "./types";
+export { UploadFile } from "./upload";
 
 /**
  * JSON schema definition for validation

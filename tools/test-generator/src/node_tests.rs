@@ -58,23 +58,23 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
 
     for (category, fixtures) in fixtures_by_category.iter() {
         let test_content = generate_test_file(category, fixtures, target)?;
-        let test_file = tests_dir.join(format!("{}.test.ts", category));
+        let test_file = tests_dir.join(format!("{}.spec.ts", category));
         fs::write(&test_file, test_content).with_context(|| format!("Failed to write test file for {}", category))?;
-        println!("  ✓ Generated tests/{}.test.ts ({} tests)", category, fixtures.len());
+        println!("  ✓ Generated tests/{}.spec.ts ({} tests)", category, fixtures.len());
     }
 
     if !sse_fixtures.is_empty() {
         let sse_content = generate_sse_test_file(&sse_fixtures, &dto_map, target)?;
-        fs::write(tests_dir.join("asyncapi_sse.test.ts"), sse_content)
-            .context("Failed to write asyncapi_sse.test.ts")?;
-        println!("  ✓ Generated tests/asyncapi_sse.test.ts");
+        fs::write(tests_dir.join("asyncapi_sse.spec.ts"), sse_content)
+            .context("Failed to write asyncapi_sse.spec.ts")?;
+        println!("  ✓ Generated tests/asyncapi_sse.spec.ts");
     }
 
     if !websocket_fixtures.is_empty() {
         let websocket_content = generate_websocket_test_file(&websocket_fixtures, &dto_map, target)?;
-        fs::write(tests_dir.join("asyncapi_websocket.test.ts"), websocket_content)
-            .context("Failed to write asyncapi_websocket.test.ts")?;
-        println!("  ✓ Generated tests/asyncapi_websocket.test.ts");
+        fs::write(tests_dir.join("asyncapi_websocket.spec.ts"), websocket_content)
+            .context("Failed to write asyncapi_websocket.spec.ts")?;
+        println!("  ✓ Generated tests/asyncapi_websocket.spec.ts");
     }
 
     format_generated_ts(output_dir)?;

@@ -6,18 +6,34 @@ High-performance Python web framework built on Rust. Spikard combines familiar P
 
 ## Performance
 
-Benchmarks on macOS (Darwin 24.6.0) with 50 concurrent connections over 10 seconds using oha:
+Benchmarks measured on Apple M4 Pro (14 cores, 48GB RAM) with 100 concurrent connections over 10 seconds per workload using oha. All tests achieved 100% success rates.
 
-| Framework | Throughput | P50 Latency | P99 Latency | Memory |
-|-----------|------------|-------------|-------------|--------|
-| **Spikard** | **112,343 req/s** | **0.40ms** | **1.40ms** | **26.5 MB** |
-| Robyn | 87,724 req/s | 0.57ms | 0.69ms | 35.1 MB |
-| FastAPI+Granian | 57,774 req/s | 0.86ms | 1.05ms | 27.0 MB |
+### JSON Request/Response Performance
 
-- **1.28x faster** than Robyn (Rust-based framework with Actix-web)
-- **1.94x faster** than FastAPI+Granian (Rust ASGI + uvloop + ORJSON)
-- **42% lower latency** at p50 (0.40ms vs 0.57ms)
-- **24% more memory efficient** than Robyn
+Tests measure JSON serialization/deserialization across varying payload sizes (86 bytes to 150 KB).
+
+**Average Performance:**
+- **Throughput**: 17,584 req/s
+- **Mean Latency**: 5.69ms
+- **P95 Latency**: 8.14ms
+- **P99 Latency**: 9.76ms
+- **Memory**: 26.8 MB (stable across all workloads)
+
+**Detailed Breakdown by Payload Size:**
+
+| Payload Size | Throughput | Mean Latency | P99 Latency |
+|--------------|------------|--------------|-------------|
+| Small (86 bytes) | 17,699 req/s | 5.65ms | 9.78ms |
+| Medium (1.5 KB) | 17,904 req/s | 5.58ms | 9.86ms |
+| Large (15 KB) | 17,775 req/s | 5.62ms | 9.59ms |
+| Very Large (150 KB) | 16,958 req/s | 5.90ms | 9.80ms |
+
+**Key Findings:**
+- Performance remains stable across payload sizes
+- Memory usage extremely stable at ~27 MB across all workloads
+- Uses zero-copy serialization via msgspec
+- PyO3 with async/await and direct msgspec integration
+- 9.4x faster when using the Rust binding directly (see main README for comparison)
 
 ## Installation
 

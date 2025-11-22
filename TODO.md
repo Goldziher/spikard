@@ -1,226 +1,439 @@
 # Spikard TODO
 
-## Benchmark Harness - Profile & Compare Modes
+**Last Updated:** 2025-11-22
+**Current Focus:** Multipart/Form-Data & Benchmark Harness
 
-### Phase 3: Profile Mode Implementation
+---
 
-- [x] **Create profile runner module** (`tools/benchmark-harness/src/profile/mod.rs`)
-  - [x] Implement `ProfileRunner` struct
-  - [x] Orchestrate workload suite execution
-  - [x] Collect structured results per `ProfileResult` schema
-  - [x] Integrate with existing server/load_generator modules
+## 🎯 HIGHEST PRIORITY - Multipart/Form-Data Support
 
-- [x] **Profile CLI subcommand** (`src/main.rs`)
-  - [x] Add `profile` subcommand to CLI
-  - [x] Parse options (framework, app-dir, suite, profiler, baseline, output)
-  - [x] Invoke ProfileRunner
-  - [x] Write structured JSON output
-  - [x] Print summary to console
+**Goal:** Ergonomic file upload support across ALL language bindings with proper typing and validation options.
 
-- [x] **End-to-end testing**
-  - [x] Test with json-bodies suite (4 workloads)
-  - [x] Verify JSON output structure
-  - [x] Validate performance metrics collection
+**Status:**
+- ✅ Rust HTTP layer complete (multipart parsing, JSON conversion)
+- ✅ Python binding complete (UploadFile class, converter, tests, validation, ergonomic API)
+- ✅ Python generator complete (generates typed handlers with UploadFile)
+- ✅ Node.js: UploadFile class + converters complete
+- ✅ Node.js: Test suite created (26 passing tests, TDD approach)
+- ✅ Node.js: Ergonomic handler wrappers complete (wrapHandler, wrapBodyHandler, wrapHandlerWithContext)
+- ✅ Test naming convention migrated to `.spec.ts` (51 files)
+- ✅ Fresh benchmarks completed (Rust: 165K req/s, Python: 17.6K req/s)
+- ✅ README files updated with latest benchmark results
+- 🚧 Node.js: Test generator needs refactoring to use handler wrappers (low priority - e2e only)
+- ❌ Ruby, Rust, WASM bindings missing
+- ❌ Ruby, Rust generators need updates to match Python ergonomics
 
-- [x] **Complete profile runner implementation**
-  - [x] Extract latency metrics from OhaOutput (From<OhaOutput> trait)
-  - [x] Calculate CPU p95 properly (ResourceMonitor::cpu_percentile)
-  - [x] Load body data from testing_data fixtures (load_body_from_fixtures)
-  - [x] Runtime version detection (python3/node/ruby/rustc --version)
-  - [x] Framework version detection (parse Cargo.toml)
-  - [x] Dynamic port allocation (scan 8100-8199)
-  - [x] Baseline comparison (load_baseline_comparison)
-  - [ ] Extract query parameters from URL path (future enhancement)
+### Phase 1: TypeScript/Node.js Implementation
 
-- [x] **Python profiler integration** (`src/profile/python.rs`)
-  - [x] Basic py-spy integration structure
-  - [x] py-spy flamegraph generation (speedscope format)
-  - [x] Application instrumentation module (`profiling/python_metrics.py`)
-  - [x] Collect GC metrics (gc_collections with gen0/gen1/gen2 breakdown)
-  - [x] Measure handler_time_ms, serialization_time_ms (when instrumented)
-  - [x] Automatic metrics file writing on shutdown
-  - [x] Graceful fallback when py-spy not installed
-  - [ ] GIL metrics extraction from py-spy data (future enhancement)
-  - [ ] FFI overhead measurement (requires deeper instrumentation)
+- [x] **Create UploadFile class** (`packages/node/src/upload.ts`)
+  - [x] Properties: filename, size, contentType, headers
+  - [x] Methods: read(), readAsync(), text(), seek(), tell(), close()
+  - [x] Buffer-based backend
+  - [x] TypeScript type definitions
+  - [x] Export from main index
 
-- [x] **Node profiler integration** (`src/profile/node.rs`)
-  - [x] Application instrumentation module structure
-  - [x] V8 heap metrics collection (v8_heap_used_mb, v8_heap_total_mb)
-  - [x] Event loop lag measurement support
-  - [x] GC metrics (gc_time_ms)
-  - [x] Graceful fallback without instrumentation
-  - [ ] Node --prof integration (future enhancement)
+- [x] **Create converter utilities** (`packages/node/src/converters.ts`)
+  - [x] convertFileMetadataToUploadFile() function
+  - [x] processUploadFileFields() for recursive conversion
+  - [x] convertHandlerBody() main entry point
 
-- [x] **Ruby profiler integration** (`src/profile/ruby.rs`)
-  - [x] Application instrumentation module structure
-  - [x] GC metrics collection (gc_count, gc_time_ms)
-  - [x] Heap metrics collection (heap_allocated_pages, heap_live_slots)
-  - [x] Graceful fallback without instrumentation
-  - [ ] stackprof integration (future enhancement)
+- [x] **Ergonomic handler wrapper** (`packages/node/src/handler-wrapper.ts`)
+  - [x] Create typed handler wrapper function
+  - [x] Auto-convert file metadata → UploadFile instances
+  - [x] Support typed body parameters (like Python's dataclass)
+  - [x] **Same ergonomics as Python**: `function handler(body: UploadRequest)`
+  - [x] Zero boilerplate - no manual JSON parsing needed
+  - [x] Three wrapper variants: wrapHandler, wrapBodyHandler, wrapHandlerWithContext
 
-- [x] **Rust profiler integration** (`src/profile/rust.rs`)
-  - [x] Application instrumentation module structure
-  - [x] Heap allocation tracking support
-  - [x] Platform-specific profiler detection (perf on Linux, Instruments on macOS)
-  - [x] Graceful fallback without instrumentation
-  - [ ] Automatic profiler attachment (future enhancement)
+- [ ] **Update code generator** (`tools/test-generator/src/node_app.rs`)
+  - [ ] Generate handlers using UploadFile type for file fields
+  - [ ] Import UploadFile from @spikard/node
+  - [ ] Generate interface types for request bodies with files
+  - [ ] Use handler wrapper for automatic conversion
+  - [ ] Match Python generator ergonomics
+  - [ ] **NOTE**: Low priority - generator only used for e2e test apps, not user code
 
-### Phase 4: Compare Mode Implementation
+- [ ] **Zod validation support**
+  - [ ] Test WITHOUT Zod (raw objects, fastest)
+  - [ ] Test WITH Zod (typed, convenience)
+  - [ ] Benchmark validation overhead
+  - [ ] Document performance tradeoffs
+
+- [ ] **Comprehensive tests** (`e2e/node/tests/upload.test.ts`)
+  - [ ] Single file upload
+  - [ ] Multiple file upload
+  - [ ] Optional file upload
+  - [ ] Mixed form data + files
+  - [ ] Large file handling
+  - [ ] With/without Zod validation
+  - [ ] Verify ergonomic API (no manual JSON.parse)
+
+### Phase 2: Ruby Implementation
+
+- [ ] **Create UploadFile class** (`packages/ruby/lib/spikard/upload_file.rb`)
+  - [ ] Properties: filename, size, content_type, headers
+  - [ ] Methods: read, rewind, close, seek, tell
+  - [ ] Tempfile-based backend
+  - [ ] Ruby idiomatic API (snake_case, blocks)
+
+- [ ] **Create converter utilities** (`packages/ruby/lib/spikard/converters.rb`)
+  - [ ] convert_file_metadata_to_upload_file method
+  - [ ] process_upload_file_fields for recursive conversion
+  - [ ] convert_handler_body main entry point
+
+- [ ] **Ergonomic handler wrapper** (`packages/ruby/lib/spikard/handler_wrapper.rb`)
+  - [ ] Create typed handler wrapper
+  - [ ] Auto-convert file metadata → UploadFile instances
+  - [ ] Support Dry::Struct for typed bodies
+  - [ ] **Same ergonomics as Python**: `def handler(body)`
+  - [ ] Zero boilerplate - automatic conversion
+
+- [ ] **Update code generator** (`tools/app-generator/src/generators/ruby.rs`)
+  - [ ] Generate handlers using UploadFile type for file fields
+  - [ ] Require 'spikard/upload_file'
+  - [ ] Generate Dry::Struct classes for request bodies with files
+  - [ ] Use handler wrapper for automatic conversion
+  - [ ] Match Python generator ergonomics
+
+- [ ] **Dry::Schema / Dry::Struct support**
+  - [ ] Test WITHOUT validation (fastest)
+  - [ ] Test WITH Dry::Schema (typed DTOs)
+  - [ ] Test WITH Dry::Struct (typed classes)
+  - [ ] Benchmark overhead
+  - [ ] Document patterns
+
+- [ ] **Comprehensive tests**
+  - [ ] Full upload test suite
+  - [ ] Validation scenarios
+  - [ ] Verify ergonomic API (automatic conversion)
+
+### Phase 3: Rust Implementation
+
+- [ ] **Create UploadFile struct** (`crates/spikard/src/upload.rs`)
+  - [ ] Fields: filename, size, content_type, content (Bytes)
+  - [ ] Methods: read(), read_to_string(), as_bytes()
+  - [ ] Implement `serde::Deserialize` for JSON metadata
+  - [ ] Implement `AsyncRead` trait
+  - [ ] Clone, Debug, Send, Sync traits
+
+- [ ] **Create converter utilities** (`crates/spikard/src/converters.rs`)
+  - [ ] convert_file_metadata_to_upload_file function
+  - [ ] process_upload_file_fields for recursive conversion
+  - [ ] Integrate with serde deserialization
+
+- [ ] **Handler integration** (`crates/spikard-http/src/handler.rs`)
+  - [ ] Auto-deserialize from JSON metadata to UploadFile
+  - [ ] Zero-copy where possible (Bytes::from)
+  - [ ] Handle single/multiple/optional files in handler signatures
+  - [ ] **Same ergonomics as Python**: `async fn handler(body: UploadRequest)`
+
+- [ ] **Update code generator** (`tools/app-generator/src/generators/rust.rs`)
+  - [ ] Generate handlers using UploadFile type for file fields
+  - [ ] Use spikard::UploadFile in generated structs
+  - [ ] Generate typed request structs with UploadFile fields
+  - [ ] Match Python generator ergonomics
+
+- [ ] **Serde validation**
+  - [ ] Test WITHOUT serde (fastest)
+  - [ ] Test WITH serde validation
+  - [ ] Benchmark overhead
+
+- [ ] **Comprehensive tests**
+  - [ ] Upload test suite
+  - [ ] Async file handling
+  - [ ] Verify ergonomic API (automatic deserialization)
+
+### Phase 4: WASM Implementation
+
+- [ ] **Create UploadFile class** (`packages/wasm/src/upload.ts`)
+  - [ ] Integrate with browser File API
+  - [ ] Properties: filename, size, type
+  - [ ] Methods: arrayBuffer(), text(), stream()
+  - [ ] TypeScript definitions
+
+- [ ] **Rust binding integration** (`crates/spikard-wasm/src/handler.rs`)
+  - [ ] Convert JSON → UploadFile
+  - [ ] Handle browser file objects
+  - [ ] Flexible body parameter naming
+
+- [ ] **Browser tests**
+  - [ ] File input integration
+  - [ ] Drag-and-drop support
+  - [ ] Multiple file selection
+
+---
+
+## 🛠️ HIGHEST PRIORITY - Code Generator Updates
+
+**Goal:** Ensure all language generators produce ergonomic, typed handler code that matches Python's quality.
+
+**Current State:**
+- ✅ Python generator: Generates typed handlers with dataclasses, UploadFile support, automatic conversion
+- ❌ Node generator: Currently generates manual JSON.parse boilerplate
+- ❌ Ruby generator: Currently generates manual JSON parsing
+- ❌ Rust generator: Needs UploadFile support + typed request structs
+
+### Generator Consistency Requirements
+
+**All generators must:**
+1. Generate typed request/response interfaces/structs/classes
+2. Import UploadFile type for file upload fields
+3. Use handler wrappers for automatic conversion (no manual parsing)
+4. Support validation libraries (Zod/Dry::Schema/Serde) as opt-in
+5. Generate the SAME ergonomic API across all languages
+
+**Example: Python (REFERENCE IMPLEMENTATION)**
+```python
+@dataclass
+class UploadRequest:
+    file: UploadFile
+    description: str
+
+@app.post("/upload")
+def upload_handler(body: UploadRequest):
+    return {"filename": body.file.filename}
+```
+
+**Example: Node.js (TARGET)**
+```typescript
+interface UploadRequest {
+    file: UploadFile;
+    description: string;
+}
+
+app.post("/upload", async ({ body }: { body: UploadRequest }) => {
+    return { filename: body.file.filename };
+});
+```
+
+**Example: Ruby (TARGET)**
+```ruby
+class UploadRequest < Dry::Struct
+  attribute :file, UploadFile
+  attribute :description, String
+end
+
+app.post("/upload") do |body|
+  { filename: body.file.filename }
+end
+```
+
+**Example: Rust (TARGET)**
+```rust
+#[derive(Deserialize)]
+struct UploadRequest {
+    file: UploadFile,
+    description: String,
+}
+
+async fn upload_handler(body: UploadRequest) -> impl IntoResponse {
+    json!({ "filename": body.file.filename })
+}
+```
+
+### Implementation Tasks
+
+- [ ] **Update Node.js generator** (`tools/app-generator/src/generators/node.rs`)
+  - [ ] Generate TypeScript interfaces for request bodies
+  - [ ] Import UploadFile for file fields
+  - [ ] Remove manual JSON.parse boilerplate
+  - [ ] Use handler wrapper pattern
+
+- [ ] **Update Ruby generator** (`tools/app-generator/src/generators/ruby.rs`)
+  - [ ] Generate Dry::Struct classes for request bodies
+  - [ ] Require UploadFile for file fields
+  - [ ] Remove manual JSON parsing
+  - [ ] Use handler wrapper pattern
+
+- [ ] **Update Rust generator** (`tools/app-generator/src/generators/rust.rs`)
+  - [ ] Generate request structs with derives
+  - [ ] Use UploadFile for file fields
+  - [ ] Auto-deserialize via serde
+
+- [ ] **Regenerate all test fixtures**
+  - [ ] Run generator for all testing_data fixtures
+  - [ ] Verify Python handlers still work (no regression)
+  - [ ] Verify Node handlers use new pattern
+  - [ ] Verify Ruby handlers use new pattern
+  - [ ] Verify Rust handlers use new pattern
+
+---
+
+## 🔥 HIGHEST PRIORITY - Benchmark Harness Auto-Start
+
+**Problem:** Harness currently requires manually starting servers. Need full automation.
+
+**Goal:** `benchmark-harness profile spikard-python` should:
+1. Build the test app
+2. Start the server automatically
+3. Run the workloads
+4. Collect results
+5. Stop the server
+6. Return structured output
+
+### Implementation Tasks
+
+- [ ] **Auto-start infrastructure** (`tools/benchmark-harness/src/server/auto_start.rs`)
+  - [ ] Detect framework from app directory
+  - [ ] Build command generation (pip install, npm install, bundle install, cargo build)
+  - [ ] Start command generation (python, node, ruby, cargo run)
+  - [ ] Port allocation and binding check
+  - [ ] Health check / readiness probe
+  - [ ] Graceful shutdown on completion
+
+- [ ] **Per-framework server managers**
+  - [ ] Python: `uv run python app.py` or `uvicorn app:app`
+  - [ ] Node: `node server.js` or `npm start`
+  - [ ] Ruby: `ruby server.rb` or `bundle exec ruby server.rb`
+  - [ ] Rust: `cargo run --release`
+
+- [ ] **Process lifecycle management**
+  - [ ] Capture stdout/stderr for debugging
+  - [ ] Timeout handling (server fails to start)
+  - [ ] Resource cleanup (kill process group)
+  - [ ] Error reporting (server crashes)
+
+- [ ] **Integration with ProfileRunner**
+  - [ ] Start server before workloads
+  - [ ] Wait for readiness
+  - [ ] Run all workloads
+  - [ ] Collect profiler output
+  - [ ] Stop server after completion
+
+- [ ] **Testing**
+  - [ ] Test auto-start for all 4 languages
+  - [ ] Test with missing dependencies (should fail gracefully)
+  - [ ] Test with port conflicts
+  - [ ] Test with server crashes
+  - [ ] Verify cleanup on interrupt (Ctrl+C)
+
+---
+
+## 📊 Phase 4: Compare Mode (After Above Complete)
 
 - [ ] **Create compare runner module** (`tools/benchmark-harness/src/compare/mod.rs`)
-  - [ ] Implement `CompareRunner` struct
   - [ ] Multi-framework orchestration
-  - [ ] Parallel execution with proper port management
+  - [ ] Parallel execution with port management
+  - [ ] Auto-start all framework servers
   - [ ] Collect results per `CompareResult` schema
 
 - [ ] **Statistical analysis** (`src/compare/analysis.rs`)
   - [ ] Implement t-test for statistical significance
   - [ ] Calculate p-values and confidence intervals
   - [ ] Determine winner per workload
-  - [ ] Compute performance ratios (framework_a_vs_framework_b)
-  - [ ] Generate overall summary (workloads_won, category_winners)
+  - [ ] Performance ratio computation
 
 - [ ] **Report generation** (`src/compare/report.rs`)
-  - [ ] Generate markdown comparison report
-  - [ ] Per-workload comparison tables
-  - [ ] Performance ratio visualizations
+  - [ ] Markdown comparison tables
+  - [ ] Performance visualizations
   - [ ] Statistical significance indicators
-  - [ ] Summary section with overall winner
+  - [ ] Overall winner summary
 
-- [ ] **Compare CLI subcommand** (`src/main.rs`)
-  - [ ] Add `compare` subcommand to CLI
-  - [ ] Parse options (frameworks, apps, suite, output, report)
-  - [ ] Invoke CompareRunner
-  - [ ] Write structured JSON output
-  - [ ] Generate markdown report (if --report specified)
-  - [ ] Print summary to console
-
-### Phase 5: CI Integration
-
-- [ ] **GitHub Actions workflow** (`.github/workflows/benchmark.yml`)
-  - [ ] Profile mode job (run on push to main)
-  - [ ] Compare mode job (run on PRs)
-  - [ ] Artifact upload (JSON results)
-  - [ ] PR comment with comparison report
-
-- [ ] **Historical tracking**
-  - [ ] Store baseline results in `results/baseline/`
-  - [ ] Commit baseline updates on main branch
-  - [ ] Version by git commit hash
-
-- [ ] **Regression detection**
-  - [ ] Define regression thresholds (e.g., >10% slowdown)
-  - [ ] Compare PR results against main baseline
-  - [ ] Flag regressions in PR comments
-  - [ ] Block merge on critical regressions (configurable)
-
-- [ ] **Auto-generated analytics** (future)
-  - [ ] Time-series database (InfluxDB/TimescaleDB)
-  - [ ] Grafana dashboards
-  - [ ] Trend analysis
-  - [ ] Email alerts on regressions
-
-### Testing & Validation
-
-- [ ] **Unit tests**
-  - [ ] Schema serialization/deserialization
-  - [ ] Metadata collection (git, host info)
-  - [ ] Workload suite loading
-  - [ ] Statistical analysis functions
-
-- [ ] **Integration tests**
-  - [ ] Profile mode end-to-end
-  - [ ] Compare mode end-to-end
-  - [ ] CLI argument parsing
-  - [ ] JSON output validation
-
-- [ ] **Documentation**
-  - [ ] Update README with CLI examples
-  - [ ] Document profiler requirements (py-spy, perf, etc.)
-  - [ ] Add CI setup guide
-  - [ ] Create user guide for interpreting results
-
-### Cleanup & Migration
-
-- [ ] **Remove deprecated bash scripts**
-  - [ ] Delete `tools/benchmark-harness/scripts/comprehensive_benchmark.sh`
-  - [ ] Delete `tools/benchmark-harness/scripts/test_workload.sh`
-  - [ ] Update documentation references
-
-- [ ] **Update BENCHMARK_RESULTS.md**
-  - [ ] Re-run benchmarks with new CLI
-  - [ ] Update results with new schema format
-  - [ ] Add profiling insights (GIL overhead, etc.)
+- [ ] **Compare CLI subcommand**
+  - [ ] `benchmark-harness compare --frameworks spikard-python,fastapi`
+  - [ ] JSON output
+  - [ ] Markdown report generation
 
 ---
 
-## Priority Order
+## 🧪 Validation Overhead Benchmarks
 
-**CURRENT PRIORITY - End-to-End Testing:**
-1. ✅ Profile runner module - COMPLETE
-2. ✅ All language profilers (Python/Node/Ruby/Rust) - COMPLETE
-3. ✅ Profile CLI subcommand - COMPLETE
-4. ⏳ Test Python binding end-to-end - IN PROGRESS
-5. ⏳ Test Node/Ruby/Rust bindings
-6. ⏳ Fix integration issues
-7. ⏳ Verify all 4 bindings work perfectly
+**Goal:** Measure performance impact of validation layers across all languages.
 
-**Next (After Testing Complete):**
-8. Phase 4: Compare runner module
-9. Phase 4: Statistical analysis
-10. Phase 4: Report generation
-11. Phase 4: Compare CLI subcommand
-12. Test compare mode end-to-end
+### Test Matrix
 
-**Future (Week 3+):**
-10. Phase 3: Node/Ruby/Rust profilers
-11. Phase 5: CI integration
-12. Phase 5: Historical tracking
-13. Cleanup & migration
+Each language tests:
+1. **No validation** (raw objects) - baseline performance
+2. **With validation** (Pydantic/Zod/Dry::Schema/Serde) - convenience vs performance
+
+### Workloads
+
+- [ ] **Simple JSON body** (user registration)
+  - Measure: serialization overhead
+
+- [ ] **Complex nested object** (order with items)
+  - Measure: deep validation cost
+
+- [ ] **File upload** (multipart/form-data)
+  - Measure: file conversion overhead
+
+- [ ] **Mixed form data** (files + JSON fields)
+  - Measure: combined overhead
+
+### Expected Findings
+
+Document for each language:
+- Validation overhead % (e.g., "Pydantic adds 15% latency")
+- When validation is worth it (safety vs speed)
+- Optimization techniques (msgspec, Zod pre-compilation)
 
 ---
 
-## Current Progress
+## 📋 Remaining Tasks (Lower Priority)
 
-**✅ Completed:**
-- Phase 1: Schema & data model (`src/schema/`)
-- Phase 2: Workload suite system (15 workloads, 5 suites)
-- Phase 3: Profile runner module
-  - Complete ProfileRunner implementation with all metrics
-  - Profile CLI subcommand
-  - End-to-end testing with json-bodies suite
-  - Python profiler integration with GC metrics collection
-  - Application instrumentation module for Python (`profiling/python_metrics.py`)
-  - Fixture loading from `testing_data/` directory
-  - Baseline comparison functionality
-  - Runtime and framework version detection
-  - Dynamic port allocation
-- Documentation: `docs/benchmarks/harness-design.md`
-- Metadata collection (git, host info)
-- Documentation reorganization (kebab-case, TODO.md tracking)
+### Benchmark Harness Enhancements
 
-**🚧 In Progress:**
-- Phase 3: End-to-end testing and validation (CURRENT PRIORITY)
+- [ ] Extract query parameters from URL path
+- [ ] GIL metrics extraction from py-spy data
+- [ ] FFI overhead measurement
+- [ ] Node --prof integration
+- [ ] Ruby stackprof integration
+- [ ] Rust profiler auto-attachment (perf/Instruments)
 
-**📋 Next Up (Phase 3 Completion):**
-1. Test Python binding with profile mode (`spikard-python-workloads`)
-2. Verify Node binding works with benchmark harness
-3. Verify Ruby binding works with benchmark harness
-4. Verify Rust binding works with benchmark harness
-5. Run full json-bodies suite on all 4 bindings
-6. Fix any integration issues discovered
-7. Document profiler usage and setup
+### CI Integration (Phase 5)
 
-**📋 After Testing (Phase 4):**
-- Create compare runner module (`src/compare/mod.rs`)
-- Implement statistical analysis (t-test, p-values)
-- Generate markdown comparison reports
-- Add Compare CLI subcommand
+- [ ] GitHub Actions workflow
+- [ ] Historical baseline tracking
+- [ ] Regression detection
+- [ ] PR comments with comparison
 
-**✅ Recently Completed:**
-- Phase 3: All language-specific profilers (with code review and cleanup)
-  - ✅ Python profiler (py-spy + GC/timing metrics)
-  - ✅ Node profiler (V8 heap + event loop metrics)
-  - ✅ Ruby profiler (GC + heap metrics)
-  - ✅ Rust profiler (heap tracking + platform profilers)
-  - ✅ Code review: Removed dead code, fixed unsafe blocks, zero warnings
+### Cleanup
+
+- [ ] Remove deprecated bash scripts
+- [ ] Update BENCHMARK_RESULTS.md with new format
+- [ ] Documentation updates
+
+---
+
+## 📈 Success Criteria
+
+### Multipart/Form-Data
+- ✅ All 5 languages (Python, Node, Ruby, Rust, WASM) have UploadFile support
+- ✅ Tests pass for single/multiple/optional file uploads
+- ✅ Validation overhead documented for each language
+- ✅ Zero breaking changes to existing APIs
+
+### Benchmark Harness
+- ✅ `benchmark-harness profile <framework>` works without manual setup
+- ✅ Auto-builds and auto-starts all framework servers
+- ✅ Compare mode runs multi-framework benchmarks
+- ✅ Statistical analysis determines winners
+- ✅ Markdown reports generated automatically
+
+---
+
+## 🎯 Current Focus (This Week)
+
+**Priority 1:** Code generator ergonomics - ALL languages must match Python quality
+- Node.js: Handler wrapper + generator updates (remove JSON.parse boilerplate)
+- Ruby: Handler wrapper + generator updates
+- Rust: UploadFile struct + auto-deserialization
+
+**Priority 2:** Complete UploadFile implementation across all bindings
+- Node.js: Handler integration + tests
+- Ruby: Full implementation
+- Rust: Native UploadFile support
+- WASM: Browser integration
+
+**Priority 3:** Benchmark harness auto-start infrastructure
+- Auto-build and auto-start servers
+- Full automation for profiling
+
+**Blocked until above complete:**
+- Compare mode (needs auto-start)
+- Validation benchmarks (needs all UploadFile implementations + generators)
+- CI integration (needs stable benchmark harness)
+
+**Key Principle:**
+Every language binding must provide the SAME ergonomic, zero-boilerplate experience as Python.
+Users should write `function handler(body: TypedRequest)` NOT `JSON.parse(requestJson)`.

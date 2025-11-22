@@ -278,9 +278,9 @@ describe("status_codes", () => {
 
 		expect(response.statusCode).toBe(429);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["x-ratelimit-remaining"]).toBe("0");
-		expect(responseHeaders["x-ratelimit-reset"]).toBe("1609459200");
 		expect(responseHeaders["x-ratelimit-limit"]).toBe("100");
+		expect(responseHeaders["x-ratelimit-reset"]).toBe("1609459200");
+		expect(responseHeaders["x-ratelimit-remaining"]).toBe("0");
 		expect(responseHeaders["retry-after"]).toBe("60");
 	});
 

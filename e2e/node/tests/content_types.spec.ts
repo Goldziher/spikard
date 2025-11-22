@@ -113,7 +113,9 @@ describe("content_types", () => {
 		expect(responseHeaders["content-type"]).toBe("application/pdf");
 	});
 
-	test.skip("20_content_length_mismatch", async () => {});
+	test.skip("20_content_length_mismatch", async () => {
+		// Not supported by the in-memory HTTP client
+	});
 
 	test("17_vendor_json_accepted", async () => {
 		const app = createAppContentTypes17VendorJsonAccepted();
@@ -296,7 +298,7 @@ describe("content_types", () => {
 		const responseData = response.json();
 		expect(responseData).toBe("binary_data_placeholder");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=file.bin");
 		expect(responseHeaders["content-type"]).toBe("application/octet-stream");
+		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=file.bin");
 	});
 });
