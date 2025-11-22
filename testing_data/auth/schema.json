@@ -3,7 +3,7 @@
 	"title": "Authentication Test Fixture",
 	"description": "Schema for JWT and API key authentication test fixtures covering token validation, expiration, signatures, and API key validation",
 	"type": "object",
-	"required": ["name", "description", "category", "source", "request", "expected_response", "handler"],
+	"required": ["name", "description", "request", "expected_response"],
 	"properties": {
 		"name": {
 			"type": "string",
@@ -71,27 +71,45 @@
 							"type": "object",
 							"description": "JWT authentication middleware config",
 							"properties": {
-								"enabled": { "type": "boolean" },
-								"algorithm": { "type": "string" },
-								"secret": { "type": "string" },
+								"enabled": {
+									"type": "boolean"
+								},
+								"algorithm": {
+									"type": "string"
+								},
+								"secret": {
+									"type": "string"
+								},
 								"audience": {
 									"type": "array",
-									"items": { "type": "string" }
+									"items": {
+										"type": "string"
+									}
 								},
-								"issuer": { "type": "string" },
-								"leeway": { "type": "integer" }
+								"issuer": {
+									"type": "string"
+								},
+								"leeway": {
+									"type": "integer"
+								}
 							}
 						},
 						"api_key_auth": {
 							"type": "object",
 							"description": "API key authentication middleware config",
 							"properties": {
-								"enabled": { "type": "boolean" },
+								"enabled": {
+									"type": "boolean"
+								},
 								"keys": {
 									"type": "array",
-									"items": { "type": "string" }
+									"items": {
+										"type": "string"
+									}
 								},
-								"header_name": { "type": "string" }
+								"header_name": {
+									"type": "string"
+								}
 							}
 						}
 					}
@@ -116,7 +134,9 @@
 				"headers": {
 					"type": "object",
 					"description": "Request headers as key-value pairs",
-					"additionalProperties": { "type": "string" }
+					"additionalProperties": {
+						"type": "string"
+					}
 				},
 				"body": {
 					"description": "Request body (any JSON type)"
@@ -140,18 +160,30 @@
 				"headers": {
 					"type": "object",
 					"description": "Expected response headers",
-					"additionalProperties": { "type": "string" }
+					"additionalProperties": {
+						"type": "string"
+					}
 				}
 			}
 		},
 		"tags": {
 			"type": "array",
 			"description": "Tags for categorizing and filtering tests",
-			"items": { "type": "string" }
+			"items": {
+				"type": "string"
+			}
 		},
 		"notes": {
 			"type": "string",
 			"description": "Additional notes or implementation details"
+		},
+		"skip": {
+			"type": "boolean",
+			"description": "Whether to skip this test"
+		},
+		"skip_reason": {
+			"type": "string",
+			"description": "Reason for skipping"
 		}
 	}
 }

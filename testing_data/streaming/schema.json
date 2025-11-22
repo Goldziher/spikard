@@ -4,7 +4,50 @@
 	"description": "Fixtures that describe streaming HTTP responses",
 	"type": "object",
 	"allOf": [
-		{ "$ref": "../00-FIXTURE-SCHEMA.json" },
+		{
+			"type": "object",
+			"required": ["name", "description", "handler", "request", "expected_response"],
+			"properties": {
+				"name": {
+					"type": "string",
+					"minLength": 1
+				},
+				"description": {
+					"type": "string",
+					"minLength": 1
+				},
+				"category": {
+					"type": "string"
+				},
+				"source": {
+					"type": "object"
+				},
+				"handler": {
+					"type": "object"
+				},
+				"request": {
+					"type": "object"
+				},
+				"expected_response": {
+					"type": "object"
+				},
+				"streaming": {
+					"type": "object"
+				},
+				"tags": {
+					"type": "array"
+				},
+				"skip": {
+					"type": "boolean"
+				},
+				"skip_reason": {
+					"type": "string"
+				},
+				"notes": {
+					"type": "string"
+				}
+			}
+		},
 		{
 			"type": "object",
 			"required": ["streaming", "expected_response"],
@@ -13,19 +56,31 @@
 					"type": "object",
 					"required": ["status_code"],
 					"properties": {
-						"status_code": { "type": "integer", "minimum": 100, "maximum": 599 },
-						"body": { "description": "Concatenated streaming payload for documentation" },
+						"status_code": {
+							"type": "integer",
+							"minimum": 100,
+							"maximum": 599
+						},
+						"body": {
+							"description": "Concatenated streaming payload for documentation"
+						},
 						"headers": {
 							"type": "object",
 							"description": "Headers expected on the streaming response",
-							"additionalProperties": { "type": "string" },
+							"additionalProperties": {
+								"type": "string"
+							},
 							"properties": {
-								"content-type": { "type": "string" }
+								"content-type": {
+									"type": "string"
+								}
 							}
 						}
 					}
 				},
-				"streaming": { "$ref": "#/definitions/streaming" }
+				"streaming": {
+					"$ref": "#/definitions/streaming"
+				}
 			}
 		}
 	],
@@ -34,7 +89,9 @@
 			"type": "object",
 			"required": ["chunks"],
 			"properties": {
-				"content_type": { "type": "string" },
+				"content_type": {
+					"type": "string"
+				},
 				"chunks": {
 					"type": "array",
 					"minItems": 1,
@@ -42,17 +99,52 @@
 						"type": "object",
 						"required": ["type"],
 						"properties": {
-							"type": { "type": "string", "enum": ["text", "bytes"] },
-							"value": { "type": "string" },
-							"base64": { "type": "string" }
+							"type": {
+								"type": "string",
+								"enum": ["text", "bytes"]
+							},
+							"value": {
+								"type": "string"
+							},
+							"base64": {
+								"type": "string"
+							}
 						},
 						"allOf": [
-							{ "if": { "properties": { "type": { "const": "text" } } }, "then": { "required": ["value"] } },
-							{ "if": { "properties": { "type": { "const": "bytes" } } }, "then": { "required": ["base64"] } }
+							{
+								"if": {
+									"properties": {
+										"type": {
+											"const": "text"
+										}
+									}
+								},
+								"then": {
+									"required": ["value"]
+								}
+							},
+							{
+								"if": {
+									"properties": {
+										"type": {
+											"const": "bytes"
+										}
+									}
+								},
+								"then": {
+									"required": ["base64"]
+								}
+							}
 						]
 					}
 				}
 			}
+		}
+	},
+	"properties": {
+		"handler": {
+			"type": "object",
+			"description": "Handler configuration"
 		}
 	}
 }

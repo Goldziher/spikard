@@ -1,6 +1,6 @@
 //! Spikard-Ruby code generator
 //!
-//! Generates Ruby code using Spikard bindings
+//! Generates Ruby code using Spikard bindings with ergonomic handler wrappers
 
 use crate::analyzer::{RouteAnalysis, RouteInfo};
 use anyhow::Result;
@@ -8,9 +8,13 @@ use anyhow::Result;
 pub fn generate(analysis: &RouteAnalysis) -> Result<String> {
     let mut output = String::new();
 
-    output.push_str(&generate_header());
+    output.push_str(&generate_header(analysis));
 
     output.push_str("app = Spikard::App.new\n\n");
+
+    // Add health check endpoint first
+    output.push_str(&generate_health_check());
+    output.push_str("\n\n");
 
     for route in &analysis.routes {
         output.push_str(&generate_handler(route));
@@ -22,8 +26,8 @@ pub fn generate(analysis: &RouteAnalysis) -> Result<String> {
     Ok(output)
 }
 
-fn generate_header() -> String {
-    r#"#!/usr/bin/env ruby
+fn generate_header(analysis: &RouteAnalysis) -> String {
+    let mut header = r#"#!/usr/bin/env ruby
 # frozen_string_literal: true
 
 # Auto-generated Spikard-Ruby benchmark server
@@ -33,76 +37,100 @@ fn generate_header() -> String {
 $LOAD_PATH.unshift File.expand_path('../../../../packages/ruby/lib', __dir__)
 require 'spikard_rb'
 require 'spikard'
-
+require 'spikard/handler_wrapper'
 "#
-    .to_string()
+    .to_string();
+
+    // Check if any routes need Dry::Struct for request bodies
+    let needs_dry_struct = analysis.routes.iter().any(|r| r.params.body.is_some());
+
+    if needs_dry_struct {
+        header.push_str("require 'dry/struct'\n");
+    }
+
+    header.push_str("\n");
+    header
+}
+
+fn generate_health_check() -> String {
+    r#"app.get('/health') do |_params, _query, _body|
+  { status: 'ok' }
+end"#
+        .to_string()
 }
 
 fn generate_handler(route: &RouteInfo) -> String {
     let method = route.method.to_lowercase();
-    let params = generate_parameters(route);
-    let body = generate_handler_body(route);
-    let handler_name = format!(
-        "{}_{}",
-        method,
-        route
-            .route
-            .replace('/', "_")
-            .replace('{', "")
-            .replace('}', "")
-            .trim_matches('_')
-    );
+    let handler_wrapper = generate_handler_wrapper(route);
+    let handler_block = generate_handler_block(route);
 
     format!(
-        r#"app.{} '{}', handler_name: '{}' do{}
-  response = {{}}
+        r#"app.{}('{}', &{} do |{}|
   {}
-  response
-end"#,
-        method, route.route, handler_name, params, body
+end)"#,
+        method, route.route, handler_wrapper, handler_block.0, handler_block.1
     )
 }
 
-fn generate_parameters(route: &RouteInfo) -> String {
-    let mut params = Vec::new();
-
+fn generate_handler_wrapper(route: &RouteInfo) -> String {
     let has_path = !route.params.path.is_empty();
     let has_query = !route.params.query.is_empty();
     let has_body = route.params.body.is_some();
 
-    if has_path {
-        params.push("params");
-    }
-    if has_query {
-        params.push("query");
-    }
-    if has_body {
-        params.push("body");
-    }
-
-    if params.is_empty() {
-        String::new()
-    } else {
-        format!(" |{}|", params.join(", "))
+    match (has_path || has_query, has_body) {
+        (false, true) => "Spikard::HandlerWrapper.wrap_body_handler".to_string(),
+        (true, false) => "Spikard::HandlerWrapper.wrap_handler".to_string(),
+        (true, true) => "Spikard::HandlerWrapper.wrap_handler".to_string(),
+        (false, false) => "Spikard::HandlerWrapper.wrap_body_handler".to_string(),
     }
 }
 
-fn generate_handler_body(route: &RouteInfo) -> String {
-    let mut lines = Vec::new();
+fn generate_handler_block(route: &RouteInfo) -> (String, String) {
+    let has_path = !route.params.path.is_empty();
+    let has_query = !route.params.query.is_empty();
+    let has_body = route.params.body.is_some();
 
-    for (name, _) in &route.params.path {
-        lines.push(format!("response[:{}] = params[:{}]", name, name));
+    let params_str = match (has_path, has_query, has_body) {
+        // Only body
+        (false, false, true) => "body".to_string(),
+        // Only path params
+        (true, false, false) => "params, _query, _body".to_string(),
+        // Path params and body
+        (true, false, true) => "params, _query, body".to_string(),
+        // Only query params
+        (false, true, false) => "_params, query, _body".to_string(),
+        // Query params and body
+        (false, true, true) => "_params, query, body".to_string(),
+        // Path and query params
+        (true, true, false) => "params, query, _body".to_string(),
+        // Path, query params, and body
+        (true, true, true) => "params, query, body".to_string(),
+        // Nothing
+        (false, false, false) => "_params, _query, _body".to_string(),
+    };
+
+    let mut lines = Vec::new();
+    lines.push("response = {}".to_string());
+
+    let path_params = crate::analyzer::extract_path_params(&route.route);
+    for param_name in &path_params {
+        lines.push(format!("response[:{name}] = params[:{name}]", name = param_name));
     }
 
     for (name, _) in &route.params.query {
-        lines.push(format!("response[:{}] = query[:{}] if query[:{}]", name, name, name));
+        lines.push(format!(
+            "response[:{name}] = query[:{name}] if query[:{name}]",
+            name = name
+        ));
     }
 
     if route.params.body.is_some() {
-        lines.push("response.merge!(body) if body".to_string());
+        lines.push("response.merge!(body)".to_string());
     }
 
-    lines.join("\n  ")
+    lines.push("response".to_string());
+
+    (params_str, lines.join("\n  "))
 }
 
 fn generate_main() -> String {

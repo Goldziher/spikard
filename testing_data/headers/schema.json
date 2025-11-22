@@ -3,7 +3,7 @@
 	"title": "HTTP Headers Test Fixture",
 	"description": "Schema for HTTP header test fixtures covering standard headers, custom headers, case sensitivity, and validation",
 	"type": "object",
-	"required": ["name", "description", "source", "request", "expected_response"],
+	"required": ["name", "description", "request", "expected_response"],
 	"properties": {
 		"name": {
 			"type": "string",
@@ -18,11 +18,10 @@
 		"source": {
 			"type": "object",
 			"description": "Source framework and test location",
-			"required": ["framework", "test_file", "test_function"],
 			"properties": {
 				"framework": {
 					"type": "string",
-					"enum": ["fastapi", "starlette", "litestar"],
+					"enum": ["fastapi", "starlette", "litestar", "spikard"],
 					"description": "Source framework"
 				},
 				"test_file": {
@@ -36,7 +35,7 @@
 					"minLength": 1
 				}
 			},
-			"additionalProperties": false
+			"additionalProperties": true
 		},
 		"request": {
 			"type": "object",
@@ -58,10 +57,14 @@
 					"description": "Request headers as key-value pairs. Headers with multiple values are represented as arrays.",
 					"additionalProperties": {
 						"oneOf": [
-							{ "type": "string" },
+							{
+								"type": "string"
+							},
 							{
 								"type": "array",
-								"items": { "type": "string" }
+								"items": {
+									"type": "string"
+								}
 							}
 						]
 					}
@@ -89,7 +92,9 @@
 				"headers": {
 					"type": "object",
 					"description": "Expected response headers",
-					"additionalProperties": { "type": "string" }
+					"additionalProperties": {
+						"type": "string"
+					}
 				},
 				"validation_errors": {
 					"type": "array",
@@ -101,7 +106,9 @@
 							"loc": {
 								"type": "array",
 								"description": "Error location path (e.g., ['header', 'x-api-key'])",
-								"items": { "type": "string" }
+								"items": {
+									"type": "string"
+								}
 							},
 							"msg": {
 								"type": "string",
@@ -120,7 +127,29 @@
 		"notes": {
 			"type": "string",
 			"description": "Additional notes about this test case"
+		},
+		"handler": {
+			"type": "object",
+			"description": "Handler configuration"
+		},
+		"tags": {
+			"type": "array",
+			"description": "Tags for filtering/organization",
+			"items": {
+				"type": "string"
+			}
+		},
+		"skip": {
+			"type": "boolean",
+			"description": "Whether to skip this test"
+		},
+		"skip_reason": {
+			"type": "string",
+			"description": "Reason for skipping"
+		},
+		"category": {
+			"type": "string",
+			"description": "Test category"
 		}
-	},
-	"additionalProperties": false
+	}
 }

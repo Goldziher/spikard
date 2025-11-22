@@ -27,10 +27,12 @@ fn apply_expected_headers(mut response: HttpResponse, headers: &[(&str, &str)]) 
     response
 }
 
+// Default app for backwards compatibility (empty)
 pub fn create_app() -> Result<App, AppError> {
     Ok(App::new())
 }
 
+// Per-fixture app functions
 /// App for fixture: API key authentication - invalid key
 pub fn create_app_auth_api_key_authentication_invalid_key() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
@@ -2079,7 +2081,7 @@ pub fn create_app_json_bodies_uuid_field_success() -> Result<App, AppError> {
 /// App for fixture: Hook Execution Order
 pub fn create_app_lifecycle_hooks_hook_execution_order() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(
+    config.lifecycle_hooks = Some(Arc::new(
         spikard::LifecycleHooks::builder()
             .on_request(spikard::request_hook(
                 "first_hook",
@@ -2094,7 +2096,7 @@ pub fn create_app_lifecycle_hooks_hook_execution_order() -> Result<App, AppError
                 lifecycle_hooks_hook_execution_order_third_hook_on_request_2,
             ))
             .build(),
-    );
+    ));
     let mut app = App::new().config(config);
     app.route(
         get("/api/test-hook-order")
@@ -2110,7 +2112,7 @@ pub fn create_app_lifecycle_hooks_hook_execution_order() -> Result<App, AppError
 /// App for fixture: Multiple Hooks - All Phases
 pub fn create_app_lifecycle_hooks_multiple_hooks_all_phases() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(
+    config.lifecycle_hooks = Some(Arc::new(
         spikard::LifecycleHooks::builder()
             .on_request(spikard::request_hook(
                 "request_logger",
@@ -2149,7 +2151,7 @@ pub fn create_app_lifecycle_hooks_multiple_hooks_all_phases() -> Result<App, App
                 lifecycle_hooks_multiple_hooks_all_phases_error_logger_on_error_0,
             ))
             .build(),
-    );
+    ));
     let mut app = App::new().config(config);
     app.route(post("/api/full-lifecycle").handler_name("lifecycle_hooks_multiple_hooks_all_phases_handler").request_schema_json(serde_json::from_str::<Value>("{\"properties\":{\"action\":{\"type\":\"string\"},\"user_id\":{\"type\":\"string\"}},\"required\":[\"user_id\",\"action\"],\"type\":\"object\"}").unwrap()).params_schema_json(serde_json::from_str::<Value>("{\"properties\":{},\"required\":[],\"type\":\"object\"}").unwrap()), lifecycle_hooks_multiple_hooks_all_phases_handler)?;
     Ok(app)
@@ -2158,7 +2160,7 @@ pub fn create_app_lifecycle_hooks_multiple_hooks_all_phases() -> Result<App, App
 /// App for fixture: onError - Error Logging
 pub fn create_app_lifecycle_hooks_onerror_error_logging() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(
+    config.lifecycle_hooks = Some(Arc::new(
         spikard::LifecycleHooks::builder()
             .on_error(spikard::response_hook(
                 "error_logger",
@@ -2169,7 +2171,7 @@ pub fn create_app_lifecycle_hooks_onerror_error_logging() -> Result<App, AppErro
                 lifecycle_hooks_onerror_error_logging_error_formatter_on_error_1,
             ))
             .build(),
-    );
+    ));
     let mut app = App::new().config(config);
     app.route(
         get("/api/test-error")
@@ -2185,7 +2187,7 @@ pub fn create_app_lifecycle_hooks_onerror_error_logging() -> Result<App, AppErro
 /// App for fixture: onRequest - Request Logging
 pub fn create_app_lifecycle_hooks_onrequest_request_logging() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(
+    config.lifecycle_hooks = Some(Arc::new(
         spikard::LifecycleHooks::builder()
             .on_request(spikard::request_hook(
                 "request_logger",
@@ -2196,7 +2198,7 @@ pub fn create_app_lifecycle_hooks_onrequest_request_logging() -> Result<App, App
                 lifecycle_hooks_onrequest_request_logging_request_id_generator_on_request_1,
             ))
             .build(),
-    );
+    ));
     let mut app = App::new().config(config);
     app.route(
         get("/api/test-on-request")
@@ -2212,7 +2214,7 @@ pub fn create_app_lifecycle_hooks_onrequest_request_logging() -> Result<App, App
 /// App for fixture: onResponse - Response Timing
 pub fn create_app_lifecycle_hooks_onresponse_response_timing() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(
+    config.lifecycle_hooks = Some(Arc::new(
         spikard::LifecycleHooks::builder()
             .on_request(spikard::request_hook(
                 "start_timer",
@@ -2223,7 +2225,7 @@ pub fn create_app_lifecycle_hooks_onresponse_response_timing() -> Result<App, Ap
                 lifecycle_hooks_onresponse_response_timing_response_timer_on_response_0,
             ))
             .build(),
-    );
+    ));
     let mut app = App::new().config(config);
     app.route(
         get("/api/test-timing")
@@ -2239,14 +2241,14 @@ pub fn create_app_lifecycle_hooks_onresponse_response_timing() -> Result<App, Ap
 /// App for fixture: onResponse - Security Headers
 pub fn create_app_lifecycle_hooks_onresponse_security_headers() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(
+    config.lifecycle_hooks = Some(Arc::new(
         spikard::LifecycleHooks::builder()
             .on_response(spikard::response_hook(
                 "security_headers",
                 lifecycle_hooks_onresponse_security_headers_security_headers_on_response_0,
             ))
             .build(),
-    );
+    ));
     let mut app = App::new().config(config);
     app.route(
         get("/api/test-security-headers")
@@ -2262,14 +2264,14 @@ pub fn create_app_lifecycle_hooks_onresponse_security_headers() -> Result<App, A
 /// App for fixture: preHandler - Authentication Failed (Short Circuit)
 pub fn create_app_lifecycle_hooks_prehandler_authentication_failed_short_circuit() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(
+    config.lifecycle_hooks = Some(Arc::new(
         spikard::LifecycleHooks::builder()
             .pre_handler(spikard::request_hook(
                 "authenticator",
                 lifecycle_hooks_prehandler_authentication_failed_short_circuit_authenticator_pre_handler_0,
             ))
             .build(),
-    );
+    ));
     let mut app = App::new().config(config);
     app.route(
         get("/api/protected-resource-fail")
@@ -2285,14 +2287,14 @@ pub fn create_app_lifecycle_hooks_prehandler_authentication_failed_short_circuit
 /// App for fixture: preHandler - Authentication Success
 pub fn create_app_lifecycle_hooks_prehandler_authentication_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(
+    config.lifecycle_hooks = Some(Arc::new(
         spikard::LifecycleHooks::builder()
             .pre_handler(spikard::request_hook(
                 "authenticator",
                 lifecycle_hooks_prehandler_authentication_success_authenticator_pre_handler_0,
             ))
             .build(),
-    );
+    ));
     let mut app = App::new().config(config);
     app.route(
         get("/api/protected-resource")
@@ -2308,7 +2310,7 @@ pub fn create_app_lifecycle_hooks_prehandler_authentication_success() -> Result<
 /// App for fixture: preHandler - Authorization Check
 pub fn create_app_lifecycle_hooks_prehandler_authorization_check() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(
+    config.lifecycle_hooks = Some(Arc::new(
         spikard::LifecycleHooks::builder()
             .pre_handler(spikard::request_hook(
                 "authenticator",
@@ -2319,7 +2321,7 @@ pub fn create_app_lifecycle_hooks_prehandler_authorization_check() -> Result<App
                 lifecycle_hooks_prehandler_authorization_check_authorizer_pre_handler_1,
             ))
             .build(),
-    );
+    ));
     let mut app = App::new().config(config);
     app.route(
         get("/api/admin-only")
@@ -2335,7 +2337,7 @@ pub fn create_app_lifecycle_hooks_prehandler_authorization_check() -> Result<App
 /// App for fixture: preHandler - Authorization Forbidden (Short Circuit)
 pub fn create_app_lifecycle_hooks_prehandler_authorization_forbidden_short_circuit() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(
+    config.lifecycle_hooks = Some(Arc::new(
         spikard::LifecycleHooks::builder()
             .pre_handler(spikard::request_hook(
                 "authenticator",
@@ -2346,7 +2348,7 @@ pub fn create_app_lifecycle_hooks_prehandler_authorization_forbidden_short_circu
                 lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authorizer_pre_handler_1,
             ))
             .build(),
-    );
+    ));
     let mut app = App::new().config(config);
     app.route(
         get("/api/admin-only-forbidden")
@@ -2362,14 +2364,14 @@ pub fn create_app_lifecycle_hooks_prehandler_authorization_forbidden_short_circu
 /// App for fixture: preValidation - Rate Limit Exceeded (Short Circuit)
 pub fn create_app_lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(
+    config.lifecycle_hooks = Some(Arc::new(
         spikard::LifecycleHooks::builder()
             .pre_validation(spikard::request_hook(
                 "rate_limiter",
                 lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_rate_limiter_pre_validation_0,
             ))
             .build(),
-    );
+    ));
     let mut app = App::new().config(config);
     app.route(
         post("/api/test-rate-limit-exceeded")
@@ -2391,14 +2393,14 @@ pub fn create_app_lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circui
 /// App for fixture: preValidation - Rate Limiting
 pub fn create_app_lifecycle_hooks_prevalidation_rate_limiting() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(
+    config.lifecycle_hooks = Some(Arc::new(
         spikard::LifecycleHooks::builder()
             .pre_validation(spikard::request_hook(
                 "rate_limiter",
                 lifecycle_hooks_prevalidation_rate_limiting_rate_limiter_pre_validation_0,
             ))
             .build(),
-    );
+    ));
     let mut app = App::new().config(config);
     app.route(
         post("/api/test-rate-limit")
@@ -4432,6 +4434,7 @@ pub fn create_app_websocket_chat() -> Result<App, AppError> {
     Ok(app)
 }
 
+// Handler functions
 async fn auth_api_key_authentication_invalid_key_handler(_ctx: RequestContext) -> HandlerResult {
     let body_value: Value = serde_json::from_str("{\"detail\":\"The provided API key is not valid\",\"status\":401,\"title\":\"Invalid API key\",\"type\":\"https://spikard.dev/errors/unauthorized\"}").unwrap();
     let response = Response::builder()
@@ -4951,8 +4954,8 @@ async fn content_types_pdf_response_application_pdf_handler(_ctx: RequestContext
     let response = apply_expected_headers(
         response,
         &[
-            ("content-type", "application/pdf"),
             ("content-disposition", "attachment; filename=document.pdf"),
+            ("content-type", "application/pdf"),
         ],
     );
     Ok(response)
@@ -5272,10 +5275,10 @@ async fn cors_08_cors_max_age_handler(_ctx: RequestContext) -> HandlerResult {
     let response = apply_expected_headers(
         response,
         &[
+            ("access-control-max-age", "3600"),
             ("access-control-allow-methods", "POST"),
             ("access-control-allow-headers", "Content-Type"),
             ("access-control-allow-origin", "https://example.com"),
-            ("access-control-max-age", "3600"),
         ],
     );
     Ok(response)
@@ -5317,8 +5320,8 @@ async fn cors_cors_private_network_access_handler(_ctx: RequestContext) -> Handl
         response,
         &[
             ("access-control-allow-origin", "https://public.example.com"),
-            ("vary", "Origin"),
             ("access-control-allow-methods", "GET, POST"),
+            ("vary", "Origin"),
             ("access-control-allow-private-network", "true"),
         ],
     );
@@ -5335,8 +5338,8 @@ async fn cors_cors_vary_header_for_proper_caching_handler(_ctx: RequestContext) 
     let response = apply_expected_headers(
         response,
         &[
-            ("access-control-allow-origin", "https://app.example.com"),
             ("cache-control", "public, max-age=3600"),
+            ("access-control-allow-origin", "https://app.example.com"),
             ("vary", "Origin"),
         ],
     );
@@ -5353,8 +5356,8 @@ async fn cors_cors_multiple_allowed_origins_handler(_ctx: RequestContext) -> Han
     let response = apply_expected_headers(
         response,
         &[
-            ("vary", "Origin"),
             ("access-control-allow-origin", "https://admin.example.com"),
+            ("vary", "Origin"),
         ],
     );
     Ok(response)
@@ -5377,9 +5380,9 @@ async fn cors_cors_preflight_for_delete_method_handler(_ctx: RequestContext) -> 
     let response = apply_expected_headers(
         response,
         &[
+            ("access-control-allow-methods", "GET, POST, PUT, PATCH, DELETE"),
             ("vary", "Origin"),
             ("access-control-allow-origin", "https://app.example.com"),
-            ("access-control-allow-methods", "GET, POST, PUT, PATCH, DELETE"),
             ("access-control-max-age", "3600"),
         ],
     );
@@ -5396,8 +5399,8 @@ async fn cors_cors_preflight_for_put_method_handler(_ctx: RequestContext) -> Han
         &[
             ("access-control-allow-origin", "https://app.example.com"),
             ("access-control-max-age", "3600"),
-            ("vary", "Origin"),
             ("access-control-allow-headers", "Content-Type, X-Custom-Header"),
+            ("vary", "Origin"),
             ("access-control-allow-methods", "GET, POST, PUT, PATCH, DELETE"),
         ],
     );
@@ -5412,10 +5415,10 @@ async fn cors_cors_preflight_request_handler(_ctx: RequestContext) -> HandlerRes
     let response = apply_expected_headers(
         response,
         &[
-            ("access-control-allow-headers", "Content-Type, X-Custom-Header"),
-            ("access-control-max-age", "600"),
             ("access-control-allow-origin", "https://example.com"),
+            ("access-control-max-age", "600"),
             ("access-control-allow-methods", "GET, POST, PUT, DELETE, OPTIONS"),
+            ("access-control-allow-headers", "Content-Type, X-Custom-Header"),
         ],
     );
     Ok(response)
@@ -5460,8 +5463,8 @@ async fn cors_cors_safelisted_headers_without_preflight_handler(_ctx: RequestCon
     let response = apply_expected_headers(
         response,
         &[
-            ("vary", "Origin"),
             ("access-control-allow-origin", "https://app.example.com"),
+            ("vary", "Origin"),
         ],
     );
     Ok(response)
@@ -5488,9 +5491,9 @@ async fn cors_cors_with_credentials_handler(_ctx: RequestContext) -> HandlerResu
     let response = apply_expected_headers(
         response,
         &[
-            ("access-control-allow-credentials", "true"),
             ("vary", "Origin"),
             ("access-control-allow-origin", "https://app.example.com"),
+            ("access-control-allow-credentials", "true"),
         ],
     );
     Ok(response)
@@ -6087,7 +6090,7 @@ async fn http_methods_head_get_metadata_without_body_handler(_ctx: RequestContex
         .unwrap();
     let response = apply_expected_headers(
         response,
-        &[("content-type", "application/json"), ("content-length", "85")],
+        &[("content-length", "85"), ("content-type", "application/json")],
     );
     Ok(response)
 }
@@ -6101,8 +6104,8 @@ async fn http_methods_options_cors_preflight_request_handler(_ctx: RequestContex
         response,
         &[
             ("access-control-allow-headers", "Content-Type"),
-            ("access-control-max-age", "86400"),
             ("access-control-allow-origin", "https://example.com"),
+            ("access-control-max-age", "86400"),
             ("access-control-allow-methods", "GET, POST, PUT, DELETE, OPTIONS"),
         ],
     );
@@ -6661,19 +6664,25 @@ async fn json_bodies_uuid_field_success_handler(_ctx: RequestContext) -> Handler
 
 async fn lifecycle_hooks_hook_execution_order_first_hook_on_request_0(
     req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // Mock onRequest hook: first_hook
     Ok(spikard::HookResult::Continue(req))
 }
 
 async fn lifecycle_hooks_hook_execution_order_second_hook_on_request_1(
     req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // Mock onRequest hook: second_hook
     Ok(spikard::HookResult::Continue(req))
 }
 
 async fn lifecycle_hooks_hook_execution_order_third_hook_on_request_2(
     req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // Mock onRequest hook: third_hook
     Ok(spikard::HookResult::Continue(req))
 }
 
@@ -6692,37 +6701,49 @@ async fn lifecycle_hooks_hook_execution_order_handler(_ctx: RequestContext) -> H
 
 async fn lifecycle_hooks_multiple_hooks_all_phases_request_logger_on_request_0(
     req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // Mock onRequest hook: request_logger
     Ok(spikard::HookResult::Continue(req))
 }
 
 async fn lifecycle_hooks_multiple_hooks_all_phases_request_id_generator_on_request_1(
     req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // Mock onRequest hook: request_id_generator
     Ok(spikard::HookResult::Continue(req))
 }
 
 async fn lifecycle_hooks_multiple_hooks_all_phases_rate_limiter_pre_validation_0(
     req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // Mock preValidation hook: rate_limiter
     Ok(spikard::HookResult::Continue(req))
 }
 
 async fn lifecycle_hooks_multiple_hooks_all_phases_authenticator_pre_handler_0(
     req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // Mock preHandler hook: authenticator
     Ok(spikard::HookResult::Continue(req))
 }
 
 async fn lifecycle_hooks_multiple_hooks_all_phases_authorizer_pre_handler_1(
     req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // Mock preHandler hook: authorizer
     Ok(spikard::HookResult::Continue(req))
 }
 
 async fn lifecycle_hooks_multiple_hooks_all_phases_security_headers_on_response_0(
     mut resp: axum::http::Response<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // onResponse hook: security_headers - Adds security headers
     resp.headers_mut()
         .insert("X-Content-Type-Options", "nosniff".parse().unwrap());
     resp.headers_mut().insert("X-Frame-Options", "DENY".parse().unwrap());
@@ -6737,20 +6758,26 @@ async fn lifecycle_hooks_multiple_hooks_all_phases_security_headers_on_response_
 
 async fn lifecycle_hooks_multiple_hooks_all_phases_response_timer_on_response_1(
     mut resp: axum::http::Response<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // onResponse hook: response_timer - Adds timing header
     resp.headers_mut().insert("X-Response-Time", ".*ms".parse().unwrap());
     Ok(spikard::HookResult::Continue(resp))
 }
 
 async fn lifecycle_hooks_multiple_hooks_all_phases_audit_logger_on_response_2(
     resp: axum::http::Response<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // Mock onResponse hook: audit_logger
     Ok(spikard::HookResult::Continue(resp))
 }
 
 async fn lifecycle_hooks_multiple_hooks_all_phases_error_logger_on_error_0(
     mut resp: axum::http::Response<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // onError hook: error_logger - Format error response
     resp.headers_mut()
         .insert("Content-Type", "application/json".parse().unwrap());
     Ok(spikard::HookResult::Continue(resp))
@@ -6766,9 +6793,9 @@ async fn lifecycle_hooks_multiple_hooks_all_phases_handler(_ctx: RequestContext)
     let response = apply_expected_headers(
         response,
         &[
-            ("x-request-id", ".*"),
-            ("x-response-time", ".*ms"),
             ("x-content-type-options", "nosniff"),
+            ("x-response-time", ".*ms"),
+            ("x-request-id", ".*"),
             ("x-frame-options", "DENY"),
         ],
     );
@@ -6777,7 +6804,9 @@ async fn lifecycle_hooks_multiple_hooks_all_phases_handler(_ctx: RequestContext)
 
 async fn lifecycle_hooks_onerror_error_logging_error_logger_on_error_0(
     mut resp: axum::http::Response<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // onError hook: error_logger - Format error response
     resp.headers_mut()
         .insert("Content-Type", "application/json".parse().unwrap());
     Ok(spikard::HookResult::Continue(resp))
@@ -6785,7 +6814,9 @@ async fn lifecycle_hooks_onerror_error_logging_error_logger_on_error_0(
 
 async fn lifecycle_hooks_onerror_error_logging_error_formatter_on_error_1(
     mut resp: axum::http::Response<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // onError hook: error_formatter - Format error response
     resp.headers_mut()
         .insert("Content-Type", "application/json".parse().unwrap());
     Ok(spikard::HookResult::Continue(resp))
@@ -6807,13 +6838,17 @@ async fn lifecycle_hooks_onerror_error_logging_handler(_ctx: RequestContext) -> 
 
 async fn lifecycle_hooks_onrequest_request_logging_request_logger_on_request_0(
     req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // Mock onRequest hook: request_logger
     Ok(spikard::HookResult::Continue(req))
 }
 
 async fn lifecycle_hooks_onrequest_request_logging_request_id_generator_on_request_1(
     req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // Mock onRequest hook: request_id_generator
     Ok(spikard::HookResult::Continue(req))
 }
 
@@ -6833,13 +6868,17 @@ async fn lifecycle_hooks_onrequest_request_logging_handler(_ctx: RequestContext)
 
 async fn lifecycle_hooks_onresponse_response_timing_start_timer_on_request_0(
     req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // Mock onRequest hook: start_timer
     Ok(spikard::HookResult::Continue(req))
 }
 
 async fn lifecycle_hooks_onresponse_response_timing_response_timer_on_response_0(
     mut resp: axum::http::Response<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // onResponse hook: response_timer - Adds timing header
     resp.headers_mut().insert("X-Response-Time", ".*ms".parse().unwrap());
     Ok(spikard::HookResult::Continue(resp))
 }
@@ -6857,7 +6896,9 @@ async fn lifecycle_hooks_onresponse_response_timing_handler(_ctx: RequestContext
 
 async fn lifecycle_hooks_onresponse_security_headers_security_headers_on_response_0(
     mut resp: axum::http::Response<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // onResponse hook: security_headers - Adds security headers
     resp.headers_mut()
         .insert("X-Content-Type-Options", "nosniff".parse().unwrap());
     resp.headers_mut().insert("X-Frame-Options", "DENY".parse().unwrap());
@@ -6880,9 +6921,9 @@ async fn lifecycle_hooks_onresponse_security_headers_handler(_ctx: RequestContex
     let response = apply_expected_headers(
         response,
         &[
-            ("x-content-type-options", "nosniff"),
-            ("x-frame-options", "DENY"),
             ("strict-transport-security", "max-age=31536000; includeSubDomains"),
+            ("x-frame-options", "DENY"),
+            ("x-content-type-options", "nosniff"),
             ("x-xss-protection", "1; mode=block"),
         ],
     );
@@ -6891,7 +6932,9 @@ async fn lifecycle_hooks_onresponse_security_headers_handler(_ctx: RequestContex
 
 async fn lifecycle_hooks_prehandler_authentication_failed_short_circuit_authenticator_pre_handler_0(
     _req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // preHandler hook: authenticator - Short circuits with 401
     use axum::response::IntoResponse;
     let response = (
         axum::http::StatusCode::UNAUTHORIZED,
@@ -6918,7 +6961,9 @@ async fn lifecycle_hooks_prehandler_authentication_failed_short_circuit_handler(
 
 async fn lifecycle_hooks_prehandler_authentication_success_authenticator_pre_handler_0(
     req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // Mock preHandler hook: authenticator
     Ok(spikard::HookResult::Continue(req))
 }
 
@@ -6936,13 +6981,17 @@ async fn lifecycle_hooks_prehandler_authentication_success_handler(_ctx: Request
 
 async fn lifecycle_hooks_prehandler_authorization_check_authenticator_pre_handler_0(
     req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // Mock preHandler hook: authenticator
     Ok(spikard::HookResult::Continue(req))
 }
 
 async fn lifecycle_hooks_prehandler_authorization_check_authorizer_pre_handler_1(
     req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // Mock preHandler hook: authorizer
     Ok(spikard::HookResult::Continue(req))
 }
 
@@ -6960,7 +7009,9 @@ async fn lifecycle_hooks_prehandler_authorization_check_handler(_ctx: RequestCon
 
 async fn lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authenticator_pre_handler_0(
     _req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // preHandler hook: authenticator - Short circuits with 403
     use axum::response::IntoResponse;
     let response = (
         axum::http::StatusCode::FORBIDDEN,
@@ -6975,7 +7026,9 @@ async fn lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authen
 
 async fn lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authorizer_pre_handler_1(
     _req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // preHandler hook: authorizer - Short circuits with 403
     use axum::response::IntoResponse;
     let response = (
         axum::http::StatusCode::FORBIDDEN,
@@ -7004,7 +7057,9 @@ async fn lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_handle
 
 async fn lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_rate_limiter_pre_validation_0(
     _req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // preValidation hook: rate_limiter - Short circuits with 429
     use axum::response::IntoResponse;
     let mut response = (
         axum::http::StatusCode::TOO_MANY_REQUESTS,
@@ -7036,7 +7091,9 @@ async fn lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_handler
 
 async fn lifecycle_hooks_prevalidation_rate_limiting_rate_limiter_pre_validation_0(
     req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>>, String> {
+) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
+{
+    // Mock preValidation hook: rate_limiter
     Ok(spikard::HookResult::Continue(req))
 }
 
@@ -8502,10 +8559,10 @@ async fn status_codes_206_partial_content_handler(_ctx: RequestContext) -> Handl
     let response = apply_expected_headers(
         response,
         &[
-            ("accept-ranges", "bytes"),
-            ("content-range", "bytes 0-1023/5000"),
-            ("content-type", "application/pdf"),
             ("content-length", "1024"),
+            ("content-type", "application/pdf"),
+            ("content-range", "bytes 0-1023/5000"),
+            ("accept-ranges", "bytes"),
         ],
     );
     Ok(response)
@@ -8660,10 +8717,10 @@ async fn status_codes_429_too_many_requests_handler(_ctx: RequestContext) -> Han
     let response = apply_expected_headers(
         response,
         &[
-            ("x-ratelimit-limit", "100"),
-            ("x-ratelimit-reset", "1609459200"),
             ("x-ratelimit-remaining", "0"),
             ("retry-after", "60"),
+            ("x-ratelimit-reset", "1609459200"),
+            ("x-ratelimit-limit", "100"),
         ],
     );
     Ok(response)
@@ -9204,11 +9261,13 @@ async fn validation_errors_string_regex_pattern_mismatch_handler(_ctx: RequestCo
 }
 
 async fn sse_notifications_handler(_ctx: RequestContext) -> HandlerResult {
-    let events: Vec<String> = vec!["data: {\"level\":\"example_level\",\"message\":\"example_message\",\"source\":\"example_source\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"system_alert\"}
+    let events: Vec<String> = vec!["data: {\"level\":\"critical\",\"message\":\"Database connection pool exhausted\",\"source\":\"database-service\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"system_alert\"}
 
-", "data: {\"body\":\"example_body\",\"priority\":\"example_priority\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"title\":\"example_title\",\"type\":\"user_notification\",\"userId\":\"example_userId\"}
+", "data: [{\"message\":\"example_message\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"example_type\"},{\"message\":\"example_message\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"example_type\"}]
 
-", "data: {\"message\":\"example_message\",\"metadata\":{},\"service\":\"example_service\",\"status\":\"example_status\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"status_update\"}
+", "data: {\"body\":\"You have received a new direct message\",\"priority\":\"high\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"title\":\"New message from John\",\"type\":\"user_notification\",\"userId\":\"user_12345\"}
+
+", "data: {\"message\":\"All systems operational\",\"metadata\":{\"region\":\"us-east-1\",\"uptime\":99.99},\"service\":\"payment-gateway\",\"status\":\"operational\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"status_update\"}
 
 "].into_iter().map(String::from).collect::<Vec<_>>();
     let stream = stream::iter(

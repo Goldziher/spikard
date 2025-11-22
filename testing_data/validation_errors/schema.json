@@ -3,7 +3,7 @@
 	"title": "Validation Error Test Fixture",
 	"description": "Test fixture for validation error scenarios (422 responses)",
 	"type": "object",
-	"required": ["name", "description", "source", "request", "expected_response"],
+	"required": ["name", "description", "request", "expected_response"],
 	"properties": {
 		"name": {
 			"type": "string",
@@ -16,11 +16,10 @@
 		"source": {
 			"type": "object",
 			"description": "Source framework and test location",
-			"required": ["framework", "test_file", "test_function"],
 			"properties": {
 				"framework": {
 					"type": "string",
-					"enum": ["fastapi", "starlette", "litestar"]
+					"enum": ["fastapi", "starlette", "litestar", "spikard"]
 				},
 				"test_file": {
 					"type": "string",
@@ -30,7 +29,8 @@
 					"type": "string",
 					"description": "Name of test function"
 				}
-			}
+			},
+			"additionalProperties": true
 		},
 		"request": {
 			"type": "object",
@@ -99,7 +99,14 @@
 											"loc": {
 												"type": "array",
 												"items": {
-													"oneOf": [{ "type": "string" }, { "type": "integer" }]
+													"oneOf": [
+														{
+															"type": "string"
+														},
+														{
+															"type": "integer"
+														}
+													]
 												}
 											},
 											"msg": {
@@ -128,6 +135,29 @@
 		"notes": {
 			"type": "string",
 			"description": "Additional notes or context"
+		},
+		"handler": {
+			"type": "object",
+			"description": "Handler configuration"
+		},
+		"tags": {
+			"type": "array",
+			"description": "Tags for filtering/organization",
+			"items": {
+				"type": "string"
+			}
+		},
+		"skip": {
+			"type": "boolean",
+			"description": "Whether to skip this test"
+		},
+		"skip_reason": {
+			"type": "string",
+			"description": "Reason for skipping"
+		},
+		"category": {
+			"type": "string",
+			"description": "Test category"
 		}
 	}
 }
