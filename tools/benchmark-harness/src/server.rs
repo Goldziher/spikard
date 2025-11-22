@@ -1,6 +1,7 @@
 //! Server management - start, stop, health check
 
 use crate::error::{Error, Result};
+use crate::framework::{detect_framework, get_framework};
 use std::env;
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
@@ -81,7 +82,8 @@ impl Drop for ServerHandle {
 
 /// Server configuration
 pub struct ServerConfig {
-    pub framework: String,
+    /// Framework name - if None, will auto-detect from app_dir
+    pub framework: Option<String>,
     pub port: u16,
     pub app_dir: PathBuf,
     /// Variant name (e.g., "sync", "async") - optional
@@ -89,89 +91,112 @@ pub struct ServerConfig {
 }
 
 /// Start a server and wait for it to be ready
+///
+/// # Arguments
+///
+/// * `config` - Server configuration with optional framework name
+///   - If `framework` is Some, uses that framework explicitly
+///   - If `framework` is None, auto-detects from `app_dir`
+///
+/// # Behavior
+///
+/// 1. Resolves framework configuration via registry or auto-detection
+/// 2. Executes build command if present in framework config
+/// 3. Substitutes {port} placeholder in start command
+/// 4. Changes to working directory hint if specified
+/// 5. Spawns server process and waits for health check
+///
+/// # Errors
+///
+/// Returns error if:
+/// - Framework not found or auto-detection fails
+/// - Build command execution fails
+/// - Server process fails to spawn
+/// - Server fails health check within timeout
 pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     let port = config.port;
     let base_url = format!("http://localhost:{}", port);
 
-    let mut cmd = match config.framework.as_str() {
-        "spikard-rust" => {
-            let server_binary = config.app_dir.join("target/release/spikard-rust-bench");
-            let mut cmd = Command::new(server_binary);
-            cmd.arg(port.to_string());
-            cmd
+    // Step 1: Resolve framework configuration
+    let framework_config = match &config.framework {
+        Some(name) => {
+            // Explicit framework name provided - look it up in registry
+            get_framework(name)
+                .ok_or_else(|| Error::FrameworkNotFound(name.clone()))?
         }
-        "spikard-python" => {
-            // Try to find workspace root
-            let workspace_root = if let Ok(cwd) = std::env::current_dir() {
-                // If we're in tools/benchmark-harness/apps/spikard-python, go up to workspace root
-                let mut current = cwd;
-                loop {
-                    let cargo_toml = current.join("Cargo.toml");
-                    if cargo_toml.exists()
-                        && let Ok(contents) = std::fs::read_to_string(&cargo_toml)
-                        && contents.contains("[workspace]")
-                    {
-                        break;
-                    }
-                    if let Some(parent) = current.parent() {
-                        current = parent.to_path_buf();
-                    } else {
-                        break;
-                    }
-                }
-                current
-            } else {
-                PathBuf::from(".")
-            };
-
-            let pythonpath = workspace_root.join("packages/python");
-            // Try to find uv in common locations
-            let uv_path = which::which("uv").unwrap_or_else(|_| PathBuf::from("/opt/homebrew/bin/uv"));
-            let mut cmd = Command::new(uv_path);
-            cmd.arg("run").arg("python").arg("server.py").arg(port.to_string());
-            cmd.env("PYTHONPATH", &pythonpath);
-            cmd
-        }
-        "spikard-node" => {
-            let mut cmd = Command::new("node");
-            cmd.arg("server.ts").arg(port.to_string());
-            cmd
-        }
-        "spikard-ruby" => {
-            let mut cmd = Command::new("ruby");
-            cmd.arg("server.rb").arg(port.to_string());
-            cmd
-        }
-        "spikard-wasm" => {
-            let mut cmd = Command::new("wasmtime");
-            cmd.arg("run").arg("--").arg("server.js").arg(port.to_string());
-            cmd
-        }
-        "fastapi-granian" => {
-            let uv_path = which::which("uv").unwrap_or_else(|_| PathBuf::from("/opt/homebrew/bin/uv"));
-            let mut cmd = Command::new(uv_path);
-            cmd.arg("run").arg("python").arg("server.py").arg(port.to_string());
-            cmd
-        }
-        "robyn" => {
-            let uv_path = which::which("uv").unwrap_or_else(|_| PathBuf::from("/opt/homebrew/bin/uv"));
-            let mut cmd = Command::new(uv_path);
-            cmd.arg("run").arg("python").arg("server.py").arg(port.to_string());
-            cmd
-        }
-        _ => {
-            return Err(Error::FrameworkNotFound(config.framework.clone()));
+        None => {
+            // Auto-detect framework from app directory
+            detect_framework(&config.app_dir)?
         }
     };
 
-    // All workload servers need to run from their app directory
-    cmd.current_dir(&config.app_dir);
+    // Step 2: Execute build command if present
+    if let Some(build_cmd) = &framework_config.build_cmd {
+        let build_cmd = build_cmd.replace("{port}", &port.to_string());
+
+        // Parse command into executable and arguments
+        let parts: Vec<&str> = build_cmd.split_whitespace().collect();
+        if !parts.is_empty() {
+            let executable = parts[0];
+            let args = &parts[1..];
+
+            let mut build = Command::new(executable);
+            build.args(args);
+            build.current_dir(&config.app_dir);
+
+            // Build output is normally visible since it's a one-time operation
+            let status = build
+                .status()
+                .map_err(|e| Error::ServerStartFailed(format!(
+                    "Failed to execute build command '{}': {}",
+                    build_cmd, e
+                )))?;
+
+            if !status.success() {
+                return Err(Error::ServerStartFailed(format!(
+                    "Build command failed with status: {}",
+                    status
+                )));
+            }
+        }
+    }
+
+    // Step 3: Build start command with port substitution
+    let start_cmd = framework_config.start_cmd.replace("{port}", &port.to_string());
+
+    // Parse command into executable and arguments
+    let parts: Vec<&str> = start_cmd.split_whitespace().collect();
+    if parts.is_empty() {
+        return Err(Error::ServerStartFailed(
+            "Empty start command from framework config".to_string()
+        ));
+    }
+
+    let executable = parts[0];
+    let args = &parts[1..];
+
+    let mut cmd = Command::new(executable);
+    cmd.args(args);
+
+    // Step 4: Set working directory
+    let working_dir = if let Some(hint) = &framework_config.working_dir_hint {
+        config.app_dir.join(hint)
+    } else {
+        config.app_dir.clone()
+    };
+
+    cmd.current_dir(&working_dir);
+
     // Suppress output during benchmarking to avoid polluting oha JSON output
     cmd.stdout(Stdio::null()).stderr(Stdio::null());
 
+    // Step 5: Spawn server process
     let process = cmd
         .spawn()
-        .map_err(|e| Error::ServerStartFailed(format!("Failed to spawn process: {}", e)))?;
+        .map_err(|e| Error::ServerStartFailed(format!(
+            "Failed to spawn process for {} with command '{}': {}",
+            framework_config.name, start_cmd, e
+        )))?;
 
     let mut handle = ServerHandle {
         process,
@@ -179,6 +204,7 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
         base_url: base_url.clone(),
     };
 
+    // Step 6: Wait for health check with timeout
     let max_attempts = 30;
     for attempt in 1..=max_attempts {
         sleep(Duration::from_secs(1)).await;
@@ -238,3 +264,160 @@ pub fn find_available_port(start: u16) -> Option<u16> {
 fn is_port_available(port: u16) -> bool {
     std::net::TcpListener::bind(("127.0.0.1", port)).is_ok()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_server_config_with_explicit_framework() {
+        let config = ServerConfig {
+            framework: Some("spikard-rust".to_string()),
+            port: 8080,
+            app_dir: PathBuf::from("."),
+            variant: None,
+        };
+
+        assert_eq!(config.framework, Some("spikard-rust".to_string()));
+        assert_eq!(config.port, 8080);
+    }
+
+    #[test]
+    fn test_server_config_with_auto_detect() {
+        let config = ServerConfig {
+            framework: None,
+            port: 8080,
+            app_dir: PathBuf::from("."),
+            variant: None,
+        };
+
+        assert_eq!(config.framework, None);
+        assert_eq!(config.port, 8080);
+    }
+
+    #[test]
+    fn test_port_substitution_in_command() {
+        // Test that {port} placeholder is correctly substituted
+        let framework = get_framework("spikard-rust").expect("spikard-rust should exist");
+        let port = 9000u16;
+        let start_cmd = framework.start_cmd.replace("{port}", &port.to_string());
+
+        assert!(start_cmd.contains("9000"));
+        assert!(!start_cmd.contains("{port}"));
+    }
+
+    #[test]
+    fn test_build_command_substitution() {
+        let framework = get_framework("spikard-rust").expect("spikard-rust should exist");
+        assert!(framework.build_cmd.is_some());
+
+        let build_cmd = framework.build_cmd.unwrap();
+        let port = 8000u16;
+        let substituted = build_cmd.replace("{port}", &port.to_string());
+
+        // Build command may or may not have {port}, just ensure no errors
+        assert!(!substituted.is_empty());
+    }
+
+    #[test]
+    fn test_working_directory_resolution() {
+        let app_dir = PathBuf::from("/app");
+
+        // Test without working_dir_hint
+        let framework = get_framework("spikard-python").expect("spikard-python should exist");
+        let working_dir = if let Some(hint) = &framework.working_dir_hint {
+            app_dir.join(hint)
+        } else {
+            app_dir.clone()
+        };
+        assert_eq!(working_dir, PathBuf::from("/app"));
+
+        // Test with working_dir_hint (if applicable)
+        // Most frameworks don't have hints, but if one did:
+        let framework = get_framework("spikard-rust").expect("spikard-rust should exist");
+        if let Some(hint) = &framework.working_dir_hint {
+            let working_dir = app_dir.join(hint);
+            assert!(!working_dir.to_string_lossy().ends_with("/"));
+        }
+    }
+
+    #[test]
+    fn test_is_port_available() {
+        // Find an unused port first
+        let port = find_available_port(10000).expect("Should find available port");
+        assert!(is_port_available(port));
+    }
+
+    #[test]
+    fn test_find_available_port() {
+        let port = find_available_port(20000);
+        assert!(port.is_some());
+
+        let port = port.unwrap();
+        assert!(port >= 20000);
+        assert!(port < 20100);
+    }
+
+    #[test]
+    fn test_framework_config_access() {
+        // Verify that all major frameworks are accessible
+        let frameworks = vec![
+            "spikard-rust",
+            "spikard-python",
+            "spikard-node",
+            "spikard-ruby",
+            "spikard-wasm",
+            "fastapi",
+            "robyn",
+        ];
+
+        for name in frameworks {
+            let fw = get_framework(name);
+            assert!(fw.is_some(), "Framework {} should be in registry", name);
+
+            let config = fw.unwrap();
+            assert_eq!(config.name, name);
+            assert!(!config.start_cmd.is_empty());
+            assert!(config.start_cmd.contains("{port}"));
+        }
+    }
+
+    #[test]
+    fn test_auto_detect_rust_framework() {
+        let temp_dir = TempDir::new().unwrap();
+        fs::write(temp_dir.path().join("Cargo.toml"), "[package]").unwrap();
+        fs::create_dir_all(temp_dir.path().join("src")).unwrap();
+        fs::write(temp_dir.path().join("src").join("main.rs"), "fn main()").unwrap();
+
+        // Manually test detection logic (start_server would use this internally)
+        let detected = detect_framework(temp_dir.path());
+        assert!(detected.is_ok());
+        assert_eq!(detected.unwrap().name, "spikard-rust");
+    }
+
+    #[test]
+    fn test_auto_detect_python_framework() {
+        let temp_dir = TempDir::new().unwrap();
+        fs::write(temp_dir.path().join("server.py"), "# Python server").unwrap();
+        fs::write(temp_dir.path().join("pyproject.toml"), "[build-system]").unwrap();
+
+        let detected = detect_framework(temp_dir.path());
+        assert!(detected.is_ok());
+        assert_eq!(detected.unwrap().name, "spikard-python");
+    }
+
+    #[test]
+    fn test_server_config_variant_field() {
+        let config = ServerConfig {
+            framework: Some("spikard-python".to_string()),
+            port: 8080,
+            app_dir: PathBuf::from("."),
+            variant: Some("async".to_string()),
+        };
+
+        assert_eq!(config.variant, Some("async".to_string()));
+    }
+}
+
