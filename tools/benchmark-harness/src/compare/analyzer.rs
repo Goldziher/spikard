@@ -60,6 +60,8 @@ impl CompareAnalyzer {
     /// # Example
     ///
     /// ```
+    /// use benchmark_harness::compare::CompareAnalyzer;
+    ///
     /// let analyzer = CompareAnalyzer::new(0.05); // 95% confidence level
     /// ```
     pub fn new(significance_threshold: f64) -> Self {

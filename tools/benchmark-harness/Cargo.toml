@@ -46,7 +46,7 @@ hostname = "0.4"
 num_cpus = "1"
 
 # Statistics
-statrs = "0.17"
+statrs = "0.18"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

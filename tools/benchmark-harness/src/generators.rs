@@ -41,7 +41,10 @@ pub fn generate_json_medium() -> Value {
 
 /// Generate a large JSON payload (~10-100KB)
 pub fn generate_json_large() -> Value {
-    let items: Vec<Value> = (0..100).map(|_| generate_json_small()).collect();
+    let items: Vec<Value> = (0..200).map(|_| generate_json_small()).collect();
+    // Add deterministic padding to keep payload size comfortably above 10KB while
+    // staying well under the 100KB upper bound used in tests.
+    let padding = "X".repeat(12_000);
 
     json!({
         "data": items,
@@ -50,13 +53,17 @@ pub fn generate_json_large() -> Value {
         "metadata": {
             "timestamp": "2024-01-01T00:00:00Z",
             "version": "1.0.0"
-        }
+        },
+        "payload": padding
     })
 }
 
 /// Generate a very large JSON payload (~100KB-1MB)
 pub fn generate_json_very_large() -> Value {
-    let items: Vec<Value> = (0..1000).map(|_| generate_json_small()).collect();
+    let items: Vec<Value> = (0..2000).map(|_| generate_json_small()).collect();
+    // Add a larger deterministic padding block so the serialized payload reliably
+    // exceeds 100KB without approaching the 1MB ceiling.
+    let padding = "Y".repeat(50_000);
 
     json!({
         "data": items,
@@ -66,7 +73,8 @@ pub fn generate_json_very_large() -> Value {
             "timestamp": "2024-01-01T00:00:00Z",
             "version": "1.0.0",
             "description": "Very large dataset for performance testing".repeat(10)
-        }
+        },
+        "payload": padding
     })
 }
 

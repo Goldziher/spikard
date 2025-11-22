@@ -33,6 +33,10 @@ static PYTHON_EVENT_LOOP: OnceCell<Py<PyAny>> = OnceCell::new();
 /// This allows proper async/await support without blocking the Rust event loop
 pub fn init_python_event_loop() -> PyResult<()> {
     Python::attach(|py| {
+        if PYTHON_EVENT_LOOP.get().is_some() {
+            return Ok(());
+        }
+
         // Install uvloop for better performance if available
         if let Ok(uvloop) = py.import("uvloop") {
             uvloop.call_method0("install")?;

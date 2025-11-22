@@ -101,13 +101,13 @@ tasks:
   python:install:
     desc: "Install Python dependencies with uv"
     cmds:
-      - uv sync --all-extras --all-groups
+      - uv sync --all-extras --all-groups --no-install-workspace
 
   python:update:
     desc: "Upgrade Python dependencies"
     cmds:
       - uv run uv-bump
-      - uv sync --all-extras --all-groups --upgrade
+      - uv sync --all-extras --all-groups --no-install-workspace --upgrade
 
   rust:install:
     desc: "Install Rust toolchain and developer tools"
@@ -628,7 +628,6 @@ tasks:
       - find crates -type d -name "dist" -exec rm -rf {} + 2>/dev/null || true
       - find crates -type d -name "node_modules" -exec rm -rf {} + 2>/dev/null || true
 
-
   bench:generator:build:
     desc: "Build the app-generator tool"
     cmds:
@@ -925,7 +924,6 @@ tasks:
       - task: bench:build:all
       - task: bench:run:all
       - echo "Benchmark results in tools/benchmark-harness/results/"
-
 
   codegen:python:
     desc: "Generate Python server code from OpenAPI schema"
