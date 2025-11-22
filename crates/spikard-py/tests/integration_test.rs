@@ -62,7 +62,7 @@ def background_run(_awaitable):
             let _ = fs::create_dir_all(&pkg_dir);
             let pkg_init = r#"
 class Route:
-    def __init__(self, method, path, handler, body_schema=None, parameter_schema=None, file_params=None):
+    def __init__(self, method, path, handler, body_schema=None, parameter_schema=None, file_params=None, body_param_name=None):
         self.method = method
         self.path = path
         self.handler = handler
@@ -72,13 +72,14 @@ class Route:
         self.parameter_schema = parameter_schema
         self.file_params = file_params
         self.is_async = False
+        self.body_param_name = body_param_name
 
 class Spikard:
     def __init__(self):
         self._routes = []
 
-    def register_route(self, method, path, handler, body_schema=None, parameter_schema=None, file_params=None):
-        self._routes.append(Route(method, path, handler, body_schema, parameter_schema, file_params))
+    def register_route(self, method, path, handler, body_schema=None, parameter_schema=None, file_params=None, body_param_name=None):
+        self._routes.append(Route(method, path, handler, body_schema, parameter_schema, file_params, body_param_name))
 
     def get_routes(self):
         return self._routes
@@ -115,7 +116,7 @@ fn build_python_handler(code: &str, function: &str, is_async: bool) -> Arc<dyn H
         let module = module_from_code(py, code, "test.py", "test");
         let handler_fn = module.getattr(function).unwrap();
         let handler_py: Py<PyAny> = handler_fn.into();
-        let python_handler = _spikard::PythonHandler::new(handler_py, is_async, None, None, None);
+        let python_handler = _spikard::PythonHandler::new(handler_py, is_async, None, None, None, None);
         Arc::new(python_handler)
     })
 }
@@ -134,7 +135,7 @@ def simple_handler(path_params, query_params, body, headers, cookies):
         let handler_fn = module.getattr("simple_handler").unwrap();
         let handler_py: Py<PyAny> = handler_fn.into();
 
-        let python_handler = _spikard::PythonHandler::new(handler_py, false, None, None, None);
+        let python_handler = _spikard::PythonHandler::new(handler_py, false, None, None, None, None);
 
         assert!(std::mem::size_of_val(&python_handler) > 0);
     });
@@ -162,6 +163,7 @@ def sync_handler(path_params, query_params, body, headers, cookies):
         query_params: serde_json::Value::Null,
         raw_query_params: HashMap::new().into(),
         body: json!({"test": "data"}),
+        raw_body: None,
         headers: HashMap::new().into(),
         cookies: HashMap::new().into(),
         method: "POST".to_string(),
@@ -211,6 +213,7 @@ async def async_handler(path_params, query_params, body, headers, cookies):
         query_params: serde_json::Value::Null,
         raw_query_params: HashMap::new().into(),
         body: serde_json::Value::Null,
+        raw_body: None,
         headers: HashMap::new().into(),
         cookies: HashMap::new().into(),
         method: "GET".to_string(),
@@ -247,6 +250,7 @@ def error_handler(path_params, query_params, body, headers, cookies):
         query_params: serde_json::Value::Null,
         raw_query_params: HashMap::new().into(),
         body: serde_json::Value::Null,
+        raw_body: None,
         headers: HashMap::new().into(),
         cookies: HashMap::new().into(),
         method: "GET".to_string(),
@@ -296,6 +300,7 @@ def echo_handler(path_params, query_params, body, headers, cookies):
         query_params: serde_json::Value::Null,
         raw_query_params: HashMap::new().into(),
         body: serde_json::Value::Null,
+        raw_body: None,
         headers: headers.clone().into(),
         cookies: cookies.clone().into(),
         method: "GET".to_string(),

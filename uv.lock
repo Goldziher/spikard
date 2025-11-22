@@ -1088,7 +1088,7 @@ dependencies = [
 
 [package.optional-dependencies]
 uvloop = [
-    { name = "uvloop" },
+    { name = "uvloop", marker = "sys_platform != 'win32'" },
 ]
 
 [package.metadata]
@@ -1099,7 +1099,7 @@ requires-dist = [
     { name = "httpx-sse", specifier = ">=0.4.3" },
     { name = "msgspec", specifier = ">=0.19" },
     { name = "uvloop", marker = "sys_platform != 'win32'", specifier = ">=0.22" },
-    { name = "uvloop", marker = "extra == 'uvloop'", specifier = ">=0.22" },
+    { name = "uvloop", marker = "sys_platform != 'win32' and extra == 'uvloop'", specifier = ">=0.22" },
     { name = "websockets", specifier = ">=15.0.1" },
 ]
 provides-extras = ["uvloop"]
@@ -1189,8 +1189,8 @@ wheels = [
 
 [[package]]
 name = "uv-bump"
-version = "0.2.0"
-source = { git = "https://github.com/Goldziher/uv-bump#9f2fab20b190a64da9ae0a1df74ceda1509c6bb1" }
+version = "0.3.0"
+source = { git = "https://github.com/Goldziher/uv-bump#876c61236e207e2137a58485f8342c4c71c8f623" }
 dependencies = [
     { name = "tomli", marker = "python_full_version < '3.11'" },
 ]

@@ -145,6 +145,7 @@ mod tests {
             file_params: None,
             is_async: true,
             cors: None,
+            body_param_name: None,
         };
 
         let route = Route::from_metadata(metadata, &registry).unwrap();
@@ -175,6 +176,7 @@ mod tests {
             file_params: None,
             is_async: true,
             cors: None,
+            body_param_name: None,
         };
 
         let route = Route::from_metadata(metadata, &registry).unwrap();
@@ -203,6 +205,7 @@ mod tests {
             file_params: None,
             is_async: true,
             cors: None,
+            body_param_name: None,
         };
 
         let metadata2 = RouteMetadata {
@@ -215,6 +218,7 @@ mod tests {
             file_params: None,
             is_async: true,
             cors: None,
+            body_param_name: None,
         };
 
         let route1 = Route::from_metadata(metadata1, &registry).unwrap();
