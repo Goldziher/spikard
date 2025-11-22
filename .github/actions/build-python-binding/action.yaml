@@ -1,0 +1,21 @@
+name: Build Python Binding
+description: Build spikard-python binding with maturin
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Python
+      uses: ./.github/actions/setup-python-env
+      with:
+        python-version: "3.13"
+        cache-prefix: benchmark-python
+
+    - name: Setup Rust
+      uses: ./.github/actions/setup-rust
+      with:
+        cache-key-prefix: benchmark-python-binding
+
+    - name: Build spikard-python
+      shell: bash
+      working-directory: packages/python
+      run: uv run maturin develop --release

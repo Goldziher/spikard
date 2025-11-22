@@ -1,0 +1,51 @@
+name: Run Benchmarks
+description: Run benchmark harness for a specific language and frameworks
+
+inputs:
+  language:
+    description: 'Language binding (python, node, ruby, rust)'
+    required: true
+  spikard-framework:
+    description: 'Spikard framework name (e.g., spikard-python)'
+    required: true
+  comparison-frameworks:
+    description: 'Comma-separated list of frameworks to compare against'
+    required: true
+  workload-suite:
+    description: 'Workload suite to run'
+    required: true
+  duration:
+    description: 'Duration per workload in seconds'
+    required: true
+  concurrency:
+    description: 'Concurrent connections'
+    required: true
+  warmup:
+    description: 'Warmup requests'
+    required: true
+  significance:
+    description: 'Statistical significance threshold'
+    required: true
+  port:
+    description: 'Base port for servers'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Create results directory
+      shell: bash
+      run: mkdir -p results/${{ inputs.language }}
+
+    - name: Run benchmark harness
+      shell: bash
+      run: |
+        benchmark-harness compare \
+          --frameworks "${{ inputs.spikard-framework }},${{ inputs.comparison-frameworks }}" \
+          --suite "${{ inputs.workload-suite }}" \
+          --duration "${{ inputs.duration }}" \
+          --concurrency "${{ inputs.concurrency }}" \
+          --warmup "${{ inputs.warmup }}" \
+          --significance "${{ inputs.significance }}" \
+          --output "results/${{ inputs.language }}" \
+          --port "${{ inputs.port }}"

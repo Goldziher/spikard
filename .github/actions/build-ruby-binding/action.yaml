@@ -1,0 +1,25 @@
+name: Build Ruby Binding
+description: Build spikard-ruby binding with rb-sys
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: "3.3"
+        bundler-cache: false
+
+    - name: Setup Rust
+      uses: ./.github/actions/setup-rust
+      with:
+        cache-key-prefix: benchmark-ruby-binding
+
+    - name: Build spikard-ruby
+      shell: bash
+      working-directory: packages/ruby
+      env:
+        RUBY: /opt/hostedtoolcache/Ruby/3.3.*/x64/bin/ruby
+      run: |
+        bundle install
+        bundle exec rake build

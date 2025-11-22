@@ -130,6 +130,48 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "node server.ts {port}",
             None,
         ),
+        FrameworkConfig::new(
+            "litestar",
+            vec!["server.py".to_string()],
+            None,
+            "uv run server.py {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "litestar-granian",
+            vec!["server.py".to_string()],
+            None,
+            "uv run server.py {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "express",
+            vec!["server.js".to_string()],
+            None,
+            "node server.js {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "hono",
+            vec!["server.js".to_string()],
+            None,
+            "node server.js {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "hanami-api",
+            vec!["server.rb".to_string()],
+            None,
+            "bundle exec ruby server.rb {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "roda",
+            vec!["server.rb".to_string()],
+            None,
+            "bundle exec ruby server.rb {port}",
+            None,
+        ),
     ]
 }
 
