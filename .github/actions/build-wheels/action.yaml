@@ -46,13 +46,8 @@ runs:
           yum install -y openssl-devel pkgconfig &&
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y &&
           source ~/.cargo/env
-        CIBW_BEFORE_ALL_MACOS: >
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y &&
-          source ~/.cargo/env &&
-          rustup target add x86_64-apple-darwin aarch64-apple-darwin
-        CIBW_BEFORE_ALL_WINDOWS: >
-          curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y &&
-          refreshenv
+        CIBW_BEFORE_ALL_MACOS: rustup target add x86_64-apple-darwin aarch64-apple-darwin
+        CIBW_BEFORE_ALL_WINDOWS: ""
 
         CIBW_BEFORE_BUILD_LINUX: pip install --upgrade pip maturin build
         CIBW_BEFORE_BUILD_MACOS: pip install --upgrade pip maturin build
@@ -60,7 +55,7 @@ runs:
 
         CIBW_ENVIRONMENT: MATURIN_BUILD_ARGS="--compatibility linux"
         CIBW_ENVIRONMENT_WINDOWS: MATURIN_BUILD_ARGS=""
-        CIBW_ENVIRONMENT_MACOS: 'MATURIN_BUILD_ARGS="" MACOSX_DEPLOYMENT_TARGET=10.12'
+        CIBW_ENVIRONMENT_MACOS: 'MATURIN_BUILD_ARGS="" MACOSX_DEPLOYMENT_TARGET=11.0'
 
         CIBW_SKIP: "*-musllinux* *-win32 *-manylinux_i686"
 
