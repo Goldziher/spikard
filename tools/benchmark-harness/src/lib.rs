@@ -26,7 +26,7 @@ pub use compare::{
 };
 pub use error::{Error, Result};
 pub use fixture::{Fixture, FixtureManager};
-pub use framework::{detect_framework, get_framework, list_frameworks, FrameworkConfig};
+pub use framework::{FrameworkConfig, detect_framework, get_framework, list_frameworks};
 pub use load_generator::{LoadGeneratorType, LoadTestConfig};
 pub use monitor::{ResourceMonitor, ResourceSample};
 pub use runner::{BenchmarkRunner, RunnerConfig};
