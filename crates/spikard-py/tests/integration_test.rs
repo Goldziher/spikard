@@ -33,7 +33,7 @@ fn init_python() {
     unsafe {
         std::env::set_var("PYTHONPATH", &new_pythonpath);
     }
-    pyo3::prepare_freethreaded_python();
+    Python::initialize();
     let _ = _spikard::init_python_event_loop();
 }
 
@@ -112,33 +112,38 @@ fn module_from_code<'py>(py: Python<'py>, code: &str, filename: &str, module_nam
 }
 
 fn build_python_handler(code: &str, function: &str, is_async: bool) -> Arc<dyn Handler> {
-    Python::with_gil(|py| {
+    let python_handler = Python::attach(|py| -> PyResult<_spikard::PythonHandler> {
         let module = module_from_code(py, code, "test.py", "test");
-        let handler_fn = module.getattr(function).unwrap();
+        let handler_fn = module.getattr(function)?;
         let handler_py: Py<PyAny> = handler_fn.into();
-        let python_handler = _spikard::PythonHandler::new(handler_py, is_async, None, None, None, None);
-        Arc::new(python_handler)
+        Ok(_spikard::PythonHandler::new(
+            handler_py, is_async, None, None, None, None,
+        ))
     })
+    .expect("failed to build Python handler");
+
+    Arc::new(python_handler)
 }
 
 #[test]
 fn test_python_handler_creation() {
     init_python();
 
-    Python::with_gil(|py| {
+    let python_handler = Python::attach(|py| -> PyResult<_spikard::PythonHandler> {
         let code = r#"
 def simple_handler(path_params, query_params, body, headers, cookies):
     return {"status_code": 200, "body": {"message": "Hello"}}
 "#;
 
         let module = module_from_code(py, code, "test.py", "test");
-        let handler_fn = module.getattr("simple_handler").unwrap();
+        let handler_fn = module.getattr("simple_handler")?;
         let handler_py: Py<PyAny> = handler_fn.into();
 
-        let python_handler = _spikard::PythonHandler::new(handler_py, false, None, None, None, None);
+        Ok(_spikard::PythonHandler::new(handler_py, false, None, None, None, None))
+    })
+    .expect("failed to build Python handler");
 
-        assert!(std::mem::size_of_val(&python_handler) > 0);
-    });
+    assert!(std::mem::size_of_val(&python_handler) > 0);
 }
 
 #[tokio::test]
@@ -336,7 +341,7 @@ fn test_event_loop_initialization() {
 fn test_extract_routes_from_app() {
     init_python();
 
-    Python::with_gil(|py| {
+    let route_list = Python::attach(|py| -> PyResult<_> {
         let code = r#"
 from spikard import Spikard
 
@@ -368,21 +373,20 @@ app.register_route(
 )
 "#;
 
-        let sys = py.import("sys").unwrap();
-        let sys_path = sys.getattr("path").unwrap();
-        sys_path.call_method1("insert", (0, "packages/python")).unwrap();
+        let sys = py.import("sys")?;
+        let sys_path = sys.getattr("path")?;
+        sys_path.call_method1("insert", (0, "packages/python"))?;
 
         let module = module_from_code(py, code, "test_app.py", "test_app");
-        let app = module.getattr("app").unwrap();
+        let app = module.getattr("app")?;
 
-        let routes = _spikard::extract_routes_from_app(py, &app);
+        _spikard::extract_routes_from_app(py, &app)
+    })
+    .expect("failed to extract routes");
 
-        assert!(routes.is_ok());
-        let route_list = routes.unwrap();
-        assert_eq!(route_list.len(), 2);
+    assert_eq!(route_list.len(), 2);
 
-        let paths: Vec<String> = route_list.iter().map(|r| r.metadata.path.clone()).collect();
-        assert!(paths.contains(&"/test1".to_string()));
-        assert!(paths.contains(&"/test2".to_string()));
-    });
+    let paths: Vec<String> = route_list.iter().map(|r| r.metadata.path.clone()).collect();
+    assert!(paths.contains(&"/test1".to_string()));
+    assert!(paths.contains(&"/test2".to_string()));
 }
