@@ -16,7 +16,7 @@
 		"build": "pnpm build:native && tsup",
 		"build:native": "cd ../../crates/spikard-node && napi build --platform --release -o ../../packages/node",
 		"build:debug": "cd ../../crates/spikard-node && napi build --platform -o ../../packages/node",
-		"test": "vitest run",
+		"test": "vitest run --passWithNoTests",
 		"test:watch": "vitest",
 		"typecheck": "tsc --noEmit",
 		"lint": "biome check src",
