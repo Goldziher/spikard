@@ -13,7 +13,11 @@ on:
         type: boolean
         default: false
       ref:
-        description: "Optional git ref to build (defaults to tag)"
+        description: "Git ref (branch, tag, or commit) to build; defaults to the tag"
+        required: false
+        type: string
+      targets:
+        description: "Comma-separated list of release targets (all, python, node, ruby, cli, crates, wasm)"
         required: false
         type: string
   push:
@@ -21,14 +25,16 @@ on:
       - "v*"
   release:
     types: [published]
+  repository_dispatch:
+    types: [publish-release]
 
 concurrency:
   group: ${{ github.workflow }}-${{ (github.event_name == 'workflow_dispatch' && (github.event.inputs.ref || github.event.inputs.tag)) || github.ref || github.run_id }}
   cancel-in-progress: false
 
-defaults:
-  run:
-    shell: bash
+env:
+  CARGO_TERM_COLOR: always
+  MACOSX_DEPLOYMENT_TARGET: "14.0"
 
 jobs:
   prepare:
@@ -38,13 +44,21 @@ jobs:
       tag: ${{ steps.meta.outputs.tag }}
       version: ${{ steps.meta.outputs.version }}
       ref: ${{ steps.meta.outputs.ref }}
+      dry_run: ${{ steps.meta.outputs.dry_run }}
       checkout_ref: ${{ steps.meta.outputs.checkout_ref }}
       target_sha: ${{ steps.meta.outputs.target_sha }}
       matrix_ref: ${{ steps.meta.outputs.matrix_ref }}
-      dry_run: ${{ steps.meta.outputs.dry_run }}
       is_tag: ${{ steps.meta.outputs.is_tag }}
+      release_targets: ${{ steps.meta.outputs.release_targets }}
+      release_any: ${{ steps.meta.outputs.release_any }}
+      release_python: ${{ steps.meta.outputs.release_python }}
+      release_node: ${{ steps.meta.outputs.release_node }}
+      release_ruby: ${{ steps.meta.outputs.release_ruby }}
+      release_cli: ${{ steps.meta.outputs.release_cli }}
+      release_crates: ${{ steps.meta.outputs.release_crates }}
+      release_wasm: ${{ steps.meta.outputs.release_wasm }}
     steps:
-      - name: Resolve release metadata
+      - name: Validate tag and compute version
         id: meta
         run: |
           event="${{ github.event_name }}"
@@ -52,33 +66,60 @@ jobs:
             tag="${{ inputs.tag }}"
             dry_run_input="${{ inputs.dry_run }}"
             ref_input="${{ inputs.ref }}"
+            targets_input="${{ inputs.targets }}"
           elif [[ "$event" == "release" ]]; then
             tag="${{ github.event.release.tag_name }}"
             dry_run_input="false"
             ref_input="refs/tags/${tag}"
+            targets_input=""
+          elif [[ "$event" == "repository_dispatch" ]]; then
+            tag="${{ github.event.client_payload.tag }}"
+            dry_run_input="${{ github.event.client_payload.dry_run }}"
+            ref_input="${{ github.event.client_payload.ref }}"
+            targets_input="${{ github.event.client_payload.targets }}"
           else
             tag="${GITHUB_REF_NAME}"
             dry_run_input="false"
             ref_input=""
+            targets_input=""
+            if [[ "$tag" == *-pre* || "$tag" == *-rc* ]]; then
+              dry_run_input="true"
+            fi
           fi
-
           if [[ -z "$tag" ]]; then
-            echo "Unable to determine release tag" >&2
+            echo "Release tag could not be determined" >&2
             exit 1
           fi
-
           if [[ "$tag" != v* ]]; then
             echo "Tag must start with 'v' (e.g., v0.5.0)" >&2
             exit 1
           fi
-
           version="${tag#v}"
-
           if [[ -n "$ref_input" ]]; then
             ref="$ref_input"
           else
             ref="refs/tags/${tag}"
           fi
+          if [[ "$ref" =~ ^[0-9a-f]{40}$ ]]; then
+            checkout_ref="refs/heads/main"
+            target_sha="$ref"
+          elif [[ "$ref" =~ ^refs/ ]]; then
+            checkout_ref="$ref"
+            target_sha=""
+          else
+            checkout_ref="refs/heads/${ref}"
+            target_sha=""
+          fi
+          if [[ "$ref" =~ ^[0-9a-f]{40}$ ]]; then
+            matrix_ref="main"
+          elif [[ "$ref" =~ ^refs/heads/(.+)$ ]]; then
+            matrix_ref="${BASH_REMATCH[1]}"
+          elif [[ "$ref" =~ ^refs/tags/(.+)$ ]]; then
+            matrix_ref="${BASH_REMATCH[1]}"
+          else
+            matrix_ref="$ref"
+          fi
+          dry_run="$dry_run_input"
 
           if [[ "$ref" =~ ^refs/tags/ ]]; then
             is_tag="true"
@@ -86,74 +127,270 @@ jobs:
             is_tag="false"
           fi
 
-          if [[ "$ref" =~ ^[0-9a-f]{40}$ ]]; then
-            checkout_ref="refs/heads/main"
-            target_sha="$ref"
-          else
-            checkout_ref="$ref"
-            target_sha=""
+          normalize_target_list() {
+            local raw="$1"
+            raw="${raw:-all}"
+            if [[ -z "$raw" ]]; then
+              echo "all"
+            else
+              echo "$raw"
+            fi
+          }
+
+          targets_value=$(normalize_target_list "$targets_input")
+          release_python=false
+          release_node=false
+          release_ruby=false
+          release_cli=false
+          release_crates=false
+          release_wasm=false
+
+          set_all_targets() {
+            release_python=true
+            release_node=true
+            release_ruby=true
+            release_cli=true
+            release_crates=true
+            release_wasm=true
+          }
+
+          mapfile -t requested_targets < <(echo "$targets_value" | tr ',' '\n')
+
+          processed_any=false
+          for raw_target in "${requested_targets[@]}"; do
+            trimmed=$(echo "$raw_target" | tr '[:upper:]' '[:lower:]' | xargs)
+            if [[ -z "$trimmed" ]]; then
+              continue
+            fi
+            processed_any=true
+            case "$trimmed" in
+              all|'*'|'default')
+                set_all_targets
+                break
+                ;;
+              python)
+                release_python=true
+                ;;
+              node)
+                release_node=true
+                ;;
+              ruby)
+                release_ruby=true
+                ;;
+              cli)
+                release_cli=true
+                ;;
+              crates)
+                release_crates=true
+                ;;
+              wasm)
+                release_wasm=true
+                ;;
+              none)
+                release_python=false
+                release_node=false
+                release_ruby=false
+                release_cli=false
+                release_crates=false
+                release_wasm=false
+                ;;
+              *)
+                echo "Unknown release target '$trimmed'. Allowed: all, python, node, ruby, cli, crates, wasm." >&2
+                exit 1
+                ;;
+            esac
+          done
+
+          if [[ "$processed_any" == "false" ]]; then
+            set_all_targets
+            requested_targets=("all")
           fi
 
-          if [[ "$ref" =~ ^refs/heads/(.+)$ ]]; then
-            matrix_ref="${BASH_REMATCH[1]}"
-          elif [[ "$ref" =~ ^refs/tags/(.+)$ ]]; then
-            matrix_ref="${BASH_REMATCH[1]}"
+          enabled_targets=()
+          if [[ "$release_python" == "true" ]]; then enabled_targets+=("python"); fi
+          if [[ "$release_node" == "true" ]]; then enabled_targets+=("node"); fi
+          if [[ "$release_ruby" == "true" ]]; then enabled_targets+=("ruby"); fi
+          if [[ "$release_cli" == "true" ]]; then enabled_targets+=("cli"); fi
+          if [[ "$release_crates" == "true" ]]; then enabled_targets+=("crates"); fi
+          if [[ "$release_wasm" == "true" ]]; then enabled_targets+=("wasm"); fi
+
+          if [[ ${#enabled_targets[@]} -eq 6 ]]; then
+            release_targets_summary="all"
+          elif [[ ${#enabled_targets[@]} -eq 0 ]]; then
+            release_targets_summary="none"
           else
-            matrix_ref="$ref"
+            release_targets_summary=$(IFS=','; echo "${enabled_targets[*]}")
           fi
 
-          dry_run="$dry_run_input"
+          release_any="false"
+          if [[ ${#enabled_targets[@]} -gt 0 ]]; then
+            release_any="true"
+          fi
 
+          cat <<JSON > release-metadata.json
+          {
+            "tag": "$tag",
+            "version": "$version",
+            "ref": "$ref",
+            "checkout_ref": "$checkout_ref",
+            "target_sha": "$target_sha",
+            "matrix_ref": "$matrix_ref",
+            "dry_run": ${dry_run:-false},
+            "is_tag": $is_tag,
+            "release_targets": "$release_targets_summary",
+            "release_any": $release_any,
+            "release_python": $release_python,
+            "release_node": $release_node,
+            "release_ruby": $release_ruby,
+            "release_cli": $release_cli,
+            "release_crates": $release_crates,
+            "release_wasm": $release_wasm
+          }
+          JSON
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "dry_run=${dry_run:-false}" >> "$GITHUB_OUTPUT"
           echo "checkout_ref=$checkout_ref" >> "$GITHUB_OUTPUT"
           echo "target_sha=$target_sha" >> "$GITHUB_OUTPUT"
           echo "matrix_ref=$matrix_ref" >> "$GITHUB_OUTPUT"
-          echo "dry_run=${dry_run:-false}" >> "$GITHUB_OUTPUT"
           echo "is_tag=$is_tag" >> "$GITHUB_OUTPUT"
+          echo "release_targets=$release_targets_summary" >> "$GITHUB_OUTPUT"
+          echo "release_any=$release_any" >> "$GITHUB_OUTPUT"
+          echo "release_python=$release_python" >> "$GITHUB_OUTPUT"
+          echo "release_node=$release_node" >> "$GITHUB_OUTPUT"
+          echo "release_ruby=$release_ruby" >> "$GITHUB_OUTPUT"
+          echo "release_cli=$release_cli" >> "$GITHUB_OUTPUT"
+          echo "release_crates=$release_crates" >> "$GITHUB_OUTPUT"
+          echo "release_wasm=$release_wasm" >> "$GITHUB_OUTPUT"
+
+      - name: Upload release metadata
+        uses: actions/upload-artifact@v5
+        with:
+          name: release-metadata
+          path: release-metadata.json
+          retention-days: 14
 
   python-wheels:
-    name: Build Python wheels (${{ matrix.os }})
+    name: Build Python wheels (${{ matrix.label }})
     needs: prepare
+    if: ${{ needs.prepare.outputs.release_python == 'true' }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - label: linux-x86_64
+            os: ubuntu-latest
+            artifact: python-wheels-linux-x86_64
+            rust_target: x86_64-unknown-linux-gnu
+            manylinux: auto
+            python: "3.10"
+            needs_qemu: false
+            extra_args: ""
+          - label: macos-arm64
+            os: macos-14
+            artifact: python-wheels-macos
+            needs_qemu: false
+            python: "3.10"
+            rust_target: aarch64-apple-darwin
+            manylinux: ""
+            extra_args: ""
+          - label: windows-amd64
+            os: windows-latest
+            artifact: python-wheels-windows
+            needs_qemu: false
+            python: "3.10"
+            rust_target: x86_64-pc-windows-msvc
+            manylinux: ""
+            extra_args: ""
     steps:
+      - name: Maximize build disk space
+        if: matrix.os == 'ubuntu-latest'
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 2048
+          temp-reserve-mb: 512
+          swap-size-mb: 4096
+          overprovision-lvm: 'true'
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+          remove-docker-images: 'true'
+
       - name: Checkout
         uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
+          submodules: recursive
 
       - name: Ensure target commit
         if: ${{ needs.prepare.outputs.target_sha != '' }}
         run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
 
-      - name: Build wheels
-        uses: ./.github/actions/build-wheels
+      - name: Setup QEMU
+        if: matrix.os == 'ubuntu-latest' && matrix.needs_qemu
+        uses: docker/setup-qemu-action@v3
         with:
-          python-version: "3.13"
+          platforms: all
 
-      - name: Upload wheels
+      - name: Install macOS Rust targets
+        if: matrix.label == 'macos-arm64'
+        shell: bash
+        run: rustup target add aarch64-apple-darwin
+
+      - name: Prepare wheel output directory
+        shell: bash
+        run: mkdir -p target/wheels
+
+      - name: Build Linux wheels
+        if: matrix.os == 'ubuntu-latest'
+        uses: PyO3/maturin-action@v1
+        with:
+          command: build
+          args: --release -i python${{ matrix.python }} --out target/wheels ${{ matrix.extra_args }}
+          target: ${{ matrix.rust_target }}
+          manylinux: ${{ matrix.manylinux }}
+          working-directory: crates/spikard-py
+          sccache: true
+
+      - name: Build wheels (native)
+        if: matrix.os != 'ubuntu-latest'
+        uses: PyO3/maturin-action@v1
+        with:
+          command: build
+          args: --release -i python${{ matrix.python }} --out target/wheels ${{ matrix.extra_args }}
+          target: ${{ matrix.rust_target }}
+          working-directory: crates/spikard-py
+          sccache: true
+
+      - name: List built wheels
+        shell: bash
+        run: ls -lh target/wheels
+
+      - name: Upload wheel artifact
         uses: actions/upload-artifact@v5
         with:
-          name: python-wheels-${{ matrix.os }}
-          path: wheelhouse/*.whl
+          name: ${{ matrix.artifact }}
+          path: target/wheels/*.whl
           retention-days: 14
 
   python-sdist:
     name: Build Python sdist
     needs: prepare
+    if: ${{ needs.prepare.outputs.release_python == 'true' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
+          submodules: recursive
 
       - name: Ensure target commit
         if: ${{ needs.prepare.outputs.target_sha != '' }}
@@ -169,11 +406,15 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Setup Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Build sdist
-        run: uv run maturin sdist --manifest-path crates/spikard-py/Cargo.toml
+        run: |
+          set -euo pipefail
+          mkdir -p target/wheels
+          cd crates/spikard-py
+          maturin sdist --out target/wheels
 
       - name: Upload sdist
         uses: actions/upload-artifact@v5
@@ -182,335 +423,988 @@ jobs:
           path: target/wheels/*.tar.gz
           retention-days: 14
 
-  cli-binaries:
-    name: Build CLI (${{ matrix.target }})
+  node-bindings:
+    name: Build Node bindings (${{ matrix.settings.target }})
     needs: prepare
+    if: ${{ needs.prepare.outputs.release_node == 'true' }}
+    runs-on: ${{ matrix.settings.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        settings:
+          - os: macos-14
+            target: aarch64-apple-darwin
+            rust_target: ""
+            use_cross: false
+            use_napi_cross: false
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            rust_target: ""
+            use_cross: false
+            use_napi_cross: false
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            rust_target: ""
+            use_cross: false
+            use_napi_cross: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Ensure target commit
+        if: ${{ needs.prepare.outputs.target_sha != '' }}
+        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: package.json
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.settings.target }}
+
+      - name: Add Rust target
+        if: ${{ matrix.settings.rust_target != '' }}
+        run: rustup target add ${{ matrix.settings.rust_target }}
+
+      - name: Install cross
+        if: ${{ matrix.settings.use_cross }}
+        run: cargo install cross --git https://github.com/cross-rs/cross --locked
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          check-latest: true
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Install Node dependencies
+        run: pnpm install --filter @spikard/node...
+
+      - name: Clean npm directory
+        if: runner.os != 'Windows'
+        run: rm -rf crates/spikard-node/npm
+
+      - name: Clean npm directory (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Remove-Item -Recurse -Force crates/spikard-node\npm -ErrorAction SilentlyContinue
+
+      - name: Create npm package structure
+        run: pnpm --filter @spikard/node exec napi create-npm-dirs
+
+      - name: Build native module
+        if: runner.os != 'Windows'
+        env:
+          TARGET: ${{ matrix.settings.target }}
+          USE_CROSS: ${{ matrix.settings.use_cross }}
+          USE_NAPI_CROSS: ${{ matrix.settings.use_napi_cross }}
+        run: |
+          cd crates/spikard-node
+          args="--platform --release --target $TARGET --output-dir ./artifacts"
+          if [[ "$USE_NAPI_CROSS" == "true" ]]; then
+            args="$args --use-napi-cross"
+          fi
+          if [[ "$USE_CROSS" == "true" ]]; then
+            args="$args --use-cross"
+          fi
+          pnpm exec napi build $args
+
+      - name: Build native module (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          TARGET: ${{ matrix.settings.target }}
+          USE_CROSS: ${{ matrix.settings.use_cross }}
+          USE_NAPI_CROSS: ${{ matrix.settings.use_napi_cross }}
+        run: |
+          $args = @('--platform', '--release', '--target', $env:TARGET, '--output-dir', './artifacts')
+          if ($env:USE_NAPI_CROSS -eq 'true') { $args += '--use-napi-cross' }
+          if ($env:USE_CROSS -eq 'true') { $args += '--use-cross' }
+          pnpm --filter @spikard/node exec napi build @args
+
+      - name: Package artifacts
+        if: runner.os != 'Windows'
+        env:
+          TARGET: ${{ matrix.settings.target }}
+        run: |
+          cd crates/spikard-node
+          pnpm exec napi artifacts --output-dir ./artifacts
+          if [ ! -d npm ]; then
+            echo "npm artifact directory missing" >&2
+            exit 1
+          fi
+          tar -czf node-bindings-$TARGET.tar.gz -C . npm
+          mv node-bindings-$TARGET.tar.gz ../..
+
+      - name: Package artifacts (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          TARGET: ${{ matrix.settings.target }}
+        run: |
+          pnpm --filter @spikard/node exec napi artifacts --output-dir ./artifacts
+          if (-Not (Test-Path crates/spikard-node\npm)) { throw "npm artifact directory missing" }
+          tar -czf node-bindings-$env:TARGET.tar.gz -C crates/spikard-node npm
+
+      - name: Generate and upload TypeScript definitions
+        if: matrix.settings.target == 'x86_64-unknown-linux-gnu'
+        run: |
+          pnpm --filter @spikard/node exec napi build --platform --dts index.d.ts
+          mkdir -p typescript-defs
+          cp crates/spikard-node/index.d.ts typescript-defs/
+          cp crates/spikard-node/index.js typescript-defs/ || true
+
+      - name: Upload TypeScript definitions
+        if: matrix.settings.target == 'x86_64-unknown-linux-gnu'
+        uses: actions/upload-artifact@v5
+        with:
+          name: node-typescript-defs
+          path: typescript-defs
+          retention-days: 14
+
+      - name: Upload Node artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: node-bindings-${{ matrix.settings.target }}
+          path: node-bindings-${{ matrix.settings.target }}.tar.gz
+          retention-days: 14
+
+  cli-binaries:
+    name: Build CLI binaries (${{ matrix.target }})
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_cli == 'true' }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+            use_cross: false
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
+            use_cross: false
+          - os: macos-14
+            target: aarch64-apple-darwin
+            use_cross: false
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-          - os: macos-latest
-            target: x86_64-apple-darwin
-          - os: macos-latest
-            target: aarch64-apple-darwin
+            use_cross: false
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
+          submodules: recursive
 
       - name: Ensure target commit
         if: ${{ needs.prepare.outputs.target_sha != '' }}
         run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
 
-      - name: Setup Rust
+      - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install cross toolchain (ARM Linux)
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
+      - name: Add compilation target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Install build dependencies
+        if: runner.os == 'Linux'
         run: |
+          set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu
-          echo 'CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc' >> $GITHUB_ENV
+          case "${{ matrix.target }}" in
+            aarch64-unknown-linux-gnu)
+              sudo apt-get install -y gcc-aarch64-linux-gnu
+              ;;
+          esac
+
+      - name: Configure cross linker
+        if: ${{ matrix.target == 'aarch64-unknown-linux-gnu' }}
+        run: |
+          {
+            echo "CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc"
+            echo "CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++"
+            echo "AR_aarch64_unknown_linux_gnu=aarch64-linux-gnu-ar"
+            echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc"
+          } >> "$GITHUB_ENV"
 
       - name: Build CLI
-        run: cargo build --release --target ${{ matrix.target }} --package spikard-cli
-
-      - name: Package binary (Unix)
-        if: matrix.os != 'windows-latest'
         run: |
-          cd target/${{ matrix.target }}/release
-          tar czf spikard-cli-${{ matrix.target }}.tar.gz spikard-cli
-          mv spikard-cli-${{ matrix.target }}.tar.gz $GITHUB_WORKSPACE/
+          set -euo pipefail
+          cargo build --release --target ${{ matrix.target }} --package spikard-cli
 
-      - name: Package binary (Windows)
-        if: matrix.os == 'windows-latest'
+      - name: Package CLI artifact
+        if: runner.os != 'Windows'
         run: |
-          cd target/${{ matrix.target }}/release
-          powershell Compress-Archive -Path spikard-cli.exe -DestinationPath spikard-cli-${{ matrix.target }}.zip
-          mv spikard-cli-${{ matrix.target }}.zip $GITHUB_WORKSPACE/
+          set -euo pipefail
+          target="${{ matrix.target }}"
+          stage="spikard-cli-$target"
+          rm -rf "$stage"
+          mkdir -p "$stage"
+          cp "target/$target/release/spikard" "$stage/"
+          cp LICENSE "$stage/" || echo "No LICENSE file"
+          cp README.md "$stage/" || echo "No README file"
+          tar -czf "$stage.tar.gz" "$stage"
+          rm -rf "$stage"
+
+      - name: Package CLI artifact (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $target = '${{ matrix.target }}'
+          $stage = "spikard-cli-$target"
+          Remove-Item -Recurse -Force $stage -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path $stage | Out-Null
+          Copy-Item "target/$target/release/spikard.exe" $stage
+          if (Test-Path LICENSE) { Copy-Item LICENSE $stage }
+          if (Test-Path README.md) { Copy-Item README.md $stage }
+          Compress-Archive -Path "$stage/*" -DestinationPath "$stage.zip" -Force
+          Remove-Item -Recurse -Force $stage
 
       - name: Upload CLI artifact
+        if: runner.os != 'Windows'
         uses: actions/upload-artifact@v5
         with:
           name: cli-${{ matrix.target }}
-          path: spikard-cli-${{ matrix.target }}.*
+          path: spikard-cli-${{ matrix.target }}.tar.gz
           retention-days: 14
 
-  node-bindings:
-    name: Build NAPI bindings (${{ matrix.settings.target }})
+      - name: Upload CLI artifact (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v5
+        with:
+          name: cli-${{ matrix.target }}
+          path: spikard-cli-${{ matrix.target }}.zip
+          retention-days: 14
+
+  ruby-gem:
+    name: Build Ruby gem (${{ matrix.label }})
     needs: prepare
-    runs-on: ${{ matrix.settings.os }}
+    if: ${{ needs.prepare.outputs.release_ruby == 'true' }}
     strategy:
       fail-fast: false
       matrix:
-        settings:
+        include:
           - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-          - os: macos-latest
-            target: x86_64-apple-darwin
-          - os: macos-latest
-            target: aarch64-apple-darwin
+            label: linux
+          - os: macos-14
+            label: macos-arm64
           - os: windows-latest
-            target: x86_64-pc-windows-msvc
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: 20
-          cache: pnpm
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.settings.target }}
-
-      - name: Install cross toolchain (Linux ARM64)
-        if: matrix.settings.target == 'aarch64-unknown-linux-gnu'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu
-          echo 'CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc' >> $GITHUB_ENV
-
-      - name: Build bindings
-        working-directory: crates/spikard-node
-        run: |
-          pnpm install
-          pnpm run build --target ${{ matrix.settings.target }}
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v5
-        with:
-          name: napi-${{ matrix.settings.target }}
-          path: crates/spikard-node/*.node
-          retention-days: 14
-
-  smoke-tests:
-    name: Smoke e2e suites
-    needs:
-      - prepare
-    runs-on: ubuntu-latest
+            label: windows-x64
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 60
+    env:
+      RB_SYS_CARGO_PROFILE: release
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
+          submodules: recursive
 
       - name: Ensure target commit
         if: ${{ needs.prepare.outputs.target_sha != '' }}
         run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
+      - name: Install MSYS2 toolchain
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ridk exec pacman -S --needed --noconfirm base-devel mingw-w64-ucrt-x86_64-toolchain
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
+      - name: Install Rust (GNU on Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: rustup toolchain install stable-gnu --profile minimal --no-self-update
 
-      - name: Setup Node workspace
-        uses: ./.github/actions/setup-node-workspace
-        with:
-          node-version: "20"
-
-      - name: Setup Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          components: rustfmt, clippy
-
-      - name: Setup Ruby
+      - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.3"
           bundler-cache: true
           working-directory: packages/ruby
 
-      - name: Build Python bindings
+      - name: Configure bindgen sysroot (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: |
-          uv sync --all-extras --all-groups --no-install-project
-          uv pip install -e crates/spikard-py --config-settings='--build-option=--release'
-          uv pip install -e packages/python
+          if (-not $env:RI_DEVKIT) {
+            throw "RI_DEVKIT environment variable is not set"
+          }
+          $msysPrefix = ridk exec bash -lc 'printf %s "$MSYSTEM_PREFIX"'
+          $msysPrefix = $msysPrefix.Trim()
+          $riDevkit = $env:RI_DEVKIT -replace '\\','/'
+          $sysroot = "$riDevkit$msysPrefix"
+          Add-Content -Path $env:GITHUB_ENV -Value "BINDGEN_EXTRA_CLANG_ARGS=--target=x86_64-pc-windows-gnu --sysroot=$sysroot"
 
-      - name: Build Node bindings
-        run: pnpm --filter @spikard/node run build:debug
-
-      - name: Compile Ruby extension
+      - name: Install Ruby dependencies (Unix)
+        if: runner.os != 'Windows'
         working-directory: packages/ruby
-        env:
-          RB_SYS_CARGO_PROFILE: release
-        run: bundle exec rake ext:build
+        run: bundle install --jobs 4 --retry 3
 
-      - name: Run fixture tests
+      - name: Install Ruby dependencies (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        working-directory: packages/ruby
         run: |
-          cargo test --manifest-path e2e/rust/Cargo.toml --release
-          (cd e2e/python && PYTHONPATH=../../packages/python uv run pytest tests/ -vv)
-          (cd e2e/node && pnpm install --frozen-lockfile && pnpm test)
-          (cd e2e/ruby && bundle install && bundle exec rspec)
+          $workspace = ridk exec bash -lc "cygpath -au '$env:GITHUB_WORKSPACE'"
+          $gemdir = "$workspace/packages/ruby"
+          ridk exec bash -lc "cd $gemdir && export RUSTUP_TOOLCHAIN=stable-gnu CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ && bundle install --jobs 4 --retry 3"
+
+      - name: Build gem (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        working-directory: packages/ruby
+        run: |
+          set -euo pipefail
+          bundle exec rake clean
+          bundle exec rake build
+
+      - name: Build gem (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $workspace = ridk exec bash -lc "cygpath -au '$env:GITHUB_WORKSPACE'"
+          $gemdir = "$workspace/packages/ruby"
+          ridk exec bash -lc "cd $gemdir && export RUSTUP_TOOLCHAIN=stable-gnu CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ && bundle exec rake clean && bundle exec rake build"
+
+      - name: Upload gem artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: rubygems-${{ matrix.label }}
+          path: packages/ruby/pkg/*.gem
+          retention-days: 14
+
+  wasm-package:
+    name: Build WebAssembly package
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_wasm == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Ensure target commit
+        if: ${{ needs.prepare.outputs.target_sha != '' }}
+        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build WASM package
+        working-directory: crates/spikard-wasm
+        run: wasm-pack build --release --target web
+
+      - name: Upload WASM artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: wasm-package
+          path: crates/spikard-wasm/pkg
+          retention-days: 14
+
+  cargo-packages:
+    name: Package Rust crates
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_crates == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Ensure target commit
+        if: ${{ needs.prepare.outputs.target_sha != '' }}
+        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Package crates
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          # Package spikard-core first (dependency of spikard)
+          core_packaged=0
+          core_status=0
+          cargo package -p spikard-core --allow-dirty || core_status=$?
+          if [ "$core_status" -eq 0 ]; then
+            core_packaged=1
+          else
+            echo "::warning::Skipping spikard-core crate packaging."
+          fi
+
+          # Package spikard (depends on spikard-core)
+          spikard_packaged=0
+          spikard_status=0
+          cargo package -p spikard --allow-dirty --no-verify || spikard_status=$?
+          if [ "$spikard_status" -eq 0 ]; then
+            spikard_packaged=1
+          else
+            echo "::warning::Skipping spikard crate packaging; spikard-core ${RELEASE_VERSION:-unknown} may not be available on crates.io."
+          fi
+
+          # Package spikard-http (depends on spikard-core)
+          http_packaged=0
+          http_status=0
+          cargo package -p spikard-http --allow-dirty --no-verify || http_status=$?
+          if [ "$http_status" -eq 0 ]; then
+            http_packaged=1
+          else
+            echo "::warning::Skipping spikard-http crate packaging; dependencies may not be available on crates.io."
+          fi
+
+          # Package spikard-cli (depends on spikard and spikard-http)
+          cli_packaged=0
+          cli_status=0
+          cargo package -p spikard-cli --allow-dirty --no-verify || cli_status=$?
+          if [ "$cli_status" -eq 0 ]; then
+            cli_packaged=1
+          else
+            echo "::warning::Skipping spikard-cli crate packaging; dependencies may not be available on crates.io."
+          fi
+
+          mkdir -p crate-artifacts
+          if [ "$core_packaged" -eq 1 ]; then
+            cp target/package/spikard-core-*.crate crate-artifacts/
+          fi
+          if [ "$spikard_packaged" -eq 1 ]; then
+            cp target/package/spikard-[0-9]*.crate crate-artifacts/
+          fi
+          if [ "$http_packaged" -eq 1 ]; then
+            cp target/package/spikard-http-*.crate crate-artifacts/
+          fi
+          if [ "$cli_packaged" -eq 1 ]; then
+            cp target/package/spikard-cli-*.crate crate-artifacts/
+          fi
+
+      - name: Upload crate packages
+        uses: actions/upload-artifact@v5
+        with:
+          name: cargo-crates
+          path: crate-artifacts/*.crate
+          retention-days: 14
+
+  upload-release-artifacts:
+    name: Upload release artifacts
+    needs:
+      - prepare
+      - python-wheels
+      - python-sdist
+      - node-bindings
+      - cli-binaries
+      - ruby-gem
+      - wasm-package
+      - cargo-packages
+    if: |
+      always() &&
+      needs.prepare.result == 'success' &&
+      needs.prepare.outputs.dry_run != 'true' &&
+      needs.prepare.outputs.is_tag == 'true' &&
+      (needs.python-wheels.result == 'success' || needs.python-wheels.result == 'skipped') &&
+      (needs.python-sdist.result == 'success' || needs.python-sdist.result == 'skipped') &&
+      (needs.node-bindings.result == 'success' || needs.node-bindings.result == 'skipped') &&
+      (needs.cli-binaries.result == 'success' || needs.cli-binaries.result == 'skipped') &&
+      (needs.ruby-gem.result == 'success' || needs.ruby-gem.result == 'skipped') &&
+      (needs.wasm-package.result == 'success' || needs.wasm-package.result == 'skipped') &&
+      (needs.cargo-packages.result == 'success' || needs.cargo-packages.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - name: Ensure GitHub release exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag="${{ needs.prepare.outputs.tag }}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists"
+          else
+            gh release create "$tag" --title "$tag" --generate-notes
+          fi
+
+      - name: Download CLI artifacts
+        if: ${{ needs.prepare.outputs.release_cli == 'true' }}
+        uses: actions/download-artifact@v6
+        with:
+          pattern: cli-*
+          path: dist/cli
+          merge-multiple: true
+
+      - name: Upload CLI binaries to release
+        if: ${{ needs.prepare.outputs.release_cli == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          shopt -s nullglob
+          files=(dist/cli/spikard-cli-*)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No CLI artifacts to upload" >&2
+            exit 1
+          fi
+          for file in "${files[@]}"; do
+            gh release upload ${{ needs.prepare.outputs.tag }} "$file" --clobber
+          done
+
+  publish-crates:
+    name: Publish crates.io packages
+    needs: [prepare, upload-release-artifacts]
+    if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_crates == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Verify Cargo.toml version matches tag
+        run: |
+          cargo_version=$(grep '^\[workspace.package\]' -A 10 Cargo.toml | grep '^version = ' | head -1 | sed -E 's/version = "(.*)"/\1/')
+          tag_version="${{ needs.prepare.outputs.version }}"
+          if [ "$cargo_version" != "$tag_version" ]; then
+            echo "Version mismatch! Cargo: $cargo_version, tag: $tag_version" >&2
+            exit 1
+          fi
+          echo "Cargo.toml version matches tag: $cargo_version"
+
+      - name: Check crates.io for existing release
+        id: crate_check
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          import os
+          import sys
+          import urllib.request
+          version = os.environ["VERSION"]
+          crates = [
+              ("spikard-core", "spikard_core_exists"),
+              ("spikard", "spikard_exists"),
+              ("spikard-http", "http_exists"),
+              ("spikard-cli", "cli_exists"),
+          ]
+          for crate, key in crates:
+              url = f"https://crates.io/api/v1/crates/{crate}"
+              try:
+                  with urllib.request.urlopen(url) as resp:
+                      data = json.load(resp)
+              except Exception as exc:
+                  print(f"::warning::{crate}: failed to query crates.io ({exc})", file=sys.stderr)
+                  exists = False
+              else:
+                  versions = [item.get("num") for item in data.get("versions", [])]
+                  exists = version in versions
+                  message = "already" if exists else "not yet"
+                  print(f"::notice::{crate} {version} {message} published", file=sys.stderr)
+              print(f"{key}={'true' if exists else 'false'}")
+          PY
+
+      - name: Publish spikard-core
+        if: ${{ steps.crate_check.outputs.spikard_core_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
+        run: |
+          set -euo pipefail
+          publish_log=$(mktemp)
+          set +e
+          cargo publish -p spikard-core --token ${{ secrets.CARGO_REGISTRY_TOKEN }} 2>&1 | tee "$publish_log"
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -ne 0 ]; then
+            if grep -qi "already uploaded" "$publish_log"; then
+              echo "::notice::spikard-core already published; skipping."
+              echo "spikard-core already published; skipping." >> $GITHUB_STEP_SUMMARY
+            else
+              exit "$status"
+            fi
+          fi
+
+      - name: Wait for spikard-core indexing
+        if: ${{ steps.crate_check.outputs.spikard_core_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
+        run: sleep 45
+
+      - name: Publish spikard
+        if: ${{ steps.crate_check.outputs.spikard_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
+        run: |
+          set -euo pipefail
+          publish_log=$(mktemp)
+          set +e
+          cargo publish -p spikard --token ${{ secrets.CARGO_REGISTRY_TOKEN }} 2>&1 | tee "$publish_log"
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -ne 0 ]; then
+            if grep -qi "already uploaded" "$publish_log"; then
+              echo "::notice::spikard already published; skipping."
+              echo "spikard already published; skipping." >> $GITHUB_STEP_SUMMARY
+            else
+              exit "$status"
+            fi
+          fi
+
+      - name: Wait for spikard indexing
+        if: ${{ steps.crate_check.outputs.spikard_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
+        run: sleep 45
+
+      - name: Publish spikard-http
+        if: ${{ steps.crate_check.outputs.http_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
+        run: |
+          set -euo pipefail
+          publish_log=$(mktemp)
+          set +e
+          cargo publish -p spikard-http --token ${{ secrets.CARGO_REGISTRY_TOKEN }} 2>&1 | tee "$publish_log"
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -ne 0 ]; then
+            if grep -qi "already uploaded" "$publish_log"; then
+              echo "::notice::spikard-http already published; skipping."
+              echo "spikard-http already published; skipping." >> $GITHUB_STEP_SUMMARY
+            else
+              exit "$status"
+            fi
+          fi
+
+      - name: Wait for spikard-http indexing
+        if: ${{ steps.crate_check.outputs.http_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
+        run: sleep 30
+
+      - name: Publish spikard-cli
+        if: ${{ steps.crate_check.outputs.cli_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
+        run: |
+          set -euo pipefail
+          publish_log=$(mktemp)
+          set +e
+          cargo publish -p spikard-cli --token ${{ secrets.CARGO_REGISTRY_TOKEN }} 2>&1 | tee "$publish_log"
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -ne 0 ]; then
+            if grep -qi "already uploaded" "$publish_log"; then
+              echo "::notice::spikard-cli already published; skipping."
+              echo "spikard-cli already published; skipping." >> $GITHUB_STEP_SUMMARY
+            else
+              exit "$status"
+            fi
+          fi
+
+      - name: Crates dry-run summary
+        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
+        run: |
+          echo "Dry run requested; cargo publish skipped." >> "$GITHUB_STEP_SUMMARY"
 
   publish-pypi:
-    name: Publish to PyPI
-    needs: [prepare, python-wheels, python-sdist, smoke-tests]
-    if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+    name: Publish Python packages to PyPI
+    needs: [prepare, upload-release-artifacts]
+    if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_python == 'true' }}
     runs-on: ubuntu-latest
+    environment: pypi
     permissions:
       id-token: write
     steps:
-      - name: Download wheels
+      - name: Download wheel artifacts
         uses: actions/download-artifact@v6
         with:
           pattern: python-wheels-*
           path: dist
           merge-multiple: true
 
-      - name: Download sdist
+      - name: Download sdist artifact
         uses: actions/download-artifact@v6
         with:
           name: python-sdist
           path: dist
 
-      - name: Publish
+      - name: List artifacts
+        run: ls -R dist
+
+      - name: Publish to PyPI
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist
           skip-existing: true
 
-  publish-npm:
-    name: Publish to npm
-    needs: [prepare, node-bindings, smoke-tests]
-    if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+      - name: Dry run summary
+        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
+        run: |
+          echo "Dry run requested; artifacts staged for PyPI:" >> $GITHUB_STEP_SUMMARY
+          ls -1 dist >> $GITHUB_STEP_SUMMARY
+
+  publish-rubygems:
+    name: Publish Ruby gems
+    needs: [prepare, upload-release-artifacts]
+    if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_ruby == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Download Ruby gem artifacts
+        uses: actions/download-artifact@v6
+        with:
+          pattern: rubygems-*
+          path: dist
+          merge-multiple: true
+
+      - name: Configure trusted publishing credentials
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        uses: rubygems/configure-rubygems-credentials@v1.0.0
+
+      - name: Check RubyGems version
+        id: rubygems_check
+        run: |
+          set -euo pipefail
+          export VERSION="${{ needs.prepare.outputs.version }}"
+          exists=$(python3 - <<'PY'
+          import json, os, urllib.request
+          version = os.environ["VERSION"]
+          try:
+              with urllib.request.urlopen("https://rubygems.org/api/v1/versions/spikard.json") as resp:
+                  data = json.load(resp)
+              print("true" if any(entry.get("number") == version for entry in data) else "false")
+          except:
+              print("false")
+          PY
+          )
+          echo "exists=$exists" >> "$GITHUB_OUTPUT"
+
+      - name: Publish gems
+        if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.rubygems_check.outputs.exists != 'true' }}
+        working-directory: dist
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          gems=($(ls spikard-*.gem | sort))
+          if [ ${#gems[@]} -eq 0 ]; then
+            echo "No gem artifacts found" >&2
+            exit 1
+          fi
+          for gem in "${gems[@]}"; do
+            echo "Pushing ${gem}"
+            gem push "$gem"
+          done
+
+      - name: Ruby gem already published
+        if: ${{ steps.rubygems_check.outputs.exists == 'true' }}
+        run: echo "RubyGem version ${{ needs.prepare.outputs.version }} already published; skipping." >> $GITHUB_STEP_SUMMARY
+
+      - name: Dry run summary
+        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
+        working-directory: dist
+        run: |
+          echo "Dry run requested; gem artifacts ready:" >> $GITHUB_STEP_SUMMARY
+          ls -1 spikard-*.gem >> $GITHUB_STEP_SUMMARY
+
+  publish-node:
+    name: Publish Node packages
+    needs: [prepare, upload-release-artifacts]
+    if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_node == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-
-      - name: Download napi artifacts
-        uses: actions/download-artifact@v6
-        with:
-          pattern: napi-*
-          path: crates/spikard-node
-          merge-multiple: true
+          ref: ${{ needs.prepare.outputs.ref }}
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
+        with:
+          package_json_file: package.json
+
+      - name: Download Node artifacts
+        uses: actions/download-artifact@v6
+        with:
+          pattern: node-bindings-*
+          path: node-artifacts
+          merge-multiple: true
+
+      - name: Download TypeScript definitions
+        uses: actions/download-artifact@v6
+        with:
+          name: node-typescript-defs
+          path: typescript-defs
+          if-no-files-found: ignore
 
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
           node-version: 20
-          registry-url: https://registry.npmjs.org
+          registry-url: https://registry.npmjs.org/
 
-      - name: Publish package
-        working-directory: crates/spikard-node
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Prepare artifact directory
+        run: |
+          set -euo pipefail
+          rm -rf crates/spikard-node/npm
+          mkdir -p crates/spikard-node/npm
+          shopt -s nullglob
+          for pkg in node-artifacts/*.tar.gz; do
+            echo "Unpacking $pkg"
+            tmpdir=$(mktemp -d)
+            tar -xzf "$pkg" -C "$tmpdir"
+            if [ ! -d "$tmpdir/npm" ]; then
+              echo "::warning::npm directory missing inside $pkg"
+              rm -rf "$tmpdir"
+              continue
+            fi
+            while IFS= read -r -d '' dir; do
+              name=$(basename "$dir")
+              dest="crates/spikard-node/npm/$name"
+              rm -rf "$dest"
+              cp -R "$dir" "$dest"
+            done < <(find "$tmpdir/npm" -mindepth 1 -maxdepth 1 -type d -print0)
+            rm -rf "$tmpdir"
+          done
+          if [ -d typescript-defs ]; then
+            cp typescript-defs/index.js typescript-defs/index.d.ts crates/spikard-node/ || true
+          fi
+
+      - name: Node artifacts summary
+        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
+        run: |
+          echo "Dry run requested; Node binding tarballs staged:" >> "$GITHUB_STEP_SUMMARY"
+          find node-artifacts -name '*.tar.gz' -print >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Install workspace dependencies
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        run: pnpm install --filter @spikard/node...
+
+      - name: Pack platform packages
+        run: |
+          cd crates/spikard-node/npm
+          for dir in */; do
+            if [ -f "$dir/package.json" ]; then
+              (cd "$dir" && npm pack && mv *.tgz ..)
+            fi
+          done
+
+      - name: Publish native binary packages
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          pnpm install
-          pnpm publish --access public --no-git-checks
-
-  publish-crates:
-    name: Publish crates.io packages
-    needs: [prepare, smoke-tests]
-    if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-
-      - name: Publish crates
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: |
           set -euo pipefail
-          cargo publish --package spikard --allow-dirty
-          sleep 15
-          cargo publish --package spikard-cli --allow-dirty
-          sleep 15
-          cargo publish --package spikard-http --allow-dirty
+          shopt -s nullglob
+          for pkg in crates/spikard-node/npm/*.tgz; do
+            echo "Publishing $pkg"
+            publish_log=$(mktemp)
+            set +e
+            npm publish "$pkg" --access public --ignore-scripts 2>&1 | tee "$publish_log"
+            status=${PIPESTATUS[0]}
+            set -e
+            if [ "$status" -ne 0 ]; then
+              if grep -q "previously published versions" "$publish_log"; then
+                echo "::notice::Package $pkg already published; skipping."
+                echo "Package $(basename "$pkg") already published; skipping." >> $GITHUB_STEP_SUMMARY
+              else
+                exit "$status"
+              fi
+            fi
+          done
 
-  publish-rubygems:
-    name: Publish RubyGem
-    needs: [prepare, smoke-tests]
-    if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+      - name: Wait for npm indexing
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        run: sleep 30
+
+      - name: Publish main Node package
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd crates/spikard-node
+          publish_log=$(mktemp)
+          set +e
+          pnpm publish --access public --no-git-checks 2>&1 | tee "$publish_log"
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -ne 0 ]; then
+            if grep -q "previously published versions" "$publish_log"; then
+              echo "::notice::@spikard/node already published; skipping."
+              echo "@spikard/node already published; skipping." >> $GITHUB_STEP_SUMMARY
+            else
+              exit "$status"
+            fi
+          fi
+
+  publish-wasm:
+    name: Publish WASM to npm
+    needs: [prepare, upload-release-artifacts]
+    if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_wasm == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
+          ref: ${{ needs.prepare.outputs.ref }}
 
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.3"
-          bundler-cache: true
-          working-directory: packages/ruby
-
-      - name: Build gem
-        working-directory: packages/ruby
-        run: gem build spikard.gemspec
-
-      - name: Publish gem
-        working-directory: packages/ruby
-        env:
-          RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
-        run: gem push spikard-*.gem
-
-  attach-cli:
-    name: Upload CLI assets
-    needs: [prepare, cli-binaries]
-    if: ${{ needs.prepare.outputs.is_tag == 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Download CLI artifacts
+      - name: Download WASM artifact
         uses: actions/download-artifact@v6
         with:
-          pattern: cli-*
-          path: cli-dist
-          merge-multiple: true
+          name: wasm-package
+          path: crates/spikard-wasm/pkg
 
-      - name: Upload release assets
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+
+      - name: Publish WASM package
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        working-directory: crates/spikard-wasm/pkg
         run: |
-          set -euo pipefail
-          for asset in cli-dist/*; do
-            gh release upload "${{ needs.prepare.outputs.tag }}" "$asset" --clobber
-          done
+          publish_log=$(mktemp)
+          set +e
+          npm publish --access public 2>&1 | tee "$publish_log"
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -ne 0 ]; then
+            if grep -q "previously published versions" "$publish_log"; then
+              echo "::notice::@spikard/wasm already published; skipping."
+              echo "@spikard/wasm already published; skipping." >> $GITHUB_STEP_SUMMARY
+            else
+              exit "$status"
+            fi
+          fi
+
+      - name: Dry run summary
+        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
+        run: echo "Dry run requested; WASM publish skipped." >> "$GITHUB_STEP_SUMMARY"
