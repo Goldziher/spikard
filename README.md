@@ -482,7 +482,9 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 ## License
 
-*(Add your license here - MIT, Apache 2.0, etc.)*
+MIT License - see the [LICENSE](LICENSE) file for details.
+
+Copyright (c) 2025 Na'aman Hirschfeld
 
 ## Acknowledgments
 
@@ -505,29 +507,6 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - **Roda** - Routing tree design and minimal overhead approach
 - **Hanami** - Component architecture and clean abstractions
 - **Rack** - Middleware pipeline and HTTP abstraction
-
-### Built With
-
-**Rust Core:**
-- axum, tower, tower-http - HTTP server and middleware
-- jsonschema - JSON Schema Draft 2020-12 validation
-- serde, serde_json - Serialization
-- tokio - Async runtime
-- thiserror - Error handling
-- utoipa - OpenAPI 3.1 generation
-
-**Language Bindings:**
-- **Python:** PyO3, msgspec (required), pyo3-async-runtimes, pythonize, with auto-detection for pydantic/attrs/dataclasses
-- **TypeScript:** napi-rs, Zod
-- **Ruby:** Magnus, rb-sys, RBS, with auto-detection for dry-schema/dry-struct
-- **WebAssembly:** wasm-bindgen, wasm-pack, js-sys
-
-**Development Tools:**
-- Taskfile for automation
-- tarpaulin for Rust coverage
-- pytest, vitest, RSpec for testing
-- Biome for TypeScript linting
-- Rubocop for Ruby linting
 
 ---
 
