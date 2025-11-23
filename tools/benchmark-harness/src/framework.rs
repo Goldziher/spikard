@@ -160,13 +160,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         // TypeScript frameworks
-        FrameworkConfig::new(
-            "fastify",
-            vec!["server.ts".to_string()],
-            None,
-            "npm start {port}",
-            None,
-        ),
+        FrameworkConfig::new("fastify", vec!["server.ts".to_string()], None, "npm start {port}", None),
         FrameworkConfig::new(
             "fastify-raw",
             vec!["server.js".to_string()],
@@ -174,13 +168,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "npm start {port}",
             None,
         ),
-        FrameworkConfig::new(
-            "hono",
-            vec!["server.ts".to_string()],
-            None,
-            "npm start {port}",
-            None,
-        ),
+        FrameworkConfig::new("hono", vec!["server.ts".to_string()], None, "npm start {port}", None),
         FrameworkConfig::new(
             "hono-raw",
             vec!["server.ts".to_string()],
