@@ -1,4 +1,5 @@
 use std::env;
+use std::ffi::OsString;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -400,7 +401,7 @@ assert instance.message == "hello"
         class_name = class_name
     );
 
-    let pythonpath = format!("{}:{}", stub_dir.display(), pythonpath_env());
+    let pythonpath = pythonpath_value(&stub_dir);
     let status = Command::new("python3")
         .env("PYTHONPATH", pythonpath)
         .arg("-c")
@@ -417,7 +418,7 @@ fn compile_python_file(code: &str) -> Result<()> {
     let stub_dir = create_python_stub_dir(dir.path())?;
     let module_path = dir.path().join("async_app.py");
     fs::write(&module_path, code)?;
-    let pythonpath = format!("{}:{}", stub_dir.display(), pythonpath_env());
+    let pythonpath = pythonpath_value(&stub_dir);
     let status = Command::new("python3")
         .env("PYTHONPATH", pythonpath)
         .arg("-m")
@@ -429,12 +430,16 @@ fn compile_python_file(code: &str) -> Result<()> {
     Ok(())
 }
 
-fn pythonpath_env() -> String {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+fn pythonpath_value(stub_dir: &Path) -> OsString {
+    let package_path = pythonpath_env();
+    env::join_paths([stub_dir, package_path.as_path()]).expect("failed to build PYTHONPATH")
+}
+
+fn pythonpath_env() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../packages/python")
         .canonicalize()
-        .expect("failed to resolve python package path");
-    path.to_string_lossy().into_owned()
+        .expect("failed to resolve python package path")
 }
 
 fn create_python_stub_dir(base: &Path) -> Result<PathBuf> {
