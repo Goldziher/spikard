@@ -423,11 +423,10 @@ if __name__ == "__main__":
     )
 
     Granian(
-        "server:app",
+        "__main__:app",
         address="0.0.0.0",
         port=port,
         interface=Interfaces.ASGI,
         workers=1,
-        threads=1,
         log_level="error",
     ).serve()
