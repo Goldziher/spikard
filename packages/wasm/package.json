@@ -1,6 +1,6 @@
 {
 	"name": "spikard-wasm",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Spikard bindings for WebAssembly/edge runtimes implemented in TypeScript.",
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",
