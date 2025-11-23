@@ -488,7 +488,7 @@ jobs:
         run: corepack enable
 
       - name: Install Node dependencies
-        run: pnpm install --filter @spikard/node...
+        run: pnpm install --filter spikard...
 
       - name: Clean npm directory
         if: runner.os != 'Windows'
@@ -500,7 +500,7 @@ jobs:
         run: Remove-Item -Recurse -Force crates/spikard-node\npm -ErrorAction SilentlyContinue
 
       - name: Create npm package structure
-        run: pnpm --filter @spikard/node exec napi create-npm-dirs
+        run: pnpm --filter spikard exec napi create-npm-dirs
 
       - name: Build native module
         if: runner.os != 'Windows'
@@ -553,7 +553,7 @@ jobs:
         env:
           TARGET: ${{ matrix.settings.target }}
         run: |
-          pnpm --filter @spikard/node exec napi artifacts --output-dir ./artifacts
+          pnpm --filter spikard exec napi artifacts --output-dir ./artifacts
           if (-Not (Test-Path crates/spikard-node\npm)) { throw "npm artifact directory missing" }
           tar -czf node-bindings-$env:TARGET.tar.gz -C crates/spikard-node npm
 
@@ -1306,7 +1306,7 @@ jobs:
 
       - name: Install workspace dependencies
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        run: pnpm install --filter @spikard/node...
+        run: pnpm install --filter spikard...
 
       - name: Pack platform packages
         run: |
@@ -1358,8 +1358,8 @@ jobs:
           set -e
           if [ "$status" -ne 0 ]; then
             if grep -q "previously published versions" "$publish_log"; then
-              echo "::notice::@spikard/node already published; skipping."
-              echo "@spikard/node already published; skipping." >> $GITHUB_STEP_SUMMARY
+              echo "::notice::spikard already published; skipping."
+              echo "spikard already published; skipping." >> $GITHUB_STEP_SUMMARY
             else
               exit "$status"
             fi
