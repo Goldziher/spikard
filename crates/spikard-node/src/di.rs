@@ -125,19 +125,25 @@ impl Dependency for NodeFactoryDependency {
         let factory_fn = Arc::clone(&self.factory_fn);
         let depends_on = self.depends_on.clone();
 
+        // Extract resolved dependencies before async
+        let resolved_deps: Vec<(String, String)> = depends_on
+            .iter()
+            .filter_map(|dep_key| {
+                resolved.get::<String>(dep_key).map(|v| (dep_key.clone(), v.to_string()))
+            })
+            .collect();
+
         Box::pin(async move {
             // Build dependencies object as JSON
             let mut deps_map = std::collections::HashMap::new();
-            for dep_key in &depends_on {
-                if let Some(dep_value) = resolved.get::<String>(dep_key) {
-                    // Dependencies are stored as JSON strings
-                    let parsed: serde_json::Value = serde_json::from_str(&dep_value).map_err(|e| {
-                        spikard_core::di::DependencyError::ResolutionFailed {
-                            message: format!("Failed to parse dependency {}: {}", dep_key, e),
-                        }
-                    })?;
-                    deps_map.insert(dep_key.clone(), parsed);
-                }
+            for (dep_key, dep_value) in resolved_deps {
+                // Dependencies are stored as JSON strings
+                let parsed: serde_json::Value = serde_json::from_str(&dep_value).map_err(|e| {
+                    spikard_core::di::DependencyError::ResolutionFailed {
+                        message: format!("Failed to parse dependency {}: {}", dep_key, e),
+                    }
+                })?;
+                deps_map.insert(dep_key, parsed);
             }
 
             let deps_json =
@@ -147,7 +153,7 @@ impl Dependency for NodeFactoryDependency {
 
             // Call the factory function
             let result = factory_fn
-                .call_async::<Promise<String>>(deps_json.clone())
+                .call_async(deps_json.clone())
                 .await
                 .map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
                     message: format!("Failed to call factory: {}", e),
@@ -184,7 +190,7 @@ pub fn extract_dependency_container(app: &Object) -> Result<Option<Arc<spikard_c
     }
 
     let dependencies = dependencies_opt.unwrap();
-    let dep_keys: Vec<String> = dependencies.get_property_names()?.into_iter().collect();
+    let dep_keys = Object::keys(&dependencies)?;
 
     if dep_keys.is_empty() {
         return Ok(None);
@@ -192,7 +198,7 @@ pub fn extract_dependency_container(app: &Object) -> Result<Option<Arc<spikard_c
 
     let mut container = spikard_core::di::DependencyContainer::new();
 
-    for key in dep_keys {
+    for key in &dep_keys {
         let dep_obj: Object = dependencies
             .get(&key)?
             .ok_or_else(|| Error::from_reason(format!("Dependency {} not found", key)))?;
@@ -225,7 +231,7 @@ pub fn extract_dependency_container(app: &Object) -> Result<Option<Arc<spikard_c
             let factory_dep = NodeFactoryDependency::new(key.clone(), tsfn, depends_on, singleton, cacheable);
 
             container
-                .register(Arc::new(factory_dep))
+                .register(key.clone(), Arc::new(factory_dep))
                 .map_err(|e| Error::from_reason(format!("Failed to register factory {}: {}", key, e)))?;
         } else {
             // Value dependency - serialize to JSON
@@ -233,13 +239,13 @@ pub fn extract_dependency_container(app: &Object) -> Result<Option<Arc<spikard_c
                 .get("value")?
                 .ok_or_else(|| Error::from_reason(format!("Value not found for dependency {}", key)))?;
 
-            // Convert to JSON string
-            let env = dep_obj.env;
+            // Convert to JSON string - get Env from app object
+            let env = Env::from(app.value().env);
             let global = env.get_global()?;
             let json_obj: Object = global.get_named_property("JSON")?;
             let stringify: Function<Unknown, String> = json_obj.get_named_property("stringify")?;
 
-            let value_json: String = stringify.call(None, &[value])?;
+            let value_json: String = stringify.call(value)?;
 
             let value_dep = NodeValueDependency::new(key.clone(), value_json);
 
@@ -257,11 +263,11 @@ pub fn extract_dependency_container(app: &Object) -> Result<Option<Arc<spikard_c
 /// Takes the resolved dependencies (stored as JSON strings) and converts them
 /// back to JavaScript values for handler consumption.
 pub fn resolved_to_js_object<'a>(
-    env: Env<'a>,
+    env: &'a Env,
     resolved: &ResolvedDependencies,
     keys: &[String],
-) -> napi::Result<Object> {
-    let obj = env.create_object()?;
+) -> napi::Result<Object<'a>> {
+    let mut obj = Object::new(env)?;
 
     let global = env.get_global()?;
     let json_obj: Object = global.get_named_property("JSON")?;
@@ -270,7 +276,7 @@ pub fn resolved_to_js_object<'a>(
     for key in keys {
         if let Some(value_json) = resolved.get::<String>(key) {
             // Parse JSON string back to JS value
-            let js_value = parse.call(None, &[env.create_string(&value_json)?])?;
+            let js_value = parse.call(value_json.to_string())?;
             obj.set(key.as_str(), js_value)?;
         }
     }
