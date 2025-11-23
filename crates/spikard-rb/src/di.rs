@@ -181,8 +181,38 @@ impl Dependency for RubyFactoryDependency {
                     })?
             };
 
+            // Check if result is an array with cleanup callback (Ruby pattern: [resource, cleanup_proc])
+            let (value_to_convert, _cleanup_callback) = if result.is_kind_of(ruby.class_array()) {
+                let array = magnus::RArray::from_value(result).ok_or_else(|| DependencyError::ResolutionFailed {
+                    message: format!("Failed to convert result to array for '{}'", key),
+                })?;
+
+                let len = array.len();
+                if len == 2 {
+                    // Extract the resource (first element)
+                    let resource: Value = array.entry(0).map_err(|e| DependencyError::ResolutionFailed {
+                        message: format!("Failed to extract resource from array for '{}': {}", key, e),
+                    })?;
+
+                    // Extract cleanup callback (second element)
+                    let cleanup: Value = array.entry(1).map_err(|e| DependencyError::ResolutionFailed {
+                        message: format!("Failed to extract cleanup callback for '{}': {}", key, e),
+                    })?;
+
+                    // TODO: Store cleanup callback for later execution
+                    // For now, we just extract the resource value
+                    (resource, Some(cleanup))
+                } else {
+                    // Not a cleanup pattern, use the array as-is
+                    (result, None)
+                }
+            } else {
+                // Not an array, use the value as-is
+                (result, None)
+            };
+
             // Convert result to JSON
-            let json_value = ruby_value_to_json(&ruby, result)
+            let json_value = ruby_value_to_json(&ruby, value_to_convert)
                 .map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?;
 
             Ok(Arc::new(json_value) as Arc<dyn Any + Send + Sync>)
@@ -219,7 +249,7 @@ fn ruby_value_to_json(ruby: &Ruby, value: Value) -> Result<JsonValue, Error> {
 }
 
 /// Convert serde_json::Value to Ruby Value
-fn json_to_ruby(ruby: &Ruby, value: &JsonValue) -> Result<Value, Error> {
+pub fn json_to_ruby(ruby: &Ruby, value: &JsonValue) -> Result<Value, Error> {
     match value {
         JsonValue::Null => Ok(ruby.qnil().as_value()),
         JsonValue::Bool(b) => Ok(if *b {

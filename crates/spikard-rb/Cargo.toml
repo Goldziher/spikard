@@ -29,5 +29,9 @@ once_cell = "1.21"
 async-stream = "0.3"
 http = "1.2"
 
+[features]
+default = ["di"]
+di = ["spikard-core/di", "spikard-http/di"]
+
 [build-dependencies]
 rb-sys-build = "0.9"

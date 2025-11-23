@@ -9,6 +9,7 @@ use super::graph::DependencyGraph;
 use super::resolved::ResolvedDependencies;
 use crate::request_data::RequestData;
 use http::Request;
+use indexmap::IndexMap;
 use std::any::Any;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -68,8 +69,8 @@ use tokio::sync::RwLock;
 /// # });
 /// ```
 pub struct DependencyContainer {
-    /// Registered dependencies by key
-    dependencies: HashMap<String, Arc<dyn Dependency>>,
+    /// Registered dependencies by key (preserves insertion order)
+    dependencies: IndexMap<String, Arc<dyn Dependency>>,
     /// Dependency graph for topological sorting and cycle detection
     dependency_graph: DependencyGraph,
     /// Global singleton cache
@@ -89,7 +90,7 @@ impl DependencyContainer {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            dependencies: HashMap::new(),
+            dependencies: IndexMap::new(),
             dependency_graph: DependencyGraph::new(),
             singleton_cache: Arc::new(RwLock::new(HashMap::new())),
         }
@@ -226,10 +227,18 @@ impl DependencyContainer {
 
         // Process each batch sequentially
         for batch in batches {
-            // Resolve all dependencies in this batch in parallel
-            let mut tasks = Vec::new();
+            // Sort keys within batch by registration order for deterministic resolution
+            // This ensures cleanup happens in a predictable reverse order
+            // NOTE: We resolve sequentially within each batch to ensure cleanup tasks
+            // are registered in a deterministic order (LIFO on cleanup)
+            let mut sorted_keys: Vec<_> = batch.iter().collect();
 
-            for key in &batch {
+            // Sort by insertion order (index in IndexMap) instead of alphabetically
+            sorted_keys.sort_by_key(|key| {
+                self.dependencies.get_index_of(*key).unwrap_or(usize::MAX)
+            });
+
+            for key in sorted_keys {
                 // Get the dependency
                 let dep = self
                     .dependencies
@@ -253,37 +262,19 @@ impl DependencyContainer {
                     continue;
                 }
 
-                // Need to resolve - spawn task
-                let dep = Arc::clone(dep);
-                let key = key.clone();
-                let req = req.clone();
-                let data = data.clone();
-                let resolved_clone = resolved.clone();
-
-                tasks.push(tokio::spawn(async move {
-                    let result = dep.resolve(&req, &data, &resolved_clone).await;
-                    (key, dep, result)
-                }));
-            }
-
-            // Wait for all tasks in this batch to complete
-            for task in tasks {
-                let (key, dep, result) = task.await.map_err(|e| DependencyError::ResolutionFailed {
-                    message: format!("Task join error: {}", e),
-                })?;
-
-                let value = result?;
+                // Need to resolve - do it sequentially to preserve cleanup order
+                let result = dep.resolve(&req, &data, &resolved).await?;
 
                 // Store in appropriate cache
                 if dep.singleton() {
                     let mut cache = self.singleton_cache.write().await;
-                    cache.insert(key.clone(), Arc::clone(&value));
+                    cache.insert(key.clone(), Arc::clone(&result));
                 } else if dep.cacheable() {
-                    request_cache.insert(key.clone(), Arc::clone(&value));
+                    request_cache.insert(key.clone(), Arc::clone(&result));
                 }
 
                 // Always store in resolved
-                resolved.insert(key, value);
+                resolved.insert(key.clone(), result);
             }
         }
 
