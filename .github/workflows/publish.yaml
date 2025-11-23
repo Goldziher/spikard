@@ -826,15 +826,32 @@ jobs:
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
-      - name: Build WASM package
+      - name: Setup Node.js for pnpm scripts
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        run: corepack enable && corepack prepare pnpm@latest --activate
+
+      - name: Install dependencies
         working-directory: crates/spikard-wasm
-        run: wasm-pack build --release --target web
+        run: pnpm install
+
+      - name: Build WASM package (all targets)
+        working-directory: crates/spikard-wasm
+        run: pnpm run build:all
 
       - name: Upload WASM artifact
         uses: actions/upload-artifact@v5
         with:
           name: wasm-package
-          path: crates/spikard-wasm/pkg
+          path: |
+            crates/spikard-wasm/dist-bundler
+            crates/spikard-wasm/dist-node
+            crates/spikard-wasm/dist-web
+            crates/spikard-wasm/README.md
+            crates/spikard-wasm/package.json
           retention-days: 14
 
   cargo-packages:
