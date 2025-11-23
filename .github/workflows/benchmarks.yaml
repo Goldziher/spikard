@@ -380,10 +380,13 @@ jobs:
         with:
           timestamp: ${{ needs.setup.outputs.timestamp }}
 
-      - name: Setup language runtime
-        uses: ./.github/actions/setup-${{ matrix.language }}
-        if: matrix.language != 'ruby'
-        continue-on-error: true
+      - name: Setup Python
+        if: matrix.language == 'python'
+        uses: ./.github/actions/setup-python-env
+
+      - name: Setup Node
+        if: matrix.language == 'node'
+        uses: ./.github/actions/setup-node-workspace
 
       - name: Setup Ruby
         if: matrix.language == 'ruby'
