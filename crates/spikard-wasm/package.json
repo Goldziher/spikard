@@ -1,17 +1,43 @@
 {
 	"name": "spikard-wasm",
 	"version": "0.1.1",
-	"description": "WebAssembly bindings for spikard",
+	"description": "WebAssembly bindings for spikard - High-performance HTTP framework",
 	"main": "dist/spikard_wasm.js",
 	"types": "dist/spikard_wasm.d.ts",
 	"license": "MIT",
+	"keywords": [
+		"wasm",
+		"webassembly",
+		"http",
+		"framework",
+		"rust",
+		"performance",
+		"web",
+		"api"
+	],
+	"author": {
+		"name": "Na'aman Hirschfeld",
+		"email": "nhirschfeld@gmail.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Goldziher/spikard"
+	},
+	"homepage": "https://github.com/Goldziher/spikard",
+	"bugs": {
+		"url": "https://github.com/Goldziher/spikard/issues"
+	},
+	"files": [
+		"README.md",
+		"dist"
+	],
 	"scripts": {
 		"build": "pnpm run build:bundler",
 		"build:bundler": "PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack build --target bundler --out-dir dist-bundler --release",
 		"build:web": "PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack build --target web --out-dir dist-web --release",
 		"build:node": "PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack build --target nodejs --out-dir dist-node --release",
 		"build:all": "pnpm run build:bundler && pnpm run build:node",
-		"test": "PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack test --node"
+		"test": "PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack build --target web && PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack test --node"
 	},
 	"devDependencies": {
 		"wasm-pack": "^0.13.1"

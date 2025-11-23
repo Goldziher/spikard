@@ -179,6 +179,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - WebAssembly bindings have limited threading support due to WASM runtime constraints
 - Background tasks in Python require explicit awaitable coroutines (no automatic lambda wrapping)
 
+## [0.1.1] - 2025-11-23
+
+### Added
+- Homebrew formula publishing automation in release workflow
+- Automatic Homebrew tap updates via `mislav/bump-homebrew-formula-action@v3`
+- `homebrew` target to release workflow (can be used with `targets: all` or `targets: homebrew`)
+
+### Fixed
+- Package publishing configuration for all language bindings
+- README.md inclusion in Python, Node.js, and WASM package manifests
+- CLI crate (`spikard-cli`) now properly configured for crates.io publishing
+
 ## [Unreleased]
 
 ### Planned
@@ -187,8 +199,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GraphQL support
 - Additional middleware: CSRF protection, session management
 - Performance benchmarks and comparison documentation
-- Official package registry releases (crates.io, PyPI, npm, RubyGems)
 
 ---
 
-[0.1.0]: https://github.com/yourusername/spikard/releases/tag/v0.1.0
+[0.1.1]: https://github.com/Goldziher/spikard/releases/tag/v0.1.1
+[0.1.0]: https://github.com/Goldziher/spikard/releases/tag/v0.1.0
