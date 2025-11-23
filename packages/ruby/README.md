@@ -24,15 +24,42 @@ require "spikard"
 
 app = Spikard::App.new
 
-app.get "/users/:id" do |params, query, body|
-  { id: params["id"].to_i, name: "Alice" }
+app.get "/users/:id" do |request|
+  user_id = request[:path_params]["id"].to_i
+  { id: user_id, name: "Alice" }
 end
 
-app.post "/users" do |params, query, body|
-  { id: 1, name: body["name"] }
+app.post "/users" do |request|
+  { id: 1, name: request[:body]["name"] }
 end
 
 app.run(port: 8000)
+```
+
+## Request Hash Structure
+
+Handlers receive a single `request` hash argument with the following keys:
+
+- `:method` - HTTP method (String): `"GET"`, `"POST"`, etc.
+- `:path` - URL path (String): `"/users/123"`
+- `:path_params` - Path parameters (Hash): `{"id" => "123"}`
+- `:query` - Query parameters (Hash): `{"search" => "ruby"}`
+- `:raw_query` - Raw query multimap (Hash of Arrays)
+- `:headers` - Request headers (Hash): `{"Authorization" => "Bearer..."}`
+- `:cookies` - Request cookies (Hash): `{"session_id" => "..."}`
+- `:body` - Parsed request body (Hash or nil)
+- `:params` - Merged params from path, query, headers, and cookies
+
+**Example:**
+
+```ruby
+app.get "/users/:id" do |request|
+  user_id = request[:path_params]["id"]
+  search = request[:query]["search"]
+  auth = request[:headers]["Authorization"]
+
+  { id: user_id, search: search }
+end
 ```
 
 ## Route Registration
@@ -40,35 +67,36 @@ app.run(port: 8000)
 ### HTTP Methods
 
 ```ruby
-app.get "/path" do |params, query, body|
+app.get "/path" do |request|
   # Handler code
+  { method: request[:method] }
 end
 
-app.post "/path" do |params, query, body|
+app.post "/path" do |request|
   { created: true }
 end
 
-app.put "/path" do |params, query, body|
+app.put "/path" do |request|
   { updated: true }
 end
 
-app.patch "/path" do |params, query, body|
+app.patch "/path" do |request|
   { patched: true }
 end
 
-app.delete "/path" do |params, query, body|
+app.delete "/path" do |request|
   { deleted: true }
 end
 
-app.options "/path" do |params, query, body|
+app.options "/path" do |request|
   { options: [] }
 end
 
-app.head "/path" do |params, query, body|
+app.head "/path" do |request|
   # HEAD request
 end
 
-app.trace "/path" do |params, query, body|
+app.trace "/path" do |request|
   # TRACE request
 end
 ```
@@ -76,14 +104,14 @@ end
 ### Path Parameters
 
 ```ruby
-app.get "/users/:user_id" do |params, query, body|
-  { user_id: params["user_id"].to_i }
+app.get "/users/:user_id" do |request|
+  { user_id: request[:path_params]["user_id"].to_i }
 end
 
-app.get "/posts/:post_id/comments/:comment_id" do |params, query, body|
+app.get "/posts/:post_id/comments/:comment_id" do |request|
   {
-    post_id: params["post_id"].to_i,
-    comment_id: params["comment_id"].to_i
+    post_id: request[:path_params]["post_id"].to_i,
+    comment_id: request[:path_params]["comment_id"].to_i
   }
 end
 ```
@@ -91,9 +119,9 @@ end
 ### Query Parameters
 
 ```ruby
-app.get "/search" do |params, query, body|
-  q = query["q"]
-  limit = (query["limit"] || "10").to_i
+app.get "/search" do |request|
+  q = request[:query]["q"]
+  limit = (request[:query]["limit"] || "10").to_i
   { query: q, limit: limit }
 end
 ```
@@ -114,9 +142,9 @@ UserSchema = Dry::Schema.JSON do
   required(:age).filled(:int?)
 end
 
-app.post "/users", request_schema: UserSchema do |params, query, body|
-  # body is validated against schema
-  { id: 1, name: body["name"] }
+app.post "/users", request_schema: UserSchema do |request|
+  # request[:body] is validated against schema
+  { id: 1, name: request[:body]["name"] }
 end
 ```
 
@@ -132,8 +160,8 @@ user_schema = {
   "required" => ["name", "email"]
 }
 
-app.post "/users", request_schema: user_schema do |params, query, body|
-  { id: 1, name: body["name"], email: body["email"] }
+app.post "/users", request_schema: user_schema do |request|
+  { id: 1, name: request[:body]["name"], email: request[:body]["email"] }
 end
 ```
 
@@ -153,8 +181,9 @@ class User < Dry::Struct
   attribute :age, Types::Integer
 end
 
-app.post "/users", request_schema: User do |params, query, body|
-  # body validated as User
+app.post "/users", request_schema: User do |request|
+  # request[:body] validated as User
+  { id: 1, name: request[:body]["name"] }
 end
 ```
 
@@ -179,9 +208,9 @@ end
 ### Full Response Object
 
 ```ruby
-app.post "/users" do |params, query, body|
+app.post "/users" do |request|
   Spikard::Response.new(
-    content: { id: 1, name: body["name"] },
+    content: { id: 1, name: request[:body]["name"] },
     status_code: 201,
     headers: { "X-Custom" => "value" }
   )
@@ -210,8 +239,8 @@ end
 ## File Uploads
 
 ```ruby
-app.post "/upload", file_params: true do |params, query, body|
-  file = body["file"]  # UploadFile instance
+app.post "/upload", file_params: true do |request|
+  file = request[:body]["file"]  # UploadFile instance
 
   {
     filename: file.filename,
@@ -405,10 +434,10 @@ app.sse("/notifications") { NotificationProducer.new }
 ## Background Tasks
 
 ```ruby
-app.post "/process" do |params, query, body|
+app.post "/process" do |request|
   Spikard::Background.run do
     # Heavy processing after response
-    ProcessData.perform(params["id"])
+    ProcessData.perform(request[:path_params]["id"])
   end
 
   { status: "processing" }

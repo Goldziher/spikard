@@ -188,7 +188,7 @@ let config = ServerConfig {
         StaticFilesConfig {
             directory: "./public".to_string(),
             route_prefix: "/static".to_string(),
-            index_file: Some(true),
+            index_file: true,
             cache_control: Some("public, max-age=3600".to_string()),
         }
     ],
@@ -197,8 +197,8 @@ let config = ServerConfig {
         title: "My API".to_string(),
         version: "1.0.0".to_string(),
         description: Some("API documentation".to_string()),
-        swagger_ui_path: Some("/docs".to_string()),
-        redoc_path: Some("/redoc".to_string()),
+        swagger_ui_path: "/docs".to_string(),
+        redoc_path: "/redoc".to_string(),
         ..Default::default()
     }),
     ..Default::default()
@@ -254,16 +254,20 @@ use serde_json::Value;
 struct EchoHandler;
 
 impl WebSocketHandler for EchoHandler {
-    async fn handle_message(&self, message: Value) -> Option<Value> {
-        Some(message) // Echo back
+    fn handle_message(&self, message: Value) -> impl std::future::Future<Output = Option<Value>> + Send {
+        async move { Some(message) } // Echo back
     }
 
-    async fn on_connect(&self) {
-        println!("Client connected");
+    fn on_connect(&self) -> impl std::future::Future<Output = ()> + Send {
+        async {
+            println!("Client connected");
+        }
     }
 
-    async fn on_disconnect(&self) {
-        println!("Client disconnected");
+    fn on_disconnect(&self) -> impl std::future::Future<Output = ()> + Send {
+        async {
+            println!("Client disconnected");
+        }
     }
 }
 
