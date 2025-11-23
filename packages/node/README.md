@@ -25,7 +25,7 @@ pnpm build
 ## Quick Start
 
 ```typescript
-import { Spikard } from "@spikard/node";
+import { Spikard } from "spikard";
 import { z } from "zod";
 
 const UserSchema = z.object({
@@ -81,7 +81,7 @@ if (require.main === module) {
 Routes are registered manually using `app.addRoute(metadata, handler)`:
 
 ```typescript
-import { Spikard } from "@spikard/node";
+import { Spikard } from "spikard";
 
 const app = new Spikard();
 
@@ -132,7 +132,7 @@ Spikard supports **Zod schemas** and **raw JSON Schema objects**.
 **With Zod (recommended - type inference):**
 
 ```typescript
-import { post } from "@spikard/node";
+import { post } from "spikard";
 import { z } from "zod";
 
 const CreateUserSchema = z.object({
@@ -215,7 +215,7 @@ post("/login")(async function login(req) {
 For automatic parameter extraction:
 
 ```typescript
-import { wrapHandler, wrapBodyHandler } from "@spikard/node";
+import { wrapHandler, wrapBodyHandler } from "spikard";
 
 // Body-only wrapper
 post("/users", {}, wrapBodyHandler(async (body: CreateUserRequest) => {
@@ -231,7 +231,7 @@ get("/users/:id", {}, wrapHandler(async (params, query, body) => {
 ## File Uploads
 
 ```typescript
-import { UploadFile } from "@spikard/node";
+import { UploadFile } from "spikard";
 
 interface UploadRequest {
   file: UploadFile;
@@ -253,7 +253,7 @@ post("/upload")(async function upload(req) {
 ## Streaming Responses
 
 ```typescript
-import { StreamingResponse } from "@spikard/node";
+import { StreamingResponse } from "spikard";
 
 async function* generateData() {
   for (let i = 0; i < 10; i++) {
@@ -273,7 +273,7 @@ get("/stream")(async function stream() {
 ## Configuration
 
 ```typescript
-import { Spikard, runServer, type ServerConfig } from "@spikard/node";
+import { Spikard, runServer, type ServerConfig } from "spikard";
 
 const app = new Spikard();
 
@@ -356,7 +356,7 @@ app.onError(async (response) => {
 ## Background Tasks
 
 ```typescript
-import * as background from "@spikard/node/background";
+import * as background from "spikard/background";
 
 post("/process")(async function process(req) {
   const data = req.json();
@@ -373,7 +373,7 @@ post("/process")(async function process(req) {
 ## Testing
 
 ```typescript
-import { TestClient } from "@spikard/node";
+import { TestClient } from "spikard";
 import { expect } from "vitest";
 
 const app = {
@@ -422,13 +422,13 @@ import {
   type ServerConfig,
   type RouteOptions,
   type HandlerFunction,
-} from "@spikard/node";
+} from "spikard";
 ```
 
 ### Parameter Types
 
 ```typescript
-import { Query, Path, Body, QueryDefault } from "@spikard/node";
+import { Query, Path, Body, QueryDefault } from "spikard";
 
 function handler(
   id: Path<number>,
@@ -465,7 +465,7 @@ post("/users", { bodySchema: UserSchema })(async function createUser(req) {
 app.run({ port: 8000 });
 
 // With full configuration
-import { runServer } from "@spikard/node";
+import { runServer } from "spikard";
 
 runServer(app, {
   host: "0.0.0.0",
