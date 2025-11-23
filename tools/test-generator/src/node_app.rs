@@ -763,6 +763,20 @@ fn generate_handler_function(
         !params.is_empty() && ((expected_status == 200 && expected_body.is_none()) || expected_status == 422);
     let params_var = if uses_params { "params" } else { "_params" };
     code.push_str(&format!("\tconst {} = request.params ?? {{}};\n", params_var));
+
+    // Extract DI dependencies if present (deduplicated)
+    if let Ok(Some(di_cfg)) = DependencyConfig::from_fixture(fixture) {
+        let mut seen = std::collections::HashSet::new();
+        for dep_key in &di_cfg.handler_dependencies {
+            if seen.insert(dep_key.clone()) {
+                code.push_str(&format!(
+                    "\tconst {} = request.dependencies?.{} ?? null;\n",
+                    dep_key, dep_key
+                ));
+            }
+        }
+    }
+
     let handler_status = if metadata.rate_limit.is_some() {
         200
     } else {

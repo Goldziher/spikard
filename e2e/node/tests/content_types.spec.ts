@@ -284,8 +284,8 @@ describe("content_types", () => {
 		const responseData = response.json();
 		expect(responseData).toBe("id,name,price\n1,Item A,10.0\n2,Item B,20.0");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["content-type"]).toBe("text/csv; charset=utf-8");
 		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=data.csv");
+		expect(responseHeaders["content-type"]).toBe("text/csv; charset=utf-8");
 	});
 
 	test("Binary response - application octet-stream", async () => {

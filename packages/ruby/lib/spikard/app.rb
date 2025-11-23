@@ -144,7 +144,11 @@ module Spikard
     def register_route(method, path, handler_name: nil, **options, &block)
       validate_route_arguments!(block, options)
       handler_name ||= default_handler_name(method, path)
-      metadata = build_metadata(method, path, handler_name, options)
+
+      # Extract handler dependencies from block parameters
+      handler_dependencies = extract_handler_dependencies(block)
+
+      metadata = build_metadata(method, path, handler_name, options, handler_dependencies)
 
       @routes << RouteEntry.new(metadata, block)
       block
@@ -157,7 +161,17 @@ module Spikard
     end
 
     def route_metadata
-      @routes.map(&:metadata)
+      # Extract handler dependencies when metadata is requested
+      # This allows dependencies to be registered after routes
+      @routes.map do |entry|
+        metadata = entry.metadata.dup
+
+        # Re-extract dependencies in case they were registered after the route
+        handler_dependencies = extract_handler_dependencies(entry.handler)
+        metadata[:handler_dependencies] = handler_dependencies unless handler_dependencies.empty?
+
+        metadata
+      end
     end
 
     def handler_map
@@ -315,13 +329,38 @@ module Spikard
       raise ArgumentError, "unknown route options: #{unknown_keys.join(', ')}"
     end
 
-    def build_metadata(method, path, handler_name, options)
+    def extract_handler_dependencies(block)
+      # Get the block's parameters
+      params = block.parameters
+
+      # Extract keyword parameters (dependencies)
+      # Parameters come in the format [:req/:opt/:keyreq/:key, :param_name]
+      # :keyreq and :key are keyword parameters (required and optional)
+      dependencies = []
+
+      params.each do |param_type, param_name|
+        # Skip the request parameter (usually first positional param)
+        # Only collect keyword parameters
+        if [:keyreq, :key].include?(param_type)
+          dep_name = param_name.to_s
+          # Only add if it's registered in our dependencies
+          dependencies << dep_name if @dependencies.key?(dep_name)
+        end
+      end
+
+      dependencies
+    end
+
+    def build_metadata(method, path, handler_name, options, handler_dependencies)
       base = {
         method: method,
         path: normalize_path(path),
         handler_name: handler_name,
         is_async: options.fetch(:is_async, false)
       }
+
+      # Add handler_dependencies if present
+      base[:handler_dependencies] = handler_dependencies unless handler_dependencies.empty?
 
       SUPPORTED_OPTIONS.each_with_object(base) do |key, metadata|
         next if key == :is_async || !options.key?(key)

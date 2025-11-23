@@ -147,9 +147,7 @@ impl Dependency for RubyFactoryDependency {
             }
 
             let result = if !kwargs.is_empty() {
-                // Build Ruby keyword arguments
-                // For Ruby procs that accept keyword args, we need to use the funcall_kw method
-                // or pass them as a hash. We'll create a kwargs hash and use it.
+                // Build Ruby keyword arguments hash
                 let kwargs_hash = ruby.hash_new();
                 for (dep_key, value) in kwargs {
                     kwargs_hash.aset(ruby.to_symbol(&dep_key), value).map_err(|e| {
@@ -159,9 +157,18 @@ impl Dependency for RubyFactoryDependency {
                     })?;
                 }
 
+                // Use Ruby lambda wrapper to convert hash to keyword arguments
+                // Equivalent to: proc.call(**kwargs)
+                let wrapper_code = ruby.eval::<Value>(r#"
+                    lambda do |proc, kwargs|
+                        proc.call(**kwargs)
+                    end
+                "#).map_err(|e| DependencyError::ResolutionFailed {
+                    message: format!("Failed to create kwarg wrapper for factory '{}': {}", key, e),
+                })?;
+
                 // Try to call with keyword arguments
-                // In Ruby, proc.call(**kwargs) is equivalent to funcall with the kwargs as last arg
-                match factory_value.funcall::<_, _, Value>("call", (kwargs_hash,)) {
+                match wrapper_code.funcall::<_, _, Value>("call", (factory_value, kwargs_hash)) {
                     Ok(result) => result,
                     Err(_) => {
                         // If that fails, try calling without arguments (factory might not expect deps)
