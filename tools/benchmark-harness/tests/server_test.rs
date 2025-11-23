@@ -35,6 +35,7 @@ fn test_find_available_port_when_blocked() {
     }
 }
 
+#[cfg(unix)]
 #[test]
 fn test_server_handle_pid() {
     let process = Command::new("sleep")
@@ -58,6 +59,7 @@ fn test_server_handle_pid() {
     handle.kill().expect("Failed to kill process");
 }
 
+#[cfg(unix)]
 #[test]
 fn test_server_handle_kill() {
     let process = Command::new("sleep")
@@ -88,6 +90,7 @@ fn test_server_handle_kill() {
     }
 }
 
+#[cfg(unix)]
 #[test]
 fn test_server_handle_drop() {
     let process = Command::new("sleep")
