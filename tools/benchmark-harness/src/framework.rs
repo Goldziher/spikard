@@ -67,7 +67,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "spikard",
+            "spikard-python",
             vec!["server.py".to_string()],
             None,
             "uv run python server.py {port}",
@@ -121,42 +121,6 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             vec!["server.py".to_string()],
             None,
             "uv run python server.py {port}",
-            None,
-        ),
-        // Raw/no-validation variants for validation overhead measurement
-        FrameworkConfig::new(
-            "spikard-raw",
-            vec!["server.py".to_string()],
-            None,
-            "uv run python server.py {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "fastapi-raw",
-            vec!["server.py".to_string()],
-            None,
-            "uv run python server.py {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "fastapi-granian-raw",
-            vec!["server.py".to_string()],
-            None,
-            "uv run server.py {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "litestar-raw",
-            vec!["server.py".to_string()],
-            None,
-            "uv run server.py {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "litestar-granian-raw",
-            vec!["server.py".to_string()],
-            None,
-            "uv run server.py {port}",
             None,
         ),
         FrameworkConfig::new(
@@ -339,7 +303,7 @@ mod tests {
         let names: Vec<&str> = registry.iter().map(|f| f.name.as_str()).collect();
 
         assert!(names.contains(&"spikard-rust"));
-        assert!(names.contains(&"spikard"));
+        assert!(names.contains(&"spikard-python"));
         assert!(names.contains(&"spikard-node"));
         assert!(names.contains(&"spikard-ruby"));
         assert!(names.contains(&"spikard-wasm"));
@@ -355,7 +319,7 @@ mod tests {
         assert!(names.contains(&"hanami-api"));
         assert!(names.contains(&"roda"));
 
-        assert_eq!(registry.len(), 21);
+        assert_eq!(registry.len(), 16);
     }
 
     #[test]
@@ -414,7 +378,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        assert_eq!(frameworks.len(), 21);
+        assert_eq!(frameworks.len(), 16);
     }
 
     #[test]
@@ -444,13 +408,13 @@ mod tests {
     }
 
     #[test]
-    fn test_detect_spikard_with_server_only() {
+    fn test_detect_spikard_python_with_server_only() {
         let temp_dir = TempDir::new().unwrap();
         fs::write(temp_dir.path().join("server.py"), "# python server").unwrap();
 
         let result = detect_framework(temp_dir.path());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().name, "spikard");
+        assert_eq!(result.unwrap().name, "spikard-python");
     }
 
     #[test]
