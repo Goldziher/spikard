@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors = ["Na'aman Hirschfeld"]
   spec.email = ["nhirschfeld@gmail.com"]
 
-  spec.summary = "High-performance Ruby HTTP framework powered by Rust"
-  spec.description = "Spikard provides Ruby bindings for a high-performance HTTP server built in Rust using Axum and Tokio"
+  spec.summary = "High-performance Ruby web framework with a Rust core"
+  spec.description = "High-performance Ruby web framework with a Rust core. Build REST APIs with Sinatra-style blocks backed by Axum and Tower-HTTP. Features type-safe routing, validation, WebSocket/SSE support, and lifecycle hooks."
   spec.homepage = "https://github.com/Goldziher/spikard"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.0.0"
@@ -17,6 +17,9 @@ Gem::Specification.new do |spec|
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "https://github.com/Goldziher/spikard"
   spec.metadata["changelog_uri"] = "https://github.com/Goldziher/spikard/blob/main/CHANGELOG.md"
+  spec.metadata["bug_tracker_uri"] = "https://github.com/Goldziher/spikard/issues"
+  spec.metadata["documentation_uri"] = "https://github.com/Goldziher/spikard#readme"
+  spec.metadata["discord_uri"] = "https://discord.gg/pXxagNK2zN"
 
   # Specify which files should be added to the gem when it is released.
   spec.files = Dir[
