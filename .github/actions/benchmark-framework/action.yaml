@@ -21,10 +21,6 @@ inputs:
     description: 'Warmup requests'
     required: false
     default: '1000'
-  port:
-    description: 'Port for server'
-    required: false
-    default: '8080'
 
 runs:
   using: composite
@@ -114,12 +110,12 @@ runs:
       run: |
         benchmark-harness profile \
           --framework "${{ inputs.framework }}" \
+          --app-dir "tools/benchmark-harness/apps/${{ inputs.framework }}" \
           --suite "${{ inputs.suite }}" \
           --duration "${{ inputs.duration }}" \
           --concurrency "${{ inputs.concurrency }}" \
           --warmup "${{ inputs.warmup }}" \
-          --output "results/${{ inputs.framework }}" \
-          --port "${{ inputs.port }}"
+          --output "results/${{ inputs.framework }}"
 
     - name: Upload benchmark results
       uses: actions/upload-artifact@v4
