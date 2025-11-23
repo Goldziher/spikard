@@ -3,10 +3,9 @@
 
 Reads the version from the root Cargo.toml [workspace.package] unless an
 explicit version is provided as the first CLI argument. Updates:
-- package.json files in this repo
-- Python pyproject.toml files
-- Ruby version.rb files
-- uv.lock entries for internal packages
+- package.json files in crates/ and packages/ (plus root)
+- Python pyproject.toml files under crates/ and packages/
+- Ruby version.rb files under crates/ and packages/
 - Cargo package versions (including workspace.package and select workspace deps)
 - Taskfile wheel name references
 """
@@ -33,30 +32,17 @@ PACKAGE_JSON_PATHS = [
     Path("crates/spikard-wasm/dist-node/package.json"),
     Path("crates/spikard-wasm/dist-web/package.json"),
     Path("crates/spikard-wasm/dist-bundler/package.json"),
-    Path("e2e/node/package.json"),
-    Path("e2e/wasm/package.json"),
-    Path("tools/benchmark-harness/apps/fastify/package.json"),
-    Path("tools/benchmark-harness/apps/express/package.json"),
-    Path("tools/benchmark-harness/apps/hono/package.json"),
 ]
 
 PYPROJECT_PATHS = [
     Path("packages/python/pyproject.toml"),
     Path("crates/spikard-py/pyproject.toml"),
-    Path("tools/benchmark-harness/apps/robyn/pyproject.toml"),
 ]
 
 RUBY_VERSION_PATHS = [
     Path("packages/ruby/lib/spikard/version.rb"),
     Path("crates/spikard-rb/lib/spikard/version.rb"),
 ]
-
-UV_LOCK_TARGETS: dict[Path, set[str]] = {
-    Path("uv.lock"): {"spikard"},
-    Path("crates/spikard-py/uv.lock"): {"spikard-bindings"},
-    Path("tools/benchmark-harness/apps/fastapi/uv.lock"): {"fastapi-benchmark"},
-    Path("tools/benchmark-harness/apps/robyn/uv.lock"): {"robyn-benchmark"},
-}
 
 
 def log_line(message: str) -> None:
@@ -114,16 +100,8 @@ def update_ruby_version(path: Path, version: str) -> bool:
     return True
 
 
-def update_uv_lock(path: Path, package_names: Iterable[str], version: str) -> bool:
-    """Update uv.lock package versions for the specified package names."""
-    original = path.read_text()
-    content = original
-    for name in package_names:
-        pattern = re.compile(rf'(name\s*=\s*"{re.escape(name)}"\s+version\s*=\s*")([^"]+)(")', re.MULTILINE)
-        content, _count = pattern.subn(rf"\g<1>{version}\g<3>", content)
-    if content != original:
-        path.write_text(content)
-        return True
+def update_uv_lock(_path: Path, _package_names: Iterable[str], _version: str) -> bool:
+    """Deprecated: uv.lock files are not updated by this script."""
     return False
 
 
@@ -183,11 +161,6 @@ def main() -> None:
     for rel in RUBY_VERSION_PATHS:
         path = REPO_ROOT / rel
         if update_ruby_version(path, version):
-            changed_files.append(rel)
-
-    for rel, package_names in UV_LOCK_TARGETS.items():
-        path = REPO_ROOT / rel
-        if update_uv_lock(path, package_names, version):
             changed_files.append(rel)
 
     for cargo_path in REPO_ROOT.rglob("Cargo.toml"):
