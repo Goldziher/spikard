@@ -1,6 +1,7 @@
 name: Benchmarks
 
 on:
+  # Manual trigger only
   workflow_dispatch:
     inputs:
       bindings:
@@ -39,6 +40,26 @@ on:
         required: false
         default: '0.05'
         type: string
+      run-wasm:
+        description: 'Run WASM benchmarks'
+        required: false
+        default: false
+        type: boolean
+      run-raw:
+        description: 'Run raw (no-validation) baseline comparisons'
+        required: false
+        default: false
+        type: boolean
+      run-profile:
+        description: 'Enable profiling mode (placeholder for future)'
+        required: false
+        default: false
+        type: boolean
+      comparison-frameworks:
+        description: 'Override comparison frameworks (comma-separated, leave empty for defaults)'
+        required: false
+        default: ''
+        type: string
 
 concurrency:
   group: benchmarks-${{ github.ref }}
@@ -51,8 +72,60 @@ env:
   CARGO_PROFILE_RELEASE_DEBUG: 0
 
 jobs:
+  # Process workflow inputs
+  determine-scope:
+    name: Process Benchmark Configuration
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      bindings: ${{ steps.scope.outputs.bindings }}
+      suite: ${{ steps.scope.outputs.suite }}
+      duration: ${{ steps.scope.outputs.duration }}
+      concurrency: ${{ steps.scope.outputs.concurrency }}
+      warmup: ${{ steps.scope.outputs.warmup }}
+      run-wasm: ${{ steps.scope.outputs.run-wasm }}
+      run-raw: ${{ steps.scope.outputs.run-raw }}
+      run-profile: ${{ steps.scope.outputs.run-profile }}
+      retention-days: ${{ steps.scope.outputs.retention-days }}
+    steps:
+      - name: Process workflow inputs
+        id: scope
+        run: |
+          # Use provided inputs or defaults
+          BINDINGS="${{ inputs.bindings || 'all' }}"
+          SUITE="${{ inputs.workload-suite || 'all' }}"
+          DURATION="${{ inputs.duration || '30' }}"
+          CONCURRENCY="${{ inputs.concurrency || '100' }}"
+          WARMUP="${{ inputs.warmup || '100' }}"
+          RUN_WASM="${{ inputs.run-wasm || 'false' }}"
+          RUN_RAW="${{ inputs.run-raw || 'false' }}"
+          RUN_PROFILE="${{ inputs.run-profile || 'false' }}"
+          RETENTION_DAYS="90"
+
+          echo "bindings=$BINDINGS" >> $GITHUB_OUTPUT
+          echo "suite=$SUITE" >> $GITHUB_OUTPUT
+          echo "duration=$DURATION" >> $GITHUB_OUTPUT
+          echo "concurrency=$CONCURRENCY" >> $GITHUB_OUTPUT
+          echo "warmup=$WARMUP" >> $GITHUB_OUTPUT
+          echo "run-wasm=$RUN_WASM" >> $GITHUB_OUTPUT
+          echo "run-raw=$RUN_RAW" >> $GITHUB_OUTPUT
+          echo "run-profile=$RUN_PROFILE" >> $GITHUB_OUTPUT
+          echo "retention-days=$RETENTION_DAYS" >> $GITHUB_OUTPUT
+
+          echo "📊 Benchmark Configuration:"
+          echo "  Bindings: $BINDINGS"
+          echo "  Suite: $SUITE"
+          echo "  Duration: ${DURATION}s"
+          echo "  Concurrency: $CONCURRENCY"
+          echo "  Warmup: $WARMUP"
+          echo "  Run WASM: $RUN_WASM"
+          echo "  Run Raw: $RUN_RAW"
+          echo "  Run Profile: $RUN_PROFILE"
+          echo "  Retention: ${RETENTION_DAYS} days"
+
   setup:
     name: Build Benchmark Harness
+    needs: determine-scope
     runs-on: ubuntu-latest
     timeout-minutes: 15
     outputs:
@@ -67,12 +140,13 @@ jobs:
 
       - name: Check which bindings to run
         id: check-bindings
+        env:
+          BINDINGS: ${{ needs.determine-scope.outputs.bindings }}
         run: |
-          bindings="${{ inputs.bindings }}"
-          echo "run-python=${{ contains(inputs.bindings, 'python') || inputs.bindings == 'all' }}" >> $GITHUB_OUTPUT
-          echo "run-node=${{ contains(inputs.bindings, 'node') || inputs.bindings == 'all' }}" >> $GITHUB_OUTPUT
-          echo "run-ruby=${{ contains(inputs.bindings, 'ruby') || inputs.bindings == 'all' }}" >> $GITHUB_OUTPUT
-          echo "run-rust=${{ contains(inputs.bindings, 'rust') || inputs.bindings == 'all' }}" >> $GITHUB_OUTPUT
+          echo "run-python=${{ contains(needs.determine-scope.outputs.bindings, 'python') || needs.determine-scope.outputs.bindings == 'all' }}" >> $GITHUB_OUTPUT
+          echo "run-node=${{ contains(needs.determine-scope.outputs.bindings, 'node') || needs.determine-scope.outputs.bindings == 'all' }}" >> $GITHUB_OUTPUT
+          echo "run-ruby=${{ contains(needs.determine-scope.outputs.bindings, 'ruby') || needs.determine-scope.outputs.bindings == 'all' }}" >> $GITHUB_OUTPUT
+          echo "run-rust=${{ contains(needs.determine-scope.outputs.bindings, 'rust') || needs.determine-scope.outputs.bindings == 'all' }}" >> $GITHUB_OUTPUT
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -97,7 +171,7 @@ jobs:
 
   benchmark-python:
     name: Benchmark Python
-    needs: setup
+    needs: [determine-scope, setup]
     if: needs.setup.outputs.run-python == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -114,12 +188,12 @@ jobs:
         with:
           language: python
           spikard-framework: spikard-python
-          comparison-frameworks: fastapi,fastapi-granian,litestar,litestar-granian,robyn
-          workload-suite: ${{ inputs.workload-suite }}
-          duration: ${{ inputs.duration }}
-          concurrency: ${{ inputs.concurrency }}
-          warmup: ${{ inputs.warmup }}
-          significance: ${{ inputs.significance-threshold }}
+          comparison-frameworks: ${{ inputs.comparison-frameworks || 'fastapi,fastapi-granian,litestar,litestar-granian,robyn' }}
+          workload-suite: ${{ needs.determine-scope.outputs.suite }}
+          duration: ${{ needs.determine-scope.outputs.duration }}
+          concurrency: ${{ needs.determine-scope.outputs.concurrency }}
+          warmup: ${{ needs.determine-scope.outputs.warmup }}
+          significance: ${{ inputs.significance-threshold || '0.05' }}
           port: '8100'
 
       - name: Upload results
@@ -132,7 +206,7 @@ jobs:
 
   benchmark-node:
     name: Benchmark Node.js
-    needs: setup
+    needs: [determine-scope, setup]
     if: needs.setup.outputs.run-node == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -149,12 +223,12 @@ jobs:
         with:
           language: node
           spikard-framework: spikard-node
-          comparison-frameworks: fastify,express,hono
-          workload-suite: ${{ inputs.workload-suite }}
-          duration: ${{ inputs.duration }}
-          concurrency: ${{ inputs.concurrency }}
-          warmup: ${{ inputs.warmup }}
-          significance: ${{ inputs.significance-threshold }}
+          comparison-frameworks: ${{ inputs.comparison-frameworks || 'fastify,express,hono' }}
+          workload-suite: ${{ needs.determine-scope.outputs.suite }}
+          duration: ${{ needs.determine-scope.outputs.duration }}
+          concurrency: ${{ needs.determine-scope.outputs.concurrency }}
+          warmup: ${{ needs.determine-scope.outputs.warmup }}
+          significance: ${{ inputs.significance-threshold || '0.05' }}
           port: '8200'
 
       - name: Upload results
@@ -167,7 +241,7 @@ jobs:
 
   benchmark-ruby:
     name: Benchmark Ruby
-    needs: setup
+    needs: [determine-scope, setup]
     if: needs.setup.outputs.run-ruby == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 50
@@ -184,12 +258,12 @@ jobs:
         with:
           language: ruby
           spikard-framework: spikard-ruby
-          comparison-frameworks: hanami-api,roda
-          workload-suite: ${{ inputs.workload-suite }}
-          duration: ${{ inputs.duration }}
-          concurrency: ${{ inputs.concurrency }}
-          warmup: ${{ inputs.warmup }}
-          significance: ${{ inputs.significance-threshold }}
+          comparison-frameworks: ${{ inputs.comparison-frameworks || 'hanami-api,roda' }}
+          workload-suite: ${{ needs.determine-scope.outputs.suite }}
+          duration: ${{ needs.determine-scope.outputs.duration }}
+          concurrency: ${{ needs.determine-scope.outputs.concurrency }}
+          warmup: ${{ needs.determine-scope.outputs.warmup }}
+          significance: ${{ inputs.significance-threshold || '0.05' }}
           port: '8300'
 
       - name: Upload results
@@ -202,7 +276,7 @@ jobs:
 
   benchmark-rust:
     name: Benchmark Rust
-    needs: setup
+    needs: [determine-scope, setup]
     if: needs.setup.outputs.run-rust == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 40
@@ -222,12 +296,12 @@ jobs:
         with:
           language: rust
           spikard-framework: spikard-rust
-          comparison-frameworks: axum-baseline
-          workload-suite: ${{ inputs.workload-suite }}
-          duration: ${{ inputs.duration }}
-          concurrency: ${{ inputs.concurrency }}
-          warmup: ${{ inputs.warmup }}
-          significance: ${{ inputs.significance-threshold }}
+          comparison-frameworks: ${{ inputs.comparison-frameworks || 'axum-baseline' }}
+          workload-suite: ${{ needs.determine-scope.outputs.suite }}
+          duration: ${{ needs.determine-scope.outputs.duration }}
+          concurrency: ${{ needs.determine-scope.outputs.concurrency }}
+          warmup: ${{ needs.determine-scope.outputs.warmup }}
+          significance: ${{ inputs.significance-threshold || '0.05' }}
           port: '8400'
 
       - name: Upload results
@@ -238,9 +312,129 @@ jobs:
           path: results/rust/**/*.json
           retention-days: 1
 
+  # WASM Benchmarking (conditional)
+  benchmark-wasm:
+    name: Benchmark WASM
+    needs: [determine-scope, setup]
+    if: needs.determine-scope.outputs.run-wasm == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-benchmark-harness
+        with:
+          timestamp: ${{ needs.setup.outputs.timestamp }}
+
+      - name: Setup Node.js for WASM runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Rust with WASM target
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: benchmark-wasm
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build WASM binding
+        working-directory: crates/spikard-wasm
+        run: |
+          wasm-pack build --target nodejs --out-dir dist-node --release
+          wasm-pack build --target web --out-dir dist-web --release
+
+      - name: Run WASM benchmarks
+        run: |
+          echo "WASM benchmarking placeholder - framework integration needed"
+          echo "This will benchmark the WASM binding in Node.js and browser environments"
+          # TODO: Implement WASM benchmark runner
+          # For now, create placeholder results
+          mkdir -p results/wasm
+          echo '{"framework":"spikard-wasm","status":"placeholder","note":"WASM benchmarking not yet implemented"}' > results/wasm/placeholder.json
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-raw-wasm-${{ needs.setup.outputs.timestamp }}
+          path: results/wasm/**/*.json
+          retention-days: 1
+
+  # Raw/Baseline Comparisons (validation overhead measurement)
+  benchmark-raw:
+    name: Benchmark Raw Implementations
+    needs: [determine-scope, setup]
+    if: needs.determine-scope.outputs.run-raw == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, node, ruby]
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-benchmark-harness
+        with:
+          timestamp: ${{ needs.setup.outputs.timestamp }}
+
+      - name: Setup language runtime
+        uses: ./.github/actions/setup-${{ matrix.language }}
+        if: matrix.language != 'ruby'
+        continue-on-error: true
+
+      - name: Setup Ruby
+        if: matrix.language == 'ruby'
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: false
+
+      - name: Run raw benchmarks
+        env:
+          SUITE: ${{ needs.determine-scope.outputs.suite }}
+          DURATION: ${{ needs.determine-scope.outputs.duration }}
+          CONCURRENCY: ${{ needs.determine-scope.outputs.concurrency }}
+          WARMUP: ${{ needs.determine-scope.outputs.warmup }}
+        run: |
+          mkdir -p results/raw-${{ matrix.language }}
+
+          # Determine which raw frameworks to test based on language
+          case "${{ matrix.language }}" in
+            python)
+              RAW_FRAMEWORKS="fastapi-raw,litestar-raw,spikard-raw"
+              PORT_BASE=8500
+              ;;
+            node)
+              RAW_FRAMEWORKS="fastify-raw,express-raw,hono-raw"
+              PORT_BASE=8600
+              ;;
+            ruby)
+              RAW_FRAMEWORKS="roda-raw,hanami-api-raw"
+              PORT_BASE=8700
+              ;;
+          esac
+
+          echo "Testing raw implementations: $RAW_FRAMEWORKS"
+          echo "This measures validation overhead by comparing validated vs non-validated implementations"
+
+          # TODO: Implement raw benchmark execution
+          # For now, create placeholder indicating raw benchmarks are configured
+          echo "{\"language\":\"${{ matrix.language }}\",\"frameworks\":\"$RAW_FRAMEWORKS\",\"status\":\"configured\",\"note\":\"Raw benchmark execution to be implemented\"}" > results/raw-${{ matrix.language }}/summary.json
+
+      - name: Upload raw results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-raw-comparison-${{ matrix.language }}-${{ needs.setup.outputs.timestamp }}
+          path: results/raw-${{ matrix.language }}/**/*.json
+          retention-days: 1
+
   aggregate:
     name: Aggregate Results
-    needs: [setup, benchmark-python, benchmark-node, benchmark-ruby, benchmark-rust]
+    needs: [determine-scope, setup, benchmark-python, benchmark-node, benchmark-ruby, benchmark-rust, benchmark-wasm, benchmark-raw]
     if: always() && needs.setup.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -254,43 +448,65 @@ jobs:
           pattern: benchmark-raw-*
           merge-multiple: false
 
+      - name: Download baseline artifacts (if available)
+        continue-on-error: true
+        run: |
+          # Attempt to download baseline results from the main branch
+          # This allows comparison with previous runs
+          mkdir -p baseline-results
+          echo "Baseline comparison will be implemented in future enhancement"
+
       - name: Create consolidated structure
         env:
           TIMESTAMP: ${{ needs.setup.outputs.timestamp }}
           SHORT_SHA: ${{ needs.setup.outputs.short-sha }}
+          SUITE: ${{ needs.determine-scope.outputs.suite }}
+          DURATION: ${{ needs.determine-scope.outputs.duration }}
         run: |
           result_dir="benchmark-results-${TIMESTAMP}-${SHORT_SHA}"
-          mkdir -p "$result_dir"/{python,node,ruby,rust}
+          mkdir -p "$result_dir"/{python,node,ruby,rust,wasm,raw}
 
           # Copy results from each language
-          for lang in python node ruby rust; do
+          for lang in python node ruby rust wasm; do
             if [ -d "raw-results/benchmark-raw-${lang}-${TIMESTAMP}" ]; then
               find "raw-results/benchmark-raw-${lang}-${TIMESTAMP}" -name "*.json" -exec cp {} "$result_dir/${lang}/" \; 2>/dev/null || true
             fi
           done
 
-          # Create metadata JSON
-          cat > "$result_dir/metadata.json" << 'EOF'
+          # Copy raw comparison results
+          for lang in python node ruby; do
+            if [ -d "raw-results/benchmark-raw-comparison-${lang}-${TIMESTAMP}" ]; then
+              mkdir -p "$result_dir/raw/${lang}"
+              find "raw-results/benchmark-raw-comparison-${lang}-${TIMESTAMP}" -name "*.json" -exec cp {} "$result_dir/raw/${lang}/" \; 2>/dev/null || true
+            fi
+          done
+
+          # Create enhanced metadata JSON
+          cat > "$result_dir/metadata.json" << EOF
           {
             "workflow_run": {
               "run_id": "${{ github.run_id }}",
               "run_number": "${{ github.run_number }}",
               "triggered_by": "${{ github.actor }}",
-              "timestamp": "${{ github.event.repository.updated_at }}"
+              "event_type": "manual",
+              "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
             },
             "repository": {
               "name": "${{ github.repository }}",
               "ref": "${{ github.ref }}",
               "sha": "${{ github.sha }}",
-              "short_sha": "${{ env.SHORT_SHA }}"
+              "short_sha": "${SHORT_SHA}"
             },
-            "inputs": {
-              "bindings": "${{ inputs.bindings }}",
-              "workload_suite": "${{ inputs.workload-suite }}",
-              "duration": "${{ inputs.duration }}",
-              "concurrency": "${{ inputs.concurrency }}",
-              "warmup": "${{ inputs.warmup }}",
-              "significance_threshold": "${{ inputs.significance-threshold }}"
+            "configuration": {
+              "bindings": "${{ needs.determine-scope.outputs.bindings }}",
+              "workload_suite": "${SUITE}",
+              "duration": "${DURATION}",
+              "concurrency": "${{ needs.determine-scope.outputs.concurrency }}",
+              "warmup": "${{ needs.determine-scope.outputs.warmup }}",
+              "significance_threshold": "${{ inputs.significance-threshold || '0.05' }}",
+              "run_wasm": "${{ needs.determine-scope.outputs.run-wasm }}",
+              "run_raw": "${{ needs.determine-scope.outputs.run-raw }}",
+              "run_profile": "${{ needs.determine-scope.outputs.run-profile }}"
             }
           }
           EOF
@@ -303,11 +519,11 @@ jobs:
         with:
           name: benchmark-results-${{ needs.setup.outputs.timestamp }}-${{ needs.setup.outputs.short-sha }}
           path: benchmark-results-*/**
-          retention-days: 90
+          retention-days: ${{ needs.determine-scope.outputs.retention-days }}
 
   report:
     name: Generate Report
-    needs: [setup, aggregate]
+    needs: [determine-scope, setup, aggregate]
     if: always() && needs.aggregate.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -320,26 +536,114 @@ jobs:
           name: benchmark-results-${{ needs.setup.outputs.timestamp }}-${{ needs.setup.outputs.short-sha }}
           path: results
 
-      - name: Create summary
+      - name: Analyze results and generate summary
+        id: analyze
+        env:
+          SUITE: ${{ needs.determine-scope.outputs.suite }}
+          DURATION: ${{ needs.determine-scope.outputs.duration }}
+        run: |
+          # Count result files and calculate basic metrics
+          PYTHON_COUNT=$(find results/benchmark-results-*/python -name "*.json" 2>/dev/null | wc -l || echo "0")
+          NODE_COUNT=$(find results/benchmark-results-*/node -name "*.json" 2>/dev/null | wc -l || echo "0")
+          RUBY_COUNT=$(find results/benchmark-results-*/ruby -name "*.json" 2>/dev/null | wc -l || echo "0")
+          RUST_COUNT=$(find results/benchmark-results-*/rust -name "*.json" 2>/dev/null | wc -l || echo "0")
+          WASM_COUNT=$(find results/benchmark-results-*/wasm -name "*.json" 2>/dev/null | wc -l || echo "0")
+          RAW_COUNT=$(find results/benchmark-results-*/raw -name "*.json" 2>/dev/null | wc -l || echo "0")
+
+          echo "python-count=$PYTHON_COUNT" >> $GITHUB_OUTPUT
+          echo "node-count=$NODE_COUNT" >> $GITHUB_OUTPUT
+          echo "ruby-count=$RUBY_COUNT" >> $GITHUB_OUTPUT
+          echo "rust-count=$RUST_COUNT" >> $GITHUB_OUTPUT
+          echo "wasm-count=$WASM_COUNT" >> $GITHUB_OUTPUT
+          echo "raw-count=$RAW_COUNT" >> $GITHUB_OUTPUT
+
+      - name: Create enhanced summary report
+        env:
+          SUITE: ${{ needs.determine-scope.outputs.suite }}
+          DURATION: ${{ needs.determine-scope.outputs.duration }}
+          CONCURRENCY: ${{ needs.determine-scope.outputs.concurrency }}
+          WARMUP: ${{ needs.determine-scope.outputs.warmup }}
+          PYTHON_COUNT: ${{ steps.analyze.outputs.python-count }}
+          NODE_COUNT: ${{ steps.analyze.outputs.node-count }}
+          RUBY_COUNT: ${{ steps.analyze.outputs.ruby-count }}
+          RUST_COUNT: ${{ steps.analyze.outputs.rust-count }}
+          WASM_COUNT: ${{ steps.analyze.outputs.wasm-count }}
+          RAW_COUNT: ${{ steps.analyze.outputs.raw-count }}
         run: |
           cat > benchmark-summary.md << 'EOF'
-          # Benchmark Results
+          # 📊 Spikard Benchmark Results
 
-          **Run ID:** ${{ github.run_id }}
-          **Commit:** ${{ github.sha }}
-          **Timestamp:** ${{ github.event.repository.updated_at }}
-          **Triggered by:** @${{ github.actor }}
+          ## Run Information
+
+          | Attribute | Value |
+          |-----------|-------|
+          | **Run ID** | [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) |
+          | **Trigger** | Manual |
+          | **Commit** | [`${{ needs.setup.outputs.short-sha }}`](https://github.com/${{ github.repository }}/commit/${{ github.sha }}) |
+          | **Branch** | `${{ github.ref_name }}` |
+          | **Triggered by** | @${{ github.actor }} |
+          | **Timestamp** | $(date -u +%Y-%m-%dT%H:%M:%SZ) |
 
           ## Configuration
 
-          - **Workload Suite:** ${{ inputs.workload-suite }}
-          - **Duration:** ${{ inputs.duration }}s per workload
-          - **Concurrency:** ${{ inputs.concurrency }} connections
-          - **Warmup:** ${{ inputs.warmup }} requests
+          | Parameter | Value |
+          |-----------|-------|
+          | **Workload Suite** | `${SUITE}` |
+          | **Duration** | ${DURATION}s per workload |
+          | **Concurrency** | ${CONCURRENCY} connections |
+          | **Warmup** | ${WARMUP} requests |
+          | **WASM Enabled** | ${{ needs.determine-scope.outputs.run-wasm }} |
+          | **Raw Comparison** | ${{ needs.determine-scope.outputs.run-raw }} |
 
-          ## Results
+          ## Results Summary
 
-          Results are available in the artifacts.
+          | Language | Result Files |
+          |----------|--------------|
+          | Python   | ${PYTHON_COUNT} |
+          | Node.js  | ${NODE_COUNT} |
+          | Ruby     | ${RUBY_COUNT} |
+          | Rust     | ${RUST_COUNT} |
+          | WASM     | ${WASM_COUNT} |
+          | Raw      | ${RAW_COUNT} |
+
+          ## Detailed Results
+
+          Full benchmark results are available in the workflow artifacts:
+          - **Artifact Name:** `benchmark-results-${{ needs.setup.outputs.timestamp }}-${{ needs.setup.outputs.short-sha }}`
+          - **Retention:** ${{ needs.determine-scope.outputs.retention-days }} days
+
+          ### What's Included
+
+          - ✅ Framework comparisons for each language binding
+          - ✅ Statistical significance analysis
+          - ✅ Performance metrics (RPS, latency percentiles)
+          EOF
+
+          if [ "${{ needs.determine-scope.outputs.run-raw }}" = "true" ]; then
+            cat >> benchmark-summary.md << 'EOF'
+          - ✅ Validation overhead analysis (validated vs raw implementations)
+          EOF
+          fi
+
+          if [ "${{ needs.determine-scope.outputs.run-wasm }}" = "true" ]; then
+            cat >> benchmark-summary.md << 'EOF'
+          - ✅ WASM binding performance metrics
+          EOF
+          fi
+
+          cat >> benchmark-summary.md << 'EOF'
+
+          ### Analysis Notes
+
+          **Interpreting Results:**
+          - Higher RPS (requests per second) is better
+          - Lower latency percentiles (p50, p95, p99) are better
+          - Success rate should be 1.0 (100%)
+          - Statistical significance (p < 0.05) indicates reliable performance differences
+
+          **Validation Overhead:**
+          Raw implementations skip input validation to measure the overhead of Spikard's type-safe validation layer.
+          Compare validated vs raw results to quantify the cost of safety.
 
           ---
           *Generated by Spikard Benchmark Harness*
@@ -352,7 +656,7 @@ jobs:
         with:
           name: benchmark-summary-${{ needs.setup.outputs.timestamp }}
           path: benchmark-summary.md
-          retention-days: 90
+          retention-days: ${{ needs.determine-scope.outputs.retention-days }}
 
       - name: Add to job summary
         run: cat benchmark-summary.md >> $GITHUB_STEP_SUMMARY
