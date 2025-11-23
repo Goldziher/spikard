@@ -1308,6 +1308,30 @@ jobs:
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         run: pnpm install -r
 
+      - name: Publish main Node package
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd crates/spikard-node
+          publish_log=$(mktemp)
+          set +e
+          pnpm publish --access public --no-git-checks 2>&1 | tee "$publish_log"
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -ne 0 ]; then
+            if grep -q "previously published versions" "$publish_log"; then
+              echo "::notice::spikard already published; skipping."
+              echo "spikard already published; skipping." >> $GITHUB_STEP_SUMMARY
+            else
+              exit "$status"
+            fi
+          fi
+
+      - name: Wait for npm indexing
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        run: sleep 30
+
       - name: Pack platform packages
         run: |
           cd crates/spikard-node/npm
@@ -1340,30 +1364,6 @@ jobs:
               fi
             fi
           done
-
-      - name: Wait for npm indexing
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        run: sleep 30
-
-      - name: Publish main Node package
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          cd crates/spikard-node
-          publish_log=$(mktemp)
-          set +e
-          pnpm publish --access public --no-git-checks 2>&1 | tee "$publish_log"
-          status=${PIPESTATUS[0]}
-          set -e
-          if [ "$status" -ne 0 ]; then
-            if grep -q "previously published versions" "$publish_log"; then
-              echo "::notice::spikard already published; skipping."
-              echo "spikard already published; skipping." >> $GITHUB_STEP_SUMMARY
-            else
-              exit "$status"
-            fi
-          fi
 
   publish-wasm:
     name: Publish WASM to npm
