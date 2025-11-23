@@ -183,16 +183,19 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
 
     cmd.current_dir(&working_dir);
 
-    // Suppress output during benchmarking to avoid polluting oha JSON output
-    cmd.stdout(Stdio::null()).stderr(Stdio::null());
+    // Suppress stdout but capture stderr for debugging startup failures
+    cmd.stdout(Stdio::null()).stderr(Stdio::piped());
 
     // Step 5: Spawn server process
-    let process = cmd.spawn().map_err(|e| {
+    let mut process = cmd.spawn().map_err(|e| {
         Error::ServerStartFailed(format!(
             "Failed to spawn process for {} with command '{}': {}",
             framework_config.name, start_cmd, e
         ))
     })?;
+
+    // Capture stderr for debugging
+    let stderr = process.stderr.take();
 
     let mut handle = ServerHandle {
         process,
@@ -207,9 +210,24 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
 
         match handle.process.try_wait() {
             Ok(Some(status)) => {
+                // Process exited - capture stderr output
+                let stderr_output = if let Some(mut stderr) = stderr {
+                    use std::io::Read;
+                    let mut buf = String::new();
+                    stderr.read_to_string(&mut buf).ok();
+                    if buf.is_empty() {
+                        String::new()
+                    } else {
+                        format!("\n\nServer stderr:\n{}", buf)
+                    }
+                } else {
+                    String::new()
+                };
+
                 return Err(Error::ServerStartFailed(format!(
-                    "Process exited with status: {}",
-                    status
+                    "Process exited with status: {}{}",
+                    status,
+                    stderr_output
                 )));
             }
             Ok(None) => {
