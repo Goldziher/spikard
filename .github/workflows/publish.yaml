@@ -1063,6 +1063,28 @@ jobs:
         if: ${{ steps.crate_check.outputs.spikard_core_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
         run: sleep 45
 
+      - name: Publish spikard-http
+        if: ${{ steps.crate_check.outputs.http_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
+        run: |
+          set -euo pipefail
+          publish_log=$(mktemp)
+          set +e
+          cargo publish -p spikard-http --token ${{ secrets.CARGO_REGISTRY_TOKEN }} 2>&1 | tee "$publish_log"
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -ne 0 ]; then
+            if grep -qi "already uploaded" "$publish_log"; then
+              echo "::notice::spikard-http already published; skipping."
+              echo "::notice::spikard-http already published; skipping." >> $GITHUB_STEP_SUMMARY
+            else
+              exit "$status"
+            fi
+          fi
+
+      - name: Wait for spikard-http indexing
+        if: ${{ steps.crate_check.outputs.http_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
+        run: sleep 45
+
       - name: Publish spikard
         if: ${{ steps.crate_check.outputs.spikard_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
         run: |
@@ -1083,28 +1105,6 @@ jobs:
 
       - name: Wait for spikard indexing
         if: ${{ steps.crate_check.outputs.spikard_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
-        run: sleep 45
-
-      - name: Publish spikard-http
-        if: ${{ steps.crate_check.outputs.http_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
-        run: |
-          set -euo pipefail
-          publish_log=$(mktemp)
-          set +e
-          cargo publish -p spikard-http --token ${{ secrets.CARGO_REGISTRY_TOKEN }} 2>&1 | tee "$publish_log"
-          status=${PIPESTATUS[0]}
-          set -e
-          if [ "$status" -ne 0 ]; then
-            if grep -qi "already uploaded" "$publish_log"; then
-              echo "::notice::spikard-http already published; skipping."
-              echo "spikard-http already published; skipping." >> $GITHUB_STEP_SUMMARY
-            else
-              exit "$status"
-            fi
-          fi
-
-      - name: Wait for spikard-http indexing
-        if: ${{ steps.crate_check.outputs.http_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
         run: sleep 30
 
       - name: Publish spikard-cli

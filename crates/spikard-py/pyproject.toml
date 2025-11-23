@@ -3,9 +3,9 @@ build-backend = "maturin"
 requires = [ "maturin>=1,<2" ]
 
 [project]
-name = "spikard-bindings"
+name = "spikard"
 version = "0.1.0"
-description = "Python bindings for spikard (internal use)"
+description = "Fast, type-safe web framework with Rust-powered Python bindings"
 license = { text = "MIT" }
 authors = [ { name = "Na'aman Hirschfeld", email = "nhirschfeld@gmail.com" } ]
 requires-python = ">=3.10"
