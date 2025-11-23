@@ -55,7 +55,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: benchmark-harness
-          path: tools/benchmark-harness/target/release/benchmark-harness
+          path: target/release/benchmark-harness
           retention-days: 1
 
   # Spikard bindings (5 frameworks)
