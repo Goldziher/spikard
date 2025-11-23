@@ -488,7 +488,9 @@ jobs:
         run: corepack enable
 
       - name: Install Node dependencies
-        run: pnpm install --filter spikard...
+        run: |
+          cd crates/spikard-node
+          pnpm install
 
       - name: Clean npm directory
         if: runner.os != 'Windows'
@@ -500,7 +502,9 @@ jobs:
         run: Remove-Item -Recurse -Force crates/spikard-node\npm -ErrorAction SilentlyContinue
 
       - name: Create npm package structure
-        run: pnpm --filter spikard exec napi create-npm-dirs
+        run: |
+          cd crates/spikard-node
+          pnpm exec napi create-npm-dirs
 
       - name: Build native module
         if: runner.os != 'Windows'
