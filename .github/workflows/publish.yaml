@@ -509,14 +509,14 @@ jobs:
           USE_CROSS: ${{ matrix.settings.use_cross }}
           USE_NAPI_CROSS: ${{ matrix.settings.use_napi_cross }}
         run: |
-          args="--platform --release --target $TARGET --output-dir ./artifacts --manifest-path crates/spikard-node/Cargo.toml"
+          args="--platform --release --target $TARGET --output-dir ./artifacts"
           if [[ "$USE_NAPI_CROSS" == "true" ]]; then
             args="$args --use-napi-cross"
           fi
           if [[ "$USE_CROSS" == "true" ]]; then
             args="$args --use-cross"
           fi
-          pnpm exec napi build $args
+          pnpm --filter spikard exec napi build $args
 
       - name: Build native module (Windows)
         if: runner.os == 'Windows'
@@ -526,10 +526,10 @@ jobs:
           USE_CROSS: ${{ matrix.settings.use_cross }}
           USE_NAPI_CROSS: ${{ matrix.settings.use_napi_cross }}
         run: |
-          $args = @('--platform', '--release', '--target', $env:TARGET, '--output-dir', './artifacts', '--manifest-path', 'crates/spikard-node/Cargo.toml')
+          $args = @('--platform', '--release', '--target', $env:TARGET, '--output-dir', './artifacts')
           if ($env:USE_NAPI_CROSS -eq 'true') { $args += '--use-napi-cross' }
           if ($env:USE_CROSS -eq 'true') { $args += '--use-cross' }
-          pnpm exec napi build @args
+          pnpm --filter spikard exec napi build @args
 
       - name: Package artifacts
         if: runner.os != 'Windows'
@@ -556,7 +556,7 @@ jobs:
       - name: Generate and upload TypeScript definitions
         if: matrix.settings.target == 'x86_64-unknown-linux-gnu'
         run: |
-          pnpm exec napi build --platform --dts index.d.ts --manifest-path crates/spikard-node/Cargo.toml
+          pnpm --filter spikard exec napi build --platform --dts index.d.ts
           mkdir -p typescript-defs
           cp crates/spikard-node/index.d.ts typescript-defs/
           cp crates/spikard-node/index.js typescript-defs/ || true
