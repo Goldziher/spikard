@@ -778,6 +778,7 @@ fn route_metadata_from_definition(def: &RouteDefinition) -> RouteMetadata {
         file_params: None,
         is_async: true,
         cors: None,
+        body_param_name: None,
     }
 }
 

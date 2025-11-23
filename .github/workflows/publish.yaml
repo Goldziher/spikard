@@ -414,7 +414,7 @@ jobs:
           set -euo pipefail
           mkdir -p target/wheels
           cd crates/spikard-py
-          maturin sdist --out target/wheels
+          uv tool run maturin sdist --out target/wheels
 
       - name: Upload sdist
         uses: actions/upload-artifact@v5
@@ -643,6 +643,7 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Build CLI
+        shell: bash
         run: |
           set -euo pipefail
           cargo build --release --target ${{ matrix.target }} --package spikard-cli
