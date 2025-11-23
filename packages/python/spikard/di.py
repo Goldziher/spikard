@@ -118,6 +118,7 @@ class Provide(Generic[T]):
         *,
         depends_on: list[str] | None = None,
         use_cache: bool = False,
+        cacheable: bool | None = None,  # Alias for use_cache
         singleton: bool = False,
     ) -> None:
         """Initialize a dependency factory.
@@ -130,12 +131,15 @@ class Provide(Generic[T]):
             List of dependency keys this factory depends on
         use_cache : bool
             Whether to cache within a request
+        cacheable : bool | None
+            Alias for use_cache (for compatibility with fixtures)
         singleton : bool
             Whether to cache globally
         """
         self.dependency = dependency
         self.depends_on = depends_on or []
-        self.use_cache = use_cache
+        # If cacheable is provided, use it; otherwise use use_cache
+        self.use_cache = cacheable if cacheable is not None else use_cache
         self.singleton = singleton
         self.is_async = asyncio.iscoroutinefunction(dependency)
         self.is_generator = inspect.isgeneratorfunction(dependency)

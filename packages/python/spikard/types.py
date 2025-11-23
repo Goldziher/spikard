@@ -19,3 +19,4 @@ class Route:
     file_params: dict[str, Any] | None = None
     is_async: bool = False
     body_param_name: str | None = None  # Name of the body parameter (default: "body")
+    handler_dependencies: list[str] | None = None  # List of dependency keys for DI

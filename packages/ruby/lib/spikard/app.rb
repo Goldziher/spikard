@@ -272,8 +272,11 @@ module Spikard
       ws_handlers = websocket_handlers
       sse_prods = sse_producers
 
+      # Get dependencies for DI
+      deps = dependencies
+
       # Call the Rust extension's run_server function
-      Spikard::Native.run_server(routes_json, handlers, config, hooks, ws_handlers, sse_prods)
+      Spikard::Native.run_server(routes_json, handlers, config, hooks, ws_handlers, sse_prods, deps)
 
       # Keep Ruby process alive while server runs
       sleep

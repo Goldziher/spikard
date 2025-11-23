@@ -3,8 +3,9 @@
 //! This module provides Node.js-specific implementations of the Dependency trait,
 //! bridging JavaScript values and factories to the Rust DI system.
 
+use http::Request;
 use napi::bindgen_prelude::*;
-use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
+use napi::threadsafe_function::ThreadsafeFunction;
 use spikard_core::di::{Dependency, ResolvedDependencies};
 use spikard_core::request_data::RequestData;
 use std::any::Any;
@@ -27,17 +28,27 @@ impl NodeValueDependency {
 }
 
 impl Dependency for NodeValueDependency {
-    fn depends_on(&self) -> &[String] {
-        &[] // Value dependencies have no dependencies
+    fn key(&self) -> &str {
+        &self.key
     }
 
-    fn resolve<'a>(
-        &'a self,
-        _resolved: &'a ResolvedDependencies,
-        _request: &'a http::Request<()>,
-        _request_data: &'a RequestData,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<Arc<dyn Any + Send + Sync>, String>> + Send + 'a>>
-    {
+    fn depends_on(&self) -> Vec<String> {
+        vec![] // Value dependencies have no dependencies
+    }
+
+    fn resolve(
+        &self,
+        _request: &Request<()>,
+        _request_data: &RequestData,
+        _resolved: &ResolvedDependencies,
+    ) -> std::pin::Pin<
+        Box<
+            dyn std::future::Future<
+                    Output = std::result::Result<Arc<dyn Any + Send + Sync>, spikard_core::di::DependencyError>,
+                > + Send
+                + '_,
+        >,
+    > {
         let value = self.value_json.clone();
         Box::pin(async move {
             // Store as JSON string to pass across threads
@@ -45,11 +56,11 @@ impl Dependency for NodeValueDependency {
         })
     }
 
-    fn is_singleton(&self) -> bool {
+    fn singleton(&self) -> bool {
         true // Value dependencies are always singletons
     }
 
-    fn is_cacheable(&self) -> bool {
+    fn cacheable(&self) -> bool {
         true
     }
 }
@@ -59,6 +70,7 @@ impl Dependency for NodeValueDependency {
 /// Wraps a JavaScript callable as a factory dependency.
 /// Uses ThreadsafeFunction to call JS from Rust async context.
 pub struct NodeFactoryDependency {
+    key: String,
     factory_fn: Arc<ThreadsafeFunction<String, Promise<String>, Vec<String>, napi::Status, false>>,
     depends_on: Vec<String>,
     singleton: bool,
@@ -71,12 +83,14 @@ unsafe impl Sync for NodeFactoryDependency {}
 impl NodeFactoryDependency {
     /// Create a new Node factory dependency
     pub fn new(
+        key: String,
         factory_fn: ThreadsafeFunction<String, Promise<String>, Vec<String>, napi::Status, false>,
         depends_on: Vec<String>,
         singleton: bool,
         cacheable: bool,
     ) -> Self {
         Self {
+            key,
             factory_fn: Arc::new(factory_fn),
             depends_on,
             singleton,
@@ -86,51 +100,73 @@ impl NodeFactoryDependency {
 }
 
 impl Dependency for NodeFactoryDependency {
-    fn depends_on(&self) -> &[String] {
-        &self.depends_on
+    fn key(&self) -> &str {
+        &self.key
     }
 
-    fn resolve<'a>(
-        &'a self,
-        resolved: &'a ResolvedDependencies,
-        _request: &'a http::Request<()>,
-        _request_data: &'a RequestData,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<Arc<dyn Any + Send + Sync>, String>> + Send + 'a>>
-    {
+    fn depends_on(&self) -> Vec<String> {
+        self.depends_on.clone()
+    }
+
+    fn resolve(
+        &self,
+        _request: &Request<()>,
+        _request_data: &RequestData,
+        resolved: &ResolvedDependencies,
+    ) -> std::pin::Pin<
+        Box<
+            dyn std::future::Future<
+                    Output = std::result::Result<Arc<dyn Any + Send + Sync>, spikard_core::di::DependencyError>,
+                > + Send
+                + '_,
+        >,
+    > {
+        // Clone what we need before async
+        let factory_fn = Arc::clone(&self.factory_fn);
+        let depends_on = self.depends_on.clone();
+
         Box::pin(async move {
             // Build dependencies object as JSON
             let mut deps_map = std::collections::HashMap::new();
-            for dep_key in &self.depends_on {
+            for dep_key in &depends_on {
                 if let Some(dep_value) = resolved.get::<String>(dep_key) {
                     // Dependencies are stored as JSON strings
-                    let parsed: serde_json::Value = serde_json::from_str(&dep_value)
-                        .map_err(|e| format!("Failed to parse dependency {}: {}", dep_key, e))?;
+                    let parsed: serde_json::Value = serde_json::from_str(&dep_value).map_err(|e| {
+                        spikard_core::di::DependencyError::ResolutionFailed {
+                            message: format!("Failed to parse dependency {}: {}", dep_key, e),
+                        }
+                    })?;
                     deps_map.insert(dep_key.clone(), parsed);
                 }
             }
 
-            let deps_json = serde_json::to_string(&deps_map)
-                .map_err(|e| format!("Failed to serialize dependencies: {}", e))?;
+            let deps_json =
+                serde_json::to_string(&deps_map).map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
+                    message: format!("Failed to serialize dependencies: {}", e),
+                })?;
 
             // Call the factory function
-            let result = self
-                .factory_fn
+            let result = factory_fn
                 .call_async::<Promise<String>>(deps_json.clone())
                 .await
-                .map_err(|e| format!("Failed to call factory: {}", e))?
+                .map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
+                    message: format!("Failed to call factory: {}", e),
+                })?
                 .await
-                .map_err(|e| format!("Factory promise failed: {}", e))?;
+                .map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
+                    message: format!("Factory promise failed: {}", e),
+                })?;
 
             // Store result as JSON string
             Ok(Arc::new(result) as Arc<dyn Any + Send + Sync>)
         })
     }
 
-    fn is_singleton(&self) -> bool {
+    fn singleton(&self) -> bool {
         self.singleton
     }
 
-    fn is_cacheable(&self) -> bool {
+    fn cacheable(&self) -> bool {
         self.cacheable
     }
 }
@@ -139,9 +175,7 @@ impl Dependency for NodeFactoryDependency {
 ///
 /// Builds a DependencyContainer from the dependencies registered on the app.
 /// Returns None if no dependencies are registered.
-pub fn extract_dependency_container(
-    app: &Object,
-) -> Result<Option<Arc<spikard_core::di::DependencyContainer>>> {
+pub fn extract_dependency_container(app: &Object) -> Result<Option<Arc<spikard_core::di::DependencyContainer>>> {
     // Try to get dependencies object
     let dependencies_opt: Option<Object> = app.get("dependencies")?;
 
@@ -159,7 +193,8 @@ pub fn extract_dependency_container(
     let mut container = spikard_core::di::DependencyContainer::new();
 
     for key in dep_keys {
-        let dep_obj: Object = dependencies.get(&key)?
+        let dep_obj: Object = dependencies
+            .get(&key)?
             .ok_or_else(|| Error::from_reason(format!("Dependency {} not found", key)))?;
 
         // Check if it's a factory or a value
@@ -171,9 +206,7 @@ pub fn extract_dependency_container(
                 .get("factory")?
                 .ok_or_else(|| Error::from_reason(format!("Factory function not found for {}", key)))?;
 
-            let depends_on: Vec<String> = dep_obj
-                .get("dependsOn")?
-                .unwrap_or_default();
+            let depends_on: Vec<String> = dep_obj.get("dependsOn")?.unwrap_or_default();
 
             let singleton: bool = dep_obj.get("singleton")?.unwrap_or(false);
             let cacheable: bool = dep_obj.get("cacheable")?.unwrap_or(false);
@@ -189,14 +222,15 @@ pub fn extract_dependency_container(
                     ))
                 })?;
 
-            let factory_dep = NodeFactoryDependency::new(tsfn, depends_on, singleton, cacheable);
+            let factory_dep = NodeFactoryDependency::new(key.clone(), tsfn, depends_on, singleton, cacheable);
 
             container
-                .register(key.clone(), Arc::new(factory_dep))
+                .register(Arc::new(factory_dep))
                 .map_err(|e| Error::from_reason(format!("Failed to register factory {}: {}", key, e)))?;
         } else {
             // Value dependency - serialize to JSON
-            let value: Unknown = dep_obj.get("value")?
+            let value: Unknown = dep_obj
+                .get("value")?
                 .ok_or_else(|| Error::from_reason(format!("Value not found for dependency {}", key)))?;
 
             // Convert to JSON string
@@ -222,11 +256,11 @@ pub fn extract_dependency_container(
 ///
 /// Takes the resolved dependencies (stored as JSON strings) and converts them
 /// back to JavaScript values for handler consumption.
-pub fn resolved_to_js_object(
-    env: Env,
+pub fn resolved_to_js_object<'a>(
+    env: Env<'a>,
     resolved: &ResolvedDependencies,
     keys: &[String],
-) -> Result<Object> {
+) -> napi::Result<Object> {
     let obj = env.create_object()?;
 
     let global = env.get_global()?;

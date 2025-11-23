@@ -182,6 +182,31 @@ impl ResolvedDependencies {
         self.dependencies.lock().unwrap().contains_key(key)
     }
 
+    /// Get all dependency keys
+    ///
+    /// Returns a vector of all keys currently stored in this resolved dependencies.
+    /// Useful for iterating over all dependencies when you need to extract them.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spikard_core::di::ResolvedDependencies;
+    /// use std::sync::Arc;
+    ///
+    /// let mut resolved = ResolvedDependencies::new();
+    /// resolved.insert("config".to_string(), Arc::new("prod".to_string()));
+    /// resolved.insert("db".to_string(), Arc::new(42i32));
+    ///
+    /// let keys = resolved.keys();
+    /// assert_eq!(keys.len(), 2);
+    /// assert!(keys.contains(&"config".to_string()));
+    /// assert!(keys.contains(&"db".to_string()));
+    /// ```
+    #[must_use]
+    pub fn keys(&self) -> Vec<String> {
+        self.dependencies.lock().unwrap().keys().cloned().collect()
+    }
+
     /// Add a cleanup task to be run when dependencies are cleaned up
     ///
     /// Cleanup tasks are useful for generator-pattern dependencies that need

@@ -101,13 +101,8 @@ impl DependencyGraph {
             return Err(DependencyError::DuplicateKey { key: key.to_string() });
         }
 
-        // Check for cycles before adding
-        if self.has_cycle_with(key, &depends_on) {
-            let mut cycle = vec![key.to_string()];
-            cycle.extend(depends_on.clone());
-            return Err(DependencyError::CircularDependency { cycle });
-        }
-
+        // Don't check for cycles here - allow registration and detect at resolution time
+        // This allows the server to start and return proper HTTP error responses
         self.graph.insert(key.to_string(), depends_on);
         Ok(())
     }
@@ -319,13 +314,40 @@ impl DependencyGraph {
 
         // Check if we processed all nodes (if not, there's a cycle)
         if processed < total {
-            // Find the cycle
+            // Find a cycle by tracing from any unprocessed node
             let unprocessed: Vec<String> = subgraph
                 .keys()
                 .filter(|k| in_degree.get(*k).is_some_and(|&d| d > 0))
                 .cloned()
                 .collect();
 
+            if let Some(start) = unprocessed.first() {
+                // Trace the cycle path
+                let mut cycle = vec![start.clone()];
+                let mut current = start;
+                let mut visited_in_path = HashSet::new();
+                visited_in_path.insert(start.clone());
+
+                // Follow dependencies until we find the cycle
+                while let Some(deps) = subgraph.get(current) {
+                    if let Some(next) = deps.iter().find(|d| unprocessed.contains(d)) {
+                        if visited_in_path.contains(next) {
+                            // Found the cycle - add the closing node
+                            cycle.push(next.clone());
+                            break;
+                        }
+                        cycle.push(next.clone());
+                        visited_in_path.insert(next.clone());
+                        current = next;
+                    } else {
+                        break;
+                    }
+                }
+
+                return Err(DependencyError::CircularDependency { cycle });
+            }
+
+            // Fallback if we can't trace the cycle
             return Err(DependencyError::CircularDependency { cycle: unprocessed });
         }
 

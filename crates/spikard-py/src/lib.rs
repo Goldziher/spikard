@@ -108,6 +108,12 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
         Some(body_param_name.extract()?)
     };
 
+    #[cfg(feature = "di")]
+    let handler_dependencies = {
+        let deps = route.getattr("handler_dependencies")?;
+        if deps.is_none() { None } else { Some(deps.extract()?) }
+    };
+
     Ok(RouteMetadata {
         method,
         path,
@@ -119,6 +125,8 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
         is_async,
         cors: None,
         body_param_name: body_param_name_value,
+        #[cfg(feature = "di")]
+        handler_dependencies,
     })
 }
 

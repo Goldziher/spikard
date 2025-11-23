@@ -49,8 +49,7 @@ impl Dependency for RubyValueDependency {
     {
         Box::pin(async move {
             // Get the Ruby value
-            let ruby = Ruby::get()
-                .map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?;
+            let ruby = Ruby::get().map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?;
 
             let value = self.value.get_inner_with(&ruby);
 
@@ -80,31 +79,17 @@ pub struct RubyFactoryDependency {
     depends_on: Vec<String>,
     singleton: bool,
     cacheable: bool,
-    json_module: Opaque<Value>,
 }
 
 impl RubyFactoryDependency {
-    pub fn new(
-        ruby: &Ruby,
-        key: String,
-        factory: Value,
-        depends_on: Vec<String>,
-        singleton: bool,
-        cacheable: bool,
-    ) -> Result<Self, Error> {
-        let json_module = ruby
-            .class_object()
-            .const_get("JSON")
-            .map_err(|_| Error::new(ruby.exception_runtime_error(), "JSON module not available"))?;
-
-        Ok(Self {
+    pub fn new(key: String, factory: Value, depends_on: Vec<String>, singleton: bool, cacheable: bool) -> Self {
+        Self {
             key,
             factory: Opaque::from(factory),
             depends_on,
             singleton,
             cacheable,
-            json_module: Opaque::from(json_module),
-        })
+        }
     }
 }
 
@@ -124,49 +109,75 @@ impl Dependency for RubyFactoryDependency {
         resolved: &ResolvedDependencies,
     ) -> Pin<Box<dyn std::future::Future<Output = Result<Arc<dyn Any + Send + Sync>, DependencyError>> + Send + '_>>
     {
-        Box::pin(async move {
-            let ruby = Ruby::get()
-                .map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?;
+        // Clone data needed in async block
+        let factory = self.factory.clone();
+        let depends_on = self.depends_on.clone();
+        let key = self.key.clone();
 
-            // Build kwargs hash from resolved dependencies
-            let kwargs = ruby.hash_new();
-            for dep_key in &self.depends_on {
-                if let Some(dep_value) = resolved.get::<JsonValue>(dep_key) {
-                    let ruby_value = json_to_ruby(&ruby, &dep_value)
-                        .map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?;
-                    kwargs.aset(ruby.str_new(dep_key), ruby_value)
-                        .map_err(|e| DependencyError::ResolutionFailed {
-                            message: format!("Failed to set dependency {}: {}", dep_key, e)
-                        })?;
-                }
-            }
+        // Extract resolved dependencies now (before async)
+        let resolved_deps: Vec<(String, JsonValue)> = depends_on
+            .iter()
+            .filter_map(|dep_key| {
+                resolved
+                    .get::<JsonValue>(dep_key)
+                    .map(|v| (dep_key.clone(), (*v).clone()))
+            })
+            .collect();
+
+        Box::pin(async move {
+            let ruby = Ruby::get().map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?;
+
+            // Build kwargs array from resolved dependencies
+            let kwargs: Vec<(String, Value)> = resolved_deps
+                .iter()
+                .filter_map(|(dep_key, dep_value)| json_to_ruby(&ruby, dep_value).ok().map(|v| (dep_key.clone(), v)))
+                .collect();
 
             // Call the factory Proc with keyword arguments
-            let factory = self.factory.get_inner_with(&ruby);
+            let factory_value = factory.get_inner_with(&ruby);
 
             // Check if factory responds to call
-            if !factory.respond_to("call", false)
+            if !factory_value
+                .respond_to("call", false)
                 .map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?
             {
                 return Err(DependencyError::ResolutionFailed {
-                    message: format!("Dependency factory for '{}' is not callable", self.key),
+                    message: format!("Dependency factory for '{}' is not callable", key),
                 });
             }
 
-            let result = if kwargs.length() > 0 {
-                // Call with keyword arguments: factory.call(**kwargs)
-                let array = ruby.ary_new();
-                factory
-                    .funcall_with_block("call", &[array.as_value()], Some(kwargs))
-                    .map_err(|e| DependencyError::ResolutionFailed {
-                        message: format!("Failed to call factory for '{}': {}", self.key, e),
-                    })?
+            let result = if !kwargs.is_empty() {
+                // Build Ruby keyword arguments
+                // For Ruby procs that accept keyword args, we need to use the funcall_kw method
+                // or pass them as a hash. We'll create a kwargs hash and use it.
+                let kwargs_hash = ruby.hash_new();
+                for (dep_key, value) in kwargs {
+                    kwargs_hash.aset(ruby.to_symbol(&dep_key), value).map_err(|e| {
+                        DependencyError::ResolutionFailed {
+                            message: format!("Failed to set dependency {}: {}", dep_key, e),
+                        }
+                    })?;
+                }
+
+                // Try to call with keyword arguments
+                // In Ruby, proc.call(**kwargs) is equivalent to funcall with the kwargs as last arg
+                match factory_value.funcall::<_, _, Value>("call", (kwargs_hash,)) {
+                    Ok(result) => result,
+                    Err(_) => {
+                        // If that fails, try calling without arguments (factory might not expect deps)
+                        factory_value
+                            .funcall("call", ())
+                            .map_err(|e| DependencyError::ResolutionFailed {
+                                message: format!("Failed to call factory for '{}': {}", key, e),
+                            })?
+                    }
+                }
             } else {
                 // Call with no arguments
-                factory
+                factory_value
                     .funcall("call", ())
                     .map_err(|e| DependencyError::ResolutionFailed {
-                        message: format!("Failed to call factory for '{}': {}", self.key, e),
+                        message: format!("Failed to call factory for '{}': {}", key, e),
                     })?
             };
 
@@ -193,7 +204,7 @@ fn ruby_value_to_json(ruby: &Ruby, value: Value) -> Result<JsonValue, Error> {
         return Ok(JsonValue::Null);
     }
 
-    let json_module = ruby
+    let json_module: Value = ruby
         .class_object()
         .const_get("JSON")
         .map_err(|_| Error::new(ruby.exception_runtime_error(), "JSON module not available"))?;

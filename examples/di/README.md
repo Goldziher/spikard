@@ -6,7 +6,7 @@ This directory contains examples demonstrating Spikard's dependency injection sy
 
 ### rust_basic.rs
 
-Demonstrates basic dependency injection patterns:
+Demonstrates basic dependency injection patterns in Rust:
 
 - **Value Dependencies**: Register static configuration values
 - **Factory Dependencies**: Create resources on-demand with async factories
@@ -17,6 +17,28 @@ Demonstrates basic dependency injection patterns:
 
 1. Add the `di` feature to your dependencies
 2. See the tests in `crates/spikard-http/tests/server_config_builder.rs` for working integration examples
+
+### node_basic.ts
+
+Demonstrates TypeScript/Node.js dependency injection:
+
+- **Value Dependencies**: Register static values (strings, numbers, objects)
+- **Factory Dependencies**: Async factories with dependency resolution
+- **Singleton Pattern**: Global shared resources (database pools, etc.)
+- **Type-Safe Injection**: TypeScript types for injected dependencies
+
+**Run with**:
+```bash
+# From the examples/di directory
+npx ts-node node_basic.ts
+
+# Or with node --loader
+node --loader ts-node/esm node_basic.ts
+```
+
+### python_basic.py / python_database.py
+
+Demonstrates Python dependency injection patterns with async support.
 
 ## Key Concepts
 
