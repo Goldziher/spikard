@@ -104,19 +104,12 @@ jobs:
           RUST_BACKTRACE: full
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: python
-          RUBY_PREFIX: ${{ steps.setup-ruby.outputs.ruby-prefix }}
         run: |
           if [[ "$RUNNER_OS" == "Windows" ]]; then
-            RUBY_PREFIX_POSIX="$(echo "${RUBY_PREFIX}" | sed 's#\\\\#/#g')"
-            MSYS_INCLUDE="${RUBY_PREFIX_POSIX}/msys64/ucrt64/include"
-            if [[ -d "$MSYS_INCLUDE" ]]; then
-              cp -R "${MSYS_INCLUDE}/." "${RUBY_PREFIX_POSIX}/include/ruby-3.3.0/"
-              cp -R "${MSYS_INCLUDE}/." "${RUBY_PREFIX_POSIX}/include/ruby-3.3.0/x64-mingw-ucrt/"
-            fi
-            export BINDGEN_EXTRA_CLANG_ARGS="-I${MSYS_INCLUDE}"
-            export BINDGEN_EXTRA_CLANG_ARGS_x86_64_pc_windows_msvc="${BINDGEN_EXTRA_CLANG_ARGS}"
+            cargo test --workspace --release --all-features --exclude spikard-py --exclude spikard-rb
+          else
+            cargo test --workspace --release --all-features --exclude spikard-py
           fi
-          cargo test --workspace --release --all-features --exclude spikard-py
           cargo test -p spikard-py --release
 
   python-wheels:
