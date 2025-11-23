@@ -109,11 +109,12 @@ jobs:
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             RUBY_PREFIX_POSIX="$(echo "${RUBY_PREFIX}" | sed 's#\\\\#/#g')"
             MSYS_INCLUDE="${RUBY_PREFIX_POSIX}/msys64/ucrt64/include"
-            STRINGS_H="${MSYS_INCLUDE}/strings.h"
-            if [[ -f "$STRINGS_H" ]]; then
-              cp "$STRINGS_H" "${RUBY_PREFIX_POSIX}/include/ruby-3.3.0/strings.h"
-              cp "$STRINGS_H" "${RUBY_PREFIX_POSIX}/include/ruby-3.3.0/x64-mingw-ucrt/strings.h"
-            fi
+            for hdr in strings.h unistd.h; do
+              if [[ -f "${MSYS_INCLUDE}/${hdr}" ]]; then
+                cp "${MSYS_INCLUDE}/${hdr}" "${RUBY_PREFIX_POSIX}/include/ruby-3.3.0/${hdr}"
+                cp "${MSYS_INCLUDE}/${hdr}" "${RUBY_PREFIX_POSIX}/include/ruby-3.3.0/x64-mingw-ucrt/${hdr}"
+              fi
+            done
             export BINDGEN_EXTRA_CLANG_ARGS="-I${MSYS_INCLUDE}"
             export BINDGEN_EXTRA_CLANG_ARGS_x86_64_pc_windows_msvc="${BINDGEN_EXTRA_CLANG_ARGS}"
           fi
