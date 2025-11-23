@@ -500,9 +500,7 @@ jobs:
         run: Remove-Item -Recurse -Force crates/spikard-node\npm -ErrorAction SilentlyContinue
 
       - name: Create npm package structure
-        run: |
-          cd crates/spikard-node
-          pnpm exec napi create-npm-dirs
+        run: pnpm --filter spikard exec napi create-npm-dirs
 
       - name: Build native module
         if: runner.os != 'Windows'
@@ -511,7 +509,6 @@ jobs:
           USE_CROSS: ${{ matrix.settings.use_cross }}
           USE_NAPI_CROSS: ${{ matrix.settings.use_napi_cross }}
         run: |
-          cd crates/spikard-node
           args="--platform --release --target $TARGET --output-dir ./artifacts"
           if [[ "$USE_NAPI_CROSS" == "true" ]]; then
             args="$args --use-napi-cross"
@@ -519,7 +516,7 @@ jobs:
           if [[ "$USE_CROSS" == "true" ]]; then
             args="$args --use-cross"
           fi
-          pnpm exec napi build $args
+          pnpm --filter spikard exec napi build $args
 
       - name: Build native module (Windows)
         if: runner.os == 'Windows'
@@ -529,25 +526,22 @@ jobs:
           USE_CROSS: ${{ matrix.settings.use_cross }}
           USE_NAPI_CROSS: ${{ matrix.settings.use_napi_cross }}
         run: |
-          cd crates/spikard-node
           $args = @('--platform', '--release', '--target', $env:TARGET, '--output-dir', './artifacts')
           if ($env:USE_NAPI_CROSS -eq 'true') { $args += '--use-napi-cross' }
           if ($env:USE_CROSS -eq 'true') { $args += '--use-cross' }
-          pnpm exec napi build @args
+          pnpm --filter spikard exec napi build @args
 
       - name: Package artifacts
         if: runner.os != 'Windows'
         env:
           TARGET: ${{ matrix.settings.target }}
         run: |
-          cd crates/spikard-node
-          pnpm exec napi artifacts --output-dir ./artifacts
-          if [ ! -d npm ]; then
+          pnpm --filter spikard exec napi artifacts --output-dir ./artifacts
+          if [ ! -d crates/spikard-node/npm ]; then
             echo "npm artifact directory missing" >&2
             exit 1
           fi
-          tar -czf node-bindings-$TARGET.tar.gz -C . npm
-          mv node-bindings-$TARGET.tar.gz ../..
+          tar -czf node-bindings-$TARGET.tar.gz -C crates/spikard-node npm
 
       - name: Package artifacts (Windows)
         if: runner.os == 'Windows'
@@ -562,11 +556,10 @@ jobs:
       - name: Generate and upload TypeScript definitions
         if: matrix.settings.target == 'x86_64-unknown-linux-gnu'
         run: |
-          cd crates/spikard-node
-          pnpm exec napi build --platform --dts index.d.ts
-          mkdir -p ../../typescript-defs
-          cp index.d.ts ../../typescript-defs/
-          cp index.js ../../typescript-defs/ || true
+          pnpm --filter spikard exec napi build --platform --dts index.d.ts
+          mkdir -p typescript-defs
+          cp crates/spikard-node/index.d.ts typescript-defs/
+          cp crates/spikard-node/index.js typescript-defs/ || true
 
       - name: Upload TypeScript definitions
         if: matrix.settings.target == 'x86_64-unknown-linux-gnu'

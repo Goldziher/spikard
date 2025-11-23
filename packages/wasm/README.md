@@ -1,6 +1,11 @@
-# @spikard/wasm
+# @spikard/wasm-rs
 
-Edge-friendly TypeScript build of Spikard for runtimes without native modules (Deno, Cloudflare Workers, browsers). Shares the same routing primitives and test client as `@spikard/node`, targeting WASM and fetch-style servers.
+[![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
+[![npm](https://img.shields.io/npm/v/spikard)](https://www.npmjs.com/package/spikard)
+[![npm (WASM)](https://img.shields.io/npm/v/@spikard/wasm-rs?label=npm%20%28wasm%29)](https://www.npmjs.com/package/@spikard/wasm-rs)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Edge-friendly TypeScript build of Spikard for runtimes without native modules (Deno, Cloudflare Workers, browsers). Shares the same routing primitives and test client as `spikard`, targeting WASM and fetch-style servers.
 
 ## Install from source
 ```bash
