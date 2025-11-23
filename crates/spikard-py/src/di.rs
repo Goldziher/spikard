@@ -120,7 +120,9 @@ impl Dependency for PythonFactoryDependency {
             self.depends_on
                 .iter()
                 .filter_map(|dep_key| {
-                    resolved.get::<Py<PyAny>>(dep_key).map(|v| (dep_key.clone(), v.clone_ref(py)))
+                    resolved
+                        .get::<Py<PyAny>>(dep_key)
+                        .map(|v| (dep_key.clone(), v.clone_ref(py)))
                 })
                 .collect()
         });
@@ -144,7 +146,8 @@ impl Dependency for PythonFactoryDependency {
                     let result = factory_bound.call((), Some(&kwargs))?;
                     Ok(Either::Value(result.unbind()))
                 }
-            }).map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
+            })
+            .map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
                 message: format!("Failed to call factory: {}", e),
             })?;
 
@@ -154,9 +157,12 @@ impl Dependency for PythonFactoryDependency {
                     let result = Python::with_gil(|py| {
                         let coroutine = coroutine_py.bind(py).clone();
                         into_future(coroutine)
-                    }).map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
+                    })
+                    .map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
                         message: format!("Failed to convert coroutine to future: {}", e),
-                    })?.await.map_err(|e| {
+                    })?
+                    .await
+                    .map_err(|e| {
                         Python::with_gil(|py| {
                             e.print(py);
                         });
@@ -172,7 +178,8 @@ impl Dependency for PythonFactoryDependency {
                             let aiter = result.bind(py);
                             let first_value = aiter.call_method0("__anext__")?;
                             Ok::<_, PyErr>(first_value.unbind())
-                        }).map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
+                        })
+                        .map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
                             message: format!("Failed to get first value from generator: {}", e),
                         })?;
 
@@ -180,9 +187,12 @@ impl Dependency for PythonFactoryDependency {
                         let final_value = Python::with_gil(|py| {
                             let val = value.bind(py).clone();
                             into_future(val)
-                        }).map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
+                        })
+                        .map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
                             message: format!("Failed to await generator value: {}", e),
-                        })?.await.map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
+                        })?
+                        .await
+                        .map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
                             message: format!("Generator value await failed: {}", e),
                         })?;
 

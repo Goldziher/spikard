@@ -163,23 +163,82 @@ impl Handler for DependencyInjectingHandler {
             let request = Request::from_parts(parts, axum::body::Body::default());
 
             // Resolve dependencies in parallel batches
-            let resolved = container
+            let resolved = match container
                 .resolve_for_handler(&required_dependencies, &core_request, &core_request_data)
                 .await
-                .map_err(|e| {
-                    let error_msg = format!("Dependency resolution failed: {}", e);
-                    debug!("DI error: {}", error_msg);
+            {
+                Ok(resolved) => resolved,
+                Err(e) => {
+                    debug!("DI error: {}", e);
 
-                    // Convert DI errors to proper HTTP responses
-                    let status = match e {
-                        DependencyError::NotFound { .. } => StatusCode::INTERNAL_SERVER_ERROR,
-                        DependencyError::CircularDependency { .. } => StatusCode::INTERNAL_SERVER_ERROR,
-                        DependencyError::ResolutionFailed { .. } => StatusCode::SERVICE_UNAVAILABLE,
-                        _ => StatusCode::INTERNAL_SERVER_ERROR,
+                    // Convert DI errors to proper JSON HTTP responses
+                    let (status, json_body) = match e {
+                        DependencyError::NotFound { ref key } => {
+                            let body = serde_json::json!({
+                                "detail": "Required dependency not found",
+                                "errors": [{
+                                    "dependency_key": key,
+                                    "msg": format!("Dependency '{}' is not registered", key),
+                                    "type": "missing_dependency"
+                                }],
+                                "status": 500,
+                                "title": "Dependency Resolution Failed",
+                                "type": "https://spikard.dev/errors/dependency-error"
+                            });
+                            (StatusCode::INTERNAL_SERVER_ERROR, body)
+                        }
+                        DependencyError::CircularDependency { ref cycle } => {
+                            let body = serde_json::json!({
+                                "detail": "Circular dependency detected",
+                                "errors": [{
+                                    "cycle": cycle,
+                                    "msg": "Circular dependency detected in dependency graph",
+                                    "type": "circular_dependency"
+                                }],
+                                "status": 500,
+                                "title": "Dependency Resolution Failed",
+                                "type": "https://spikard.dev/errors/dependency-error"
+                            });
+                            (StatusCode::INTERNAL_SERVER_ERROR, body)
+                        }
+                        DependencyError::ResolutionFailed { ref message } => {
+                            let body = serde_json::json!({
+                                "detail": "Dependency resolution failed",
+                                "errors": [{
+                                    "msg": message,
+                                    "type": "resolution_failed"
+                                }],
+                                "status": 503,
+                                "title": "Service Unavailable",
+                                "type": "https://spikard.dev/errors/dependency-error"
+                            });
+                            (StatusCode::SERVICE_UNAVAILABLE, body)
+                        }
+                        _ => {
+                            let body = serde_json::json!({
+                                "detail": "Dependency resolution failed",
+                                "errors": [{
+                                    "msg": e.to_string(),
+                                    "type": "unknown"
+                                }],
+                                "status": 500,
+                                "title": "Dependency Resolution Failed",
+                                "type": "https://spikard.dev/errors/dependency-error"
+                            });
+                            (StatusCode::INTERNAL_SERVER_ERROR, body)
+                        }
                     };
 
-                    (status, error_msg)
-                })?;
+                    // Return JSON error response
+                    let response = axum::http::Response::builder()
+                        .status(status)
+                        .header("Content-Type", "application/json")
+                        .body(Body::from(json_body.to_string()))
+                        .unwrap();
+
+                    return Ok(response);
+                }
+            };
 
             let duration = start.elapsed();
             debug!(

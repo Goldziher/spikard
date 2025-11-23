@@ -238,6 +238,7 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
         openapi,
         lifecycle_hooks: None,
+        di_container: None,
     })
 }
 
@@ -323,6 +324,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
             is_async,
             cors: None,
             body_param_name: None,
+            handler_dependencies: None, // TODO: Extract from route
         };
 
         routes.push(route_meta);
@@ -420,7 +422,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
 
     let mut server_config = server_config;
     server_config.lifecycle_hooks = lifecycle_hooks.map(Arc::new);
-    server_config.dependency_container = dependency_container;
+    server_config.di_container = dependency_container;
 
     let schema_registry = spikard_http::SchemaRegistry::new();
 

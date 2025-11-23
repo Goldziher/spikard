@@ -1,9 +1,10 @@
-RB_SYS_BUILD_DIR ?= /Users/naamanhirschfeld/workspace/spikard/packages/ruby/ext/spikard_rb/.rb-sys
+RB_SYS_BUILD_DIR ?= /Users/naamanhirschfeld/workspace/worktrees/spikard-di/packages/ruby/ext/spikard_rb/.rb-sys
 CARGO ?= cargo
 CARGO_BUILD_TARGET ?=
 SOEXT ?= dylib
 
 
+# Determine the prefix Cargo uses for the lib.
 ifneq ($(SOEXT),dll)
 	SOEXT_PREFIX ?= lib
 endif
@@ -15,14 +16,17 @@ RB_SYS_EXTRA_RUSTFLAGS ?=
 RB_SYS_EXTRA_CARGO_ARGS ?=
 RB_SYS_CARGO_MANIFEST_DIR ?= .
 
+# Set dirname for the profile, since the profiles do not directly map to target dir (i.e. dev -> debug)
 ifeq ($(RB_SYS_CARGO_PROFILE),dev)
 	RB_SYS_CARGO_PROFILE_DIR ?= debug
 else
 	RB_SYS_CARGO_PROFILE_DIR ?= $(RB_SYS_CARGO_PROFILE)
 endif
 
+# Set the build profile (dev, release, etc.).
 	RB_SYS_CARGO_PROFILE_FLAG = --profile $(RB_SYS_CARGO_PROFILE)
 
+# Account for sub-directories when using `--target` argument with Cargo
 RB_SYS_CARGO_TARGET_DIR ?= target
 ifneq ($(CARGO_BUILD_TARGET),)
 	RB_SYS_FULL_TARGET_DIR = $(RB_SYS_CARGO_TARGET_DIR)/$(CARGO_BUILD_TARGET)
@@ -48,6 +52,7 @@ RUBYGEMS_CLEAN_DIRS = $(CLEANOBJS) $(CLEANFILES) ./cargo-vendor
 
 SHELL = /bin/sh
 
+# V=0 quiet, V=1 verbose.  other values don't work.
 V = 0
 V0 = $(V:0=)
 Q1 = $(V:1=)
@@ -522,19 +527,26 @@ FORCE: ;
 
 RB_SYS_FORCE_INSTALL_RUST_TOOLCHAIN ?= false
 
+# Only run if the we are told to explicitly install the Rust toolchain
 ifneq ($(RB_SYS_FORCE_INSTALL_RUST_TOOLCHAIN),false)
 RB_SYS_RUSTUP_PROFILE ?= minimal
 
+# If the user passed true, we assume stable Rust. Otherwise, use what
+# was specified (i.e. RB_SYS_FORCE_INSTALL_RUST_TOOLCHAIN=beta)
 ifeq ($(RB_SYS_FORCE_INSTALL_RUST_TOOLCHAIN),true)
   RB_SYS_FORCE_INSTALL_RUST_TOOLCHAIN = stable
 endif
 
+# If a $RUST_TARGET is specified (i.e. for rake-compiler-dock), append
+# that to the profile.
 ifeq ($(RUST_TARGET),)
   RB_SYS_DEFAULT_TOOLCHAIN = $(RB_SYS_FORCE_INSTALL_RUST_TOOLCHAIN)
 else
   RB_SYS_DEFAULT_TOOLCHAIN = $(RB_SYS_FORCE_INSTALL_RUST_TOOLCHAIN)-$(RUST_TARGET)
 endif
 
+# Since we are forcing the installation of the Rust toolchain, we need
+# to set these env vars unconditionally for the build.
 export CARGO_HOME := $(RB_SYS_BUILD_DIR)/$(RB_SYS_DEFAULT_TOOLCHAIN)/cargo
 export RUSTUP_HOME := $(RB_SYS_BUILD_DIR)/$(RB_SYS_DEFAULT_TOOLCHAIN)/rustup
 export PATH := $(CARGO_HOME)/bin:$(RUSTUP_HOME)/bin:$(PATH)

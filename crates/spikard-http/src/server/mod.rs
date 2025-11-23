@@ -38,8 +38,8 @@ type RouteHandlerPair = (crate::Route, Arc<dyn Handler>);
 ///
 /// Placeholder implementation until routes can declare dependencies via metadata.
 #[cfg(feature = "di")]
-fn extract_handler_dependencies(_route: &crate::Route) -> Vec<String> {
-    Vec::new()
+fn extract_handler_dependencies(route: &crate::Route) -> Vec<String> {
+    route.handler_dependencies.clone()
 }
 
 /// Determines if a method typically has a request body
@@ -633,6 +633,8 @@ impl Server {
                 is_async: route.is_async,
                 cors: route.cors.clone(),
                 body_param_name: None,
+                #[cfg(feature = "di")]
+                handler_dependencies: Some(route.handler_dependencies.clone()),
             })
             .collect();
         build_router_with_handlers_and_config(routes, config, metadata)
