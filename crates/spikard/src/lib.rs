@@ -370,6 +370,7 @@ impl RouteBuilder {
             is_async: self.is_async,
             cors: self.cors,
             body_param_name: None,
+            #[cfg(feature = "di")]
             handler_dependencies: None,
         }
     }

@@ -1,6 +1,53 @@
 # frozen_string_literal: true
 
 module Spikard
+  # Wrapper class for dependency providers
+  #
+  # This class wraps factory functions and configuration for dependency injection.
+  # It provides a consistent API across Python, Node.js, and Ruby bindings.
+  #
+  # @example Factory with caching
+  #   app.provide("db", Spikard::Provide.new(method("create_db"), cacheable: true))
+  #
+  # @example Factory with dependencies
+  #   app.provide("auth", Spikard::Provide.new(
+  #     method("create_auth_service"),
+  #     depends_on: ["db", "cache"],
+  #     singleton: true
+  #   ))
+  class Provide
+    attr_reader :factory, :depends_on, :singleton, :cacheable
+
+    # Create a new dependency provider
+    #
+    # @param factory [Proc, Method] The factory function that creates the dependency value
+    # @param depends_on [Array<String, Symbol>] List of dependency keys this factory depends on
+    # @param singleton [Boolean] Whether to cache the value globally (default: false)
+    # @param cacheable [Boolean] Whether to cache the value per-request (default: true)
+    def initialize(factory, depends_on: [], singleton: false, cacheable: true)
+      @factory = factory
+      @depends_on = Array(depends_on).map(&:to_s)
+      @singleton = singleton
+      @cacheable = cacheable
+    end
+
+    # Check if the factory is async (based on method arity or other heuristics)
+    #
+    # @return [Boolean] True if the factory appears to be async
+    def async?
+      # Ruby doesn't have explicit async/await like Python/JS
+      # We could check if it returns a Thread or uses Fiber
+      false
+    end
+
+    # Check if the factory is an async generator
+    #
+    # @return [Boolean] True if the factory is an async generator
+    def async_generator?
+      false
+    end
+  end
+
   # Dependency Injection support for Spikard applications
   #
   # Provides methods for registering and managing dependencies that can be
@@ -18,15 +65,19 @@ module Spikard
   #   app.provide("config", singleton: true) do
   #     Config.load_from_file("config.yml")
   #   end
+  #
+  # @example Using Provide wrapper
+  #   app.provide("db", Spikard::Provide.new(method("create_db"), cacheable: true))
   module ProvideSupport
     # Register a dependency in the DI container
     #
-    # This method supports two patterns:
+    # This method supports three patterns:
     # 1. **Value dependency**: Pass a value directly (e.g., string, number, object)
     # 2. **Factory dependency**: Pass a block that computes the value
+    # 3. **Provide wrapper**: Pass a Spikard::Provide instance
     #
     # @param key [String, Symbol] Unique identifier for the dependency
-    # @param value [Object, nil] Static value for the dependency (if no block given)
+    # @param value [Object, Provide, nil] Static value, Provide instance, or nil
     # @param depends_on [Array<String, Symbol>] List of dependency keys this factory depends on
     # @param singleton [Boolean] Whether to cache the value globally (default: false)
     # @param cacheable [Boolean] Whether to cache the value per-request (default: true)
@@ -53,12 +104,25 @@ module Spikard
     #   app.provide("request_id", cacheable: false) do
     #     SecureRandom.uuid
     #   end
+    #
+    # @example Using Provide wrapper
+    #   app.provide("db", Spikard::Provide.new(method("create_db"), cacheable: true))
     def provide(key, value = nil, depends_on: [], singleton: false, cacheable: true, &block)
       key_str = key.to_s
       @dependencies ||= {}
 
-      if block
-        # Factory dependency
+      # Handle Provide wrapper instances
+      if value.is_a?(Provide)
+        provider = value
+        @dependencies[key_str] = {
+          type: :factory,
+          factory: provider.factory,
+          depends_on: provider.depends_on,
+          singleton: provider.singleton,
+          cacheable: provider.cacheable
+        }
+      elsif block
+        # Factory dependency (block form)
         @dependencies[key_str] = {
           type: :factory,
           factory: block,

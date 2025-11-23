@@ -12979,7 +12979,7 @@ async def create_cache_from_config(config) -> Any:
     return {"cache_id": str(UUID(int=2)), "ttl": cache_ttl}
 
 
-def create_auth_service(db_pool, cache) -> Any:
+async def create_auth_service(db_pool, cache) -> Any:
     """Factory for auth_service."""
     # Create auth service
     return {"auth_service_enabled": True, "has_db": db_pool is not None, "has_cache": cache is not None}
@@ -13171,61 +13171,62 @@ def create_app_di_ruby_keyword_argument_injection_success() -> Spikard:
     return app
 
 
-def create_session_with_cleanup(db_connection, cache_connection):
+async def create_session_with_cleanup(db_connection, cache_connection):
     """Factory for session with cleanup."""
     # Create resource
+    BACKGROUND_STATE["cleanup_events_di_multiple_dependencies_with_cleanup_success"].append("session_opened")
     resource = {"id": str(UUID(int=7)), "active": True}
     try:
         yield resource
     finally:
         # Cleanup resource
         resource["active"] = False
+        BACKGROUND_STATE["cleanup_events_di_multiple_dependencies_with_cleanup_success"].append("session_closed")
 
 
 async def create_db_connection_with_cleanup():
     """Factory for db_connection with cleanup."""
     # Create resource
-    BACKGROUND_STATE["cleanup_events_di_multiple_dependencies_with_cleanup_success"].append("session_opened")
+    BACKGROUND_STATE["cleanup_events_di_multiple_dependencies_with_cleanup_success"].append("db_opened")
     resource = {"id": str(UUID("00000000-0000-0000-0000-00000000002d")), "active": True}
     try:
         yield resource
     finally:
         # Cleanup resource
-        BACKGROUND_STATE["cleanup_events_di_multiple_dependencies_with_cleanup_success"].append("session_closed")
+        BACKGROUND_STATE["cleanup_events_di_multiple_dependencies_with_cleanup_success"].append("db_closed")
 
 
 async def create_cache_connection_with_cleanup():
     """Factory for cache_connection with cleanup."""
     # Create resource
-    BACKGROUND_STATE["cleanup_events_di_multiple_dependencies_with_cleanup_success"].append("session_opened")
+    BACKGROUND_STATE["cleanup_events_di_multiple_dependencies_with_cleanup_success"].append("cache_opened")
     resource = {"id": str(UUID("00000000-0000-0000-0000-00000000002d")), "active": True}
     try:
         yield resource
     finally:
         # Cleanup resource
-        BACKGROUND_STATE["cleanup_events_di_multiple_dependencies_with_cleanup_success"].append("session_closed")
+        BACKGROUND_STATE["cleanup_events_di_multiple_dependencies_with_cleanup_success"].append("cache_closed")
 
 
 async def di_multiple_dependencies_with_cleanup_success(
     session: Any,
 ) -> Any:
     """Handler for GET /api/multi-cleanup-test."""
-    state = BACKGROUND_STATE.setdefault("di_multiple_dependencies_with_cleanup_success", [])
-    value = body.get("event") if body is not None else None
-    if value is None:
-        raise ValueError("background task requires request body value")
-
-    async def _background_task() -> None:
-        state.append(value)
-
-    background.run(_background_task())
-    return Response(status_code=200, headers={"Content-Type": "application/json"})
+    return Response(
+        content={"session_id": session["id"], "active": session["active"]},
+        status_code=200,
+        headers={"Content-Type": "application/json"}
+    )
 
 
 def di_multiple_dependencies_with_cleanup_success_background_state() -> Any:
     """Background state endpoint."""
-    state = BACKGROUND_STATE.get("di_multiple_dependencies_with_cleanup_success", [])
-    return {"cleanup_order": state}
+    state = BACKGROUND_STATE.get("cleanup_events_di_multiple_dependencies_with_cleanup_success", [])
+    return Response(
+        content={"cleanup_order": state},
+        status_code=200,
+        headers={"Content-Type": "application/json"}
+    )
 
 
 async def di_multiple_dependencies_with_cleanup_success_cleanup_state() -> Any:
@@ -13262,11 +13263,10 @@ def create_db_pool(app_config) -> Any:
     # Singleton with counter
     if "singleton_db_pool" not in BACKGROUND_STATE:
         BACKGROUND_STATE["singleton_db_pool"] = {"id": str(UUID(int=99)), "count": 0}
-    BACKGROUND_STATE["singleton_db_pool"]["count"] += 1
     return BACKGROUND_STATE["singleton_db_pool"]
 
 
-def create_request_context(db_pool) -> Any:
+async def create_request_context(db_pool) -> Any:
     """Factory for request_context."""
     return {"id": str(UUID(int=15)), "timestamp": str(datetime.now())}
 
@@ -13277,8 +13277,15 @@ async def di_mixed_singleton_and_per_request_caching_success(
     request_context: Any,
 ) -> Any:
     """Handler for GET /api/mixed-caching."""
+    # Increment the counter on each request
+    db_pool["count"] += 1
     return Response(
-        content={"app_name": "MyApp", "context_id": "<<uuid>>", "pool_id": "<<uuid>>"},
+        content={
+            "id": db_pool["id"],
+            "count": db_pool["count"],
+            "context_id": request_context["id"],
+            "app_name": app_config["app_name"],
+        },
         status_code=200,
         headers={"Content-Type": "application/json"},
     )
@@ -13315,27 +13322,30 @@ async def di_resource_cleanup_after_request_success(
     db_session: Any,
 ) -> Any:
     """Handler for GET /api/cleanup-test."""
-    state = BACKGROUND_STATE.setdefault("di_resource_cleanup_after_request_success", [])
-    value = body.get("session_id") if body is not None else None
-    if value is None:
-        raise ValueError("background task requires request body value")
-
-    async def _background_task() -> None:
-        state.append(value)
-
-    background.run(_background_task())
-    return Response(status_code=200, headers={"Content-Type": "application/json"})
+    return Response(
+        content={"session_id": db_session["id"], "active": db_session["active"]},
+        status_code=200,
+        headers={"Content-Type": "application/json"}
+    )
 
 
 def di_resource_cleanup_after_request_success_background_state() -> Any:
     """Background state endpoint."""
-    state = BACKGROUND_STATE.get("di_resource_cleanup_after_request_success", [])
-    return {"cleanup_events": state}
+    state = BACKGROUND_STATE.get("cleanup_events_di_resource_cleanup_after_request_success", [])
+    return Response(
+        content={"cleanup_events": state},
+        status_code=200,
+        headers={"Content-Type": "application/json"}
+    )
 
 
 async def di_resource_cleanup_after_request_success_cleanup_state() -> Any:
     """Return cleanup state for DI fixture."""
-    return {"cleanup_events": BACKGROUND_STATE.get("cleanup_events_di_resource_cleanup_after_request_success", [])}
+    return Response(
+        content={"cleanup_events": BACKGROUND_STATE.get("cleanup_events_di_resource_cleanup_after_request_success", [])},
+        status_code=200,
+        headers={"Content-Type": "application/json"}
+    )
 
 
 def create_app_di_resource_cleanup_after_request_success() -> Spikard:
@@ -13417,7 +13427,6 @@ def create_app_counter() -> Any:
     # Singleton with counter
     if "singleton_app_counter" not in BACKGROUND_STATE:
         BACKGROUND_STATE["singleton_app_counter"] = {"id": str(UUID(int=99)), "count": 0}
-    BACKGROUND_STATE["singleton_app_counter"]["count"] += 1
     return BACKGROUND_STATE["singleton_app_counter"]
 
 
@@ -13425,8 +13434,12 @@ async def di_singleton_dependency_caching_success(
     app_counter: Any,
 ) -> Any:
     """Handler for GET /api/app-counter."""
+    # Increment the counter on each access
+    app_counter["count"] += 1
     return Response(
-        content={"count": 1, "counter_id": "<<uuid>>"}, status_code=200, headers={"Content-Type": "application/json"}
+        content={"id": app_counter["id"], "count": app_counter["count"]},
+        status_code=200,
+        headers={"Content-Type": "application/json"}
     )
 
 
@@ -13443,7 +13456,7 @@ def create_app_di_singleton_dependency_caching_success() -> Spikard:
     return app
 
 
-async def create_db_pool() -> Any:
+async def create_async_db_pool() -> Any:
     """Async factory for db_pool."""
     # Simulate async DB connection
     db_url = "postgresql://localhost/mydb"
@@ -13466,7 +13479,7 @@ def create_app_di_async_factory_dependency_success() -> Spikard:
     app = Spikard()
 
     # Register dependencies
-    app.provide("db_pool", Provide(create_db_pool, cacheable=True))
+    app.provide("db_pool", Provide(create_async_db_pool, cacheable=True))
     # Register handler with this app instance
     app.register_route("GET", "/api/db-status", body_schema=None, parameter_schema=None, file_params=None)(
         di_async_factory_dependency_success

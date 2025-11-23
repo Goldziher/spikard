@@ -53,13 +53,13 @@ impl Handler for NodeHandler {
         Box::pin(async move {
             #[cfg(feature = "di")]
             let dependencies = if let Some(resolved) = &request_data.dependencies {
-                let keys: Vec<String> = resolved.keys().collect();
+                let keys: Vec<String> = resolved.keys();
 
                 let mut deps_map = serde_json::Map::new();
                 for key in &keys {
                     if let Some(value_json) = resolved.get::<String>(key) {
                         if let Ok(parsed) = serde_json::from_str::<Value>(&value_json) {
-                            deps_map.insert(key.clone(), parsed);
+                            deps_map.insert(key.to_string(), parsed);
                         }
                     }
                 }

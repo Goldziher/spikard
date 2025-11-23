@@ -27,7 +27,7 @@ use std::sync::Arc;
 
 /// Global Python event loop for async handlers
 /// Managed by a dedicated Python thread
-static PYTHON_EVENT_LOOP: OnceCell<Py<PyAny>> = OnceCell::new();
+pub static PYTHON_EVENT_LOOP: OnceCell<Py<PyAny>> = OnceCell::new();
 
 /// Initialize Python event loop that runs in a dedicated thread
 /// This allows proper async/await support without blocking the Rust event loop
