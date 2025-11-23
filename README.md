@@ -1,5 +1,12 @@
 # Spikard
 
+[![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
+[![PyPI](https://badge.fury.io/py/spikard.svg)](https://badge.fury.io/py/spikard)
+[![npm](https://img.shields.io/npm/v/@spikard/node)](https://www.npmjs.com/package/@spikard/node)
+[![RubyGems](https://badge.fury.io/rb/spikard.svg)](https://rubygems.org/gems/spikard)
+[![Crates.io](https://img.shields.io/crates/v/spikard)](https://crates.io/crates/spikard)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 **An experimental polyglot web development framework.**
 
 Spikard is a high-performance API toolkit built in Rust with bindings for Python, TypeScript, Ruby, and WebAssembly. Write REST APIs, JSON-RPC services, or Protobuf-based applications in the language you prefer—all sharing the same runtime, middleware, and validation engine.

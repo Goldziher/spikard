@@ -1,5 +1,9 @@
 # Spikard (Rust)
 
+[![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
+[![Crates.io](https://img.shields.io/crates/v/spikard)](https://crates.io/crates/spikard)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 High-performance HTTP framework built on Axum and Tower-HTTP with type-safe routing, validation, WebSocket/SSE support, and lifecycle hooks.
 
 ## Installation
