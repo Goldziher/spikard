@@ -26,7 +26,7 @@ const SmallPayloadSchema = z.object({
   name: z.string(),
   description: z.string(),
   price: z.number(),
-  tax: z.number().optional().nullable(),
+  tax: z.number().nullable(),
 });
 
 /**
@@ -46,8 +46,8 @@ const AddressSchema = z.object({
  */
 const MediumPayloadSchema = z.object({
   name: z.string(),
-  email: z.string().email(),
-  age: z.number().int().positive(),
+  email: z.string(),
+  age: z.number().int(),
   address: AddressSchema,
   tags: z.array(z.string()),
 });
@@ -60,7 +60,7 @@ const ItemSchema = z.object({
   id: z.string(),
   name: z.string(),
   price: z.number(),
-  quantity: z.number().int().nonnegative(),
+  quantity: z.number().int(),
 });
 
 /**
@@ -70,7 +70,7 @@ const ItemSchema = z.object({
 const LargePayloadSchema = z.object({
   user_id: z.string(),
   name: z.string(),
-  email: z.string().email(),
+  email: z.string(),
   items: z.array(ItemSchema),
   metadata: z.record(z.string(), z.any()),
 });

@@ -226,8 +226,7 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
 
                 return Err(Error::ServerStartFailed(format!(
                     "Process exited with status: {}{}",
-                    status,
-                    stderr_output
+                    status, stderr_output
                 )));
             }
             Ok(None) => {
