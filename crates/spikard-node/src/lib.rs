@@ -35,6 +35,8 @@
 #![warn(missing_docs)]
 
 mod background;
+#[cfg(feature = "di")]
+pub mod di;
 mod handler;
 mod lifecycle;
 mod response;
@@ -356,6 +358,12 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
         handler_map.insert(route.handler_name.clone(), handler);
     }
 
+    // Extract dependency container if DI is enabled
+    #[cfg(feature = "di")]
+    let dependency_container = di::extract_dependency_container(&app)?;
+    #[cfg(not(feature = "di"))]
+    let dependency_container: Option<Arc<spikard_core::di::DependencyContainer>> = None;
+
     let lifecycle_hooks = if let Ok(hooks_obj) = app.get_named_property::<Object>("lifecycleHooks") {
         let mut hooks = spikard_http::LifecycleHooks::new();
 
@@ -412,6 +420,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
 
     let mut server_config = server_config;
     server_config.lifecycle_hooks = lifecycle_hooks.map(Arc::new);
+    server_config.dependency_container = dependency_container;
 
     let schema_registry = spikard_http::SchemaRegistry::new();
 

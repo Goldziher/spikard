@@ -15,6 +15,10 @@ readme = "README.md"
 name = "spikard"
 path = "src/lib.rs"
 
+[features]
+default = []
+di = ["spikard-http/di"]
+
 [dependencies]
 anyhow = "1.0"
 axum.workspace = true

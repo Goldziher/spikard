@@ -459,6 +459,8 @@ fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyRes
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
         openapi: openapi_config,
         lifecycle_hooks: None,
+        #[cfg(feature = "di")]
+        di_container: None,
     })
 }
 
@@ -467,15 +469,15 @@ fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyRes
 /// Converts Python dependencies (values and Provide wrappers) to Rust DependencyContainer
 #[cfg(feature = "di")]
 fn build_dependency_container(
-    py: Python<'_>,
+    _py: Python<'_>,
     dependencies: &Bound<'_, PyAny>,
 ) -> PyResult<spikard_core::di::DependencyContainer> {
-    use pyo3::types::{PyDict, PyString};
-    use spikard_core::di::{DependencyContainer, ValueDependency};
+    use pyo3::types::PyDict;
+    use spikard_core::di::DependencyContainer;
     use std::sync::Arc;
 
     let mut container = DependencyContainer::new();
-    let deps_dict = dependencies.downcast::<PyDict>()?;
+    let deps_dict = dependencies.cast::<PyDict>()?;
 
     for (key, value) in deps_dict.iter() {
         let key_str: String = key.extract()?;
@@ -493,6 +495,7 @@ fn build_dependency_container(
             // Create Python factory dependency
             let py_factory = factory.into();
             let factory_dep = crate::di::PythonFactoryDependency::new(
+                key_str.clone(),
                 py_factory,
                 depends_on,
                 singleton,
