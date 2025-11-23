@@ -488,9 +488,7 @@ jobs:
         run: corepack enable
 
       - name: Install Node dependencies
-        run: |
-          cd crates/spikard-node
-          pnpm install
+        run: pnpm install -r
 
       - name: Clean npm directory
         if: runner.os != 'Windows'
@@ -1310,7 +1308,7 @@ jobs:
 
       - name: Install workspace dependencies
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        run: pnpm install --filter spikard...
+        run: pnpm install -r
 
       - name: Pack platform packages
         run: |
