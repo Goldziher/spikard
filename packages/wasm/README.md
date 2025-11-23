@@ -1,8 +1,8 @@
-# @spikard/wasm-rs
+# spikard-wasm
 
 [![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
 [![npm](https://img.shields.io/npm/v/spikard)](https://www.npmjs.com/package/spikard)
-[![npm (WASM)](https://img.shields.io/npm/v/@spikard/wasm-rs?label=npm%20%28wasm%29)](https://www.npmjs.com/package/@spikard/wasm-rs)
+[![npm (WASM)](https://img.shields.io/npm/v/spikard-wasm?label=npm%20%28wasm%29)](https://www.npmjs.com/package/spikard-wasm)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Edge-friendly TypeScript build of Spikard for runtimes without native modules (Deno, Cloudflare Workers, browsers). Shares the same routing primitives and test client as `spikard`, targeting WASM and fetch-style servers.
@@ -16,7 +16,7 @@ pnpm build   # emits ESM to dist/
 
 ## Quick start
 ```typescript
-import { Spikard, get, createFetchHandler } from "@spikard/wasm";
+import { Spikard, get, createFetchHandler } from "spikard-wasm";
 
 const app = new Spikard();
 
@@ -34,7 +34,7 @@ export default {
 ## Testing
 Use the in-memory test client with Vitest:
 ```typescript
-import { TestClient } from "@spikard/wasm";
+import { TestClient } from "spikard-wasm";
 
 const client = new TestClient(app);
 const res = await client.get("/hello");

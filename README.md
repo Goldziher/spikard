@@ -3,7 +3,7 @@
 [![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
 [![PyPI](https://badge.fury.io/py/spikard.svg)](https://badge.fury.io/py/spikard)
 [![npm](https://img.shields.io/npm/v/spikard)](https://www.npmjs.com/package/spikard)
-[![npm (WASM)](https://img.shields.io/npm/v/@spikard/wasm-rs?label=npm%20%28wasm%29)](https://www.npmjs.com/package/@spikard/wasm-rs)
+[![npm (WASM)](https://img.shields.io/npm/v/spikard-wasm?label=npm%20%28wasm%29)](https://www.npmjs.com/package/spikard-wasm)
 [![RubyGems](https://badge.fury.io/rb/spikard.svg)](https://rubygems.org/gems/spikard)
 [![Crates.io](https://img.shields.io/crates/v/spikard)](https://crates.io/crates/spikard)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
