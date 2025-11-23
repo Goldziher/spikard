@@ -1,5 +1,5 @@
 {
-	"name": "@spikard/wasm-rs",
+	"name": "spikard-wasm",
 	"version": "0.1.0",
 	"description": "WebAssembly bindings for spikard",
 	"main": "dist/spikard_wasm.js",
