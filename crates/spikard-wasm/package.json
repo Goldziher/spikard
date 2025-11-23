@@ -1,6 +1,6 @@
 {
 	"name": "spikard-wasm",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "WebAssembly bindings for spikard",
 	"main": "dist/spikard_wasm.js",
 	"types": "dist/spikard_wasm.d.ts",

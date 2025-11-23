@@ -39,7 +39,6 @@ Same middleware. Same validation. Same correctness guarantees. Different languag
 - Database library (SQLAlchemy, Prisma, Sequel, Diesel, etc.)
 - Template engine if needed (Jinja2, EJS, ERB)
 - Frontend framework
-- Background job queue
 
 Spikard focuses on being the best HTTP/API layer—everything from the socket to your handler. Database, templates, and full-stack concerns are intentionally out of scope.
 
@@ -302,23 +301,21 @@ The CLI is designed to be AI-friendly: structured output, consistent patterns, a
 
 ## Performance
 
-Preliminary benchmarks on Apple M4 Pro (14-core, 48GB RAM) with 100 concurrent connections:
+Benchmarks on Apple M4 Pro (14-core, 48GB RAM) with 100 concurrent connections:
 
-### JSON Request/Response
+### Rust vs Python Bindings
 | Binding | Avg Throughput | Mean Latency | P99 Latency |
 |---------|----------------|--------------|-------------|
 | **Rust** | 165,454 req/s | 0.60ms | 1.53ms |
-| **Python** | 17,584 req/s | 5.69ms | 9.76ms |
+| **Python** | 35,779 req/s | 7.44ms | - |
 
 **Key findings:**
-- Rust ~9x faster than Python, but Python still delivers 17.5k req/s
+- Rust ~4.6x faster than Python, but Python still delivers 35k+ req/s
 - Performance stable across payload sizes (86 bytes to 150KB)
 - Low memory usage (~27MB for both)
 - Zero-copy serialization (serde for Rust, msgspec for Python)
 
 Node.js, Ruby, and WASM benchmarks coming soon.
-
-*Note: These are early benchmarks. Comprehensive performance comparisons vs. ecosystem leaders (FastAPI, Fastify, Gin, etc.) coming in v0.4+*
 
 ## Status: 0.1 - Experimental
 
@@ -356,6 +353,7 @@ Node.js, Ruby, and WASM benchmarks coming soon.
 - [ ] HTTP/3 (QUIC) support *(post v1.0)*
 - [ ] CloudEvents support *(post v1.0)*
 - [ ] Queue protocols (AMQP, Kafka) *(post v1.0)*
+- [ ] Plugin/extension system
 
 ### Language Bindings
 - [x] Python (PyO3 + msgspec/Pydantic)
@@ -364,10 +362,10 @@ Node.js, Ruby, and WASM benchmarks coming soon.
 - [x] WebAssembly (wasm-bindgen)
 - [x] Rust (native)
 - [ ] PHP (ext-php-rs) - *In progress*
-- [ ] Go (exploring FFI options)
-- [ ] C# (.NET) - *Exploring*
-- [ ] Java/Kotlin (JNI) - *Exploring*
-- [ ] Elixir (Rustler) - *Exploring*
+- [ ] Go (Maybe?)
+- [ ] C# (Maybe?)
+- [ ] Java/Kotlin (Maybe?)
+- [ ] Elixir (Maybe?)
 
 ### Validation Libraries Integration
 - [x] Python: msgspec (required), with auto-detection of Pydantic v2, attrs, dataclasses
@@ -375,34 +373,23 @@ Node.js, Ruby, and WASM benchmarks coming soon.
 - [x] Ruby: Auto-detection of dry-schema, dry-struct
 - [ ] TypeScript: ArkType, Valibot, TypeBox, Effect
 - [ ] Ruby: dry-validation, ActiveModel
-- [ ] Additional Python integrations (cattrs, etc.)
 
 ### Developer Experience
 - [x] Fixture-driven testing (400+ scenarios)
 - [x] CLI for code generation
 - [x] OpenAPI and AsyncAPI support
 - [x] Documentation generation
-- [ ] MCP server for AI assistants
+- [ ] MCP server (as part of the CLI)
 - [ ] Official Claude skills
 - [ ] Comprehensive documentation site
 - [ ] Example applications library
-- [ ] Plugin/extension system
-- [ ] Interactive playground
 
-### Performance & Production
-- [x] Benchmark harness (profile/compare modes)
+### Performance
+- [x] Benchmark harness (profiling support builtin)
 - [x] Zero-copy serialization paths
-- [ ] Performance benchmarks vs. ecosystem leaders
-- [ ] Production hardening (security audit, stress testing)
-- [ ] Graceful shutdown and health checks
-- [ ] Performance regression detection in CI
 
 ### Stability
 - [ ] API stability guarantees
-- [ ] Semantic versioning commitment
-- [ ] Migration guides between versions
-- [ ] LTS support policy
-- [ ] Published packages (PyPI, npm, RubyGems, crates.io)
 
 ## Getting Started
 

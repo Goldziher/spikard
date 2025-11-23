@@ -1,0 +1,56 @@
+{
+	"metadata": {
+		"timestamp": "2025-11-23T10:25:06.666063+00:00",
+		"git_commit": "143775ad45d190d9814bfb21b6369b5b6bf7c5dd",
+		"git_branch": "main",
+		"git_dirty": false,
+		"host": {
+			"os": "macos",
+			"arch": "aarch64",
+			"cpu_model": "Apple M4 Pro",
+			"cpu_cores": 14,
+			"cpu_threads": 14,
+			"memory_gb": 48.0,
+			"hostname": "Mac"
+		}
+	},
+	"frameworks": [
+		{
+			"name": "spikard-python",
+			"version": "0.1.0",
+			"language": "python",
+			"runtime": "Python 3.12.8",
+			"app_dir": "/Users/naamanhirschfeld/workspace/spikard/tools/benchmark-harness/apps/spikard-python",
+			"variant": null
+		},
+		{
+			"name": "fastapi",
+			"version": "0.1.0",
+			"language": "unknown",
+			"runtime": "unknown",
+			"app_dir": "/Users/naamanhirschfeld/workspace/spikard/tools/benchmark-harness/apps/fastapi",
+			"variant": null
+		},
+		{
+			"name": "litestar",
+			"version": "0.1.0",
+			"language": "unknown",
+			"runtime": "unknown",
+			"app_dir": "/Users/naamanhirschfeld/workspace/spikard/tools/benchmark-harness/apps/litestar",
+			"variant": null
+		}
+	],
+	"configuration": {
+		"duration_secs": 30,
+		"concurrency": 100,
+		"warmup_secs": 5,
+		"load_tool": "oha"
+	},
+	"suites": [],
+	"summary": {
+		"overall_winner": "spikard-python",
+		"avg_performance_gain": 1.8005432876259149,
+		"workloads_won": {},
+		"category_winners": {}
+	}
+}

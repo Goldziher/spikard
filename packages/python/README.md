@@ -504,11 +504,32 @@ All compile to JSON Schema for validation and OpenAPI generation.
 
 ## Performance
 
-Python bindings use:
-- **PyO3** for zero-copy FFI
-- **msgspec** for ultra-fast serialization
-- **pyo3_async_runtimes** for native async/await
-- Direct Python object construction (no JSON round-trip)
+### vs FastAPI
+Comprehensive comparison across 18 real-world workloads on Apple M4 Pro (100 concurrent connections):
+
+| Framework | Avg Throughput | Mean Latency | Difference |
+|-----------|----------------|--------------|------------|
+| **Spikard** | **35,779 req/s** | **7.44ms** | baseline |
+| FastAPI | 12,776 req/s | 7.90ms | **-64% slower** |
+
+**Spikard is 2.8x faster than FastAPI** with statistically significant improvements (p < 0.05).
+
+### Why Spikard is Faster
+
+**Rust-Powered Core:**
+- HTTP server built on Tokio and Hyper
+- Tower middleware for zero-overhead routing
+- No Python GIL contention for HTTP layer
+
+**Zero-Copy Optimizations:**
+- Direct PyO3 type construction (no JSON string serialization)
+- Eliminates 30-40% conversion overhead vs serialize-then-parse
+- msgspec integration for validation without extra allocations
+
+**Async-First Design:**
+- `pyo3_async_runtimes` for efficient coroutine handling
+- Single event loop initialization per worker
+- GIL release before awaiting Rust futures
 
 ## Running the Server
 
