@@ -210,11 +210,13 @@ from spikard import UploadFile
 
 @app.post("/upload")
 async def upload_file(file: UploadFile):
-    content = file.read()
+    # Use aread() for async file reading
+    content = await file.aread()
     return {
         "filename": file.filename,
         "size": file.size,
-        "content_type": file.content_type
+        "content_type": file.content_type,
+        "content_length": len(content)
     }
 ```
 
@@ -331,7 +333,7 @@ config = ServerConfig(static_files=[static])
 **OpenAPI Documentation:**
 
 ```python
-from spikard import OpenApiConfig
+from spikard.config import OpenApiConfig
 
 openapi = OpenApiConfig(
     enabled=True,
@@ -379,50 +381,36 @@ async def log_error(response):
 ## WebSockets
 
 ```python
-from spikard import websocket
-from typing import Any
+from spikard import Spikard, websocket
 
-@app.websocket("/ws")
-class ChatHandler:
-    async def on_connect(self):
-        print("Client connected")
+app = Spikard()
 
-    async def handle_message(self, message: dict[str, Any]) -> dict[str, Any] | None:
-        # Echo back the message
-        return {"echo": message}
-
-    async def on_disconnect(self):
-        print("Client disconnected")
+@websocket("/ws")
+async def chat_handler(message: dict) -> dict | None:
+    """Handle incoming WebSocket messages."""
+    print(f"Received: {message}")
+    # Echo back the message
+    return {"echo": message}
 ```
 
 ## Server-Sent Events (SSE)
 
 ```python
-from spikard import sse, SseEvent
+from spikard import Spikard, sse
+import asyncio
 
-@app.sse("/events")
-class EventProducer:
-    def __init__(self):
-        self.count = 0
+app = Spikard()
 
-    async def on_connect(self):
-        print("SSE client connected")
-
-    async def next_event(self) -> SseEvent | None:
-        if self.count >= 10:
-            return None  # End stream
-
-        event = SseEvent(
-            data={"count": self.count},
-            event_type="update",
-            id=str(self.count),
-            retry_ms=3000
-        )
-        self.count += 1
-        return event
-
-    async def on_disconnect(self):
-        print("SSE client disconnected")
+@sse("/events")
+async def event_stream():
+    """Stream events to connected clients."""
+    for i in range(10):
+        await asyncio.sleep(1)
+        yield {
+            "count": i,
+            "message": f"Event {i}",
+            "timestamp": i
+        }
 ```
 
 ## Background Tasks
@@ -430,14 +418,16 @@ class EventProducer:
 ```python
 from spikard import background
 
+async def heavy_processing(data: dict):
+    """Async function that runs after response is sent."""
+    # Heavy processing here
+    pass
+
 @app.post("/process")
 async def process_data(data: dict):
-    background.run(lambda: heavy_processing(data))
+    # Schedule async function to run in background
+    background.run(heavy_processing(data))
     return {"status": "processing"}
-
-def heavy_processing(data):
-    # Runs after response is sent
-    pass
 ```
 
 ## Testing
@@ -469,11 +459,14 @@ async def test_create_user(client):
 ### WebSocket Testing
 
 ```python
+import json
+
 @pytest.mark.asyncio
 async def test_websocket(client):
     async with client.websocket("/ws") as ws:
-        await ws.send_json({"message": "hello"})
-        response = await ws.receive_json()
+        await ws.send(json.dumps({"message": "hello"}))
+        response_text = await ws.recv()
+        response = json.loads(response_text)
         assert response["echo"]["message"] == "hello"
 ```
 

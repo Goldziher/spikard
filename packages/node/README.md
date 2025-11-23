@@ -20,7 +20,7 @@ pnpm build
 ## Quick Start
 
 ```typescript
-import { Spikard, get, post } from "@spikard/node";
+import { Spikard } from "@spikard/node";
 import { z } from "zod";
 
 const UserSchema = z.object({
@@ -33,15 +33,36 @@ type User = z.infer<typeof UserSchema>;
 
 const app = new Spikard();
 
-get("/users/:id")(async function getUser(req) {
+async function getUser(req) {
   const id = parseInt(req.params.id);
   return { id, name: "Alice", email: "alice@example.com" };
-});
+}
 
-post("/users", { bodySchema: UserSchema })(async function createUser(req) {
+async function createUser(req) {
   const user = req.json<User>();
   return user;
-});
+}
+
+app.addRoute(
+  {
+    method: "GET",
+    path: "/users/:id",
+    handler_name: "getUser",
+    is_async: true,
+  },
+  getUser
+);
+
+app.addRoute(
+  {
+    method: "POST",
+    path: "/users",
+    handler_name: "createUser",
+    request_schema: UserSchema,
+    is_async: true,
+  },
+  createUser
+);
 
 if (require.main === module) {
   app.run({ port: 8000 });
@@ -50,31 +71,54 @@ if (require.main === module) {
 
 ## Route Registration
 
-### HTTP Method Decorators
+### Manual Registration with `addRoute`
+
+Routes are registered manually using `app.addRoute(metadata, handler)`:
 
 ```typescript
-import { get, post, put, patch, del } from "@spikard/node";
+import { Spikard } from "@spikard/node";
 
-get("/users")(async function listUsers() {
+const app = new Spikard();
+
+async function listUsers() {
   return { users: [] };
-});
+}
 
-post("/users")(async function createUser(req) {
+async function createUser(req) {
   return { created: true };
-});
+}
 
-put("/users/:id")(async function updateUser(req) {
-  return { updated: true };
-});
+app.addRoute(
+  {
+    method: "GET",
+    path: "/users",
+    handler_name: "listUsers",
+    is_async: true,
+  },
+  listUsers
+);
 
-patch("/users/:id")(async function patchUser(req) {
-  return { patched: true };
-});
-
-del("/users/:id")(async function deleteUser(req) {
-  return { deleted: true };
-});
+app.addRoute(
+  {
+    method: "POST",
+    path: "/users",
+    handler_name: "createUser",
+    is_async: true,
+  },
+  createUser
+);
 ```
+
+### Supported HTTP Methods
+
+- `GET` - Retrieve resources
+- `POST` - Create resources
+- `PUT` - Replace resources
+- `PATCH` - Update resources
+- `DELETE` - Delete resources
+- `HEAD` - Get headers only
+- `OPTIONS` - Get allowed methods
+- `TRACE` - Echo the request
 
 ### With Schemas
 
