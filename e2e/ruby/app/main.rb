@@ -895,7 +895,7 @@ module E2ERubyApp
     app
   end
 
-  def create_db_pool()
+  def create_db_pool_simple()
     { id: '000000000007', type: 'db_pool', timestamp: Time.now.to_s }
   end
 
@@ -906,15 +906,15 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("db_pool", Spikard::Provide.new(method("create_db_pool"), cacheable: true))
+    app.provide("db_pool", Spikard::Provide.new(method(:create_db_pool_simple), cacheable: true))
     app
   end
 
-  def create_service_b(service_a:)
+  def create_service_b(service_a)
     { id: '000000000009', type: 'service_b', timestamp: Time.now.to_s }
   end
 
-  def create_service_a(service_b:)
+  def create_service_a(service_b)
     { id: '000000000009', type: 'service_a', timestamp: Time.now.to_s }
   end
 
@@ -925,8 +925,8 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("service_a", Spikard::Provide.new(method("create_service_a"), depends_on: ["service_b"]))
-    app.provide("service_b", Spikard::Provide.new(method("create_service_b"), depends_on: ["service_a"]))
+    app.provide("service_a", Spikard::Provide.new(method(:create_service_a), depends_on: ["service_b"]))
+    app.provide("service_b", Spikard::Provide.new(method(:create_service_b), depends_on: ["service_a"]))
     app
   end
 
@@ -963,7 +963,7 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("timestamp_generator", Spikard::Provide.new(method("create_timestamp")))
+    app.provide("timestamp_generator", Spikard::Provide.new(method(:create_timestamp)))
     app
   end
 
@@ -975,7 +975,7 @@ module E2ERubyApp
     app
   end
 
-  def create_db_pool(app_config:)
+  def create_db_pool_singleton(app_config = nil)
     # Singleton with counter
     singleton_key = 'singleton_db_pool'
     BACKGROUND_STATE[singleton_key] ||= {
@@ -986,7 +986,7 @@ module E2ERubyApp
     BACKGROUND_STATE[singleton_key]
   end
 
-  def create_request_context(db_pool:)
+  def create_request_context(db_pool)
     { id: '00000000000f', type: 'request_context', timestamp: Time.now.to_s }
   end
 
@@ -998,8 +998,8 @@ module E2ERubyApp
 
     # Register dependencies
     app.provide("app_config", {"app_name" => "MyApp", "version" => "2.0"})
-    app.provide("request_context", Spikard::Provide.new(method("create_request_context"), depends_on: ["db_pool"], cacheable: true))
-    app.provide("db_pool", Spikard::Provide.new(method("create_db_pool"), depends_on: ["app_config"], singleton: true))
+    app.provide("request_context", Spikard::Provide.new(method(:create_request_context), depends_on: ["db_pool"], cacheable: true))
+    app.provide("db_pool", Spikard::Provide.new(method(:create_db_pool_singleton), depends_on: ["app_config"], singleton: true))
     app
   end
 
@@ -1016,7 +1016,7 @@ module E2ERubyApp
     [resource, cleanup_proc]
   end
 
-  def create_session_with_cleanup(db_connection:, cache_connection:)
+  def create_session_with_cleanup(db_connection, cache_connection)
     # Create resource
     CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_opened'
     resource = { id: '00000000002d', active: true }
@@ -1059,25 +1059,25 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("cache_connection", Spikard::Provide.new(method("create_cache_connection_with_cleanup"), cacheable: true))
-    app.provide("db_connection", Spikard::Provide.new(method("create_db_connection_with_cleanup"), cacheable: true))
-    app.provide("session", Spikard::Provide.new(method("create_session_with_cleanup"), depends_on: ["db_connection", "cache_connection"], cacheable: true))
+    app.provide("cache_connection", Spikard::Provide.new(method(:create_cache_connection_with_cleanup), cacheable: true))
+    app.provide("db_connection", Spikard::Provide.new(method(:create_db_connection_with_cleanup), cacheable: true))
+    app.provide("session", Spikard::Provide.new(method(:create_session_with_cleanup), depends_on: ["db_connection", "cache_connection"], cacheable: true))
     app.get('/api/cleanup-state', handler_name: "di_7_multiple_dependencies_with_cleanup_success_cleanup_state") do |_req|
       build_response(content: { cleanup_events: CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] }, status: 200)
     end
     app
   end
 
-  def create_cache_from_config(config:)
+  def create_cache_from_config(config)
     { id: '000000000005', type: 'cache', timestamp: Time.now.to_s }
   end
 
-  def create_auth_service(db_pool:, cache:)
+  def create_auth_service(db_pool, cache)
     # Create auth service
     { auth_service_enabled: true, has_db: !db_pool.nil?, has_cache: !cache.nil? }
   end
 
-  def create_db_pool_from_config(config:)
+  def create_db_pool_from_config(config)
     { id: '000000000007', type: 'db_pool', timestamp: Time.now.to_s }
   end
 
@@ -1088,9 +1088,9 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("auth_service", Spikard::Provide.new(method("create_auth_service"), depends_on: ["db_pool", "cache"], cacheable: true))
-    app.provide("db_pool", Spikard::Provide.new(method("create_db_pool_from_config"), depends_on: ["config"], cacheable: true))
-    app.provide("cache", Spikard::Provide.new(method("create_cache_from_config"), depends_on: ["config"], cacheable: true))
+    app.provide("auth_service", Spikard::Provide.new(method(:create_auth_service), depends_on: ["db_pool", "cache"], cacheable: true))
+    app.provide("db_pool", Spikard::Provide.new(method(:create_db_pool_from_config), depends_on: ["config"], cacheable: true))
+    app.provide("cache", Spikard::Provide.new(method(:create_cache_from_config), depends_on: ["config"], cacheable: true))
     app.provide("config", {"cache_ttl" => 300, "db_url" => "postgresql://localhost/mydb"})
     app
   end
@@ -1118,7 +1118,7 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("request_id_generator", Spikard::Provide.new(method("create_request_id"), cacheable: true))
+    app.provide("request_id_generator", Spikard::Provide.new(method(:create_request_id), cacheable: true))
     app
   end
 
@@ -1176,7 +1176,7 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("db_session", Spikard::Provide.new(method("create_db_session_with_cleanup"), cacheable: true))
+    app.provide("db_session", Spikard::Provide.new(method(:create_db_session_with_cleanup), cacheable: true))
     app.get('/api/cleanup-state', handler_name: "di_13_resource_cleanup_after_request_success_cleanup_state") do |_req|
       build_response(content: { cleanup_events: CLEANUP_STATE[:di_resource_cleanup_after_request_success] }, status: 200)
     end
@@ -1224,7 +1224,7 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("app_counter", Spikard::Provide.new(method("create_app_counter"), singleton: true))
+    app.provide("app_counter", Spikard::Provide.new(method(:create_app_counter), singleton: true))
     app
   end
 

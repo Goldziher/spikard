@@ -68,7 +68,7 @@ RSpec.describe "di" do
     app = E2ERubyApp.create_app_di_6_mixed_singleton_and_per_request_caching_success
     client = Spikard::Testing.create_test_client(app)
     response = client.get("/api/mixed-caching")
-
+    puts "DEBUG Mixed: Status=#{response.status_code}, Body=#{response.body}"
     # Second request to verify singleton caching
     response2 = client.get("/api/mixed-caching")
     expect(response.status_code).to eq(200)
