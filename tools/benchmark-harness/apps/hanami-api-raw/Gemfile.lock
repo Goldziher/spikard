@@ -1,0 +1,37 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    csv (3.3.5)
+    hanami-api (0.3.0)
+      hanami-router (~> 2.0)
+    hanami-router (2.3.0)
+      csv (~> 3.3)
+      mustermann (~> 3.0)
+      mustermann-contrib (~> 3.0)
+      rack (>= 2.0)
+    hansi (0.2.1)
+    mustermann (3.0.4)
+      ruby2_keywords (~> 0.0.1)
+    mustermann-contrib (3.0.4)
+      hansi (~> 0.2.0)
+      mustermann (= 3.0.4)
+    nio4r (2.7.5)
+    puma (7.1.0)
+      nio4r (~> 2.0)
+    rack (3.2.4)
+    rackup (2.2.1)
+      rack (>= 3)
+    ruby2_keywords (0.0.5)
+
+PLATFORMS
+  arm64-darwin-24
+  ruby
+
+DEPENDENCIES
+  hanami-api (~> 0.3)
+  puma (~> 7.1)
+  rack (~> 3.2)
+  rackup (~> 2.2)
+
+BUNDLED WITH
+   2.7.2
