@@ -1,5 +1,9 @@
 # @spikard/node
 
+[![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
+[![npm](https://img.shields.io/npm/v/@spikard/node)](https://www.npmjs.com/package/@spikard/node)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 High-performance TypeScript/Node.js web framework with a Rust core. Build REST APIs with Fastify-style decorators backed by Axum and Tower-HTTP.
 
 ## Installation
