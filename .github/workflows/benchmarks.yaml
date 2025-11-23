@@ -80,7 +80,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8001'
 
   bench-spikard-python:
     name: spikard
@@ -103,7 +102,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8002'
 
   bench-spikard-node:
     name: spikard-node
@@ -126,7 +124,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8003'
 
   bench-spikard-ruby:
     name: spikard-ruby
@@ -149,7 +146,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8004'
 
   bench-spikard-wasm:
     name: spikard-wasm
@@ -172,7 +168,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8005'
 
   # Python frameworks (6 frameworks)
   bench-axum-baseline:
@@ -196,7 +191,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8006'
 
   bench-fastapi:
     name: fastapi
@@ -216,7 +210,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8007'
 
   bench-fastapi-granian:
     name: fastapi-granian
@@ -236,7 +229,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8008'
 
   bench-litestar:
     name: litestar
@@ -256,7 +248,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8009'
 
   bench-litestar-granian:
     name: litestar-granian
@@ -276,7 +267,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8010'
 
   bench-robyn:
     name: robyn
@@ -296,7 +286,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8011'
 
   # Python raw variants (5 frameworks)
   bench-spikard-raw:
@@ -320,7 +309,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8012'
 
   bench-fastapi-raw:
     name: fastapi-raw
@@ -340,7 +328,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8013'
 
   bench-fastapi-granian-raw:
     name: fastapi-granian-raw
@@ -360,7 +347,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8014'
 
   bench-litestar-raw:
     name: litestar-raw
@@ -380,7 +366,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8015'
 
   bench-litestar-granian-raw:
     name: litestar-granian-raw
@@ -400,7 +385,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8016'
 
   # TypeScript frameworks (6 frameworks)
   bench-fastify:
@@ -421,7 +405,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8017'
 
   bench-fastify-raw:
     name: fastify-raw
@@ -441,7 +424,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8018'
 
   bench-hono:
     name: hono
@@ -461,7 +443,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8019'
 
   bench-hono-raw:
     name: hono-raw
@@ -481,7 +462,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8020'
 
   bench-express:
     name: express
@@ -501,7 +481,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8021'
 
   bench-express-raw:
     name: express-raw
@@ -521,7 +500,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8022'
 
   # Ruby frameworks (4 frameworks)
   bench-hanami-api:
@@ -542,7 +520,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8023'
 
   bench-hanami-api-raw:
     name: hanami-api-raw
@@ -562,7 +539,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8024'
 
   bench-roda:
     name: roda
@@ -582,7 +558,6 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8025'
 
   bench-roda-raw:
     name: roda-raw
@@ -602,4 +577,3 @@ jobs:
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          port: '8026'
