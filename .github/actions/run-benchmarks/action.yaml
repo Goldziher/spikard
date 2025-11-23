@@ -33,6 +33,13 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Install oha load generator
+      shell: bash
+      run: |
+        if ! command -v oha &> /dev/null; then
+          cargo install oha
+        fi
+
     - name: Create results directory
       shell: bash
       run: mkdir -p results/${{ inputs.language }}
