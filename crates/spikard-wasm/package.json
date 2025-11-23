@@ -2,8 +2,26 @@
 	"name": "spikard-wasm",
 	"version": "0.1.1",
 	"description": "WebAssembly bindings for spikard - High-performance HTTP framework",
-	"main": "dist/spikard_wasm.js",
-	"types": "dist/spikard_wasm.d.ts",
+	"main": "dist-bundler/spikard_wasm.js",
+	"types": "dist-bundler/spikard_wasm.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist-bundler/spikard_wasm.js",
+			"types": "./dist-bundler/spikard_wasm.d.ts",
+			"default": "./dist-bundler/spikard_wasm.js"
+		},
+		"./dist-node": {
+			"import": "./dist-node/spikard_wasm.js",
+			"require": "./dist-node/spikard_wasm.js",
+			"types": "./dist-node/spikard_wasm.d.ts"
+		},
+		"./dist-node/*": "./dist-node/*",
+		"./dist-web": {
+			"import": "./dist-web/spikard_wasm.js",
+			"types": "./dist-web/spikard_wasm.d.ts"
+		},
+		"./dist-web/*": "./dist-web/*"
+	},
 	"license": "MIT",
 	"keywords": [
 		"wasm",
@@ -29,17 +47,24 @@
 	},
 	"files": [
 		"README.md",
-		"dist"
+		"dist-bundler",
+		"dist-node",
+		"dist-web"
 	],
 	"scripts": {
 		"build": "pnpm run build:bundler",
 		"build:bundler": "PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack build --target bundler --out-dir dist-bundler --release",
 		"build:web": "PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack build --target web --out-dir dist-web --release",
 		"build:node": "PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack build --target nodejs --out-dir dist-node --release",
-		"build:all": "pnpm run build:bundler && pnpm run build:node",
-		"test": "PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack build --target web && PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack test --node"
+		"build:all": "pnpm run build:bundler && pnpm run build:node && pnpm run build:web",
+		"test": "PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack build --target web && PATH=\"$HOME/.cargo/bin:$PATH\" rustup run stable wasm-pack test --node",
+		"clean": "rm -rf dist-bundler dist-node dist-web node_modules"
 	},
 	"devDependencies": {
 		"wasm-pack": "^0.13.1"
+	},
+	"publishConfig": {
+		"registry": "https://registry.npmjs.org/",
+		"access": "public"
 	}
 }

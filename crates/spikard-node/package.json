@@ -36,14 +36,19 @@
 		"url": "https://github.com/Goldziher/spikard/issues"
 	},
 	"scripts": {
+		"artifacts": "napi artifacts",
 		"build": "napi build --platform --release",
 		"build:debug": "napi build --platform",
-		"test": "vitest run --passWithNoTests"
+		"prepublishOnly": "napi prepublish -t npm",
+		"test": "vitest run --passWithNoTests",
+		"universal": "napi universal",
+		"version": "napi version"
 	},
 	"files": [
 		"README.md",
 		"index.js",
-		"index.d.ts"
+		"*.d.ts",
+		"*.node"
 	],
 	"engines": {
 		"node": ">=20"
