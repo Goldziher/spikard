@@ -322,7 +322,7 @@ mod tests {
         let app_dir = PathBuf::from("/app");
 
         // Test without working_dir_hint
-        let framework = get_framework("spikard-python").expect("spikard-python should exist");
+        let framework = get_framework("spikard").expect("spikard should exist");
         let working_dir = if let Some(hint) = &framework.working_dir_hint {
             app_dir.join(hint)
         } else {
@@ -361,7 +361,7 @@ mod tests {
         // Verify that all major frameworks are accessible
         let frameworks = vec![
             "spikard-rust",
-            "spikard-python",
+            "spikard",
             "spikard-node",
             "spikard-ruby",
             "spikard-wasm",
@@ -401,13 +401,13 @@ mod tests {
 
         let detected = detect_framework(temp_dir.path());
         assert!(detected.is_ok());
-        assert_eq!(detected.unwrap().name, "spikard-python");
+        assert_eq!(detected.unwrap().name, "spikard");
     }
 
     #[test]
     fn test_server_config_variant_field() {
         let config = ServerConfig {
-            framework: Some("spikard-python".to_string()),
+            framework: Some("spikard".to_string()),
             port: 8080,
             app_dir: PathBuf::from("."),
             variant: Some("async".to_string()),

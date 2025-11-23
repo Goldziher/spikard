@@ -2,15 +2,22 @@
   "name": "hono-benchmark",
   "version": "0.1.0",
   "description": "Hono comparison server for benchmarking",
-  "main": "server.js",
+  "type": "module",
+  "main": "server.ts",
   "scripts": {
-    "start": "node server.js"
+    "start": "tsx server.ts",
+    "start:js": "node server.js"
   },
   "dependencies": {
-    "hono": "4.10.0",
-    "@hono/node-server": "1.19.6",
-    "@hono/zod-validator": "0.7.4",
-    "zod": "4.0.0"
+    "hono": "^4.10.0",
+    "@hono/node-server": "^1.19.6",
+    "@hono/zod-validator": "^0.7.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "@types/node": "^22.10.1"
   },
   "engines": {
     "node": ">=18.0.0"
