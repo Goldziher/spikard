@@ -1,7 +1,7 @@
 {
 	"name": "@spikard/node",
 	"version": "0.1.0",
-	"description": "High-performance HTTP framework for Node.js/TypeScript. Type-safe routing, validation, and testing powered by Rust core.",
+	"description": "High-performance HTTP framework for Node.js and Bun. Type-safe routing, validation, and testing powered by Rust core.",
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",
 	"types": "index.d.ts",
@@ -29,12 +29,18 @@
 		"framework",
 		"typescript",
 		"nodejs",
+		"bun",
 		"rust",
 		"napi",
 		"performance",
 		"validation",
 		"testing",
-		"type-safe"
+		"type-safe",
+		"axum",
+		"tower",
+		"web",
+		"api",
+		"rest"
 	],
 	"author": {
 		"name": "Na'aman Hirschfeld",
