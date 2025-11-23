@@ -1,5 +1,5 @@
 {
-	"name": "@spikard/node",
+	"name": "spikard",
 	"version": "0.1.0",
 	"description": "Node.js bindings for spikard",
 	"main": "index.js",

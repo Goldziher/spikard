@@ -351,7 +351,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           command: build
-          args: --release -i python${{ matrix.python }} --out target/wheels ${{ matrix.extra_args }}
+          args: --release -i python${{ matrix.python }} --out ../../target/wheels ${{ matrix.extra_args }}
           target: ${{ matrix.rust_target }}
           manylinux: ${{ matrix.manylinux }}
           working-directory: crates/spikard-py
@@ -362,7 +362,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           command: build
-          args: --release -i python${{ matrix.python }} --out target/wheels ${{ matrix.extra_args }}
+          args: --release -i python${{ matrix.python }} --out ../../target/wheels ${{ matrix.extra_args }}
           target: ${{ matrix.rust_target }}
           working-directory: crates/spikard-py
           sccache: true
@@ -414,7 +414,7 @@ jobs:
           set -euo pipefail
           mkdir -p target/wheels
           cd crates/spikard-py
-          uv tool run maturin sdist --out target/wheels
+          uv tool run maturin sdist --out ../../target/wheels
 
       - name: Upload sdist
         uses: actions/upload-artifact@v5
