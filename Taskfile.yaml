@@ -184,13 +184,13 @@ tasks:
     desc: "Run Python linters with auto-fix"
     cmds:
       - uv run ruff check --fix .
-      - uv run mypy benchmarks tools packages/python
+      - uv run mypy tools packages/python
 
   python:lint:check:
     desc: "Check Python linters without auto-fix"
     cmds:
       - uv run ruff check .
-      - uv run mypy benchmarks tools packages/python
+      - uv run mypy tools packages/python
 
   python:format:
     desc: "Format Python code with Ruff"

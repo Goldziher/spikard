@@ -177,6 +177,14 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
+            "elysia",
+            vec!["server.ts".to_string()],
+            None,
+            "bun run server.ts {port}",
+            None,
+        ),
+        FrameworkConfig::new("morojs", vec!["server.ts".to_string()], None, "npm start {port}", None),
+        FrameworkConfig::new(
             "express",
             vec!["server.ts".to_string()],
             None,
@@ -399,7 +407,7 @@ mod tests {
         assert!(names.contains(&"roda"));
         assert!(names.contains(&"roda-raw"));
 
-        assert_eq!(registry.len(), 26);
+        assert_eq!(registry.len(), 28);
     }
 
     #[test]
@@ -458,7 +466,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        assert_eq!(frameworks.len(), 26);
+        assert_eq!(frameworks.len(), 28);
     }
 
     #[test]
