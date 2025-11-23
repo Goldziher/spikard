@@ -2,12 +2,16 @@
 
 use benchmark_harness::server::{find_available_port, ServerConfig};
 #[cfg(unix)]
+#[allow(unused_imports)]
 use benchmark_harness::server::ServerHandle;
 use std::net::TcpListener;
 use std::path::PathBuf;
+use std::process::Command;
 #[cfg(unix)]
-use std::process::{Command, Stdio};
+#[allow(unused_imports)]
+use std::process::Stdio;
 #[cfg(unix)]
+#[allow(unused_imports)]
 use std::time::Duration;
 
 #[test]
