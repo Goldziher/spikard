@@ -1,6 +1,6 @@
 {
   "name": "hono-benchmark",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Hono comparison server for benchmarking",
   "main": "server.js",
   "scripts": {
