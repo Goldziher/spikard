@@ -1,6 +1,6 @@
 name: Benchmarks
 
-on:
+'on':
   # Manual trigger only
   workflow_dispatch:
     inputs:
