@@ -535,25 +535,27 @@ jobs:
 
       - name: Package artifacts
         if: runner.os != 'Windows'
+        working-directory: crates/spikard-node
         env:
           TARGET: ${{ matrix.settings.target }}
         run: |
-          pnpm --filter spikard exec napi artifacts --output-dir ./artifacts
-          if [ ! -d crates/spikard-node/npm ]; then
+          pnpm exec napi artifacts --output-dir ./artifacts
+          if [ ! -d npm ]; then
             echo "npm artifact directory missing" >&2
             exit 1
           fi
-          tar -czf node-bindings-$TARGET.tar.gz -C crates/spikard-node npm
+          tar -czf ../../node-bindings-$TARGET.tar.gz -C . npm
 
       - name: Package artifacts (Windows)
         if: runner.os == 'Windows'
+        working-directory: crates/spikard-node
         shell: pwsh
         env:
           TARGET: ${{ matrix.settings.target }}
         run: |
-          pnpm --filter spikard exec napi artifacts --output-dir ./artifacts
-          if (-Not (Test-Path crates/spikard-node\npm)) { throw "npm artifact directory missing" }
-          tar -czf node-bindings-$env:TARGET.tar.gz -C crates/spikard-node npm
+          pnpm exec napi artifacts --output-dir ./artifacts
+          if (-Not (Test-Path npm)) { throw "npm artifact directory missing" }
+          tar -czf ..\..\node-bindings-$env:TARGET.tar.gz -C . npm
 
       - name: Generate and upload TypeScript definitions
         if: matrix.settings.target == 'x86_64-unknown-linux-gnu'
