@@ -42,6 +42,10 @@ tasks:
       - echo "Updating pre-commit hooks..."
       - task: pre-commit:update
       - echo "All dependencies updated"
+  version:sync:
+    desc: "Sync all package versions to the workspace version"
+    cmds:
+      - python3 scripts/sync_versions.py{{if .VERSION}} {{.VERSION}}{{end}}
   build:
     desc: "Build Rust core and language bindings"
     cmds:
