@@ -14,6 +14,7 @@ from spikard.config import (
     StaticFilesConfig,
 )
 from spikard.datastructures import UploadFile
+from spikard.di import Provide, inject_dependencies
 from spikard.params import Body, Cookie, Header, Path, Query
 from spikard.request import Request
 from spikard.routing import delete, get, head, options, patch, post, put, route, trace
@@ -29,6 +30,7 @@ __all__ = [
     "HttpMethod",
     "JwtConfig",
     "Path",
+    "Provide",
     "Query",
     "RateLimitConfig",
     "Request",
@@ -43,6 +45,7 @@ __all__ = [
     "delete",
     "get",
     "head",
+    "inject_dependencies",
     "options",
     "patch",
     "post",

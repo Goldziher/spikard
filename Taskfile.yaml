@@ -116,8 +116,8 @@ tasks:
   rust:install:
     desc: "Install Rust toolchain and developer tools"
     cmds:
-      - uv tool install cargo-binstall
-      - uv tool install cargo-upgrade
+      - which cargo-binstall || cargo install cargo-binstall || echo "cargo-binstall install failed (optional)"
+      - which cargo-upgrade || cargo install cargo-upgrade || echo "cargo-upgrade install failed (optional)"
 
   rust:update:
     desc: "Upgrade Rust dependencies"

@@ -4,6 +4,7 @@
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::background_data;
+use crate::dependencies::{DependencyConfig, has_cleanup, requires_multi_request_test};
 use crate::middleware::parse_middleware;
 use anyhow::{Context, Result};
 use serde_json::Value;
@@ -296,6 +297,60 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
 ",
         request_call
     ));
+
+    // Check for DI-specific test patterns
+    if let Some(di_config) = DependencyConfig::from_fixture(fixture).expect("invalid DI config") {
+        // Handle singleton caching tests - requires multiple requests
+        if requires_multi_request_test(&di_config) {
+            example.push_str("\n");
+            example.push_str("    # Second request to verify singleton caching\n");
+            example.push_str(&format!("    response2 = {}\n", request_call));
+            example.push_str("    expect(response.status_code).to eq(200)\n");
+            example.push_str("    expect(response2.status_code).to eq(200)\n");
+            example.push_str("    data1 = response.json\n");
+            example.push_str("    data2 = response2.json\n");
+            example.push_str("\n");
+            example.push_str("    # Singleton should have same ID but incremented count\n");
+            example.push_str("    expect(data1).to have_key('id')\n");
+            example.push_str("    expect(data2).to have_key('id')\n");
+            example.push_str("    expect(data1['id']).to eq(data2['id'])  # Same singleton instance\n");
+            example.push_str("    if data1.key?('count') && data2.key?('count')\n");
+            example.push_str("      expect(data2['count']).to be > data1['count']  # Count incremented\n");
+            example.push_str("    end\n");
+            example.push_str("    client.close\n");
+            example.push_str(
+                "  end
+
+",
+            );
+            return example;
+        }
+
+        // Handle cleanup tests - poll cleanup state endpoint
+        if has_cleanup(&di_config) {
+            example.push_str("    expect(response.status_code).to eq(200)\n");
+            example.push_str("\n");
+            example.push_str("    # Allow async cleanup to complete\n");
+            example.push_str("    sleep 0.1\n");
+            example.push_str("\n");
+            example.push_str("    # Verify cleanup was called\n");
+            example.push_str("    cleanup_response = client.get('/api/cleanup-state')\n");
+            example.push_str("    expect(cleanup_response.status_code).to eq(200)\n");
+            example.push_str("    cleanup_state = cleanup_response.json\n");
+            example.push_str("    expect(cleanup_state).to have_key('cleanup_events')\n");
+            example.push_str("    events = cleanup_state['cleanup_events']\n");
+            example.push_str("    expect(events).to include('session_opened')\n");
+            example.push_str("    expect(events).to include('session_closed')\n");
+            example.push_str("    client.close\n");
+            example.push_str(
+                "  end
+
+",
+            );
+            return example;
+        }
+    }
+
     example.push_str(&build_expectations(
         &fixture.expected_response,
         streaming_info.as_ref(),

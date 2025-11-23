@@ -40,6 +40,7 @@ class Spikard:
             "on_response": [],
             "on_error": [],
         }
+        self._dependencies: dict[str, Any] = {}
         Spikard.current_instance = self
 
     def register_route(
@@ -443,6 +444,68 @@ class Spikard:
             Dictionary of hook lists by type
         """
         return {hook_type: hooks.copy() for hook_type, hooks in self._lifecycle_hooks.items()}
+
+    def provide(self, key: str, dependency: Any) -> "Spikard":
+        """Register a dependency for injection into handlers.
+
+        Dependencies can be static values or factory functions wrapped in `Provide`.
+        Handler parameters matching the dependency key will be automatically injected.
+
+        Args:
+            key: Dependency key used for injection (matches handler parameter names)
+            dependency: Either a static value or a Provide wrapper for factory functions
+
+        Returns:
+            Self for method chaining
+
+        Examples:
+            Static value dependency::
+
+                app.provide("app_name", "MyApp")
+                app.provide("max_connections", 100)
+
+
+                @app.get("/config")
+                async def handler(app_name: str, max_connections: int):
+                    return {"app": app_name, "max": max_connections}
+
+            Factory dependency::
+
+                from spikard.di import Provide
+
+
+                async def create_db_pool(config: dict):
+                    return await connect_to_db(config["db_url"])
+
+
+                app.provide("config", {"db_url": "postgresql://localhost/mydb"})
+                app.provide("db", Provide(create_db_pool, depends_on=["config"], singleton=True))
+
+
+                @app.get("/users")
+                async def handler(db):
+                    return await db.fetch_all("SELECT * FROM users")
+
+            Generator pattern for cleanup::
+
+                async def create_session(db):
+                    session = await db.create_session()
+                    yield session
+                    await session.close()
+
+
+                app.provide("session", Provide(create_session, depends_on=["db"]))
+        """
+        self._dependencies[key] = dependency
+        return self
+
+    def get_dependencies(self) -> dict[str, Any]:
+        """Get all registered dependencies.
+
+        Returns:
+            Dictionary mapping dependency keys to their values or Provide wrappers
+        """
+        return self._dependencies.copy()
 
     def websocket(self, path: str) -> Callable[[Callable[[], Any]], Callable[[], Any]]:
         """Register a WebSocket endpoint.

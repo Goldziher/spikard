@@ -1,0 +1,49 @@
+{
+	"name": "Route-level dependency override - success",
+	"description": "Tests route-level dependency override of app-level dependency for testing or special cases",
+	"category": "dependency_injection",
+	"source": {
+		"framework": "spikard",
+		"adapted": false
+	},
+	"handler": {
+		"route": "/api/override-test",
+		"method": "GET",
+		"dependencies": {
+			"api_key_validator": {
+				"type": "value",
+				"value": {
+					"mode": "production",
+					"strict": true
+				},
+				"value_type": "object",
+				"scope": "app"
+			}
+		},
+		"route_overrides": {
+			"api_key_validator": {
+				"type": "value",
+				"value": {
+					"mode": "test",
+					"strict": false
+				},
+				"value_type": "object",
+				"scope": "route"
+			}
+		},
+		"handler_dependencies": ["api_key_validator"]
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/override-test"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"mode": "test",
+			"strict": false
+		}
+	},
+	"notes": "App-level dependency has mode='production', but route-level override sets mode='test'. Handler should receive the route-level override.",
+	"tags": ["dependency_injection", "override", "testing", "advanced"]
+}

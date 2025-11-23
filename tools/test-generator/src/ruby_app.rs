@@ -4,6 +4,7 @@
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
+use crate::dependencies::{Dependency, DependencyConfig, has_cleanup};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use anyhow::{Context, Result};
 use serde_json::{Map, Value};
@@ -29,11 +30,22 @@ pub fn generate_ruby_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
 
     let fixtures_by_category = load_fixtures_grouped(fixtures_dir)?;
     let mut needs_background = false;
+    let mut needs_cleanup_state = false;
     'outer: for fixtures in fixtures_by_category.values() {
         for fixture in fixtures {
             if background_data(fixture)?.is_some() {
                 needs_background = true;
-                break 'outer;
+                if needs_cleanup_state {
+                    break 'outer;
+                }
+            }
+            if let Some(di_config) = DependencyConfig::from_fixture(fixture)? {
+                if has_cleanup(&di_config) {
+                    needs_cleanup_state = true;
+                    if needs_background {
+                        break 'outer;
+                    }
+                }
             }
         }
     }
@@ -55,6 +67,9 @@ pub fn generate_ruby_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     );
     if needs_background {
         code.push_str("BACKGROUND_STATE = Hash.new { |hash, key| hash[key] = [] }\n\n");
+    }
+    if needs_cleanup_state {
+        code.push_str("CLEANUP_STATE = Hash.new { |hash, key| hash[key] = [] }\n\n");
     }
     code.push_str(
         "module E2ERubyApp
@@ -98,6 +113,16 @@ pub fn generate_ruby_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
                 write_static_assets(&app_dir, &fixture_dir, &metadata.static_dirs)?;
             }
             let background_info = background_data(fixture)?;
+            let di_config = DependencyConfig::from_fixture(fixture)?;
+
+            // Generate DI factory functions first
+            if let Some(ref di_cfg) = di_config {
+                let factories = generate_all_dependency_factories_ruby(di_cfg, &fixture_dir)?;
+                if !factories.is_empty() {
+                    code.push_str(&factories);
+                }
+            }
+
             code.push_str(&build_fixture_function(
                 category,
                 index,
@@ -105,6 +130,7 @@ pub fn generate_ruby_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
                 background_info,
                 &metadata,
                 &fixture_dir,
+                di_config.as_ref(),
             )?);
         }
     }
@@ -149,6 +175,7 @@ fn build_fixture_function(
     background: Option<BackgroundFixtureData>,
     metadata: &MiddlewareMetadata,
     fixture_dir: &str,
+    di_config: Option<&DependencyConfig>,
 ) -> Result<String> {
     let method_name = build_method_name(category, index, &fixture.name);
     let handler_name = build_handler_name(category, index, &fixture.name);
@@ -222,6 +249,17 @@ fn build_fixture_function(
 
     let args_joined = args.join(", ");
     let skip_route_registration = !metadata.static_dirs.is_empty();
+
+    // Add DI parameter to handler block
+    let mut handler_params = Vec::new();
+    handler_params.push("_request".to_string());
+    if let Some(di_cfg) = di_config {
+        for dep_key in &di_cfg.handler_dependencies {
+            handler_params.push(format!("{}:", dep_key));
+        }
+    }
+    let handler_params_str = handler_params.join(", ");
+
     if !skip_route_registration {
         let request_var = if background.is_some() { "request" } else { "_request" };
         function.push_str(&format!(
@@ -230,7 +268,14 @@ fn build_fixture_function(
             method,
             string_literal(route),
             args_joined,
-            request_var
+            if di_config
+                .as_ref()
+                .map_or(false, |cfg| !cfg.handler_dependencies.is_empty())
+            {
+                &handler_params_str
+            } else {
+                request_var
+            }
         ));
 
         if let Some(stmt) = request_timeout_sleep_statement(metadata) {
@@ -282,6 +327,28 @@ fn build_fixture_function(
 ",
         );
     }
+
+    // Add DI registration
+    if let Some(di_cfg) = di_config {
+        let di_registration = generate_dependency_registration_ruby(di_cfg, fixture_dir)?;
+        if !di_registration.is_empty() {
+            function.push_str(&di_registration);
+        }
+
+        // Add cleanup state handler
+        if has_cleanup(di_cfg) {
+            function.push_str(&format!(
+                "    app.get('/api/cleanup-state', handler_name: {}) do |_req|\n",
+                string_literal(&format!("{}_cleanup_state", handler_name))
+            ));
+            function.push_str(&format!(
+                "      build_response(content: {{ cleanup_events: CLEANUP_STATE[:{}] }}, status: 200)\n",
+                fixture_dir
+            ));
+            function.push_str("    end\n");
+        }
+    }
+
     function.push_str(
         "    app
 ",
@@ -1036,4 +1103,169 @@ fn format_sleep_seconds(ms: u64) -> String {
         literal.push('0');
     }
     literal
+}
+
+/// Generate Ruby factory function for a dependency
+fn generate_dependency_factory_ruby(dep: &Dependency, fixture_id: &str) -> Result<String> {
+    let factory_name = dep.factory.as_ref().unwrap_or(&dep.key);
+    let is_cleanup = dep.cleanup;
+
+    let mut code = String::new();
+
+    if is_cleanup {
+        // Factory with cleanup (returns [value, cleanup_proc])
+        code.push_str(&format!("  def {}(", factory_name));
+        for (i, depend_key) in dep.depends_on.iter().enumerate() {
+            if i > 0 {
+                code.push_str(", ");
+            }
+            code.push_str(&format!("{}:", depend_key));
+        }
+        code.push_str(")\n");
+        code.push_str("    # Create resource\n");
+        code.push_str(&format!("    CLEANUP_STATE[:{}] << 'session_opened'\n", fixture_id));
+        code.push_str(&format!(
+            "    resource = {{ id: '{:012x}', active: true }}\n",
+            fixture_id.len()
+        ));
+        code.push_str("    \n");
+        code.push_str("    # Return resource and cleanup proc\n");
+        code.push_str("    cleanup_proc = -> do\n");
+        code.push_str(&format!("      CLEANUP_STATE[:{}] << 'session_closed'\n", fixture_id));
+        code.push_str("    end\n");
+        code.push_str("    \n");
+        code.push_str("    [resource, cleanup_proc]\n");
+        code.push_str("  end\n\n");
+    } else if dep.singleton {
+        // Singleton factory with persistent state
+        code.push_str(&format!("  def {}(", factory_name));
+        for (i, depend_key) in dep.depends_on.iter().enumerate() {
+            if i > 0 {
+                code.push_str(", ");
+            }
+            code.push_str(&format!("{}:", depend_key));
+        }
+        code.push_str(")\n");
+        code.push_str("    # Singleton with counter\n");
+        code.push_str(&format!("    singleton_key = 'singleton_{}'\n", dep.key));
+        code.push_str("    BACKGROUND_STATE[singleton_key] ||= {\n");
+        code.push_str("      id: '00000000-0000-0000-0000-000000000063',\n");
+        code.push_str("      count: 0\n");
+        code.push_str("    }\n");
+        code.push_str("    BACKGROUND_STATE[singleton_key][:count] += 1\n");
+        code.push_str("    BACKGROUND_STATE[singleton_key]\n");
+        code.push_str("  end\n\n");
+    } else {
+        // Regular factory
+        code.push_str(&format!("  def {}(", factory_name));
+        for (i, depend_key) in dep.depends_on.iter().enumerate() {
+            if i > 0 {
+                code.push_str(", ");
+            }
+            code.push_str(&format!("{}:", depend_key));
+        }
+        code.push_str(")\n");
+
+        if dep.key.contains("auth") {
+            // Auth service
+            code.push_str("    # Create auth service\n");
+            if !dep.depends_on.is_empty() {
+                code.push_str(&format!(
+                    "    {{ {}_enabled: true, has_db: !{}.nil?, has_cache: !{}.nil? }}\n",
+                    dep.key,
+                    dep.depends_on.get(0).unwrap_or(&"nil".to_string()),
+                    dep.depends_on.get(1).unwrap_or(&"nil".to_string())
+                ));
+            } else {
+                code.push_str(&format!("    {{ {}_enabled: true, enabled: true }}\n", dep.key));
+            }
+        } else {
+            // Generic factory
+            code.push_str(&format!(
+                "    {{ id: '{:012x}', type: '{}', timestamp: Time.now.to_s }}\n",
+                dep.key.len(),
+                dep.key
+            ));
+        }
+
+        code.push_str("  end\n\n");
+    }
+
+    Ok(code)
+}
+
+/// Generate Ruby code to register dependencies in app
+fn generate_dependency_registration_ruby(di_config: &DependencyConfig, _fixture_id: &str) -> Result<String> {
+    if !di_config.has_dependencies() {
+        return Ok(String::new());
+    }
+
+    let mut code = String::new();
+    code.push_str("\n    # Register dependencies\n");
+
+    // Get all dependencies
+    let all_deps = di_config.all_dependencies();
+
+    // Register each dependency
+    for (key, dep) in all_deps.iter() {
+        if dep.is_value() {
+            // Value dependency
+            let value = ruby_dependency_value(dep)?;
+            code.push_str(&format!("    app.provide({}, {})\n", string_literal(key), value));
+        } else {
+            // Factory dependency
+            let factory_name = dep.factory.as_ref().unwrap_or(key);
+            let mut provide_args = Vec::new();
+            provide_args.push(format!("method({})", string_literal(factory_name)));
+
+            if !dep.depends_on.is_empty() {
+                let deps_array = dep
+                    .depends_on
+                    .iter()
+                    .map(|d| string_literal(d))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                provide_args.push(format!("depends_on: [{}]", deps_array));
+            }
+            if dep.singleton {
+                provide_args.push("singleton: true".to_string());
+            }
+            if dep.cacheable {
+                provide_args.push("cacheable: true".to_string());
+            }
+
+            code.push_str(&format!(
+                "    app.provide({}, Spikard::Provide.new({}))\n",
+                string_literal(key),
+                provide_args.join(", ")
+            ));
+        }
+    }
+
+    Ok(code)
+}
+
+/// Generate factory functions for all dependencies
+fn generate_all_dependency_factories_ruby(di_config: &DependencyConfig, fixture_id: &str) -> Result<String> {
+    let mut code = String::new();
+
+    let all_deps = di_config.all_dependencies();
+
+    // Generate factory functions for non-value dependencies
+    for dep in all_deps.values() {
+        if !dep.is_value() {
+            code.push_str(&generate_dependency_factory_ruby(dep, fixture_id)?);
+        }
+    }
+
+    Ok(code)
+}
+
+/// Convert dependency value to Ruby literal
+fn ruby_dependency_value(dep: &Dependency) -> Result<String> {
+    if let Some(ref value) = dep.value {
+        Ok(value_to_ruby(value))
+    } else {
+        Ok("nil".to_string())
+    }
 }

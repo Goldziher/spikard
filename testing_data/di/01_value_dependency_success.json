@@ -1,0 +1,44 @@
+{
+	"name": "Value dependency injection - success",
+	"description": "Tests simple value injection (config, constants) into a handler",
+	"category": "dependency_injection",
+	"source": {
+		"framework": "spikard",
+		"adapted": false
+	},
+	"handler": {
+		"route": "/api/config",
+		"method": "GET",
+		"dependencies": {
+			"app_name": {
+				"type": "value",
+				"value": "SpikardApp",
+				"value_type": "string"
+			},
+			"version": {
+				"type": "value",
+				"value": "1.0.0",
+				"value_type": "string"
+			},
+			"max_connections": {
+				"type": "value",
+				"value": 100,
+				"value_type": "integer"
+			}
+		},
+		"handler_dependencies": ["app_name", "version", "max_connections"]
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/config"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"app_name": "SpikardApp",
+			"version": "1.0.0",
+			"max_connections": 100
+		}
+	},
+	"tags": ["dependency_injection", "value", "simple"]
+}

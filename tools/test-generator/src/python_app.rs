@@ -12,6 +12,7 @@
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
+use crate::dependencies::{Dependency, DependencyConfig, has_cleanup};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::{StreamingFixtureData, chunk_bytes, streaming_data};
 use anyhow::{Context, Result};
@@ -120,6 +121,7 @@ fn generate_app_file_per_fixture(
     let mut needs_background = false;
     let mut needs_static_assets = false;
     let mut needs_asyncio = false;
+    let mut needs_di = false;
 
     for fixtures in fixtures_by_category.values() {
         for fixture in fixtures {
@@ -138,6 +140,13 @@ fn generate_app_file_per_fixture(
                     .is_some()
             {
                 needs_asyncio = true;
+            }
+            if !needs_di {
+                if let Some(di_cfg) = DependencyConfig::from_fixture(fixture)? {
+                    if di_cfg.has_dependencies() {
+                        needs_di = true;
+                    }
+                }
             }
         }
     }
@@ -188,6 +197,9 @@ fn generate_app_file_per_fixture(
     }
     if !sse_fixtures.is_empty() {
         spikard_imports.push("sse");
+    }
+    if needs_di {
+        spikard_imports.push("Provide");
     }
     code.push_str(&format!("from spikard import {}\n", spikard_imports.join(", ")));
     code.push_str("from spikard.config import (\n");
@@ -491,6 +503,239 @@ def {factory_name}() -> Spikard:
     Ok(())
 }
 
+/// Generate Python code for dependency value
+fn python_dependency_value(dep: &Dependency) -> Result<String> {
+    if let Some(value) = &dep.value {
+        Ok(json_to_python(value))
+    } else {
+        Ok("None".to_string())
+    }
+}
+
+/// Generate Python factory function for a dependency
+fn generate_dependency_factory_python(dep: &Dependency, fixture_id: &str) -> Result<String> {
+    let factory_name = dep.factory.as_ref().unwrap_or(&dep.key);
+    let is_async = dep.is_async_factory();
+    let is_cleanup = dep.cleanup;
+
+    let mut code = String::new();
+
+    if is_async && is_cleanup {
+        // Async factory with cleanup (generator pattern)
+        code.push_str(&format!("\nasync def {}(", factory_name));
+        for (i, depend_key) in dep.depends_on.iter().enumerate() {
+            if i > 0 {
+                code.push_str(", ");
+            }
+            code.push_str(depend_key);
+        }
+        code.push_str("):\n");
+        code.push_str(&format!("    \"\"\"Factory for {} with cleanup.\"\"\"\n", dep.key));
+        code.push_str("    # Create resource\n");
+        code.push_str(&format!(
+            "    BACKGROUND_STATE[\"cleanup_events_{}\"].append(\"session_opened\")\n",
+            fixture_id
+        ));
+        code.push_str(&format!(
+            "    resource = {{\"id\": str(UUID(\"00000000-0000-0000-0000-{:012x}\")), \"active\": True}}\n",
+            fixture_id.len()
+        ));
+        code.push_str("    try:\n");
+        code.push_str("        yield resource\n");
+        code.push_str("    finally:\n");
+        code.push_str("        # Cleanup resource\n");
+        code.push_str(&format!(
+            "        BACKGROUND_STATE[\"cleanup_events_{}\"].append(\"session_closed\")\n",
+            fixture_id
+        ));
+    } else if is_async {
+        // Async factory without cleanup
+        code.push_str(&format!("\nasync def {}(", factory_name));
+        for (i, depend_key) in dep.depends_on.iter().enumerate() {
+            if i > 0 {
+                code.push_str(", ");
+            }
+            code.push_str(depend_key);
+        }
+        code.push_str(") -> Any:\n");
+        code.push_str(&format!("    \"\"\"Async factory for {}.\"\"\"\n", dep.key));
+
+        // Generate factory logic based on dependency name
+        if dep.key.contains("db") || dep.key.contains("database") {
+            code.push_str("    # Simulate async DB connection\n");
+            if !dep.depends_on.is_empty() {
+                code.push_str(&format!(
+                    "    db_url = {}.get(\"db_url\", \"postgresql://localhost/mydb\")\n",
+                    dep.depends_on[0]
+                ));
+            } else {
+                code.push_str("    db_url = \"postgresql://localhost/mydb\"\n");
+            }
+            code.push_str("    return {\"pool_id\": str(UUID(int=1)), \"connected\": True, \"url\": db_url}\n");
+        } else if dep.key.contains("cache") {
+            code.push_str("    # Simulate async cache connection\n");
+            if !dep.depends_on.is_empty() {
+                code.push_str(&format!(
+                    "    cache_ttl = {}.get(\"cache_ttl\", 300)\n",
+                    dep.depends_on[0]
+                ));
+            } else {
+                code.push_str("    cache_ttl = 300\n");
+            }
+            code.push_str("    return {\"cache_id\": str(UUID(int=2)), \"ttl\": cache_ttl}\n");
+        } else {
+            code.push_str(&format!(
+                "    return {{\"id\": str(UUID(int={})), \"type\": \"{}\"}}\n",
+                dep.key.len(),
+                dep.key
+            ));
+        }
+    } else if is_cleanup {
+        // Sync factory with cleanup
+        code.push_str(&format!("\ndef {}(", factory_name));
+        for (i, depend_key) in dep.depends_on.iter().enumerate() {
+            if i > 0 {
+                code.push_str(", ");
+            }
+            code.push_str(depend_key);
+        }
+        code.push_str("):\n");
+        code.push_str(&format!("    \"\"\"Factory for {} with cleanup.\"\"\"\n", dep.key));
+        code.push_str("    # Create resource\n");
+        code.push_str(&format!(
+            "    resource = {{\"id\": str(UUID(int={})), \"active\": True}}\n",
+            dep.key.len()
+        ));
+        code.push_str("    try:\n");
+        code.push_str("        yield resource\n");
+        code.push_str("    finally:\n");
+        code.push_str("        # Cleanup resource\n");
+        code.push_str("        resource[\"active\"] = False\n");
+    } else {
+        // Sync factory without cleanup
+        code.push_str(&format!("\ndef {}(", factory_name));
+        for (i, depend_key) in dep.depends_on.iter().enumerate() {
+            if i > 0 {
+                code.push_str(", ");
+            }
+            code.push_str(depend_key);
+        }
+        code.push_str(") -> Any:\n");
+        code.push_str(&format!("    \"\"\"Factory for {}.\"\"\"\n", dep.key));
+
+        // Generate factory logic based on dependency name
+        if dep.key.contains("auth") {
+            code.push_str("    # Create auth service\n");
+            let deps_str = if !dep.depends_on.is_empty() {
+                format!(
+                    "\"has_db\": {} is not None, \"has_cache\": {} is not None",
+                    dep.depends_on.get(0).unwrap_or(&"None".to_string()),
+                    dep.depends_on.get(1).unwrap_or(&"None".to_string())
+                )
+            } else {
+                "\"enabled\": True".to_string()
+            };
+            code.push_str(&format!("    return {{\"{}_enabled\": True, {}}}\n", dep.key, deps_str));
+        } else if dep.singleton {
+            // Singleton factory with persistent state
+            code.push_str("    # Singleton with counter\n");
+            code.push_str(&format!("    if \"singleton_{}\" not in BACKGROUND_STATE:\n", dep.key));
+            code.push_str(&format!("        BACKGROUND_STATE[\"singleton_{}\"] = {{\n", dep.key));
+            code.push_str("            \"id\": str(UUID(int=99)),\n");
+            code.push_str("            \"count\": 0\n");
+            code.push_str("        }\n");
+            code.push_str(&format!(
+                "    BACKGROUND_STATE[\"singleton_{}\"][\"count\"] += 1\n",
+                dep.key
+            ));
+            code.push_str(&format!("    return BACKGROUND_STATE[\"singleton_{}\"]\n", dep.key));
+        } else {
+            // Generic factory
+            code.push_str(&format!(
+                "    return {{\"id\": str(UUID(int={})), \"timestamp\": str(datetime.now())}}\n",
+                dep.key.len()
+            ));
+        }
+    }
+
+    Ok(code)
+}
+
+/// Generate Python code to register dependencies in app
+fn generate_dependency_registration_python(di_config: &DependencyConfig, fixture_id: &str) -> Result<String> {
+    if !di_config.has_dependencies() {
+        return Ok(String::new());
+    }
+
+    let mut code = String::new();
+    code.push_str("\n    # Register dependencies\n");
+
+    // Get all dependencies in resolution order
+    let all_deps = di_config.all_dependencies();
+
+    // Register each dependency
+    for (key, dep) in all_deps.iter() {
+        if dep.is_value() {
+            // Value dependency
+            let value = python_dependency_value(dep)?;
+            code.push_str(&format!("    app.provide(\"{}\", {})\n", key, value));
+        } else {
+            // Factory dependency
+            let factory_name = dep.factory.as_ref().unwrap_or(key);
+            let deps_arg = if dep.depends_on.is_empty() {
+                String::new()
+            } else {
+                format!(
+                    ", depends_on=[{}]",
+                    dep.depends_on
+                        .iter()
+                        .map(|d| format!("\"{}\"", d))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            };
+            let singleton_arg = if dep.singleton { ", singleton=True" } else { "" };
+            let cacheable_arg = if dep.cacheable { ", cacheable=True" } else { "" };
+            code.push_str(&format!(
+                "    app.provide(\"{}\", Provide({}{}{}{}))\n",
+                key, factory_name, deps_arg, singleton_arg, cacheable_arg
+            ));
+        }
+    }
+
+    Ok(code)
+}
+
+/// Generate factory functions for all dependencies
+fn generate_all_dependency_factories_python(di_config: &DependencyConfig, fixture_id: &str) -> Result<String> {
+    let mut code = String::new();
+
+    let all_deps = di_config.all_dependencies();
+
+    // Generate factory functions for non-value dependencies
+    for dep in all_deps.values() {
+        if !dep.is_value() {
+            code.push_str(&generate_dependency_factory_python(dep, fixture_id)?);
+            code.push_str("\n");
+        }
+    }
+
+    Ok(code)
+}
+
+/// Generate cleanup state handler for DI fixtures
+fn generate_di_cleanup_state_handler_python(handler_name: &str, fixture_id: &str) -> Result<String> {
+    let handler_func_name = format!("{}_cleanup_state", handler_name);
+    Ok(format!(
+        r#"async def {}() -> Any:
+    """Return cleanup state for DI fixture."""
+    return {{
+        "cleanup_events": BACKGROUND_STATE.get("cleanup_events_{}", [])
+    }}"#,
+        handler_func_name, fixture_id
+    ))
+}
+
 /// Generate handler and app factory for a single fixture (Python version)
 fn generate_fixture_handler_and_app_python(
     fixture: &Fixture,
@@ -553,7 +798,20 @@ fn generate_fixture_handler_and_app_python(
         String::new()
     };
 
+    // Parse DI configuration
+    let di_config = DependencyConfig::from_fixture(fixture)?;
+
     let mut handler_code = String::new();
+
+    // Generate dependency factory functions
+    if let Some(ref di_cfg) = di_config {
+        let factories = generate_all_dependency_factories_python(di_cfg, fixture_id)?;
+        if !factories.is_empty() {
+            handler_code.push_str(&factories);
+            handler_code.push_str("\n");
+        }
+    }
+
     if !models_code.is_empty() {
         handler_code.push_str(&models_code);
         handler_code.push_str("\n\n");
@@ -566,6 +824,14 @@ fn generate_fixture_handler_and_app_python(
     if let Some(bg) = &background {
         handler_code.push_str("\n\n");
         handler_code.push_str(&generate_background_state_handler_python(handler_name, fixture_id, bg));
+    }
+
+    // Generate cleanup state handler if DI has cleanup
+    if let Some(ref di_cfg) = di_config {
+        if has_cleanup(di_cfg) {
+            handler_code.push_str("\n\n");
+            handler_code.push_str(&generate_di_cleanup_state_handler_python(handler_name, fixture_id)?);
+        }
     }
 
     let app_factory_name = format!("create_app_{}", handler_name);
@@ -669,6 +935,20 @@ fn generate_fixture_handler_and_app_python(
     } else {
         String::new()
     };
+
+    // Add cleanup state route registration for DI fixtures
+    let di_state_route_registration = if let Some(ref di_cfg) = di_config {
+        if has_cleanup(di_cfg) {
+            format!(
+                "\n    app.register_route(\"GET\", \"/api/cleanup-state\", body_schema=None, parameter_schema=None, file_params=None)({}_cleanup_state)",
+                handler_name
+            )
+        } else {
+            String::new()
+        }
+    } else {
+        String::new()
+    };
     let mut route_registration = String::new();
     if !primary_registration.is_empty() {
         route_registration.push_str(&primary_registration);
@@ -678,6 +958,9 @@ fn generate_fixture_handler_and_app_python(
     }
     if !state_route_registration.is_empty() {
         route_registration.push_str(&state_route_registration);
+    }
+    if !di_state_route_registration.is_empty() {
+        route_registration.push_str(&di_state_route_registration);
     }
     let register_comment = if route_registration.trim().is_empty() {
         String::new()
@@ -695,7 +978,14 @@ fn generate_fixture_handler_and_app_python(
         }
     }
 
-    let app_factory_code = if config_str == "None" && hooks_code.is_empty() {
+    // Generate DI registration code
+    let di_registration = if let Some(ref di_cfg) = di_config {
+        generate_dependency_registration_python(di_cfg, fixture_id)?
+    } else {
+        String::new()
+    };
+
+    let app_factory_code = if config_str == "None" && hooks_code.is_empty() && di_registration.is_empty() {
         format!(
             r#"def {}() -> Spikard:
     """App factory for fixture: {}"""
@@ -703,7 +993,7 @@ fn generate_fixture_handler_and_app_python(
 {}{}    return app"#,
             app_factory_name, fixture.name, registration_block, hooks_code
         )
-    } else if config_str != "None" && hooks_code.is_empty() {
+    } else if config_str != "None" && hooks_code.is_empty() && di_registration.is_empty() {
         format!(
             r#"def {}() -> Spikard:
     """App factory for fixture: {}"""
@@ -712,13 +1002,30 @@ fn generate_fixture_handler_and_app_python(
 {}{}    return app"#,
             app_factory_name, fixture.name, config_str, registration_block, hooks_code
         )
-    } else if config_str == "None" && !hooks_code.is_empty() {
+    } else if config_str == "None" && !hooks_code.is_empty() && di_registration.is_empty() {
         format!(
             r#"def {}() -> Spikard:
     """App factory for fixture: {}"""
     app = Spikard()
 {}{}    return app"#,
             app_factory_name, fixture.name, registration_block, hooks_code
+        )
+    } else if config_str != "None" && di_registration.is_empty() {
+        format!(
+            r#"def {}() -> Spikard:
+    """App factory for fixture: {}"""
+    config = {}
+    app = Spikard(config=config)
+{}{}    return app"#,
+            app_factory_name, fixture.name, config_str, registration_block, hooks_code
+        )
+    } else if config_str == "None" {
+        format!(
+            r#"def {}() -> Spikard:
+    """App factory for fixture: {}"""
+    app = Spikard()
+{}{}{}    return app"#,
+            app_factory_name, fixture.name, di_registration, registration_block, hooks_code
         )
     } else {
         format!(
@@ -726,8 +1033,8 @@ fn generate_fixture_handler_and_app_python(
     """App factory for fixture: {}"""
     config = {}
     app = Spikard(config=config)
-{}{}    return app"#,
-            app_factory_name, fixture.name, config_str, registration_block, hooks_code
+{}{}{}    return app"#,
+            app_factory_name, fixture.name, config_str, di_registration, registration_block, hooks_code
         )
     };
 
@@ -771,6 +1078,9 @@ fn generate_handler_function_for_fixture(
     metadata: &MiddlewareMetadata,
 ) -> Result<String> {
     let handler_opt = fixture.handler.as_ref();
+
+    // Parse DI configuration
+    let di_config = DependencyConfig::from_fixture(fixture)?;
 
     let params = if let Some(handler) = handler_opt {
         if let Some(ref param_schema) = handler.parameters {
@@ -840,6 +1150,13 @@ fn generate_handler_function_for_fixture(
     for (param_name, param_type, is_required) in &params {
         if !*is_required {
             code.push_str(&format!("    {}: {} | None = None,\n", param_name, param_type));
+        }
+    }
+
+    // Add DI parameters
+    if let Some(ref di_cfg) = di_config {
+        for dep_key in &di_cfg.handler_dependencies {
+            code.push_str(&format!("    {}: Any,\n", dep_key));
         }
     }
 
@@ -1000,6 +1317,14 @@ fn generate_handler_function_for_fixture(
                 code.push_str(&format!("        result[\"{}\"] = str({})\n", param_name, param_name));
             } else {
                 code.push_str(&format!("        result[\"{}\"] = {}\n", param_name, param_name));
+            }
+        }
+
+        // Add DI dependencies to result
+        if let Some(ref di_cfg) = di_config {
+            for dep_key in &di_cfg.handler_dependencies {
+                code.push_str(&format!("    if {} is not None:\n", dep_key));
+                code.push_str(&format!("        result[\"{}\"] = {}\n", dep_key, dep_key));
             }
         }
 

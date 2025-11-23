@@ -1,0 +1,46 @@
+{
+	"name": "Node.js object destructuring injection - success",
+	"description": "Tests Node.js/TypeScript-specific object destructuring pattern for dependency injection",
+	"category": "dependency_injection",
+	"source": {
+		"framework": "spikard",
+		"adapted": false
+	},
+	"handler": {
+		"route": "/api/node-destructure",
+		"method": "GET",
+		"dependencies": {
+			"db": {
+				"type": "value",
+				"value": {
+					"name": "PostgreSQL",
+					"connected": true
+				},
+				"value_type": "object"
+			},
+			"logger": {
+				"type": "value",
+				"value": {
+					"level": "info",
+					"enabled": true
+				},
+				"value_type": "object"
+			}
+		},
+		"handler_dependencies": ["db", "logger"],
+		"injection_strategy": "destructure"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/node-destructure"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"db_name": "PostgreSQL",
+			"log_level": "info"
+		}
+	},
+	"notes": "TypeScript handler uses object destructuring: async (request, { db, logger }: { db: Database, logger: Logger }) => {...}",
+	"tags": ["dependency_injection", "node", "typescript", "destructuring", "language_specific"]
+}

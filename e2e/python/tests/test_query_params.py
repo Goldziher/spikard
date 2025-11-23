@@ -117,6 +117,7 @@ async def test_enum_query_parameter_invalid_value() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -176,6 +177,7 @@ async def test_required_string_query_parameter_missing() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -246,6 +248,7 @@ async def test_string_query_param_with_max_length_constraint_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -260,6 +263,7 @@ async def test_45_string_minlength_validation_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -288,6 +292,7 @@ async def test_67_multipleof_constraint_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -347,6 +352,7 @@ async def test_required_integer_query_parameter_invalid_type() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -361,6 +367,7 @@ async def test_required_integer_query_parameter_float_value() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -390,6 +397,7 @@ async def test_59_format_email_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -449,6 +457,7 @@ async def test_string_query_param_with_min_length_constraint_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -523,6 +532,7 @@ async def test_46_string_maxlength_validation_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -537,6 +547,7 @@ async def test_56_array_maxitems_constraint_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -551,6 +562,7 @@ async def test_string_query_param_with_regex_pattern_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -580,6 +592,7 @@ async def test_61_format_ipv4_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -594,6 +607,7 @@ async def test_48_pattern_validation_email_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -605,6 +619,7 @@ async def test_required_integer_query_parameter_missing() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -634,6 +649,7 @@ async def test_list_query_parameter_required_but_missing() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -677,6 +693,7 @@ async def test_53_integer_le_constraint_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -685,9 +702,9 @@ async def test_multiple_query_parameters_with_different_types() -> None:
 
     async with TestClient(create_app_query_params_multiple_query_parameters_with_different_types()) as client:
         params = {
-            "age": "30",
             "active": "true",
             "name": "john",
+            "age": "30",
             "score": "95.5",
         }
         response = await client.get("/query/multi-type", params=params)
@@ -833,6 +850,7 @@ async def test_69_array_uniqueitems_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -865,6 +883,7 @@ async def test_string_validation_with_regex_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -994,6 +1013,7 @@ async def test_uuid_query_parameter_invalid_format() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -1049,6 +1069,7 @@ async def test_50_integer_gt_constraint_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -1063,6 +1084,7 @@ async def test_64_format_uri_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -1095,6 +1117,7 @@ async def test_55_array_minitems_constraint_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 

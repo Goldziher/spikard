@@ -1,0 +1,46 @@
+{
+	"name": "Ruby keyword argument injection - success",
+	"description": "Tests Ruby-specific keyword argument pattern for dependency injection",
+	"category": "dependency_injection",
+	"source": {
+		"framework": "spikard",
+		"adapted": false
+	},
+	"handler": {
+		"route": "/api/ruby-kwargs",
+		"method": "GET",
+		"dependencies": {
+			"db_pool": {
+				"type": "value",
+				"value": {
+					"adapter": "postgresql",
+					"pool_size": 5
+				},
+				"value_type": "object"
+			},
+			"session": {
+				"type": "value",
+				"value": {
+					"session_id": "abc123",
+					"user_id": 42
+				},
+				"value_type": "object"
+			}
+		},
+		"handler_dependencies": ["db_pool", "session"],
+		"injection_strategy": "keyword_args"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/ruby-kwargs"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"adapter": "postgresql",
+			"user_id": 42
+		}
+	},
+	"notes": "Ruby handler uses keyword arguments: def handler(request, db_pool:, session:) ... end. Dependencies injected as keyword arguments.",
+	"tags": ["dependency_injection", "ruby", "keyword_args", "language_specific"]
+}

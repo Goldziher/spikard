@@ -1,0 +1,58 @@
+{
+	"name": "Multiple dependencies with cleanup - success",
+	"description": "Tests cleanup for multiple dependencies with generator pattern, ensuring all are cleaned up in reverse resolution order",
+	"category": "dependency_injection",
+	"source": {
+		"framework": "spikard",
+		"adapted": false
+	},
+	"handler": {
+		"route": "/api/multi-cleanup-test",
+		"method": "GET",
+		"dependencies": {
+			"db_connection": {
+				"type": "async_factory",
+				"factory": "create_db_connection_with_cleanup",
+				"depends_on": [],
+				"singleton": false,
+				"cacheable": true,
+				"cleanup": true
+			},
+			"cache_connection": {
+				"type": "async_factory",
+				"factory": "create_cache_connection_with_cleanup",
+				"depends_on": [],
+				"singleton": false,
+				"cacheable": true,
+				"cleanup": true
+			},
+			"session": {
+				"type": "factory",
+				"factory": "create_session_with_cleanup",
+				"depends_on": ["db_connection", "cache_connection"],
+				"singleton": false,
+				"cacheable": true,
+				"cleanup": true
+			}
+		},
+		"handler_dependencies": ["session"]
+	},
+	"background": {
+		"state_path": "/api/multi-cleanup-state",
+		"state_key": "cleanup_order",
+		"value_field": "event",
+		"expected_state": ["db_opened", "cache_opened", "session_opened", "session_closed", "cache_closed", "db_closed"]
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/multi-cleanup-test"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"session_active": true
+		}
+	},
+	"notes": "Multiple dependencies with cleanup. Cleanup should occur in reverse resolution order (session first, then cache, then db). Background state verifies cleanup order.",
+	"tags": ["dependency_injection", "cleanup", "multiple", "ordering"]
+}

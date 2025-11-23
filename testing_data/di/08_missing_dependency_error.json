@@ -1,0 +1,37 @@
+{
+	"name": "Missing dependency - error",
+	"description": "Tests error when handler requires a dependency that was never registered",
+	"category": "dependency_injection",
+	"source": {
+		"framework": "spikard",
+		"adapted": false
+	},
+	"handler": {
+		"route": "/api/missing-dep",
+		"method": "GET",
+		"dependencies": {},
+		"handler_dependencies": ["non_existent_service"]
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/missing-dep"
+	},
+	"expected_response": {
+		"status_code": 500,
+		"body": {
+			"type": "https://spikard.dev/errors/dependency-error",
+			"title": "Dependency Resolution Failed",
+			"status": 500,
+			"detail": "Required dependency not found",
+			"errors": [
+				{
+					"type": "missing_dependency",
+					"msg": "Dependency 'non_existent_service' is not registered",
+					"dependency_key": "non_existent_service"
+				}
+			]
+		}
+	},
+	"notes": "Handler requires 'non_existent_service' but it's not in the registered dependencies map.",
+	"tags": ["dependency_injection", "error", "missing"]
+}

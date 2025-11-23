@@ -4,6 +4,7 @@
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::background_data;
+use crate::dependencies::{DependencyConfig, has_cleanup, requires_multi_request_test};
 use crate::middleware::parse_middleware;
 use crate::streaming::streaming_data;
 use anyhow::{Context, Result};
@@ -83,6 +84,7 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
     let mut needs_uuid_import = false;
     let mut needs_re_import = false;
     let mut needs_pytest_import = false;
+    let mut needs_time_import = false;
     for fixture in fixtures {
         let metadata = parse_middleware(fixture)?;
         if metadata
@@ -112,6 +114,12 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
         if should_skip_due_to_http_client(fixture) {
             needs_pytest_import = true;
         }
+        // Check for DI cleanup fixtures
+        if let Some(di_config) = DependencyConfig::from_fixture(fixture)? {
+            if has_cleanup(&di_config) {
+                needs_time_import = true;
+            }
+        }
     }
 
     let mut code = String::new();
@@ -136,10 +144,13 @@ fn generate_test_file(category: &str, fixtures: &[Fixture]) -> Result<String> {
     if needs_re_import {
         code.push_str("import re\n");
     }
+    if needs_time_import {
+        code.push_str("import time\n");
+    }
     if needs_uuid_import {
         code.push_str("from uuid import UUID\n");
     }
-    if needs_asyncio_sleep || needs_uuid_import || needs_re_import {
+    if needs_asyncio_sleep || needs_uuid_import || needs_re_import || needs_time_import {
         code.push('\n');
     }
     code.push_str("from spikard.testing import TestClient\n");
@@ -472,6 +483,53 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         let expected_body = format!("{{\"{}\": {} }}", bg.state_key, json_to_python(&expected_state_value));
         code.push_str(&format!("        assert state_response.json() == {}\n", expected_body));
         return Ok(code);
+    }
+
+    // Check for DI-specific test patterns
+    if let Some(di_config) = DependencyConfig::from_fixture(fixture)? {
+        // Handle singleton caching tests - requires multiple requests
+        if requires_multi_request_test(&di_config) {
+            code.push_str("\n");
+            code.push_str("        # Second request to verify singleton caching\n");
+            let request_str = if request_kwargs.is_empty() {
+                format!("        response2 = await client.{}(\"{}\")\n", method, path)
+            } else {
+                format!(
+                    "        response2 = await client.{}(\"{}\", {})\n",
+                    method,
+                    path,
+                    request_kwargs.join(", ")
+                )
+            };
+            code.push_str(&request_str);
+            code.push_str("        assert response2.status_code == 200\n");
+            code.push_str("        data1 = response.json()\n");
+            code.push_str("        data2 = response2.json()\n");
+            code.push_str("\n");
+            code.push_str("        # Singleton should have same ID but incremented count\n");
+            code.push_str("        assert \"id\" in data1 and \"id\" in data2\n");
+            code.push_str("        assert data1[\"id\"] == data2[\"id\"]  # Same singleton instance\n");
+            code.push_str("        if \"count\" in data1 and \"count\" in data2:\n");
+            code.push_str("            assert data2[\"count\"] > data1[\"count\"]  # Count incremented\n");
+            return Ok(code);
+        }
+
+        // Handle cleanup tests - poll cleanup state endpoint
+        if has_cleanup(&di_config) {
+            code.push_str("\n");
+            code.push_str("        # Allow async cleanup to complete\n");
+            code.push_str("        time.sleep(0.1)\n");
+            code.push_str("\n");
+            code.push_str("        # Verify cleanup was called\n");
+            code.push_str("        cleanup_response = await client.get(\"/api/cleanup-state\")\n");
+            code.push_str("        assert cleanup_response.status_code == 200\n");
+            code.push_str("        cleanup_state = cleanup_response.json()\n");
+            code.push_str("        assert \"cleanup_events\" in cleanup_state\n");
+            code.push_str("        events = cleanup_state[\"cleanup_events\"]\n");
+            code.push_str("        assert \"session_opened\" in events\n");
+            code.push_str("        assert \"session_closed\" in events\n");
+            return Ok(code);
+        }
     }
 
     let status_code = fixture.expected_response.status_code;
