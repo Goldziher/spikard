@@ -1,79 +1,448 @@
 # @spikard/node
 
-TypeScript-native bindings to Spikard’s Rust HTTP runtime. Fastify-like ergonomics with Rust-backed performance, typed routing helpers, and an in-memory test client.
+High-performance TypeScript/Node.js web framework with a Rust core. Build REST APIs with Fastify-style decorators backed by Axum and Tower-HTTP.
 
-## Install from source
+## Installation
+
+**From source (currently):**
+
 ```bash
 cd packages/node
 pnpm install
-pnpm build   # compiles TypeScript and ensures the napi module is present
+pnpm build
 ```
 
-## Quick start
+**Requirements:**
+- Node.js 20+
+- pnpm 10+
+- Rust toolchain (for building from source)
+
+## Quick Start
+
 ```typescript
-import { Spikard, get, post, ServerConfig } from "@spikard/node";
+import { Spikard, get, post } from "@spikard/node";
+import { z } from "zod";
+
+const UserSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  email: z.string().email(),
+});
+
+type User = z.infer<typeof UserSchema>;
 
 const app = new Spikard();
 
-get("/hello")(async function hello(req) {
-  const params = new URLSearchParams(req.queryString);
-  const name = params.get("name") ?? "World";
-  return { message: `Hello, ${name}` };
+get("/users/:id")(async function getUser(req) {
+  const id = parseInt(req.params.id);
+  return { id, name: "Alice", email: "alice@example.com" };
 });
 
-post("/users/{id:int}")(async function updateUser(req) {
-  const body = req.json<Record<string, unknown>>();
-  return { id: "from-path", ...body };
+post("/users", { bodySchema: UserSchema })(async function createUser(req) {
+  const user = req.json<User>();
+  return user;
 });
 
 if (require.main === module) {
-  app.run(ServerConfig.withDefaults({ host: "0.0.0.0", port: 8000 }));
+  app.run({ port: 8000 });
 }
 ```
-- Route helpers (`get`, `post`, `del`, `route`) collect metadata for the Rust server.
-- Config objects enable compression, rate limits, timeouts, static files, request IDs, and OpenAPI metadata.
-- WebSockets and SSE share the same handler registration API.
+
+## Route Registration
+
+### HTTP Method Decorators
+
+```typescript
+import { get, post, put, patch, del } from "@spikard/node";
+
+get("/users")(async function listUsers() {
+  return { users: [] };
+});
+
+post("/users")(async function createUser(req) {
+  return { created: true };
+});
+
+put("/users/:id")(async function updateUser(req) {
+  return { updated: true };
+});
+
+patch("/users/:id")(async function patchUser(req) {
+  return { patched: true };
+});
+
+del("/users/:id")(async function deleteUser(req) {
+  return { deleted: true };
+});
+```
+
+### With Schemas
+
+Spikard supports **Zod schemas** and **raw JSON Schema objects**.
+
+**With Zod (recommended - type inference):**
+
+```typescript
+import { post } from "@spikard/node";
+import { z } from "zod";
+
+const CreateUserSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+  age: z.number().int().min(18),
+});
+
+post("/users", {
+  bodySchema: CreateUserSchema,
+  responseSchema: z.object({ id: z.number(), name: z.string() }),
+})(async function createUser(req) {
+  const user = req.json();
+  return { id: 1, name: user.name };
+});
+```
+
+**With raw JSON Schema:**
+
+```typescript
+const userSchema = {
+  type: "object",
+  properties: {
+    name: { type: "string" },
+    email: { type: "string", format: "email" },
+  },
+  required: ["name", "email"],
+};
+
+post("/users", { bodySchema: userSchema })(async function createUser(req) {
+  const user = req.json<{ name: string; email: string }>();
+  return { id: 1, ...user };
+});
+```
+
+## Request Handling
+
+### Accessing Request Data
+
+```typescript
+get("/search")(async function search(req) {
+  // Query parameters
+  const params = new URLSearchParams(req.queryString);
+  const q = params.get("q");
+  const limit = params.get("limit") ?? "10";
+
+  // Headers
+  const auth = req.headers["authorization"];
+
+  // Method and path
+  console.log(`${req.method} ${req.path}`);
+
+  return { query: q, limit: parseInt(limit) };
+});
+```
+
+### JSON Body
+
+```typescript
+post("/users")(async function createUser(req) {
+  const body = req.json<{ name: string; email: string }>();
+  return { id: 1, ...body };
+});
+```
+
+### Form Data
+
+```typescript
+post("/login")(async function login(req) {
+  const form = req.form();
+  return {
+    username: form.username,
+    password: form.password,
+  };
+});
+```
+
+## Handler Wrappers
+
+For automatic parameter extraction:
+
+```typescript
+import { wrapHandler, wrapBodyHandler } from "@spikard/node";
+
+// Body-only wrapper
+post("/users", {}, wrapBodyHandler(async (body: CreateUserRequest) => {
+  return { id: 1, name: body.name };
+}));
+
+// Full context wrapper
+get("/users/:id", {}, wrapHandler(async (params, query, body) => {
+  return { id: params.id, query };
+}));
+```
+
+## File Uploads
+
+```typescript
+import { UploadFile } from "@spikard/node";
+
+interface UploadRequest {
+  file: UploadFile;
+  description: string;
+}
+
+post("/upload")(async function upload(req) {
+  const body = req.json<UploadRequest>();
+  const content = body.file.read();
+
+  return {
+    filename: body.file.filename,
+    size: body.file.size,
+    contentType: body.file.contentType,
+  };
+});
+```
+
+## Streaming Responses
+
+```typescript
+import { StreamingResponse } from "@spikard/node";
+
+async function* generateData() {
+  for (let i = 0; i < 10; i++) {
+    yield JSON.stringify({ count: i }) + "\n";
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+}
+
+get("/stream")(async function stream() {
+  return new StreamingResponse(generateData(), {
+    statusCode: 200,
+    headers: { "Content-Type": "application/x-ndjson" },
+  });
+});
+```
+
+## Configuration
+
+```typescript
+import { Spikard, runServer, type ServerConfig } from "@spikard/node";
+
+const app = new Spikard();
+
+const config: ServerConfig = {
+  host: "0.0.0.0",
+  port: 8080,
+  workers: 4,
+  enableRequestId: true,
+  maxBodySize: 10 * 1024 * 1024, // 10 MB
+  requestTimeout: 30, // seconds
+  compression: {
+    gzip: true,
+    brotli: true,
+    quality: 9,
+    minSize: 1024,
+  },
+  rateLimit: {
+    perSecond: 100,
+    burst: 200,
+    ipBased: true,
+  },
+  jwtAuth: {
+    secret: "your-secret-key",
+    algorithm: "HS256",
+  },
+  staticFiles: [
+    {
+      directory: "./public",
+      routePrefix: "/static",
+      indexFile: true,
+    },
+  ],
+  openapi: {
+    enabled: true,
+    title: "My API",
+    version: "1.0.0",
+    swaggerUiPath: "/docs",
+    redocPath: "/redoc",
+  },
+};
+
+runServer(app, config);
+```
+
+## Lifecycle Hooks
+
+```typescript
+app.onRequest(async (request) => {
+  console.log(`${request.method} ${request.path}`);
+  return request;
+});
+
+app.preValidation(async (request) => {
+  // Check before validation
+  if (!request.headers["authorization"]) {
+    return {
+      status: 401,
+      body: { error: "Unauthorized" },
+    };
+  }
+  return request;
+});
+
+app.preHandler(async (request) => {
+  // After validation, before handler
+  return request;
+});
+
+app.onResponse(async (response) => {
+  response.headers["X-Frame-Options"] = "DENY";
+  return response;
+});
+
+app.onError(async (response) => {
+  console.error(`Error: ${response.status}`);
+  return response;
+});
+```
+
+## Background Tasks
+
+```typescript
+import * as background from "@spikard/node/background";
+
+post("/process")(async function process(req) {
+  const data = req.json();
+
+  background.run(() => {
+    // Heavy processing after response sent
+    processData(data);
+  });
+
+  return { status: "processing" };
+});
+```
 
 ## Testing
-Use the zero-network test client to exercise handlers:
+
 ```typescript
 import { TestClient } from "@spikard/node";
+import { expect } from "vitest";
+
+const app = {
+  routes: [
+    /* ... */
+  ],
+  handlers: {
+    /* ... */
+  },
+};
 
 const client = new TestClient(app);
-const res = await client.get("/hello?name=Ada");
-expect(res.statusCode).toBe(200);
-expect(res.json()).toEqual({ message: "Hello, Ada!" });
-```
-Vitest config is included; run `pnpm test`.
 
-## Code generation
-The `spikard` CLI can emit Node-ready apps and tests:
-```bash
-spikard generate openapi --fixtures ../../testing_data --output ./generated
-spikard generate asyncapi --fixtures ../../testing_data/websockets --output ./generated
+const response = await client.get("/users/123");
+expect(response.statusCode).toBe(200);
+expect(response.json()).toEqual({ id: "123", name: "Alice" });
 ```
-Generated handlers use the same routing helpers and config objects shown above.
+
+### WebSocket Testing
+
+```typescript
+const ws = await client.websocketConnect("/ws");
+await ws.sendJson({ message: "hello" });
+const response = await ws.receiveJson();
+expect(response.echo.message).toBe("hello");
+await ws.close();
+```
+
+### SSE Testing
+
+```typescript
+const response = await client.get("/events");
+const sse = new SseStream(response.text());
+const events = sse.eventsAsJson();
+expect(events.length).toBeGreaterThan(0);
+```
+
+## Type Safety
+
+Full TypeScript support with auto-generated types:
+
+```typescript
+import {
+  type Request,
+  type Response,
+  type ServerConfig,
+  type RouteOptions,
+  type HandlerFunction,
+} from "@spikard/node";
+```
+
+### Parameter Types
+
+```typescript
+import { Query, Path, Body, QueryDefault } from "@spikard/node";
+
+function handler(
+  id: Path<number>,
+  limit: Query<string | undefined>,
+  body: Body<UserType>
+) {
+  // Full type inference
+}
+```
+
+## Validation with Zod
+
+```typescript
+import { z } from "zod";
+
+const UserSchema = z.object({
+  name: z.string().min(1).max(100),
+  email: z.string().email(),
+  age: z.number().int().min(18).optional(),
+  tags: z.array(z.string()).default([]),
+});
+
+post("/users", { bodySchema: UserSchema })(async function createUser(req) {
+  const user = req.json<z.infer<typeof UserSchema>>();
+  // user is fully typed and validated
+  return user;
+});
+```
+
+## Running the Server
+
+```typescript
+// Simple start
+app.run({ port: 8000 });
+
+// With full configuration
+import { runServer } from "@spikard/node";
+
+runServer(app, {
+  host: "0.0.0.0",
+  port: 8080,
+  workers: 4,
+});
+```
 
 ## Performance
 
-Spikard-Node uses napi-rs bindings with ThreadsafeFunction for async handler integration. Benchmarks on macOS (Darwin 24.6.0) with 50 concurrent connections:
+Node.js bindings use:
+- **napi-rs** for zero-copy FFI
+- **ThreadsafeFunction** for async JavaScript callbacks
+- Dedicated Tokio runtime (doesn't block Node event loop)
+- Direct type conversion without JSON serialization overhead
 
-| Workload | Throughput | Mean Latency | P95 Latency | P99 Latency | Memory |
-|----------|------------|--------------|-------------|-------------|--------|
-| Baseline | *pending* | *pending* | *pending* | *pending* | *pending* |
-| JSON Bodies | *pending* | *pending* | *pending* | *pending* | *pending* |
-| Multipart Forms | *pending* | *pending* | *pending* | *pending* | *pending* |
-| URL-Encoded | *pending* | *pending* | *pending* | *pending* | *pending* |
+## Examples
 
-**Architecture:**
-- **NAPI-RS bindings**: Zero-copy data transfer between JavaScript and Rust
-- **TypeScript-first**: Full type safety with `.d.ts` generation
-- **ThreadsafeFunction**: Efficient async handler execution across language boundary
-- **Tower middleware**: Shares the same middleware stack as native Rust implementation
+See `/examples/node/` for more examples.
 
-Benchmark harness integration pending. See `tools/benchmark-harness/` for methodology.
+## Documentation
 
-## Development notes
-- Public API is under `src/`; napi bindings live in `crates/spikard-node`.
-- Keep fixtures in `testing_data/` aligned with tests under `e2e/node`.
-- The package ships d.ts files (`index.d.ts`) with the published build.
+- [Main Project README](../../README.md)
+- [Contributing Guide](../../CONTRIBUTING.md)
+- [TypeScript API Reference](./src/index.ts)
+
+## License
+
+MIT
