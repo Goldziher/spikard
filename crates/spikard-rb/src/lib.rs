@@ -593,8 +593,25 @@ impl RubyHandler {
                     }
                 }
 
-                // Call handler with request and dependencies
-                handler_proc.funcall("call", (request_value, kwargs_hash))
+                // Call handler with request and dependencies as keyword arguments
+                // Ruby 3.x requires keyword arguments to be passed differently than Ruby 2.x
+                // We'll create a Ruby lambda that calls the handler with ** splat operator
+                //
+                // Equivalent Ruby code:
+                //   lambda { |req, kwargs| handler_proc.call(req, **kwargs) }.call(request, kwargs_hash)
+
+                let wrapper_code = ruby.eval::<Value>(r#"
+                    lambda do |proc, request, kwargs|
+                        proc.call(request, **kwargs)
+                    end
+                "#).map_err(|e| {
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        format!("Failed to create kwarg wrapper: {}", e),
+                    )
+                })?;
+
+                wrapper_code.funcall("call", (handler_proc, request_value, kwargs_hash))
             } else {
                 // No dependencies, call with just request
                 handler_proc.funcall("call", (request_value,))
