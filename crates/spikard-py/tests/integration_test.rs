@@ -21,15 +21,14 @@ fn init_python() {
         .canonicalize()
         .expect("failed to resolve python package path");
     let stub_path = ensure_stub_dir();
-    let new_pythonpath = if let Ok(current) = std::env::var("PYTHONPATH") {
-        if current.is_empty() {
-            format!("{}:{}", stub_path.display(), package_path.display())
-        } else {
-            format!("{}:{}:{}", stub_path.display(), package_path.display(), current)
+    let mut python_paths = vec![stub_path.clone(), package_path];
+    if let Some(current) = std::env::var_os("PYTHONPATH") {
+        if !current.is_empty() {
+            python_paths.extend(std::env::split_paths(&current));
         }
-    } else {
-        format!("{}:{}", stub_path.display(), package_path.display())
-    };
+    }
+
+    let new_pythonpath = std::env::join_paths(python_paths).expect("failed to build PYTHONPATH");
     unsafe {
         std::env::set_var("PYTHONPATH", &new_pythonpath);
     }
