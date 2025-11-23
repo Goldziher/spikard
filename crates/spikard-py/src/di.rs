@@ -3,6 +3,7 @@
 //! This module provides Python-specific implementations of the Dependency trait,
 //! bridging Python values and factories to the Rust DI system.
 
+use http::Request;
 use pyo3::prelude::*;
 use pyo3_async_runtimes::tokio::into_future;
 use spikard_core::di::{Dependency, ResolvedDependencies};
@@ -25,31 +26,38 @@ impl PythonValueDependency {
 }
 
 impl Dependency for PythonValueDependency {
-    fn depends_on(&self) -> &[String] {
-        &[] // Value dependencies have no dependencies
-    }
-
-    fn resolve<'a>(
-        &'a self,
-        _resolved: &'a ResolvedDependencies,
-        _request: &'a http::Request<()>,
-        _request_data: &'a RequestData,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<Arc<dyn Any + Send + Sync>, String>> + Send + 'a>>
-    {
+    fn resolve(
+        &self,
+        _request: &Request<()>,
+        _request_data: &RequestData,
+        _resolved: &ResolvedDependencies,
+    ) -> std::pin::Pin<
+        Box<
+            dyn std::future::Future<Output = Result<Arc<dyn Any + Send + Sync>, spikard_core::di::DependencyError>>
+                + Send
+                + '_,
+        >,
+    > {
+        let value = Python::with_gil(|py| self.value.clone_ref(py));
         Box::pin(async move {
             // Clone the Python object to return
-            Python::with_gil(|py| {
-                let value = self.value.clone_ref(py);
-                Ok(Arc::new(value) as Arc<dyn Any + Send + Sync>)
-            })
+            Ok(Arc::new(value) as Arc<dyn Any + Send + Sync>)
         })
     }
 
-    fn is_singleton(&self) -> bool {
+    fn key(&self) -> &str {
+        &self.key
+    }
+
+    fn depends_on(&self) -> Vec<String> {
+        vec![] // Value dependencies have no dependencies
+    }
+
+    fn singleton(&self) -> bool {
         true // Value dependencies are always singletons
     }
 
-    fn is_cacheable(&self) -> bool {
+    fn cacheable(&self) -> bool {
         true
     }
 }
@@ -58,6 +66,7 @@ impl Dependency for PythonValueDependency {
 ///
 /// Wraps a Python callable as a factory dependency
 pub struct PythonFactoryDependency {
+    key: String,
     factory: Py<PyAny>,
     depends_on: Vec<String>,
     singleton: bool,
@@ -68,6 +77,7 @@ pub struct PythonFactoryDependency {
 
 impl PythonFactoryDependency {
     pub fn new(
+        key: String,
         factory: Py<PyAny>,
         depends_on: Vec<String>,
         singleton: bool,
@@ -76,6 +86,7 @@ impl PythonFactoryDependency {
         is_async_generator: bool,
     ) -> Self {
         Self {
+            key,
             factory,
             depends_on,
             singleton,
@@ -87,104 +98,127 @@ impl PythonFactoryDependency {
 }
 
 impl Dependency for PythonFactoryDependency {
-    fn depends_on(&self) -> &[String] {
-        &self.depends_on
-    }
+    fn resolve(
+        &self,
+        _request: &Request<()>,
+        _request_data: &RequestData,
+        resolved: &ResolvedDependencies,
+    ) -> std::pin::Pin<
+        Box<
+            dyn std::future::Future<Output = Result<Arc<dyn Any + Send + Sync>, spikard_core::di::DependencyError>>
+                + Send
+                + '_,
+        >,
+    > {
+        // Clone things we need in the async block
+        let factory = Python::with_gil(|py| self.factory.clone_ref(py));
+        let is_async = self.is_async;
+        let is_async_generator = self.is_async_generator;
 
-    fn resolve<'a>(
-        &'a self,
-        resolved: &'a ResolvedDependencies,
-        _request: &'a http::Request<()>,
-        _request_data: &'a RequestData,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<Arc<dyn Any + Send + Sync>, String>> + Send + 'a>>
-    {
+        // Extract resolved dependencies now (before async)
+        let resolved_deps: Vec<(String, Py<PyAny>)> = Python::with_gil(|py| {
+            self.depends_on
+                .iter()
+                .filter_map(|dep_key| {
+                    resolved.get::<Py<PyAny>>(dep_key).map(|v| (dep_key.clone(), v.clone_ref(py)))
+                })
+                .collect()
+        });
+
         Box::pin(async move {
-            Python::with_gil(|py| {
-                // Build kwargs from resolved dependencies
+            // Build kwargs and call factory with GIL
+            let coroutine_or_result = Python::with_gil(|py| -> PyResult<Either> {
                 let kwargs = pyo3::types::PyDict::new(py);
-                for dep_key in &self.depends_on {
-                    if let Some(dep_value) = resolved.get::<Py<PyAny>>(dep_key) {
-                        kwargs
-                            .set_item(dep_key, dep_value.clone_ref(py))
-                            .map_err(|e| format!("Failed to set dependency {}: {}", dep_key, e))?;
-                    }
+                for (dep_key, dep_value) in &resolved_deps {
+                    kwargs.set_item(dep_key, dep_value.bind(py))?;
                 }
 
-                // Call the factory
-                let factory = self.factory.bind(py);
+                let factory_bound = factory.bind(py);
 
-                if self.is_async {
-                    // Async factory
-                    let coroutine = factory
-                        .call((), Some(&kwargs))
-                        .map_err(|e| format!("Failed to call async factory: {}", e))?;
+                if is_async {
+                    // Async factory - return coroutine
+                    let coroutine = factory_bound.call((), Some(&kwargs))?;
+                    Ok(Either::Coroutine(coroutine.unbind()))
+                } else {
+                    // Sync factory - return result directly
+                    let result = factory_bound.call((), Some(&kwargs))?;
+                    Ok(Either::Value(result.unbind()))
+                }
+            }).map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
+                message: format!("Failed to call factory: {}", e),
+            })?;
 
-                    // Drop GIL and await the coroutine
-                    py.allow_threads(|| {
-                        tokio::runtime::Handle::current().block_on(async {
-                            Python::with_gil(|py| {
-                                let coroutine = coroutine.clone_ref(py);
-
-                                // Convert Python coroutine to Rust future
-                                let future = into_future(coroutine.bind(py))
-                                    .map_err(|e| format!("Failed to convert coroutine to future: {}", e))?;
-
-                                Ok::<_, String>(future)
-                            })
-                        })
-                    })?
-                    .await
-                    .map_err(|e| format!("Async factory failed: {}", e))
-                    .and_then(|result| {
-                        Python::with_gil(|py| {
-                            if self.is_async_generator {
-                                // For generators, call __anext__ to get the first value
-                                let aiter = result.bind(py);
-                                let first_value = aiter
-                                    .call_method0("__anext__")
-                                    .map_err(|e| format!("Failed to get first value from generator: {}", e))?;
-
-                                // Convert to future and await
-                                let value_future = into_future(first_value)
-                                    .map_err(|e| format!("Failed to await generator value: {}", e))?;
-
-                                Ok(value_future)
-                            } else {
-                                // Regular async function - result is already the value
-                                Ok(result)
-                            }
-                        })
-                    })?
-                    .await
-                    .map(|value| Arc::new(value) as Arc<dyn Any + Send + Sync>)
-                    .map_err(|e: PyErr| {
+            match coroutine_or_result {
+                Either::Coroutine(coroutine_py) => {
+                    // Async path: await the coroutine
+                    let result = Python::with_gil(|py| {
+                        let coroutine = coroutine_py.bind(py).clone();
+                        into_future(coroutine)
+                    }).map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
+                        message: format!("Failed to convert coroutine to future: {}", e),
+                    })?.await.map_err(|e| {
                         Python::with_gil(|py| {
                             e.print(py);
-                            format!("Async factory execution failed: {}", e)
-                        })
-                    })
-                } else {
-                    // Sync factory
-                    let result = factory
-                        .call((), Some(&kwargs))
-                        .map_err(|e| format!("Failed to call sync factory: {}", e))?;
+                        });
+                        spikard_core::di::DependencyError::ResolutionFailed {
+                            message: format!("Async factory failed: {}", e),
+                        }
+                    })?;
 
-                    if self.is_async_generator {
-                        // This shouldn't happen (sync generator marked as async_generator)
-                        return Err("Sync generator not yet supported".to_string());
+                    // Handle generator vs regular async
+                    if is_async_generator {
+                        // For generators, call __anext__ to get the first value
+                        let value = Python::with_gil(|py| {
+                            let aiter = result.bind(py);
+                            let first_value = aiter.call_method0("__anext__")?;
+                            Ok::<_, PyErr>(first_value.unbind())
+                        }).map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
+                            message: format!("Failed to get first value from generator: {}", e),
+                        })?;
+
+                        // Await the generator value
+                        let final_value = Python::with_gil(|py| {
+                            let val = value.bind(py).clone();
+                            into_future(val)
+                        }).map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
+                            message: format!("Failed to await generator value: {}", e),
+                        })?.await.map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
+                            message: format!("Generator value await failed: {}", e),
+                        })?;
+
+                        Ok(Arc::new(final_value) as Arc<dyn Any + Send + Sync>)
+                    } else {
+                        // Regular async function - result is already the value
+                        Ok(Arc::new(result) as Arc<dyn Any + Send + Sync>)
                     }
-
-                    Ok(Arc::new(result.into()) as Arc<dyn Any + Send + Sync>)
                 }
-            })
+                Either::Value(value) => {
+                    // Sync path - already have the value
+                    Ok(Arc::new(value) as Arc<dyn Any + Send + Sync>)
+                }
+            }
         })
     }
 
-    fn is_singleton(&self) -> bool {
+    fn key(&self) -> &str {
+        &self.key
+    }
+
+    fn depends_on(&self) -> Vec<String> {
+        self.depends_on.clone()
+    }
+
+    fn singleton(&self) -> bool {
         self.singleton
     }
 
-    fn is_cacheable(&self) -> bool {
+    fn cacheable(&self) -> bool {
         self.cacheable
     }
+}
+
+// Helper enum to avoid returning Option
+enum Either {
+    Coroutine(Py<PyAny>),
+    Value(Py<PyAny>),
 }

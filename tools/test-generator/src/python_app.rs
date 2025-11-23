@@ -1153,10 +1153,13 @@ fn generate_handler_function_for_fixture(
         }
     }
 
-    // Add DI parameters
+    // Add DI parameters (deduplicated to avoid duplicate function parameters)
     if let Some(ref di_cfg) = di_config {
+        let mut seen = std::collections::HashSet::new();
         for dep_key in &di_cfg.handler_dependencies {
-            code.push_str(&format!("    {}: Any,\n", dep_key));
+            if seen.insert(dep_key.clone()) {
+                code.push_str(&format!("    {}: Any,\n", dep_key));
+            }
         }
     }
 
@@ -1320,11 +1323,14 @@ fn generate_handler_function_for_fixture(
             }
         }
 
-        // Add DI dependencies to result
+        // Add DI dependencies to result (deduplicated)
         if let Some(ref di_cfg) = di_config {
+            let mut seen = std::collections::HashSet::new();
             for dep_key in &di_cfg.handler_dependencies {
-                code.push_str(&format!("    if {} is not None:\n", dep_key));
-                code.push_str(&format!("        result[\"{}\"] = {}\n", dep_key, dep_key));
+                if seen.insert(dep_key.clone()) {
+                    code.push_str(&format!("    if {} is not None:\n", dep_key));
+                    code.push_str(&format!("        result[\"{}\"] = {}\n", dep_key, dep_key));
+                }
             }
         }
 

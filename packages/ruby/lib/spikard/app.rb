@@ -120,6 +120,7 @@ module Spikard
   # rubocop:disable Metrics/ClassLength
   class App
     include LifecycleHooks
+    include ProvideSupport
 
     HTTP_METHODS = %w[GET POST PUT PATCH DELETE OPTIONS HEAD TRACE].freeze
     SUPPORTED_OPTIONS = %i[request_schema response_schema parameter_schema file_params is_async cors].freeze
@@ -130,6 +131,7 @@ module Spikard
       @routes = []
       @websocket_handlers = {}
       @sse_producers = {}
+      @dependencies = {}
       @lifecycle_hooks = {
         on_request: [],
         pre_validation: [],

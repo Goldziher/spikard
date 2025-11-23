@@ -9,6 +9,7 @@
 //!
 //! - `test_client`: TestClient wrapper for integration testing
 //! - `handler`: RubyHandler trait implementation
+//! - `di`: Dependency injection bridge for Ruby types
 //! - `config`: ServerConfig extraction from Ruby objects
 //! - `conversion`: Ruby ↔ Rust type conversions
 //! - `server`: HTTP server setup and lifecycle management
@@ -22,6 +23,7 @@
 mod background;
 mod config;
 mod conversion;
+mod di;
 mod handler;
 mod lifecycle;
 mod server;

@@ -1,0 +1,286 @@
+//! Ruby dependency injection implementations
+//!
+//! This module provides Ruby-specific implementations of the Dependency trait,
+//! bridging Ruby values and Procs to the Rust DI system.
+
+use http::Request;
+use magnus::prelude::*;
+use magnus::value::{InnerValue, Opaque};
+use magnus::{Error, RHash, Ruby, TryConvert, Value};
+use serde_json::Value as JsonValue;
+use spikard_core::di::{Dependency, DependencyError, ResolvedDependencies};
+use spikard_core::request_data::RequestData;
+use std::any::Any;
+use std::pin::Pin;
+use std::sync::Arc;
+
+/// Ruby value dependency
+///
+/// Wraps a Ruby object as a static dependency value
+pub struct RubyValueDependency {
+    key: String,
+    value: Opaque<Value>,
+}
+
+impl RubyValueDependency {
+    pub fn new(key: String, value: Value) -> Self {
+        Self {
+            key,
+            value: Opaque::from(value),
+        }
+    }
+}
+
+impl Dependency for RubyValueDependency {
+    fn key(&self) -> &str {
+        &self.key
+    }
+
+    fn depends_on(&self) -> Vec<String> {
+        Vec::new() // Value dependencies have no dependencies
+    }
+
+    fn resolve(
+        &self,
+        _request: &Request<()>,
+        _request_data: &RequestData,
+        _resolved: &ResolvedDependencies,
+    ) -> Pin<Box<dyn std::future::Future<Output = Result<Arc<dyn Any + Send + Sync>, DependencyError>> + Send + '_>>
+    {
+        Box::pin(async move {
+            // Get the Ruby value
+            let ruby = Ruby::get()
+                .map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?;
+
+            let value = self.value.get_inner_with(&ruby);
+
+            // Convert to JSON and back to make it Send + Sync
+            let json_value = ruby_value_to_json(&ruby, value)
+                .map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?;
+
+            Ok(Arc::new(json_value) as Arc<dyn Any + Send + Sync>)
+        })
+    }
+
+    fn singleton(&self) -> bool {
+        true // Value dependencies are always singletons
+    }
+
+    fn cacheable(&self) -> bool {
+        true
+    }
+}
+
+/// Ruby factory dependency
+///
+/// Wraps a Ruby Proc as a factory dependency
+pub struct RubyFactoryDependency {
+    key: String,
+    factory: Opaque<Value>,
+    depends_on: Vec<String>,
+    singleton: bool,
+    cacheable: bool,
+    json_module: Opaque<Value>,
+}
+
+impl RubyFactoryDependency {
+    pub fn new(
+        ruby: &Ruby,
+        key: String,
+        factory: Value,
+        depends_on: Vec<String>,
+        singleton: bool,
+        cacheable: bool,
+    ) -> Result<Self, Error> {
+        let json_module = ruby
+            .class_object()
+            .const_get("JSON")
+            .map_err(|_| Error::new(ruby.exception_runtime_error(), "JSON module not available"))?;
+
+        Ok(Self {
+            key,
+            factory: Opaque::from(factory),
+            depends_on,
+            singleton,
+            cacheable,
+            json_module: Opaque::from(json_module),
+        })
+    }
+}
+
+impl Dependency for RubyFactoryDependency {
+    fn key(&self) -> &str {
+        &self.key
+    }
+
+    fn depends_on(&self) -> Vec<String> {
+        self.depends_on.clone()
+    }
+
+    fn resolve(
+        &self,
+        _request: &Request<()>,
+        _request_data: &RequestData,
+        resolved: &ResolvedDependencies,
+    ) -> Pin<Box<dyn std::future::Future<Output = Result<Arc<dyn Any + Send + Sync>, DependencyError>> + Send + '_>>
+    {
+        Box::pin(async move {
+            let ruby = Ruby::get()
+                .map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?;
+
+            // Build kwargs hash from resolved dependencies
+            let kwargs = ruby.hash_new();
+            for dep_key in &self.depends_on {
+                if let Some(dep_value) = resolved.get::<JsonValue>(dep_key) {
+                    let ruby_value = json_to_ruby(&ruby, &dep_value)
+                        .map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?;
+                    kwargs.aset(ruby.str_new(dep_key), ruby_value)
+                        .map_err(|e| DependencyError::ResolutionFailed {
+                            message: format!("Failed to set dependency {}: {}", dep_key, e)
+                        })?;
+                }
+            }
+
+            // Call the factory Proc with keyword arguments
+            let factory = self.factory.get_inner_with(&ruby);
+
+            // Check if factory responds to call
+            if !factory.respond_to("call", false)
+                .map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?
+            {
+                return Err(DependencyError::ResolutionFailed {
+                    message: format!("Dependency factory for '{}' is not callable", self.key),
+                });
+            }
+
+            let result = if kwargs.length() > 0 {
+                // Call with keyword arguments: factory.call(**kwargs)
+                let array = ruby.ary_new();
+                factory
+                    .funcall_with_block("call", &[array.as_value()], Some(kwargs))
+                    .map_err(|e| DependencyError::ResolutionFailed {
+                        message: format!("Failed to call factory for '{}': {}", self.key, e),
+                    })?
+            } else {
+                // Call with no arguments
+                factory
+                    .funcall("call", ())
+                    .map_err(|e| DependencyError::ResolutionFailed {
+                        message: format!("Failed to call factory for '{}': {}", self.key, e),
+                    })?
+            };
+
+            // Convert result to JSON
+            let json_value = ruby_value_to_json(&ruby, result)
+                .map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?;
+
+            Ok(Arc::new(json_value) as Arc<dyn Any + Send + Sync>)
+        })
+    }
+
+    fn singleton(&self) -> bool {
+        self.singleton
+    }
+
+    fn cacheable(&self) -> bool {
+        self.cacheable
+    }
+}
+
+/// Convert Ruby Value to serde_json::Value
+fn ruby_value_to_json(ruby: &Ruby, value: Value) -> Result<JsonValue, Error> {
+    if value.is_nil() {
+        return Ok(JsonValue::Null);
+    }
+
+    let json_module = ruby
+        .class_object()
+        .const_get("JSON")
+        .map_err(|_| Error::new(ruby.exception_runtime_error(), "JSON module not available"))?;
+
+    let json_string: String = json_module.funcall("generate", (value,))?;
+    serde_json::from_str(&json_string).map_err(|err| {
+        Error::new(
+            ruby.exception_runtime_error(),
+            format!("Failed to convert Ruby value to JSON: {err}"),
+        )
+    })
+}
+
+/// Convert serde_json::Value to Ruby Value
+fn json_to_ruby(ruby: &Ruby, value: &JsonValue) -> Result<Value, Error> {
+    match value {
+        JsonValue::Null => Ok(ruby.qnil().as_value()),
+        JsonValue::Bool(b) => Ok(if *b {
+            ruby.qtrue().as_value()
+        } else {
+            ruby.qfalse().as_value()
+        }),
+        JsonValue::Number(num) => {
+            if let Some(i) = num.as_i64() {
+                Ok(ruby.integer_from_i64(i).as_value())
+            } else if let Some(f) = num.as_f64() {
+                Ok(ruby.float_from_f64(f).as_value())
+            } else {
+                Ok(ruby.qnil().as_value())
+            }
+        }
+        JsonValue::String(str_val) => Ok(ruby.str_new(str_val).as_value()),
+        JsonValue::Array(items) => {
+            let array = ruby.ary_new();
+            for item in items {
+                array.push(json_to_ruby(ruby, item)?)?;
+            }
+            Ok(array.as_value())
+        }
+        JsonValue::Object(map) => {
+            let hash = ruby.hash_new();
+            for (key, item) in map {
+                hash.aset(ruby.str_new(key), json_to_ruby(ruby, item)?)?;
+            }
+            Ok(hash.as_value())
+        }
+    }
+}
+
+/// Helper to extract keyword arguments from Ruby options hash
+pub fn extract_di_options(ruby: &Ruby, options: Value) -> Result<(Vec<String>, bool, bool), Error> {
+    if options.is_nil() {
+        return Ok((Vec::new(), false, true));
+    }
+
+    let hash = RHash::try_convert(options)?;
+
+    // Extract depends_on
+    let depends_on = if let Some(deps_value) = get_kw(ruby, hash, "depends_on") {
+        if deps_value.is_nil() {
+            Vec::new()
+        } else {
+            Vec::<String>::try_convert(deps_value)?
+        }
+    } else {
+        Vec::new()
+    };
+
+    // Extract singleton (default false)
+    let singleton = if let Some(singleton_value) = get_kw(ruby, hash, "singleton") {
+        bool::try_convert(singleton_value).unwrap_or(false)
+    } else {
+        false
+    };
+
+    // Extract cacheable (default true)
+    let cacheable = if let Some(cacheable_value) = get_kw(ruby, hash, "cacheable") {
+        bool::try_convert(cacheable_value).unwrap_or(true)
+    } else {
+        true
+    };
+
+    Ok((depends_on, singleton, cacheable))
+}
+
+/// Get keyword argument from Ruby hash (tries both symbol and string keys)
+fn get_kw(ruby: &Ruby, hash: RHash, name: &str) -> Option<Value> {
+    let sym = ruby.intern(name);
+    hash.get(sym).or_else(|| hash.get(name))
+}

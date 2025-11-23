@@ -250,12 +250,15 @@ fn build_fixture_function(
     let args_joined = args.join(", ");
     let skip_route_registration = !metadata.static_dirs.is_empty();
 
-    // Add DI parameter to handler block
+    // Add DI parameter to handler block (deduplicated to avoid duplicate parameters)
     let mut handler_params = Vec::new();
     handler_params.push("_request".to_string());
     if let Some(di_cfg) = di_config {
+        let mut seen = std::collections::HashSet::new();
         for dep_key in &di_cfg.handler_dependencies {
-            handler_params.push(format!("{}:", dep_key));
+            if seen.insert(dep_key.clone()) {
+                handler_params.push(format!("{}:", dep_key));
+            }
         }
     }
     let handler_params_str = handler_params.join(", ");
