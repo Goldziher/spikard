@@ -3,12 +3,22 @@
   "version": "0.1.0",
   "description": "Express comparison server for benchmarking",
   "main": "server.js",
+  "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "start:ts": "tsx server.ts",
+    "build": "tsc",
+    "dev": "tsx watch server.ts"
   },
   "dependencies": {
     "express": "5.1.0",
-    "zod": "4.0.0"
+    "zod": "3.24.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
   },
   "engines": {
     "node": ">=18.0.0"

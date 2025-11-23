@@ -67,7 +67,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "spikard-python",
+            "spikard",
             vec!["server.py".to_string()],
             None,
             "uv run python server.py {port}",
@@ -77,7 +77,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "spikard-node",
             vec!["server.ts".to_string()],
             None,
-            "node server.ts {port}",
+            "npm start {port}",
             None,
         ),
         FrameworkConfig::new(
@@ -120,14 +120,86 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "robyn",
             vec!["server.py".to_string()],
             None,
+            "uv run server.py {port}",
+            None,
+        ),
+        // Raw/no-validation variants for validation overhead measurement
+        FrameworkConfig::new(
+            "spikard-raw",
+            vec!["server.py".to_string()],
+            None,
             "uv run python server.py {port}",
             None,
         ),
         FrameworkConfig::new(
+            "fastapi-raw",
+            vec!["server.py".to_string()],
+            None,
+            "uv run python server.py {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "fastapi-granian-raw",
+            vec!["server.py".to_string()],
+            None,
+            "uv run server.py {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "litestar-raw",
+            vec!["server.py".to_string()],
+            None,
+            "uv run server.py {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "litestar-granian-raw",
+            vec!["server.py".to_string()],
+            None,
+            "uv run server.py {port}",
+            None,
+        ),
+        // TypeScript frameworks
+        FrameworkConfig::new(
             "fastify",
             vec!["server.ts".to_string()],
             None,
-            "node server.ts {port}",
+            "npm start {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "fastify-raw",
+            vec!["server.js".to_string()],
+            None,
+            "npm start {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "hono",
+            vec!["server.ts".to_string()],
+            None,
+            "npm start {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "hono-raw",
+            vec!["server.ts".to_string()],
+            None,
+            "npm start {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "express",
+            vec!["server.ts".to_string()],
+            None,
+            "npm run start:ts {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "express-raw",
+            vec!["server.ts".to_string()],
+            None,
+            "npm start {port}",
             None,
         ),
         FrameworkConfig::new(
@@ -144,32 +216,33 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "uv run server.py {port}",
             None,
         ),
-        FrameworkConfig::new(
-            "express",
-            vec!["server.js".to_string()],
-            None,
-            "node server.js {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "hono",
-            vec!["server.js".to_string()],
-            None,
-            "node server.js {port}",
-            None,
-        ),
+        // Ruby frameworks
         FrameworkConfig::new(
             "hanami-api",
             vec!["server.rb".to_string()],
             None,
-            "bundle exec ruby server.rb {port}",
+            "ruby server.rb {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "hanami-api-raw",
+            vec!["server.rb".to_string()],
+            None,
+            "ruby server.rb {port}",
             None,
         ),
         FrameworkConfig::new(
             "roda",
             vec!["server.rb".to_string()],
             None,
-            "bundle exec ruby server.rb {port}",
+            "ruby server.rb {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "roda-raw",
+            vec!["server.rb".to_string()],
+            None,
+            "ruby server.rb {port}",
             None,
         ),
     ]
@@ -302,24 +375,43 @@ mod tests {
         let registry = framework_registry();
         let names: Vec<&str> = registry.iter().map(|f| f.name.as_str()).collect();
 
+        // Spikard bindings (5)
         assert!(names.contains(&"spikard-rust"));
-        assert!(names.contains(&"spikard-python"));
+        assert!(names.contains(&"spikard"));
         assert!(names.contains(&"spikard-node"));
         assert!(names.contains(&"spikard-ruby"));
         assert!(names.contains(&"spikard-wasm"));
+
+        // Python validated (6)
         assert!(names.contains(&"axum-baseline"));
         assert!(names.contains(&"fastapi"));
         assert!(names.contains(&"fastapi-granian"));
-        assert!(names.contains(&"robyn"));
-        assert!(names.contains(&"fastify"));
         assert!(names.contains(&"litestar"));
         assert!(names.contains(&"litestar-granian"));
-        assert!(names.contains(&"express"));
-        assert!(names.contains(&"hono"));
-        assert!(names.contains(&"hanami-api"));
-        assert!(names.contains(&"roda"));
+        assert!(names.contains(&"robyn"));
 
-        assert_eq!(registry.len(), 16);
+        // Python raw (5)
+        assert!(names.contains(&"spikard-raw"));
+        assert!(names.contains(&"fastapi-raw"));
+        assert!(names.contains(&"fastapi-granian-raw"));
+        assert!(names.contains(&"litestar-raw"));
+        assert!(names.contains(&"litestar-granian-raw"));
+
+        // TypeScript (6)
+        assert!(names.contains(&"fastify"));
+        assert!(names.contains(&"fastify-raw"));
+        assert!(names.contains(&"hono"));
+        assert!(names.contains(&"hono-raw"));
+        assert!(names.contains(&"express"));
+        assert!(names.contains(&"express-raw"));
+
+        // Ruby (4)
+        assert!(names.contains(&"hanami-api"));
+        assert!(names.contains(&"hanami-api-raw"));
+        assert!(names.contains(&"roda"));
+        assert!(names.contains(&"roda-raw"));
+
+        assert_eq!(registry.len(), 26);
     }
 
     #[test]
@@ -378,7 +470,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        assert_eq!(frameworks.len(), 16);
+        assert_eq!(frameworks.len(), 26);
     }
 
     #[test]
@@ -408,13 +500,13 @@ mod tests {
     }
 
     #[test]
-    fn test_detect_spikard_python_with_server_only() {
+    fn test_detect_spikard_with_server_only() {
         let temp_dir = TempDir::new().unwrap();
         fs::write(temp_dir.path().join("server.py"), "# python server").unwrap();
 
         let result = detect_framework(temp_dir.path());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().name, "spikard-python");
+        assert_eq!(result.unwrap().name, "spikard");
     }
 
     #[test]

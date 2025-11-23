@@ -3,6 +3,12 @@
 
 Robyn is a Rust-based Python web framework with high performance.
 """
+# /// script
+# dependencies = [
+#     "robyn>=0.39",
+#     "pydantic>=2",
+# ]
+# ///
 
 import sys
 from typing import Any

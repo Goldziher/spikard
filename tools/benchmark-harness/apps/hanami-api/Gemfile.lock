@@ -41,6 +41,7 @@ GEM
       mustermann-contrib (~> 3.0)
       rack (>= 2.0)
     hansi (0.2.1)
+    json (2.16.0)
     logger (1.7.0)
     mustermann (3.0.4)
       ruby2_keywords (~> 0.0.1)
@@ -63,6 +64,7 @@ PLATFORMS
 DEPENDENCIES
   dry-schema (~> 1.14)
   hanami-api (~> 0.3)
+  json (~> 2.9)
   puma (~> 7.1)
   rack (~> 3.2)
   rackup (~> 2.2)

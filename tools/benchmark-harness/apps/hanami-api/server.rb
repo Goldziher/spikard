@@ -4,16 +4,17 @@
 # Hanami API HTTP server for workload benchmarking.
 #
 # This server implements all workload types to measure Hanami API performance
-# against spikard-ruby and other Ruby frameworks.
+# against spikard-ruby and other Ruby frameworks using Dry::Schema for validation.
 
 require 'hanami/api'
 require 'dry/schema'
 require 'json'
 
 # ============================================================================
-# Validation Schemas
+# Validation Schemas (Dry::Schema.JSON matching Python Pydantic patterns)
 # ============================================================================
 
+# Small JSON payload schema (~100 bytes)
 SmallPayloadSchema = Dry::Schema.JSON do
   required(:name).filled(:string)
   required(:description).filled(:string)
@@ -21,6 +22,7 @@ SmallPayloadSchema = Dry::Schema.JSON do
   optional(:tax).maybe(:float)
 end
 
+# Nested schemas for medium payload
 AddressSchema = Dry::Schema.JSON do
   required(:street).filled(:string)
   required(:city).filled(:string)
@@ -28,35 +30,40 @@ AddressSchema = Dry::Schema.JSON do
   required(:zip_code).filled(:string)
 end
 
+# Medium JSON payload schema (~1KB)
 MediumPayloadSchema = Dry::Schema.JSON do
-  required(:user_id).filled(:integer)
-  required(:username).filled(:string)
+  required(:name).filled(:string)
   required(:email).filled(:string)
-  required(:is_active).filled(:bool)
+  required(:age).filled(:integer)
   required(:address).hash(AddressSchema)
-  required(:tags).filled(:array)
+  required(:tags).array(:str?)
 end
 
+# Item schema for large payload
 ItemSchema = Dry::Schema.JSON do
-  required(:id).filled(:integer)
+  required(:id).filled(:string)
   required(:name).filled(:string)
   required(:price).filled(:float)
-  required(:in_stock).filled(:bool)
+  required(:quantity).filled(:integer)
 end
 
+# Large JSON payload schema (~10KB)
 LargePayloadSchema = Dry::Schema.JSON do
-  required(:order_id).filled(:string)
-  required(:customer_name).filled(:string)
+  required(:user_id).filled(:string)
+  required(:name).filled(:string)
+  required(:email).filled(:string)
   required(:items).array(ItemSchema)
-  required(:total).filled(:float)
-  required(:notes).filled(:string)
+  required(:metadata).hash
 end
 
+# Very large JSON payload schema (~100KB)
 VeryLargePayloadSchema = Dry::Schema.JSON do
-  required(:data).filled(:array)
-  required(:metadata).filled(:hash)
+  required(:batch_id).filled(:string)
+  required(:records).array(:hash?)
+  required(:summary).hash
 end
 
+# URL-encoded form schemas
 UrlencodedSimpleSchema = Dry::Schema.Params do
   required(:name).filled(:string)
   optional(:email).maybe(:string)
@@ -79,9 +86,9 @@ end
 # ============================================================================
 
 class BenchmarkApp < Hanami::API
-  # JSON body endpoints
+  # JSON body endpoints - validate and echo back
   post '/json/small' do
-    body = JSON.parse(request.body.read)
+    body = JSON.parse(env['rack.input'].read)
     result = SmallPayloadSchema.call(body)
 
     if result.success?
@@ -92,7 +99,7 @@ class BenchmarkApp < Hanami::API
   end
 
   post '/json/medium' do
-    body = JSON.parse(request.body.read)
+    body = JSON.parse(env['rack.input'].read)
     result = MediumPayloadSchema.call(body)
 
     if result.success?
@@ -103,7 +110,7 @@ class BenchmarkApp < Hanami::API
   end
 
   post '/json/large' do
-    body = JSON.parse(request.body.read)
+    body = JSON.parse(env['rack.input'].read)
     result = LargePayloadSchema.call(body)
 
     if result.success?
@@ -114,7 +121,7 @@ class BenchmarkApp < Hanami::API
   end
 
   post '/json/very-large' do
-    body = JSON.parse(request.body.read)
+    body = JSON.parse(env['rack.input'].read)
     result = VeryLargePayloadSchema.call(body)
 
     if result.success?
@@ -124,7 +131,7 @@ class BenchmarkApp < Hanami::API
     end
   end
 
-  # Multipart form endpoints (stub implementations)
+  # Multipart form endpoints (stub implementations - return expected format)
   post '/multipart/small' do
     json({ files_received: 1, total_bytes: 1024 })
   end
@@ -158,7 +165,7 @@ class BenchmarkApp < Hanami::API
     end
   end
 
-  # Path parameter endpoints
+  # Path parameter endpoints - extract and return params
   get '/path/simple/:id' do
     json({ id: params[:id] })
   end
@@ -192,21 +199,35 @@ class BenchmarkApp < Hanami::API
     json({ date: params[:date] })
   end
 
-  # Query parameter endpoints
+  # Query parameter endpoints - return query params as JSON
   get '/query/few' do
-    json({
-      q: params[:q],
-      page: params[:page]&.to_i,
-      limit: params[:limit]&.to_i
-    })
+    result = {}
+    result[:q] = params[:q] if params[:q]
+    result[:page] = params[:page].to_i if params[:page]
+    result[:limit] = params[:limit].to_i if params[:limit]
+    json(result)
   end
 
   get '/query/medium' do
-    json(params.select { |k, _| k != 'route' })
+    # Return all query params from request
+    query_string = env['QUERY_STRING'] || ''
+    result = {}
+    query_string.split('&').each do |pair|
+      key, value = pair.split('=', 2)
+      result[key] = value if key && value
+    end
+    json(result)
   end
 
   get '/query/many' do
-    json(params.select { |k, _| k != 'route' })
+    # Return all query params from request
+    query_string = env['QUERY_STRING'] || ''
+    result = {}
+    query_string.split('&').each do |pair|
+      key, value = pair.split('=', 2)
+      result[key] = value if key && value
+    end
+    json(result)
   end
 
   # Health check endpoints
