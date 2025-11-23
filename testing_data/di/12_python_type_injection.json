@@ -1,0 +1,48 @@
+{
+	"name": "Python type annotation-based injection - success",
+	"description": "Tests Python-specific type annotation-based dependency injection where dependencies are matched by type hints",
+	"category": "dependency_injection",
+	"source": {
+		"framework": "spikard",
+		"adapted": false
+	},
+	"handler": {
+		"route": "/api/python-type-inject",
+		"method": "GET",
+		"dependencies": {
+			"database_pool": {
+				"type": "value",
+				"value": {
+					"pool_type": "PostgreSQL",
+					"max_connections": 20
+				},
+				"value_type": "object",
+				"python_type": "DatabasePool"
+			},
+			"cache_client": {
+				"type": "value",
+				"value": {
+					"cache_type": "Redis",
+					"ttl": 300
+				},
+				"value_type": "object",
+				"python_type": "CacheClient"
+			}
+		},
+		"handler_dependencies": ["database_pool", "cache_client"],
+		"injection_strategy": "type"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/python-type-inject"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"pool_type": "PostgreSQL",
+			"cache_type": "Redis"
+		}
+	},
+	"notes": "Python handler uses type hints (def handler(db: DatabasePool, cache: CacheClient)) to automatically inject dependencies by matching types.",
+	"tags": ["dependency_injection", "python", "type_hints", "language_specific"]
+}

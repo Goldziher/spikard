@@ -1,0 +1,52 @@
+{
+	"name": "Circular dependency detection - error",
+	"description": "Tests that circular dependencies (A depends on B, B depends on A) are detected and rejected at registration time",
+	"category": "dependency_injection",
+	"source": {
+		"framework": "spikard",
+		"adapted": false
+	},
+	"handler": {
+		"route": "/api/circular",
+		"method": "GET",
+		"dependencies": {
+			"service_a": {
+				"type": "factory",
+				"factory": "create_service_a",
+				"depends_on": ["service_b"],
+				"singleton": false,
+				"cacheable": false
+			},
+			"service_b": {
+				"type": "factory",
+				"factory": "create_service_b",
+				"depends_on": ["service_a"],
+				"singleton": false,
+				"cacheable": false
+			}
+		},
+		"handler_dependencies": ["service_a"]
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/circular"
+	},
+	"expected_response": {
+		"status_code": 500,
+		"body": {
+			"type": "https://spikard.dev/errors/dependency-error",
+			"title": "Dependency Resolution Failed",
+			"status": 500,
+			"detail": "Circular dependency detected",
+			"errors": [
+				{
+					"type": "circular_dependency",
+					"msg": "Circular dependency detected in dependency graph",
+					"cycle": ["service_a", "service_b", "service_a"]
+				}
+			]
+		}
+	},
+	"notes": "Circular dependencies should be detected at registration time (during app setup) and result in an error response. The cycle field shows the circular path.",
+	"tags": ["dependency_injection", "error", "circular", "validation"]
+}

@@ -1,0 +1,36 @@
+{
+	"name": "Singleton dependency caching - success",
+	"description": "Tests singleton dependency that is created once and shared across all requests",
+	"category": "dependency_injection",
+	"source": {
+		"framework": "spikard",
+		"adapted": false
+	},
+	"handler": {
+		"route": "/api/app-counter",
+		"method": "GET",
+		"dependencies": {
+			"app_counter": {
+				"type": "factory",
+				"factory": "create_app_counter",
+				"depends_on": [],
+				"singleton": true,
+				"cacheable": false
+			}
+		},
+		"handler_dependencies": ["app_counter"]
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/app-counter"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"counter_id": "<<uuid>>",
+			"count": 1
+		}
+	},
+	"notes": "Singleton=true means the same counter instance is used across all requests. The counter_id (UUID) will be the same for subsequent requests, and count will increment. Test should make multiple requests to verify singleton behavior.",
+	"tags": ["dependency_injection", "singleton", "caching"]
+}

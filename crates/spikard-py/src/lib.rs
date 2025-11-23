@@ -3,6 +3,8 @@
 //! This crate provides Python bindings using PyO3
 
 mod background;
+#[cfg(feature = "di")]
+pub mod di;
 pub mod handler;
 pub mod lifecycle;
 pub mod request;
@@ -135,6 +137,8 @@ fn process() -> PyResult<()> {
 ///     TestClient: A test client for making requests to the app
 #[pyfunction]
 fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_client::TestClient> {
+    use std::sync::Arc;
+
     // DEBUG: Log test client creation
     let _ = std::fs::write("/tmp/create_test_client.log", "create_test_client() called\n");
     eprintln!("[UNCONDITIONAL DEBUG] create_test_client() called");
@@ -175,7 +179,7 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
         format!("Converted {} routes\n", routes.len()),
     );
 
-    let config = if let Ok(py_config) = app.getattr("_config") {
+    let mut config = if let Ok(py_config) = app.getattr("_config") {
         if !py_config.is_none() {
             extract_server_config(py, &py_config)?
         } else {
@@ -184,6 +188,15 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
     } else {
         spikard_http::ServerConfig::default()
     };
+
+    // Extract and register dependencies
+    #[cfg(feature = "di")]
+    {
+        let dependencies = app.call_method0("get_dependencies")?;
+        if !dependencies.is_none() {
+            config.di_container = Some(Arc::new(build_dependency_container(py, &dependencies)?));
+        }
+    }
 
     eprintln!(
         "[UNCONDITIONAL DEBUG] Building Axum router with {} routes",
@@ -449,6 +462,65 @@ fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyRes
     })
 }
 
+/// Build dependency container from Python dependencies
+///
+/// Converts Python dependencies (values and Provide wrappers) to Rust DependencyContainer
+#[cfg(feature = "di")]
+fn build_dependency_container(
+    py: Python<'_>,
+    dependencies: &Bound<'_, PyAny>,
+) -> PyResult<spikard_core::di::DependencyContainer> {
+    use pyo3::types::{PyDict, PyString};
+    use spikard_core::di::{DependencyContainer, ValueDependency};
+    use std::sync::Arc;
+
+    let mut container = DependencyContainer::new();
+    let deps_dict = dependencies.downcast::<PyDict>()?;
+
+    for (key, value) in deps_dict.iter() {
+        let key_str: String = key.extract()?;
+
+        // Check if this is a Provide wrapper
+        if value.hasattr("dependency")? {
+            // This is a Provide wrapper - extract factory details
+            let factory = value.getattr("dependency")?;
+            let depends_on: Vec<String> = value.getattr("depends_on")?.extract().unwrap_or_default();
+            let singleton: bool = value.getattr("singleton")?.extract().unwrap_or(false);
+            let use_cache: bool = value.getattr("use_cache")?.extract().unwrap_or(false);
+            let is_async: bool = value.getattr("is_async")?.extract().unwrap_or(false);
+            let is_async_generator: bool = value.getattr("is_async_generator")?.extract().unwrap_or(false);
+
+            // Create Python factory dependency
+            let py_factory = factory.into();
+            let factory_dep = crate::di::PythonFactoryDependency::new(
+                py_factory,
+                depends_on,
+                singleton,
+                use_cache || singleton,
+                is_async,
+                is_async_generator,
+            );
+
+            container.register(key_str, Arc::new(factory_dep)).map_err(|e| {
+                PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+                    "Failed to register factory dependency: {}",
+                    e
+                ))
+            })?;
+        } else {
+            // This is a static value - wrap in PyObject
+            let py_value = value.into();
+            let value_dep = crate::di::PythonValueDependency::new(key_str.clone(), py_value);
+
+            container.register(key_str, Arc::new(value_dep)).map_err(|e| {
+                PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to register value dependency: {}", e))
+            })?;
+        }
+    }
+
+    Ok(container)
+}
+
 /// Run Spikard server from Python
 ///
 /// This function enables Python to run Spikard, rather than having the Rust CLI embed Python.
@@ -498,6 +570,15 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
     let lifecycle_hooks = crate::lifecycle::build_lifecycle_hooks(py, &hooks_dict)?;
 
     config.lifecycle_hooks = Some(Arc::new(lifecycle_hooks));
+
+    // Extract and register dependencies
+    #[cfg(feature = "di")]
+    {
+        let dependencies = app.call_method0("get_dependencies")?;
+        if !dependencies.is_none() {
+            config.di_container = Some(Arc::new(build_dependency_container(py, &dependencies)?));
+        }
+    }
 
     let schema_registry = spikard_http::SchemaRegistry::new();
 

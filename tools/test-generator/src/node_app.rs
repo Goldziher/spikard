@@ -4,6 +4,7 @@
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
+use crate::dependencies::{Dependency, DependencyConfig, has_cleanup};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::{StreamingFixtureData, streaming_data};
 use crate::ts_target::TypeScriptTarget;
@@ -178,6 +179,9 @@ fn generate_app_file_per_fixture(
     let mut padded_binary_bodies = false;
     let mut streaming_has_binary_chunks = false;
     let has_websocket = !websocket_fixtures.is_empty();
+    let mut needs_di = false;
+    let mut needs_di_cleanup_state = false;
+
     for fixtures in fixtures_by_category.values() {
         for fixture in fixtures {
             if !needs_background && background_data(fixture)?.is_some() {
@@ -198,6 +202,16 @@ fn generate_app_file_per_fixture(
             if !streaming_has_binary_chunks && streaming_data(fixture)?.map(|info| !info.is_text_only).unwrap_or(false)
             {
                 streaming_has_binary_chunks = true;
+            }
+            if !needs_di {
+                if let Some(di_config) = DependencyConfig::from_fixture(fixture)? {
+                    if di_config.has_dependencies() {
+                        needs_di = true;
+                        if has_cleanup(&di_config) {
+                            needs_di_cleanup_state = true;
+                        }
+                    }
+                }
             }
         }
     }
@@ -225,6 +239,9 @@ fn generate_app_file_per_fixture(
     }
     if needs_background {
         value_imports.push("background");
+    }
+    if needs_di {
+        value_imports.push("Provide");
     }
     if !value_imports.is_empty() {
         code.push_str(&format!(
@@ -310,6 +327,11 @@ fn generate_app_file_per_fixture(
         code.push_str("const BACKGROUND_STATE: Record<string, unknown[]> = {};\n\n");
     }
 
+    if needs_di_cleanup_state {
+        code.push_str("// Cleanup state tracking for DI fixtures\n");
+        code.push_str("const CLEANUP_STATE: Record<string, string[]> = {};\n\n");
+    }
+
     let mut handler_names = HashMap::new();
 
     let mut all_app_factories = Vec::new();
@@ -324,8 +346,15 @@ fn generate_app_file_per_fixture(
             }
 
             let background_info = background_data(fixture)?;
-            let (handler_code, app_factory_code) =
-                generate_fixture_handler_and_app_node(fixture, &handler_name, &fixture_id, background_info, &metadata)?;
+            let di_config = DependencyConfig::from_fixture(fixture)?;
+            let (handler_code, app_factory_code) = generate_fixture_handler_and_app_node(
+                fixture,
+                &handler_name,
+                &fixture_id,
+                background_info,
+                &metadata,
+                di_config.as_ref(),
+            )?;
 
             code.push_str(&handler_code);
             code.push_str("\n\n");
@@ -381,6 +410,7 @@ fn generate_fixture_handler_and_app_node(
     fixture_id: &str,
     background: Option<BackgroundFixtureData>,
     metadata: &MiddlewareMetadata,
+    di_config: Option<&DependencyConfig>,
 ) -> Result<(String, String)> {
     let route = if let Some(handler) = &fixture.handler {
         handler.route.clone()
@@ -448,6 +478,13 @@ fn generate_fixture_handler_and_app_node(
 
     let app_factory_name = format!("createApp{}", to_pascal_case(handler_name));
 
+    // Generate DI factory functions if needed
+    let di_factories = if let Some(di_cfg) = di_config {
+        generate_all_dependency_factories_ts(di_cfg, fixture_id)?
+    } else {
+        String::new()
+    };
+
     let body_schema_str = if let Some(handler) = &fixture.handler {
         if let Some(schema) = &handler.body_schema {
             serde_json::to_string(schema)?
@@ -481,17 +518,43 @@ fn generate_fixture_handler_and_app_node(
     let raw_middleware = fixture.handler.as_ref().and_then(|handler| handler.middleware.as_ref());
     let config_code = generate_server_config_ts(metadata, raw_middleware, fixture_id)?;
 
+    // Generate DI providers registration
+    let di_providers = if let Some(di_cfg) = di_config {
+        generate_di_providers_ts(di_cfg, fixture_id)?
+    } else {
+        String::new()
+    };
+
+    // Generate cleanup state handler if needed
+    let cleanup_state_handler = if let Some(di_cfg) = di_config {
+        if has_cleanup(di_cfg) {
+            Some(generate_cleanup_state_handler_ts(handler_name, fixture_id))
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
     let background_handler_name = if background.is_some() && !skip_route_registration {
         Some(format!("{}_background_state", handler_name))
     } else {
         None
     };
+
+    let cleanup_handler_name = cleanup_state_handler
+        .as_ref()
+        .map(|_| format!("{}_cleanup_state", handler_name));
+
     let mut handler_entries = Vec::new();
     if !skip_route_registration {
         handler_entries.push(format!("\t\t\t{}: {}", handler_name, to_camel_case(handler_name)));
     }
     if let Some(bg_name) = &background_handler_name {
         handler_entries.push(format!("\t\t\t{}: {}", bg_name, to_camel_case(bg_name)));
+    }
+    if let Some(cleanup_name) = &cleanup_handler_name {
+        handler_entries.push(format!("\t\t\t{}: {}", cleanup_name, to_camel_case(cleanup_name)));
     }
     let handlers_literal = if handler_entries.is_empty() {
         "{\n\t\t}".to_string()
@@ -510,12 +573,24 @@ fn generate_fixture_handler_and_app_node(
         None
     };
 
+    let cleanup_route_decl = cleanup_handler_name.as_ref().map(|cleanup_name| {
+        format!(
+            "\tconst cleanupRoute: RouteMetadata = {{\n\t\tmethod: \"GET\",\n\t\tpath: \"/api/cleanup-state\",\n\t\thandler_name: \"{}\",\n\t\trequest_schema: undefined,\n\t\tresponse_schema: undefined,\n\t\tparameter_schema: undefined,\n\t\tfile_params: undefined,\n\t\tis_async: true,\n\t}};\n\n",
+            cleanup_name
+        )
+    });
+
     let routes_literal = if skip_route_registration {
         "[]".to_string()
-    } else if background_route_decl.is_some() {
-        "[route, backgroundRoute]".to_string()
     } else {
-        "[route]".to_string()
+        let mut routes = vec!["route".to_string()];
+        if background_route_decl.is_some() {
+            routes.push("backgroundRoute".to_string());
+        }
+        if cleanup_route_decl.is_some() {
+            routes.push("cleanupRoute".to_string());
+        }
+        format!("[{}]", routes.join(", "))
     };
 
     let mut app_factory_code = String::new();
@@ -527,6 +602,16 @@ fn generate_fixture_handler_and_app_node(
         }
         app_factory_code.push('\n');
     }
+
+    // Add DI providers if present
+    if !di_providers.is_empty() {
+        app_factory_code.push_str(&di_providers);
+        if !di_providers.ends_with('\n') {
+            app_factory_code.push('\n');
+        }
+        app_factory_code.push('\n');
+    }
+
     if !skip_route_registration {
         app_factory_code.push_str(&format!(
             "\tconst route: RouteMetadata = {{\n\t\tmethod: \"{}\",\n\t\tpath: \"{}\",\n\t\thandler_name: \"{}\",\n\t\trequest_schema: {},\n\t\tresponse_schema: undefined,\n\t\tparameter_schema: {},\n\t\tfile_params: {},\n\t\tis_async: true,\n\t}};\n\n",
@@ -539,6 +624,9 @@ fn generate_fixture_handler_and_app_node(
         ));
         if let Some(bg_decl) = &background_route_decl {
             app_factory_code.push_str(bg_decl);
+        }
+        if let Some(cleanup_decl) = &cleanup_route_decl {
+            app_factory_code.push_str(&cleanup_decl);
         }
     }
 
@@ -555,7 +643,16 @@ fn generate_fixture_handler_and_app_node(
     app_factory_code.push_str("}\n");
 
     let mut full_handler_code = String::new();
+
+    // Add DI factories first
+    if !di_factories.is_empty() {
+        full_handler_code.push_str(&di_factories);
+    }
+
     if !hooks_code.is_empty() {
+        if !full_handler_code.is_empty() {
+            full_handler_code.push_str("\n\n");
+        }
         full_handler_code.push_str(&hooks_code);
     }
     if !handler_func.is_empty() {
@@ -569,6 +666,12 @@ fn generate_fixture_handler_and_app_node(
             full_handler_code.push_str("\n\n");
         }
         full_handler_code.push_str(&state_handler);
+    }
+    if let Some(cleanup_handler) = cleanup_state_handler.filter(|code| !code.is_empty()) {
+        if !full_handler_code.is_empty() {
+            full_handler_code.push_str("\n\n");
+        }
+        full_handler_code.push_str(&cleanup_handler);
     }
 
     Ok((full_handler_code.trim().to_string(), app_factory_code))
@@ -1893,4 +1996,191 @@ fn generate_lifecycle_hooks_registration_ts(fixture_id: &str, hooks: &Value) -> 
     } else {
         format!("\tlifecycleHooks: {{\n{}\n\t}},\n", registrations.join(",\n"))
     }
+}
+
+/// Generate all dependency factory functions for TypeScript
+fn generate_all_dependency_factories_ts(di_config: &DependencyConfig, fixture_id: &str) -> Result<String> {
+    let mut code = String::new();
+    let all_deps = di_config.all_dependencies();
+
+    // Generate factory functions for non-value dependencies
+    for dep in all_deps.values() {
+        if dep.is_value() {
+            continue; // Values are registered directly, no factory needed
+        }
+
+        let factory_code = generate_dependency_factory_ts(dep, fixture_id)?;
+        if !factory_code.is_empty() {
+            code.push_str(&factory_code);
+            code.push_str("\n\n");
+        }
+    }
+
+    Ok(code.trim().to_string())
+}
+
+/// Generate a single dependency factory function for TypeScript
+fn generate_dependency_factory_ts(dep: &Dependency, fixture_id: &str) -> Result<String> {
+    let factory_name = to_camel_case(&format!("{}_{}", fixture_id, &dep.key));
+    let is_async = dep.is_async_factory();
+    let has_cleanup = dep.cleanup;
+
+    let mut code = String::new();
+
+    if has_cleanup {
+        // Generator function for cleanup (async generator)
+        code.push_str(&format!("async function* {}(", factory_name));
+        for (i, depend_key) in dep.depends_on.iter().enumerate() {
+            if i > 0 {
+                code.push_str(", ");
+            }
+            code.push_str(&to_camel_case(depend_key));
+        }
+        code.push_str("): AsyncGenerator<unknown, void, unknown> {\n");
+        code.push_str(&format!("\t// Factory for {} with cleanup\n", dep.key));
+        code.push_str("\t// Initialize cleanup state\n");
+        code.push_str(&format!(
+            "\tCLEANUP_STATE[\"{}\"] = CLEANUP_STATE[\"{}\"] || [];\n",
+            fixture_id, fixture_id
+        ));
+        code.push_str(&format!(
+            "\tCLEANUP_STATE[\"{}\"].push(\"session_opened\");\n",
+            fixture_id
+        ));
+        code.push_str("\t// Create resource\n");
+        code.push_str(&format!(
+            "\tconst resource = {{ id: \"{}\", opened: true }};\n",
+            format!("00000000-0000-0000-0000-{:012x}", fixture_id.len())
+        ));
+        code.push_str("\ttry {\n");
+        code.push_str("\t\tyield resource;\n");
+        code.push_str("\t} finally {\n");
+        code.push_str("\t\t// Cleanup resource\n");
+        code.push_str(&format!(
+            "\t\tCLEANUP_STATE[\"{}\"].push(\"session_closed\");\n",
+            fixture_id
+        ));
+        code.push_str("\t}\n");
+        code.push('}');
+    } else if is_async {
+        // Async factory without cleanup
+        code.push_str(&format!("async function {}(", factory_name));
+        for (i, depend_key) in dep.depends_on.iter().enumerate() {
+            if i > 0 {
+                code.push_str(", ");
+            }
+            code.push_str(&to_camel_case(depend_key));
+        }
+        code.push_str("): Promise<unknown> {\n");
+        code.push_str(&format!("\t// Async factory for {}\n", dep.key));
+
+        // Generate factory logic based on dependency name
+        if dep.key.contains("db") || dep.key.contains("database") {
+            code.push_str("\t// Simulate async DB connection\n");
+            code.push_str("\treturn { connected: true, poolId: Math.random().toString() };\n");
+        } else if dep.key.contains("cache") {
+            code.push_str("\t// Simulate async cache connection\n");
+            code.push_str("\treturn { ready: true, cacheId: Math.random().toString() };\n");
+        } else if dep.key.contains("stats") || dep.key.contains("counter") {
+            code.push_str("\t// Simulate singleton instance with ID\n");
+            code.push_str("\treturn { id: Math.random().toString(), count: 0 };\n");
+        } else {
+            code.push_str(&format!(
+                "\treturn {{ _factory: \"{}\", _random: Math.random() }};\n",
+                dep.key
+            ));
+        }
+        code.push('}');
+    } else {
+        // Sync factory
+        code.push_str(&format!("function {}(", factory_name));
+        for (i, depend_key) in dep.depends_on.iter().enumerate() {
+            if i > 0 {
+                code.push_str(", ");
+            }
+            code.push_str(&to_camel_case(depend_key));
+        }
+        code.push_str("): unknown {\n");
+        code.push_str(&format!("\t// Factory for {}\n", dep.key));
+        code.push_str(&format!(
+            "\treturn {{ _factory: \"{}\", _random: Math.random() }};\n",
+            dep.key
+        ));
+        code.push('}');
+    }
+
+    Ok(code)
+}
+
+/// Generate DI provider registrations for TypeScript
+fn generate_di_providers_ts(di_config: &DependencyConfig, fixture_id: &str) -> Result<String> {
+    let mut code = String::new();
+    let all_deps = di_config.all_dependencies();
+
+    // Sort dependencies by resolution order
+    // If circular dependency is detected, skip DI generation (this is intentional for error test fixtures)
+    let resolution_order = match di_config.compute_resolution_order() {
+        Ok(order) => order,
+        Err(_) => {
+            // Circular dependency detected - skip DI registration for this fixture
+            // The fixture is likely testing circular dependency error handling
+            return Ok(String::new());
+        }
+    };
+
+    for batch in resolution_order {
+        for key in batch {
+            if let Some(dep) = all_deps.get(&key) {
+                let camel_key = to_camel_case(&key);
+
+                if dep.is_value() {
+                    // Direct value registration
+                    if let Some(value) = &dep.value {
+                        let value_literal = json_value_to_ts_literal(value);
+                        code.push_str(&format!("\tapp.provide(\"{}\", {});\n", camel_key, value_literal));
+                    }
+                } else {
+                    // Factory registration with Provide wrapper
+                    let factory_name = to_camel_case(&format!("{}_{}", fixture_id, &key));
+                    let mut options = Vec::new();
+
+                    if dep.singleton {
+                        options.push("singleton: true");
+                    }
+                    if dep.cacheable {
+                        options.push("cacheable: true");
+                    }
+
+                    let options_str = if options.is_empty() {
+                        String::new()
+                    } else {
+                        format!(", {{ {} }}", options.join(", "))
+                    };
+
+                    code.push_str(&format!(
+                        "\tapp.provide(\"{}\", Provide({}{}));\n",
+                        camel_key, factory_name, options_str
+                    ));
+                }
+            }
+        }
+    }
+
+    Ok(code)
+}
+
+/// Generate cleanup state handler for TypeScript
+fn generate_cleanup_state_handler_ts(handler_name: &str, fixture_id: &str) -> String {
+    let function_name = to_camel_case(&format!("{}_cleanup_state", handler_name));
+    format!(
+        r#"async function {}(): Promise<string> {{
+	// Return cleanup events
+	const cleanupEvents = CLEANUP_STATE["{}"] || [];
+	const response: HandlerResponse = {{ status: 200 }};
+	response.headers = {{ "content-type": "application/json" }};
+	response.body = {{ cleanup_events: cleanupEvents }};
+	return JSON.stringify(response);
+}}"#,
+        function_name, fixture_id
+    )
 }

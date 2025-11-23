@@ -1,0 +1,44 @@
+{
+	"name": "Python parameter name-based injection - success",
+	"description": "Tests Python-specific parameter name-based dependency injection where dependencies are matched by parameter names",
+	"category": "dependency_injection",
+	"source": {
+		"framework": "spikard",
+		"adapted": false
+	},
+	"handler": {
+		"route": "/api/python-name-inject",
+		"method": "GET",
+		"dependencies": {
+			"db_pool": {
+				"type": "value",
+				"value": {
+					"status": "connected"
+				},
+				"value_type": "object"
+			},
+			"cache": {
+				"type": "value",
+				"value": {
+					"status": "ready"
+				},
+				"value_type": "object"
+			}
+		},
+		"handler_dependencies": ["db_pool", "cache"],
+		"injection_strategy": "name"
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/python-name-inject"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"db_status": "connected",
+			"cache_status": "ready"
+		}
+	},
+	"notes": "Python handler parameters (def handler(db_pool, cache)) are matched to dependency keys by name. No type hints required.",
+	"tags": ["dependency_injection", "python", "name_based", "language_specific"]
+}

@@ -25,6 +25,10 @@ serde_qs = "0.15"
 url = "2.5"
 jiff = "0.2"
 uuid = "1.18"
+tokio = { workspace = true, optional = true }
+bytes = { version = "1.11", optional = true }
+thiserror = { workspace = true, optional = true }
 
 [features]
 default = []
+di = ["dep:tokio", "dep:bytes", "dep:thiserror"]
