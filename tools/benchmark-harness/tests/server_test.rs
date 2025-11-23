@@ -44,6 +44,7 @@ fn test_server_handle_pid() {
         .spawn()
         .expect("Failed to spawn test process");
 
+    #[cfg(unix)]
     let pid = process.id();
 
     let handle = ServerHandle {
@@ -66,6 +67,7 @@ fn test_server_handle_kill() {
         .spawn()
         .expect("Failed to spawn test process");
 
+    #[cfg(unix)]
     let pid = process.id();
 
     let handle = ServerHandle {
