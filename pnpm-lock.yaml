@@ -66,15 +66,15 @@ importers:
 
   e2e/wasm:
     devDependencies:
-      '@spikard/wasm':
-        specifier: workspace:*
-        version: link:../../packages/wasm
       '@types/node':
         specifier: ^24.10.1
         version: 24.10.1
       '@vitest/coverage-v8':
         specifier: ^4.0.13
         version: 4.0.13(vitest@4.0.13(@types/node@24.10.1)(tsx@4.20.6))
+      spikard-wasm:
+        specifier: workspace:*
+        version: link:../../packages/wasm
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
