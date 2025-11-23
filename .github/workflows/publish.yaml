@@ -527,10 +527,11 @@ jobs:
           USE_CROSS: ${{ matrix.settings.use_cross }}
           USE_NAPI_CROSS: ${{ matrix.settings.use_napi_cross }}
         run: |
+          cd crates/spikard-node
           $args = @('--platform', '--release', '--target', $env:TARGET, '--output-dir', './artifacts')
           if ($env:USE_NAPI_CROSS -eq 'true') { $args += '--use-napi-cross' }
           if ($env:USE_CROSS -eq 'true') { $args += '--use-cross' }
-          pnpm --filter @spikard/node exec napi build @args
+          pnpm exec napi build @args
 
       - name: Package artifacts
         if: runner.os != 'Windows'
@@ -559,10 +560,11 @@ jobs:
       - name: Generate and upload TypeScript definitions
         if: matrix.settings.target == 'x86_64-unknown-linux-gnu'
         run: |
-          pnpm --filter @spikard/node exec napi build --platform --dts index.d.ts
-          mkdir -p typescript-defs
-          cp crates/spikard-node/index.d.ts typescript-defs/
-          cp crates/spikard-node/index.js typescript-defs/ || true
+          cd crates/spikard-node
+          pnpm exec napi build --platform --dts index.d.ts
+          mkdir -p ../../typescript-defs
+          cp index.d.ts ../../typescript-defs/
+          cp index.js ../../typescript-defs/ || true
 
       - name: Upload TypeScript definitions
         if: matrix.settings.target == 'x86_64-unknown-linux-gnu'
