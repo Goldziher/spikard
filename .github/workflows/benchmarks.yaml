@@ -1,59 +1,32 @@
 name: Benchmarks
 
-'on':
-  # Manual trigger only
+on:
   workflow_dispatch:
     inputs:
-      language:
-        description: 'Language to benchmark (python/node/ruby/rust/all)'
-        required: false
-        default: 'all'
-        type: choice
-        options:
-          - all
-          - python
-          - node
-          - ruby
-          - rust
-      workload-suite:
+      suite:
         description: 'Workload suite to run'
         required: false
         default: 'all'
         type: choice
         options:
           - all
-          - json-bodies
-          - path-params
-          - query-params
-          - forms
+          - simple
+          - json
+          - headers
+          - cookies
       duration:
-        description: 'Duration per workload in seconds'
+        description: 'Duration per workload (seconds)'
         required: false
         default: '30'
         type: string
       concurrency:
-        description: 'Concurrent connections per workload'
+        description: 'Concurrent connections'
         required: false
         default: '100'
-        type: string
-      warmup:
-        description: 'Warmup requests per framework'
-        required: false
-        default: '100'
-        type: string
-      significance-threshold:
-        description: 'Statistical significance threshold (p-value)'
-        required: false
-        default: '0.05'
-        type: string
-      comparison-frameworks:
-        description: 'Override comparison frameworks (comma-separated, leave empty for defaults)'
-        required: false
-        default: ''
         type: string
 
 concurrency:
-  group: benchmarks-${{ github.ref }}-${{ inputs.language }}
+  group: benchmarks-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -63,7 +36,6 @@ env:
   CARGO_PROFILE_RELEASE_DEBUG: 0
 
 jobs:
-  # Build the benchmark harness once for all jobs
   build-harness:
     name: Build Benchmark Harness
     runs-on: ubuntu-latest
@@ -79,257 +51,555 @@ jobs:
       - name: Build benchmark harness
         run: cargo build --manifest-path tools/benchmark-harness/Cargo.toml --release
 
-      - name: Upload harness binary
+      - name: Upload benchmark harness
         uses: actions/upload-artifact@v4
         with:
-          name: benchmark-harness-binary
-          path: target/release/benchmark-harness
+          name: benchmark-harness
+          path: tools/benchmark-harness/target/release/benchmark-harness
           retention-days: 1
 
-  # Independent benchmark job for Python
-  bench-python:
-    name: Python Benchmarks
+  # Spikard bindings (5 frameworks)
+  bench-spikard-rust:
+    name: spikard-rust
     needs: build-harness
-    if: inputs.language == 'all' || inputs.language == 'python'
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-
-      - name: Download harness binary
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: benchmark-harness-binary
-          path: bin
-
-      - name: Make harness executable
-        run: chmod +x bin/benchmark-harness && echo "$PWD/bin" >> $GITHUB_PATH
-
-      - uses: ./.github/actions/build-python-binding
-
-      - uses: ./.github/actions/run-benchmarks
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/setup-rust
         with:
-          language: python
-          spikard-framework: spikard-python
-          comparison-frameworks: ${{ inputs.comparison-frameworks || 'fastapi,fastapi-granian,litestar,litestar-granian,robyn' }}
-          workload-suite: ${{ inputs.workload-suite || 'all' }}
+          cache-key-prefix: bench-spikard-rust
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: spikard-rust
+          suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          warmup: ${{ inputs.warmup || '100' }}
-          significance: ${{ inputs.significance-threshold || '0.05' }}
-          port: '8100'
+          port: '8001'
 
-      - name: Upload results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: benchmark-python-${{ github.run_id }}
-          path: results/**/*.json
-          retention-days: 90
-
-  # Independent benchmark job for Node.js
-  bench-node:
-    name: Node.js Benchmarks
+  bench-spikard-python:
+    name: spikard
     needs: build-harness
-    if: inputs.language == 'all' || inputs.language == 'node'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-
-      - name: Download harness binary
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: benchmark-harness-binary
-          path: bin
-
-      - name: Make harness executable
-        run: chmod +x bin/benchmark-harness && echo "$PWD/bin" >> $GITHUB_PATH
-
-      - uses: ./.github/actions/build-node-binding
-
-      - uses: ./.github/actions/run-benchmarks
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/setup-rust
         with:
-          language: node
-          spikard-framework: spikard-node
-          comparison-frameworks: ${{ inputs.comparison-frameworks || 'fastify,express,hono' }}
-          workload-suite: ${{ inputs.workload-suite || 'all' }}
+          cache-key-prefix: bench-spikard-python
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: spikard
+          suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          warmup: ${{ inputs.warmup || '100' }}
-          significance: ${{ inputs.significance-threshold || '0.05' }}
-          port: '8200'
+          port: '8002'
 
-      - name: Upload results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: benchmark-node-${{ github.run_id }}
-          path: results/**/*.json
-          retention-days: 90
-
-  # Independent benchmark job for Ruby
-  bench-ruby:
-    name: Ruby Benchmarks
+  bench-spikard-node:
+    name: spikard-node
     needs: build-harness
-    if: inputs.language == 'all' || inputs.language == 'ruby'
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-
-      - name: Download harness binary
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: benchmark-harness-binary
-          path: bin
-
-      - name: Make harness executable
-        run: chmod +x bin/benchmark-harness && echo "$PWD/bin" >> $GITHUB_PATH
-
-      - uses: ./.github/actions/build-ruby-binding
-
-      - uses: ./.github/actions/run-benchmarks
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/setup-rust
         with:
-          language: ruby
-          spikard-framework: spikard-ruby
-          comparison-frameworks: ${{ inputs.comparison-frameworks || 'hanami-api,roda' }}
-          workload-suite: ${{ inputs.workload-suite || 'all' }}
+          cache-key-prefix: bench-spikard-node
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: spikard-node
+          suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          warmup: ${{ inputs.warmup || '100' }}
-          significance: ${{ inputs.significance-threshold || '0.05' }}
-          port: '8300'
+          port: '8003'
 
-      - name: Upload results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: benchmark-ruby-${{ github.run_id }}
-          path: results/**/*.json
-          retention-days: 90
-
-  # Independent benchmark job for Rust
-  bench-rust:
-    name: Rust Benchmarks
+  bench-spikard-ruby:
+    name: spikard-ruby
     needs: build-harness
-    if: inputs.language == 'all' || inputs.language == 'rust'
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-
-      - name: Download harness binary
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: benchmark-harness-binary
-          path: bin
-
-      - name: Make harness executable
-        run: chmod +x bin/benchmark-harness && echo "$PWD/bin" >> $GITHUB_PATH
-
-      - name: Setup Rust
-        uses: ./.github/actions/setup-rust
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/setup-rust
         with:
-          cache-key-prefix: benchmark-rust
-
-      - uses: ./.github/actions/run-benchmarks
+          cache-key-prefix: bench-spikard-ruby
+      - uses: ./.github/actions/benchmark-framework
         with:
-          language: rust
-          spikard-framework: spikard-rust
-          comparison-frameworks: ${{ inputs.comparison-frameworks || 'axum-baseline' }}
-          workload-suite: ${{ inputs.workload-suite || 'all' }}
+          framework: spikard-ruby
+          suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
-          warmup: ${{ inputs.warmup || '100' }}
-          significance: ${{ inputs.significance-threshold || '0.05' }}
-          port: '8400'
+          port: '8004'
 
-      - name: Upload results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: benchmark-rust-${{ github.run_id }}
-          path: results/**/*.json
-          retention-days: 90
-
-  # Summary report (only runs if at least one benchmark ran)
-  report:
-    name: Generate Summary Report
-    needs: [build-harness, bench-python, bench-node, bench-ruby, bench-rust]
-    if: always() && needs.build-harness.result == 'success'
+  bench-spikard-wasm:
+    name: spikard-wasm
+    needs: build-harness
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-
-      - name: Download all available results
-        uses: actions/download-artifact@v4
-        continue-on-error: true
+      - uses: actions/download-artifact@v4
         with:
-          path: results
-          pattern: benchmark-*
-          merge-multiple: false
-
-      - name: Create summary report
-        run: |
-          cat > benchmark-summary.md << 'EOF'
-          # 📊 Spikard Benchmark Results
-
-          ## Run Information
-
-          | Attribute | Value |
-          |-----------|-------|
-          | **Run ID** | [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) |
-          | **Language** | `${{ inputs.language }}` |
-          | **Commit** | [`${{ github.sha }}`](https://github.com/${{ github.repository }}/commit/${{ github.sha }}) |
-          | **Branch** | `${{ github.ref_name }}` |
-          | **Triggered by** | @${{ github.actor }} |
-          | **Timestamp** | $(date -u +%Y-%m-%dT%H:%M:%SZ) |
-
-          ## Configuration
-
-          | Parameter | Value |
-          |-----------|-------|
-          | **Workload Suite** | `${{ inputs.workload-suite || 'all' }}` |
-          | **Duration** | ${{ inputs.duration || '30' }}s per workload |
-          | **Concurrency** | ${{ inputs.concurrency || '100' }} connections |
-          | **Warmup** | ${{ inputs.warmup || '100' }} requests |
-
-          ## Results
-
-          EOF
-
-          # Count results for each language
-          for lang in python node ruby rust; do
-            if [ -d "results/benchmark-${lang}-${{ github.run_id }}" ]; then
-              count=$(find "results/benchmark-${lang}-${{ github.run_id }}" -name "*.json" 2>/dev/null | wc -l || echo "0")
-              echo "- **${lang^}**: ${count} result files" >> benchmark-summary.md
-            fi
-          done
-
-          cat >> benchmark-summary.md << 'EOF'
-
-          ## Access Results
-
-          Download the artifacts above to access detailed benchmark data including:
-          - Framework comparisons
-          - Statistical significance analysis
-          - Performance metrics (RPS, latency percentiles)
-          - Success rates
-
-          ---
-          *Generated by Spikard Benchmark Harness*
-          EOF
-
-          cat benchmark-summary.md
-
-      - name: Upload report
-        uses: actions/upload-artifact@v4
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/setup-rust
         with:
-          name: benchmark-summary-${{ github.run_id }}
-          path: benchmark-summary.md
-          retention-days: 90
+          cache-key-prefix: bench-spikard-wasm
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: spikard-wasm
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8005'
 
-      - name: Add to job summary
-        run: cat benchmark-summary.md >> $GITHUB_STEP_SUMMARY
+  # Python frameworks (6 frameworks)
+  bench-axum-baseline:
+    name: axum-baseline
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: bench-axum
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: axum-baseline
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8006'
+
+  bench-fastapi:
+    name: fastapi
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: fastapi
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8007'
+
+  bench-fastapi-granian:
+    name: fastapi-granian
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: fastapi-granian
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8008'
+
+  bench-litestar:
+    name: litestar
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: litestar
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8009'
+
+  bench-litestar-granian:
+    name: litestar-granian
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: litestar-granian
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8010'
+
+  bench-robyn:
+    name: robyn
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: robyn
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8011'
+
+  # Python raw variants (5 frameworks)
+  bench-spikard-raw:
+    name: spikard-raw
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: bench-spikard-raw
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: spikard-raw
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8012'
+
+  bench-fastapi-raw:
+    name: fastapi-raw
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: fastapi-raw
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8013'
+
+  bench-fastapi-granian-raw:
+    name: fastapi-granian-raw
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: fastapi-granian-raw
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8014'
+
+  bench-litestar-raw:
+    name: litestar-raw
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: litestar-raw
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8015'
+
+  bench-litestar-granian-raw:
+    name: litestar-granian-raw
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: litestar-granian-raw
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8016'
+
+  # TypeScript frameworks (6 frameworks)
+  bench-fastify:
+    name: fastify
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: fastify
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8017'
+
+  bench-fastify-raw:
+    name: fastify-raw
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: fastify-raw
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8018'
+
+  bench-hono:
+    name: hono
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: hono
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8019'
+
+  bench-hono-raw:
+    name: hono-raw
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: hono-raw
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8020'
+
+  bench-express:
+    name: express
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: express
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8021'
+
+  bench-express-raw:
+    name: express-raw
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: express-raw
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8022'
+
+  # Ruby frameworks (4 frameworks)
+  bench-hanami-api:
+    name: hanami-api
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: hanami-api
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8023'
+
+  bench-hanami-api-raw:
+    name: hanami-api-raw
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: hanami-api-raw
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8024'
+
+  bench-roda:
+    name: roda
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: roda
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8025'
+
+  bench-roda-raw:
+    name: roda-raw
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: roda-raw
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+          port: '8026'

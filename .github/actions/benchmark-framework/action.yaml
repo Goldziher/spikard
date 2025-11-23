@@ -1,0 +1,130 @@
+name: Benchmark Single Framework
+description: Run benchmark for a single framework
+
+inputs:
+  framework:
+    description: 'Framework name (e.g., spikard-python, fastapi, hono)'
+    required: true
+  suite:
+    description: 'Workload suite to run'
+    required: false
+    default: 'all'
+  duration:
+    description: 'Duration per workload in seconds'
+    required: false
+    default: '30'
+  concurrency:
+    description: 'Concurrent connections'
+    required: false
+    default: '100'
+  warmup:
+    description: 'Warmup requests'
+    required: false
+    default: '1000'
+  port:
+    description: 'Port for server'
+    required: false
+    default: '8080'
+
+runs:
+  using: composite
+  steps:
+    - name: Install oha load generator
+      shell: bash
+      run: |
+        if ! command -v oha &> /dev/null; then
+          cargo install oha
+        fi
+
+    - name: Detect framework language
+      id: detect
+      shell: bash
+      run: |
+        framework="${{ inputs.framework }}"
+
+        # Determine language based on framework name and app directory
+        if [[ "$framework" == *"-rust" ]] || [[ "$framework" == "axum-baseline" ]]; then
+          echo "language=rust" >> $GITHUB_OUTPUT
+        elif [[ "$framework" == *"-python" ]] || [[ "$framework" == "fastapi"* ]] || [[ "$framework" == "litestar"* ]] || [[ "$framework" == "robyn" ]] || [[ "$framework" == "spikard" ]] || [[ "$framework" == *"-raw" ]]; then
+          echo "language=python" >> $GITHUB_OUTPUT
+        elif [[ "$framework" == *"-node" ]] || [[ "$framework" == "fastify"* ]] || [[ "$framework" == "hono"* ]] || [[ "$framework" == "express"* ]]; then
+          echo "language=node" >> $GITHUB_OUTPUT
+        elif [[ "$framework" == *"-ruby" ]] || [[ "$framework" == "hanami-api"* ]] || [[ "$framework" == "roda"* ]]; then
+          echo "language=ruby" >> $GITHUB_OUTPUT
+        elif [[ "$framework" == *"-wasm" ]]; then
+          echo "language=wasm" >> $GITHUB_OUTPUT
+        else
+          echo "language=unknown" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Setup Python environment
+      if: steps.detect.outputs.language == 'python'
+      uses: ./.github/actions/setup-python-env
+      with:
+        python-version: "3.13"
+        cache-prefix: benchmark-${{ inputs.framework }}
+
+    - name: Setup Node environment
+      if: steps.detect.outputs.language == 'node'
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'pnpm'
+
+    - name: Setup Ruby environment
+      if: steps.detect.outputs.language == 'ruby'
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.2'
+        bundler-cache: true
+
+    - name: Build Python binding (if needed)
+      if: steps.detect.outputs.language == 'python' && (inputs.framework == 'spikard' || inputs.framework == 'spikard-python' || inputs.framework == 'spikard-raw')
+      shell: bash
+      working-directory: crates/spikard-py
+      run: |
+        # Install maturin if not available
+        if ! uv run --isolated --with maturin maturin --version &>/dev/null; then
+          uv pip install maturin
+        fi
+        uv run maturin develop --release
+
+    - name: Build Node binding (if needed)
+      if: steps.detect.outputs.language == 'node' && inputs.framework == 'spikard-node'
+      shell: bash
+      working-directory: crates/spikard-node
+      run: |
+        pnpm install
+        pnpm exec napi build --release
+
+    - name: Build Ruby binding (if needed)
+      if: steps.detect.outputs.language == 'ruby' && inputs.framework == 'spikard-ruby'
+      shell: bash
+      working-directory: crates/spikard-rb
+      run: |
+        bundle install
+        bundle exec rake compile
+
+    - name: Create results directory
+      shell: bash
+      run: mkdir -p results/${{ inputs.framework }}
+
+    - name: Run benchmark
+      shell: bash
+      run: |
+        benchmark-harness profile \
+          --framework "${{ inputs.framework }}" \
+          --suite "${{ inputs.suite }}" \
+          --duration "${{ inputs.duration }}" \
+          --concurrency "${{ inputs.concurrency }}" \
+          --warmup "${{ inputs.warmup }}" \
+          --output "results/${{ inputs.framework }}" \
+          --port "${{ inputs.port }}"
+
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: benchmark-results-${{ inputs.framework }}
+        path: results/${{ inputs.framework }}/
+        retention-days: 30
