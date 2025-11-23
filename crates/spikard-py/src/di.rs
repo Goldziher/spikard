@@ -116,6 +116,7 @@ impl Dependency for PythonFactoryDependency {
         let factory = Python::with_gil(|py| self.factory.clone_ref(py));
         let is_async = self.is_async;
         let is_async_generator = self.is_async_generator;
+        let resolved_clone = resolved.clone();
 
         // Extract resolved dependencies now (before async)
         let resolved_deps: Vec<(String, Py<PyAny>)> = Python::with_gil(|py| {
@@ -158,7 +159,13 @@ impl Dependency for PythonFactoryDependency {
                     // Handle generator vs regular async
                     if is_async_generator {
                         // For async generators, the result of calling the function is an async generator object
-                        // Call __anext__ to get the first value (which returns a coroutine)
+                        // We need to:
+                        // 1. Call __anext__ to get the first yielded value
+                        // 2. Store the generator object for cleanup later
+                        // 3. Register a cleanup task that will close the generator
+
+                        let generator_obj = Python::with_gil(|py| coroutine_py.clone_ref(py));
+
                         let final_value = tokio::task::spawn_blocking(move || {
                             Python::with_gil(|py| -> PyResult<Py<PyAny>> {
                                 let asyncio = py.import("asyncio")?;
@@ -188,6 +195,36 @@ impl Dependency for PythonFactoryDependency {
                         .map_err(|e| spikard_core::di::DependencyError::ResolutionFailed {
                             message: format!("Async generator __anext__ failed: {}", e),
                         })?;
+
+                        // Register cleanup task to close the generator
+                        let mut resolved_mut = resolved_clone;
+                        resolved_mut.add_cleanup_task(Box::new(move || {
+                            Box::pin(async move {
+                                let _ = tokio::task::spawn_blocking(move || {
+                                    Python::with_gil(|py| -> PyResult<()> {
+                                        let asyncio = py.import("asyncio")?;
+                                        let event_loop = PYTHON_EVENT_LOOP
+                                            .get()
+                                            .ok_or_else(|| {
+                                                pyo3::exceptions::PyRuntimeError::new_err(
+                                                    "Python event loop not initialized"
+                                                )
+                                            })?;
+
+                                        // Close the async generator by calling aclose()
+                                        let aiter = generator_obj.bind(py);
+                                        let close_coro = aiter.call_method0("aclose")?;
+
+                                        // Await the aclose coroutine
+                                        let loop_obj = event_loop.bind(py);
+                                        let future = asyncio.call_method1("run_coroutine_threadsafe", (close_coro, loop_obj))?;
+                                        let _ = future.call_method0("result")?;
+                                        Ok(())
+                                    })
+                                })
+                                .await;
+                            })
+                        }));
 
                         Ok(Arc::new(final_value) as Arc<dyn Any + Send + Sync>)
                     } else {

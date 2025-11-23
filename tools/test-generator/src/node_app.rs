@@ -241,7 +241,7 @@ fn generate_app_file_per_fixture(
         value_imports.push("background");
     }
     if needs_di {
-        value_imports.push("Provide");
+        value_imports.push("Spikard");
     }
     if !value_imports.is_empty() {
         code.push_str(&format!(
@@ -595,6 +595,13 @@ fn generate_fixture_handler_and_app_node(
 
     let mut app_factory_code = String::new();
     app_factory_code.push_str(&format!("export function {}(): SpikardApp {{\n", app_factory_name));
+
+    // If we have DI providers, we need to create an app instance first
+    let needs_app_instance = !di_providers.is_empty();
+    if needs_app_instance {
+        app_factory_code.push_str("\tconst app = new Spikard();\n\n");
+    }
+
     if !config_code.is_empty() {
         app_factory_code.push_str(&config_code);
         if !config_code.ends_with('\n') {
@@ -630,16 +637,39 @@ fn generate_fixture_handler_and_app_node(
         }
     }
 
-    app_factory_code.push_str("\treturn {\n");
-    app_factory_code.push_str(&format!("\t\troutes: {},\n", routes_literal));
-    app_factory_code.push_str(&format!("\t\thandlers: {},\n", handlers_literal));
-    if !hooks_registration.is_empty() {
-        app_factory_code.push_str(&hooks_registration);
+    if needs_app_instance {
+        // When using DI, set properties on the app instance and return it
+        app_factory_code.push_str(&format!("\tapp.routes = {};\n", routes_literal));
+        app_factory_code.push_str(&format!("\tapp.handlers = {};\n", handlers_literal));
+        if !hooks_registration.is_empty() {
+            // Extract lifecycle hooks object from registration string and assign to app
+            // hooks_registration is like: "\tlifecycleHooks: {\n\t\tonRequest: [...],\n\t},\n"
+            // We need to convert it to: "\tapp.lifecycleHooks = {\n\t\tonRequest: [...],\n\t};\n"
+            let hooks_obj = hooks_registration
+                .trim()
+                .strip_prefix("lifecycleHooks:")
+                .unwrap_or(&hooks_registration)
+                .trim()
+                .trim_end_matches(',');
+            app_factory_code.push_str(&format!("\tapp.lifecycleHooks = {};\n", hooks_obj));
+        }
+        if !config_code.is_empty() {
+            app_factory_code.push_str("\tapp.config = config;\n");
+        }
+        app_factory_code.push_str("\treturn app;\n");
+    } else {
+        // When not using DI, return a plain object
+        app_factory_code.push_str("\treturn {\n");
+        app_factory_code.push_str(&format!("\t\troutes: {},\n", routes_literal));
+        app_factory_code.push_str(&format!("\t\thandlers: {},\n", handlers_literal));
+        if !hooks_registration.is_empty() {
+            app_factory_code.push_str(&hooks_registration);
+        }
+        if !config_code.is_empty() {
+            app_factory_code.push_str("\t\tconfig,\n");
+        }
+        app_factory_code.push_str("\t};\n");
     }
-    if !config_code.is_empty() {
-        app_factory_code.push_str("\t\tconfig,\n");
-    }
-    app_factory_code.push_str("\t};\n");
     app_factory_code.push_str("}\n");
 
     let mut full_handler_code = String::new();
@@ -2140,7 +2170,7 @@ fn generate_di_providers_ts(di_config: &DependencyConfig, fixture_id: &str) -> R
                         code.push_str(&format!("\tapp.provide(\"{}\", {});\n", camel_key, value_literal));
                     }
                 } else {
-                    // Factory registration with Provide wrapper
+                    // Factory registration - pass factory function and options to app.provide()
                     let factory_name = to_camel_case(&format!("{}_{}", fixture_id, &key));
                     let mut options = Vec::new();
 
@@ -2158,7 +2188,7 @@ fn generate_di_providers_ts(di_config: &DependencyConfig, fixture_id: &str) -> R
                     };
 
                     code.push_str(&format!(
-                        "\tapp.provide(\"{}\", Provide({}{}));\n",
+                        "\tapp.provide(\"{}\", {}{});\n",
                         camel_key, factory_name, options_str
                     ));
                 }

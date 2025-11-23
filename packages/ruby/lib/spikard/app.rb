@@ -162,16 +162,10 @@ module Spikard
 
     def handler_map
       map = {}
-      deps = dependencies
       @routes.each do |entry|
         name = entry.metadata[:handler_name]
-        # Wrap handler with DI support if dependencies are registered
-        handler = if deps.empty?
-                    entry.handler
-                  else
-                    DIHandlerWrapper.wrap_handler(entry.handler, deps)
-                  end
-        map[name] = handler
+        # Pass raw handler - DI resolution happens in Rust layer
+        map[name] = entry.handler
       end
       map
     end
