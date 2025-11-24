@@ -25,7 +25,7 @@ pnpm build
 ## Quick Start
 
 ```typescript
-import { Spikard } from "spikard";
+import { Spikard, type Request } from "spikard";
 import { z } from "zod";
 
 const UserSchema = z.object({
@@ -38,15 +38,15 @@ type User = z.infer<typeof UserSchema>;
 
 const app = new Spikard();
 
-async function getUser(req) {
-  const id = parseInt(req.params.id);
+const getUser = async (req: Request): Promise<User> => {
+  const segments = req.path.split("/");
+  const id = Number(segments[segments.length - 1] ?? 0);
   return { id, name: "Alice", email: "alice@example.com" };
-}
+};
 
-async function createUser(req) {
-  const user = req.json<User>();
-  return user;
-}
+const createUser = async (req: Request): Promise<User> => {
+  return UserSchema.parse(req.json());
+};
 
 app.addRoute(
   {
@@ -55,7 +55,7 @@ app.addRoute(
     handler_name: "getUser",
     is_async: true,
   },
-  getUser
+  getUser,
 );
 
 app.addRoute(
@@ -64,9 +64,10 @@ app.addRoute(
     path: "/users",
     handler_name: "createUser",
     request_schema: UserSchema,
+    response_schema: UserSchema,
     is_async: true,
   },
-  createUser
+  createUser,
 );
 
 if (require.main === module) {
@@ -81,15 +82,15 @@ if (require.main === module) {
 Routes are registered manually using `app.addRoute(metadata, handler)`:
 
 ```typescript
-import { Spikard } from "spikard";
+import { Spikard, type Request } from "spikard";
 
 const app = new Spikard();
 
-async function listUsers() {
+async function listUsers(_req: Request): Promise<{ users: unknown[] }> {
   return { users: [] };
 }
 
-async function createUser(req) {
+async function createUser(_req: Request): Promise<{ created: boolean }> {
   return { created: true };
 }
 
@@ -223,9 +224,13 @@ post("/users", {}, wrapBodyHandler(async (body: CreateUserRequest) => {
 }));
 
 // Full context wrapper
-get("/users/:id", {}, wrapHandler(async (params, query, body) => {
-  return { id: params.id, query };
-}));
+get(
+  "/users/:id",
+  {},
+  wrapHandler(async (params: { id: string }, query: Record<string, unknown>) => {
+    return { id: Number(params.id), query };
+  }),
+);
 ```
 
 ## File Uploads

@@ -9,7 +9,8 @@ interface OrderResponse {
 const app = new Spikard();
 
 const getOrder = async (req: Request): Promise<OrderResponse> => {
-  const id = Number(req.path.split("/").pop() ?? 0);
+  const segments = req.path.split("/");
+  const id = Number(segments[segments.length - 1] ?? 0);
   const query = new URLSearchParams(req.queryString);
   const details = query.get("details") === "true";
   return { id, details };
