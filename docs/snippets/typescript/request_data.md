@@ -14,7 +14,7 @@ const app = new Spikard();
 
 const updateOrder = async (req: Request): Promise<Order> => {
   const order = OrderSchema.parse(req.json());
-  return order;
+  return { ...order, id: Number(req.params["order_id"] ?? order.id) };
 };
 
 app.addRoute(

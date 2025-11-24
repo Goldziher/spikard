@@ -10,8 +10,7 @@ const app = new Spikard();
 app.addRoute(
   { method: "GET", path: "/users/:id", handler_name: "getUser", is_async: true },
   async (req: Request): Promise<User> => {
-    const segments = req.path.split("/");
-    const id = Number(segments[segments.length - 1] ?? 0);
+    const id = Number(req.params["id"] ?? 0);
     return { id, name: "Alice" };
   },
 );

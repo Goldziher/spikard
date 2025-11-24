@@ -123,8 +123,7 @@ type User = z.infer<typeof UserSchema>;
 const app = new Spikard();
 
 const getUser = async (req: Request): Promise<User> => {
-  const segments = req.path.split("/");
-  const id = Number(segments[segments.length - 1] ?? 0);
+  const id = Number(req.params["id"] ?? 0);
   return { id, name: "Alice" };
 };
 
