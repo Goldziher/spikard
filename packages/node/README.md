@@ -215,21 +215,6 @@ post("/login")(async function login(req) {
 For automatic parameter extraction:
 
 ```typescript
-import { wrapHandler, wrapBodyHandler } from "spikard";
-
-// Body-only wrapper
-post("/users", {}, wrapBodyHandler(async (body: CreateUserRequest) => {
-  return { id: 1, name: body.name };
-}));
-
-// Full context wrapper
-get(
-  "/users/:id",
-  {},
-  wrapHandler(async (params: { id: string }, query: Record<string, unknown>) => {
-    return { id: Number(params.id), query };
-  }),
-);
 ```
 
 ## File Uploads
