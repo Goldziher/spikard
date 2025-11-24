@@ -1,5 +1,5 @@
 ```typescript
-import { Spikard, type Request } from "spikard";
+import { Spikard, wrapHandlerWithContext } from "spikard";
 
 interface OrderResponse {
   id: number;
@@ -8,16 +8,12 @@ interface OrderResponse {
 
 const app = new Spikard();
 
-const getOrder = async (req: Request): Promise<OrderResponse> => {
-  const segments = req.path.split("/");
-  const id = Number(segments[segments.length - 1] ?? 0);
-  const query = new URLSearchParams(req.queryString);
-  const details = query.get("details") === "true";
-  return { id, details };
-};
-
 app.addRoute(
   { method: "GET", path: "/orders/:order_id", handler_name: "getOrder", is_async: true },
-  getOrder,
+  wrapHandlerWithContext(async ({ pathParams, queryParams }): Promise<OrderResponse> => {
+    const id = Number(pathParams["order_id"] ?? 0);
+    const details = queryParams["details"] === "true";
+    return { id, details };
+  }),
 );
 ```
