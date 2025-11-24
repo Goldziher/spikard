@@ -48,11 +48,12 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PythonHook {
         let name = self.name.clone();
 
         Box::pin(async move {
+            let name_for_spawn = name.clone();
             let result = tokio::task::spawn_blocking(move || {
                 Python::attach(|py| -> PyResult<HookResult<Request<Body>, Response<Body>>> {
                     let py_req = Py::new(py, PyRequest::from_request(req, py)?)?;
-                    let result = func.call1(py, (py_req.bind(py),))?;
-                    execute_python_hook_request(py, result, &name)
+                    let result = func.call1(py, (py_req.as_ref(),))?;
+                    execute_python_hook_request(py, result, &name_for_spawn)
                 })
             })
             .await
@@ -74,11 +75,12 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PythonHook {
             let (parts, body) = resp.into_parts();
             let body_bytes = spikard_http::lifecycle::adapter::serial::extract_body(body).await?;
 
+            let name_for_spawn = name.clone();
             let result = tokio::task::spawn_blocking(move || {
                 Python::attach(|py| -> PyResult<HookResult<Response<Body>, Response<Body>>> {
                     let py_resp = Py::new(py, PyResponse::from_response_parts(parts, body_bytes.clone(), py)?)?;
-                    let result = func.call1(py, (py_resp.bind(py),))?;
-                    execute_python_hook_response(py, result, &name)
+                    let result = func.call1(py, (py_resp.as_ref(),))?;
+                    execute_python_hook_response(py, result, &name_for_spawn)
                 })
             })
             .await
@@ -96,12 +98,11 @@ fn execute_python_hook_request(
     result: Py<PyAny>,
     name: &str,
 ) -> PyResult<HookResult<Request<Body>, Response<Body>>> {
-    let bound_result = result.bind(py);
+    let bound_result = result.clone_ref(py).into_bound(py);
     if bound_result.hasattr("__await__")? {
         let asyncio = py.import("asyncio")?;
-        let completed_result = asyncio.call_method1("run", (bound_result,))?;
-        let completed_bound = completed_result.bind(py);
-        return handle_python_hook_result(py, completed_bound, name, true);
+        let completed_result = asyncio.call_method1("run", (result.clone_ref(py),))?;
+        return handle_python_hook_result(py, completed_result, name, true);
     }
     handle_python_hook_result(py, bound_result, name, false)
 }
@@ -112,12 +113,11 @@ fn execute_python_hook_response(
     result: Py<PyAny>,
     name: &str,
 ) -> PyResult<HookResult<Response<Body>, Response<Body>>> {
-    let bound_result = result.bind(py);
+    let bound_result = result.clone_ref(py).into_bound(py);
     if bound_result.hasattr("__await__")? {
         let asyncio = py.import("asyncio")?;
-        let completed_result = asyncio.call_method1("run", (bound_result,))?;
-        let completed_bound = completed_result.bind(py);
-        return validate_and_convert_response(py, completed_bound, name);
+        let completed_result = asyncio.call_method1("run", (result.clone_ref(py),))?;
+        return validate_and_convert_response(py, completed_result, name);
     }
     validate_and_convert_response(py, bound_result, name)
 }
@@ -147,8 +147,8 @@ fn handle_python_hook_result(
         .map(|n| n.to_string())
         .unwrap_or_else(|_| "unknown".to_string());
     Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(format!(
-        "Hook must return Request or Response, got {}",
-        type_name
+        "Hook {} must return Request or Response, got {}",
+        name, type_name
     )))
 }
 
@@ -156,7 +156,7 @@ fn handle_python_hook_result(
 fn validate_and_convert_response(
     py: Python<'_>,
     result: Bound<'_, PyAny>,
-    _name: &str,
+    name: &str,
 ) -> PyResult<HookResult<Response<Body>, Response<Body>>> {
     if !result.is_instance_of::<PyResponse>() {
         let type_name = result
@@ -165,8 +165,8 @@ fn validate_and_convert_response(
             .map(|n| n.to_string())
             .unwrap_or_else(|_| "unknown".to_string());
         return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(format!(
-            "Hook must return Response, got {}",
-            type_name
+            "Hook {} must return Response, got {}",
+            name, type_name
         )));
     }
 

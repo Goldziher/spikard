@@ -226,7 +226,10 @@ interface MockApp {
 }
 
 interface TestClientType {
-	post(path: string, config: unknown): Promise<{
+	post(
+		path: string,
+		config: unknown,
+	): Promise<{
 		statusCode: number;
 		json(): Record<string, unknown>;
 	}>;
@@ -307,7 +310,9 @@ describe.skip("UploadFile Handler Integration", () => {
 				is_async: true,
 			});
 
-			app.handlers.uploadJson = async (payload: { file: UploadFile }): Promise<{ filename: string; contentType: string }> => {
+			app.handlers.uploadJson = async (payload: {
+				file: UploadFile;
+			}): Promise<{ filename: string; contentType: string }> => {
 				const file = payload.file as UploadFile;
 				return {
 					filename: file.filename,
@@ -343,7 +348,9 @@ describe.skip("UploadFile Handler Integration", () => {
 				is_async: true,
 			});
 
-			app.handlers.uploadHeaders = async (payload: { file: UploadFile }): Promise<{ filename: string; hasHeaders: boolean }> => {
+			app.handlers.uploadHeaders = async (payload: {
+				file: UploadFile;
+			}): Promise<{ filename: string; hasHeaders: boolean }> => {
 				const file = payload.file as UploadFile;
 				return {
 					filename: file.filename,
@@ -382,7 +389,9 @@ describe.skip("UploadFile Handler Integration", () => {
 				is_async: true,
 			});
 
-			app.handlers.uploadMultiple = async (payload: { files: UploadFile[] }): Promise<{ count: number; filenames: string[]; sizes: number[] }> => {
+			app.handlers.uploadMultiple = async (payload: {
+				files: UploadFile[];
+			}): Promise<{ count: number; filenames: string[]; sizes: number[] }> => {
 				const body = payload as MultiFileRequest;
 				return {
 					count: body.files.length,
@@ -468,7 +477,10 @@ describe.skip("UploadFile Handler Integration", () => {
 				is_async: true,
 			});
 
-			app.handlers.uploadOptional = async (payload: { file?: UploadFile; name: string }): Promise<{ hasFile: boolean; filename?: string; name: string }> => {
+			app.handlers.uploadOptional = async (payload: {
+				file?: UploadFile;
+				name: string;
+			}): Promise<{ hasFile: boolean; filename?: string; name: string }> => {
 				const body = payload as OptionalUploadRequest;
 				return {
 					hasFile: body.file !== undefined && body.file !== null,
@@ -514,7 +526,10 @@ describe.skip("UploadFile Handler Integration", () => {
 				is_async: true,
 			});
 
-			app.handlers.uploadOptionalAbsent = async (payload: { file?: UploadFile; name: string }): Promise<{ hasFile: boolean; filename: string | null; name: string }> => {
+			app.handlers.uploadOptionalAbsent = async (payload: {
+				file?: UploadFile;
+				name: string;
+			}): Promise<{ hasFile: boolean; filename: string | null; name: string }> => {
 				const body = payload as OptionalUploadRequest;
 				return {
 					hasFile: body.file !== undefined && body.file !== null,
@@ -557,7 +572,12 @@ describe.skip("UploadFile Handler Integration", () => {
 				is_async: true,
 			});
 
-			app.handlers.uploadMixed = async (payload: { file: UploadFile; name: string; email: string; age: number }): Promise<{ filename: string; name: string; email: string; age: number }> => {
+			app.handlers.uploadMixed = async (payload: {
+				file: UploadFile;
+				name: string;
+				email: string;
+				age: number;
+			}): Promise<{ filename: string; name: string; email: string; age: number }> => {
 				const body = payload as MixedRequest;
 				return {
 					filename: body.file.filename,
@@ -609,7 +629,9 @@ describe.skip("UploadFile Handler Integration", () => {
 				is_async: true,
 			});
 
-			app.handlers.uploadNested = async (payload: { metadata: { title: string; file: UploadFile } }): Promise<{ title: string; filename: string; size: number }> => {
+			app.handlers.uploadNested = async (payload: {
+				metadata: { title: string; file: UploadFile };
+			}): Promise<{ title: string; filename: string; size: number }> => {
 				const body = payload as NestedFileRequest;
 				return {
 					title: body.metadata.title,
@@ -651,7 +673,9 @@ describe.skip("UploadFile Handler Integration", () => {
 				is_async: true,
 			});
 
-			app.handlers.uploadLarge = async (payload: { file: UploadFile }): Promise<{ filename: string; size: number; readSuccess: boolean }> => {
+			app.handlers.uploadLarge = async (payload: {
+				file: UploadFile;
+			}): Promise<{ filename: string; size: number; readSuccess: boolean }> => {
 				const file = payload.file as UploadFile;
 				return {
 					filename: file.filename,
@@ -726,7 +750,9 @@ describe.skip("UploadFile Handler Integration", () => {
 				is_async: true,
 			});
 
-			app.handlers.uploadBinary = async (payload: { file: UploadFile }): Promise<{ filename: string; size: number; firstBytes: string }> => {
+			app.handlers.uploadBinary = async (payload: {
+				file: UploadFile;
+			}): Promise<{ filename: string; size: number; firstBytes: string }> => {
 				const file = payload.file as UploadFile;
 				const buffer = file.getBuffer();
 				return {
@@ -770,7 +796,9 @@ describe.skip("UploadFile Handler Integration", () => {
 				is_async: true,
 			});
 
-			app.handlers.uploadRequired = async (payload: { file?: UploadFile }): Promise<{ status?: number; body?: Record<string, unknown>; filename?: string }> => {
+			app.handlers.uploadRequired = async (payload: {
+				file?: UploadFile;
+			}): Promise<{ status?: number; body?: Record<string, unknown>; filename?: string }> => {
 				const file = payload?.file;
 				if (!file) {
 					return {
@@ -806,7 +834,9 @@ describe.skip("UploadFile Handler Integration", () => {
 				is_async: true,
 			});
 
-			app.handlers.uploadWrongField = async (payload: Record<string, unknown>): Promise<{ hasFile: boolean; type: string }> => {
+			app.handlers.uploadWrongField = async (
+				payload: Record<string, unknown>,
+			): Promise<{ hasFile: boolean; type: string }> => {
 				const file = payload?.file;
 				return {
 					hasFile: file !== undefined && file !== null,
@@ -847,7 +877,10 @@ describe.skip("UploadFile Handler Integration", () => {
 				is_async: true,
 			});
 
-			app.handlers.uploadInvalidJson = async (payload: { file: UploadFile; metadata: Record<string, unknown> }): Promise<{ filename: string }> => {
+			app.handlers.uploadInvalidJson = async (payload: {
+				file: UploadFile;
+				metadata: Record<string, unknown>;
+			}): Promise<{ filename: string }> => {
 				const body = payload as RequestWithJson;
 				return {
 					filename: body.file.filename,
@@ -891,7 +924,10 @@ describe.skip("UploadFile Handler Integration", () => {
 				is_async: true,
 			});
 
-			app.handlers.uploadNoParse = async (payload: { file: UploadFile; description: string }): Promise<{ filename: string; description: string }> => {
+			app.handlers.uploadNoParse = async (payload: {
+				file: UploadFile;
+				description: string;
+			}): Promise<{ filename: string; description: string }> => {
 				// No manual JSON.parse needed - payload is already an object
 				const file = payload.file as UploadFile;
 				return {
@@ -943,7 +979,10 @@ describe.skip("UploadFile Handler Integration", () => {
 				is_async: true,
 			});
 
-			app.handlers.uploadTyped = async (payload: { file: UploadFile; name: string }): Promise<{ filename: string; size: number; contentType: string; name: string }> => {
+			app.handlers.uploadTyped = async (payload: {
+				file: UploadFile;
+				name: string;
+			}): Promise<{ filename: string; size: number; contentType: string; name: string }> => {
 				const body = payload as TypedRequest;
 
 				// TypeScript knows these properties exist
@@ -998,7 +1037,14 @@ describe.skip("UploadFile Handler Integration", () => {
 				is_async: true,
 			});
 
-			app.handlers.uploadAutoConvert = async (payload: { file: UploadFile }): Promise<{ isUploadFile: boolean; hasReadMethod: boolean; hasSeekMethod: boolean; hasTextMethod: boolean }> => {
+			app.handlers.uploadAutoConvert = async (payload: {
+				file: UploadFile;
+			}): Promise<{
+				isUploadFile: boolean;
+				hasReadMethod: boolean;
+				hasSeekMethod: boolean;
+				hasTextMethod: boolean;
+			}> => {
 				const body = payload as RequestWithFile;
 
 				// file should be an UploadFile instance, not raw metadata
@@ -1046,7 +1092,9 @@ describe.skip("UploadFile Handler Integration", () => {
 				is_async: true,
 			});
 
-			app.handlers.uploadAsyncOps = async (payload: { file: UploadFile }): Promise<{ text: string; position: number }> => {
+			app.handlers.uploadAsyncOps = async (payload: {
+				file: UploadFile;
+			}): Promise<{ text: string; position: number }> => {
 				const file = payload.file as UploadFile;
 
 				// Can use async operations naturally
@@ -1096,7 +1144,12 @@ describe.skip("UploadFile Handler Integration", () => {
 				is_async: true,
 			});
 
-			app.handlers.uploadTypedFields = async (payload: { file: UploadFile; count: number; enabled: boolean; tags: string[] }): Promise<{ count: number; enabled: boolean; tags: string[] }> => {
+			app.handlers.uploadTypedFields = async (payload: {
+				file: UploadFile;
+				count: number;
+				enabled: boolean;
+				tags: string[];
+			}): Promise<{ count: number; enabled: boolean; tags: string[] }> => {
 				const body = payload as TypedRequest;
 				return {
 					count: body.count,

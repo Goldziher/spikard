@@ -10,11 +10,10 @@ from __future__ import annotations
 
 import io
 from tempfile import SpooledTemporaryFile
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import Annotated, Any
 
 import msgspec
 from typing_extensions import Self
-
 
 __all__ = ("UploadFile",)
 
@@ -238,7 +237,6 @@ class UploadFile:
     def __repr__(self) -> str:
         """String representation of the upload file."""
         return f"UploadFile(filename={self.filename!r}, content_type={self.content_type!r}, size={self.size})"
-
 
     def __del__(self) -> None:
         """Ensure file is closed when object is garbage collected."""
