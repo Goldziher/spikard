@@ -27,7 +27,7 @@ app.addRoute(
 app.run({ port: 8000 });
 ```
 
-Decorators (`get`, `post`, etc.) are available for metadata-only definitions, but the recommended path today is explicit `addRoute` with Zod schemas as above to avoid ambiguity about handler registration. For Deno/Edge runtimes, use `spikard-wasm` and `createFetchHandler`.
+Decorators (`get`, `post`, etc.) are available for metadata-only definitions, but the recommended path today is explicit `addRoute` with Zod schemas as above to avoid ambiguity about handler registration. For Deno/Edge runtimes, use `spikard-wasm` and `createFetchHandler`. WebSocket helpers are planned; use HTTP/SSE until available.
 
 ## Validation
 - Zod (recommended) with `bodySchema`/`responseSchema` metadata.

@@ -36,5 +36,5 @@ Offload non-critical work from request handlers.
 
 ## Tips
 - Keep request handlers fast; enqueue email/notifications/ETL jobs instead of blocking responses.
-- Prefer durable queues (Redis/SQS) over in-process threads for production workloads.
+- Prefer durable queues (Redis/SQS) over in-process threads for production workloads; the built-in helpers are best-effort and in-process.
 - Ensure idempotency when retrying background tasks.

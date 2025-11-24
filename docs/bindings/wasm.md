@@ -18,5 +18,5 @@ Use `spikard-wasm` for runtimes without native modules (Deno, Cloudflare Workers
 
 ## Notes
 - Uses fetch-native APIs; no Node globals.
-- WebSockets/SSE availability depends on the host runtime.
+- WebSockets/SSE availability depends on the host runtime; stick to HTTP/SSE on platforms without WS support.
 - Keep payloads small; worker environments often have stricter limits.
