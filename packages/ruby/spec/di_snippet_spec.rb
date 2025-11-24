@@ -5,6 +5,12 @@ require 'json'
 
 RSpec.describe 'DI doc snippet' do
   it 'evaluates and registers dependencies' do
+    begin
+      require 'spikard'
+    rescue LoadError
+      skip 'spikard native extension not built; skipping doc snippet eval'
+    end
+
     snippet_path = Pathname.new(__dir__).join('..', '..', '..', 'docs', 'snippets', 'ruby',
                                               'dependency_injection.md').cleanpath
     content = snippet_path.read
