@@ -1,0 +1,26 @@
+# Streaming & Real-Time
+
+Serve streaming responses (chunked, NDJSON), SSE, or WebSockets.
+
+## Streaming response
+
+=== "Python"
+
+    --8<-- "snippets/python/streaming.md"
+
+=== "TypeScript"
+
+    --8<-- "snippets/typescript/streaming.md"
+
+=== "Ruby"
+
+    --8<-- "snippets/ruby/streaming.md"
+
+=== "Rust"
+
+    --8<-- "snippets/rust/streaming.md"
+
+## Tips
+- Set appropriate content types (`application/x-ndjson`, `text/event-stream`).
+- Handle client disconnects gracefully; stop producing when the connection closes.
+- For WebSockets/SSE, add auth middleware before handler execution.
