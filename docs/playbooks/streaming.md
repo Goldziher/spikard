@@ -36,7 +36,7 @@ Serve streaming responses (chunked, NDJSON), SSE, or WebSockets.
     --8<-- "snippets/rust/websocket.md"
 
 ??? note "TypeScript"
-    WebSocket support exists in the runtime but the public API is still being finalized. Use HTTP/SSE for now.
+    WebSocket support is available via `method: "WS"` handlers and the test client `websocketConnect`.
 
 === "Ruby"
 
