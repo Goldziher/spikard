@@ -42,3 +42,21 @@ Serve streaming responses (chunked, NDJSON), SSE, or WebSockets.
 === "Rust"
 
     --8<-- "snippets/rust/websocket.md"
+
+## Server-Sent Events (SSE)
+
+=== "Python"
+
+    --8<-- "snippets/python/sse.md"
+
+=== "TypeScript"
+
+    --8<-- "snippets/typescript/sse.md"
+
+=== "Ruby"
+
+    --8<-- "snippets/ruby/sse.md"
+
+=== "Rust"
+
+    --8<-- "snippets/rust/sse.md"
