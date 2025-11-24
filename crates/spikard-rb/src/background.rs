@@ -8,11 +8,17 @@ use std::sync::{Arc, RwLock};
 static BACKGROUND_HANDLE: Lazy<RwLock<Option<BackgroundHandle>>> = Lazy::new(|| RwLock::new(None));
 
 pub fn install_handle(handle: BackgroundHandle) {
-    *BACKGROUND_HANDLE.write().expect("background handle lock poisoned") = Some(handle);
+    match BACKGROUND_HANDLE.write() {
+        Ok(mut guard) => *guard = Some(handle),
+        Err(_) => eprintln!("warning: background handle lock poisoned, continuing"),
+    }
 }
 
 pub fn clear_handle() {
-    *BACKGROUND_HANDLE.write().expect("background handle lock poisoned") = None;
+    match BACKGROUND_HANDLE.write() {
+        Ok(mut guard) => *guard = None,
+        Err(_) => eprintln!("warning: background handle lock poisoned, continuing"),
+    }
 }
 
 pub fn background_run(ruby: &Ruby, block: Value) -> Result<(), Error> {

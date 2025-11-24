@@ -29,6 +29,15 @@ struct MessageOperationMetadata {
     replies: Vec<String>,
 }
 
+/// Channel operation metadata extracted from AsyncAPI spec.
+///
+/// Contains information about operations defined on a channel, including
+/// the operation name, action type (send/receive), messages involved,
+/// and any reply messages. Used during fixture generation and test app creation.
+///
+/// NOTE: Marked with #[allow(dead_code)] because derived traits (Debug, Clone)
+/// don't count as usage for Rust's dead code linter, even though this struct
+/// is actively used in `collect_channel_operations()` to populate channel metadata.
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
 struct ChannelOperation {
@@ -484,7 +493,14 @@ pub fn generate_python_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Re
     Ok(code)
 }
 
-/// Channel information extracted from AsyncAPI spec
+/// Channel information extracted from AsyncAPI spec.
+///
+/// Contains metadata about a single channel including its name, address path,
+/// associated messages, and operations. Used during code generation for test applications.
+///
+/// NOTE: Marked with #[allow(dead_code)] because some fields may not be accessed
+/// in all code generation paths, but the struct is constructed and stored in vectors
+/// for comprehensive channel documentation.
 #[derive(Debug)]
 #[allow(dead_code)]
 struct ChannelInfo {

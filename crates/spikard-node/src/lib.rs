@@ -483,7 +483,13 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
         .map_err(|e| Error::from_reason(format!("Invalid socket address {}: {}", addr, e)))?;
 
     std::thread::spawn(move || {
-        let runtime = tokio::runtime::Runtime::new().expect("Failed to create Tokio runtime");
+        let runtime = match tokio::runtime::Runtime::new() {
+            Ok(rt) => rt,
+            Err(e) => {
+                error!("Failed to create Tokio runtime: {}", e);
+                return;
+            }
+        };
 
         runtime.block_on(async move {
             let listener = tokio::net::TcpListener::bind(socket_addr)
