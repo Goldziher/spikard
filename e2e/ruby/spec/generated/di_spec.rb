@@ -195,9 +195,11 @@ RSpec.describe "di" do
     app = E2ERubyApp.create_app_di_16_singleton_dependency_caching_success
     client = Spikard::Testing.create_test_client(app)
     response = client.get("/api/app-counter")
+    puts "DEBUG Singleton 1st: Status=#{response.status_code}, Body=#{response.body[0..200]}"
 
     # Second request to verify singleton caching
     response2 = client.get("/api/app-counter")
+    puts "DEBUG Singleton 2nd: Status=#{response2.status_code}, Body=#{response2.body[0..200]}"
     expect(response.status_code).to eq(200)
     expect(response2.status_code).to eq(200)
     data1 = response.json

@@ -233,7 +233,7 @@ impl ResolvedDependencies {
     /// resolved.cleanup().await;
     /// # });
     /// ```
-    pub fn add_cleanup_task(&mut self, task: CleanupTask) {
+    pub fn add_cleanup_task(&self, task: CleanupTask) {
         self.cleanup_tasks.lock().unwrap().push(task);
     }
 

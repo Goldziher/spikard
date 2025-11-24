@@ -113,14 +113,28 @@ impl Dependency for RubyFactoryDependency {
         let factory = self.factory.clone();
         let depends_on = self.depends_on.clone();
         let key = self.key.clone();
+        let is_singleton = self.singleton;
+        let resolved_clone = resolved.clone();
 
         // Extract resolved dependencies now (before async)
+        // Need to handle both JsonValue and RubyValueWrapper types
         let resolved_deps: Vec<(String, JsonValue)> = depends_on
             .iter()
             .filter_map(|dep_key| {
-                resolved
-                    .get::<JsonValue>(dep_key)
-                    .map(|v| (dep_key.clone(), (*v).clone()))
+                // Try JsonValue first
+                if let Some(json_value) = resolved.get::<JsonValue>(dep_key) {
+                    return Some((dep_key.clone(), (*json_value).clone()));
+                }
+                // Try RubyValueWrapper (for singletons)
+                if let Some(wrapper) = resolved.get::<RubyValueWrapper>(dep_key) {
+                    // Convert wrapper to JSON synchronously
+                    if let Ok(ruby) = Ruby::get() {
+                        if let Ok(json) = wrapper.to_json(&ruby) {
+                            return Some((dep_key.clone(), json));
+                        }
+                    }
+                }
+                None
             })
             .collect();
 
@@ -185,7 +199,7 @@ impl Dependency for RubyFactoryDependency {
             })?;
 
             // Check if result is an array with cleanup callback (Ruby pattern: [resource, cleanup_proc])
-            let (value_to_convert, _cleanup_callback) = if result.is_kind_of(ruby.class_array()) {
+            let (value_to_convert, cleanup_callback) = if result.is_kind_of(ruby.class_array()) {
                 let array = magnus::RArray::from_value(result).ok_or_else(|| DependencyError::ResolutionFailed {
                     message: format!("Failed to convert result to array for '{}'", key),
                 })?;
@@ -202,8 +216,6 @@ impl Dependency for RubyFactoryDependency {
                         message: format!("Failed to extract cleanup callback for '{}': {}", key, e),
                     })?;
 
-                    // TODO: Store cleanup callback for later execution
-                    // For now, we just extract the resource value
                     (resource, Some(cleanup))
                 } else {
                     // Not a cleanup pattern, use the array as-is
@@ -214,7 +226,30 @@ impl Dependency for RubyFactoryDependency {
                 (result, None)
             };
 
-            // Convert result to JSON
+            // Register cleanup callback if present
+            if let Some(cleanup_proc) = cleanup_callback {
+                let cleanup_opaque = Opaque::from(cleanup_proc);
+
+                resolved_clone.add_cleanup_task(Box::new(move || {
+                    Box::pin(async move {
+                        // Get Ruby runtime and call cleanup proc
+                        if let Ok(ruby) = Ruby::get() {
+                            let proc = cleanup_opaque.get_inner_with(&ruby);
+                            // Call the cleanup proc - ignore errors during cleanup
+                            let _ = proc.funcall::<_, _, Value>("call", ());
+                        }
+                    })
+                }));
+            }
+
+            // For singleton dependencies, store Ruby value wrapper to preserve mutations
+            // For non-singleton, convert to JSON immediately (no need to preserve mutations)
+            if is_singleton {
+                let wrapper = RubyValueWrapper::new(value_to_convert);
+                return Ok(Arc::new(wrapper) as Arc<dyn Any + Send + Sync>);
+            }
+
+            // Convert result to JSON for non-singleton dependencies
             let json_value = ruby_value_to_json(&ruby, value_to_convert)
                 .map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?;
 
@@ -230,6 +265,48 @@ impl Dependency for RubyFactoryDependency {
         self.cacheable
     }
 }
+
+/// Wrapper around a Ruby Value that preserves object identity for singleton mutations
+///
+/// This stores the Ruby object itself rather than a JSON snapshot, allowing
+/// singleton dependencies to maintain mutable state across requests.
+#[derive(Clone)]
+pub struct RubyValueWrapper {
+    /// Thread-safe wrapper around Ruby Value
+    /// Opaque<Value> is Send + Sync per magnus design
+    value: Opaque<Value>,
+}
+
+impl RubyValueWrapper {
+    /// Create a new wrapper around a Ruby value
+    pub fn new(value: Value) -> Self {
+        Self {
+            value: Opaque::from(value),
+        }
+    }
+
+    /// Get the raw Ruby value directly
+    ///
+    /// This preserves object identity for singletons, allowing mutations
+    /// to persist across requests.
+    pub fn get_value(&self, ruby: &Ruby) -> Value {
+        self.value.get_inner_with(ruby)
+    }
+
+    /// Convert the wrapped Ruby value to JSON
+    ///
+    /// This is called fresh each time to capture any mutations to the object.
+    /// For singletons, this means we see updated counter values, etc.
+    pub fn to_json(&self, ruby: &Ruby) -> Result<JsonValue, Error> {
+        let value = self.value.get_inner_with(ruby);
+        ruby_value_to_json(ruby, value)
+    }
+}
+
+// Safety: Opaque<Value> is designed to be Send + Sync by magnus
+// It holds a stable pointer that's safe to share across threads
+unsafe impl Send for RubyValueWrapper {}
+unsafe impl Sync for RubyValueWrapper {}
 
 /// Convert Ruby Value to serde_json::Value
 fn ruby_value_to_json(ruby: &Ruby, value: Value) -> Result<JsonValue, Error> {
