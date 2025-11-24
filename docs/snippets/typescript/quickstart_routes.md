@@ -1,5 +1,5 @@
 ```typescript
-import { Spikard, wrapHandlerWithContext } from "spikard";
+import { Spikard, type Request } from "spikard";
 import { z } from "zod";
 
 const UserSchema = z.object({ id: z.number(), name: z.string() });
@@ -9,10 +9,11 @@ const app = new Spikard();
 
 app.addRoute(
   { method: "GET", path: "/users/:id", handler_name: "getUser", is_async: true },
-  wrapHandlerWithContext(async ({ pathParams }): Promise<User> => {
-    const id = Number(pathParams["id"] ?? 0);
+  async (req: Request): Promise<User> => {
+    const segments = req.path.split("/");
+    const id = Number(segments[segments.length - 1] ?? 0);
     return { id, name: "Alice" };
-  }),
+  },
 );
 
 app.addRoute(
@@ -24,7 +25,7 @@ app.addRoute(
     response_schema: UserSchema,
     is_async: true,
   },
-  wrapHandlerWithContext(async ({ body }): Promise<User> => UserSchema.parse(body)),
+  async (req: Request): Promise<User> => UserSchema.parse(req.json()),
 );
 
 if (require.main === module) {
