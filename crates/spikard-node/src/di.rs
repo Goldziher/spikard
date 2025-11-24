@@ -178,29 +178,29 @@ impl Dependency for NodeFactoryDependency {
                     .get("__async_generator__")
                     .and_then(|v| v.as_bool())
                     .unwrap_or(false)
-                {
-                    // This is an async generator - extract the yielded value and generator handle
-                    let value_str = obj
-                        .get("value")
-                        .and_then(|v| serde_json::to_string(v).ok())
-                        .ok_or_else(|| spikard_core::di::DependencyError::ResolutionFailed {
-                            message: format!("AsyncGenerator missing 'value' field for {}", key),
-                        })?;
+            {
+                // This is an async generator - extract the yielded value and generator handle
+                let value_str = obj
+                    .get("value")
+                    .and_then(|v| serde_json::to_string(v).ok())
+                    .ok_or_else(|| spikard_core::di::DependencyError::ResolutionFailed {
+                        message: format!("AsyncGenerator missing 'value' field for {}", key),
+                    })?;
 
-                    // For cleanup, we would need to call the generator's return() method
-                    // Since we can't easily store the generator object across the FFI boundary,
-                    // we rely on JavaScript's GC to clean up when the generator is no longer referenced
-                    // For now, store a note that cleanup is needed
-                    let mut resolved_mut = resolved_clone;
-                    resolved_mut.add_cleanup_task(Box::new(move || {
-                        Box::pin(async move {
-                            // Cleanup will be handled by JavaScript runtime
-                            // The generator's finally block will run when it's GC'd or explicitly closed
-                        })
-                    }));
+                // For cleanup, we would need to call the generator's return() method
+                // Since we can't easily store the generator object across the FFI boundary,
+                // we rely on JavaScript's GC to clean up when the generator is no longer referenced
+                // For now, store a note that cleanup is needed
+                let mut resolved_mut = resolved_clone;
+                resolved_mut.add_cleanup_task(Box::new(move || {
+                    Box::pin(async move {
+                        // Cleanup will be handled by JavaScript runtime
+                        // The generator's finally block will run when it's GC'd or explicitly closed
+                    })
+                }));
 
-                    return Ok(Arc::new(value_str) as Arc<dyn Any + Send + Sync>);
-                }
+                return Ok(Arc::new(value_str) as Arc<dyn Any + Send + Sync>);
+            }
 
             // Store result as JSON string
             Ok(Arc::new(result) as Arc<dyn Any + Send + Sync>)

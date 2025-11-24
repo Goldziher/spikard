@@ -593,19 +593,16 @@ impl RubyHandler {
                 // Filter dependencies: only pass those declared by the handler
                 for key in &self.inner.handler_dependencies {
                     if let Some(value) = deps.get_arc(key) {
-                        // Convert dependency value to JSON
-                        if let Some(json_value) = value.downcast_ref::<serde_json::Value>() {
-                            // Convert JSON value to Ruby value
-                            match crate::di::json_to_ruby(&ruby, json_value) {
-                                Ok(ruby_value) => {
-                                    let key_sym = ruby.to_symbol(key);
-                                    if let Err(e) = kwargs_hash.aset(key_sym, ruby_value) {
-                                        return Err((
-                                            StatusCode::INTERNAL_SERVER_ERROR,
-                                            format!("Failed to add dependency '{}': {}", key, e),
-                                        ));
-                                    }
-                                }
+                        // Check what type of dependency this is and extract Ruby value
+                        let ruby_val = if let Some(wrapper) = value.downcast_ref::<crate::di::RubyValueWrapper>() {
+                            // It's a Ruby value wrapper (singleton with preserved mutations)
+                            // Get the raw Ruby value directly to preserve object identity
+                            wrapper.get_value(&ruby)
+                        } else if let Some(json) = value.downcast_ref::<serde_json::Value>() {
+                            // It's already JSON (non-singleton or value dependency)
+                            // Convert JSON to Ruby value
+                            match crate::di::json_to_ruby(&ruby, json) {
+                                Ok(val) => val,
                                 Err(e) => {
                                     return Err((
                                         StatusCode::INTERNAL_SERVER_ERROR,
@@ -613,6 +610,23 @@ impl RubyHandler {
                                     ));
                                 }
                             }
+                        } else {
+                            return Err((
+                                StatusCode::INTERNAL_SERVER_ERROR,
+                                format!(
+                                    "Unknown dependency type for '{}': expected RubyValueWrapper or JSON",
+                                    key
+                                ),
+                            ));
+                        };
+
+                        // Add to kwargs hash
+                        let key_sym = ruby.to_symbol(key);
+                        if let Err(e) = kwargs_hash.aset(key_sym, ruby_val) {
+                            return Err((
+                                StatusCode::INTERNAL_SERVER_ERROR,
+                                format!("Failed to add dependency '{}': {}", key, e),
+                            ));
                         }
                     }
                 }

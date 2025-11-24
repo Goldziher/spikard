@@ -976,7 +976,7 @@ module E2ERubyApp
   end
 
   def create_db_pool_singleton(app_config = nil)
-    # Singleton with counter
+    # Singleton with counter - initialize once, return reference
     singleton_key = 'singleton_db_pool'
     # Don't use ||= with BACKGROUND_STATE because default proc returns []
     unless BACKGROUND_STATE.key?(singleton_key) && BACKGROUND_STATE[singleton_key].is_a?(Hash)
@@ -985,7 +985,6 @@ module E2ERubyApp
         count: 0
       }
     end
-    BACKGROUND_STATE[singleton_key][:count] += 1
     BACKGROUND_STATE[singleton_key]
   end
 
@@ -996,8 +995,19 @@ module E2ERubyApp
   def create_app_di_6_mixed_singleton_and_per_request_caching_success
     app = Spikard::App.new
     app.get("/api/mixed-caching", handler_name: "di_6_mixed_singleton_and_per_request_caching_success") do |_request, app_config:, db_pool:, request_context:|
-      # Return the actual db_pool data so test can verify singleton behavior
-      build_response(content: db_pool, status: 200, headers: nil)
+      # Increment the counter on each request (like Python)
+      # Note: We receive the actual Ruby object with symbol keys
+      db_pool[:count] += 1
+      build_response(
+        content: {
+          id: db_pool[:id],
+          count: db_pool[:count],
+          context_id: request_context["id"],
+          app_name: app_config["app_name"]
+        },
+        status: 200,
+        headers: nil
+      )
     end
 
     # Register dependencies
@@ -1199,7 +1209,7 @@ module E2ERubyApp
   end
 
   def create_app_counter()
-    # Singleton with counter
+    # Singleton with counter - initialize once, return reference
     singleton_key = 'singleton_app_counter'
     # Don't use ||= with BACKGROUND_STATE because default proc returns []
     unless BACKGROUND_STATE.key?(singleton_key) && BACKGROUND_STATE[singleton_key].is_a?(Hash)
@@ -1208,15 +1218,16 @@ module E2ERubyApp
         count: 0
       }
     end
-    BACKGROUND_STATE[singleton_key][:count] += 1
     BACKGROUND_STATE[singleton_key]
   end
 
   def create_app_di_16_singleton_dependency_caching_success
     app = Spikard::App.new
     app.get("/api/app-counter", handler_name: "di_16_singleton_dependency_caching_success") do |_request, app_counter:|
-      # Return the actual app_counter data so test can verify singleton behavior
-      build_response(content: app_counter, status: 200, headers: nil)
+      # Increment the counter on each access (like Python handler does)
+      # Note: We receive the actual Ruby object with symbol keys
+      app_counter[:count] += 1
+      build_response(content: { id: app_counter[:id], count: app_counter[:count] }, status: 200, headers: nil)
     end
 
     # Register dependencies
