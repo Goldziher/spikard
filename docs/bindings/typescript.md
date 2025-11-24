@@ -29,14 +29,17 @@ app.run({ port: 8000 });
 
 Decorators (`get`, `post`, etc.) are available for metadata-only definitions, but the recommended path today is explicit `addRoute` with Zod schemas as above to avoid ambiguity about handler registration. For Deno/Edge runtimes, use `spikard-wasm` and `createFetchHandler`. WebSocket helpers are planned; use HTTP/SSE until available.
 
+## Request shape
+- `method`, `path`, `params`, `query`, `headers` (lowercased), `cookies`, `body`
+- Helpers: `json()` (with UploadFile conversion), `form()`
+
 ## Validation
 - Zod (recommended) with `bodySchema`/`responseSchema` metadata.
 - JSON Schema objects supported as alternatives.
 
 ## Middleware & Hooks
 - Use lifecycle hooks: `app.onRequest`, `app.preValidation`, `app.onResponse`, `app.onError`.
-- Wrap handlers with `wrapHandler` / `wrapBodyHandler` for typed params/query/body extraction.
-- Path/query params: route params are not injected today; parse from `request.path` and `new URLSearchParams(request.queryString)` until param support lands.
+- Handlers receive `Request` with parsed params/query/cookies/headers; wrappers are optional.
 
 ## Deployment
 - Local: `node app.js`/`ts-node app.ts`; set `PORT` via `app.run({ port })`.

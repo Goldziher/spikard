@@ -11,9 +11,8 @@ const app = new Spikard();
 app.addRoute(
   { method: "GET", path: "/orders/:order_id", handler_name: "getOrder", is_async: true },
   async (req: Request): Promise<OrderResponse> => {
-    const segments = req.path.split("/");
-    const id = Number(segments[segments.length - 1] ?? 0);
-    const details = new URLSearchParams(req.queryString).get("details") === "true";
+    const id = Number(req.params["order_id"] ?? 0);
+    const details = req.query["details"] === "true";
     return { id, details };
   },
 );
