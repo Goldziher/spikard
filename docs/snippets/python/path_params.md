@@ -1,5 +1,8 @@
 ```python
+from spikard import Spikard
 from msgspec import Struct
+
+app = Spikard()
 
 
 class OrderResponse(Struct):

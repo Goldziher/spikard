@@ -1,16 +1,16 @@
 ```ruby
 require "spikard"
 
-App = Spikard::App.new
+app = Spikard::App.new
 
-App.get("/users/:id") do |ctx|
-  { id: ctx.params[:id].to_i, name: "Alice" }
+app.get("/users/:id") do |params, _query, _body|
+  { id: params[:id].to_i, name: "Alice" }
 end
 
-App.post("/users") do |ctx|
-  user = ctx.json
+app.post("/users") do |_params, _query, body|
+  user = body
   { id: user["id"], name: user["name"] }
 end
 
-App.run(port: 8000)
+app.run(port: 8000)
 ```

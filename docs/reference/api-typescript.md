@@ -7,18 +7,22 @@ The TypeScript binding uses NAPI-RS for Node/Bun and can also target WASM for De
 - Entry module: `spikard`
 
 ## Core Types
-- `App` – register routes and middleware, start the HTTP server
-- `Context` – access `params`, `query`, `headers`, `cookies`, and parsed `body`
-- Helpers for JSON responses and streaming bodies
+- `Spikard` – register routes and start the HTTP server
+- `Request` – access `params`, `query`, `headers`, `cookies`, and parsed `body`
+- Lifecycle hooks (`onRequest`, `preValidation`, `preHandler`, `onResponse`, `onError`)
+- Helper wrappers for streaming and background tasks
 
 ## Routing
 ```typescript
-import { App } from "spikard";
+import { Spikard } from "spikard";
 
-const app = new App();
+const app = new Spikard();
 
-app.get("/health", () => ({ status: "ok" }));
-app.listen({ port: 8000 });
+app.addRoute(
+  { method: "GET", path: "/health", handler_name: "health", is_async: true },
+  async () => ({ status: "ok" }),
+);
+app.run({ port: 8000 });
 ```
 
 ## Validation
@@ -26,14 +30,24 @@ Use Zod (recommended) to validate requests/responses:
 ```typescript
 import { z } from "zod";
 const User = z.object({ id: z.number(), name: z.string() });
-app.post("/users", ({ body }) => User.parse(body));
+app.addRoute(
+  {
+    method: "POST",
+    path: "/users",
+    handler_name: "createUser",
+    request_schema: User,
+    response_schema: User,
+    is_async: true,
+  },
+  (req) => User.parse(req.json()),
+);
 ```
 
 ## Middleware
 ```typescript
-app.use(async (ctx, next) => {
-  console.log(`${ctx.method} ${ctx.path}`);
-  return next();
+app.onRequest(async (request) => {
+  console.log(`${request.method} ${request.path}`);
+  return request;
 });
 ```
 

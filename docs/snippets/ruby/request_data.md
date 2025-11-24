@@ -1,11 +1,11 @@
 ```ruby
-App.post("/orders/:order_id") do |ctx|
-  order = ctx.json
+app = Spikard::App.new
+
+app.post("/orders/:order_id") do |params, query, body|
   {
-    **order,
-    id: ctx.params[:order_id].to_i,
-    request_id: ctx.headers["x-request-id"],
-    verbose: ctx.query["verbose"] == "true",
+    **body,
+    id: params[:order_id].to_i,
+    verbose: query["verbose"] == "true",
   }
 end
 ```

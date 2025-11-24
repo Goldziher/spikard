@@ -1,12 +1,12 @@
 ```python
-from spikard import App
+from spikard import Spikard
 from msgspec import Struct
 
 class User(Struct):
     id: int
     name: str
 
-app = App()
+app = Spikard()
 
 @app.get("/users/{id:int}")
 async def get_user(id: int) -> User:

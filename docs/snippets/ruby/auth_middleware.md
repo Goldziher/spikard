@@ -1,10 +1,12 @@
 ```ruby
-app.use do |ctx, next_middleware|
-  token = ctx.headers["authorization"]
-  if token != "Bearer dev-token"
+app = Spikard::App.new
+
+app.pre_handler do |request|
+  headers = request[:headers] || {}
+  if headers["authorization"] != "Bearer dev-token"
     { error: "unauthorized" }
   else
-    next_middleware.call
+    request
   end
 end
 ```

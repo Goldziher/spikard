@@ -7,27 +7,30 @@ The Ruby binding uses magnus to expose the Rust runtime with a Ruby-friendly DSL
 - Require: `require "spikard"`
 
 ## Core Types
-- `Spikard::App` – register routes, middleware, and start the server
-- `ctx` – provides `params`, `query`, `headers`, `cookies`, and parsed request bodies
+- `Spikard::App` – register routes and start the server
+- Handler args – receive path params, query params, and body (or use handler wrappers)
+- Lifecycle hooks (`on_request`, `pre_validation`, `pre_handler`, `on_response`, `on_error`)
 
 ## Routing
 ```ruby
 require "spikard"
 
-App = Spikard::App.new
+app = Spikard::App.new
 
-App.get("/health") do |_ctx|
+app.get("/health") do |_params, _query, _body|
   { status: "ok" }
 end
 
-App.listen(port: 8000)
+app.run(port: 8000)
 ```
 
 ## Middleware
 ```ruby
-App.use do |ctx, next_middleware|
-  puts "#{ctx.method} #{ctx.path}"
-  next_middleware.call
+app = Spikard::App.new
+
+app.on_request do |request|
+  puts "#{request[:method]} #{request[:path]}"
+  request
 end
 ```
 
