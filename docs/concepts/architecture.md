@@ -22,3 +22,7 @@ Spikard splits concerns between a Rust core and language-specific bindings so te
 5. **Validation** checks schemas on both ingress and egress when configured.
 
 See [ADR 0001](../adr/0001-architecture-and-principles.md) for the original rationale and [Python Binding Architecture](../python/architecture.md) for a deep dive into the PyO3 path.
+
+## High-level flow
+
+--8<-- "concepts/architecture-diagram.md"
