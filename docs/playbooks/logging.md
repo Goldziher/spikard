@@ -7,11 +7,13 @@ Standardize request IDs, structured logs, and tracing across bindings.
 === "Python"
 
     ```python
-    def request_id(ctx, next_fn):
-        ctx.state["request_id"] = ctx.headers.get("x-request-id") or ctx.state.get("request_id")
-        return next_fn()
-
-    app.use(request_id)
+    @app.on_request
+    async def request_id(request: dict[str, object]):
+        headers = request.get("headers", {}) if isinstance(request, dict) else {}
+        request_id = headers.get("x-request-id") or request.get("request_id")
+        if isinstance(headers, dict):
+            headers = {**headers, "x-request-id": request_id}
+        return {**request, "headers": headers, "request_id": request_id}
     ```
 
 === "TypeScript"
@@ -32,20 +34,24 @@ Standardize request IDs, structured logs, and tracing across bindings.
     ```ruby
     require "securerandom"
 
-    app.use do |ctx, next_middleware|
-      ctx.headers["x-request-id"] ||= SecureRandom.uuid
-      next_middleware.call
+    app.on_request do |request|
+      headers = request[:headers] || {}
+      headers["x-request-id"] ||= SecureRandom.uuid
+      request.merge(headers: headers)
     end
     ```
 
 === "Rust"
 
     ```rust
-    use spikard::prelude::*;
-    use tower_http::trace::TraceLayer;
+    use axum::response::Json;
+    use spikard::{get, App, RequestContext};
 
     let mut app = App::new();
-    app.layer(TraceLayer::new_for_http());
+    app.route(get("/health"), |_ctx: RequestContext| async move {
+        let body = serde_json::json!({ "status": "ok" });
+        Ok(Json(body).into())
+    })?;
     ```
 
 ## Tips

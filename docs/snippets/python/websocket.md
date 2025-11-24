@@ -1,5 +1,7 @@
 ```python
-from spikard import websocket
+from spikard import Spikard, websocket
+
+app = Spikard()
 
 @websocket("/ws")
 async def echo(socket):

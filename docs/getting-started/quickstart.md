@@ -22,7 +22,7 @@ Build the same minimal service in each binding. Choose a tab, copy the snippet, 
 
 ## Run it
 
-- Python: `python app.py` or `spikard run app.py`
+- Python: `python app.py`
 - TypeScript: `pnpm ts-node app.ts` (or your runtime of choice), then hit `http://localhost:8000/users/1`
 - Ruby: `ruby app.rb`
 - Rust: `cargo run` inside your crate/binary

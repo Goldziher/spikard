@@ -13,6 +13,7 @@ Use the Rust API when you want zero-overhead access to the runtime without cross
 
 ## Routing
 ```rust
+use axum::response::Json;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use spikard::{get, post, App, RequestContext};
@@ -29,14 +30,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     app.route(get("/health"), |_ctx: RequestContext| async move {
         let body = serde_json::json!({"status": "ok"});
-        Ok(axum::response::Json(body).into())
+        Ok(Json(body).into())
     })?;
 
     app.route(
         post("/users").request_body::<User>().response_body::<User>(),
         |ctx: RequestContext| async move {
             let user: User = ctx.json()?;
-            Ok(axum::response::Json(user).into())
+            Ok(Json(user).into())
         },
     )?;
 
@@ -46,7 +47,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```
 
 ## Middleware
-Use Tower layers or helper methods on `App` to add logging, tracing, auth, or custom extractors.
+Attach middleware via `ServerConfig` or by adding layers to the Axum router produced by `App::into_router`.
 
 ## Validation
 Integrate serde-based DTOs with JSON Schema derivation to keep contracts aligned with other bindings and code generators.

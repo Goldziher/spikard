@@ -1,6 +1,6 @@
 # CLI Usage
 
-`spikard-cli` boots the Rust HTTP server and wires in language bindings. It also drives code generation for DTOs and handlers.
+`spikard-cli` handles code generation and schema validation for DTOs and handlers.
 
 ## Install
 ```bash
@@ -8,12 +8,10 @@ cargo install spikard-cli
 ```
 
 ## Run an App
-Point the CLI at your binding entrypoint:
-```bash
-spikard run path/to/app.py --host 0.0.0.0 --port 8000
-```
-- Serves routes provided by the Python binding (similar commands for other bindings)
-- Auto-reload and multi-worker flags are parsed today and will be enabled incrementally
+Runtime serving from the CLI is planned. Today, start apps with the binding APIs:
+- Python: `python app.py`
+- TypeScript: `node app.js` or `bun run app.ts`
+- Ruby: `ruby app.rb`
 
 ## Generate Code
 Use the CLI to generate DTOs/handlers from contracts (OpenAPI/AsyncAPI):

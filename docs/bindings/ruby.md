@@ -1,6 +1,6 @@
 # Ruby Binding
 
-Ruby binding built on Magnus. Handlers receive a request hash; dry-schema provides validation, and responses are plain Ruby hashes/objects.
+Ruby binding built on Magnus. Handlers receive path params, query params, and body arguments (or a request hash when using helper wrappers); dry-schema provides validation, and responses are plain Ruby hashes/objects.
 
 ## Quickstart
 
@@ -9,8 +9,8 @@ require "spikard"
 
 app = Spikard::App.new
 
-app.get "/health" do |request|
-  { status: "ok", path: request[:path] }
+app.get "/health" do |_params, _query, _body|
+  { status: "ok" }
 end
 
 app.run(port: 8000)
@@ -27,8 +27,7 @@ UserSchema = Dry::Schema.JSON do
   required(:email).filled(:str?)
 end
 
-app.post "/users", request_schema: UserSchema do |request|
-  body = request[:body]
+app.post "/users", request_schema: UserSchema do |_params, _query, body|
   { id: 1, name: body["name"], email: body["email"] }
 end
 ```
@@ -37,17 +36,17 @@ end
 - Request hash keys: `:method`, `:path`, `:path_params`, `:query`, `:raw_query`, `:headers`, `:cookies`, `:body`, `:params` (merged).
 - Return Ruby hashes/arrays; the runtime serializes.
 
-## Middleware
+## Lifecycle hooks
 
 ```ruby
-app.use do |ctx, next_middleware|
-  puts "#{ctx.method} #{ctx.path}"
-  next_middleware.call
+app.on_request do |request|
+  puts "#{request[:method]} #{request[:path]}"
+  request
 end
 ```
 
 ## Deployment
-- Local: `ruby app.rb` or run via the Rust CLI.
+- Local: `ruby app.rb`.
 - Native extension requires Ruby 3.2+ and a Rust toolchain; ensure `bundle exec rake ext:build` has been run.
 
 ## Troubleshooting

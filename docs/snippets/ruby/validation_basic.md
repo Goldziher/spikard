@@ -4,7 +4,9 @@ PaymentSchema = Dry::Schema.Params do
   required(:amount).filled(:float)
 end
 
-App.post("/payments") do |ctx|
-  PaymentSchema.call(ctx.json)
+app = Spikard::App.new
+
+app.post("/payments") do |_params, _query, body|
+  PaymentSchema.call(body)
 end
 ```

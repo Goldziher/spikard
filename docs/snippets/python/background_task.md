@@ -1,5 +1,12 @@
 ```python
-from spikard import background
+from spikard import Spikard, background
+from msgspec import Struct
+
+app = Spikard()
+
+class User(Struct):
+    id: int
+    email: str
 
 async def send_email(user_id: int) -> None:
     # enqueue real email send
