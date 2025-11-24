@@ -333,9 +333,20 @@ pub struct TestClient {
 impl TestClient {
     /// Create a new test client from routes and handlers
     #[napi(constructor)]
-    pub fn new(routes_json: String, handlers_map: Object, config: Option<Object>) -> Result<Self> {
+    pub fn new(
+        routes_json: String,
+        websocket_routes_json: Option<String>,
+        handlers_map: Object,
+        websocket_handlers: Option<Object>,
+        config: Option<Object>,
+    ) -> Result<Self> {
         let routes_data: Vec<RouteMetadata> = serde_json::from_str(&routes_json)
             .map_err(|e| Error::from_reason(format!("Failed to parse routes: {}", e)))?;
+
+        let websocket_routes_data: Vec<RouteMetadata> = websocket_routes_json
+            .as_ref()
+            .and_then(|json| serde_json::from_str(json).ok())
+            .unwrap_or_default();
 
         let server_config = if let Some(cfg) = config {
             crate::extract_server_config(&cfg)?
@@ -348,9 +359,7 @@ impl TestClient {
 
         let schema_registry = spikard_http::SchemaRegistry::new();
 
-        let (regular_routes_data, websocket_routes_data): (Vec<_>, Vec<_>) = routes_data
-            .into_iter()
-            .partition(|metadata| !metadata.handler_name.to_lowercase().starts_with("websocket"));
+        let regular_routes_data = routes_data;
 
         let mut prepared_routes: Vec<(Route, Arc<dyn spikard_http::Handler>)> = Vec::new();
         let mut metadata_list: Vec<RouteMetadata> = Vec::new();
@@ -379,25 +388,16 @@ impl TestClient {
             let path = ws_metadata.path.clone();
             let handler_name = ws_metadata.handler_name.clone();
 
-            let js_handler: Function<String, Promise<String>> =
-                handlers_map.get_named_property(&handler_name).map_err(|e| {
-                    Error::from_reason(format!("Failed to get WebSocket handler '{}': {}", handler_name, e))
-                })?;
+            let ws_map = websocket_handlers
+                .as_ref()
+                .ok_or_else(|| Error::from_reason(format!("Missing websocketHandlers map for {}", handler_name)))?;
 
-            let handle_message_tsfn = js_handler
-                .build_threadsafe_function()
-                .build_callback(|ctx| Ok(vec![ctx.value]))
-                .map_err(|e| {
-                    Error::from_reason(format!(
-                        "Failed to build ThreadsafeFunction for WebSocket handler '{}': {}",
-                        handler_name, e
-                    ))
-                })?;
+            let handler_obj: Object = ws_map
+                .get_named_property(&handler_name)
+                .map_err(|e| Error::from_reason(format!("Failed to get WebSocket handler {}: {}", handler_name, e)))?;
 
-            let ws_handler =
-                crate::websocket::NodeWebSocketHandler::new(handler_name.clone(), handle_message_tsfn, None, None);
-
-            let ws_state = spikard_http::WebSocketState::new(ws_handler);
+            let ws_state = crate::websocket::create_websocket_state(&handler_obj)
+                .map_err(|e| Error::from_reason(format!("Failed to build WebSocket state: {}", e)))?;
 
             use axum::routing::get;
             axum_router = axum_router.route(

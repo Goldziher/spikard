@@ -15,6 +15,8 @@ use serde_json::Value;
 use std::sync::Arc;
 use urlencoding::encode;
 
+type MultipartPayload = Option<(Vec<(String, String)>, Vec<super::MultipartFilePart>)>;
+
 /// Core test client for making HTTP requests to a Spikard application.
 ///
 /// This struct wraps axum-test's TestServer and provides a language-agnostic
@@ -64,7 +66,7 @@ impl TestClient {
         path: &str,
         json: Option<Value>,
         form_data: Option<Vec<(String, String)>>,
-        multipart: Option<(Vec<(String, String)>, Vec<super::MultipartFilePart>)>,
+        multipart: MultipartPayload,
         query_params: Option<Vec<(String, String)>>,
         headers: Option<Vec<(String, String)>>,
     ) -> Result<ResponseSnapshot, SnapshotError> {

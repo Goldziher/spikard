@@ -61,19 +61,29 @@ interface NativeClient {
 
 type NativeClientConstructor = new (
 	routesJson: string,
+	websocketRoutesJson: string | null,
 	handlers: Record<string, NativeHandlerFunction>,
+	websocketHandlers: Record<string, Record<string, unknown>>,
 	config: ServerConfig | null,
 ) => NativeClient;
 
 type NativeClientFactory = (
 	routesJson: string,
+	websocketRoutesJson: string | null,
 	handlers: Record<string, NativeHandlerFunction>,
+	websocketHandlers: Record<string, Record<string, unknown>>,
 	config: ServerConfig | null,
 ) => NativeClient;
 
-const defaultNativeClientFactory: NativeClientFactory = (routesJson, handlers, config) => {
+const defaultNativeClientFactory: NativeClientFactory = (
+	routesJson,
+	websocketRoutesJson,
+	handlers,
+	websocketHandlers,
+	config,
+) => {
 	const Ctor = NativeTestClient as NativeClientConstructor;
-	return new Ctor(routesJson, handlers, config);
+	return new Ctor(routesJson, websocketRoutesJson, handlers, websocketHandlers, config);
 };
 
 let nativeClientFactory: NativeClientFactory = defaultNativeClientFactory;
@@ -125,15 +135,17 @@ export class TestClient {
 		}
 		this.app = app;
 		const routesJson = JSON.stringify(app.routes);
+		const websocketRoutesJson = JSON.stringify(app.websocketRoutes ?? []);
 		const handlersMap = Object.fromEntries(
 			Object.entries(app.handlers || {}).map(([name, handler]) => {
 				const nativeHandler = isNativeHandler(handler) ? handler : wrapHandler(handler as HandlerFunction);
 				return [name, nativeHandler];
 			}),
 		);
+		const websocketHandlersMap = app.websocketHandlers || {};
 		const config = app.config ?? null;
 
-		this.nativeClient = nativeClientFactory(routesJson, handlersMap, config);
+		this.nativeClient = nativeClientFactory(routesJson, websocketRoutesJson, handlersMap, websocketHandlersMap, config);
 	}
 
 	/**
