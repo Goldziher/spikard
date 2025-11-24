@@ -66,7 +66,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -88,7 +88,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -110,7 +110,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -132,7 +132,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -154,7 +154,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -177,7 +177,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -199,7 +199,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -218,7 +218,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -237,7 +237,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -256,7 +256,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -275,7 +275,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -295,7 +295,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -317,7 +317,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -336,7 +336,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -355,7 +355,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -374,7 +374,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -394,7 +394,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -413,7 +413,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -432,7 +432,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -451,7 +451,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -470,7 +470,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -489,7 +489,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -509,7 +509,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -528,7 +528,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -547,7 +547,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
@@ -566,7 +566,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: benchmark-harness
           path: ~/.cargo/bin
