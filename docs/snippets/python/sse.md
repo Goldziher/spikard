@@ -1,5 +1,7 @@
 ```python
-from spikard import SseEvent, sse
+from spikard import Spikard, SseEvent, sse
+
+app = Spikard()
 
 @sse("/events")
 async def events():

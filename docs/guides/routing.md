@@ -1,6 +1,6 @@
 # Routing Basics
 
-Routing is uniform across bindings: define an `App`, register routes with typed parameters, and return typed responses.
+Routing is uniform across bindings: create an app, register routes with typed parameters, and return typed responses.
 
 ## Declare routes
 

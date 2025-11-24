@@ -1,4 +1,5 @@
 ```rust
+use axum::response::Json;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use spikard::{get, post, App, RequestContext};
@@ -15,14 +16,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     app.route(get("/users/:id"), |ctx: RequestContext| async move {
         let id = ctx.path_param("id").unwrap_or("0").parse::<i64>().unwrap_or_default();
-        Ok(axum::response::Json(User { id, name: "Alice".into() }).into())
+        Ok(Json(User { id, name: "Alice".into() }).into())
     })?;
 
     app.route(
         post("/users").request_body::<User>().response_body::<User>(),
         |ctx: RequestContext| async move {
             let user: User = ctx.json()?;
-            Ok(axum::response::Json(user).into())
+            Ok(Json(user).into())
         },
     )?;
 

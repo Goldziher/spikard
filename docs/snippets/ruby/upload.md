@@ -1,8 +1,10 @@
 ```ruby
 require "spikard"
 
-app.post "/upload" do |request|
-  file = request[:body]["file"]
+app = Spikard::App.new
+
+app.post "/upload" do |_params, _query, body|
+  file = body["file"]
   { filename: file[:filename], size: file[:tempfile].size }
 end
 ```

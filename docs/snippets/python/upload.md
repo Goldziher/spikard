@@ -1,5 +1,7 @@
 ```python
-from spikard import UploadFile
+from spikard import Spikard, UploadFile
+
+app = Spikard()
 
 @app.post("/upload")
 async def upload(file: UploadFile) -> dict:

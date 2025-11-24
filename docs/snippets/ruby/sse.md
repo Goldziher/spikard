@@ -1,7 +1,10 @@
 ```ruby
+require "spikard"
 require "json"
 
-app.get "/events" do |_request|
+app = Spikard::App.new
+
+app.get "/events" do |_params, _query, _body|
   Enumerator.new do |y|
     3.times do |i|
       y << "data: #{JSON.dump({ tick: i })}\n\n"

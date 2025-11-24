@@ -1,3 +1,1 @@
-```bash
-spikard run app.py --host 0.0.0.0 --port 8000
-```
+Runtime serving via CLI is planned. Start your binding directly, e.g. `python app.py`.

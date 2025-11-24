@@ -1,8 +1,10 @@
 ```ruby
-App.get("/orders/:order_id") do |ctx|
+app = Spikard::App.new
+
+app.get("/orders/:order_id") do |params, query, _body|
   {
-    id: ctx.params[:order_id].to_i,
-    details: ctx.query["details"] == "true",
+    id: params[:order_id].to_i,
+    details: query["details"] == "true",
   }
 end
 ```

@@ -38,14 +38,13 @@ async def create_payment(payment: Payment) -> Payment:
     return payment
 ```
 
-## Middleware
+## Lifecycle hooks
 
 ```python
-def logging_middleware(ctx, next_fn):
-    print(f"{ctx.method} {ctx.path}")
-    return next_fn()
-
-app.use(logging_middleware)
+@app.on_request
+async def logging_hook(request: dict[str, object]):
+    print(f"{request['method']} {request['path']}")
+    return request
 ```
 
 ## Requests & Responses
@@ -54,8 +53,8 @@ app.use(logging_middleware)
 - Responses: return Python objects/Structs; the runtime serializes.
 
 ## Deployment
-- Local: `spikard run app.py` or `python app.py`.
-- Production: build with the CLI or embed routes in Rust; set `SPIKARD_PORT`/`SPIKARD_HOST` via env.
+- Local: `python app.py`.
+- Production: build with the binding and set `SPIKARD_PORT`/`SPIKARD_HOST` via env.
 
 ## Troubleshooting
 - Ensure Python 3.11+ and Rust toolchain are installed.

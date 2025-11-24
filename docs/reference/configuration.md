@@ -20,10 +20,9 @@ Configuration is code-first with environment overrides. Use these settings consi
 - Enable request/response validation globally or per route (bindings surface this via schemas/DTOs).
 - Schema sources: derived (`JsonSchema`, msgspec/Typed schemas, Zod) or explicit JSON Schema objects.
 
-## CLI Flags (common)
-- `--host`, `--port` for `spikard run`
-- `--workers` (planned multi-worker support)
-- `--reload` (planned) for dev-mode restarts
+## CLI Flags (codegen/validation)
+- `spikard generate` and `spikard validate-asyncapi` use standard file/path flags
+- Runtime serving via the CLI is planned; use binding-specific `run` methods today
 
 ## Environment Variables (convention)
 - `SPIKARD_HOST`, `SPIKARD_PORT`

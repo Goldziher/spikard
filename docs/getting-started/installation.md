@@ -32,13 +32,11 @@ Spikard ships a Rust core plus bindings for Python, TypeScript/Node, and Ruby. I
 
 ## CLI
 
-Install the CLI for running apps and code generation:
+Install the CLI for code generation and schema validation:
 
 ```bash
 cargo install spikard-cli
 ```
-
-Run with `spikard run path/to/app.py` (or the equivalent entrypoint for other bindings).
 
 ## Local repo setup
 
