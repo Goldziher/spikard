@@ -169,13 +169,9 @@ impl Dependency for PythonFactoryDependency {
                         let final_value = tokio::task::spawn_blocking(move || {
                             Python::with_gil(|py| -> PyResult<Py<PyAny>> {
                                 let asyncio = py.import("asyncio")?;
-                                let event_loop = PYTHON_EVENT_LOOP
-                                    .get()
-                                    .ok_or_else(|| {
-                                        pyo3::exceptions::PyRuntimeError::new_err(
-                                            "Python event loop not initialized"
-                                        )
-                                    })?;
+                                let event_loop = PYTHON_EVENT_LOOP.get().ok_or_else(|| {
+                                    pyo3::exceptions::PyRuntimeError::new_err("Python event loop not initialized")
+                                })?;
 
                                 // coroutine_py is the async generator object
                                 let aiter = coroutine_py.bind(py);
@@ -183,7 +179,8 @@ impl Dependency for PythonFactoryDependency {
 
                                 // Await the __anext__ coroutine
                                 let loop_obj = event_loop.bind(py);
-                                let future = asyncio.call_method1("run_coroutine_threadsafe", (first_value_coro, loop_obj))?;
+                                let future =
+                                    asyncio.call_method1("run_coroutine_threadsafe", (first_value_coro, loop_obj))?;
                                 let result = future.call_method0("result")?;
                                 Ok(result.into())
                             })
@@ -203,13 +200,11 @@ impl Dependency for PythonFactoryDependency {
                                 let _ = tokio::task::spawn_blocking(move || {
                                     Python::with_gil(|py| -> PyResult<()> {
                                         let asyncio = py.import("asyncio")?;
-                                        let event_loop = PYTHON_EVENT_LOOP
-                                            .get()
-                                            .ok_or_else(|| {
-                                                pyo3::exceptions::PyRuntimeError::new_err(
-                                                    "Python event loop not initialized"
-                                                )
-                                            })?;
+                                        let event_loop = PYTHON_EVENT_LOOP.get().ok_or_else(|| {
+                                            pyo3::exceptions::PyRuntimeError::new_err(
+                                                "Python event loop not initialized",
+                                            )
+                                        })?;
 
                                         // Close the async generator by calling aclose()
                                         let aiter = generator_obj.bind(py);
@@ -217,7 +212,8 @@ impl Dependency for PythonFactoryDependency {
 
                                         // Await the aclose coroutine
                                         let loop_obj = event_loop.bind(py);
-                                        let future = asyncio.call_method1("run_coroutine_threadsafe", (close_coro, loop_obj))?;
+                                        let future =
+                                            asyncio.call_method1("run_coroutine_threadsafe", (close_coro, loop_obj))?;
                                         let _ = future.call_method0("result")?;
                                         Ok(())
                                     })
@@ -232,13 +228,11 @@ impl Dependency for PythonFactoryDependency {
                         let result = tokio::task::spawn_blocking(move || {
                             Python::with_gil(|py| -> PyResult<Py<PyAny>> {
                                 let asyncio = py.import("asyncio")?;
-                                let event_loop = PYTHON_EVENT_LOOP
-                                    .get()
-                                    .ok_or_else(|| {
-                                        pyo3::exceptions::PyRuntimeError::new_err(
-                                            "Python event loop not initialized. Call init_python_event_loop() first."
-                                        )
-                                    })?;
+                                let event_loop = PYTHON_EVENT_LOOP.get().ok_or_else(|| {
+                                    pyo3::exceptions::PyRuntimeError::new_err(
+                                        "Python event loop not initialized. Call init_python_event_loop() first.",
+                                    )
+                                })?;
 
                                 let coroutine = coroutine_py.bind(py);
                                 let loop_obj = event_loop.bind(py);

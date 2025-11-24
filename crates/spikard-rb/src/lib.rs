@@ -112,6 +112,8 @@ struct RubyHandlerInner {
     request_validator: Option<Arc<SchemaValidator>>,
     response_validator: Option<Arc<SchemaValidator>>,
     parameter_validator: Option<ParameterValidator>,
+    #[cfg(feature = "di")]
+    handler_dependencies: Vec<String>,
 }
 
 struct HandlerResponsePayload {
@@ -475,6 +477,8 @@ impl RubyHandler {
                 request_validator: route.request_validator.clone(),
                 response_validator: route.response_validator.clone(),
                 parameter_validator: route.parameter_validator.clone(),
+                #[cfg(feature = "di")]
+                handler_dependencies: route.handler_dependencies.clone(),
             }),
         })
     }
@@ -501,6 +505,8 @@ impl RubyHandler {
                 request_validator: route.request_validator.clone(),
                 response_validator: route.response_validator.clone(),
                 parameter_validator: route.parameter_validator.clone(),
+                #[cfg(feature = "di")]
+                handler_dependencies: route.handler_dependencies.clone(),
             }),
         })
     }
@@ -565,16 +571,34 @@ impl RubyHandler {
         let handler_result = {
             if let Some(deps) = &request_data.dependencies {
                 // Build keyword arguments hash from dependencies
+                // ONLY include dependencies that the handler actually declared
                 let kwargs_hash = ruby.hash_new();
 
-                for key in deps.keys() {
-                    if let Some(value) = deps.get_arc(&key) {
+                // Check if all required handler dependencies are present
+                // If any are missing, return error BEFORE calling handler
+                for key in &self.inner.handler_dependencies {
+                    if !deps.contains(key) {
+                        // Handler requires a dependency that was not resolved
+                        // This should have been caught by DI system, but safety check here
+                        return Err((
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            format!(
+                                "Handler '{}' requires dependency '{}' which was not resolved",
+                                self.inner.handler_name, key
+                            ),
+                        ));
+                    }
+                }
+
+                // Filter dependencies: only pass those declared by the handler
+                for key in &self.inner.handler_dependencies {
+                    if let Some(value) = deps.get_arc(key) {
                         // Convert dependency value to JSON
                         if let Some(json_value) = value.downcast_ref::<serde_json::Value>() {
                             // Convert JSON value to Ruby value
                             match crate::di::json_to_ruby(&ruby, json_value) {
                                 Ok(ruby_value) => {
-                                    let key_sym = ruby.to_symbol(&key);
+                                    let key_sym = ruby.to_symbol(key);
                                     if let Err(e) = kwargs_hash.aset(key_sym, ruby_value) {
                                         return Err((
                                             StatusCode::INTERNAL_SERVER_ERROR,
@@ -600,16 +624,20 @@ impl RubyHandler {
                 // Equivalent Ruby code:
                 //   lambda { |req, kwargs| handler_proc.call(req, **kwargs) }.call(request, kwargs_hash)
 
-                let wrapper_code = ruby.eval::<Value>(r#"
+                let wrapper_code = ruby
+                    .eval::<Value>(
+                        r#"
                     lambda do |proc, request, kwargs|
                         proc.call(request, **kwargs)
                     end
-                "#).map_err(|e| {
-                    (
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        format!("Failed to create kwarg wrapper: {}", e),
+                "#,
                     )
-                })?;
+                    .map_err(|e| {
+                        (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            format!("Failed to create kwarg wrapper: {}", e),
+                        )
+                    })?;
 
                 wrapper_code.funcall("call", (handler_proc, request_value, kwargs_hash))
             } else {
