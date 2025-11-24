@@ -1,18 +1,38 @@
 ```typescript
-import { App } from "spikard";
+import { Spikard, type Request } from "spikard";
 import { z } from "zod";
 
-const User = z.object({ id: z.number(), name: z.string() });
-type User = z.infer<typeof User>;
+const UserSchema = z.object({ id: z.number(), name: z.string() });
+type User = z.infer<typeof UserSchema>;
 
-const app = new App();
+const app = new Spikard();
 
-app.get("/users/:id", ({ params }): User => ({
-  id: Number(params.id),
-  name: "Alice",
-}));
+const getUser = async (_req: Request): Promise<User> => {
+  return { id: 1, name: "Alice" };
+};
 
-app.post("/users", ({ body }): User => User.parse(body));
+const createUser = async (req: Request): Promise<User> => {
+  const user = UserSchema.parse(req.json());
+  return user;
+};
 
-app.listen({ port: 8000 });
+app.addRoute(
+  { method: "GET", path: "/users/:id", handler_name: "getUser", is_async: true },
+  getUser,
+);
+
+app.addRoute(
+  {
+    method: "POST",
+    path: "/users",
+    handler_name: "createUser",
+    request_schema: UserSchema,
+    is_async: true,
+  },
+  createUser,
+);
+
+if (require.main === module) {
+  app.run({ port: 8000 });
+}
 ```

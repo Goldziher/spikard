@@ -1,6 +1,10 @@
 ```typescript
-app.use(async (ctx, next) => {
-  console.log(`${ctx.method} ${ctx.path}`);
-  return next();
+import { Spikard, type Request } from "spikard";
+
+const app = new Spikard();
+
+app.onRequest(async (request: Request) => {
+  console.log(`${request.method} ${request.path}`);
+  return request;
 });
 ```

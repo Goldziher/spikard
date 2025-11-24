@@ -111,27 +111,43 @@ if __name__ == "__main__":
 
 ### TypeScript (Node/Bun)
 ```typescript
-import { App } from "@spikard/node";
+import { Spikard, type Request } from "spikard";
 import { z } from "zod";
 
 const UserSchema = z.object({
   id: z.number(),
   name: z.string(),
 });
+type User = z.infer<typeof UserSchema>;
 
-const app = new App();
+const app = new Spikard();
 
-app.get("/users/:id", async (req) => {
-  const id = parseInt(req.params.id);
-  return { id, name: "Alice" };
-});
+const getUser = async (_req: Request): Promise<User> => {
+  return { id: 1, name: "Alice" };
+};
 
-app.post("/users", async (req) => {
-  const user = UserSchema.parse(req.body);
-  return user;
-});
+const createUser = async (req: Request): Promise<User> => {
+  return UserSchema.parse(req.json());
+};
 
-app.listen(8000);
+app.addRoute(
+  { method: "GET", path: "/users/:id", handler_name: "getUser", is_async: true },
+  getUser,
+);
+
+app.addRoute(
+  {
+    method: "POST",
+    path: "/users",
+    handler_name: "createUser",
+    request_schema: UserSchema,
+    response_schema: UserSchema,
+    is_async: true,
+  },
+  createUser,
+);
+
+app.run({ port: 8000 });
 ```
 
 ### Ruby
@@ -154,9 +170,9 @@ app.run(port: 8000)
 
 ### Rust
 ```rust
-use spikard::{App, Request, Response, IntoResponse};
-use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+use spikard::prelude::*;
 
 #[derive(Serialize, Deserialize, JsonSchema)]
 struct User {
@@ -165,20 +181,28 @@ struct User {
 }
 
 #[tokio::main]
-async fn main() {
-    let app = App::new();
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut app = App::new();
 
-    app.get("/users/:id", |req: Request| async move {
-        let id: i32 = req.param("id").unwrap();
-        User { id, name: "Alice".to_string() }.into_response()
-    });
+    app.route(get("/users/:id"), |ctx: Context| async move {
+        let id: i32 = ctx
+            .path_param("id")
+            .unwrap_or("0")
+            .parse()
+            .unwrap_or_default();
+        Ok(Json(User { id, name: "Alice".to_string() }))
+    })?;
 
-    app.post("/users", |req: Request| async move {
-        let user: User = req.json().await.unwrap();
-        user.into_response()
-    });
+    app.route(
+        post("/users").request_body::<User>().response_body::<User>(),
+        |ctx: Context| async move {
+            let user: User = ctx.json()?;
+            Ok(Json(user))
+        },
+    )?;
 
-    app.listen("0.0.0.0:8000").await.unwrap();
+    app.run().await?;
+    Ok(())
 }
 ```
 
