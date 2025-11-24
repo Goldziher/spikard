@@ -36,7 +36,7 @@ Decorators (`get`, `post`, etc.) are available for metadata-only definitions, bu
 ## Middleware & Hooks
 - Use lifecycle hooks: `app.onRequest`, `app.preValidation`, `app.onResponse`, `app.onError`.
 - Wrap handlers with `wrapHandler` / `wrapBodyHandler` for typed params/query/body extraction.
-- Route params are not injected today; parse from `request.path` or metadata until param support lands.
+- Path/query params: route params are not injected today; parse from `request.path` and `new URLSearchParams(request.queryString)` until param support lands.
 
 ## Deployment
 - Local: `node app.js`/`ts-node app.ts`; set `PORT` via `app.run({ port })`.
