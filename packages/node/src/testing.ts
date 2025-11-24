@@ -8,7 +8,8 @@ import {
 	type WebSocketTestConnection,
 } from "../index.js";
 import type { ServerConfig } from "./config";
-import type { HandlerFunction, SpikardApp } from "./index";
+import { isNativeHandler, wrapHandler } from "./handler-wrapper";
+import type { HandlerFunction, NativeHandlerFunction, SpikardApp } from "./index";
 import type { JsonValue } from "./types";
 
 /**
@@ -60,13 +61,13 @@ interface NativeClient {
 
 type NativeClientConstructor = new (
 	routesJson: string,
-	handlers: Record<string, HandlerFunction>,
+	handlers: Record<string, NativeHandlerFunction>,
 	config: ServerConfig | null,
 ) => NativeClient;
 
 type NativeClientFactory = (
 	routesJson: string,
-	handlers: Record<string, HandlerFunction>,
+	handlers: Record<string, NativeHandlerFunction>,
 	config: ServerConfig | null,
 ) => NativeClient;
 
@@ -124,7 +125,12 @@ export class TestClient {
 		}
 		this.app = app;
 		const routesJson = JSON.stringify(app.routes);
-		const handlersMap = app.handlers || {};
+		const handlersMap = Object.fromEntries(
+			Object.entries(app.handlers || {}).map(([name, handler]) => {
+				const nativeHandler = isNativeHandler(handler) ? handler : wrapHandler(handler as HandlerFunction);
+				return [name, nativeHandler];
+			}),
+		);
 		const config = app.config ?? null;
 
 		this.nativeClient = nativeClientFactory(routesJson, handlersMap, config);

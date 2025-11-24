@@ -22,12 +22,8 @@ export type {
 	StaticFilesConfig,
 } from "./config";
 export {
-	type HandlerPayload,
-	type RequestData,
-	type TypedHandler,
 	wrapBodyHandler,
 	wrapHandler,
-	wrapHandlerWithContext,
 } from "./handler-wrapper";
 export type { Body, Path, Query, QueryDefault } from "./params";
 export type { Request } from "./request";
@@ -38,12 +34,12 @@ export { TestClient, type TestResponse } from "./testing";
 export type {
 	Base64EncodedBody,
 	HandlerFunction,
-	HandlerPayload,
 	HandlerResult,
 	JsonPrimitive,
 	JsonRecord,
 	JsonValue,
 	MaybePromise,
+	NativeHandlerFunction,
 	StructuredHandlerResponse,
 } from "./types";
 export { UploadFile } from "./upload";
@@ -112,7 +108,7 @@ export interface SpikardApp {
 	/** Route metadata array */
 	routes: RouteMetadata[];
 	/** Handler functions mapped by handler_name */
-	handlers: Record<string, HandlerFunction>;
+	handlers: Record<string, HandlerFunction | NativeHandlerFunction>;
 	/** Optional server configuration (for middleware, auth, etc.) */
 	config?: import("./config").ServerConfig;
 	/** Optional lifecycle hooks */

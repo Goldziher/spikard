@@ -35,49 +35,30 @@ fn is_debug_mode() -> bool {
         .unwrap_or(false)
 }
 
-fn default_params(request_data: &RequestData) -> Value {
-    let mut params = JsonMap::new();
-
-    for (key, value) in &*request_data.path_params {
-        params.insert(key.clone(), Value::String(value.clone()));
-    }
-
-    if let Value::Object(query) = &request_data.query_params {
-        for (key, value) in query {
-            params.insert(key.clone(), value.clone());
-        }
-    }
-
-    for (key, value) in &*request_data.headers {
-        params.insert(key.clone(), Value::String(value.clone()));
-    }
-
-    for (key, value) in &*request_data.cookies {
-        params.insert(key.clone(), Value::String(value.clone()));
-    }
-
-    Value::Object(params)
-}
-
 fn build_js_payload(handler: &JsHandler, request_data: &RequestData, validated_params: Option<Value>) -> Value {
-    let params_value = validated_params.unwrap_or_else(|| default_params(request_data));
-
-    let path_params = serde_json::to_value(&*request_data.path_params).unwrap_or(Value::Null);
-    let raw_query = serde_json::to_value(&*request_data.raw_query_params).unwrap_or(Value::Null);
+    let path_params =
+        validated_params.unwrap_or_else(|| serde_json::to_value(&*request_data.path_params).unwrap_or(Value::Null));
     let headers = serde_json::to_value(&*request_data.headers).unwrap_or(Value::Null);
     let cookies = serde_json::to_value(&*request_data.cookies).unwrap_or(Value::Null);
-    let body = request_data.body.clone();
+    let body_bytes = request_data
+        .raw_body
+        .as_ref()
+        .map(|bytes| Value::Array(bytes.iter().copied().map(|b| Value::Number(b.into())).collect()))
+        .unwrap_or(Value::Null);
+    let query: JsonMap<String, Value> = request_data
+        .raw_query_params
+        .iter()
+        .filter_map(|(k, values)| values.first().map(|value| (k.clone(), Value::String(value.clone()))))
+        .collect();
 
     json!({
         "method": handler.method,
         "path": handler.path,
-        "pathParams": path_params,
-        "query": request_data.query_params,
-        "rawQuery": raw_query,
+        "params": path_params,
+        "query": Value::Object(query),
         "headers": headers,
         "cookies": cookies,
-        "params": params_value,
-        "body": body
+        "body": body_bytes
     })
 }
 

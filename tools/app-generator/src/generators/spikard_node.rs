@@ -1,8 +1,8 @@
 //! Spikard-Node code generator
 //!
 //! Generates TypeScript code using Spikard Node bindings with ergonomic
-//! handler wrappers (wrapHandler, wrapBodyHandler, wrapHandlerWithContext)
-//! that automatically convert file metadata to UploadFile instances
+//! handler wrappers (wrapHandler, wrapBodyHandler) that automatically
+//! convert file metadata to UploadFile instances
 
 use crate::analyzer::{RouteAnalysis, RouteInfo};
 use anyhow::Result;

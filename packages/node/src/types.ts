@@ -24,10 +24,12 @@ export interface StructuredHandlerResponse {
 	body?: HandlerBody;
 }
 
-export type HandlerPayload = Request | JsonValue | string | BinaryLike | null | undefined;
-
 export type HandlerResult = StructuredHandlerResponse | JsonValue | StreamingResponse | undefined;
 
 export type HandlerFunction<TReturn extends HandlerResult = HandlerResult> = (
-	payload: HandlerPayload,
+	request: Request,
 ) => MaybePromise<TReturn>;
+
+export type NativeHandlerFunction<TReturn extends HandlerResult = HandlerResult> = (
+	requestJson: string,
+) => MaybePromise<TReturn | string>;
