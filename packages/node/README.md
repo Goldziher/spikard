@@ -25,7 +25,7 @@ pnpm build
 ## Quick Start
 
 ```typescript
-import { Spikard } from "spikard";
+import { Spikard, type Request } from "spikard";
 import { z } from "zod";
 
 const UserSchema = z.object({
@@ -38,24 +38,18 @@ type User = z.infer<typeof UserSchema>;
 
 const app = new Spikard();
 
-async function getUser(req) {
-  const id = parseInt(req.params.id);
+const getUser = async (req: Request): Promise<User> => {
+  const id = Number(req.params["id"] ?? 0);
   return { id, name: "Alice", email: "alice@example.com" };
-}
+};
 
-async function createUser(req) {
-  const user = req.json<User>();
-  return user;
-}
+const createUser = async (req: Request): Promise<User> => {
+  return UserSchema.parse(req.json());
+};
 
 app.addRoute(
-  {
-    method: "GET",
-    path: "/users/:id",
-    handler_name: "getUser",
-    is_async: true,
-  },
-  getUser
+  { method: "GET", path: "/users/:id", handler_name: "getUser", is_async: true },
+  getUser,
 );
 
 app.addRoute(
@@ -64,9 +58,10 @@ app.addRoute(
     path: "/users",
     handler_name: "createUser",
     request_schema: UserSchema,
+    response_schema: UserSchema,
     is_async: true,
   },
-  createUser
+  createUser,
 );
 
 if (require.main === module) {
@@ -81,15 +76,15 @@ if (require.main === module) {
 Routes are registered manually using `app.addRoute(metadata, handler)`:
 
 ```typescript
-import { Spikard } from "spikard";
+import { Spikard, type Request } from "spikard";
 
 const app = new Spikard();
 
-async function listUsers() {
+async function listUsers(_req: Request): Promise<{ users: unknown[] }> {
   return { users: [] };
 }
 
-async function createUser(req) {
+async function createUser(_req: Request): Promise<{ created: boolean }> {
   return { created: true };
 }
 
@@ -168,6 +163,29 @@ post("/users", { bodySchema: userSchema })(async function createUser(req) {
 });
 ```
 
+## Dependency Injection
+
+Register values or factories and access them via `request.dependencies`:
+
+```typescript
+const app = new Spikard();
+
+app.provide("config", { dbUrl: "postgresql://localhost/app" });
+app.provide(
+  "dbPool",
+  async ({ config }) => ({ url: config.dbUrl, driver: "pool" }),
+  { dependsOn: ["config"], singleton: true },
+);
+
+app.addRoute(
+  { method: "GET", path: "/stats", handler_name: "stats", is_async: true },
+  async (req) => {
+    const deps = req.dependencies ?? {};
+    return { db: deps.dbPool?.url, env: deps.config?.dbUrl };
+  },
+);
+```
+
 ## Request Handling
 
 ### Accessing Request Data
@@ -220,17 +238,6 @@ post("/login")(async function login(req) {
 For automatic parameter extraction:
 
 ```typescript
-import { wrapHandler, wrapBodyHandler } from "spikard";
-
-// Body-only wrapper
-post("/users", {}, wrapBodyHandler(async (body: CreateUserRequest) => {
-  return { id: 1, name: body.name };
-}));
-
-// Full context wrapper
-get("/users/:id", {}, wrapHandler(async (params, query, body) => {
-  return { id: params.id, query };
-}));
 ```
 
 ## File Uploads
@@ -406,6 +413,7 @@ const response = await ws.receiveJson();
 expect(response.echo.message).toBe("hello");
 await ws.close();
 ```
+
 
 ### SSE Testing
 

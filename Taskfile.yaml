@@ -167,6 +167,26 @@ tasks:
     desc: "Run Prek hooks across the repo"
     cmds:
       - prek run --all-files
+  docs:build:
+    desc: "Build documentation"
+    cmds:
+      - uv run mkdocs build --clean --strict
+  docs:serve:
+    desc: "Serve documentation locally"
+    cmds:
+      - uv run mkdocs serve
+  docs:serve:versioned:
+    desc: "Serve versioned documentation with mike"
+    cmds:
+      - uv run mike serve
+  docs:deploy:
+    desc: "Build and stage versioned documentation with mike"
+    cmds:
+      - uv run mike deploy --update-aliases latest
+  docs:publish:
+    desc: "Publish documentation with mike (push latest alias)"
+    cmds:
+      - uv run mike deploy --push latest
 
   python:test:
     desc: "Run Python integration tests"

@@ -111,27 +111,44 @@ if __name__ == "__main__":
 
 ### TypeScript (Node/Bun)
 ```typescript
-import { App } from "@spikard/node";
+import { Spikard, type Request } from "spikard";
 import { z } from "zod";
 
 const UserSchema = z.object({
   id: z.number(),
   name: z.string(),
 });
+type User = z.infer<typeof UserSchema>;
 
-const app = new App();
+const app = new Spikard();
 
-app.get("/users/:id", async (req) => {
-  const id = parseInt(req.params.id);
+const getUser = async (req: Request): Promise<User> => {
+  const id = Number(req.params["id"] ?? 0);
   return { id, name: "Alice" };
-});
+};
 
-app.post("/users", async (req) => {
-  const user = UserSchema.parse(req.body);
-  return user;
-});
+const createUser = async (req: Request): Promise<User> => {
+  return UserSchema.parse(req.json());
+};
 
-app.listen(8000);
+app.addRoute(
+  { method: "GET", path: "/users/:id", handler_name: "getUser", is_async: true },
+  getUser,
+);
+
+app.addRoute(
+  {
+    method: "POST",
+    path: "/users",
+    handler_name: "createUser",
+    request_schema: UserSchema,
+    response_schema: UserSchema,
+    is_async: true,
+  },
+  createUser,
+);
+
+app.run({ port: 8000 });
 ```
 
 ### Ruby
@@ -140,13 +157,14 @@ require 'spikard'
 
 app = Spikard::App.new
 
-app.get('/users/:id') do |req|
-  { id: req.params[:id].to_i, name: 'Alice' }
+app.get('/users/:id') do |request|
+  user_id = request[:path_params]["id"].to_i
+  { id: user_id, name: 'Alice' }
 end
 
-app.post('/users') do |req|
-  # Validation via DrySchema
-  req.body # Already validated
+app.post('/users') do |request|
+  # request[:body] is validated when a schema is provided
+  request[:body]
 end
 
 app.run(port: 8000)
@@ -154,9 +172,9 @@ app.run(port: 8000)
 
 ### Rust
 ```rust
-use spikard::{App, Request, Response, IntoResponse};
-use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+use spikard::prelude::*;
 
 #[derive(Serialize, Deserialize, JsonSchema)]
 struct User {
@@ -165,20 +183,28 @@ struct User {
 }
 
 #[tokio::main]
-async fn main() {
-    let app = App::new();
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut app = App::new();
 
-    app.get("/users/:id", |req: Request| async move {
-        let id: i32 = req.param("id").unwrap();
-        User { id, name: "Alice".to_string() }.into_response()
-    });
+    app.route(get("/users/:id"), |ctx: Context| async move {
+        let id: i32 = ctx
+            .path_param("id")
+            .unwrap_or("0")
+            .parse()
+            .unwrap_or_default();
+        Ok(Json(User { id, name: "Alice".to_string() }))
+    })?;
 
-    app.post("/users", |req: Request| async move {
-        let user: User = req.json().await.unwrap();
-        user.into_response()
-    });
+    app.route(
+        post("/users").request_body::<User>().response_body::<User>(),
+        |ctx: Context| async move {
+            let user: User = ctx.json()?;
+            Ok(Json(user))
+        },
+    )?;
 
-    app.listen("0.0.0.0:8000").await.unwrap();
+    app.run().await?;
+    Ok(())
 }
 ```
 
@@ -251,11 +277,9 @@ Fine-grained control over request processing:
 
 ### Dependency Injection
 
-*(Coming very soon)*
-
 - Container-based DI for services and dependencies
-- Scoped injection (request, singleton, transient)
-- Language-idiomatic integration (decorators in Python, providers in TypeScript)
+- Scoped injection (request cache, singleton, per-call)
+- Language-idiomatic integration (Python `Provide`, TypeScript `provide`, Ruby `provide` with keyword deps, Rust `ServerConfig::provide_*`)
 
 ## Code Generation & CLI
 
@@ -346,7 +370,7 @@ Node.js, Ruby, and WASM benchmarks coming soon.
 - [x] OpenAPI 3.1 code generation
 - [x] AsyncAPI code generation
 - [x] Documentation generation
-- [ ] **Dependency Injection** - *In progress*
+- [x] **Dependency Injection**
 - [ ] JSON-RPC protocol support
 - [ ] Protobuf with protoc integration
 - [ ] GraphQL support (queries, mutations, subscriptions)

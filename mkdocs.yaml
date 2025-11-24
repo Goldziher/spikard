@@ -1,0 +1,216 @@
+site_name: Spikard
+site_description: A polyglot API toolkit with a Rust core and first-class bindings for Python, TypeScript, Ruby, and Rust
+site_url: https://spikard.dev
+site_author: Spikard Contributors
+repo_name: Goldziher/spikard
+repo_url: https://github.com/Goldziher/spikard
+edit_uri: edit/main/docs/
+copyright: |
+  Copyright &copy; 2023-2025 Spikard Contributors<br>
+  <a href="#__consent">Change cookie settings</a>
+
+theme:
+  name: material
+  logo: assets/logo.svg
+  favicon: assets/favicon.svg
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep-purple
+      accent: cyan
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep-purple
+      accent: cyan
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.path
+    - navigation.prune
+    - navigation.indexes
+    - navigation.sections
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.tracking
+    - navigation.top
+    - navigation.footer
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    - toc.integrate
+    - announce.dismiss
+    - content.action.edit
+    - content.action.view
+  icon:
+    repo: fontawesome/brands/github
+  language: en
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      linenums: false
+      use_pygments: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets:
+      base_path: ["docs", "."]
+      check_paths: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+plugins:
+  - search
+  - tags
+  - minify:
+      minify_html: true
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [packages/python]
+          options:
+            show_source: true
+            show_root_heading: true
+            heading_level: 2
+            show_category_heading: true
+            show_if_no_docstring: false
+            show_signature_annotations: true
+            show_submodules: false
+            docstring_style: google
+            docstring_section_style: spacy
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: timeago
+      fallback_to_build_date: true
+      enabled: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Goldziher/spikard
+      name: View on GitHub
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/spikard/
+      name: View on PyPI
+    - icon: fontawesome/brands/npm
+      link: https://www.npmjs.com/package/spikard
+      name: View on npm
+    - icon: fontawesome/brands/rust
+      link: https://crates.io/crates/spikard
+      name: View on crates.io
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/pXxagNK2zN
+      name: Chat on Discord
+  version:
+    provider: mike
+    default: latest
+    alias: true
+  analytics:
+    provider: google
+    property: !ENV [GOOGLE_ANALYTICS_KEY, ""]
+  status:
+    new: Recently added
+    deprecated: Deprecated
+  repo:
+    stars: true
+    forks: true
+
+extra_css:
+  - css/extra.css
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quickstart.md
+  - Features: features.md
+  - Concepts:
+      - Architecture: concepts/architecture.md
+      - Runtime Model: concepts/runtime.md
+      - Validation Engine: concepts/validation.md
+      - Middleware & Extensions: concepts/middleware.md
+      - Streaming & Async IO: concepts/streaming.md
+      - Python Binding Architecture: python/architecture.md
+  - Guides:
+      - Routing Basics: guides/routing.md
+      - Requests & Responses: guides/requests.md
+      - Configuration: guides/configuration.md
+      - Middleware: guides/middleware.md
+      - Validation Flows: guides/validation.md
+      - Dependency Injection: guides/dependency-injection.md
+      - Deployment: guides/deployment.md
+  - CLI: cli/usage.md
+  - Bindings:
+      - Python: bindings/python.md
+      - TypeScript / Node: bindings/typescript.md
+      - Ruby: bindings/ruby.md
+      - Rust: bindings/rust.md
+      - WASM / Edge: bindings/wasm.md
+  - Playbooks:
+      - Auth & Guards: playbooks/auth.md
+      - Logging & Tracing: playbooks/logging.md
+      - File Uploads: playbooks/uploads.md
+      - Streaming & Real-Time: playbooks/streaming.md
+      - Error Handling: playbooks/errors.md
+      - Background Tasks: playbooks/background.md
+  - API Reference:
+      - Python: reference/api-python.md
+      - TypeScript: reference/api-typescript.md
+      - Ruby: reference/api-ruby.md
+      - Rust: reference/api-rust.md
+      - Configuration: reference/configuration.md
+      - Types: reference/types.md
+      - Errors: reference/errors.md
+  - Architecture Decisions:
+      - ADR Overview: adr/README.md
+      - ADR 0001 - Architecture and Principles: adr/0001-architecture-and-principles.md
+      - ADR 0002 - Runtime and Middleware: adr/0002-runtime-and-middleware.md
+      - ADR 0003 - Validation and Fixtures: adr/0003-validation-and-fixtures.md
+      - ADR 0004 - Code Generation: adr/0004-code-generation.md
+      - ADR 0005 - Lifecycle Hooks: adr/0005-lifecycle-hooks.md
+      - ADR 0006 - Streaming and Async Protocols: adr/0006-streaming-and-async-protocols.md
+      - ADR 0007 - Observability and OTEL: adr/0007-observability-and-otel.md
+  - Benchmarks: benchmarks/harness-design.md
+  - Contributing: contributing.md
+  - Changelog: changelog.md

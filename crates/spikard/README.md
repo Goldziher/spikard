@@ -19,10 +19,9 @@ tokio = { version = "1", features = ["full"] }
 ## Quick Start
 
 ```rust
-use spikard::{App, get, post, RequestContext, HandlerResult};
-use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
-use axum::http::{Response, StatusCode};
+use serde::{Deserialize, Serialize};
+use spikard::prelude::*;
 
 #[derive(Deserialize, Serialize, JsonSchema)]
 struct User {
@@ -31,45 +30,27 @@ struct User {
     email: String,
 }
 
-async fn get_user(ctx: RequestContext) -> HandlerResult {
-    let id: u64 = ctx.path_param("id")
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(0);
-
-    let user = User {
-        id,
-        name: "Alice".to_string(),
-        email: "alice@example.com".to_string(),
-    };
-
-    let json = serde_json::to_string(&user).unwrap();
-    Ok(Response::builder()
-        .status(StatusCode::OK)
-        .header("content-type", "application/json")
-        .body(axum::body::Body::from(json))
-        .unwrap())
-}
-
-async fn create_user(ctx: RequestContext) -> HandlerResult {
-    let user: User = ctx.json()?;
-    let json = serde_json::to_string(&user).unwrap();
-    Ok(Response::builder()
-        .status(StatusCode::CREATED)
-        .header("content-type", "application/json")
-        .body(axum::body::Body::from(json))
-        .unwrap())
-}
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut app = App::new();
 
-    app.route(get("/users/:id"), get_user)?;
+    app.route(get("/users/:id"), |ctx: Context| async move {
+        let id: u64 = ctx.path_param("id").unwrap_or("0").parse().unwrap_or(0);
+        Ok(Json(User {
+            id,
+            name: "Alice".to_string(),
+            email: "alice@example.com".to_string(),
+        }))
+    })?;
+
     app.route(
         post("/users")
             .request_body::<User>()
             .response_body::<User>(),
-        create_user
+        |ctx: Context| async move {
+            let user: User = ctx.json()?;
+            Ok(Json(user))
+        },
     )?;
 
     app.run().await?;
@@ -123,14 +104,14 @@ let route = post("/users")
     .request_schema_json(schema);
 ```
 
-## RequestContext
+## Request Context
 
 Access request data in handlers:
 
 ```rust
-use spikard::RequestContext;
+use spikard::prelude::*;
 
-async fn handler(ctx: RequestContext) -> HandlerResult {
+async fn handler(ctx: Context) -> HandlerResult {
     // Parse JSON body
     let body: MyStruct = ctx.json()?;
 
@@ -151,7 +132,7 @@ async fn handler(ctx: RequestContext) -> HandlerResult {
     let method = ctx.method();
     let path = ctx.path_str();
 
-    Ok(/* ... */)
+    Ok(Json(body))
 }
 ```
 
@@ -316,7 +297,7 @@ struct UploadRequest {
     description: String,
 }
 
-async fn upload_handler(ctx: RequestContext) -> HandlerResult {
+async fn upload_handler(ctx: Context) -> HandlerResult {
     let upload: UploadRequest = ctx.json()?;
     let content = upload.file.as_bytes();
     let filename = &upload.file.filename;
@@ -385,7 +366,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Type Safety
 
-All handlers use `RequestContext` and return `HandlerResult`:
+All handlers use `Context` and return `HandlerResult`:
 
 ```rust
 pub type HandlerResult = Result<Response<Body>, (StatusCode, String)>;
@@ -398,9 +379,9 @@ pub trait IntoHandler {
 Handlers can be async functions or closures:
 
 ```rust
-async fn handler(ctx: RequestContext) -> HandlerResult { /* ... */ }
+async fn handler(ctx: Context) -> HandlerResult { /* ... */ }
 
-|ctx: RequestContext| async move { /* ... */ }
+|ctx: Context| async move { /* ... */ }
 ```
 
 ## Features

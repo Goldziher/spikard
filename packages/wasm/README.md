@@ -27,6 +27,17 @@ export default {
   fetch: createFetchHandler(app),
 };
 ```
+
+### Deno
+```typescript
+import { Spikard, get } from "npm:spikard-wasm";
+
+const app = new Spikard();
+
+get("/hello")(async () => ({ message: "Hello from Deno" }));
+
+Deno.serve({ port: 8000 }, (request) => app.handleRequest(request));
+```
 - Routing helpers and schema options mirror `@spikard/node`.
 - `createFetchHandler` adapts the app to standard FetchRequest/Response without Node APIs.
 - WebSockets/SSE helpers are present for runtimes that expose them.

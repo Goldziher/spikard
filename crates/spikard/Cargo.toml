@@ -17,7 +17,7 @@ path = "src/lib.rs"
 
 [features]
 default = []
-di = ["spikard-http/di"]
+di = ["spikard-http/di", "spikard-core/di"]
 
 [dependencies]
 anyhow = "1.0"
@@ -29,6 +29,7 @@ schemars = { version = "1.1", features = ["derive"] }
 serde.workspace = true
 serde_json.workspace = true
 spikard-http = { version = "0.1.0", path = "../spikard-http" }
+spikard-core = { version = "0.1.0", path = "../spikard-core", optional = true }
 thiserror.workspace = true
 
 [dev-dependencies]
