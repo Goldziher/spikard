@@ -11,6 +11,7 @@ The Python binding exposes the Rust runtime through a thin, Pythonic surface.
 - Route decorators (`@app.get`, `@app.post`, …) – built on msgspec type hints
 - Lifecycle hooks (`on_request`, `pre_validation`, `pre_handler`, `on_response`, `on_error`)
 - Validation powered by msgspec (with optional Pydantic/attrs/dataclass detection)
+- Dependency injection via `app.provide` and `spikard.di.Provide`
 
 ## Routing
 ```python
@@ -21,6 +22,14 @@ app = Spikard()
 @app.get("/health")
 async def health() -> dict:
     return {"status": "ok"}
+```
+
+## Dependency Injection
+```python
+from spikard.di import Provide
+
+app.provide("config", {"db_url": "postgresql://localhost/app"})
+app.provide("db_pool", Provide(lambda config: f"pool({config['db_url']})", depends_on=["config"], singleton=True))
 ```
 
 ## Middleware

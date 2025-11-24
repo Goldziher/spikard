@@ -9,6 +9,7 @@ export interface Request {
 	headers: Record<string, string>;
 	cookies: Record<string, string>;
 	body: Buffer | null;
+	dependencies?: Record<string, unknown>;
 	json<T = unknown>(): T;
 	form(): Record<string, string>;
 }
@@ -21,6 +22,7 @@ export interface NativeRequestData {
 	headers: Record<string, string>;
 	cookies: Record<string, string>;
 	body: number[] | null;
+	dependencies?: Record<string, unknown>;
 }
 
 class RequestImpl implements Request {
@@ -31,6 +33,7 @@ class RequestImpl implements Request {
 	headers: Record<string, string>;
 	cookies: Record<string, string>;
 	body: Buffer | null;
+	dependencies?: Record<string, unknown>;
 
 	#jsonCache: unknown | undefined;
 	#formCache: Record<string, string> | undefined;
@@ -43,6 +46,7 @@ class RequestImpl implements Request {
 		this.headers = normalizeHeaders(data.headers ?? {});
 		this.cookies = data.cookies ?? {};
 		this.body = data.body ? Buffer.from(data.body) : null;
+		this.dependencies = data.dependencies ?? undefined;
 	}
 
 	json<T = unknown>(): T {

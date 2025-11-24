@@ -24,7 +24,7 @@ Spikard is a polyglot API toolkit with a Rust core and first-class bindings for 
 
 - **[Getting Started](getting-started/quickstart.md)** – First route in each language plus how to run it.
 - **[Installation](getting-started/installation.md)** – Binding install commands and repo setup.
-- **[Guides](guides/routing.md)** – Routing, requests/responses, middleware, validation, deployment.
+- **[Guides](guides/routing.md)** – Routing, requests/responses, middleware, validation, dependency injection, deployment.
 - **[Concepts](concepts/architecture.md)** – Architecture, runtime model, validation, middleware, streaming internals.
 - **[Reference](reference/api-python.md)** – Language APIs, configuration surface, types, and error semantics.
 - **[CLI](cli/usage.md)** – Running the HTTP server and invoking generators from `spikard-cli`.

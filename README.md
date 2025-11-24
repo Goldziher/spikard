@@ -277,11 +277,9 @@ Fine-grained control over request processing:
 
 ### Dependency Injection
 
-*(Coming very soon)*
-
 - Container-based DI for services and dependencies
-- Scoped injection (request, singleton, transient)
-- Language-idiomatic integration (decorators in Python, providers in TypeScript)
+- Scoped injection (request cache, singleton, per-call)
+- Language-idiomatic integration (Python `Provide`, TypeScript `provide`, Ruby `provide` with keyword deps, Rust `ServerConfig::provide_*`)
 
 ## Code Generation & CLI
 
@@ -372,7 +370,7 @@ Node.js, Ruby, and WASM benchmarks coming soon.
 - [x] OpenAPI 3.1 code generation
 - [x] AsyncAPI code generation
 - [x] Documentation generation
-- [ ] **Dependency Injection** - *In progress*
+- [x] **Dependency Injection**
 - [ ] JSON-RPC protocol support
 - [ ] Protobuf with protoc integration
 - [ ] GraphQL support (queries, mutations, subscriptions)

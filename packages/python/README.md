@@ -158,6 +158,23 @@ async def create_post(post: CreatePost):
 - **msgspec.Struct** (default, zero-copy, fastest)
 - **Pydantic v2** BaseModel
 - **dataclasses**
+
+### Dependency Injection
+
+Register values or factories and inject by parameter name:
+
+```python
+from spikard import Spikard
+from spikard.di import Provide
+
+app = Spikard()
+app.provide("config", {"db_url": "postgresql://localhost/app"})
+app.provide("db", Provide(lambda config: f"pool({config['db_url']})", depends_on=["config"], singleton=True))
+
+@app.get("/stats")
+async def stats(config: dict[str, str], db: str):
+    return {"db": db, "env": config["db_url"]}
+```
 - **TypedDict**
 - **NamedTuple**
 - **attrs** classes

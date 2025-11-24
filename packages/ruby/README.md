@@ -178,6 +178,21 @@ app.post "/users", request_schema: user_schema do |request|
 end
 ```
 
+## Dependency Injection
+
+Register values or factories and inject them as keyword parameters:
+
+```ruby
+app.provide("config", { "db_url" => "postgresql://localhost/app" })
+app.provide("db_pool", depends_on: ["config"], singleton: true) do |config:|
+  { url: config["db_url"], driver: "pool" }
+end
+
+app.get "/stats" do |_params, _query, _body, config:, db_pool:|
+  { db: db_pool[:url], env: config["db_url"] }
+end
+```
+
 ### With dry-struct
 
 ```ruby

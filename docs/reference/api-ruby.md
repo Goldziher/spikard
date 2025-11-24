@@ -10,6 +10,7 @@ The Ruby binding uses magnus to expose the Rust runtime with a Ruby-friendly DSL
 - `Spikard::App` – register routes and start the server
 - Handler args – receive path params, query params, and body (or use handler wrappers)
 - Lifecycle hooks (`on_request`, `pre_validation`, `pre_handler`, `on_response`, `on_error`)
+- Dependency injection via `app.provide` and keyword parameters
 
 ## Routing
 ```ruby
@@ -32,6 +33,12 @@ app.on_request do |request|
   puts "#{request[:method]} #{request[:path]}"
   request
 end
+```
+
+## Dependency Injection
+```ruby
+app.provide("config", { "db_url" => "postgresql://localhost/app" })
+app.provide("db_pool", depends_on: ["config"], singleton: true) { |config:| config["db_url"] }
 ```
 
 ## Validation
