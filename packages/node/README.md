@@ -25,7 +25,7 @@ pnpm build
 ## Quick Start
 
 ```typescript
-import { Spikard } from "spikard";
+import { Spikard, type Request } from "spikard";
 import { z } from "zod";
 
 const UserSchema = z.object({
@@ -38,24 +38,18 @@ type User = z.infer<typeof UserSchema>;
 
 const app = new Spikard();
 
-async function getUser(req) {
-  const id = parseInt(req.params.id);
-  return { id, name: "Alice", email: "alice@example.com" };
-}
+const getUser = async (_req: Request): Promise<User> => {
+  return { id: 1, name: "Alice", email: "alice@example.com" };
+};
 
-async function createUser(req) {
-  const user = req.json<User>();
+const createUser = async (req: Request): Promise<User> => {
+  const user = UserSchema.parse(req.json());
   return user;
-}
+};
 
 app.addRoute(
-  {
-    method: "GET",
-    path: "/users/:id",
-    handler_name: "getUser",
-    is_async: true,
-  },
-  getUser
+  { method: "GET", path: "/users/:id", handler_name: "getUser", is_async: true },
+  getUser,
 );
 
 app.addRoute(
@@ -64,9 +58,10 @@ app.addRoute(
     path: "/users",
     handler_name: "createUser",
     request_schema: UserSchema,
+    response_schema: UserSchema,
     is_async: true,
   },
-  createUser
+  createUser,
 );
 
 if (require.main === module) {

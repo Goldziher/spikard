@@ -1,5 +1,11 @@
 ```python
 from spikard import App
+from msgspec import Struct
+
+
+class User(Struct):
+    id: int
+    name: str
 
 app = App()
 
@@ -8,6 +14,6 @@ async def health() -> dict:
     return {"status": "ok"}
 
 @app.post("/users")
-async def create_user(user: dict) -> dict:
+async def create_user(user: User) -> User:
     return user
 ```
