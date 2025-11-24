@@ -191,7 +191,7 @@ impl Dependency for NodeFactoryDependency {
                 // Since we can't easily store the generator object across the FFI boundary,
                 // we rely on JavaScript's GC to clean up when the generator is no longer referenced
                 // For now, store a note that cleanup is needed
-                let mut resolved_mut = resolved_clone;
+                let resolved_mut = resolved_clone;
                 resolved_mut.add_cleanup_task(Box::new(move || {
                     Box::pin(async move {
                         // Cleanup will be handled by JavaScript runtime

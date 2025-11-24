@@ -316,7 +316,7 @@ export class Spikard implements SpikardApp {
 	}
 }
 
-function wrapWebSocketHandler(handler: WebSocketHandler, options: WebSocketOptions): Record<string, unknown> {
+function _wrapWebSocketHandler(handler: WebSocketHandler, options: WebSocketOptions): Record<string, unknown> {
 	return {
 		handleMessage: async (message: unknown): Promise<string> => {
 			const result = await handler(message);

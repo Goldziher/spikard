@@ -360,6 +360,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                         is_async,
                         cors: None,
                         body_param_name: None,
+                        handler_dependencies: None,
                     });
                 }
             }

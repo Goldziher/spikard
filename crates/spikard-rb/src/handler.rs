@@ -3,6 +3,8 @@
 //! This module provides the `RubyHandler` struct that wraps Ruby Proc objects
 //! and implements Spikard's `Handler` trait for async request processing.
 
+#![allow(dead_code)]
+
 use axum::body::Body;
 use axum::http::{HeaderName, HeaderValue, Request, StatusCode};
 use magnus::prelude::*;

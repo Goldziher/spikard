@@ -107,6 +107,7 @@ module Spikard
     #
     # @example Using Provide wrapper
     #   app.provide("db", Spikard::Provide.new(method("create_db"), cacheable: true))
+    # rubocop:disable Metrics/MethodLength
     def provide(key, value = nil, depends_on: [], singleton: false, cacheable: true, &block)
       key_str = key.to_s
       @dependencies ||= {}
@@ -132,7 +133,7 @@ module Spikard
         }
       else
         # Value dependency
-        raise ArgumentError, "Either provide a value or a block, not both" if value.nil?
+        raise ArgumentError, 'Either provide a value or a block, not both' if value.nil?
 
         @dependencies[key_str] = {
           type: :value,
@@ -144,6 +145,7 @@ module Spikard
 
       self
     end
+    # rubocop:enable Metrics/MethodLength
 
     # Get all registered dependencies
     #
@@ -167,6 +169,7 @@ module Spikard
     # @param handler [Proc] The original route handler
     # @param dependencies [Hash] Available dependencies from the app
     # @return [Proc] Wrapped handler with DI support
+    # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
     def self.wrap_handler(handler, dependencies)
       # Extract parameter names from the handler
       params = handler.parameters.map { |_type, name| name.to_s }
@@ -190,7 +193,7 @@ module Spikard
         end
 
         # Call original handler with injected dependencies
-        if handler.arity == 0
+        if handler.arity.zero?
           # Handler takes no arguments (dependencies injected via closure or instance vars)
           handler.call
         elsif injectable_params.length == params.length
@@ -202,6 +205,7 @@ module Spikard
         end
       end
     end
+    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
     # Resolve a dependency definition
     #
@@ -214,17 +218,10 @@ module Spikard
       when :value
         dep_def[:value]
       when :factory
-        # For factories, resolve dependencies and call
         factory = dep_def[:factory]
-        depends_on = dep_def[:depends_on]
-
-        if depends_on.empty?
-          factory.call
-        else
-          # TODO: Implement nested dependency resolution
-          # For now, factories with dependencies should be pre-resolved
-          factory.call
-        end
+        dep_def[:depends_on]
+        # TODO: Implement nested dependency resolution when dependencies are provided
+        factory.call
       end
     end
   end

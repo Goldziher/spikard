@@ -230,6 +230,7 @@ struct TestResponseData {
 struct NativeRequestError(String);
 
 impl NativeTestClient {
+    #[allow(clippy::too_many_arguments)]
     fn initialize(
         ruby: &Ruby,
         this: &Self,
@@ -1270,7 +1271,6 @@ fn mark(client: &NativeTestClient, marker: &Marker) {
         }
     }
 }
->>>>>>> 22a53ef2 (fix(di): achieve 100% Python test pass rate (18/18))
 
 /// Return the Spikard version.
 fn version() -> String {
@@ -1737,6 +1737,7 @@ fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard_htt
 /// config = Spikard::ServerConfig.new(host: '0.0.0.0', port: 8000)
 /// Spikard::Native.run_server(routes_json, handlers, config, hooks, ws, sse, deps)
 /// ```
+#[allow(clippy::too_many_arguments)]
 fn run_server(
     ruby: &Ruby,
     routes_json: String,
@@ -1991,7 +1992,6 @@ fn run_server(
     Ok(())
 }
 
->>>>>>> 49b4c69c (feat(di): implement handler parameter extraction for Python/Node/Ruby bindings)
 #[magnus::init]
 pub fn init(ruby: &Ruby) -> Result<(), Error> {
     let spikard = ruby.define_module("Spikard")?;

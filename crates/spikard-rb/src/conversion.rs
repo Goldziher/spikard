@@ -3,6 +3,8 @@
 //! This module provides functions for converting between Ruby and Rust types,
 //! including JSON conversion, string conversion, and request/response building.
 
+#![allow(dead_code)]
+
 use bytes::Bytes;
 use magnus::prelude::*;
 use magnus::{Error, RArray, RHash, RString, Ruby, TryConvert, Value};
