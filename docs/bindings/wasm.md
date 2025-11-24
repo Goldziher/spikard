@@ -11,7 +11,9 @@ Use `spikard-wasm` for runtimes without native modules (Deno, Cloudflare Workers
 
 ## Deployment
 - **Cloudflare Workers**: export `fetch` handler from your module; bundle via Wrangler.
-- **Deno**: `import { Spikard } from "npm:spikard-wasm";` and call `Deno.serve` with `app.handleRequest`.
+- **Deno**: use the fetch-style handler:
+
+    --8<-- "snippets/typescript/deno_fetch.md"
 - **Browsers**: TestClient and in-memory handlers are available for local logic; production WS/SSE depends on host support.
 
 ## Notes
