@@ -3,6 +3,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { Spikard } from "./app";
 import type { SpikardApp } from "./index";
 import { __setNativeClientFactory, TestClient } from "./testing";
 import type { JsonValue } from "./types";
@@ -230,5 +231,20 @@ describe("TestClient", () => {
 			const response = await client.post("/test", { json: null });
 			expect(response.json()).toBeNull();
 		});
+	});
+});
+
+describe("WebSocket support", () => {
+	it("echoes JSON messages via websocket", async () => {
+		const app = new Spikard();
+		app.websocket("/echo", async (message) => message);
+
+		const client = new TestClient(app);
+		const ws = await client.websocketConnect("/echo");
+
+		await ws.send_json({ hello: "world" });
+		const response = await ws.receive_json();
+
+		expect(response).toEqual({ hello: "world" });
 	});
 });

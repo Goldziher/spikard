@@ -123,7 +123,6 @@ fn node_object_to_json(obj: &Object) -> Result<serde_json::Value> {
 /// Create WebSocketState from Node.js handler factory
 ///
 /// This function is designed to be called from JavaScript to register WebSocket handlers.
-#[allow(dead_code)]
 pub fn create_websocket_state(handler_instance: &Object) -> Result<spikard_http::WebSocketState<NodeWebSocketHandler>> {
     let handle_message_fn: Function<String, Promise<String>> = handler_instance.get_named_property("handleMessage")?;
 

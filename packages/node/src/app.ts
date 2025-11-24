@@ -6,7 +6,7 @@ import { isNativeHandler, wrapHandler } from "./handler-wrapper";
 import type { HandlerFunction, NativeHandlerFunction, RouteMetadata, SpikardApp } from "./index";
 import type { Request } from "./request";
 import { runServer, type ServerOptions } from "./server";
-import type { MaybePromise, StructuredHandlerResponse } from "./types";
+import type { MaybePromise, StructuredHandlerResponse, WebSocketHandler, WebSocketOptions } from "./types";
 
 /**
  * Payload type provided to lifecycle hooks
@@ -54,6 +54,8 @@ export interface LifecycleHooks {
 export class Spikard implements SpikardApp {
 	routes: RouteMetadata[] = [];
 	handlers: Record<string, NativeHandlerFunction> = {};
+	websocketRoutes: RouteMetadata[] = [];
+	websocketHandlers: Record<string, Record<string, unknown>> = {};
 	lifecycleHooks: LifecycleHooks = {
 		onRequest: [],
 		preValidation: [],
@@ -72,6 +74,27 @@ export class Spikard implements SpikardApp {
 		this.routes.push(metadata);
 		const nativeHandler = isNativeHandler(handler) ? handler : wrapHandler(handler as HandlerFunction);
 		this.handlers[metadata.handler_name] = nativeHandler;
+	}
+
+	/**
+	 * Register a WebSocket route (message-based)
+	 */
+	websocket(path: string, handler: WebSocketHandler, options: WebSocketOptions = {}): void {
+		const handlerName =
+			options.handlerName ?? `ws_${this.websocketRoutes.length}_${path}`.replace(/[^a-zA-Z0-9_]/g, "_");
+		const route: RouteMetadata = {
+			method: "GET",
+			path,
+			handler_name: handlerName,
+			request_schema: options.messageSchema as never,
+			response_schema: options.responseSchema as never,
+			parameter_schema: undefined,
+			file_params: undefined,
+			is_async: true,
+		};
+
+		this.websocketRoutes.push(route);
+		this.websocketHandlers[handlerName] = handler;
 	}
 
 	/**
@@ -212,4 +235,20 @@ export class Spikard implements SpikardApp {
 			onError: [...this.lifecycleHooks.onError],
 		};
 	}
+}
+
+function wrapWebSocketHandler(handler: WebSocketHandler, options: WebSocketOptions): Record<string, unknown> {
+	return {
+		handleMessage: async (message: unknown): Promise<string> => {
+			const result = await handler(message);
+			if (result === undefined) {
+				return "null";
+			}
+			return JSON.stringify(result);
+		},
+		onConnect: options.onConnect,
+		onDisconnect: options.onDisconnect,
+		_messageSchema: options.messageSchema,
+		_responseSchema: options.responseSchema,
+	};
 }

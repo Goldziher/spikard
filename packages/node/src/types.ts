@@ -33,3 +33,13 @@ export type HandlerFunction<TReturn extends HandlerResult = HandlerResult> = (
 export type NativeHandlerFunction<TReturn extends HandlerResult = HandlerResult> = (
 	requestJson: string,
 ) => MaybePromise<TReturn | string>;
+
+export type WebSocketHandler = (message: unknown) => MaybePromise<unknown>;
+
+export interface WebSocketOptions {
+	onConnect?: () => MaybePromise<void>;
+	onDisconnect?: () => MaybePromise<void>;
+	messageSchema?: unknown;
+	responseSchema?: unknown;
+	handlerName?: string;
+}

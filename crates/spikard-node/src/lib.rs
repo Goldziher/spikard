@@ -330,9 +330,40 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
         .get_named_property("handlers")
         .map_err(|e| Error::from_reason(format!("Failed to get handlers from app: {}", e)))?;
 
-    let (regular_routes, websocket_routes): (Vec<_>, Vec<_>) = routes
-        .into_iter()
-        .partition(|route| !route.handler_name.to_lowercase().starts_with("websocket"));
+    let websocket_routes: Vec<RouteMetadata> = app
+        .get_named_property::<Object>("websocketRoutes")
+        .ok()
+        .map(|arr| {
+            let length = arr.get_array_length().unwrap_or(0);
+            let mut result = Vec::new();
+            for i in 0..length {
+                if let Ok(route_obj) = arr.get_element::<Object>(i)
+                    && let (Ok(method), Ok(path), Ok(handler_name), Ok(is_async)) = (
+                        route_obj.get_named_property::<String>("method"),
+                        route_obj.get_named_property::<String>("path"),
+                        route_obj.get_named_property::<String>("handler_name"),
+                        route_obj.get_named_property::<bool>("is_async"),
+                    )
+                {
+                    result.push(RouteMetadata {
+                        method,
+                        path,
+                        handler_name,
+                        request_schema: None,
+                        response_schema: None,
+                        parameter_schema: None,
+                        file_params: None,
+                        is_async,
+                        cors: None,
+                        body_param_name: None,
+                    });
+                }
+            }
+            result
+        })
+        .unwrap_or_default();
+
+    let regular_routes = routes;
 
     let mut handler_map = std::collections::HashMap::new();
 
@@ -442,7 +473,11 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
     for ws_metadata in websocket_routes {
         let path = ws_metadata.path.clone();
 
-        let js_handler: Function<String, Promise<String>> = handlers_obj
+        let ws_handlers_obj = app
+            .get_named_property::<Object>("websocketHandlers")
+            .map_err(|_| Error::from_reason("websocketHandlers map missing on app"))?;
+
+        let handler_obj: Object = ws_handlers_obj
             .get_named_property(&ws_metadata.handler_name)
             .map_err(|e| {
                 Error::from_reason(format!(
@@ -451,20 +486,8 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                 ))
             })?;
 
-        let handle_message_tsfn = js_handler
-            .build_threadsafe_function()
-            .build_callback(|ctx| Ok(vec![ctx.value]))
-            .map_err(|e| {
-                Error::from_reason(format!(
-                    "Failed to build ThreadsafeFunction for WebSocket handler '{}': {}",
-                    ws_metadata.handler_name, e
-                ))
-            })?;
-
-        let ws_handler =
-            websocket::NodeWebSocketHandler::new(ws_metadata.handler_name.clone(), handle_message_tsfn, None, None);
-
-        let ws_state = spikard_http::WebSocketState::new(ws_handler);
+        let ws_state = websocket::create_websocket_state(&handler_obj)
+            .map_err(|e| Error::from_reason(format!("Failed to build WebSocket state: {}", e)))?;
 
         use axum::routing::get;
         app_router = app_router.route(
