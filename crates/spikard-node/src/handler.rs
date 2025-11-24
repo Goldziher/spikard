@@ -57,10 +57,10 @@ impl Handler for NodeHandler {
 
                 let mut deps_map = serde_json::Map::new();
                 for key in &keys {
-                    if let Some(value_json) = resolved.get::<String>(key) {
-                        if let Ok(parsed) = serde_json::from_str::<Value>(&value_json) {
-                            deps_map.insert(key.to_string(), parsed);
-                        }
+                    if let Some(value_json) = resolved.get::<String>(key)
+                        && let Ok(parsed) = serde_json::from_str::<Value>(&value_json)
+                    {
+                        deps_map.insert(key.to_string(), parsed);
                     }
                 }
                 Value::Object(deps_map)

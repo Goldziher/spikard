@@ -4,6 +4,8 @@
 //! HTTP testing capabilities against a Spikard server. It manages test servers
 //! for both HTTP and WebSocket/SSE transports.
 
+#![allow(dead_code)]
+
 use axum::http::Method;
 use axum_test::{TestServer, TestServerConfig, Transport};
 use bytes::Bytes;

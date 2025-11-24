@@ -43,7 +43,7 @@ class Spikard:
         self._dependencies: dict[str, Any] = {}
         Spikard.current_instance = self
 
-    def register_route(
+    def register_route(  # noqa: C901
         self,
         method: HttpMethod,
         path: str,
@@ -65,7 +65,7 @@ class Spikard:
             Decorator function
         """
 
-        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:  # noqa: C901
             methods_without_body = {"GET", "DELETE", "HEAD", "OPTIONS"}
             if method.upper() in methods_without_body:
                 request_schema = None
@@ -88,9 +88,7 @@ class Spikard:
             # We include ALL non-standard parameters, not just registered ones, so that
             # the DI handler can properly return "dependency not found" errors for missing deps
             standard_params = {"self", "cls", "path_params", "query_params", "headers", "cookies"}
-            potential_dependencies = [
-                param_name for param_name in sig.parameters if param_name not in standard_params
-            ]
+            potential_dependencies = [param_name for param_name in sig.parameters if param_name not in standard_params]
 
             # For methods with no body schema, assume first non-standard param that's NOT a
             # path/query/header/cookie param is likely a DI dependency, not a body parameter

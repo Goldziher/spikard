@@ -40,7 +40,7 @@ impl Dependency for PythonValueDependency {
                 + '_,
         >,
     > {
-        let value = Python::with_gil(|py| self.value.clone_ref(py));
+        let value = Python::attach(|py| self.value.clone_ref(py));
         Box::pin(async move {
             // Clone the Python object to return
             Ok(Arc::new(value) as Arc<dyn Any + Send + Sync>)
@@ -113,13 +113,13 @@ impl Dependency for PythonFactoryDependency {
         >,
     > {
         // Clone things we need in the async block
-        let factory = Python::with_gil(|py| self.factory.clone_ref(py));
+        let factory = Python::attach(|py| self.factory.clone_ref(py));
         let is_async = self.is_async;
         let is_async_generator = self.is_async_generator;
         let resolved_clone = resolved.clone();
 
         // Extract resolved dependencies now (before async)
-        let resolved_deps: Vec<(String, Py<PyAny>)> = Python::with_gil(|py| {
+        let resolved_deps: Vec<(String, Py<PyAny>)> = Python::attach(|py| {
             self.depends_on
                 .iter()
                 .filter_map(|dep_key| {
@@ -132,7 +132,7 @@ impl Dependency for PythonFactoryDependency {
 
         Box::pin(async move {
             // Build kwargs and call factory with GIL
-            let coroutine_or_result = Python::with_gil(|py| -> PyResult<Either> {
+            let coroutine_or_result = Python::attach(|py| -> PyResult<Either> {
                 let kwargs = pyo3::types::PyDict::new(py);
                 for (dep_key, dep_value) in &resolved_deps {
                     kwargs.set_item(dep_key, dep_value.bind(py))?;
@@ -164,10 +164,10 @@ impl Dependency for PythonFactoryDependency {
                         // 2. Store the generator object for cleanup later
                         // 3. Register a cleanup task that will close the generator
 
-                        let generator_obj = Python::with_gil(|py| coroutine_py.clone_ref(py));
+                        let generator_obj = Python::attach(|py| coroutine_py.clone_ref(py));
 
                         let final_value = tokio::task::spawn_blocking(move || {
-                            Python::with_gil(|py| -> PyResult<Py<PyAny>> {
+                            Python::attach(|py| -> PyResult<Py<PyAny>> {
                                 let asyncio = py.import("asyncio")?;
                                 let event_loop = PYTHON_EVENT_LOOP.get().ok_or_else(|| {
                                     pyo3::exceptions::PyRuntimeError::new_err("Python event loop not initialized")
@@ -194,11 +194,11 @@ impl Dependency for PythonFactoryDependency {
                         })?;
 
                         // Register cleanup task to close the generator
-                        let mut resolved_mut = resolved_clone;
+                        let resolved_mut = resolved_clone;
                         resolved_mut.add_cleanup_task(Box::new(move || {
                             Box::pin(async move {
                                 let _ = tokio::task::spawn_blocking(move || {
-                                    Python::with_gil(|py| -> PyResult<()> {
+                                    Python::attach(|py| -> PyResult<()> {
                                         let asyncio = py.import("asyncio")?;
                                         let event_loop = PYTHON_EVENT_LOOP.get().ok_or_else(|| {
                                             pyo3::exceptions::PyRuntimeError::new_err(
@@ -226,7 +226,7 @@ impl Dependency for PythonFactoryDependency {
                     } else {
                         // Regular async function - await the coroutine
                         let result = tokio::task::spawn_blocking(move || {
-                            Python::with_gil(|py| -> PyResult<Py<PyAny>> {
+                            Python::attach(|py| -> PyResult<Py<PyAny>> {
                                 let asyncio = py.import("asyncio")?;
                                 let event_loop = PYTHON_EVENT_LOOP.get().ok_or_else(|| {
                                     pyo3::exceptions::PyRuntimeError::new_err(
@@ -248,7 +248,7 @@ impl Dependency for PythonFactoryDependency {
                             message: format!("Tokio error running async factory: {}", e),
                         })?
                         .map_err(|e| {
-                            Python::with_gil(|py| {
+                            Python::attach(|py| {
                                 e.print(py);
                             });
                             spikard_core::di::DependencyError::ResolutionFailed {

@@ -3,6 +3,8 @@
 //! This module handles conversion of Ruby ServerConfig objects
 //! into Rust ServerConfig structs for Spikard HTTP server setup.
 
+#![allow(dead_code)]
+
 use magnus::prelude::*;
 use magnus::{Error, RArray, RHash, Ruby, TryConvert, Value};
 use spikard_http::{
@@ -196,6 +198,8 @@ pub fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<ServerC
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
         openapi,
         lifecycle_hooks: None,
+        #[cfg(feature = "di")]
+        di_container: None,
     })
 }
 

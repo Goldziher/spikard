@@ -7,9 +7,14 @@ This example demonstrates:
 - Proper resource management
 """
 
+import logging
 from collections.abc import AsyncGenerator
+
 from spikard import Spikard
 from spikard.di import Provide
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 # Simulated database pool (singleton - shared across requests)
@@ -27,7 +32,7 @@ class DatabasePool:
         self.db_url = config["db_url"]
         self.max_connections = config.get("max_connections", 10)
         self.connection_count = 0
-        print(f"[DB Pool] Created pool for {self.db_url} (max: {self.max_connections})")
+        logger.info("[DB Pool] Created pool for %s (max: %s)", self.db_url, self.max_connections)
 
     async def create_session(self) -> "DatabaseSession":
         """Create a new database session.
@@ -38,7 +43,7 @@ class DatabasePool:
             A new session from the pool
         """
         self.connection_count += 1
-        print(f"[DB Pool] Creating session #{self.connection_count}")
+        logger.info("[DB Pool] Creating session #%s", self.connection_count)
         return DatabaseSession(self, self.connection_count)
 
 
@@ -59,7 +64,7 @@ class DatabaseSession:
         self.pool = pool
         self.session_id = session_id
         self.closed = False
-        print(f"[DB Session {self.session_id}] Session opened")
+        logger.info("[DB Session %s] Session opened", self.session_id)
 
     async def query(self, sql: str) -> list[dict]:
         """Execute a query.
@@ -76,14 +81,14 @@ class DatabaseSession:
         """
         if self.closed:
             raise RuntimeError("Session is closed")
-        print(f"[DB Session {self.session_id}] Executing: {sql}")
+        logger.info("[DB Session %s] Executing: %s", self.session_id, sql)
         return [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]
 
     async def close(self) -> None:
         """Close the session and return to pool."""
         if not self.closed:
             self.closed = True
-            print(f"[DB Session {self.session_id}] Session closed")
+            logger.info("[DB Session %s] Session closed", self.session_id)
 
 
 async def create_db_pool(config: dict) -> DatabasePool:
@@ -101,7 +106,7 @@ async def create_db_pool(config: dict) -> DatabasePool:
     DatabasePool
         The singleton database pool
     """
-    print("[Factory] Creating database pool...")
+    logger.info("[Factory] Creating database pool...")
     return DatabasePool(config)
 
 
@@ -122,14 +127,14 @@ async def create_db_session(db_pool: DatabasePool) -> AsyncGenerator[DatabaseSes
     DatabaseSession
         A database session for this request
     """
-    print("[Factory] Creating database session...")
+    logger.info("[Factory] Creating database session...")
     session = await db_pool.create_session()
 
     # Yield the session to the handler
     yield session
 
     # Cleanup runs after the handler completes
-    print("[Factory] Cleaning up database session...")
+    logger.info("[Factory] Cleaning up database session...")
     await session.close()
 
 
@@ -237,14 +242,14 @@ def main() -> None:
             },
         }
 
-    print("\n=== Database DI Example ===")
-    print("Routes:")
-    print("  GET /users  - Query users (uses db_session with cleanup)")
-    print("  GET /stats  - Pool statistics (uses singleton db_pool)")
-    print("  GET /complex - Complex query (uses both dependencies)")
-    print("\nNote: Watch the console for cleanup logs after each request")
-    print("\nStarting server on http://127.0.0.1:8000")
-    print("Press Ctrl+C to stop\n")
+    logger.info("=== Database DI Example ===")
+    logger.info("Routes:")
+    logger.info("  GET /users  - Query users (uses db_session with cleanup)")
+    logger.info("  GET /stats  - Pool statistics (uses singleton db_pool)")
+    logger.info("  GET /complex - Complex query (uses both dependencies)")
+    logger.info("Note: Watch the console for cleanup logs after each request")
+    logger.info("Starting server on http://127.0.0.1:8000")
+    logger.info("Press Ctrl+C to stop")
 
 
 if __name__ == "__main__":

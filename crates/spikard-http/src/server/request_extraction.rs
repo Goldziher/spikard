@@ -77,6 +77,8 @@ pub fn create_request_data_without_body(
         raw_body: None,
         method: method.as_str().to_string(),
         path: uri.path().to_string(),
+        #[cfg(feature = "di")]
+        dependencies: None,
     }
 }
 
@@ -111,5 +113,7 @@ pub async fn create_request_data_with_body(
         raw_body: if body_bytes.is_empty() { None } else { Some(body_bytes) },
         method: parts.method.as_str().to_string(),
         path: parts.uri.path().to_string(),
+        #[cfg(feature = "di")]
+        dependencies: None,
     })
 }

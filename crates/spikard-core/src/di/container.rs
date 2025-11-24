@@ -261,7 +261,7 @@ impl DependencyContainer {
                 }
 
                 // Need to resolve - do it sequentially to preserve cleanup order
-                let result = dep.resolve(&req, &data, &resolved).await?;
+                let result = dep.resolve(req, data, &resolved).await?;
 
                 // Store in appropriate cache
                 if dep.singleton() {

@@ -3,6 +3,8 @@
 //! Internal tool for generating test infrastructure from fixtures.
 //! Generates test applications and test suites for Rust, Python, and TypeScript.
 
+#![allow(clippy::all, dead_code, unused_variables)]
+
 mod asyncapi;
 mod background;
 mod dependencies;

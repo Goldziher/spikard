@@ -3,6 +3,8 @@
 //! This module handles the creation and startup of the Spikard HTTP server
 //! including route registration, middleware configuration, and lifecycle hooks.
 
+#![allow(dead_code)]
+
 use axum::body::Body;
 use axum::http::Request;
 use axum::http::Response;

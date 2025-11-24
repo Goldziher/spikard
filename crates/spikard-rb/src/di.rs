@@ -3,6 +3,8 @@
 //! This module provides Ruby-specific implementations of the Dependency trait,
 //! bridging Ruby values and Procs to the Rust DI system.
 
+#![allow(dead_code)]
+
 use http::Request;
 use magnus::prelude::*;
 use magnus::value::{InnerValue, Opaque};
@@ -110,7 +112,7 @@ impl Dependency for RubyFactoryDependency {
     ) -> Pin<Box<dyn std::future::Future<Output = Result<Arc<dyn Any + Send + Sync>, DependencyError>> + Send + '_>>
     {
         // Clone data needed in async block
-        let factory = self.factory.clone();
+        let factory = self.factory;
         let depends_on = self.depends_on.clone();
         let key = self.key.clone();
         let is_singleton = self.singleton;
@@ -128,10 +130,10 @@ impl Dependency for RubyFactoryDependency {
                 // Try RubyValueWrapper (for singletons)
                 if let Some(wrapper) = resolved.get::<RubyValueWrapper>(dep_key) {
                     // Convert wrapper to JSON synchronously
-                    if let Ok(ruby) = Ruby::get() {
-                        if let Ok(json) = wrapper.to_json(&ruby) {
-                            return Some((dep_key.clone(), json));
-                        }
+                    if let Ok(ruby) = Ruby::get()
+                        && let Ok(json) = wrapper.to_json(&ruby)
+                    {
+                        return Some((dep_key.clone(), json));
                     }
                 }
                 None

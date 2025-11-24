@@ -353,10 +353,10 @@ impl DependencyGraph {
                     if let Some((min_idx, _)) = cycle[..cycle.len() - 1].iter().enumerate().min_by_key(|(_, s)| *s) {
                         cycle.rotate_left(min_idx);
                         // After rotation, update the closing element to match the new first element
-                        if let Some(first) = cycle.first().cloned() {
-                            if let Some(last) = cycle.last_mut() {
-                                *last = first;
-                            }
+                        if let Some(first) = cycle.first().cloned()
+                            && let Some(last) = cycle.last_mut()
+                        {
+                            *last = first;
                         }
                     }
                 }
