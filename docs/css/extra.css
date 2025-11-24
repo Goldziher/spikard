@@ -1,0 +1,13 @@
+/* Minimal tweaks for Spikard docs */
+:root {
+	--md-primary-fg-color: #5b34ef;
+	--md-accent-fg-color: #00bcd4;
+}
+
+.md-typeset code {
+	font-weight: 600;
+}
+
+.md-typeset .admonition {
+	border-radius: 6px;
+}

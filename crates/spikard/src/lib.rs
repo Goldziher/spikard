@@ -19,6 +19,8 @@ use axum::{Router as AxumRouter, body::Body};
 use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
+#[cfg(feature = "di")]
+use spikard_core::di;
 pub use spikard_http::{
     CompressionConfig, CorsConfig, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, Method, RateLimitConfig,
     ServerConfig, StaticFilesConfig,
@@ -566,6 +568,12 @@ impl RequestContext {
     /// Borrow the raw JSON request body.
     pub fn body_value(&self) -> &Value {
         &self.data.body
+    }
+
+    /// Borrow resolved dependencies for this request (if DI is enabled).
+    #[cfg(feature = "di")]
+    pub fn dependencies(&self) -> Option<Arc<di::ResolvedDependencies>> {
+        self.data.dependencies.as_ref().map(Arc::clone)
     }
 
     /// Return the HTTP method.
