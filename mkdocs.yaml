@@ -185,6 +185,7 @@ nav:
       - TypeScript / Node: bindings/typescript.md
       - Ruby: bindings/ruby.md
       - Rust: bindings/rust.md
+      - WASM / Edge: bindings/wasm.md
   - Playbooks:
       - Auth & Guards: playbooks/auth.md
       - Logging & Tracing: playbooks/logging.md

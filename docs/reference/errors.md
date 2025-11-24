@@ -92,3 +92,12 @@ Spikard returns structured error responses that align with RFC 9457 so clients c
         })).with_status(StatusCode::UNPROCESSABLE_ENTITY))
     })?;
     ```
+
+## Status code map (binding expectations)
+
+| Binding | Validation | Auth | Not Found | Server |
+|---------|------------|------|-----------|--------|
+| Python | 422 with RFC9457 body | 401/403 (structured) | 404 with path info | 500 with generic message |
+| TypeScript | 422 with RFC9457 body | 401/403 (structured) | 404 with path info | 500 with generic message |
+| Ruby | 422 with RFC9457 body | 401/403 (structured) | 404 with path info | 500 with generic message |
+| Rust | 422 with RFC9457 body | 401/403 (structured) | 404 with path info | 500 with generic message |
