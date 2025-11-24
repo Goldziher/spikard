@@ -15,26 +15,77 @@ use tracing::{debug, error, info, warn};
 
 /// WebSocket message handler trait
 ///
-/// Implement this trait to handle WebSocket messages in your application.
+/// Implement this trait to create custom WebSocket message handlers for your application.
+/// The handler processes JSON messages received from WebSocket clients and can optionally
+/// send responses back.
+///
+/// # Implementing the Trait
+///
+/// You must implement the `handle_message` method. The `on_connect` and `on_disconnect`
+/// methods are optional and provide lifecycle hooks.
+///
+/// # Example
+///
+/// ```ignore
+/// use spikard_http::websocket::WebSocketHandler;
+/// use serde_json::{json, Value};
+///
+/// struct EchoHandler;
+///
+/// #[async_trait]
+/// impl WebSocketHandler for EchoHandler {
+///     async fn handle_message(&self, message: Value) -> Option<Value> {
+///         // Echo the message back to the client
+///         Some(message)
+///     }
+///
+///     async fn on_connect(&self) {
+///         println!("Client connected");
+///     }
+///
+///     async fn on_disconnect(&self) {
+///         println!("Client disconnected");
+///     }
+/// }
+/// ```
 pub trait WebSocketHandler: Send + Sync {
     /// Handle incoming WebSocket message
     ///
-    /// Returns an optional response message to send back to the client.
+    /// Called whenever a text message is received from a WebSocket client.
+    /// Messages are automatically parsed as JSON.
+    ///
+    /// # Arguments
+    /// * `message` - JSON value received from the client
+    ///
+    /// # Returns
+    /// * `Some(value)` - JSON value to send back to the client
+    /// * `None` - No response to send
     fn handle_message(&self, message: Value) -> impl std::future::Future<Output = Option<Value>> + Send;
 
-    /// Called when a client connects
+    /// Called when a client connects to the WebSocket
+    ///
+    /// Optional lifecycle hook invoked when a new WebSocket connection is established.
+    /// Default implementation does nothing.
     fn on_connect(&self) -> impl std::future::Future<Output = ()> + Send {
         async {}
     }
 
-    /// Called when a client disconnects
+    /// Called when a client disconnects from the WebSocket
+    ///
+    /// Optional lifecycle hook invoked when a WebSocket connection is closed
+    /// (either by the client or due to an error). Default implementation does nothing.
     fn on_disconnect(&self) -> impl std::future::Future<Output = ()> + Send {
         async {}
     }
 }
 
 /// WebSocket state shared across connections
+///
+/// Contains the message handler and optional JSON schemas for validating
+/// incoming and outgoing messages. This state is shared among all connections
+/// to the same WebSocket endpoint.
 pub struct WebSocketState<H: WebSocketHandler> {
+    /// The message handler implementation
     handler: Arc<H>,
     /// Optional JSON Schema for validating incoming messages
     message_schema: Option<Arc<jsonschema::Validator>>,
@@ -54,6 +105,18 @@ impl<H: WebSocketHandler> Clone for WebSocketState<H> {
 
 impl<H: WebSocketHandler + 'static> WebSocketState<H> {
     /// Create new WebSocket state with a handler
+    ///
+    /// Creates a new state without message or response validation schemas.
+    /// Messages and responses are not validated.
+    ///
+    /// # Arguments
+    /// * `handler` - The message handler implementation
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// let state = WebSocketState::new(MyHandler);
+    /// ```
     pub fn new(handler: H) -> Self {
         Self {
             handler: Arc::new(handler),
@@ -62,7 +125,40 @@ impl<H: WebSocketHandler + 'static> WebSocketState<H> {
         }
     }
 
-    /// Create new WebSocket state with a handler and schemas
+    /// Create new WebSocket state with a handler and optional validation schemas
+    ///
+    /// Creates a new state with optional JSON schemas for validating incoming messages
+    /// and outgoing responses. If a schema is provided and validation fails, the message
+    /// or response is rejected.
+    ///
+    /// # Arguments
+    /// * `handler` - The message handler implementation
+    /// * `message_schema` - Optional JSON schema for validating client messages
+    /// * `response_schema` - Optional JSON schema for validating handler responses
+    ///
+    /// # Returns
+    /// * `Ok(state)` - Successfully created state
+    /// * `Err(msg)` - Invalid schema provided
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use serde_json::json;
+    ///
+    /// let message_schema = json!({
+    ///     "type": "object",
+    ///     "properties": {
+    ///         "type": {"type": "string"},
+    ///         "data": {"type": "string"}
+    ///     }
+    /// });
+    ///
+    /// let state = WebSocketState::with_schemas(
+    ///     MyHandler,
+    ///     Some(message_schema),
+    ///     None,
+    /// )?;
+    /// ```
     pub fn with_schemas(
         handler: H,
         message_schema: Option<serde_json::Value>,
@@ -94,8 +190,26 @@ impl<H: WebSocketHandler + 'static> WebSocketState<H> {
 
 /// WebSocket upgrade handler
 ///
-/// This is the main entry point for WebSocket connections.
-/// Use this as an Axum route handler.
+/// This is the main entry point for WebSocket connections. Use this as an Axum route
+/// handler by passing it to an Axum router's `.route()` method with `get()`.
+///
+/// # Arguments
+/// * `ws` - WebSocket upgrade from Axum
+/// * `State(state)` - Application state containing the handler and optional schemas
+///
+/// # Returns
+/// An Axum response that upgrades the connection to WebSocket
+///
+/// # Example
+///
+/// ```ignore
+/// use axum::{Router, routing::get, extract::State};
+///
+/// let state = WebSocketState::new(MyHandler);
+/// let router = Router::new()
+///     .route("/ws", get(websocket_handler::<MyHandler>))
+///     .with_state(state);
+/// ```
 pub async fn websocket_handler<H: WebSocketHandler + 'static>(
     ws: WebSocketUpgrade,
     State(state): State<WebSocketState<H>>,
@@ -105,7 +219,6 @@ pub async fn websocket_handler<H: WebSocketHandler + 'static>(
 
 /// Handle an individual WebSocket connection
 async fn handle_socket<H: WebSocketHandler>(mut socket: WebSocket, state: WebSocketState<H>) {
-    println!("websocket handle_socket invoked");
     info!("WebSocket client connected");
 
     state.handler.on_connect().await;
@@ -113,7 +226,6 @@ async fn handle_socket<H: WebSocketHandler>(mut socket: WebSocket, state: WebSoc
     while let Some(msg) = socket.recv().await {
         match msg {
             Ok(Message::Text(text)) => {
-                println!("received text payload: {}", text);
                 debug!("Received text message: {}", text);
 
                 match serde_json::from_str::<Value>(&text) {

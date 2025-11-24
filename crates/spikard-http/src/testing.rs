@@ -6,6 +6,10 @@ pub mod multipart;
 pub use multipart::{MultipartFilePart, build_multipart_body};
 
 pub mod form;
+
+pub mod test_client;
+pub use test_client::TestClient;
+
 use brotli::Decompressor;
 use flate2::read::GzDecoder;
 pub use form::encode_urlencoded_body;

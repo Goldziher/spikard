@@ -116,7 +116,7 @@ async fn test_port_allocation_strategy() {
     assert_eq!(config.port, 8100);
 
     // These would be the allocated ports
-    let expected_ports = vec![8100, 8110, 8120];
+    let expected_ports = [8100, 8110, 8120];
 
     for (idx, _fw) in config.frameworks.iter().enumerate() {
         let allocated_port = config.port + (idx as u16 * 10);

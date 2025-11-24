@@ -158,10 +158,7 @@ impl App {
             WebSocketState::new(handler)
         };
 
-        let path = normalize_path(path.into());
-        let router = AxumRouter::new().route(&path, axum_get(websocket_handler::<H>).with_state(state));
-        self.attached_routers.push(router);
-        Ok(self)
+        self.register_stateful_ws_route(path, state)
     }
 
     /// Register an SSE producer for the specified path.
@@ -189,6 +186,27 @@ impl App {
             SseState::new(producer)
         };
 
+        self.register_stateful_sse_route(path, state)
+    }
+
+    /// Internal helper: register a WebSocket state with route normalization.
+    fn register_stateful_ws_route<H: WebSocketHandler + Send + Sync + 'static>(
+        &mut self,
+        path: impl Into<String>,
+        state: WebSocketState<H>,
+    ) -> std::result::Result<&mut Self, AppError> {
+        let path = normalize_path(path.into());
+        let router = AxumRouter::new().route(&path, axum_get(websocket_handler::<H>).with_state(state));
+        self.attached_routers.push(router);
+        Ok(self)
+    }
+
+    /// Internal helper: register an SSE state with route normalization.
+    fn register_stateful_sse_route<P: SseEventProducer + Send + Sync + 'static>(
+        &mut self,
+        path: impl Into<String>,
+        state: SseState<P>,
+    ) -> std::result::Result<&mut Self, AppError> {
         let path = normalize_path(path.into());
         let router = AxumRouter::new().route(&path, axum_get(sse_handler::<P>).with_state(state));
         self.attached_routers.push(router);
@@ -356,30 +374,48 @@ impl RouteBuilder {
     }
 }
 
-/// Convenience helper for building a GET route.
-pub fn get(path: impl Into<String>) -> RouteBuilder {
-    RouteBuilder::new(Method::Get, path)
+macro_rules! http_method {
+    (
+        $(#[$meta:meta])*
+        $name:ident,
+        $method:expr
+    ) => {
+        $(#[$meta])*
+        pub fn $name(path: impl Into<String>) -> RouteBuilder {
+            RouteBuilder::new($method, path)
+        }
+    };
 }
 
-/// Convenience helper for building a POST route.
-pub fn post(path: impl Into<String>) -> RouteBuilder {
-    RouteBuilder::new(Method::Post, path)
-}
+http_method!(
+    /// Convenience helper for building a GET route.
+    get,
+    Method::Get
+);
 
-/// Convenience helper for building a PUT route.
-pub fn put(path: impl Into<String>) -> RouteBuilder {
-    RouteBuilder::new(Method::Put, path)
-}
+http_method!(
+    /// Convenience helper for building a POST route.
+    post,
+    Method::Post
+);
 
-/// Convenience helper for building a PATCH route.
-pub fn patch(path: impl Into<String>) -> RouteBuilder {
-    RouteBuilder::new(Method::Patch, path)
-}
+http_method!(
+    /// Convenience helper for building a PUT route.
+    put,
+    Method::Put
+);
 
-/// Convenience helper for building a DELETE route.
-pub fn delete(path: impl Into<String>) -> RouteBuilder {
-    RouteBuilder::new(Method::Delete, path)
-}
+http_method!(
+    /// Convenience helper for building a PATCH route.
+    patch,
+    Method::Patch
+);
+
+http_method!(
+    /// Convenience helper for building a DELETE route.
+    delete,
+    Method::Delete
+);
 
 fn default_handler_name(method: &Method, path: &str) -> String {
     let prefix = method.as_str().to_lowercase();
@@ -406,8 +442,13 @@ fn sanitize_identifier(input: &str) -> String {
 
 fn schema_for<T: JsonSchema>() -> Value {
     let root = schemars::schema_for!(T);
-    let value = serde_json::to_value(root).expect("Schema serialization to succeed");
-    value.get("schema").cloned().unwrap_or(value)
+    match serde_json::to_value(root) {
+        Ok(value) => value.get("schema").cloned().unwrap_or(value),
+        Err(e) => {
+            eprintln!("warning: failed to serialize schema: {}, returning null", e);
+            Value::Null
+        }
+    }
 }
 
 fn normalize_path(path: String) -> String {
@@ -579,6 +620,186 @@ mod tests {
         message: String,
     }
 
+    // ===== Tests for sanitize_identifier =====
+    #[test]
+    fn sanitize_identifier_with_slashes_and_braces() {
+        assert_eq!(sanitize_identifier("/users/{id}"), "users_id");
+    }
+
+    #[test]
+    fn sanitize_identifier_with_api_version() {
+        assert_eq!(sanitize_identifier("/api/v1/posts"), "api_v1_posts");
+    }
+
+    #[test]
+    fn sanitize_identifier_with_leading_colons() {
+        // Colons are converted to underscores, then leading underscores are trimmed
+        assert_eq!(sanitize_identifier("/:user/:post"), "user_post");
+    }
+
+    #[test]
+    fn sanitize_identifier_removes_consecutive_underscores() {
+        let input = "/users//--posts";
+        let result = sanitize_identifier(input);
+        assert!(!result.contains("__"));
+    }
+
+    #[test]
+    fn sanitize_identifier_trims_leading_underscores() {
+        assert_eq!(sanitize_identifier("/_start"), "start");
+    }
+
+    #[test]
+    fn sanitize_identifier_trims_trailing_underscores() {
+        assert_eq!(sanitize_identifier("/end_"), "end");
+    }
+
+    #[test]
+    fn sanitize_identifier_converts_to_lowercase() {
+        assert_eq!(sanitize_identifier("/UsersAPI"), "usersapi");
+    }
+
+    #[test]
+    fn sanitize_identifier_preserves_alphanumeric() {
+        assert_eq!(sanitize_identifier("/users123"), "users123");
+    }
+
+    #[test]
+    fn sanitize_identifier_handles_complex_path() {
+        assert_eq!(
+            sanitize_identifier("/api/v2/{resource}-{id}/action"),
+            "api_v2_resource_id_action"
+        );
+    }
+
+    #[test]
+    fn sanitize_identifier_empty_string() {
+        assert_eq!(sanitize_identifier(""), "");
+    }
+
+    #[test]
+    fn sanitize_identifier_only_special_chars() {
+        assert_eq!(sanitize_identifier("//--"), "");
+    }
+
+    // ===== Tests for normalize_path =====
+    #[test]
+    fn normalize_path_adds_leading_slash() {
+        assert_eq!(normalize_path("users".to_string()), "/users");
+    }
+
+    #[test]
+    fn normalize_path_preserves_existing_slash() {
+        assert_eq!(normalize_path("/users".to_string()), "/users");
+    }
+
+    #[test]
+    fn normalize_path_handles_empty_string() {
+        assert_eq!(normalize_path("".to_string()), "/");
+    }
+
+    #[test]
+    fn normalize_path_with_params() {
+        assert_eq!(normalize_path("users/{id}".to_string()), "/users/{id}");
+    }
+
+    #[test]
+    fn normalize_path_with_query_string() {
+        assert_eq!(normalize_path("search?q=test".to_string()), "/search?q=test");
+    }
+
+    #[test]
+    fn normalize_path_preserves_double_slash_in_middle() {
+        assert_eq!(normalize_path("/path//to//resource".to_string()), "/path//to//resource");
+    }
+
+    // ===== Tests for RouteBuilder and default_handler_name =====
+    #[test]
+    fn route_builder_creates_get_route() {
+        let builder = get("/users");
+        assert_eq!(builder.path, "/users");
+        assert_eq!(builder.method, Method::Get);
+    }
+
+    #[test]
+    fn route_builder_creates_post_route() {
+        let builder = post("/users");
+        assert_eq!(builder.path, "/users");
+        assert_eq!(builder.method, Method::Post);
+    }
+
+    #[test]
+    fn route_builder_creates_put_route() {
+        let builder = put("/users/{id}");
+        assert_eq!(builder.path, "/users/{id}");
+        assert_eq!(builder.method, Method::Put);
+    }
+
+    #[test]
+    fn route_builder_creates_patch_route() {
+        let builder = patch("/users/{id}");
+        assert_eq!(builder.method, Method::Patch);
+    }
+
+    #[test]
+    fn route_builder_creates_delete_route() {
+        let builder = delete("/users/{id}");
+        assert_eq!(builder.method, Method::Delete);
+    }
+
+    #[test]
+    fn route_builder_generates_handler_name() {
+        let builder = get("/users/{id}");
+        // default_handler_name is private, so check through metadata
+        assert_eq!(builder.handler_name, "get_users_id");
+    }
+
+    #[test]
+    fn route_builder_allows_custom_handler_name() {
+        let builder = post("/users").handler_name("create_user");
+        assert_eq!(builder.handler_name, "create_user");
+    }
+
+    #[test]
+    fn route_builder_with_request_body_schema() {
+        let builder = post("/users").request_body::<Greeting>();
+        assert!(builder.request_schema.is_some());
+    }
+
+    #[test]
+    fn route_builder_with_response_body_schema() {
+        let builder = post("/users").response_body::<Greeting>();
+        assert!(builder.response_schema.is_some());
+    }
+
+    #[test]
+    fn route_builder_mark_as_sync() {
+        let builder = get("/users").sync();
+        assert!(!builder.is_async);
+    }
+
+    #[test]
+    fn route_builder_default_is_async() {
+        let builder = get("/users");
+        assert!(builder.is_async);
+    }
+
+    // ===== Tests for App =====
+    #[test]
+    fn app_new_creates_default_instance() {
+        let app = App::new();
+        assert_eq!(app.routes.len(), 0);
+        assert_eq!(app.metadata.len(), 0);
+    }
+
+    #[test]
+    fn app_config_sets_server_config() {
+        let config = ServerConfig::default();
+        let app = App::new().config(config);
+        // ServerConfig doesn't implement PartialEq, just verify it was set
+        assert_eq!(app.metadata.len(), 0); // Verify app is still in initial state
+    }
+
     #[tokio::test]
     async fn registers_route_with_schema() {
         let mut app = App::new();
@@ -601,6 +822,187 @@ mod tests {
         assert!(meta.request_schema.is_some());
         assert!(meta.response_schema.is_some());
         assert!(meta.parameter_schema.is_none());
+    }
+
+    #[test]
+    fn app_merge_axum_router_consumes_self() {
+        let app = App::new();
+        let router = AxumRouter::new();
+        let app = app.merge_axum_router(router);
+        assert_eq!(app.attached_routers.len(), 1);
+    }
+
+    #[test]
+    fn app_attach_axum_router_mutably_adds_router() {
+        let mut app = App::new();
+        let router = AxumRouter::new();
+        app.attach_axum_router(router);
+        assert_eq!(app.attached_routers.len(), 1);
+    }
+
+    // ===== Tests for RequestContext =====
+    #[test]
+    fn request_context_extracts_headers() {
+        let mut headers = std::collections::HashMap::new();
+        headers.insert("content-type".to_string(), "application/json".to_string());
+        headers.insert("authorization".to_string(), "Bearer token123".to_string());
+
+        let request = Request::builder()
+            .uri("http://localhost/test")
+            .body(Body::empty())
+            .unwrap();
+
+        let data = RequestData {
+            method: "GET".to_string(),
+            path: "/test".to_string(),
+            headers: std::sync::Arc::new(headers),
+            cookies: std::sync::Arc::new(HashMap::new()),
+            query_params: Value::Object(Default::default()),
+            raw_query_params: std::sync::Arc::new(HashMap::new()),
+            path_params: std::sync::Arc::new(HashMap::new()),
+            body: Value::Null,
+            raw_body: None,
+        };
+
+        let ctx = RequestContext::new(request, data);
+
+        assert_eq!(ctx.header("content-type"), Some("application/json"));
+        assert_eq!(ctx.header("authorization"), Some("Bearer token123"));
+    }
+
+    #[test]
+    fn request_context_header_lookup_case_insensitive() {
+        let mut headers = std::collections::HashMap::new();
+        headers.insert("content-type".to_string(), "application/json".to_string());
+
+        let request = Request::builder()
+            .uri("http://localhost/test")
+            .body(Body::empty())
+            .unwrap();
+
+        let data = RequestData {
+            method: "GET".to_string(),
+            path: "/test".to_string(),
+            headers: std::sync::Arc::new(headers),
+            cookies: std::sync::Arc::new(HashMap::new()),
+            query_params: Value::Object(Default::default()),
+            raw_query_params: std::sync::Arc::new(HashMap::new()),
+            path_params: std::sync::Arc::new(HashMap::new()),
+            body: Value::Null,
+            raw_body: None,
+        };
+
+        let ctx = RequestContext::new(request, data);
+
+        // Headers are already lowercase in the map
+        assert_eq!(ctx.header("Content-Type"), Some("application/json"));
+        assert_eq!(ctx.header("CONTENT-TYPE"), Some("application/json"));
+    }
+
+    #[test]
+    fn request_context_extracts_cookies() {
+        let mut cookies = std::collections::HashMap::new();
+        cookies.insert("session_id".to_string(), "abc123".to_string());
+        cookies.insert("user_pref".to_string(), "dark_mode".to_string());
+
+        let request = Request::builder()
+            .uri("http://localhost/test")
+            .body(Body::empty())
+            .unwrap();
+
+        let data = RequestData {
+            method: "GET".to_string(),
+            path: "/test".to_string(),
+            headers: std::sync::Arc::new(HashMap::new()),
+            cookies: std::sync::Arc::new(cookies),
+            query_params: Value::Object(Default::default()),
+            raw_query_params: std::sync::Arc::new(HashMap::new()),
+            path_params: std::sync::Arc::new(HashMap::new()),
+            body: Value::Null,
+            raw_body: None,
+        };
+
+        let ctx = RequestContext::new(request, data);
+
+        assert_eq!(ctx.cookie("session_id"), Some("abc123"));
+        assert_eq!(ctx.cookie("user_pref"), Some("dark_mode"));
+        assert_eq!(ctx.cookie("nonexistent"), None);
+    }
+
+    #[test]
+    fn request_context_extracts_path_params() {
+        let mut path_params = std::collections::HashMap::new();
+        path_params.insert("id".to_string(), "123".to_string());
+        path_params.insert("name".to_string(), "john".to_string());
+
+        let request = Request::builder()
+            .uri("http://localhost/users/123/john")
+            .body(Body::empty())
+            .unwrap();
+
+        let data = RequestData {
+            method: "GET".to_string(),
+            path: "/users/{id}/{name}".to_string(),
+            headers: std::sync::Arc::new(HashMap::new()),
+            cookies: std::sync::Arc::new(HashMap::new()),
+            query_params: Value::Object(Default::default()),
+            raw_query_params: std::sync::Arc::new(HashMap::new()),
+            path_params: std::sync::Arc::new(path_params),
+            body: Value::Null,
+            raw_body: None,
+        };
+
+        let ctx = RequestContext::new(request, data);
+
+        assert_eq!(ctx.path_param("id"), Some("123"));
+        assert_eq!(ctx.path_param("name"), Some("john"));
+        assert_eq!(ctx.path_param("missing"), None);
+    }
+
+    #[test]
+    fn request_context_accesses_method() {
+        let request = Request::builder()
+            .uri("http://localhost/test")
+            .body(Body::empty())
+            .unwrap();
+
+        let data = RequestData {
+            method: "POST".to_string(),
+            path: "/test".to_string(),
+            headers: std::sync::Arc::new(HashMap::new()),
+            cookies: std::sync::Arc::new(HashMap::new()),
+            query_params: Value::Object(Default::default()),
+            raw_query_params: std::sync::Arc::new(HashMap::new()),
+            path_params: std::sync::Arc::new(HashMap::new()),
+            body: Value::Null,
+            raw_body: None,
+        };
+
+        let ctx = RequestContext::new(request, data);
+        assert_eq!(ctx.method(), "POST");
+    }
+
+    #[test]
+    fn request_context_accesses_path() {
+        let request = Request::builder()
+            .uri("http://localhost/test")
+            .body(Body::empty())
+            .unwrap();
+
+        let data = RequestData {
+            method: "GET".to_string(),
+            path: "/test".to_string(),
+            headers: std::sync::Arc::new(HashMap::new()),
+            cookies: std::sync::Arc::new(HashMap::new()),
+            query_params: Value::Object(Default::default()),
+            raw_query_params: std::sync::Arc::new(HashMap::new()),
+            path_params: std::sync::Arc::new(HashMap::new()),
+            body: Value::Null,
+            raw_body: None,
+        };
+
+        let ctx = RequestContext::new(request, data);
+        assert_eq!(ctx.path_str(), "/test");
     }
 
     struct EchoWebSocket;

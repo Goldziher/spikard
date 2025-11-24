@@ -1,49 +1,31 @@
-//! Test client for Spikard applications
+//! PyO3 wrapper for the core Spikard test client
 //!
-//! This module provides a test client powered by axum-test for testing Spikard applications
-//! without needing to start a real HTTP server.
+//! This module bridges the language-agnostic test client from spikard_http
+//! to Python, providing a Pythonic API surface using PyO3.
 
 use crate::test_sse;
 use crate::test_websocket;
 use axum::Router as AxumRouter;
-use axum::http::{HeaderName, HeaderValue, Method};
-use axum_test::{TestResponse as AxumTestResponse, TestServer as AxumTestServer};
-use once_cell::sync::Lazy;
 use pyo3::prelude::*;
-use pyo3::types::{PyBytes, PyDict, PyString};
+use pyo3::types::{PyDict, PyList};
 use serde_json::Value;
-use spikard_http::testing::{
-    MultipartFilePart, ResponseSnapshot, SnapshotError, build_multipart_body, encode_urlencoded_body, snapshot_response,
-};
-use std::sync::Arc;
-use tokio::runtime::{Builder, Runtime};
-use urlencoding::encode;
-
-pub(crate) static GLOBAL_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
-    Builder::new_multi_thread()
-        .worker_threads(2)
-        .enable_all()
-        .build()
-        .expect("Failed to create Tokio runtime")
-});
+use spikard_http::testing::{MultipartFilePart, ResponseSnapshot, TestClient as CoreTestClient};
 
 /// A test client for making requests to a Spikard application
 ///
-/// This wraps axum-test's TestServer and provides a Python-friendly interface
+/// This wraps the core TestClient from spikard_http and provides a Python-friendly interface.
 #[pyclass]
 pub struct TestClient {
-    server: Arc<AxumTestServer>,
+    client: CoreTestClient,
 }
 
 impl TestClient {
     /// Create a new test client from an Axum router
     pub fn from_router(router: AxumRouter) -> PyResult<Self> {
-        let server = AxumTestServer::new(router)
+        let client = CoreTestClient::from_router(router)
             .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to create test server: {}", e)))?;
 
-        Ok(Self {
-            server: Arc::new(server),
-        })
+        Ok(Self { client })
     }
 }
 
@@ -81,37 +63,20 @@ impl TestClient {
             }
         }
 
-        let server = Arc::clone(&self.server);
-
         let fut = async move {
-            let full_path = if !query_params_vec.is_empty() {
-                let query_string: Vec<String> = query_params_vec
-                    .iter()
-                    .map(|(k, v)| format!("{}={}", encode(k), encode(v)))
-                    .collect();
-                if path.contains('?') {
-                    format!("{}&{}", path, query_string.join("&"))
-                } else {
-                    format!("{}?{}", path, query_string.join("&"))
-                }
-            } else {
-                path.clone()
-            };
-
-            let mut request = server.get(&full_path);
-
-            for (key, value) in headers_vec {
-                let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
-                })?;
-                let header_value = HeaderValue::from_str(&value).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
-                })?;
-                request = request.add_header(header_name, header_value);
-            }
-
-            let response = request.await;
-            TestResponse::from_axum_response(response).await
+            self.client
+                .get(
+                    &path,
+                    Some(query_params_vec),
+                    if headers_vec.is_empty() {
+                        None
+                    } else {
+                        Some(headers_vec)
+                    },
+                )
+                .await
+                .map(|snapshot| TestResponse { snapshot })
+                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
         };
 
         pyo3_async_runtimes::tokio::future_into_py(py, fut)
@@ -122,6 +87,7 @@ impl TestClient {
     /// Args:
     ///     path: The path to request
     ///     json: Optional JSON body as a dict
+    ///     data: Optional form data (dict, str, or bytes)
     ///     files: Optional files for multipart/form-data upload
     ///     query_params: Optional query parameters
     ///     headers: Optional headers as a dict
@@ -153,13 +119,10 @@ impl TestClient {
         let mut raw_body: Option<Vec<u8>> = None;
         if let Some(obj) = data {
             if let Ok(dict) = obj.cast::<PyDict>() {
-                #[allow(clippy::needless_borrow)]
-                {
-                    form_data = extract_dict_to_vec(Some(&dict))?;
-                }
-            } else if let Ok(py_bytes) = obj.cast::<PyBytes>() {
+                form_data = extract_dict_to_vec(Some(&dict))?;
+            } else if let Ok(py_bytes) = obj.cast::<pyo3::types::PyBytes>() {
                 raw_body = Some(py_bytes.as_bytes().to_vec());
-            } else if let Ok(py_str) = obj.cast::<PyString>() {
+            } else if let Ok(py_str) = obj.cast::<pyo3::types::PyString>() {
                 raw_body = Some(py_str.to_str()?.as_bytes().to_vec());
             } else {
                 return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
@@ -170,66 +133,37 @@ impl TestClient {
 
         let files_data = extract_files(files)?;
 
-        let server = Arc::clone(&self.server);
-        let raw_body = raw_body;
-
         let fut = async move {
-            let full_path = build_full_path(&path, &query_params_vec);
-            let mut request = server.post(&full_path);
+            // Determine body type priority: multipart > form-encoded > JSON > raw > nothing
+            let multipart =
+                if !files_data.is_empty() || (!form_data.is_empty() && raw_body.is_none() && json_value.is_none()) {
+                    Some((form_data, files_data))
+                } else {
+                    None
+                };
 
-            let is_multipart = !files_data.is_empty() || !form_data.is_empty();
+            let form_for_encoding = if multipart.is_none() && raw_body.is_none() && !form_data.is_empty() {
+                Some(form_data)
+            } else {
+                None
+            };
 
-            let is_form_encoded = headers_vec.iter().any(|(k, v)| {
-                k.eq_ignore_ascii_case("content-type") && v.contains("application/x-www-form-urlencoded")
-            });
-
-            if is_multipart {
-                let (multipart_body, boundary) = build_multipart_body(&form_data, &files_data);
-                request = request.add_header(
-                    HeaderName::from_static("content-type"),
-                    HeaderValue::from_str(&format!("multipart/form-data; boundary={boundary}")).map_err(|e| {
-                        PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header: {}", e))
-                    })?,
-                );
-                request = request.bytes(bytes::Bytes::from(multipart_body));
-            } else if let Some(body) = raw_body {
-                request = request.bytes(bytes::Bytes::from(body));
-            } else if is_form_encoded {
-                let json_val = json_value.clone().ok_or_else(|| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                        "Form-encoded requests require a JSON body to encode",
-                    )
-                })?;
-
-                let encoded = encode_urlencoded_body(&json_val).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid form body: {}", e))
-                })?;
-
-                request = request.add_header(
-                    HeaderName::from_static("content-type"),
-                    HeaderValue::from_static("application/x-www-form-urlencoded"),
-                );
-                request = request.bytes(bytes::Bytes::from(encoded));
-            } else if let Some(json_val) = json_value.clone() {
-                request = request.json(&json_val);
-            }
-
-            for (key, value) in headers_vec {
-                if is_form_encoded && key.eq_ignore_ascii_case("content-type") {
-                    continue;
-                }
-
-                let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
-                })?;
-                let header_value = HeaderValue::from_str(&value).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
-                })?;
-                request = request.add_header(header_name, header_value);
-            }
-
-            let response = request.await;
-            TestResponse::from_axum_response(response).await
+            self.client
+                .post(
+                    &path,
+                    json_value,
+                    form_for_encoding,
+                    multipart,
+                    Some(query_params_vec),
+                    if headers_vec.is_empty() {
+                        None
+                    } else {
+                        Some(headers_vec)
+                    },
+                )
+                .await
+                .map(|snapshot| TestResponse { snapshot })
+                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
         };
 
         pyo3_async_runtimes::tokio::future_into_py(py, fut)
@@ -254,28 +188,21 @@ impl TestClient {
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
 
-        let server = Arc::clone(&self.server);
-
         let fut = async move {
-            let full_path = build_full_path(&path, &query_params_vec);
-            let mut request = server.put(&full_path);
-
-            if let Some(json_val) = json_value {
-                request = request.json(&json_val);
-            }
-
-            for (key, value) in headers_vec {
-                let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
-                })?;
-                let header_value = HeaderValue::from_str(&value).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
-                })?;
-                request = request.add_header(header_name, header_value);
-            }
-
-            let response = request.await;
-            TestResponse::from_axum_response(response).await
+            self.client
+                .put(
+                    &path,
+                    json_value,
+                    Some(query_params_vec),
+                    if headers_vec.is_empty() {
+                        None
+                    } else {
+                        Some(headers_vec)
+                    },
+                )
+                .await
+                .map(|snapshot| TestResponse { snapshot })
+                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
         };
 
         pyo3_async_runtimes::tokio::future_into_py(py, fut)
@@ -300,28 +227,21 @@ impl TestClient {
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
 
-        let server = Arc::clone(&self.server);
-
         let fut = async move {
-            let full_path = build_full_path(&path, &query_params_vec);
-            let mut request = server.patch(&full_path);
-
-            if let Some(json_val) = json_value {
-                request = request.json(&json_val);
-            }
-
-            for (key, value) in headers_vec {
-                let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
-                })?;
-                let header_value = HeaderValue::from_str(&value).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
-                })?;
-                request = request.add_header(header_name, header_value);
-            }
-
-            let response = request.await;
-            TestResponse::from_axum_response(response).await
+            self.client
+                .patch(
+                    &path,
+                    json_value,
+                    Some(query_params_vec),
+                    if headers_vec.is_empty() {
+                        None
+                    } else {
+                        Some(headers_vec)
+                    },
+                )
+                .await
+                .map(|snapshot| TestResponse { snapshot })
+                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
         };
 
         pyo3_async_runtimes::tokio::future_into_py(py, fut)
@@ -340,24 +260,20 @@ impl TestClient {
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
 
-        let server = Arc::clone(&self.server);
-
         let fut = async move {
-            let full_path = build_full_path(&path, &query_params_vec);
-            let mut request = server.delete(&full_path);
-
-            for (key, value) in headers_vec {
-                let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
-                })?;
-                let header_value = HeaderValue::from_str(&value).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
-                })?;
-                request = request.add_header(header_name, header_value);
-            }
-
-            let response = request.await;
-            TestResponse::from_axum_response(response).await
+            self.client
+                .delete(
+                    &path,
+                    Some(query_params_vec),
+                    if headers_vec.is_empty() {
+                        None
+                    } else {
+                        Some(headers_vec)
+                    },
+                )
+                .await
+                .map(|snapshot| TestResponse { snapshot })
+                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
         };
 
         pyo3_async_runtimes::tokio::future_into_py(py, fut)
@@ -376,24 +292,20 @@ impl TestClient {
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
 
-        let server = Arc::clone(&self.server);
-
         let fut = async move {
-            let full_path = build_full_path(&path, &query_params_vec);
-            let mut request = server.method(Method::OPTIONS, &full_path);
-
-            for (key, value) in headers_vec {
-                let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
-                })?;
-                let header_value = HeaderValue::from_str(&value).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
-                })?;
-                request = request.add_header(header_name, header_value);
-            }
-
-            let response = request.await;
-            TestResponse::from_axum_response(response).await
+            self.client
+                .options(
+                    &path,
+                    Some(query_params_vec),
+                    if headers_vec.is_empty() {
+                        None
+                    } else {
+                        Some(headers_vec)
+                    },
+                )
+                .await
+                .map(|snapshot| TestResponse { snapshot })
+                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
         };
 
         pyo3_async_runtimes::tokio::future_into_py(py, fut)
@@ -412,24 +324,20 @@ impl TestClient {
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
 
-        let server = Arc::clone(&self.server);
-
         let fut = async move {
-            let full_path = build_full_path(&path, &query_params_vec);
-            let mut request = server.method(Method::HEAD, &full_path);
-
-            for (key, value) in headers_vec {
-                let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
-                })?;
-                let header_value = HeaderValue::from_str(&value).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
-                })?;
-                request = request.add_header(header_name, header_value);
-            }
-
-            let response = request.await;
-            TestResponse::from_axum_response(response).await
+            self.client
+                .head(
+                    &path,
+                    Some(query_params_vec),
+                    if headers_vec.is_empty() {
+                        None
+                    } else {
+                        Some(headers_vec)
+                    },
+                )
+                .await
+                .map(|snapshot| TestResponse { snapshot })
+                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
         };
 
         pyo3_async_runtimes::tokio::future_into_py(py, fut)
@@ -448,66 +356,47 @@ impl TestClient {
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
 
-        let server = Arc::clone(&self.server);
-
         let fut = async move {
-            let full_path = build_full_path(&path, &query_params_vec);
-            let mut request = server.method(Method::TRACE, &full_path);
-
-            for (key, value) in headers_vec {
-                let header_name = HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header name: {}", e))
-                })?;
-                let header_value = HeaderValue::from_str(&value).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid header value: {}", e))
-                })?;
-                request = request.add_header(header_name, header_value);
-            }
-
-            let response = request.await;
-            TestResponse::from_axum_response(response).await
+            self.client
+                .trace(
+                    &path,
+                    Some(query_params_vec),
+                    if headers_vec.is_empty() {
+                        None
+                    } else {
+                        Some(headers_vec)
+                    },
+                )
+                .await
+                .map(|snapshot| TestResponse { snapshot })
+                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
         };
 
         pyo3_async_runtimes::tokio::future_into_py(py, fut)
     }
 
     /// Connect to a WebSocket endpoint
-    ///
-    /// Args:
-    ///     path: The WebSocket endpoint path (e.g., "/ws")
-    ///
-    /// Returns:
-    ///     WebSocketTestConnection: A WebSocket connection for testing
     fn websocket<'py>(&self, py: Python<'py>, path: &str) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
-        let server = Arc::clone(&self.server);
+        let server = self.client.server();
 
-        let fut = GLOBAL_RUNTIME.spawn(async move { test_websocket::connect_websocket_for_test(&server, &path).await });
+        let fut = async move { test_websocket::connect_websocket_for_test(server, &path).await };
 
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            fut.await
-                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("WebSocket task failed: {}", e)))?
-        })
+        pyo3_async_runtimes::tokio::future_into_py(py, fut)
     }
 
     /// Connect to a Server-Sent Events endpoint
-    ///
-    /// Args:
-    ///     path: The SSE endpoint path (e.g., "/events")
-    ///
-    /// Returns:
-    ///     SseStream: An SSE stream for testing
     fn sse<'py>(&self, py: Python<'py>, path: &str) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
-        let server = Arc::clone(&self.server);
+        let server = self.client.server();
 
         let fut = async move {
             let axum_response = server.get(&path).await;
-            let snapshot = snapshot_response(axum_response).await.map_err(snapshot_err_to_py)?;
+            let snapshot = spikard_http::testing::snapshot_response(axum_response)
+                .await
+                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
 
-            let sse_stream = test_sse::sse_stream_from_response(&snapshot)?;
-
-            Ok(sse_stream)
+            test_sse::sse_stream_from_response(&snapshot)
         };
 
         pyo3_async_runtimes::tokio::future_into_py(py, fut)
@@ -518,14 +407,6 @@ impl TestClient {
 #[pyclass]
 pub struct TestResponse {
     snapshot: ResponseSnapshot,
-}
-
-impl TestResponse {
-    /// Create a TestResponse from an axum-test response
-    async fn from_axum_response(response: AxumTestResponse) -> PyResult<Self> {
-        let snapshot = snapshot_response(response).await.map_err(snapshot_err_to_py)?;
-        Ok(Self { snapshot })
-    }
 }
 
 #[pymethods]
@@ -620,7 +501,7 @@ fn extract_dict_to_vec(dict: Option<&Bound<'_, PyDict>>) -> PyResult<Vec<(String
         for (key, value) in d.iter() {
             let key: String = key.extract()?;
 
-            if let Ok(list) = value.cast::<pyo3::types::PyList>() {
+            if let Ok(list) = value.cast::<PyList>() {
                 for item in list.iter() {
                     let item_str: String = item.str()?.extract()?;
                     result.push((key.clone(), item_str));
@@ -633,23 +514,6 @@ fn extract_dict_to_vec(dict: Option<&Bound<'_, PyDict>>) -> PyResult<Vec<(String
         Ok(result)
     } else {
         Ok(Vec::new())
-    }
-}
-
-fn build_full_path(path: &str, query_params: &[(String, String)]) -> String {
-    if query_params.is_empty() {
-        return path.to_string();
-    }
-
-    let query_string: Vec<String> = query_params
-        .iter()
-        .map(|(k, v)| format!("{}={}", encode(k), encode(v)))
-        .collect();
-
-    if path.contains('?') {
-        format!("{}&{}", path, query_string.join("&"))
-    } else {
-        format!("{}?{}", path, query_string.join("&"))
     }
 }
 
@@ -671,10 +535,6 @@ fn json_value_to_python<'py>(py: Python<'py>, value: &Value) -> PyResult<Bound<'
     Ok(result)
 }
 
-fn snapshot_err_to_py(err: SnapshotError) -> PyErr {
-    pyo3::exceptions::PyRuntimeError::new_err(err.to_string())
-}
-
 /// Extract files from Python dict
 /// Expects: {"field": ("filename", bytes), "field2": [("file1", bytes), ("file2", bytes)]}
 fn extract_files(files_dict: Option<&Bound<'_, PyDict>>) -> PyResult<Vec<MultipartFilePart>> {
@@ -687,7 +547,7 @@ fn extract_files(files_dict: Option<&Bound<'_, PyDict>>) -> PyResult<Vec<Multipa
     for (key, value) in files.iter() {
         let field_name: String = key.extract()?;
 
-        if let Ok(list) = value.cast::<pyo3::types::PyList>() {
+        if let Ok(list) = value.cast::<PyList>() {
             for item in list.iter() {
                 let file_data = extract_single_file(&field_name, &item)?;
                 result.push(file_data);

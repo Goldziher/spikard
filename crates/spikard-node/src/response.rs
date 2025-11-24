@@ -73,6 +73,13 @@ impl TestResponse {
 }
 
 /// Optional configuration for a streaming response.
+///
+/// This struct is exposed to JavaScript via napi and provides configuration
+/// options when creating streaming responses from async iterators.
+///
+/// NOTE: Marked with #[allow(dead_code)] because the #[napi(object)] macro
+/// generates access patterns that aren't visible to the Rust dead code checker,
+/// though the struct is actually exposed to and used by JavaScript code.
 #[napi(object)]
 #[allow(dead_code)]
 pub struct StreamingResponseInit {
@@ -92,9 +99,25 @@ pub struct StreamingHandle {
 }
 
 static STREAM_HANDLE_REGISTRY: Lazy<Mutex<HashMap<i64, StreamingHandle>>> = Lazy::new(|| Mutex::new(HashMap::new()));
+
+/// Atomic counter for generating unique streaming handle IDs.
+///
+/// Used by `create_streaming_handle()` to assign monotonically increasing
+/// identifiers to each streaming response, enabling correlation in the registry.
+///
+/// NOTE: Marked with #[allow(dead_code)] because it's used via atomic operations
+/// (fetch_add) which the dead code checker doesn't recognize as a direct usage.
 #[allow(dead_code)]
 static STREAM_HANDLE_COUNTER: AtomicU64 = AtomicU64::new(1);
 
+/// Creates a streaming handle from a JavaScript async iterator.
+///
+/// This function is exposed to JavaScript via napi. It wraps async iterators
+/// in a streaming handle structure that can be used to construct HTTP streaming responses.
+///
+/// NOTE: Marked with #[allow(dead_code)] because the #[napi] macro generates
+/// FFI bindings that aren't visible to the Rust dead code checker, though the
+/// function is actually exported and callable from JavaScript.
 #[napi]
 #[allow(dead_code)]
 pub fn create_streaming_handle(iterator: Object, init: Option<StreamingResponseInit>) -> Result<i64> {
