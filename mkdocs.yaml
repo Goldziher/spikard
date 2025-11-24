@@ -180,6 +180,11 @@ nav:
       - Validation Flows: guides/validation.md
       - Deployment: guides/deployment.md
   - CLI: cli/usage.md
+  - Bindings:
+      - Python: bindings/python.md
+      - TypeScript / Node: bindings/typescript.md
+      - Ruby: bindings/ruby.md
+      - Rust: bindings/rust.md
   - API Reference:
       - Python: reference/api-python.md
       - TypeScript: reference/api-typescript.md
