@@ -6,40 +6,19 @@ Middleware is the right place for cross-cutting behavior like logging, auth, or 
 
 === "Python"
 
-    ```python
-    def logging_middleware(ctx, next_fn):
-        print(f"{ctx.method} {ctx.path}")
-        return next_fn()
-
-    app.use(logging_middleware)
-    ```
+    --8<-- "snippets/python/middleware_basic.md"
 
 === "TypeScript"
 
-    ```typescript
-    app.use(async (ctx, next) => {
-      console.log(`${ctx.method} ${ctx.path}`);
-      return next();
-    });
-    ```
+    --8<-- "snippets/typescript/middleware_basic.md"
 
 === "Ruby"
 
-    ```ruby
-    App.use do |ctx, next_middleware|
-      puts "#{ctx.method} #{ctx.path}"
-      next_middleware.call
-    end
-    ```
+    --8<-- "snippets/ruby/middleware_basic.md"
 
 === "Rust"
 
-    ```rust
-    use tower_http::trace::TraceLayer;
-
-    let mut app = App::new();
-    app.layer(TraceLayer::new_for_http());
-    ```
+    --8<-- "snippets/rust/middleware_basic.md"
 
 ## Patterns
 - **Auth guards**: check headers/cookies, enrich context with the authenticated principal, and short-circuit on failures.

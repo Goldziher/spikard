@@ -6,29 +6,19 @@ Spikard can run as a compiled Rust binary, via the CLI, or packaged into contain
 
 === "CLI"
 
-    ```bash
-    spikard run app.py --host 0.0.0.0 --port 8000
-    ```
+    --8<-- "snippets/cli/run_app.md"
 
 === "Rust binary"
 
-    ```bash
-    cargo run --bin spikard-http -- --port 8000
-    ```
+    --8<-- "snippets/rust/run_binary.md"
 
 === "TypeScript"
 
-    ```bash
-    pnpm ts-node app.ts  # app bootstraps the Rust runtime via the Node binding
-    ```
+    --8<-- "snippets/typescript/run_app.md"
 
 === "Python"
 
-    ```bash
-    python app.py
-    # or
-    spikard run app.py
-    ```
+    --8<-- "snippets/python/run_app.md"
 
 ## Production tips
 - Set explicit `host`/`port` and timeouts; avoid relying on defaults in container platforms.

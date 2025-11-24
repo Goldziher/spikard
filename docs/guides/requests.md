@@ -6,88 +6,37 @@ Handlers receive a context object tailored to each binding but backed by the sam
 
 === "Python"
 
-    ```python
-    from typing import Optional
-
-    @app.post("/orders/{order_id:int}")
-    async def update_order(order_id: int, order: Order, verbose: Optional[bool] = False) -> Order:
-        # order is validated before the handler runs
-        if verbose:
-            print("updating", order_id)
-        return order
-    ```
+    --8<-- "snippets/python/request_data.md"
 
 === "TypeScript"
 
-    ```typescript
-    app.post("/orders/:orderId", ({ params, query, headers, body }) => {
-      const order = Order.parse(body);
-      return {
-        ...order,
-        id: Number(params.orderId),
-        requestId: headers["x-request-id"],
-        verbose: query.verbose === "true",
-      };
-    });
-    ```
+    --8<-- "snippets/typescript/request_data.md"
 
 === "Ruby"
 
-    ```ruby
-    App.post("/orders/:order_id") do |ctx|
-      order = ctx.json
-      {
-        **order,
-        id: ctx.params[:order_id].to_i,
-        request_id: ctx.headers["x-request-id"],
-      }
-    end
-    ```
+    --8<-- "snippets/ruby/request_data.md"
 
 === "Rust"
 
-    ```rust
-    app.route(post("/orders/:order_id"), |ctx: Context| async move {
-        let mut order: serde_json::Value = ctx.json()?;
-        let id = ctx.path_param("order_id").unwrap_or("0");
-        let verbose: serde_json::Value = ctx.query().unwrap_or_default();
-        if let Some(map) = order.as_object_mut() {
-            map.insert("id".into(), serde_json::json!(id.parse::<i64>().unwrap_or_default()));
-            map.insert("verbose".into(), verbose.get("verbose").cloned().unwrap_or(serde_json::json!(false)));
-        }
-        Ok(Json(order))
-    })?;
-    ```
+    --8<-- "snippets/rust/request_data.md"
 
 ## Return responses
 
 === "Python"
 
-    ```python
-    @app.get("/health")
-    async def health() -> dict:
-        return {"status": "ok"}
-    ```
+    --8<-- "snippets/python/response_basic.md"
 
 === "TypeScript"
 
-    ```typescript
-    app.get("/health", () => ({ status: "ok" }));
-    ```
+    --8<-- "snippets/typescript/response_basic.md"
 
 === "Ruby"
 
-    ```ruby
-    App.get("/health") { { status: "ok" } }
-    ```
+    --8<-- "snippets/ruby/response_basic.md"
 
 === "Rust"
 
-    ```rust
-    app.route(get("/health"), |_ctx: Context| async {
-        Ok(Json(serde_json::json!({"status": "ok"})))
-    })?;
-    ```
+    --8<-- "snippets/rust/response_basic.md"
 
 ## Tips
 - Use DTOs/schemas so validation runs before your handler executes.

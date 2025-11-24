@@ -6,98 +6,37 @@ Routing is uniform across bindings: define an `App`, register routes with typed 
 
 === "Python"
 
-    ```python
-    from spikard import App
-
-    app = App()
-
-    @app.get("/health")
-    async def health() -> dict:
-        return {"status": "ok"}
-
-    @app.post("/users")
-    async def create_user(user: User) -> User:
-        return user
-    ```
+    --8<-- "snippets/python/routing_basic.md"
 
 === "TypeScript"
 
-    ```typescript
-    import { App } from "spikard";
-
-    const app = new App();
-
-    app.get("/health", () => ({ status: "ok" }));
-    app.post("/users", ({ body }) => body);
-    ```
+    --8<-- "snippets/typescript/routing_basic.md"
 
 === "Ruby"
 
-    ```ruby
-    require "spikard"
-
-    App = Spikard::App.new
-
-    App.get("/health") { { status: "ok" } }
-    App.post("/users") { |ctx| ctx.json }
-    ```
+    --8<-- "snippets/ruby/routing_basic.md"
 
 === "Rust"
 
-    ```rust
-    use spikard::prelude::*;
-
-    let mut app = App::new();
-
-    app.route(get("/health"), |_ctx: Context| async { Ok(Json(json!({"status": "ok"}))) })?;
-    app.route(post("/users"), |ctx: Context| async move {
-        let user: serde_json::Value = ctx.json()?;
-        Ok(Json(user))
-    })?;
-    ```
+    --8<-- "snippets/rust/routing_basic.md"
 
 ## Path and query params
 
 === "Python"
 
-    ```python
-    @app.get("/orders/{order_id:int}")
-    async def get_order(order_id: int, include_details: bool = False) -> dict:
-        return {"id": order_id, "details": include_details}
-    ```
+    --8<-- "snippets/python/path_params.md"
 
 === "TypeScript"
 
-    ```typescript
-    app.get("/orders/:orderId", ({ params, query }) => ({
-      id: Number(params.orderId),
-      details: query.details === "true",
-    }));
-    ```
+    --8<-- "snippets/typescript/path_params.md"
 
 === "Ruby"
 
-    ```ruby
-    App.get("/orders/:order_id") do |ctx|
-      {
-        id: ctx.params[:order_id].to_i,
-        details: ctx.query["details"] == "true",
-      }
-    end
-    ```
+    --8<-- "snippets/ruby/path_params.md"
 
 === "Rust"
 
-    ```rust
-    app.route(get("/orders/:order_id"), |ctx: Context| async move {
-        let id = ctx.path_param("order_id").unwrap_or("0");
-        let details: serde_json::Value = ctx.query()?;
-        Ok(Json(json!({
-            "id": id.parse::<i64>().unwrap_or_default(),
-            "details": details.get("details").and_then(|d| d.as_bool()).unwrap_or(false)
-        })))
-    })?;
-    ```
+    --8<-- "snippets/rust/path_params.md"
 
 ## Best practices
 - Keep handlers small and pure; push IO into services.
