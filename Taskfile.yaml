@@ -193,7 +193,7 @@ tasks:
     deps:
       - build:py
     cmds:
-      - PYTHONPATH=packages/python uv run pytest packages/python/tests -v
+      - PYTHONPATH=packages/python .venv/bin/python -m pytest packages/python/tests -v
 
   test:python:
     desc: "Alias for python:test"
@@ -569,7 +569,7 @@ tasks:
     desc: "Run Python e2e tests (fixture-driven integration tests)"
     dir: e2e/python
     cmds:
-      - PYTHONPATH=../../packages/python uv run pytest tests/ -v
+      - PYTHONPATH=../../packages/python:. ../../.venv/bin/python -m pytest tests/ -v
 
   test:e2e:node:
     desc: "Run Node.js e2e tests (fixture-driven integration tests with vitest)"

@@ -9,6 +9,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 #[cfg(feature = "di")]
+use crate::di::ResolvedDependencies;
+#[cfg(feature = "di")]
 use bytes::Bytes;
 
 /// Request data extracted from HTTP request
@@ -44,6 +46,9 @@ pub struct RequestData {
     pub method: String,
     /// Request path
     pub path: String,
+    /// Resolved dependencies for this request (populated by DI handlers)
+    #[cfg(feature = "di")]
+    pub dependencies: Option<Arc<ResolvedDependencies>>,
 }
 
 impl Serialize for RequestData {
@@ -162,6 +167,8 @@ impl<'de> Deserialize<'de> for RequestData {
                     cookies: cookies.ok_or_else(|| serde::de::Error::missing_field("cookies"))?,
                     method: method.ok_or_else(|| serde::de::Error::missing_field("method"))?,
                     path: path.ok_or_else(|| serde::de::Error::missing_field("path"))?,
+                    #[cfg(feature = "di")]
+                    dependencies: None,
                 })
             }
         }

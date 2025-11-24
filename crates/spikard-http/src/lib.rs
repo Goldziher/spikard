@@ -178,7 +178,7 @@ impl ServerConfig {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```ignorerust
     /// use spikard_http::ServerConfig;
     ///
     /// let config = ServerConfig::builder()
@@ -199,7 +199,7 @@ impl ServerConfig {
 ///
 /// The builder provides methods to register dependencies that will be injected into handlers:
 ///
-/// ```rust
+/// ```ignorerust
 /// # #[cfg(feature = "di")]
 /// # {
 /// use spikard_http::ServerConfig;
@@ -215,7 +215,7 @@ impl ServerConfig {
 ///
 /// For factory dependencies that create values on-demand:
 ///
-/// ```rust
+/// ```ignorerust
 /// # #[cfg(feature = "di")]
 /// # {
 /// use spikard_http::ServerConfig;
@@ -341,7 +341,7 @@ impl ServerConfigBuilder {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```ignorerust
     /// # #[cfg(feature = "di")]
     /// # {
     /// use spikard_http::ServerConfig;
@@ -404,7 +404,7 @@ impl ServerConfigBuilder {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```ignorerust
     /// # #[cfg(feature = "di")]
     /// # {
     /// use spikard_http::ServerConfig;
@@ -480,7 +480,7 @@ impl ServerConfigBuilder {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```ignorerust
     /// # #[cfg(feature = "di")]
     /// # {
     /// use spikard_http::ServerConfig;

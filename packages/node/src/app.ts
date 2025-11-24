@@ -2,7 +2,6 @@
  * Spikard application class
  */
 
-import { isNativeHandler, wrapHandler } from "./handler-wrapper";
 import type { HandlerFunction, NativeHandlerFunction, RouteMetadata, SpikardApp } from "./index";
 import type { Request } from "./request";
 import { runServer, type ServerOptions } from "./server";
@@ -87,7 +86,7 @@ export interface LifecycleHooks {
  */
 export class Spikard implements SpikardApp {
 	routes: RouteMetadata[] = [];
-	handlers: Record<string, NativeHandlerFunction> = {};
+	handlers: Record<string, HandlerFunction | NativeHandlerFunction> = {};
 	websocketRoutes: RouteMetadata[] = [];
 	websocketHandlers: Record<string, Record<string, unknown>> = {};
 	lifecycleHooks: LifecycleHooks = {
@@ -107,8 +106,7 @@ export class Spikard implements SpikardApp {
 	 */
 	addRoute(metadata: RouteMetadata, handler: HandlerFunction | NativeHandlerFunction): void {
 		this.routes.push(metadata);
-		const nativeHandler = isNativeHandler(handler) ? handler : wrapHandler(handler as HandlerFunction);
-		this.handlers[metadata.handler_name] = nativeHandler;
+		this.handlers[metadata.handler_name] = handler;
 	}
 
 	/**
@@ -117,6 +115,14 @@ export class Spikard implements SpikardApp {
 	websocket(path: string, handler: WebSocketHandler, options: WebSocketOptions = {}): void {
 		const handlerName =
 			options.handlerName ?? `ws_${this.websocketRoutes.length}_${path}`.replace(/[^a-zA-Z0-9_]/g, "_");
+		const handlerWrapper: Record<string, unknown> = { handleMessage: handler };
+		if (options.messageSchema) {
+			handlerWrapper._messageSchema = options.messageSchema;
+		}
+		if (options.responseSchema) {
+			handlerWrapper._responseSchema = options.responseSchema;
+		}
+
 		const route: RouteMetadata = {
 			method: "GET",
 			path,
@@ -129,7 +135,7 @@ export class Spikard implements SpikardApp {
 		};
 
 		this.websocketRoutes.push(route);
-		this.websocketHandlers[handlerName] = handler;
+		this.websocketHandlers[handlerName] = handlerWrapper;
 	}
 
 	/**

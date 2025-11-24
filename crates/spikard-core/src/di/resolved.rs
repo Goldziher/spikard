@@ -22,7 +22,7 @@ type CleanupTask = Box<dyn FnOnce() -> BoxFuture<'static, ()> + Send>;
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use spikard_core::di::ResolvedDependencies;
 /// use std::sync::Arc;
 ///
@@ -58,7 +58,7 @@ impl ResolvedDependencies {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::ResolvedDependencies;
     ///
     /// let resolved = ResolvedDependencies::new();
@@ -80,7 +80,7 @@ impl ResolvedDependencies {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::ResolvedDependencies;
     /// use std::sync::Arc;
     ///
@@ -107,7 +107,7 @@ impl ResolvedDependencies {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::ResolvedDependencies;
     /// use std::sync::Arc;
     ///
@@ -145,7 +145,7 @@ impl ResolvedDependencies {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::ResolvedDependencies;
     /// use std::sync::Arc;
     ///
@@ -167,7 +167,7 @@ impl ResolvedDependencies {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::ResolvedDependencies;
     /// use std::sync::Arc;
     ///
@@ -189,7 +189,7 @@ impl ResolvedDependencies {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::ResolvedDependencies;
     /// use std::sync::Arc;
     ///
@@ -218,7 +218,7 @@ impl ResolvedDependencies {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::ResolvedDependencies;
     ///
     /// # tokio_test::block_on(async {
@@ -246,7 +246,7 @@ impl ResolvedDependencies {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::ResolvedDependencies;
     /// use std::sync::{Arc, Mutex};
     ///

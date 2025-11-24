@@ -59,6 +59,28 @@ interface NativeClient {
 	websocket(path: string): Promise<WebSocketTestConnection>;
 }
 
+class MockWebSocketConnection {
+	private readonly handler: (msg: unknown) => Promise<unknown>;
+	private readonly queue: unknown[] = [];
+
+	constructor(handler: (msg: unknown) => Promise<unknown>) {
+		this.handler = handler;
+	}
+
+	async send_json(message: unknown): Promise<void> {
+		const response = await this.handler(message);
+		this.queue.push(response);
+	}
+
+	async receive_json(): Promise<unknown> {
+		return this.queue.shift();
+	}
+
+	async close(): Promise<void> {
+		// no-op for mock
+	}
+}
+
 type NativeClientConstructor = new (
 	routesJson: string,
 	websocketRoutesJson: string | null,
@@ -279,6 +301,16 @@ export class TestClient {
 	 * @returns WebSocket test connection
 	 */
 	async websocketConnect(path: string): Promise<WebSocketTestConnection> {
+		const handlerName = this.app.websocketRoutes?.find((r) => r.path === path)?.handler_name;
+		const handlerEntry = handlerName ? this.app.websocketHandlers?.[handlerName] : undefined;
+		const handler =
+			handlerEntry && typeof handlerEntry.handleMessage === "function" ? handlerEntry.handleMessage : null;
+
+		if (handler) {
+			const mock = new MockWebSocketConnection(async (msg) => handler(msg));
+			return mock as unknown as WebSocketTestConnection;
+		}
+
 		return this.nativeClient.websocket(path);
 	}
 

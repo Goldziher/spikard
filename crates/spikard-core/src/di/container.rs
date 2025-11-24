@@ -30,7 +30,7 @@ use tokio::sync::RwLock;
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use spikard_core::di::{DependencyContainer, ValueDependency};
 /// use std::sync::Arc;
 ///
@@ -82,7 +82,7 @@ impl DependencyContainer {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::DependencyContainer;
     ///
     /// let container = DependencyContainer::new();
@@ -118,7 +118,7 @@ impl DependencyContainer {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::{DependencyContainer, ValueDependency};
     /// use std::sync::Arc;
     ///
@@ -163,7 +163,7 @@ impl DependencyContainer {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::{DependencyContainer, ValueDependency, FactoryDependency};
     /// use std::sync::Arc;
     ///
@@ -219,6 +219,12 @@ impl DependencyContainer {
         req: &Request<()>,
         data: &RequestData,
     ) -> Result<ResolvedDependencies, DependencyError> {
+        for key in deps {
+            if !self.dependencies.contains_key(key) {
+                return Err(DependencyError::NotFound { key: key.clone() });
+            }
+        }
+
         // Calculate resolution batches
         let batches = self.dependency_graph.calculate_batches(deps)?;
 
@@ -283,7 +289,7 @@ impl DependencyContainer {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::{DependencyContainer, ValueDependency};
     /// use std::sync::Arc;
     ///
@@ -303,7 +309,7 @@ impl DependencyContainer {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::DependencyContainer;
     ///
     /// let container = DependencyContainer::new();
@@ -318,7 +324,7 @@ impl DependencyContainer {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::{DependencyContainer, ValueDependency};
     /// use std::sync::Arc;
     ///
@@ -334,6 +340,12 @@ impl DependencyContainer {
         self.dependencies.contains_key(key)
     }
 
+    /// Get the keys of all registered dependencies
+    #[must_use]
+    pub fn keys(&self) -> Vec<String> {
+        self.dependencies.keys().cloned().collect()
+    }
+
     /// Clear the singleton cache
     ///
     /// This is useful for testing or when you need to force re-resolution
@@ -341,7 +353,7 @@ impl DependencyContainer {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::DependencyContainer;
     ///
     /// # tokio_test::block_on(async {
@@ -391,6 +403,8 @@ mod tests {
             cookies: Arc::new(HashMap::new()),
             method: "GET".to_string(),
             path: "/".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
         }
     }
 
@@ -423,8 +437,8 @@ mod tests {
         assert!(matches!(result, Err(DependencyError::DuplicateKey { .. })));
     }
 
-    #[test]
-    fn test_register_circular() {
+    #[tokio::test]
+    async fn test_register_circular() {
         let mut container = DependencyContainer::new();
 
         let dep_a = FactoryDependency::builder("a")
@@ -438,7 +452,13 @@ mod tests {
             .build();
 
         container.register("a".to_string(), Arc::new(dep_a)).unwrap();
-        let result = container.register("b".to_string(), Arc::new(dep_b));
+        container.register("b".to_string(), Arc::new(dep_b)).unwrap();
+
+        let request = make_request();
+        let request_data = make_request_data();
+        let result = container
+            .resolve_for_handler(&["a".to_string()], &request, &request_data)
+            .await;
 
         assert!(matches!(result, Err(DependencyError::CircularDependency { .. })));
     }

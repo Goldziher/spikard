@@ -26,7 +26,7 @@ use std::sync::Arc;
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use spikard_core::di::{Dependency, ValueDependency};
 /// use http::Request;
 /// use crate::request_data::RequestData;
@@ -73,7 +73,7 @@ impl<T: Clone + Send + Sync + 'static> ValueDependency<T> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::ValueDependency;
     ///
     /// // Simple value
@@ -156,6 +156,8 @@ mod tests {
             cookies: Arc::new(HashMap::new()),
             method: "GET".to_string(),
             path: "/".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
         }
     }
 

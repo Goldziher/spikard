@@ -872,6 +872,8 @@ mod tests {
             path_params: std::sync::Arc::new(HashMap::new()),
             body: Value::Null,
             raw_body: None,
+            #[cfg(feature = "di")]
+            dependencies: None,
         };
 
         let ctx = RequestContext::new(request, data);
@@ -900,6 +902,8 @@ mod tests {
             path_params: std::sync::Arc::new(HashMap::new()),
             body: Value::Null,
             raw_body: None,
+            #[cfg(feature = "di")]
+            dependencies: None,
         };
 
         let ctx = RequestContext::new(request, data);
@@ -930,6 +934,8 @@ mod tests {
             path_params: std::sync::Arc::new(HashMap::new()),
             body: Value::Null,
             raw_body: None,
+            #[cfg(feature = "di")]
+            dependencies: None,
         };
 
         let ctx = RequestContext::new(request, data);
@@ -960,6 +966,8 @@ mod tests {
             path_params: std::sync::Arc::new(path_params),
             body: Value::Null,
             raw_body: None,
+            #[cfg(feature = "di")]
+            dependencies: None,
         };
 
         let ctx = RequestContext::new(request, data);
@@ -986,6 +994,8 @@ mod tests {
             path_params: std::sync::Arc::new(HashMap::new()),
             body: Value::Null,
             raw_body: None,
+            #[cfg(feature = "di")]
+            dependencies: None,
         };
 
         let ctx = RequestContext::new(request, data);
@@ -1009,6 +1019,8 @@ mod tests {
             path_params: std::sync::Arc::new(HashMap::new()),
             body: Value::Null,
             raw_body: None,
+            #[cfg(feature = "di")]
+            dependencies: None,
         };
 
         let ctx = RequestContext::new(request, data);

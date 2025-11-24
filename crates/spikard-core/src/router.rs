@@ -151,6 +151,8 @@ mod tests {
             is_async: true,
             cors: None,
             body_param_name: None,
+            #[cfg(feature = "di")]
+            handler_dependencies: None,
         };
 
         let route = Route::from_metadata(metadata, &registry).unwrap();
@@ -182,6 +184,8 @@ mod tests {
             is_async: true,
             cors: None,
             body_param_name: None,
+            #[cfg(feature = "di")]
+            handler_dependencies: None,
         };
 
         let route = Route::from_metadata(metadata, &registry).unwrap();
@@ -211,6 +215,8 @@ mod tests {
             is_async: true,
             cors: None,
             body_param_name: None,
+            #[cfg(feature = "di")]
+            handler_dependencies: None,
         };
 
         let metadata2 = RouteMetadata {
@@ -224,6 +230,8 @@ mod tests {
             is_async: true,
             cors: None,
             body_param_name: None,
+            #[cfg(feature = "di")]
+            handler_dependencies: None,
         };
 
         let route1 = Route::from_metadata(metadata1, &registry).unwrap();

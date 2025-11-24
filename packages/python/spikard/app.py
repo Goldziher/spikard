@@ -43,7 +43,7 @@ class Spikard:
         self._dependencies: dict[str, Any] = {}
         Spikard.current_instance = self
 
-    def register_route(  # noqa: C901
+    def register_route(  # noqa: C901, PLR0915
         self,
         method: HttpMethod,
         path: str,
@@ -65,7 +65,7 @@ class Spikard:
             Decorator function
         """
 
-        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:  # noqa: C901
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:  # noqa: C901, PLR0915, PLR0912
             methods_without_body = {"GET", "DELETE", "HEAD", "OPTIONS"}
             if method.upper() in methods_without_body:
                 request_schema = None
@@ -90,32 +90,48 @@ class Spikard:
             standard_params = {"self", "cls", "path_params", "query_params", "headers", "cookies"}
             potential_dependencies = [param_name for param_name in sig.parameters if param_name not in standard_params]
 
+            # Parameters already bound to the request (headers/query/path/cookies/files/body) are
+            # NOT DI dependencies. Derive them from the parameter schema, file params, and ParamBase defaults.
+            request_bound_params = set()
+            provided_parameter_schema = parameter_schema is not None
+            if extracted_parameter_schema:
+                props = extracted_parameter_schema.get("properties", {}) or {}
+                for param_name, schema in props.items():
+                    source = schema.get("source")
+                    if provided_parameter_schema or source in {"path", "header", "cookie"}:
+                        request_bound_params.add(param_name)
+
+            if file_params:
+                request_bound_params.update(file_params.keys())
+
+            for param_name, param in sig.parameters.items():
+                if isinstance(param.default, ParamBase):
+                    request_bound_params.add(param_name)
+
+            # Never treat registered dependencies as request-bound
+            request_bound_params.difference_update(self._dependencies.keys())
+
             # For methods with no body schema, assume first non-standard param that's NOT a
             # path/query/header/cookie param is likely a DI dependency, not a body parameter
             # The body parameter should be explicitly named "body" or have a body schema
             handler_dependencies = []
+            body_param_name = None
             if method.upper() not in {"GET", "DELETE", "HEAD", "OPTIONS"}:
-                # For methods that can have a body, assume first param is body unless it's in dependencies
-                body_param_name = None
                 for param_name in potential_dependencies:
-                    # If this param is in registered dependencies, it's a DI param
+                    if param_name in request_bound_params:
+                        continue
                     if param_name in self._dependencies:
                         handler_dependencies.append(param_name)
-                    elif body_param_name is None and param_name not in handler_dependencies:
-                        # First param that's not a DI dependency is the body
+                        continue
+                    if body_param_name is None:
+                        # First unbound param is treated as the body
                         body_param_name = param_name
                     else:
-                        # Additional params are DI dependencies
                         handler_dependencies.append(param_name)
-
-                # Any remaining potential dependencies are DI params
-                for param_name in potential_dependencies:
-                    if param_name != body_param_name and param_name not in handler_dependencies:
-                        handler_dependencies.append(param_name)
-            else:
-                # For GET/DELETE/etc, all non-standard params are DI dependencies
-                handler_dependencies = potential_dependencies
-                body_param_name = None
+            # Any param that is not request-bound and not the body is treated as a DI dependency
+            handler_dependencies.extend(
+                [p for p in potential_dependencies if p != body_param_name and p not in request_bound_params]
+            )
 
             has_param_defaults = any(isinstance(param.default, ParamBase) for param in sig.parameters.values())
 

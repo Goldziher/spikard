@@ -172,6 +172,8 @@ def sync_handler(path_params, query_params, body, headers, cookies):
         cookies: HashMap::new().into(),
         method: "POST".to_string(),
         path: "/test".to_string(),
+        #[cfg(feature = "di")]
+        dependencies: None,
     };
 
     let request = Request::builder()
@@ -222,6 +224,8 @@ async def async_handler(path_params, query_params, body, headers, cookies):
         cookies: HashMap::new().into(),
         method: "GET".to_string(),
         path: "/items/42".to_string(),
+        #[cfg(feature = "di")]
+        dependencies: None,
     };
 
     let request = Request::builder()
@@ -259,6 +263,8 @@ def error_handler(path_params, query_params, body, headers, cookies):
         cookies: HashMap::new().into(),
         method: "GET".to_string(),
         path: "/error".to_string(),
+        #[cfg(feature = "di")]
+        dependencies: None,
     };
 
     let request = Request::builder()
@@ -309,6 +315,8 @@ def echo_handler(path_params, query_params, body, headers, cookies):
         cookies: cookies.clone().into(),
         method: "GET".to_string(),
         path: "/echo".to_string(),
+        #[cfg(feature = "di")]
+        dependencies: None,
     };
 
     let request = Request::builder()

@@ -110,7 +110,10 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
 
     #[cfg(feature = "di")]
     let handler_dependencies = {
-        let deps = route.getattr("handler_dependencies")?;
+        let deps = match route.getattr("handler_dependencies") {
+            Ok(value) => value,
+            Err(_) => py.None().into_bound(py),
+        };
         if deps.is_none() { None } else { Some(deps.extract()?) }
     };
 

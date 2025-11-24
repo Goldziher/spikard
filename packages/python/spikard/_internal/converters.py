@@ -16,16 +16,27 @@ from __future__ import annotations
 import base64
 import dataclasses
 import inspect
+import types
 import typing
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import is_dataclass
 from datetime import date, datetime, time, timedelta
-from typing import Any, Union, get_args, get_origin, get_type_hints
+from typing import TYPE_CHECKING, Any, Union, get_args, get_origin, get_type_hints
 
 import msgspec
 
 from spikard.datastructures import UploadFile
+
+if TYPE_CHECKING:
+    from pydantic import BaseModel as PydanticBaseModel
+else:  # pragma: no cover - runtime optional import
+    try:
+        from pydantic import BaseModel as PydanticBaseModel
+    except ImportError:
+        PydanticBaseModel = None  # type: ignore[assignment]
+
+BaseModel = typing.cast("type[PydanticBaseModel] | None", PydanticBaseModel)
 
 __all__ = ("clear_decoders", "convert_params", "needs_conversion", "register_decoder")
 
@@ -132,7 +143,7 @@ def _is_upload_file_type(type_hint: type) -> bool:
         if args and args[0] is UploadFile:
             return True
 
-    if origin is Union:
+    if origin is Union or origin is types.UnionType:
         args = get_args(type_hint)
         return any(arg is UploadFile for arg in args if arg is not type(None))
 
@@ -341,6 +352,7 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
 
         target_type = type_hints[key]
         origin = get_origin(target_type)
+        args = get_args(target_type)
         value = raw_value
 
         # For body parameter with bytes, decode JSON first
@@ -375,14 +387,15 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
 
         # Handle direct UploadFile or list[UploadFile] parameters
         if _is_upload_file_type(target_type):
+            if origin is Union and any(arg is UploadFile for arg in args) and isinstance(value, dict):
+                converted[key] = _convert_file_json_to_upload_file(value)
+                continue
             if target_type is UploadFile and isinstance(value, dict):
                 converted[key] = _convert_file_json_to_upload_file(value)
                 continue
-            if origin is list:
-                args = get_args(target_type)
-                if args and args[0] is UploadFile and isinstance(value, list):
-                    converted[key] = [_convert_file_json_to_upload_file(f) if isinstance(f, dict) else f for f in value]
-                    continue
+            if origin is list and args and args[0] is UploadFile and isinstance(value, list):
+                converted[key] = [_convert_file_json_to_upload_file(f) if isinstance(f, dict) else f for f in value]
+                continue
 
         # Now check if this type has UploadFile fields (for multipart/form data)
         # This happens AFTER JSON decoding so value is a dict
@@ -410,7 +423,8 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                     if field.name not in value_with_defaults:
                         field_type = type_hints_for_dc.get(field.name, field.type)
                         # Check if field is Optional
-                        if get_origin(field_type) is Union and type(None) in get_args(field_type):
+                        origin = get_origin(field_type)
+                        if origin in (Union, types.UnionType) and type(None) in get_args(field_type):
                             value_with_defaults[field.name] = None
 
                 converted[key] = target_type(**value_with_defaults)  # type: ignore[operator]
@@ -449,6 +463,34 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                 if strict:
                     raise ValueError(
                         f"Failed to convert parameter '{key}' to msgspec.Struct {target_type}: {err}"
+                    ) from err
+                converted[key] = value
+                continue
+
+        # Pydantic BaseModel support
+        if BaseModel is not None and isinstance(target_type, type) and issubclass(target_type, BaseModel):
+            try:
+                if (
+                    isinstance(value, list)
+                    and origin in (list, tuple)
+                    and args
+                    and isinstance(args[0], type)
+                    and issubclass(args[0], BaseModel)
+                ):
+                    model_cls = args[0]
+                    converted[key] = [
+                        model_cls.model_validate(item) if isinstance(item, dict) else item for item in value
+                    ]
+                elif isinstance(value, dict):
+                    model_cls = target_type
+                    converted[key] = model_cls.model_validate(value)
+                else:
+                    converted[key] = value
+                continue
+            except Exception as err:
+                if strict:
+                    raise ValueError(
+                        f"Failed to convert parameter '{key}' to Pydantic model {target_type}: {err}"
                     ) from err
                 converted[key] = value
                 continue

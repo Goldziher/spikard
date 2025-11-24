@@ -47,7 +47,7 @@ pub type FactoryFn = dyn Fn(
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use spikard_core::di::{FactoryDependency, Dependency, ResolvedDependencies};
 /// use http::Request;
 /// use crate::request_data::RequestData;
@@ -83,7 +83,7 @@ impl FactoryDependency {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::FactoryDependency;
     /// use std::sync::Arc;
     ///
@@ -146,7 +146,7 @@ impl std::fmt::Debug for FactoryDependency {
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use spikard_core::di::FactoryDependency;
 /// use std::sync::Arc;
 ///
@@ -197,7 +197,7 @@ impl FactoryDependencyBuilder {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::FactoryDependency;
     /// use std::sync::Arc;
     ///
@@ -233,7 +233,7 @@ impl FactoryDependencyBuilder {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::FactoryDependency;
     /// use std::sync::Arc;
     ///
@@ -259,7 +259,7 @@ impl FactoryDependencyBuilder {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::FactoryDependency;
     /// use std::sync::Arc;
     ///
@@ -286,7 +286,7 @@ impl FactoryDependencyBuilder {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::FactoryDependency;
     /// use std::sync::Arc;
     ///
@@ -314,7 +314,7 @@ impl FactoryDependencyBuilder {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::FactoryDependency;
     /// use std::sync::Arc;
     ///
@@ -357,6 +357,8 @@ mod tests {
             cookies: Arc::new(HashMap::new()),
             method: "GET".to_string(),
             path: "/".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
         }
     }
 

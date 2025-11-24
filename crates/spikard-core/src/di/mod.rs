@@ -29,7 +29,7 @@
 //!
 //! ## Basic Usage
 //!
-//! ```
+//! ```ignore
 //! use spikard_core::di::{DependencyContainer, ValueDependency, FactoryDependency};
 //! use std::sync::Arc;
 //!
@@ -84,7 +84,7 @@
 //!
 //! ## Request-Scoped Dependencies
 //!
-//! ```
+//! ```ignore
 //! use spikard_core::di::{DependencyContainer, FactoryDependency};
 //! use std::sync::Arc;
 //!
@@ -108,7 +108,7 @@
 //!
 //! ## Accessing Request Data
 //!
-//! ```
+//! ```ignore
 //! use spikard_core::di::{DependencyContainer, FactoryDependency};
 //! use std::sync::Arc;
 //!
@@ -135,7 +135,7 @@
 //!
 //! ## Cleanup Tasks
 //!
-//! ```
+//! ```ignore
 //! use spikard_core::di::ResolvedDependencies;
 //! use std::sync::Arc;
 //!

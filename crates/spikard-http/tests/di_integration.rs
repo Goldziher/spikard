@@ -134,11 +134,10 @@ async fn test_di_missing_dependency_error() {
 
     let result = di_handler.call(request, request_data).await;
 
-    // Verify: should return error
-    assert!(result.is_err());
-    let (status, msg) = result.unwrap_err();
-    assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
-    assert!(msg.contains("Dependency resolution failed"));
+    // Verify: should return structured error response
+    assert!(result.is_ok());
+    let response = result.unwrap();
+    assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
 }
 
 #[tokio::test]

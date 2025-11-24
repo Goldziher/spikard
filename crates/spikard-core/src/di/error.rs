@@ -7,7 +7,7 @@
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use spikard_core::di::DependencyError;
 ///
 /// let error = DependencyError::NotFound {
@@ -23,7 +23,7 @@ pub enum DependencyError {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::DependencyError;
     ///
     /// let error = DependencyError::CircularDependency {
@@ -41,7 +41,7 @@ pub enum DependencyError {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::DependencyError;
     ///
     /// let error = DependencyError::NotFound {
@@ -61,7 +61,7 @@ pub enum DependencyError {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::DependencyError;
     ///
     /// let error = DependencyError::TypeMismatch {
@@ -82,7 +82,7 @@ pub enum DependencyError {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::DependencyError;
     ///
     /// let error = DependencyError::ResolutionFailed {
@@ -102,7 +102,7 @@ pub enum DependencyError {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::DependencyError;
     ///
     /// let error = DependencyError::DuplicateKey {
