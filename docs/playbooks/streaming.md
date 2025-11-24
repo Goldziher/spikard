@@ -24,3 +24,21 @@ Serve streaming responses (chunked, NDJSON), SSE, or WebSockets.
 - Set appropriate content types (`application/x-ndjson`, `text/event-stream`).
 - Handle client disconnects gracefully; stop producing when the connection closes.
 - For WebSockets/SSE, add auth middleware before handler execution.
+
+## WebSockets
+
+=== "Python"
+
+    --8<-- "snippets/python/websocket.md"
+
+=== "TypeScript"
+
+    --8<-- "snippets/typescript/websocket.md"
+
+=== "Ruby"
+
+    --8<-- "snippets/ruby/websocket.md"
+
+=== "Rust"
+
+    --8<-- "snippets/rust/websocket.md"

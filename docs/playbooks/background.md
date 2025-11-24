@@ -15,14 +15,23 @@ Offload non-critical work from request handlers.
 === "Ruby"
 
     ```ruby
-    # Background task helpers are planned. Today, use external job runners (Sidekiq/Resque)
-    # or spawn threads carefully; prefer external queues for production.
+    # Background task helpers are planned. Use external job runners (Sidekiq/Resque)
+    # or a queue to defer work; avoid heavy work inside request handlers.
     ```
 
 === "Rust"
 
     ```rust
-    // Use Tokio tasks or external queues; a dedicated background task API is planned.
+    use spikard::prelude::*;
+    use tokio::task;
+
+    app.route(post("/signup"), |ctx: Context| async move {
+        let user: serde_json::Value = ctx.json()?;
+        task::spawn(async move {
+            // send email or enqueue to external system
+        });
+        Ok(Json(user))
+    })?;
     ```
 
 ## Tips
