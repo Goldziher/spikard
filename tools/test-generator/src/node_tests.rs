@@ -4,6 +4,7 @@
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::background_data;
+use crate::dependencies::{DependencyConfig, has_cleanup, requires_multi_request_test};
 use crate::middleware::parse_middleware;
 use crate::streaming::streaming_data;
 use crate::ts_target::TypeScriptTarget;
@@ -530,6 +531,47 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
         ));
         code.push_str("\t});\n");
         return Ok(code);
+    }
+
+    // Check for DI-specific test patterns
+    if let Some(di_config) = DependencyConfig::from_fixture(fixture)? {
+        // Handle singleton caching tests - requires multiple requests
+        if requires_multi_request_test(&di_config) {
+            code.push_str("\n");
+            code.push_str("\t\t// Second request to verify singleton caching\n");
+            code.push_str(&format!("\t\tconst response2 = {};\n", request_call));
+            code.push_str("\t\texpect(response2.statusCode).toBe(200);\n");
+            code.push_str("\t\tconst data1 = response.json();\n");
+            code.push_str("\t\tconst data2 = response2.json();\n");
+            code.push_str("\n");
+            code.push_str("\t\t// Singleton should have same ID but incremented count\n");
+            code.push_str("\t\texpect(data1.id).toBeDefined();\n");
+            code.push_str("\t\texpect(data2.id).toBeDefined();\n");
+            code.push_str("\t\texpect(data1.id).toBe(data2.id); // Same singleton instance\n");
+            code.push_str("\t\tif (data1.count !== undefined && data2.count !== undefined) {\n");
+            code.push_str("\t\t\texpect(data2.count).toBeGreaterThan(data1.count); // Count incremented\n");
+            code.push_str("\t\t}\n");
+            code.push_str("\t});\n");
+            return Ok(code);
+        }
+
+        // Handle cleanup tests - poll cleanup state endpoint
+        if has_cleanup(&di_config) {
+            code.push_str("\n");
+            code.push_str("\t\t// Allow async cleanup to complete\n");
+            code.push_str("\t\tawait new Promise((resolve) => setTimeout(resolve, 100));\n");
+            code.push_str("\n");
+            code.push_str("\t\t// Verify cleanup was called\n");
+            code.push_str("\t\tconst cleanupResponse = await client.get(\"/api/cleanup-state\");\n");
+            code.push_str("\t\texpect(cleanupResponse.statusCode).toBe(200);\n");
+            code.push_str("\t\tconst cleanupState = cleanupResponse.json();\n");
+            code.push_str("\t\texpect(cleanupState.cleanup_events).toBeDefined();\n");
+            code.push_str("\t\tconst events = cleanupState.cleanup_events;\n");
+            code.push_str("\t\texpect(events).toContain(\"session_opened\");\n");
+            code.push_str("\t\texpect(events).toContain(\"session_closed\");\n");
+            code.push_str("\t});\n");
+            return Ok(code);
+        }
     }
 
     if status_code == 200 {

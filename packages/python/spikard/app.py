@@ -40,6 +40,7 @@ class Spikard:
             "on_response": [],
             "on_error": [],
         }
+        self._dependencies: dict[str, Any] = {}
         Spikard.current_instance = self
 
     def register_route(
@@ -82,12 +83,41 @@ class Spikard:
             sig = inspect.signature(func)
             wrapped_func = func
 
-            # Extract body parameter name (first non-self/non-cls parameter)
-            body_param_name = None
-            for param_name in sig.parameters:
-                if param_name not in ("self", "cls"):
-                    body_param_name = param_name
-                    break
+            # Extract handler dependencies FIRST (all parameter names that could be dependencies)
+            # We do this before extracting body_param_name so we can skip DI parameters
+            # We include ALL non-standard parameters, not just registered ones, so that
+            # the DI handler can properly return "dependency not found" errors for missing deps
+            standard_params = {"self", "cls", "path_params", "query_params", "headers", "cookies"}
+            potential_dependencies = [
+                param_name for param_name in sig.parameters if param_name not in standard_params
+            ]
+
+            # For methods with no body schema, assume first non-standard param that's NOT a
+            # path/query/header/cookie param is likely a DI dependency, not a body parameter
+            # The body parameter should be explicitly named "body" or have a body schema
+            handler_dependencies = []
+            if method.upper() not in {"GET", "DELETE", "HEAD", "OPTIONS"}:
+                # For methods that can have a body, assume first param is body unless it's in dependencies
+                body_param_name = None
+                for param_name in potential_dependencies:
+                    # If this param is in registered dependencies, it's a DI param
+                    if param_name in self._dependencies:
+                        handler_dependencies.append(param_name)
+                    elif body_param_name is None and param_name not in handler_dependencies:
+                        # First param that's not a DI dependency is the body
+                        body_param_name = param_name
+                    else:
+                        # Additional params are DI dependencies
+                        handler_dependencies.append(param_name)
+
+                # Any remaining potential dependencies are DI params
+                for param_name in potential_dependencies:
+                    if param_name != body_param_name and param_name not in handler_dependencies:
+                        handler_dependencies.append(param_name)
+            else:
+                # For GET/DELETE/etc, all non-standard params are DI dependencies
+                handler_dependencies = potential_dependencies
+                body_param_name = None
 
             has_param_defaults = any(isinstance(param.default, ParamBase) for param in sig.parameters.values())
 
@@ -124,6 +154,7 @@ class Spikard:
                 file_params=file_params,
                 is_async=inspect.iscoroutinefunction(func),
                 body_param_name=body_param_name,
+                handler_dependencies=handler_dependencies if handler_dependencies else None,
             )
 
             self._routes.append(route)
@@ -443,6 +474,68 @@ class Spikard:
             Dictionary of hook lists by type
         """
         return {hook_type: hooks.copy() for hook_type, hooks in self._lifecycle_hooks.items()}
+
+    def provide(self, key: str, dependency: Any) -> "Spikard":
+        """Register a dependency for injection into handlers.
+
+        Dependencies can be static values or factory functions wrapped in `Provide`.
+        Handler parameters matching the dependency key will be automatically injected.
+
+        Args:
+            key: Dependency key used for injection (matches handler parameter names)
+            dependency: Either a static value or a Provide wrapper for factory functions
+
+        Returns:
+            Self for method chaining
+
+        Examples:
+            Static value dependency::
+
+                app.provide("app_name", "MyApp")
+                app.provide("max_connections", 100)
+
+
+                @app.get("/config")
+                async def handler(app_name: str, max_connections: int):
+                    return {"app": app_name, "max": max_connections}
+
+            Factory dependency::
+
+                from spikard.di import Provide
+
+
+                async def create_db_pool(config: dict):
+                    return await connect_to_db(config["db_url"])
+
+
+                app.provide("config", {"db_url": "postgresql://localhost/mydb"})
+                app.provide("db", Provide(create_db_pool, depends_on=["config"], singleton=True))
+
+
+                @app.get("/users")
+                async def handler(db):
+                    return await db.fetch_all("SELECT * FROM users")
+
+            Generator pattern for cleanup::
+
+                async def create_session(db):
+                    session = await db.create_session()
+                    yield session
+                    await session.close()
+
+
+                app.provide("session", Provide(create_session, depends_on=["db"]))
+        """
+        self._dependencies[key] = dependency
+        return self
+
+    def get_dependencies(self) -> dict[str, Any]:
+        """Get all registered dependencies.
+
+        Returns:
+            Dictionary mapping dependency keys to their values or Provide wrappers
+        """
+        return self._dependencies.copy()
 
     def websocket(self, path: str) -> Callable[[Callable[[], Any]], Callable[[], Any]]:
         """Register a WebSocket endpoint.

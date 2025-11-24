@@ -109,8 +109,8 @@ describe("content_types", () => {
 		const responseData = response.json();
 		expect(responseData).toBe("pdf_binary_data");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=document.pdf");
 		expect(responseHeaders["content-type"]).toBe("application/pdf");
+		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=document.pdf");
 	});
 
 	test.skip("20_content_length_mismatch", async () => {
@@ -284,8 +284,8 @@ describe("content_types", () => {
 		const responseData = response.json();
 		expect(responseData).toBe("id,name,price\n1,Item A,10.0\n2,Item B,20.0");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["content-type"]).toBe("text/csv; charset=utf-8");
 		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=data.csv");
+		expect(responseHeaders["content-type"]).toBe("text/csv; charset=utf-8");
 	});
 
 	test("Binary response - application octet-stream", async () => {
@@ -298,7 +298,7 @@ describe("content_types", () => {
 		const responseData = response.json();
 		expect(responseData).toBe("binary_data_placeholder");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["content-type"]).toBe("application/octet-stream");
 		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=file.bin");
+		expect(responseHeaders["content-type"]).toBe("application/octet-stream");
 	});
 });

@@ -1,0 +1,36 @@
+{
+	"name": "Per-request dependency caching - success",
+	"description": "Tests per-request caching where dependency is created once per request but shared by multiple usages within that request",
+	"category": "dependency_injection",
+	"source": {
+		"framework": "spikard",
+		"adapted": false
+	},
+	"handler": {
+		"route": "/api/request-id",
+		"method": "GET",
+		"dependencies": {
+			"request_id_generator": {
+				"type": "factory",
+				"factory": "create_request_id",
+				"depends_on": [],
+				"singleton": false,
+				"cacheable": true
+			}
+		},
+		"handler_dependencies": ["request_id_generator", "request_id_generator"]
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/request-id"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"first_id": "<<uuid>>",
+			"second_id": "<<same_as:first_id>>"
+		}
+	},
+	"notes": "Cacheable=true with singleton=false means the dependency is created once per request. Handler uses the dependency twice; both should return the same instance (same UUID).",
+	"tags": ["dependency_injection", "per-request", "caching"]
+}

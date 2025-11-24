@@ -1,0 +1,69 @@
+{
+	"name": "Dependency injection in lifecycle hooks - success",
+	"description": "Tests accessing dependencies in lifecycle hooks (onRequest, preHandler) for auth, logging, etc.",
+	"category": "dependency_injection",
+	"source": {
+		"framework": "spikard",
+		"adapted": false
+	},
+	"handler": {
+		"route": "/api/hook-di-test",
+		"method": "GET",
+		"dependencies": {
+			"auth_service": {
+				"type": "value",
+				"value": {
+					"enabled": true,
+					"strict_mode": true
+				},
+				"value_type": "object"
+			},
+			"logger": {
+				"type": "value",
+				"value": {
+					"level": "debug"
+				},
+				"value_type": "object"
+			}
+		},
+		"handler_dependencies": [],
+		"middleware": {
+			"lifecycle_hooks": {
+				"on_request": [
+					{
+						"name": "log_request",
+						"handler": "log_incoming_request",
+						"dependencies": ["logger"]
+					}
+				],
+				"pre_handler": [
+					{
+						"name": "auth_check",
+						"handler": "check_authentication",
+						"dependencies": ["auth_service"]
+					}
+				]
+			}
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/hook-di-test",
+		"headers": {
+			"authorization": "Bearer valid_token"
+		}
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"authenticated": true,
+			"logged": true
+		},
+		"headers": {
+			"X-Log-Level": "debug",
+			"X-Auth-Mode": "strict"
+		}
+	},
+	"notes": "Lifecycle hooks can access dependencies. onRequest hook uses logger, preHandler uses auth_service. Dependencies are resolved before hooks execute.",
+	"tags": ["dependency_injection", "lifecycle_hooks", "integration", "advanced"]
+}

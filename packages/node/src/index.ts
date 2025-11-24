@@ -6,7 +6,14 @@
 
 import type { HandlerFunction, JsonValue } from "./types";
 
-export { type LifecycleHookFunction, type LifecycleHooks, Spikard } from "./app";
+export {
+	type DependencyFactory,
+	type DependencyOptions,
+	type DependencyValue,
+	type LifecycleHookFunction,
+	type LifecycleHooks,
+	Spikard,
+} from "./app";
 export * as background from "./background";
 export type {
 	ApiKeyConfig,
@@ -119,4 +126,6 @@ export interface SpikardApp {
 	config?: import("./config").ServerConfig;
 	/** Optional lifecycle hooks */
 	lifecycleHooks?: Partial<import("./app").LifecycleHooks>;
+	/** Optional dependency injection container */
+	dependencies?: Record<string, unknown>;
 }

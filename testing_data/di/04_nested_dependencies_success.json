@@ -1,0 +1,60 @@
+{
+	"name": "Nested dependencies (3 levels) - success",
+	"description": "Tests dependency resolution where auth depends on cache and db, which both depend on config",
+	"category": "dependency_injection",
+	"source": {
+		"framework": "spikard",
+		"adapted": false
+	},
+	"handler": {
+		"route": "/api/auth-status",
+		"method": "GET",
+		"dependencies": {
+			"config": {
+				"type": "value",
+				"value": {
+					"db_url": "postgresql://localhost/mydb",
+					"cache_ttl": 300
+				},
+				"value_type": "object"
+			},
+			"db_pool": {
+				"type": "async_factory",
+				"factory": "create_db_pool_from_config",
+				"depends_on": ["config"],
+				"singleton": false,
+				"cacheable": true
+			},
+			"cache": {
+				"type": "async_factory",
+				"factory": "create_cache_from_config",
+				"depends_on": ["config"],
+				"singleton": false,
+				"cacheable": true
+			},
+			"auth_service": {
+				"type": "factory",
+				"factory": "create_auth_service",
+				"depends_on": ["db_pool", "cache"],
+				"singleton": false,
+				"cacheable": true
+			}
+		},
+		"handler_dependencies": ["auth_service"]
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/auth-status"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"auth_enabled": true,
+			"has_db": true,
+			"has_cache": true
+		},
+		"dependency_resolution_order": [["config"], ["db_pool", "cache"], ["auth_service"]]
+	},
+	"notes": "Demonstrates batched parallel resolution: Batch 1: config; Batch 2: db_pool + cache (parallel); Batch 3: auth_service",
+	"tags": ["dependency_injection", "nested", "batching", "complex"]
+}

@@ -1,0 +1,35 @@
+{
+	"name": "Factory dependency - success",
+	"description": "Tests factory dependency that creates instances on-demand",
+	"category": "dependency_injection",
+	"source": {
+		"framework": "spikard",
+		"adapted": false
+	},
+	"handler": {
+		"route": "/api/timestamp",
+		"method": "GET",
+		"dependencies": {
+			"timestamp_generator": {
+				"type": "factory",
+				"factory": "create_timestamp",
+				"depends_on": [],
+				"singleton": false,
+				"cacheable": false
+			}
+		},
+		"handler_dependencies": ["timestamp_generator"]
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/timestamp"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"timestamp": "<<present>>"
+		}
+	},
+	"notes": "Factory creates a new timestamp on each request. Response body should contain a timestamp field with any valid ISO-8601 datetime value.",
+	"tags": ["dependency_injection", "factory", "sync"]
+}

@@ -5,6 +5,8 @@ require 'spikard'
 
 BACKGROUND_STATE = Hash.new { |hash, key| hash[key] = [] }
 
+CLEANUP_STATE = Hash.new { |hash, key| hash[key] = [] }
+
 module E2ERubyApp
   module_function
 
@@ -890,6 +892,370 @@ module E2ERubyApp
     app.get("/items/", handler_name: "cors_18_simple_cors_request") do |_request|
       build_response(content: {"items" => []}, status: 200, headers: {"Access-Control-Allow-Origin" => "https://example.com", "Vary" => "Origin"})
     end
+    app
+  end
+
+  def create_db_pool_simple()
+    { id: '000000000007', type: 'db_pool', timestamp: Time.now.to_s }
+  end
+
+  def create_app_di_1_async_factory_dependency_success
+    app = Spikard::App.new
+    app.get("/api/db-status", handler_name: "di_1_async_factory_dependency_success") do |_request, db_pool:|
+      build_response(content: {"max_size" => 10, "pool_status" => "connected"}, status: 200, headers: nil)
+    end
+
+    # Register dependencies
+    app.provide("db_pool", Spikard::Provide.new(method(:create_db_pool_simple), cacheable: true))
+    app
+  end
+
+  def create_service_b(service_a)
+    { id: '000000000009', type: 'service_b', timestamp: Time.now.to_s }
+  end
+
+  def create_service_a(service_b)
+    { id: '000000000009', type: 'service_a', timestamp: Time.now.to_s }
+  end
+
+  def create_app_di_2_circular_dependency_detection_error
+    app = Spikard::App.new
+    app.get("/api/circular", handler_name: "di_2_circular_dependency_detection_error") do |_request, service_a:|
+      build_response(content: {"detail" => "Circular dependency detected", "errors" => [{"cycle" => ["service_a", "service_b", "service_a"], "msg" => "Circular dependency detected in dependency graph", "type" => "circular_dependency"}], "status" => 500, "title" => "Dependency Resolution Failed", "type" => "https://spikard.dev/errors/dependency-error"}, status: 500, headers: nil)
+    end
+
+    # Register dependencies
+    app.provide("service_a", Spikard::Provide.new(method(:create_service_a), depends_on: ["service_b"]))
+    app.provide("service_b", Spikard::Provide.new(method(:create_service_b), depends_on: ["service_a"]))
+    app
+  end
+
+  def create_app_di_3_dependency_injection_in_lifecycle_hooks_success
+    app = Spikard::App.new
+    # onRequest hook: log_request
+    on_request_proc = lambda do |request|
+      # Mock implementation
+      request
+    end
+    # preHandler hook: auth_check
+    pre_handler_proc = lambda do |request|
+      # Mock implementation
+      request
+    end
+    app.get("/api/hook-di-test", handler_name: "di_3_dependency_injection_in_lifecycle_hooks_success") do |_request|
+      build_response(content: {"authenticated" => true, "logged" => true}, status: 200, headers: {"X-Auth-Mode" => "strict", "X-Log-Level" => "debug"})
+    end
+
+    # Register dependencies
+    app.provide("logger", {"level" => "debug"})
+    app.provide("auth_service", {"enabled" => true, "strict_mode" => true})
+    app
+  end
+
+  def create_timestamp()
+    { id: '000000000013', type: 'timestamp_generator', timestamp: Time.now.to_s }
+  end
+
+  def create_app_di_4_factory_dependency_success
+    app = Spikard::App.new
+    app.get("/api/timestamp", handler_name: "di_4_factory_dependency_success") do |_request, timestamp_generator:|
+      build_response(content: {"timestamp" => "<<present>>"}, status: 200, headers: nil)
+    end
+
+    # Register dependencies
+    app.provide("timestamp_generator", Spikard::Provide.new(method(:create_timestamp)))
+    app
+  end
+
+  def create_app_di_5_missing_dependency_error
+    app = Spikard::App.new
+    app.get("/api/missing-dep", handler_name: "di_5_missing_dependency_error") do |_request, non_existent_service:|
+      build_response(content: {"detail" => "Required dependency not found", "errors" => [{"dependency_key" => "non_existent_service", "msg" => "Dependency \'non_existent_service\' is not registered", "type" => "missing_dependency"}], "status" => 500, "title" => "Dependency Resolution Failed", "type" => "https://spikard.dev/errors/dependency-error"}, status: 500, headers: nil)
+    end
+    app
+  end
+
+  def create_db_pool_singleton(app_config = nil)
+    # Singleton with counter - initialize once, return reference
+    singleton_key = 'singleton_db_pool'
+    # Don't use ||= with BACKGROUND_STATE because default proc returns []
+    unless BACKGROUND_STATE.key?(singleton_key) && BACKGROUND_STATE[singleton_key].is_a?(Hash)
+      BACKGROUND_STATE[singleton_key] = {
+        id: '00000000-0000-0000-0000-000000000063',
+        count: 0
+      }
+    end
+    BACKGROUND_STATE[singleton_key]
+  end
+
+  def create_request_context(db_pool)
+    { id: '00000000000f', type: 'request_context', timestamp: Time.now.to_s }
+  end
+
+  def create_app_di_6_mixed_singleton_and_per_request_caching_success
+    app = Spikard::App.new
+    app.get("/api/mixed-caching", handler_name: "di_6_mixed_singleton_and_per_request_caching_success") do |_request, app_config:, db_pool:, request_context:|
+      # Increment the counter on each request (like Python)
+      # Note: We receive the actual Ruby object with symbol keys
+      db_pool[:count] += 1
+      build_response(
+        content: {
+          id: db_pool[:id],
+          count: db_pool[:count],
+          context_id: request_context["id"],
+          app_name: app_config["app_name"]
+        },
+        status: 200,
+        headers: nil
+      )
+    end
+
+    # Register dependencies
+    app.provide("app_config", {"app_name" => "MyApp", "version" => "2.0"})
+    app.provide("request_context", Spikard::Provide.new(method(:create_request_context), depends_on: ["db_pool"], cacheable: true))
+    app.provide("db_pool", Spikard::Provide.new(method(:create_db_pool_singleton), depends_on: ["app_config"], singleton: true))
+    app
+  end
+
+  def create_cache_connection_with_cleanup()
+    # Create resource
+    CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_opened'
+    resource = { id: '00000000002d', active: true }
+
+    # Return resource and cleanup proc
+    cleanup_proc = -> do
+      CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_closed'
+    end
+
+    [resource, cleanup_proc]
+  end
+
+  def create_session_with_cleanup(db_connection, cache_connection)
+    # Create resource
+    CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_opened'
+    resource = { id: '00000000002d', active: true }
+
+    # Return resource and cleanup proc
+    cleanup_proc = -> do
+      CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_closed'
+    end
+
+    [resource, cleanup_proc]
+  end
+
+  def create_db_connection_with_cleanup()
+    # Create resource
+    CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_opened'
+    resource = { id: '00000000002d', active: true }
+
+    # Return resource and cleanup proc
+    cleanup_proc = -> do
+      CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_closed'
+    end
+
+    [resource, cleanup_proc]
+  end
+
+  def create_app_di_7_multiple_dependencies_with_cleanup_success
+    app = Spikard::App.new
+    app.get("/api/multi-cleanup-test", handler_name: "di_7_multiple_dependencies_with_cleanup_success") do |_request, session:|
+      # Session is injected via DI, just return success
+      build_response(content: {"session_active" => true}, status: 200, headers: nil)
+    end
+    app.get("/api/multi-cleanup-state", handler_name: "di_7_multiple_dependencies_with_cleanup_success_background_state") do |_req|
+      build_response(content: { "cleanup_order" => BACKGROUND_STATE["di_7_multiple_dependencies_with_cleanup_success"] }, status: 200)
+    end
+
+    # Register dependencies
+    app.provide("cache_connection", Spikard::Provide.new(method(:create_cache_connection_with_cleanup), cacheable: true))
+    app.provide("db_connection", Spikard::Provide.new(method(:create_db_connection_with_cleanup), cacheable: true))
+    app.provide("session", Spikard::Provide.new(method(:create_session_with_cleanup), depends_on: ["db_connection", "cache_connection"], cacheable: true))
+    app.get('/api/cleanup-state', handler_name: "di_7_multiple_dependencies_with_cleanup_success_cleanup_state") do |_req|
+      build_response(content: { cleanup_events: CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] }, status: 200)
+    end
+    app
+  end
+
+  def create_cache_from_config(config)
+    { id: '000000000005', type: 'cache', timestamp: Time.now.to_s }
+  end
+
+  def create_auth_service(db_pool, cache)
+    # Create auth service
+    { auth_service_enabled: true, has_db: !db_pool.nil?, has_cache: !cache.nil? }
+  end
+
+  def create_db_pool_from_config(config)
+    { id: '000000000007', type: 'db_pool', timestamp: Time.now.to_s }
+  end
+
+  def create_app_di_8_nested_dependencies_3_levels_success
+    app = Spikard::App.new
+    app.get("/api/auth-status", handler_name: "di_8_nested_dependencies_3_levels_success") do |_request, auth_service:|
+      build_response(content: {"auth_enabled" => true, "has_cache" => true, "has_db" => true}, status: 200, headers: nil)
+    end
+
+    # Register dependencies
+    app.provide("auth_service", Spikard::Provide.new(method(:create_auth_service), depends_on: ["db_pool", "cache"], cacheable: true))
+    app.provide("db_pool", Spikard::Provide.new(method(:create_db_pool_from_config), depends_on: ["config"], cacheable: true))
+    app.provide("cache", Spikard::Provide.new(method(:create_cache_from_config), depends_on: ["config"], cacheable: true))
+    app.provide("config", {"cache_ttl" => 300, "db_url" => "postgresql://localhost/mydb"})
+    app
+  end
+
+  def create_app_di_9_node_js_object_destructuring_injection_success
+    app = Spikard::App.new
+    app.get("/api/node-destructure", handler_name: "di_9_node_js_object_destructuring_injection_success") do |_request, db:, logger:|
+      build_response(content: {"db_name" => "PostgreSQL", "log_level" => "info"}, status: 200, headers: nil)
+    end
+
+    # Register dependencies
+    app.provide("db", {"connected" => true, "name" => "PostgreSQL"})
+    app.provide("logger", {"enabled" => true, "level" => "info"})
+    app
+  end
+
+  def create_request_id()
+    { id: '000000000014', type: 'request_id_generator', timestamp: Time.now.to_s }
+  end
+
+  def create_app_di_10_per_request_dependency_caching_success
+    app = Spikard::App.new
+    app.get("/api/request-id", handler_name: "di_10_per_request_dependency_caching_success") do |_request, request_id_generator:|
+      build_response(content: {"first_id" => "<<uuid>>", "second_id" => "<<same_as:first_id>>"}, status: 200, headers: nil)
+    end
+
+    # Register dependencies
+    app.provide("request_id_generator", Spikard::Provide.new(method(:create_request_id), cacheable: true))
+    app
+  end
+
+  def create_app_di_11_python_parameter_name_based_injection_success
+    app = Spikard::App.new
+    app.get("/api/python-name-inject", handler_name: "di_11_python_parameter_name_based_injection_success") do |_request, db_pool:, cache:|
+      build_response(content: {"cache_status" => "ready", "db_status" => "connected"}, status: 200, headers: nil)
+    end
+
+    # Register dependencies
+    app.provide("db_pool", {"status" => "connected"})
+    app.provide("cache", {"status" => "ready"})
+    app
+  end
+
+  def create_app_di_12_python_type_annotation_based_injection_success
+    app = Spikard::App.new
+    app.get("/api/python-type-inject", handler_name: "di_12_python_type_annotation_based_injection_success") do |_request, database_pool:, cache_client:|
+      build_response(content: {"cache_type" => "Redis", "pool_type" => "PostgreSQL"}, status: 200, headers: nil)
+    end
+
+    # Register dependencies
+    app.provide("database_pool", {"max_connections" => 20, "pool_type" => "PostgreSQL"})
+    app.provide("cache_client", {"cache_type" => "Redis", "ttl" => 300})
+    app
+  end
+
+  def create_db_session_with_cleanup()
+    # Create resource
+    CLEANUP_STATE[:di_resource_cleanup_after_request_success] << 'session_opened'
+    resource = { id: '000000000029', active: true }
+
+    # Return resource and cleanup proc
+    cleanup_proc = -> do
+      CLEANUP_STATE[:di_resource_cleanup_after_request_success] << 'session_closed'
+    end
+
+    [resource, cleanup_proc]
+  end
+
+  def create_app_di_13_resource_cleanup_after_request_success
+    app = Spikard::App.new
+    app.get("/api/cleanup-test", handler_name: "di_13_resource_cleanup_after_request_success") do |_request, db_session:|
+      # db_session is injected via DI, just return success
+      build_response(content: {"session_id" => "<<uuid>>", "status" => "completed"}, status: 200, headers: nil)
+    end
+    app.get("/api/cleanup-state", handler_name: "di_13_resource_cleanup_after_request_success_background_state") do |_req|
+      build_response(content: { "cleanup_events" => BACKGROUND_STATE["di_13_resource_cleanup_after_request_success"] }, status: 200)
+    end
+
+    # Register dependencies
+    app.provide("db_session", Spikard::Provide.new(method(:create_db_session_with_cleanup), cacheable: true))
+    app.get('/api/cleanup-state', handler_name: "di_13_resource_cleanup_after_request_success_cleanup_state") do |_req|
+      build_response(content: { cleanup_events: CLEANUP_STATE[:di_resource_cleanup_after_request_success] }, status: 200)
+    end
+    app
+  end
+
+  def create_app_di_14_route_level_dependency_override_success
+    app = Spikard::App.new
+    app.get("/api/override-test", handler_name: "di_14_route_level_dependency_override_success") do |_request, api_key_validator:|
+      build_response(content: {"mode" => "test", "strict" => false}, status: 200, headers: nil)
+    end
+
+    # Register dependencies
+    app.provide("api_key_validator", {"mode" => "test", "strict" => false})
+    app
+  end
+
+  def create_app_di_15_ruby_keyword_argument_injection_success
+    app = Spikard::App.new
+    app.get("/api/ruby-kwargs", handler_name: "di_15_ruby_keyword_argument_injection_success") do |_request, db_pool:, session:|
+      build_response(content: {"adapter" => "postgresql", "user_id" => 42}, status: 200, headers: nil)
+    end
+
+    # Register dependencies
+    app.provide("db_pool", {"adapter" => "postgresql", "pool_size" => 5})
+    app.provide("session", {"session_id" => "abc123", "user_id" => 42})
+    app
+  end
+
+  def create_app_counter()
+    # Singleton with counter - initialize once, return reference
+    singleton_key = 'singleton_app_counter'
+    # Don't use ||= with BACKGROUND_STATE because default proc returns []
+    unless BACKGROUND_STATE.key?(singleton_key) && BACKGROUND_STATE[singleton_key].is_a?(Hash)
+      BACKGROUND_STATE[singleton_key] = {
+        id: '00000000-0000-0000-0000-000000000063',
+        count: 0
+      }
+    end
+    BACKGROUND_STATE[singleton_key]
+  end
+
+  def create_app_di_16_singleton_dependency_caching_success
+    app = Spikard::App.new
+    app.get("/api/app-counter", handler_name: "di_16_singleton_dependency_caching_success") do |_request, app_counter:|
+      # Increment the counter on each access (like Python handler does)
+      # Note: We receive the actual Ruby object with symbol keys
+      app_counter[:count] += 1
+      build_response(content: { id: app_counter[:id], count: app_counter[:count] }, status: 200, headers: nil)
+    end
+
+    # Register dependencies
+    app.provide("app_counter", Spikard::Provide.new(method(:create_app_counter), singleton: true))
+    app
+  end
+
+  def create_app_di_17_type_mismatch_in_dependency_resolution_error
+    app = Spikard::App.new
+    app.get("/api/type-mismatch", handler_name: "di_17_type_mismatch_in_dependency_resolution_error") do |_request, config:|
+      build_response(content: {"detail" => "Dependency type mismatch", "errors" => [{"actual_type" => "string", "dependency_key" => "config", "expected_type" => "object", "msg" => "Dependency \'config\' type mismatch: expected object, got string", "type" => "type_mismatch"}], "status" => 500, "title" => "Dependency Resolution Failed", "type" => "https://spikard.dev/errors/dependency-error"}, status: 500, headers: nil)
+    end
+
+    # Register dependencies
+    app.provide("config", "string_config")
+    app
+  end
+
+  def create_app_di_18_value_dependency_injection_success
+    app = Spikard::App.new
+    app.get("/api/config", handler_name: "di_18_value_dependency_injection_success") do |_request, app_name:, version:, max_connections:|
+      build_response(content: {"app_name" => "SpikardApp", "max_connections" => 100, "version" => "1.0.0"}, status: 200, headers: nil)
+    end
+
+    # Register dependencies
+    app.provide("app_name", "SpikardApp")
+    app.provide("max_connections", 100)
+    app.provide("version", "1.0.0")
     app
   end
 

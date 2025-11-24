@@ -9,6 +9,40 @@ import { runServer, type ServerOptions } from "./server";
 import type { MaybePromise, StructuredHandlerResponse, WebSocketHandler, WebSocketOptions } from "./types";
 
 /**
+ * Dependency value or factory configuration
+ */
+export type DependencyValue = unknown;
+
+/**
+ * Factory function for creating dependencies
+ */
+export type DependencyFactory = (dependencies: Record<string, DependencyValue>) => MaybePromise<DependencyValue>;
+
+/**
+ * Dependency registration options
+ */
+export interface DependencyOptions {
+	/** List of dependency keys this factory depends on */
+	dependsOn?: string[];
+	/** Whether this is a singleton (resolved once globally) */
+	singleton?: boolean;
+	/** Whether to cache per-request (default: false for factories, true for values) */
+	cacheable?: boolean;
+}
+
+/**
+ * Internal dependency descriptor
+ */
+interface DependencyDescriptor {
+	isFactory: boolean;
+	value?: DependencyValue;
+	factory?: DependencyFactory;
+	dependsOn: string[];
+	singleton: boolean;
+	cacheable: boolean;
+}
+
+/**
  * Payload type provided to lifecycle hooks
  */
 export type LifecycleHookPayload = Request | StructuredHandlerResponse;
@@ -63,6 +97,7 @@ export class Spikard implements SpikardApp {
 		onResponse: [],
 		onError: [],
 	};
+	dependencies: Record<string, DependencyDescriptor> = {};
 
 	/**
 	 * Add a route to the application
@@ -219,6 +254,50 @@ export class Spikard implements SpikardApp {
 	onError(hook: LifecycleHookFunction): LifecycleHookFunction {
 		this.lifecycleHooks.onError.push(hook);
 		return hook;
+	}
+
+	/**
+	 * Register a dependency value or factory
+	 *
+	 * Provides a value or factory function to be injected into handlers.
+	 * Dependencies are matched by parameter name or can be accessed via the
+	 * request context.
+	 *
+	 * @param key - Unique identifier for the dependency
+	 * @param valueOrFactory - Static value or factory function
+	 * @param options - Configuration options for the dependency
+	 * @returns The Spikard instance for method chaining
+	 *
+	 * @example
+	 * ```typescript
+	 * // Simple value dependency
+	 * app.provide('app_name', 'MyApp');
+	 * app.provide('max_connections', 100);
+	 *
+	 * // Factory dependency
+	 * app.provide('db_pool', async ({ database_url }) => {
+	 *   return await createPool(database_url);
+	 * }, { dependsOn: ['database_url'], singleton: true });
+	 *
+	 * // Use in handler
+	 * app.get('/config', async (request, { app_name, db_pool }) => {
+	 *   return { app: app_name, pool: db_pool };
+	 * });
+	 * ```
+	 */
+	provide(key: string, valueOrFactory: DependencyValue | DependencyFactory, options?: DependencyOptions): this {
+		const isFactory = typeof valueOrFactory === "function";
+
+		this.dependencies[key] = {
+			isFactory,
+			value: isFactory ? undefined : valueOrFactory,
+			factory: isFactory ? (valueOrFactory as DependencyFactory) : undefined,
+			dependsOn: options?.dependsOn ?? [],
+			singleton: options?.singleton ?? false,
+			cacheable: options?.cacheable ?? !isFactory, // Values are cacheable by default
+		};
+
+		return this;
 	}
 
 	/**

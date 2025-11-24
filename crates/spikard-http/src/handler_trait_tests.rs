@@ -107,6 +107,8 @@ mod tests {
             cookies: Arc::new(HashMap::new()),
             method: "POST".to_string(),
             path: "/items/123".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
         };
 
         let request = Request::builder()
@@ -136,6 +138,9 @@ mod tests {
             cookies: Arc::new(HashMap::new()),
             method: "GET".to_string(),
             path: "/error".to_string(),
+
+            #[cfg(feature = "di")]
+            dependencies: None,
         };
 
         let request = Request::builder()
@@ -171,6 +176,8 @@ mod tests {
             cookies: Arc::new(HashMap::new()),
             method: "GET".to_string(),
             path: "/api/data".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
         };
 
         let request = Request::builder()
@@ -192,6 +199,9 @@ mod tests {
             cookies: Arc::new(HashMap::new()),
             method: "GET".to_string(),
             path: "/api/data".to_string(),
+
+            #[cfg(feature = "di")]
+            dependencies: None,
         };
 
         let request_no_param = Request::builder()
@@ -226,6 +236,8 @@ mod tests {
             cookies: Arc::new(HashMap::new()),
             method: "PUT".to_string(),
             path: "/users/42".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
         };
 
         let json_str = serde_json::to_string(&request_data).unwrap();
@@ -249,6 +261,9 @@ mod tests {
             cookies: Arc::new(HashMap::new()),
             method: "GET".to_string(),
             path: "/".to_string(),
+
+            #[cfg(feature = "di")]
+            dependencies: None,
         };
 
         assert_eq!(request_data.method, "GET");

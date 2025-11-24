@@ -1,0 +1,43 @@
+{
+	"name": "Resource cleanup after request - success",
+	"description": "Tests generator pattern cleanup where dependency resources are cleaned up after handler completes",
+	"category": "dependency_injection",
+	"source": {
+		"framework": "spikard",
+		"adapted": false
+	},
+	"handler": {
+		"route": "/api/cleanup-test",
+		"method": "GET",
+		"dependencies": {
+			"db_session": {
+				"type": "async_factory",
+				"factory": "create_db_session_with_cleanup",
+				"depends_on": [],
+				"singleton": false,
+				"cacheable": true,
+				"cleanup": true
+			}
+		},
+		"handler_dependencies": ["db_session"]
+	},
+	"background": {
+		"state_path": "/api/cleanup-state",
+		"state_key": "cleanup_events",
+		"value_field": "session_id",
+		"expected_state": ["session_opened", "session_closed"]
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/cleanup-test"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"session_id": "<<uuid>>",
+			"status": "completed"
+		}
+	},
+	"notes": "Factory uses generator pattern (yield) for cleanup. After handler completes, cleanup code runs (closes session). Background state endpoint verifies cleanup was called.",
+	"tags": ["dependency_injection", "cleanup", "generator", "async"]
+}
