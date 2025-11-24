@@ -185,6 +185,11 @@ nav:
       - TypeScript / Node: bindings/typescript.md
       - Ruby: bindings/ruby.md
       - Rust: bindings/rust.md
+  - Playbooks:
+      - Auth & Guards: playbooks/auth.md
+      - File Uploads: playbooks/uploads.md
+      - Streaming & Real-Time: playbooks/streaming.md
+      - Error Handling: playbooks/errors.md
   - API Reference:
       - Python: reference/api-python.md
       - TypeScript: reference/api-typescript.md
