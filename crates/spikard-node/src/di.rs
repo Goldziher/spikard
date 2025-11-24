@@ -216,19 +216,44 @@ impl Dependency for NodeFactoryDependency {
     }
 }
 
-/// Extract dependency container from Node.js app object
+/// Extract dependency container from a Spikard app or dependencies map
 ///
 /// Builds a DependencyContainer from the dependencies registered on the app.
-/// Returns None if no dependencies are registered.
-pub fn extract_dependency_container(app: &Object) -> Result<Option<Arc<spikard_core::di::DependencyContainer>>> {
-    // Try to get dependencies object
-    let dependencies_opt: Option<Object> = app.get("dependencies")?;
+/// Returns None if no dependencies are registered. Accepts either a full app
+/// object with a `dependencies` property or the dependency map itself.
+pub fn extract_dependency_container(
+    app_or_dependencies: &Object,
+) -> Result<Option<Arc<spikard_core::di::DependencyContainer>>> {
+    // Prefer an explicit `dependencies` property on the app; otherwise treat the
+    // provided object itself as the dependency map (used by the test client).
+    let dependencies_opt: Option<Object> = app_or_dependencies.get("dependencies")?;
+    let dependencies = if let Some(obj) = dependencies_opt {
+        obj
+    } else {
+        let dep_keys = Object::keys(app_or_dependencies)?;
 
-    if dependencies_opt.is_none() {
-        return Ok(None);
-    }
+        // Heuristic: if the object has entries that look like dependency descriptors,
+        // accept it as the dependency map.
+        let has_dependency_shape = dep_keys.iter().any(|key| {
+            app_or_dependencies
+                .get::<Object>(key)
+                .ok()
+                .flatten()
+                .map(|dep_obj| {
+                    dep_obj.has_named_property("isFactory").unwrap_or(false)
+                        || dep_obj.has_named_property("factory").unwrap_or(false)
+                        || dep_obj.has_named_property("value").unwrap_or(false)
+                })
+                .unwrap_or(false)
+        });
 
-    let dependencies = dependencies_opt.unwrap();
+        if !has_dependency_shape {
+            return Ok(None);
+        }
+
+        *app_or_dependencies
+    };
+
     let dep_keys = Object::keys(&dependencies)?;
 
     if dep_keys.is_empty() {
@@ -279,7 +304,7 @@ pub fn extract_dependency_container(app: &Object) -> Result<Option<Arc<spikard_c
                 .ok_or_else(|| Error::from_reason(format!("Value not found for dependency {}", key)))?;
 
             // Convert to JSON string - get Env from app object
-            let env = Env::from(app.value().env);
+            let env = Env::from(app_or_dependencies.value().env);
             let global = env.get_global()?;
             let json_obj: Object = global.get_named_property("JSON")?;
             let stringify: Function<Unknown, String> = json_obj.get_named_property("stringify")?;
