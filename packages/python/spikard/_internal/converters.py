@@ -9,7 +9,6 @@ and supports multiple type systems:
 - dataclass: Direct construction via **kwargs (fast, Python 3.14 compatible)
 - NamedTuple: Direct construction via **kwargs (fast)
 - msgspec.Struct: Native msgspec support (fastest typed)
-- Pydantic: Custom decoder via model_validate (slower)
 """
 
 from __future__ import annotations
@@ -25,7 +24,6 @@ from datetime import date, datetime, time, timedelta
 from typing import Any, Union, get_args, get_origin, get_type_hints
 
 import msgspec
-from pydantic.fields import FieldInfo
 
 from spikard.datastructures import UploadFile
 
@@ -75,17 +73,6 @@ def clear_decoders() -> None:
     _CUSTOM_DECODERS.clear()
 
 
-def _pydantic_decoder(type_: type, obj: Any) -> Any:
-    """Decoder for Pydantic models.
-
-    Uses model_validate which trusts the data has already been validated
-    by Rust, so it won't re-validate.
-    """
-    if hasattr(type_, "model_validate"):
-        return type_.model_validate(obj)
-    raise NotImplementedError
-
-
 def _is_typed_dict(type_: type) -> bool:
     """Check if a type is a TypedDict.
 
@@ -109,13 +96,12 @@ def _get_or_create_decoder(target_type: type) -> msgspec.json.Decoder[typing.Any
 
 
 def _default_dec_hook(type_: type, obj: Any) -> Any:
-    """Default decoder hook that tries custom decoders, then Pydantic.
+    """Default decoder hook that tries custom decoders.
 
     This is called by msgspec when it encounters a type it doesn't know
     how to convert. We try:
     1. Custom user-registered decoders
-    2. Pydantic model_validate
-    3. Raise NotImplementedError to let msgspec handle it
+    2. Raise NotImplementedError to let msgspec handle it
 
     Note: msgspec natively handles dataclass, NamedTuple, and msgspec.Struct,
     so those types won't reach this hook.
@@ -123,11 +109,6 @@ def _default_dec_hook(type_: type, obj: Any) -> Any:
     for decoder in _CUSTOM_DECODERS:
         with suppress(NotImplementedError):
             return decoder(type_, obj)
-
-    try:
-        return _pydantic_decoder(type_, obj)
-    except NotImplementedError:
-        pass
 
     raise NotImplementedError
 
@@ -484,10 +465,5 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
             if strict:
                 raise ValueError(f"Failed to convert parameter '{key}' to type {target_type}: {err}") from err
             converted[key] = value
-
-    if sig:
-        for param_name, param in sig.parameters.items():
-            if param_name not in converted and isinstance(param.default, FieldInfo):
-                converted[param_name] = param.default.default
 
     return converted

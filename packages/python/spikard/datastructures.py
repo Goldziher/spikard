@@ -15,9 +15,6 @@ from typing import TYPE_CHECKING, Annotated, Any
 import msgspec
 from typing_extensions import Self
 
-if TYPE_CHECKING:
-    from pydantic import GetCoreSchemaHandler
-    from pydantic_core import core_schema
 
 __all__ = ("UploadFile",)
 
@@ -242,25 +239,6 @@ class UploadFile:
         """String representation of the upload file."""
         return f"UploadFile(filename={self.filename!r}, content_type={self.content_type!r}, size={self.size})"
 
-    @classmethod
-    def __get_pydantic_core_schema__(cls, source_type: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
-        """Generate Pydantic core schema for UploadFile.
-
-        UploadFile is represented as a dict with file metadata in JSON Schema,
-        but will be converted to an UploadFile instance at runtime.
-        """
-        from pydantic_core import core_schema  # noqa: PLC0415
-
-        # Define the structure of the file representation in JSON
-        # This matches what Rust provides: {filename, content, size, content_type}
-        return core_schema.dict_schema(
-            keys_schema=core_schema.str_schema(),
-            values_schema=core_schema.any_schema(),
-            metadata={
-                "format": "binary",
-                "description": "File upload data",
-            },
-        )
 
     def __del__(self) -> None:
         """Ensure file is closed when object is garbage collected."""
