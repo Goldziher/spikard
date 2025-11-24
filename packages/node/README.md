@@ -38,13 +38,14 @@ type User = z.infer<typeof UserSchema>;
 
 const app = new Spikard();
 
-const getUser = async (_req: Request): Promise<User> => {
-  return { id: 1, name: "Alice", email: "alice@example.com" };
+const getUser = async (req: Request): Promise<User> => {
+  const segments = req.path.split("/");
+  const id = Number(segments[segments.length - 1] ?? 0);
+  return { id, name: "Alice", email: "alice@example.com" };
 };
 
 const createUser = async (req: Request): Promise<User> => {
-  const user = UserSchema.parse(req.json());
-  return user;
+  return UserSchema.parse(req.json());
 };
 
 app.addRoute(
@@ -76,15 +77,15 @@ if (require.main === module) {
 Routes are registered manually using `app.addRoute(metadata, handler)`:
 
 ```typescript
-import { Spikard } from "spikard";
+import { Spikard, type Request } from "spikard";
 
 const app = new Spikard();
 
-async function listUsers() {
+async function listUsers(_req: Request): Promise<{ users: unknown[] }> {
   return { users: [] };
 }
 
-async function createUser(req) {
+async function createUser(_req: Request): Promise<{ created: boolean }> {
   return { created: true };
 }
 
@@ -223,9 +224,13 @@ post("/users", {}, wrapBodyHandler(async (body: CreateUserRequest) => {
 }));
 
 // Full context wrapper
-get("/users/:id", {}, wrapHandler(async (params, query, body) => {
-  return { id: params.id, query };
-}));
+get(
+  "/users/:id",
+  {},
+  wrapHandler(async (params: { id: string }, query: Record<string, unknown>) => {
+    return { id: Number(params.id), query };
+  }),
+);
 ```
 
 ## File Uploads

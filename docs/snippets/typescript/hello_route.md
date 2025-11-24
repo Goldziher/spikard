@@ -8,8 +8,9 @@ type User = z.infer<typeof UserSchema>;
 const app = new Spikard();
 
 const getUser = async (req: Request): Promise<User> => {
-  // Use request.path or JSON body as needed; params support will be surfaced via metadata
-  return { id: 1, name: "Alice" };
+  const segments = req.path.split("/");
+  const id = Number(segments[segments.length - 1] ?? 0);
+  return { id, name: "Alice" };
 };
 
 app.addRoute(
