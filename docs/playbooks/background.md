@@ -15,8 +15,7 @@ Offload non-critical work from request handlers.
 === "Ruby"
 
     ```ruby
-    # Background task helpers are planned. Use external job runners (Sidekiq/Resque)
-    # or a queue to defer work; avoid heavy work inside request handlers.
+    # Use external job runners (Sidekiq/Resque) or queues for durability; avoid heavy work inside request handlers.
     ```
 
 === "Rust"
