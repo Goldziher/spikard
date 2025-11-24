@@ -1,34 +1,97 @@
 # Spikard Documentation
 
-Spikard is a polyglot API toolkit with a Rust core and first-class bindings for Python, TypeScript/Node, Ruby, and Rust. It gives every language the same router, middleware stack, validation engine, and streaming support so teams can build HTTP, JSON-RPC, or Protobuf services without re-learning framework conventions per runtime.
+Spikard is a polyglot API toolkit with a Rust core and first-class bindings for Python, TypeScript/Node, Ruby, and Rust. It keeps routing, middleware, validation, and streaming semantics identical across languages so teams can mix runtimes without relearning frameworks.
 
-## What You Can Build
+## Hello Route (pick a binding)
 
-- **Consistent APIs across languages** – idiomatic bindings, shared routing/validation semantics, and compatible middleware in every language.
-- **Protocol-agnostic services** – REST today with JSON-RPC and protobuf generation on deck, backed by a shared schema/validation layer.
-- **Strong typing end-to-end** – JSON Schema + language-native types (msgspec, Zod, RBS) enforced in both request parsing and responses.
-- **Real-time and streaming** – WebSocket and SSE support with a unified async model across bindings.
-- **Code generation** – CLI-driven DTO/handler generation from OpenAPI/AsyncAPI keeps contract tests and bindings aligned.
+=== "Python"
+
+    ```python
+    from spikard import App
+    from msgspec import Struct
+
+    class User(Struct):
+        id: int
+        name: str
+
+    app = App()
+
+    @app.get("/users/{id:int}")
+    async def get_user(id: int) -> User:
+        return User(id=id, name="Alice")
+
+    if __name__ == "__main__":
+        app.run(port=8000)
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    import { App } from "spikard";
+    import { z } from "zod";
+
+    const User = z.object({ id: z.number(), name: z.string() });
+    type User = z.infer<typeof User>;
+
+    const app = new App();
+
+    app.get("/users/:id", ({ params }): User => ({
+      id: Number(params.id),
+      name: "Alice",
+    }));
+
+    app.listen({ port: 8000 });
+    ```
+
+=== "Ruby"
+
+    ```ruby
+    require "spikard"
+
+    App = Spikard::App.new
+
+    App.get("/users/:id") do |ctx|
+      { id: ctx.params[:id].to_i, name: "Alice" }
+    end
+
+    App.run(port: 8000)
+    ```
+
+=== "Rust"
+
+    ```rust
+    use serde::{Deserialize, Serialize};
+    use spikard::prelude::*;
+
+    #[derive(Serialize, Deserialize)]
+    struct User {
+        id: i64,
+        name: String,
+    }
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        let mut app = App::new();
+
+        app.route(get("/users/:id"), |ctx: Context| async move {
+            let id = ctx.path_param("id").unwrap_or("0").parse::<i64>().unwrap_or_default();
+            Ok(Json(User { id, name: "Alice".into() }))
+        })?;
+
+        app.run().await?;
+        Ok(())
+    }
+    ```
 
 ## Documentation Map
 
-- **[Getting Started](getting-started/quickstart.md)** – First route in each language and the minimum runtime wiring.
-- **[Installation](getting-started/installation.md)** – How to install the Rust core, bindings, and CLI.
-- **[Guides](guides/routing.md)** – Routing, requests/responses, validation, middleware, deployment, and benchmarks.
-- **[Concepts](concepts/architecture.md)** – Architecture, runtime model, validation, middleware, and streaming internals.
+- **[Getting Started](getting-started/quickstart.md)** – First route in each language plus how to run it.
+- **[Installation](getting-started/installation.md)** – Binding install commands and repo setup.
+- **[Guides](guides/routing.md)** – Routing, requests/responses, middleware, validation, deployment.
+- **[Concepts](concepts/architecture.md)** – Architecture, runtime model, validation, middleware, streaming internals.
 - **[Reference](reference/api-python.md)** – Language APIs, configuration surface, types, and error semantics.
 - **[CLI](cli/usage.md)** – Running the HTTP server and invoking generators from `spikard-cli`.
-- **[ADRs](adr/README.md)** – Design history and reasoning behind the runtime.
-
-## Supported Bindings
-
-| Binding / Interface | Package | Docs |
-|--------------------|---------|------|
-| Python             | `pip install spikard` | [Python API Reference](reference/api-python.md) |
-| TypeScript/Node.js | `npm install spikard` | [TypeScript API Reference](reference/api-typescript.md) |
-| Ruby               | `gem install spikard` | [Ruby API Reference](reference/api-ruby.md) |
-| Rust               | `cargo add spikard` | [Rust API Reference](reference/api-rust.md) |
-| CLI                | `cargo install spikard-cli` | [CLI Usage](cli/usage.md) |
+- **[ADRs](adr/README.md)** – Design history and rationale behind the runtime.
 
 ## Getting Help
 

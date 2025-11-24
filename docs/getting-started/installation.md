@@ -2,44 +2,45 @@
 
 Spikard ships a Rust core plus bindings for Python, TypeScript/Node, and Ruby. Install only what you need; every binding shares the same runtime behavior.
 
-## Prerequisites
-- Rust toolchain (for the core, CLI, and building bindings)
-- Python 3.10+ for the Python package
-- Node.js 18+ / pnpm for the TypeScript package
-- Ruby 3.2+ for the Ruby gem
-- `uv`, `cargo`, and `pnpm` are used throughout the Taskfile
+## Install by binding
 
-## Install the Rust Core
-```bash
-cargo add spikard
-```
+=== "Python"
 
-## Install the CLI
+    ```bash
+    pip install spikard
+    ```
+
+=== "TypeScript / Node"
+
+    ```bash
+    npm install spikard
+    # or
+    pnpm add spikard
+    ```
+
+=== "Ruby"
+
+    ```bash
+    gem install spikard
+    ```
+
+=== "Rust"
+
+    ```bash
+    cargo add spikard
+    ```
+
+## CLI
+
+Install the CLI for running apps and code generation:
+
 ```bash
 cargo install spikard-cli
 ```
-Use `spikard run` to serve an app entrypoint (see [CLI usage](../cli/usage.md)).
 
-## Install Language Bindings
+Run with `spikard run path/to/app.py` (or the equivalent entrypoint for other bindings).
 
-### Python
-```bash
-pip install spikard
-```
-
-### TypeScript / Node.js
-```bash
-npm install spikard
-# or
-pnpm add spikard
-```
-
-### Ruby
-```bash
-gem install spikard
-```
-
-## Local Development Setup
+## Local repo setup
 
 The repo uses `uv` to manage Python deps and pnpm for JavaScript:
 

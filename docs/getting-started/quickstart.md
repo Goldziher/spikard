@@ -1,96 +1,115 @@
 # Quick Start
 
-A minimal Spikard service looks familiar in every language. Pick your binding and run the same app structure with consistent routing, validation, and middleware semantics.
+Build the same minimal service in each binding. Choose a tab, copy the snippet, and run.
 
-## Python
-```python
-from spikard import App
-from msgspec import Struct
+## Define routes
 
-class User(Struct):
-    id: int
-    name: str
+=== "Python"
 
-app = App()
+    ```python
+    from spikard import App
+    from msgspec import Struct
 
-@app.get("/users/{id:int}")
-async def get_user(id: int) -> User:
-    return User(id=id, name="Alice")
+    class User(Struct):
+        id: int
+        name: str
 
-@app.post("/users")
-async def create_user(user: User) -> User:
-    return user
+    app = App()
 
-if __name__ == "__main__":
-    app.run(port=8000)
-```
-Run with `python app.py` or through the CLI: `spikard run app.py`.
+    @app.get("/users/{id:int}")
+    async def get_user(id: int) -> User:
+        return User(id=id, name="Alice")
 
-## TypeScript / Node.js
-```typescript
-import { App } from "spikard";
-import { z } from "zod";
+    @app.post("/users")
+    async def create_user(user: User) -> User:
+        return user
 
-const UserSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-});
+    if __name__ == "__main__":
+        app.run(port=8000)
+    ```
 
-type User = z.infer<typeof UserSchema>;
+=== "TypeScript"
 
-const app = new App();
+    ```typescript
+    import { App } from "spikard";
+    import { z } from "zod";
 
-app.get("/users/:id", ({ params }): User => ({
-  id: Number(params.id),
-  name: "Alice",
-}));
+    const User = z.object({ id: z.number(), name: z.string() });
+    type User = z.infer<typeof User>;
 
-app.post("/users", async ({ body }): Promise<User> => {
-  const user = UserSchema.parse(body);
-  return user;
-});
+    const app = new App();
 
-app.listen({ port: 8000 });
-```
+    app.get("/users/:id", ({ params }): User => ({
+      id: Number(params.id),
+      name: "Alice",
+    }));
 
-## Ruby
-```ruby
-require "spikard"
+    app.post("/users", ({ body }): User => User.parse(body));
 
-App = Spikard::App.new
+    app.listen({ port: 8000 });
+    ```
 
-App.get("/users/:id") do |ctx|
-  { id: ctx.params[:id].to_i, name: "Alice" }
-end
+=== "Ruby"
 
-App.post("/users") do |ctx|
-  user = ctx.json
-  { id: user["id"], name: user["name"] }
-end
+    ```ruby
+    require "spikard"
 
-App.listen(port: 8000)
-```
+    App = Spikard::App.new
 
-## Rust
-```rust
-use spikard::prelude::*;
+    App.get("/users/:id") do |ctx|
+      { id: ctx.params[:id].to_i, name: "Alice" }
+    end
 
-fn main() {
-    let app = App::new()
-        .get("/users/:id", |ctx: Context| async move {
-            let id = ctx.path_param("id").unwrap_or_default();
-            Ok(Json(json!({ "id": id.parse::<i64>().unwrap_or(0), "name": "Alice" })))
-        })
-        .post("/users", |ctx: Context| async move {
-            let user: serde_json::Value = ctx.json()?;
-            Ok(Json(user))
-        });
+    App.post("/users") do |ctx|
+      user = ctx.json
+      { id: user["id"], name: user["name"] }
+    end
 
-    app.listen(8000).unwrap();
-}
-```
+    App.run(port: 8000)
+    ```
 
-## Next Steps
+=== "Rust"
+
+    ```rust
+    use serde::{Deserialize, Serialize};
+    use spikard::prelude::*;
+
+    #[derive(Serialize, Deserialize)]
+    struct User {
+        id: i64,
+        name: String,
+    }
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        let mut app = App::new();
+
+        app.route(get("/users/:id"), |ctx: Context| async move {
+            let id = ctx.path_param("id").unwrap_or("0").parse::<i64>().unwrap_or_default();
+            Ok(Json(User { id, name: "Alice".into() }))
+        })?;
+
+        app.route(
+            post("/users").request_body::<User>().response_body::<User>(),
+            |ctx: Context| async move {
+                let user: User = ctx.json()?;
+                Ok(Json(user))
+            },
+        )?;
+
+        app.run().await?;
+        Ok(())
+    }
+    ```
+
+## Run it
+
+- Python: `python app.py` or `spikard run app.py`
+- TypeScript: `pnpm ts-node app.ts` (or your runtime of choice), then hit `http://localhost:8000/users/1`
+- Ruby: `ruby app.rb`
+- Rust: `cargo run` inside your crate/binary
+
+## Next steps
 - Add middleware (logging, auth, tracing) with the same signature in every binding.
 - Wire JSON Schema validation so request/response contracts stay enforced.
 - Deploy using the Rust binary, the CLI, or container images (see [Deployment](../guides/deployment.md)).
