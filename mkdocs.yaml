@@ -178,6 +178,7 @@ nav:
       - Configuration: guides/configuration.md
       - Middleware: guides/middleware.md
       - Validation Flows: guides/validation.md
+      - Dependency Injection: guides/dependency-injection.md
       - Deployment: guides/deployment.md
   - CLI: cli/usage.md
   - Bindings:

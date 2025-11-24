@@ -163,6 +163,29 @@ post("/users", { bodySchema: userSchema })(async function createUser(req) {
 });
 ```
 
+## Dependency Injection
+
+Register values or factories and access them via `request.dependencies`:
+
+```typescript
+const app = new Spikard();
+
+app.provide("config", { dbUrl: "postgresql://localhost/app" });
+app.provide(
+  "dbPool",
+  async ({ config }) => ({ url: config.dbUrl, driver: "pool" }),
+  { dependsOn: ["config"], singleton: true },
+);
+
+app.addRoute(
+  { method: "GET", path: "/stats", handler_name: "stats", is_async: true },
+  async (req) => {
+    const deps = req.dependencies ?? {};
+    return { db: deps.dbPool?.url, env: deps.config?.dbUrl };
+  },
+);
+```
+
 ## Request Handling
 
 ### Accessing Request Data

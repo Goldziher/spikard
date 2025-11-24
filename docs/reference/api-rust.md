@@ -10,6 +10,7 @@ Use the Rust API when you want zero-overhead access to the runtime without cross
 - `App` – build your router and middleware stack
 - `RequestContext` – access path/query/header/cookie/body data
 - Response helpers such as `HandlerResponse::stream`, plus `axum` response types for JSON/streaming in your handlers
+- Dependency injection via `ServerConfig::provide_value` / `provide_factory` and `RequestContext::dependencies`
 
 ## Routing
 ```rust

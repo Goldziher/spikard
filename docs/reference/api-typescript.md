@@ -11,6 +11,7 @@ The TypeScript binding uses NAPI-RS for Node/Bun and can also target WASM for De
 - `Request` – access `params`, `query`, `headers`, `cookies`, and parsed `body`
 - Lifecycle hooks (`onRequest`, `preValidation`, `preHandler`, `onResponse`, `onError`)
 - Helper wrappers for streaming and background tasks
+- Dependency injection via `app.provide` and `request.dependencies`
 
 ## Routing
 ```typescript
@@ -23,6 +24,12 @@ app.addRoute(
   async () => ({ status: "ok" }),
 );
 app.run({ port: 8000 });
+```
+
+## Dependency Injection
+```typescript
+app.provide("config", { dbUrl: "postgresql://localhost/app" });
+app.provide("dbPool", async ({ config }) => ({ url: config.dbUrl }), { dependsOn: ["config"], singleton: true });
 ```
 
 ## Validation
