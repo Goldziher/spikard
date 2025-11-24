@@ -31,3 +31,64 @@ Spikard returns structured error responses that align with RFC 9457 so clients c
 ## Binding notes
 - **Python/TypeScript/Ruby**: return structured objects/hashes; include `status`/`statusCode` and a predictable body shape.
 - **Rust**: use `Json(..).with_status(StatusCode::...)` or return typed error responses from handlers/middleware.
+
+## Examples per binding
+
+=== "Python"
+
+    ```python
+    from spikard import Response
+
+    @app.get("/fail")
+    async def fail() -> Response:
+        return Response(
+            {
+                "type": "https://spikard.dev/errors/validation",
+                "title": "Validation failed",
+                "detail": "email is invalid",
+                "status": 422,
+            },
+            status=422,
+        )
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    const app = new Spikard();
+
+    app.addRoute(
+      { method: "GET", path: "/fail", handler_name: "fail", is_async: true },
+      async () => ({
+        statusCode: 422,
+        body: {
+          type: "https://spikard.dev/errors/validation",
+          title: "Validation failed",
+          detail: "email is invalid",
+          status: 422,
+        },
+      }),
+    );
+    ```
+
+=== "Ruby"
+
+    ```ruby
+    app.get "/fail" do |_request|
+      [{ type: "https://spikard.dev/errors/validation", title: "Validation failed", status: 422 }, 422]
+    end
+    ```
+
+=== "Rust"
+
+    ```rust
+    use spikard::prelude::*;
+
+    app.route(get("/fail"), |_ctx: Context| async move {
+        Ok(Json(json!({
+            "type": "https://spikard.dev/errors/validation",
+            "title": "Validation failed",
+            "status": 422
+        })).with_status(StatusCode::UNPROCESSABLE_ENTITY))
+    })?;
+    ```
