@@ -187,6 +187,7 @@ nav:
       - Rust: bindings/rust.md
   - Playbooks:
       - Auth & Guards: playbooks/auth.md
+      - Logging & Tracing: playbooks/logging.md
       - File Uploads: playbooks/uploads.md
       - Streaming & Real-Time: playbooks/streaming.md
       - Error Handling: playbooks/errors.md
