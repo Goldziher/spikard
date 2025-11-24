@@ -25,6 +25,12 @@ bundle exec rake ext:build
 
 ```ruby
 require "spikard"
+require "dry-schema"
+
+UserSchema = Dry::Schema.JSON do
+  required(:name).filled(:str?)
+  required(:email).filled(:str?)
+end
 
 app = Spikard::App.new
 
@@ -33,8 +39,9 @@ app.get "/users/:id" do |request|
   { id: user_id, name: "Alice" }
 end
 
-app.post "/users" do |request|
-  { id: 1, name: request[:body]["name"] }
+app.post "/users", request_schema: UserSchema do |request|
+  body = request[:body]
+  { id: 1, name: body["name"], email: body["email"] }
 end
 
 app.run(port: 8000)
