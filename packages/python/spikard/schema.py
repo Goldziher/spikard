@@ -2,6 +2,7 @@
 
 import dataclasses
 import inspect
+import types
 from collections.abc import Callable
 from typing import Any, Protocol, Union, get_args, get_origin, get_type_hints, runtime_checkable
 
@@ -142,6 +143,31 @@ def extract_schemas(
 
                 if not (is_upload_file or is_list_upload_file):
                     request_schema = extract_json_schema(param_type)
+                    if request_schema and "required" in request_schema:
+                        try:
+                            body_type_hints = get_type_hints(param_type)
+                        except (AttributeError, NameError, TypeError, ValueError):
+                            body_type_hints = {}
+
+                        def _is_optional_upload(field_type: Any) -> bool:
+                            origin = get_origin(field_type)
+                            args = get_args(field_type)
+                            return (
+                                origin in (Union, types.UnionType)
+                                and any(arg is UploadFile for arg in args)
+                                and type(None) in args
+                            )
+
+                        optional_upload_fields = [
+                            field_name
+                            for field_name, field_type in body_type_hints.items()
+                            if _is_optional_upload(field_type)
+                        ]
+                        if optional_upload_fields:
+                            required_fields = request_schema.get("required", [])
+                            request_schema["required"] = [
+                                field for field in required_fields if field not in optional_upload_fields
+                            ]
 
     response_schema = None
     return_type = type_hints.get("return")

@@ -185,6 +185,8 @@ mod tests {
             is_async: true,
             cors: None,
             body_param_name: None,
+            #[cfg(feature = "di")]
+            handler_dependencies: None,
         };
 
         let result = route_to_path_item(&route);

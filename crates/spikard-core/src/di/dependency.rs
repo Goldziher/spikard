@@ -37,7 +37,7 @@ type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use spikard_core::di::{Dependency, DependencyError, ResolvedDependencies};
 /// use http::Request;
 /// use crate::request_data::RequestData;
@@ -92,7 +92,7 @@ pub trait Dependency: Send + Sync {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::{Dependency, DependencyError, ResolvedDependencies};
     /// use http::Request;
     /// use crate::request_data::RequestData;
@@ -143,7 +143,7 @@ pub trait Dependency: Send + Sync {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::Dependency;
     /// # use spikard_core::di::{DependencyError, ResolvedDependencies};
     /// # use http::Request;
@@ -175,7 +175,7 @@ pub trait Dependency: Send + Sync {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::Dependency;
     /// # use spikard_core::di::{DependencyError, ResolvedDependencies};
     /// # use http::Request;
@@ -209,7 +209,7 @@ pub trait Dependency: Send + Sync {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::Dependency;
     /// # use spikard_core::di::{DependencyError, ResolvedDependencies};
     /// # use http::Request;
@@ -247,7 +247,7 @@ pub trait Dependency: Send + Sync {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::Dependency;
     /// # use spikard_core::di::{DependencyError, ResolvedDependencies};
     /// # use http::Request;

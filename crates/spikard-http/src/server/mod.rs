@@ -93,7 +93,13 @@ fn create_method_router(
                             .await
                     },
                 ),
-                _ => unreachable!(),
+                _ => {
+                    eprintln!(
+                        "[spikard-router] unsupported HTTP method with path params: {} (defaulting to 405)",
+                        method
+                    );
+                    MethodRouter::new()
+                }
             }
         } else {
             let handler_clone = handler.clone();
@@ -123,7 +129,13 @@ fn create_method_router(
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 }),
-                _ => unreachable!(),
+                _ => {
+                    eprintln!(
+                        "[spikard-router] unsupported HTTP method without path params: {} (defaulting to 405)",
+                        method
+                    );
+                    MethodRouter::new()
+                }
             }
         }
     } else {
@@ -180,7 +192,25 @@ fn create_method_router(
                             .await
                     },
                 ),
-                _ => unreachable!(),
+                "OPTIONS" => axum::routing::options(
+                    move |path_params: Path<HashMap<String, String>>, req: axum::extract::Request| async move {
+                        let request_data = request_extraction::create_request_data_without_body(
+                            req.uri(),
+                            req.method(),
+                            req.headers(),
+                            path_params.0,
+                        );
+                        lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
+                            .await
+                    },
+                ),
+                _ => {
+                    eprintln!(
+                        "[spikard-router] unsupported HTTP method with path params: {} (defaulting to 405)",
+                        method
+                    );
+                    MethodRouter::new()
+                }
             }
         } else {
             let handler_clone = handler.clone();
@@ -226,7 +256,23 @@ fn create_method_router(
                     lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
                         .await
                 }),
-                _ => unreachable!(),
+                "OPTIONS" => axum::routing::options(move |req: axum::extract::Request| async move {
+                    let request_data = request_extraction::create_request_data_without_body(
+                        req.uri(),
+                        req.method(),
+                        req.headers(),
+                        HashMap::new(),
+                    );
+                    lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler_clone, hooks_clone)
+                        .await
+                }),
+                _ => {
+                    eprintln!(
+                        "[spikard-router] unsupported HTTP method without path params: {} (defaulting to 405)",
+                        method
+                    );
+                    MethodRouter::new()
+                }
             }
         }
     }
@@ -426,6 +472,15 @@ pub fn build_router_with_handlers_and_config(
     config: ServerConfig,
     route_metadata: Vec<crate::RouteMetadata>,
 ) -> Result<AxumRouter, String> {
+    #[cfg(feature = "di")]
+    if config.di_container.is_none() {
+        eprintln!("[spikard-di] build_router: di_container is None");
+    } else {
+        eprintln!(
+            "[spikard-di] build_router: di_container has keys: {:?}",
+            config.di_container.as_ref().unwrap().keys()
+        );
+    }
     let hooks = config.lifecycle_hooks.clone();
 
     #[cfg(feature = "di")]

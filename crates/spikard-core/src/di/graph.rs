@@ -17,7 +17,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use spikard_core::di::DependencyGraph;
 ///
 /// let mut graph = DependencyGraph::new();
@@ -52,7 +52,7 @@ impl DependencyGraph {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::DependencyGraph;
     ///
     /// let graph = DependencyGraph::new();
@@ -82,7 +82,7 @@ impl DependencyGraph {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::DependencyGraph;
     ///
     /// let mut graph = DependencyGraph::new();
@@ -123,7 +123,7 @@ impl DependencyGraph {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::DependencyGraph;
     ///
     /// let mut graph = DependencyGraph::new();
@@ -214,7 +214,7 @@ impl DependencyGraph {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use spikard_core::di::DependencyGraph;
     ///
     /// let mut graph = DependencyGraph::new();

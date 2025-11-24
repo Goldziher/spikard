@@ -33,6 +33,8 @@ async fn test_request_data_serialization() {
         raw_query_params: Arc::new(HashMap::new()),
         body,
         raw_body: None,
+        #[cfg(feature = "di")]
+        dependencies: None,
     };
 
     let expected = json!({

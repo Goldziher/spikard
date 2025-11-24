@@ -3,7 +3,8 @@
  */
 
 import type { ServerConfig } from "./config";
-import type { SpikardApp } from "./index";
+import { isNativeHandler, wrapHandler } from "./handler-wrapper";
+import type { HandlerFunction, NativeHandlerFunction, SpikardApp } from "./index";
 
 interface NativeServerBinding {
 	runServer(app: SpikardApp, config: ServerConfig | ServerOptions): void;
@@ -69,5 +70,12 @@ export interface ServerOptions {
  * ```
  */
 export function runServer(app: SpikardApp, config: ServerConfig | ServerOptions = {}): void {
-	nativeBinding.runServer(app, config);
+	const handlers: Record<string, NativeHandlerFunction> = Object.fromEntries(
+		Object.entries(app.handlers || {}).map(([name, handler]) => {
+			const nativeHandler = isNativeHandler(handler) ? handler : wrapHandler(handler as HandlerFunction);
+			return [name, nativeHandler];
+		}),
+	);
+
+	nativeBinding.runServer({ ...app, handlers }, config);
 }
