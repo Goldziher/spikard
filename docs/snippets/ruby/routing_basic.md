@@ -1,8 +1,8 @@
 ```ruby
 require "spikard"
 
-App = Spikard::App.new
+app = Spikard::App.new
 
-App.get("/health") { { status: "ok" } }
-App.post("/users") { |ctx| ctx.json }
+app.get("/health") { |_params, _query, _body| { status: "ok" } }
+app.post("/users") { |_params, _query, body| body }
 ```

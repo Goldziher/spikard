@@ -1,6 +1,8 @@
 ```ruby
-App.use do |ctx, next_middleware|
-  puts "#{ctx.method} #{ctx.path}"
-  next_middleware.call
+app = Spikard::App.new
+
+app.on_request do |request|
+  puts "#{request[:method]} #{request[:path]}"
+  request
 end
 ```

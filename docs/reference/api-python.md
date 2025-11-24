@@ -1,22 +1,22 @@
 # Python API Reference
 
-The Python binding mirrors the Rust runtime while exposing Pythonic ergonomics via PyO3.
+The Python binding exposes the Rust runtime through a thin, Pythonic surface.
 
 ## Package
 - Install: `pip install spikard`
 - Entry module: `spikard`
 
 ## Core Types
-- `App` – register routes, middleware, and error handlers
-- `Context` – access request data (path params, query, headers, cookies, body)
-- `Response` helpers – JSON responses, redirects, streams
-- Validation helpers powered by msgspec (with optional Pydantic detection)
+- `Spikard` – register routes and run the server
+- Route decorators (`@app.get`, `@app.post`, …) – built on msgspec type hints
+- Lifecycle hooks (`on_request`, `pre_validation`, `pre_handler`, `on_response`, `on_error`)
+- Validation powered by msgspec (with optional Pydantic/attrs/dataclass detection)
 
 ## Routing
 ```python
-from spikard import App
+from spikard import Spikard
 
-app = App()
+app = Spikard()
 
 @app.get("/health")
 async def health() -> dict:
@@ -24,12 +24,16 @@ async def health() -> dict:
 ```
 
 ## Middleware
+Use lifecycle hooks for cross-cutting behavior:
 ```python
-def logging_middleware(ctx, next_fn):
-    print(f"Handling {ctx.method} {ctx.path}")
-    return next_fn()
+from spikard import Spikard
 
-app.use(logging_middleware)
+app = Spikard()
+
+@app.on_request
+async def log_request(request):
+    print(f"{request['method']} {request['path']}")
+    return request
 ```
 
 ## Validation

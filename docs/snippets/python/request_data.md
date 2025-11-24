@@ -1,6 +1,9 @@
 ```python
 from typing import Optional
+from spikard import Spikard
 from msgspec import Struct
+
+app = Spikard()
 
 
 class Order(Struct):

@@ -1,7 +1,10 @@
 ```python
-def logging_middleware(ctx, next_fn):
-    print(f"{ctx.method} {ctx.path}")
-    return next_fn()
+from spikard import Spikard
 
-app.use(logging_middleware)
+app = Spikard()
+
+@app.on_request
+async def logging_hook(request):
+    print(f"{request['method']} {request['path']}")
+    return request
 ```
