@@ -35,11 +35,28 @@ fn is_debug_mode() -> bool {
         .unwrap_or(false)
 }
 
-fn build_js_payload(handler: &JsHandler, request_data: &RequestData, validated_params: Option<Value>) -> Value {
+fn build_js_payload(_handler: &JsHandler, request_data: &RequestData, validated_params: Option<Value>) -> Value {
     let path_params =
         validated_params.unwrap_or_else(|| serde_json::to_value(&*request_data.path_params).unwrap_or(Value::Null));
     let headers = serde_json::to_value(&*request_data.headers).unwrap_or(Value::Null);
     let cookies = serde_json::to_value(&*request_data.cookies).unwrap_or(Value::Null);
+    #[cfg(feature = "di")]
+    let dependencies = if let Some(resolved) = &request_data.dependencies {
+        let mut deps_map: JsonMap<String, Value> = JsonMap::new();
+        for key in resolved.keys() {
+            if let Some(value_json) = resolved.get::<String>(&key)
+                && let Ok(parsed) = serde_json::from_str::<Value>(&value_json)
+            {
+                deps_map.insert(key, parsed);
+            }
+        }
+        Value::Object(deps_map)
+    } else {
+        Value::Null
+    };
+    #[cfg(not(feature = "di"))]
+    let dependencies = Value::Null;
+
     let body_bytes = request_data
         .raw_body
         .as_ref()
@@ -52,13 +69,14 @@ fn build_js_payload(handler: &JsHandler, request_data: &RequestData, validated_p
         .collect();
 
     json!({
-        "method": handler.method,
-        "path": handler.path,
+        "method": request_data.method,
+        "path": request_data.path,
         "params": path_params,
         "query": Value::Object(query),
         "headers": headers,
         "cookies": cookies,
-        "body": body_bytes
+        "body": body_bytes,
+        "dependencies": dependencies,
     })
 }
 
@@ -338,6 +356,8 @@ impl TestClient {
         websocket_routes_json: Option<String>,
         handlers_map: Object,
         websocket_handlers: Option<Object>,
+        dependencies: Option<Object>,
+        lifecycle_hooks: Option<Object>,
         config: Option<Object>,
     ) -> Result<Self> {
         let routes_data: Vec<RouteMetadata> = serde_json::from_str(&routes_json)
@@ -348,7 +368,7 @@ impl TestClient {
             .and_then(|json| serde_json::from_str(json).ok())
             .unwrap_or_default();
 
-        let server_config = if let Some(cfg) = config {
+        let mut server_config = if let Some(cfg) = config {
             crate::extract_server_config(&cfg)?
         } else {
             spikard_http::ServerConfig {
@@ -356,6 +376,76 @@ impl TestClient {
                 ..Default::default()
             }
         };
+
+        #[cfg(feature = "di")]
+        let dependency_container = if let Some(deps_obj) = dependencies {
+            crate::di::extract_dependency_container(&deps_obj)?
+        } else {
+            None
+        };
+        #[cfg(not(feature = "di"))]
+        let dependency_container: Option<std::sync::Arc<spikard_core::di::DependencyContainer>> = None;
+
+        let lifecycle_hooks = if let Some(hooks_obj) = lifecycle_hooks {
+            let mut hooks = spikard_http::LifecycleHooks::new();
+
+            let extract_hooks =
+                |hooks_obj: &Object, hook_type: &str| -> Result<Vec<crate::lifecycle::NodeLifecycleHook>> {
+                    let hook_array: Result<Object> = hooks_obj.get_named_property(hook_type);
+                    if let Ok(arr) = hook_array {
+                        let length = arr.get_array_length()?;
+                        let mut result = Vec::new();
+
+                        for i in 0..length {
+                            let js_fn: Function<String, Promise<String>> = arr.get_element(i)?;
+                            let name = format!("{}_{}", hook_type, i);
+
+                            let tsfn = js_fn
+                                .build_threadsafe_function()
+                                .build_callback(|ctx| Ok(vec![ctx.value]))
+                                .map_err(|e| {
+                                    Error::from_reason(format!(
+                                        "Failed to build ThreadsafeFunction for hook '{}': {}",
+                                        name, e
+                                    ))
+                                })?;
+
+                            result.push(crate::lifecycle::NodeLifecycleHook::new(name, tsfn));
+                        }
+
+                        Ok(result)
+                    } else {
+                        Ok(Vec::new())
+                    }
+                };
+
+            for hook in extract_hooks(&hooks_obj, "onRequest")? {
+                hooks.add_on_request(std::sync::Arc::new(hook));
+            }
+
+            for hook in extract_hooks(&hooks_obj, "preValidation")? {
+                hooks.add_pre_validation(std::sync::Arc::new(hook));
+            }
+
+            for hook in extract_hooks(&hooks_obj, "preHandler")? {
+                hooks.add_pre_handler(std::sync::Arc::new(hook));
+            }
+
+            for hook in extract_hooks(&hooks_obj, "onResponse")? {
+                hooks.add_on_response(std::sync::Arc::new(hook));
+            }
+
+            for hook in extract_hooks(&hooks_obj, "onError")? {
+                hooks.add_on_error(std::sync::Arc::new(hook));
+            }
+
+            Some(hooks)
+        } else {
+            None
+        };
+
+        server_config.lifecycle_hooks = lifecycle_hooks.map(std::sync::Arc::new);
+        server_config.di_container = dependency_container;
 
         let schema_registry = spikard_http::SchemaRegistry::new();
 

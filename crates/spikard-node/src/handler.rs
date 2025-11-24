@@ -28,6 +28,58 @@ pub struct NodeHandler {
     handler_fn: Arc<ThreadsafeFunction<String, Promise<HandlerReturnValue>, Vec<String>, napi::Status, false>>,
 }
 
+#[derive(Clone)]
+struct HandlerResponsePayload {
+    status: u16,
+    headers: std::collections::HashMap<String, String>,
+    body: Option<serde_json::Value>,
+}
+
+fn interpret_handler_response(value: serde_json::Value) -> HandlerResponsePayload {
+    if let serde_json::Value::Object(mut obj) = value {
+        let status = obj
+            .remove("status")
+            .or_else(|| obj.remove("statusCode"))
+            .and_then(|v| v.as_u64())
+            .map(|n| n as u16)
+            .unwrap_or(200);
+
+        let headers = obj
+            .remove("headers")
+            .and_then(|v| v.as_object().cloned())
+            .map(|map| {
+                map.into_iter()
+                    .filter_map(|(k, v)| match v {
+                        serde_json::Value::String(s) => Some((k, s)),
+                        serde_json::Value::Number(n) => Some((k, n.to_string())),
+                        serde_json::Value::Bool(b) => Some((k, b.to_string())),
+                        _ => None,
+                    })
+                    .collect::<std::collections::HashMap<String, String>>()
+            })
+            .unwrap_or_default();
+
+        let body = if let Some(body_value) = obj.remove("body") {
+            match body_value {
+                serde_json::Value::Null => None,
+                other => Some(other),
+            }
+        } else if obj.is_empty() {
+            None
+        } else {
+            Some(serde_json::Value::Object(obj))
+        };
+
+        HandlerResponsePayload { status, headers, body }
+    } else {
+        HandlerResponsePayload {
+            status: 200,
+            headers: std::collections::HashMap::new(),
+            body: Some(value),
+        }
+    }
+}
+
 unsafe impl Send for NodeHandler {}
 unsafe impl Sync for NodeHandler {}
 
@@ -71,14 +123,25 @@ impl Handler for NodeHandler {
             #[cfg(not(feature = "di"))]
             let dependencies = Value::Null;
 
+            let body_bytes = request_data
+                .raw_body
+                .as_ref()
+                .map(|bytes| bytes.iter().copied().collect::<Vec<u8>>());
+
+            let query: std::collections::HashMap<String, String> = request_data
+                .raw_query_params
+                .iter()
+                .filter_map(|(k, values)| values.first().map(|value| (k.clone(), value.clone())))
+                .collect();
+
             let request_json = serde_json::json!({
                 "path": request_data.path,
                 "method": request_data.method,
-                "path_params": &*request_data.path_params,
-                "query_params": request_data.query_params,
+                "params": &*request_data.path_params,
+                "query": query,
                 "headers": &*request_data.headers,
                 "cookies": &*request_data.cookies,
-                "body": request_data.body,
+                "body": body_bytes,
                 "dependencies": dependencies,
             });
 
@@ -129,23 +192,38 @@ impl Handler for NodeHandler {
                 )
             })?;
 
-            let body_str = serde_json::to_string(&response_data).map_err(|e| {
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Failed to serialize response: {}", e),
-                )
-            })?;
+            let mut handler_response = interpret_handler_response(response_data);
 
-            Response::builder()
-                .status(StatusCode::OK)
-                .header("content-type", "application/json")
-                .body(Body::from(body_str))
-                .map_err(|e| {
+            let mut response_builder =
+                Response::builder().status(StatusCode::from_u16(handler_response.status).unwrap_or(StatusCode::OK));
+
+            for (key, value) in handler_response.headers.into_iter() {
+                response_builder = response_builder.header(key, value);
+            }
+
+            match handler_response.body.take() {
+                Some(body_value) => {
+                    let body_str = serde_json::to_string(&body_value).map_err(|e| {
+                        (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            format!("Failed to serialize response: {}", e),
+                        )
+                    })?;
+
+                    response_builder.body(Body::from(body_str)).map_err(|e| {
+                        (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            format!("Failed to build response: {}", e),
+                        )
+                    })
+                }
+                None => response_builder.body(Body::empty()).map_err(|e| {
                     (
                         StatusCode::INTERNAL_SERVER_ERROR,
-                        format!("Failed to build response: {}", e),
+                        format!("Failed to build empty response: {}", e),
                     )
-                })
+                }),
+            }
         })
     }
 }
