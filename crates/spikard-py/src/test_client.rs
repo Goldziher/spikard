@@ -10,13 +10,14 @@ use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 use serde_json::Value;
 use spikard_http::testing::{MultipartFilePart, ResponseSnapshot, TestClient as CoreTestClient};
+use std::sync::Arc;
 
 /// A test client for making requests to a Spikard application
 ///
 /// This wraps the core TestClient from spikard_http and provides a Python-friendly interface.
 #[pyclass]
 pub struct TestClient {
-    client: CoreTestClient,
+    client: Arc<CoreTestClient>,
 }
 
 impl TestClient {
@@ -25,7 +26,9 @@ impl TestClient {
         let client = CoreTestClient::from_router(router)
             .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to create test server: {}", e)))?;
 
-        Ok(Self { client })
+        Ok(Self {
+            client: Arc::new(client),
+        })
     }
 }
 
@@ -53,6 +56,7 @@ impl TestClient {
         let path = path.to_string();
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let mut headers_vec = extract_dict_to_vec(headers)?;
+        let client = Arc::clone(&self.client);
 
         if let Some(cookies_dict) = cookies {
             let cookies_vec = extract_dict_to_vec(Some(cookies_dict))?;
@@ -64,7 +68,7 @@ impl TestClient {
         }
 
         let fut = async move {
-            self.client
+            client
                 .get(
                     &path,
                     Some(query_params_vec),
@@ -114,12 +118,13 @@ impl TestClient {
         };
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
+        let client = Arc::clone(&self.client);
 
         let mut form_data = Vec::new();
         let mut raw_body: Option<Vec<u8>> = None;
         if let Some(obj) = data {
             if let Ok(dict) = obj.cast::<PyDict>() {
-                form_data = extract_dict_to_vec(Some(&dict))?;
+                form_data = extract_dict_to_vec(Some(dict))?;
             } else if let Ok(py_bytes) = obj.cast::<pyo3::types::PyBytes>() {
                 raw_body = Some(py_bytes.as_bytes().to_vec());
             } else if let Ok(py_str) = obj.cast::<pyo3::types::PyString>() {
@@ -137,7 +142,7 @@ impl TestClient {
             // Determine body type priority: multipart > form-encoded > JSON > raw > nothing
             let multipart =
                 if !files_data.is_empty() || (!form_data.is_empty() && raw_body.is_none() && json_value.is_none()) {
-                    Some((form_data, files_data))
+                    Some((form_data.clone(), files_data))
                 } else {
                     None
                 };
@@ -148,7 +153,7 @@ impl TestClient {
                 None
             };
 
-            self.client
+            client
                 .post(
                     &path,
                     json_value,
@@ -187,9 +192,10 @@ impl TestClient {
         };
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
+        let client = Arc::clone(&self.client);
 
         let fut = async move {
-            self.client
+            client
                 .put(
                     &path,
                     json_value,
@@ -226,9 +232,10 @@ impl TestClient {
         };
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
+        let client = Arc::clone(&self.client);
 
         let fut = async move {
-            self.client
+            client
                 .patch(
                     &path,
                     json_value,
@@ -259,9 +266,10 @@ impl TestClient {
         let path = path.to_string();
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
+        let client = Arc::clone(&self.client);
 
         let fut = async move {
-            self.client
+            client
                 .delete(
                     &path,
                     Some(query_params_vec),
@@ -291,9 +299,10 @@ impl TestClient {
         let path = path.to_string();
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
+        let client = Arc::clone(&self.client);
 
         let fut = async move {
-            self.client
+            client
                 .options(
                     &path,
                     Some(query_params_vec),
@@ -323,9 +332,10 @@ impl TestClient {
         let path = path.to_string();
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
+        let client = Arc::clone(&self.client);
 
         let fut = async move {
-            self.client
+            client
                 .head(
                     &path,
                     Some(query_params_vec),
@@ -355,9 +365,10 @@ impl TestClient {
         let path = path.to_string();
         let query_params_vec = extract_dict_to_vec(query_params)?;
         let headers_vec = extract_dict_to_vec(headers)?;
+        let client = Arc::clone(&self.client);
 
         let fut = async move {
-            self.client
+            client
                 .trace(
                     &path,
                     Some(query_params_vec),
@@ -378,9 +389,9 @@ impl TestClient {
     /// Connect to a WebSocket endpoint
     fn websocket<'py>(&self, py: Python<'py>, path: &str) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
-        let server = self.client.server();
+        let client = Arc::clone(&self.client);
 
-        let fut = async move { test_websocket::connect_websocket_for_test(server, &path).await };
+        let fut = async move { test_websocket::connect_websocket_for_test(client.server(), &path).await };
 
         pyo3_async_runtimes::tokio::future_into_py(py, fut)
     }
@@ -388,10 +399,10 @@ impl TestClient {
     /// Connect to a Server-Sent Events endpoint
     fn sse<'py>(&self, py: Python<'py>, path: &str) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
-        let server = self.client.server();
+        let client = Arc::clone(&self.client);
 
         let fut = async move {
-            let axum_response = server.get(&path).await;
+            let axum_response = client.server().get(&path).await;
             let snapshot = spikard_http::testing::snapshot_response(axum_response)
                 .await
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
