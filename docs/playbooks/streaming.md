@@ -35,8 +35,12 @@ Serve streaming responses (chunked, NDJSON), SSE, or WebSockets.
 
     --8<-- "snippets/rust/websocket.md"
 
-??? note "TypeScript / Ruby"
-    WebSocket helpers for TypeScript/Ruby bindings are planned; use HTTP/SSE today.
+??? note "TypeScript"
+    WebSocket support exists in the runtime but the public API is still being finalized. Use HTTP/SSE for now.
+
+=== "Ruby"
+
+    --8<-- "snippets/ruby/websocket.md"
 
 ## Server-Sent Events (SSE)
 
