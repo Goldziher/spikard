@@ -4,7 +4,7 @@
 
 import type { CorsConfig, JsonSchema, RouteMetadata } from "./index";
 import type { Request } from "./request";
-import type { HandlerResult, JsonValue, MaybePromise } from "./types";
+import type { HandlerResult, MaybePromise } from "./types";
 
 /**
  * Route configuration options
@@ -37,9 +37,7 @@ export interface RouteOptions {
 	cors?: CorsConfig;
 }
 
-type RouteArgument = Request | JsonValue | string | number | boolean | null | undefined;
-
-type RouteHandler = (...args: RouteArgument[]) => MaybePromise<HandlerResult>;
+type RouteHandler = (request: Request) => MaybePromise<HandlerResult>;
 
 /**
  * Route decorator for defining HTTP routes

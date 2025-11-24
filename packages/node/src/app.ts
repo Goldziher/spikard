@@ -2,7 +2,8 @@
  * Spikard application class
  */
 
-import type { HandlerFunction, RouteMetadata, SpikardApp } from "./index";
+import { isNativeHandler, wrapHandler } from "./handler-wrapper";
+import type { HandlerFunction, NativeHandlerFunction, RouteMetadata, SpikardApp } from "./index";
 import type { Request } from "./request";
 import { runServer, type ServerOptions } from "./server";
 import type { MaybePromise, StructuredHandlerResponse } from "./types";
@@ -52,7 +53,7 @@ export interface LifecycleHooks {
  */
 export class Spikard implements SpikardApp {
 	routes: RouteMetadata[] = [];
-	handlers: Record<string, HandlerFunction> = {};
+	handlers: Record<string, NativeHandlerFunction> = {};
 	lifecycleHooks: LifecycleHooks = {
 		onRequest: [],
 		preValidation: [],
@@ -67,9 +68,10 @@ export class Spikard implements SpikardApp {
 	 * @param metadata - Route configuration metadata
 	 * @param handler - Handler function (sync or async)
 	 */
-	addRoute(metadata: RouteMetadata, handler: HandlerFunction): void {
+	addRoute(metadata: RouteMetadata, handler: HandlerFunction | NativeHandlerFunction): void {
 		this.routes.push(metadata);
-		this.handlers[metadata.handler_name] = handler;
+		const nativeHandler = isNativeHandler(handler) ? handler : wrapHandler(handler as HandlerFunction);
+		this.handlers[metadata.handler_name] = nativeHandler;
 	}
 
 	/**

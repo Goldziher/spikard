@@ -12,6 +12,7 @@ use napi::bindgen_prelude::*;
 use napi::threadsafe_function::ThreadsafeFunction;
 use serde_json::Value;
 use spikard_http::{Handler, HandlerResult, RequestData};
+use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -51,14 +52,28 @@ impl Handler for NodeHandler {
         request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
+            let query: HashMap<String, String> = request_data
+                .raw_query_params
+                .iter()
+                .filter_map(|(key, values)| values.first().map(|value| (key.clone(), value.clone())))
+                .collect();
+
+            let raw_body = if let Some(raw) = request_data.raw_body.as_ref() {
+                Some(raw.to_vec())
+            } else if !request_data.body.is_null() {
+                serde_json::to_vec(&request_data.body).ok()
+            } else {
+                None
+            };
+
             let request_json = serde_json::json!({
                 "path": request_data.path,
                 "method": request_data.method,
-                "path_params": &*request_data.path_params,
-                "query_params": request_data.query_params,
+                "params": &*request_data.path_params,
+                "query": query,
                 "headers": &*request_data.headers,
                 "cookies": &*request_data.cookies,
-                "body": request_data.body,
+                "body": raw_body,
             });
 
             let json_input = serde_json::to_string(&request_json).map_err(|e| {

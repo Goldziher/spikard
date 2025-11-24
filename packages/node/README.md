@@ -174,18 +174,23 @@ post("/users", { bodySchema: userSchema })(async function createUser(req) {
 
 ```typescript
 get("/search")(async function search(req) {
-  // Query parameters
-  const params = new URLSearchParams(req.queryString);
-  const q = params.get("q");
-  const limit = params.get("limit") ?? "10";
+  // Parsed query parameters (string values)
+  const q = req.query.q;
+  const limit = Number(req.query.limit ?? "10");
 
-  // Headers
-  const auth = req.headers["authorization"];
+  // Path params
+  const id = req.params.id;
+
+  // Headers (already lowercased)
+  const auth = req.headers.authorization;
+
+  // Cookies
+  const session = req.cookies.session_id;
 
   // Method and path
   console.log(`${req.method} ${req.path}`);
 
-  return { query: q, limit: parseInt(limit) };
+  return { query: q, limit };
 });
 ```
 
