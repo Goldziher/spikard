@@ -31,17 +31,12 @@ Serve streaming responses (chunked, NDJSON), SSE, or WebSockets.
 
     --8<-- "snippets/python/websocket.md"
 
-=== "TypeScript"
-
-    --8<-- "snippets/typescript/websocket.md"
-
-=== "Ruby"
-
-    --8<-- "snippets/ruby/websocket.md"
-
 === "Rust"
 
     --8<-- "snippets/rust/websocket.md"
+
+??? note "TypeScript / Ruby"
+    WebSocket helpers for TypeScript/Ruby bindings are planned; use HTTP/SSE today.
 
 ## Server-Sent Events (SSE)
 
