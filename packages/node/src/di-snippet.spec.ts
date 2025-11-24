@@ -3,7 +3,7 @@ import path from "node:path";
 import ts from "typescript";
 import { describe, expect, test } from "vitest";
 
-const SNIPPET_PATH = path.resolve(__dirname, "../../docs/snippets/typescript/dependency_injection.md");
+const SNIPPET_PATH = path.resolve(__dirname, "../../../docs/snippets/typescript/dependency_injection.md");
 
 const extractSnippet = (): string => {
 	const content = fs.readFileSync(SNIPPET_PATH, "utf8");
