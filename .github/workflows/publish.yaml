@@ -431,6 +431,48 @@ jobs:
           path: target/wheels/*.tar.gz
           retention-days: 14
 
+  python-wrapper:
+    name: Build Python wrapper package
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_python == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Ensure target commit
+        if: ${{ needs.prepare.outputs.target_sha != '' }}
+        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Build wrapper wheel
+        run: |
+          set -euo pipefail
+          mkdir -p target/wheels
+          cd packages/python
+          uv build --wheel --out-dir ../../target/wheels
+
+      - name: Upload wrapper wheel
+        uses: actions/upload-artifact@v5
+        with:
+          name: python-wrapper
+          path: target/wheels/*.whl
+          retention-days: 14
+
   node-bindings:
     name: Build Node bindings (${{ matrix.settings.target }})
     needs: prepare
@@ -911,15 +953,9 @@ jobs:
             echo "::warning::Skipping spikard-http crate packaging; dependencies may not be available on crates.io."
           fi
 
-          # Package spikard-cli (depends on spikard and spikard-http)
-          cli_packaged=0
-          cli_status=0
-          cargo package -p spikard-cli --allow-dirty --no-verify || cli_status=$?
-          if [ "$cli_status" -eq 0 ]; then
-            cli_packaged=1
-          else
-            echo "::warning::Skipping spikard-cli crate packaging; dependencies may not be available on crates.io."
-          fi
+          # Skip spikard-cli (has optional Python binding dependencies not on crates.io)
+          # CLI can be installed via: cargo install --git https://github.com/Goldziher/spikard spikard-cli
+          echo "::notice::Skipping spikard-cli packaging (not published to crates.io; use cargo install --git or homebrew)"
 
           mkdir -p crate-artifacts
           if [ "$core_packaged" -eq 1 ]; then
@@ -930,9 +966,6 @@ jobs:
           fi
           if [ "$http_packaged" -eq 1 ]; then
             cp target/package/spikard-http-*.crate crate-artifacts/
-          fi
-          if [ "$cli_packaged" -eq 1 ]; then
-            cp target/package/spikard-cli-*.crate crate-artifacts/
           fi
 
       - name: Upload crate packages
@@ -948,6 +981,7 @@ jobs:
       - prepare
       - python-wheels
       - python-sdist
+      - python-wrapper
       - node-bindings
       - cli-binaries
       - ruby-gem
@@ -960,6 +994,7 @@ jobs:
       needs.prepare.outputs.is_tag == 'true' &&
       (needs.python-wheels.result == 'success' || needs.python-wheels.result == 'skipped') &&
       (needs.python-sdist.result == 'success' || needs.python-sdist.result == 'skipped') &&
+      (needs.python-wrapper.result == 'success' || needs.python-wrapper.result == 'skipped') &&
       (needs.node-bindings.result == 'success' || needs.node-bindings.result == 'skipped') &&
       (needs.cli-binaries.result == 'success' || needs.cli-binaries.result == 'skipped') &&
       (needs.ruby-gem.result == 'success' || needs.ruby-gem.result == 'skipped') &&
@@ -1048,7 +1083,6 @@ jobs:
               ("spikard-core", "spikard_core_exists"),
               ("spikard", "spikard_exists"),
               ("spikard-http", "http_exists"),
-              ("spikard-cli", "cli_exists"),
           ]
           for crate, key in crates:
               url = f"https://crates.io/api/v1/crates/{crate}"
@@ -1132,23 +1166,10 @@ jobs:
         if: ${{ steps.crate_check.outputs.spikard_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
         run: sleep 30
 
-      - name: Publish spikard-cli
-        if: ${{ steps.crate_check.outputs.cli_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
+      - name: Skip spikard-cli publish
         run: |
-          set -euo pipefail
-          publish_log=$(mktemp)
-          set +e
-          cargo publish -p spikard-cli --token ${{ secrets.CARGO_REGISTRY_TOKEN }} 2>&1 | tee "$publish_log"
-          status=${PIPESTATUS[0]}
-          set -e
-          if [ "$status" -ne 0 ]; then
-            if grep -qi "already uploaded" "$publish_log"; then
-              echo "::notice::spikard-cli already published; skipping."
-              echo "spikard-cli already published; skipping." >> $GITHUB_STEP_SUMMARY
-            else
-              exit "$status"
-            fi
-          fi
+          echo "::notice::spikard-cli not published to crates.io (install via: cargo install --git https://github.com/Goldziher/spikard spikard-cli)"
+          echo "spikard-cli skipped (not published to crates.io)" >> $GITHUB_STEP_SUMMARY
 
       - name: Crates dry-run summary
         if: ${{ needs.prepare.outputs.dry_run == 'true' }}
@@ -1175,6 +1196,12 @@ jobs:
         uses: actions/download-artifact@v6
         with:
           name: python-sdist
+          path: dist
+
+      - name: Download wrapper wheel
+        uses: actions/download-artifact@v6
+        with:
+          name: python-wrapper
           path: dist
 
       - name: List artifacts
@@ -1341,7 +1368,7 @@ jobs:
           cd crates/spikard-node
           publish_log=$(mktemp)
           set +e
-          pnpm publish --access public --no-git-checks 2>&1 | tee "$publish_log"
+          pnpm publish --access public --no-git-checks --ignore-scripts 2>&1 | tee "$publish_log"
           status=${PIPESTATUS[0]}
           set -e
           if [ "$status" -ne 0 ]; then
