@@ -391,6 +391,7 @@ expect(response.echo.message).toBe("hello");
 await ws.close();
 ```
 
+
 ### SSE Testing
 
 ```typescript
