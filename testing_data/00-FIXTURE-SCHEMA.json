@@ -142,6 +142,89 @@
 					"type": "object",
 					"description": "JSON Schema for response body (for documentation/validation)"
 				},
+				"dependencies": {
+					"type": "object",
+					"description": "Dependency injection configuration - map of dependency key to dependency definition",
+					"additionalProperties": {
+						"type": "object",
+						"description": "Dependency definition",
+						"required": ["type"],
+						"properties": {
+							"type": {
+								"type": "string",
+								"enum": ["value", "factory", "async_factory"],
+								"description": "Dependency type: value (static), factory (sync creation), async_factory (async creation)"
+							},
+							"value": {
+								"description": "Static value for type='value' dependencies (any JSON type)"
+							},
+							"value_type": {
+								"type": "string",
+								"enum": ["string", "number", "integer", "boolean", "object", "array", "null"],
+								"description": "Type of the value for type='value' dependencies"
+							},
+							"factory": {
+								"type": "string",
+								"description": "Factory function name for type='factory' or 'async_factory' dependencies"
+							},
+							"depends_on": {
+								"type": "array",
+								"description": "Array of dependency keys that this dependency depends on",
+								"items": { "type": "string" },
+								"default": []
+							},
+							"singleton": {
+								"type": "boolean",
+								"description": "If true, dependency is created once and shared across all requests (global cache)",
+								"default": false
+							},
+							"cacheable": {
+								"type": "boolean",
+								"description": "If true, dependency is cached within a single request (per-request cache)",
+								"default": false
+							},
+							"cleanup": {
+								"type": "boolean",
+								"description": "If true, dependency uses generator pattern for cleanup (yield in Python, cleanup callback in other languages)",
+								"default": false
+							},
+							"scope": {
+								"type": "string",
+								"enum": ["app", "route"],
+								"description": "Scope of the dependency: app-level (default) or route-level override",
+								"default": "app"
+							},
+							"python_type": {
+								"type": "string",
+								"description": "Python type name for type-based injection (e.g., 'DatabasePool', 'CacheClient')"
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"handler_dependencies": {
+					"type": "array",
+					"description": "Array of dependency keys required by this handler (in resolution order)",
+					"items": { "type": "string" }
+				},
+				"route_overrides": {
+					"type": "object",
+					"description": "Route-level dependency overrides that replace app-level dependencies for this specific route",
+					"additionalProperties": {
+						"type": "object",
+						"description": "Same structure as dependencies object - overrides app-level dependency with same key"
+					}
+				},
+				"injection_strategy": {
+					"type": "string",
+					"enum": ["name", "type", "destructure", "keyword_args"],
+					"description": "Language-specific injection strategy: name (Python param names), type (Python type hints), destructure (Node/TS), keyword_args (Ruby)"
+				},
+				"expected_types": {
+					"type": "object",
+					"description": "Expected types for dependencies (used to test type mismatch errors)",
+					"additionalProperties": { "type": "string" }
+				},
 				"middleware": {
 					"type": "object",
 					"description": "Per-route middleware configuration (compression, rate limiting, timeouts, static files, etc.). Also carries test directives for features that require multiple requests or simulated delays.",
@@ -484,6 +567,16 @@
 						},
 						"additionalProperties": false
 					}
+				},
+				"dependency_resolution_order": {
+					"type": "array",
+					"description": "Expected dependency resolution order for DI fixtures. Each element is a batch (array of dependency keys) that should be resolved in parallel. Batches are processed sequentially.",
+					"items": {
+						"type": "array",
+						"description": "Batch of dependency keys that can be resolved in parallel",
+						"items": { "type": "string" }
+					},
+					"examples": [[["config"], ["db_pool", "cache"], ["auth_service"]]]
 				}
 			},
 			"additionalProperties": false

@@ -84,6 +84,10 @@ pub struct RouteMetadata {
     /// Name of the body parameter (defaults to "body" if not specified)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub body_param_name: Option<String>,
+    /// List of dependency keys this handler requires (for DI)
+    #[cfg(feature = "di")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub handler_dependencies: Option<Vec<String>>,
 }
 
 /// Compression configuration shared across runtimes

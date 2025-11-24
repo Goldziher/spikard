@@ -35,6 +35,8 @@
 #![warn(missing_docs)]
 
 mod background;
+#[cfg(feature = "di")]
+pub mod di;
 mod handler;
 mod lifecycle;
 mod response;
@@ -236,6 +238,7 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
         openapi,
         lifecycle_hooks: None,
+        di_container: None,
     })
 }
 
@@ -321,6 +324,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
             is_async,
             cors: None,
             body_param_name: None,
+            handler_dependencies: None, // TODO: Extract from route
         };
 
         routes.push(route_meta);
@@ -387,6 +391,12 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
         handler_map.insert(route.handler_name.clone(), handler);
     }
 
+    // Extract dependency container if DI is enabled
+    #[cfg(feature = "di")]
+    let dependency_container = di::extract_dependency_container(&app)?;
+    #[cfg(not(feature = "di"))]
+    let dependency_container: Option<Arc<spikard_core::di::DependencyContainer>> = None;
+
     let lifecycle_hooks = if let Ok(hooks_obj) = app.get_named_property::<Object>("lifecycleHooks") {
         let mut hooks = spikard_http::LifecycleHooks::new();
 
@@ -443,6 +453,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
 
     let mut server_config = server_config;
     server_config.lifecycle_hooks = lifecycle_hooks.map(Arc::new);
+    server_config.di_container = dependency_container;
 
     let schema_registry = spikard_http::SchemaRegistry::new();
 

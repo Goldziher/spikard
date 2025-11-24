@@ -120,6 +120,7 @@ module Spikard
   # rubocop:disable Metrics/ClassLength
   class App
     include LifecycleHooks
+    include ProvideSupport
 
     HTTP_METHODS = %w[GET POST PUT PATCH DELETE OPTIONS HEAD TRACE].freeze
     SUPPORTED_OPTIONS = %i[request_schema response_schema parameter_schema file_params is_async cors].freeze
@@ -130,6 +131,7 @@ module Spikard
       @routes = []
       @websocket_handlers = {}
       @sse_producers = {}
+      @dependencies = {}
       @lifecycle_hooks = {
         on_request: [],
         pre_validation: [],
@@ -142,7 +144,11 @@ module Spikard
     def register_route(method, path, handler_name: nil, **options, &block)
       validate_route_arguments!(block, options)
       handler_name ||= default_handler_name(method, path)
-      metadata = build_metadata(method, path, handler_name, options)
+
+      # Extract handler dependencies from block parameters
+      handler_dependencies = extract_handler_dependencies(block)
+
+      metadata = build_metadata(method, path, handler_name, options, handler_dependencies)
 
       @routes << RouteEntry.new(metadata, block)
       block
@@ -155,13 +161,24 @@ module Spikard
     end
 
     def route_metadata
-      @routes.map(&:metadata)
+      # Extract handler dependencies when metadata is requested
+      # This allows dependencies to be registered after routes
+      @routes.map do |entry|
+        metadata = entry.metadata.dup
+
+        # Re-extract dependencies in case they were registered after the route
+        handler_dependencies = extract_handler_dependencies(entry.handler)
+        metadata[:handler_dependencies] = handler_dependencies unless handler_dependencies.empty?
+
+        metadata
+      end
     end
 
     def handler_map
       map = {}
       @routes.each do |entry|
         name = entry.metadata[:handler_name]
+        # Pass raw handler - DI resolution happens in Rust layer
         map[name] = entry.handler
       end
       map
@@ -270,8 +287,11 @@ module Spikard
       ws_handlers = websocket_handlers
       sse_prods = sse_producers
 
+      # Get dependencies for DI
+      deps = dependencies
+
       # Call the Rust extension's run_server function
-      Spikard::Native.run_server(routes_json, handlers, config, hooks, ws_handlers, sse_prods)
+      Spikard::Native.run_server(routes_json, handlers, config, hooks, ws_handlers, sse_prods, deps)
 
       # Keep Ruby process alive while server runs
       sleep
@@ -309,13 +329,39 @@ module Spikard
       raise ArgumentError, "unknown route options: #{unknown_keys.join(', ')}"
     end
 
-    def build_metadata(method, path, handler_name, options)
+    def extract_handler_dependencies(block)
+      # Get the block's parameters
+      params = block.parameters
+
+      # Extract keyword parameters (dependencies)
+      # Parameters come in the format [:req/:opt/:keyreq/:key, :param_name]
+      # :keyreq and :key are keyword parameters (required and optional)
+      dependencies = []
+
+      params.each do |param_type, param_name|
+        # Skip the request parameter (usually first positional param)
+        # Only collect keyword parameters
+        next unless %i[keyreq key].include?(param_type)
+
+        dep_name = param_name.to_s
+        # Collect ALL keyword parameters, not just registered ones
+        # This allows the DI system to validate missing dependencies
+        dependencies << dep_name
+      end
+
+      dependencies
+    end
+
+    def build_metadata(method, path, handler_name, options, handler_dependencies)
       base = {
         method: method,
         path: normalize_path(path),
         handler_name: handler_name,
         is_async: options.fetch(:is_async, false)
       }
+
+      # Add handler_dependencies if present
+      base[:handler_dependencies] = handler_dependencies unless handler_dependencies.empty?
 
       SUPPORTED_OPTIONS.each_with_object(base) do |key, metadata|
         next if key == :is_async || !options.key?(key)

@@ -1,0 +1,48 @@
+{
+	"name": "Type mismatch in dependency resolution - error",
+	"description": "Tests error when handler expects a different type than what the dependency provides",
+	"category": "dependency_injection",
+	"source": {
+		"framework": "spikard",
+		"adapted": false
+	},
+	"handler": {
+		"route": "/api/type-mismatch",
+		"method": "GET",
+		"dependencies": {
+			"config": {
+				"type": "value",
+				"value": "string_config",
+				"value_type": "string"
+			}
+		},
+		"handler_dependencies": ["config"],
+		"expected_types": {
+			"config": "object"
+		}
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/type-mismatch"
+	},
+	"expected_response": {
+		"status_code": 500,
+		"body": {
+			"type": "https://spikard.dev/errors/dependency-error",
+			"title": "Dependency Resolution Failed",
+			"status": 500,
+			"detail": "Dependency type mismatch",
+			"errors": [
+				{
+					"type": "type_mismatch",
+					"msg": "Dependency 'config' type mismatch: expected object, got string",
+					"dependency_key": "config",
+					"expected_type": "object",
+					"actual_type": "string"
+				}
+			]
+		}
+	},
+	"notes": "Handler expects config to be an object but it's registered as a string. Type checking happens during resolution.",
+	"tags": ["dependency_injection", "error", "type_mismatch"]
+}

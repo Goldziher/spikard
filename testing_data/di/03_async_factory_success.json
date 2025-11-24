@@ -1,0 +1,36 @@
+{
+	"name": "Async factory dependency - success",
+	"description": "Tests async factory that creates database pool asynchronously",
+	"category": "dependency_injection",
+	"source": {
+		"framework": "spikard",
+		"adapted": false
+	},
+	"handler": {
+		"route": "/api/db-status",
+		"method": "GET",
+		"dependencies": {
+			"db_pool": {
+				"type": "async_factory",
+				"factory": "create_db_pool",
+				"depends_on": [],
+				"singleton": false,
+				"cacheable": true
+			}
+		},
+		"handler_dependencies": ["db_pool"]
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/db-status"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"pool_status": "connected",
+			"max_size": 10
+		}
+	},
+	"notes": "Async factory creates a database pool. Cacheable=true means the same pool is reused within the request.",
+	"tags": ["dependency_injection", "factory", "async", "cacheable"]
+}

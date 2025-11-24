@@ -80,6 +80,22 @@ pub struct FixtureHandler {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub middleware: Option<Value>,
+
+    /// Dependency injection: app-level dependencies
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dependencies: Option<Value>,
+
+    /// Dependency injection: dependencies required by this handler
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub handler_dependencies: Option<Value>,
+
+    /// Dependency injection: route-level dependency overrides
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub route_overrides: Option<Value>,
+
+    /// Dependency injection: injection strategy
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub injection_strategy: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -29,6 +29,9 @@ pub struct Route {
     /// Precomputed flag: true if this route expects a JSON request body
     /// Used by middleware to validate Content-Type headers
     pub expects_json_body: bool,
+    /// List of dependency keys this handler requires (for DI)
+    #[cfg(feature = "di")]
+    pub handler_dependencies: Vec<String>,
 }
 
 impl Route {
@@ -82,6 +85,8 @@ impl Route {
             is_async: metadata.is_async,
             cors: metadata.cors,
             expects_json_body,
+            #[cfg(feature = "di")]
+            handler_dependencies: metadata.handler_dependencies.unwrap_or_default(),
         })
     }
 }

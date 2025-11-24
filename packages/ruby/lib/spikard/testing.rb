@@ -24,7 +24,8 @@ module Spikard
       handlers = app.handler_map.transform_keys(&:to_sym)
       ws_handlers = app.websocket_handlers || {}
       sse_producers = app.sse_producers || {}
-      native = Spikard::Native::TestClient.new(routes_json, handlers, config, ws_handlers, sse_producers)
+      dependencies = app.dependencies || {}
+      native = Spikard::Native::TestClient.new(routes_json, handlers, config, ws_handlers, sse_producers, dependencies)
       TestClient.new(native)
     end
 

@@ -5,6 +5,7 @@
 
 mod asyncapi;
 mod background;
+mod dependencies;
 mod middleware;
 mod node_app;
 mod node_tests;

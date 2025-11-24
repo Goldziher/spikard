@@ -33,6 +33,9 @@ pub struct RequestData {
     pub cookies: std::sync::Arc<HashMap<String, String>>,
     pub method: String,
     pub path: String,
+    /// Resolved dependencies for this request (populated by DependencyInjectingHandler)
+    #[cfg(feature = "di")]
+    pub dependencies: Option<std::sync::Arc<spikard_core::di::ResolvedDependencies>>,
 }
 
 impl Serialize for RequestData {
@@ -41,7 +44,12 @@ impl Serialize for RequestData {
         S: serde::Serializer,
     {
         use serde::ser::SerializeStruct;
-        let mut state = serializer.serialize_struct("RequestData", 9)?;
+        #[cfg(feature = "di")]
+        let field_count = 10;
+        #[cfg(not(feature = "di"))]
+        let field_count = 9;
+
+        let mut state = serializer.serialize_struct("RequestData", field_count)?;
         state.serialize_field("path_params", &*self.path_params)?;
         state.serialize_field("query_params", &self.query_params)?;
         state.serialize_field("raw_query_params", &*self.raw_query_params)?;
@@ -51,6 +59,14 @@ impl Serialize for RequestData {
         state.serialize_field("cookies", &*self.cookies)?;
         state.serialize_field("method", &self.method)?;
         state.serialize_field("path", &self.path)?;
+
+        #[cfg(feature = "di")]
+        {
+            // Dependencies field is not serialized (contains Arc<dyn Any>)
+            // We just serialize a marker indicating whether dependencies exist
+            state.serialize_field("has_dependencies", &self.dependencies.is_some())?;
+        }
+
         state.end()
     }
 }
@@ -72,6 +88,8 @@ impl<'de> Deserialize<'de> for RequestData {
             Cookies,
             Method,
             Path,
+            #[cfg(feature = "di")]
+            HasDependencies,
         }
 
         struct RequestDataVisitor;
@@ -127,6 +145,11 @@ impl<'de> Deserialize<'de> for RequestData {
                         Field::Path => {
                             path = Some(map.next_value()?);
                         }
+                        #[cfg(feature = "di")]
+                        Field::HasDependencies => {
+                            // We skip this field as dependencies can't be deserialized
+                            let _: bool = map.next_value()?;
+                        }
                     }
                 }
 
@@ -141,10 +164,27 @@ impl<'de> Deserialize<'de> for RequestData {
                     cookies: cookies.ok_or_else(|| serde::de::Error::missing_field("cookies"))?,
                     method: method.ok_or_else(|| serde::de::Error::missing_field("method"))?,
                     path: path.ok_or_else(|| serde::de::Error::missing_field("path"))?,
+                    #[cfg(feature = "di")]
+                    dependencies: None,
                 })
             }
         }
 
+        #[cfg(feature = "di")]
+        const FIELDS: &[&str] = &[
+            "path_params",
+            "query_params",
+            "raw_query_params",
+            "body",
+            "raw_body",
+            "headers",
+            "cookies",
+            "method",
+            "path",
+            "has_dependencies",
+        ];
+
+        #[cfg(not(feature = "di"))]
         const FIELDS: &[&str] = &[
             "path_params",
             "query_params",
@@ -156,6 +196,7 @@ impl<'de> Deserialize<'de> for RequestData {
             "method",
             "path",
         ];
+
         deserializer.deserialize_struct("RequestData", FIELDS, RequestDataVisitor)
     }
 }

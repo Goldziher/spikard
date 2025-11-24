@@ -34,6 +34,14 @@ use uuid::Uuid;
 /// Type alias for route handler pairs
 type RouteHandlerPair = (crate::Route, Arc<dyn Handler>);
 
+/// Extract required dependencies from route metadata
+///
+/// Placeholder implementation until routes can declare dependencies via metadata.
+#[cfg(feature = "di")]
+fn extract_handler_dependencies(route: &crate::Route) -> Vec<String> {
+    route.handler_dependencies.clone()
+}
+
 /// Determines if a method typically has a request body
 fn method_expects_body(method: &str) -> bool {
     matches!(method, "POST" | "PUT" | "PATCH")
@@ -263,9 +271,29 @@ async fn shutdown_signal() {
 }
 
 /// Build an Axum router from routes and foreign handlers
+#[cfg(not(feature = "di"))]
 pub fn build_router_with_handlers(
     routes: Vec<(crate::Route, Arc<dyn Handler>)>,
     hooks: Option<Arc<crate::LifecycleHooks>>,
+) -> Result<AxumRouter, String> {
+    build_router_with_handlers_inner(routes, hooks, None)
+}
+
+/// Build an Axum router from routes and foreign handlers with optional DI container
+#[cfg(feature = "di")]
+pub fn build_router_with_handlers(
+    routes: Vec<(crate::Route, Arc<dyn Handler>)>,
+    hooks: Option<Arc<crate::LifecycleHooks>>,
+    di_container: Option<Arc<spikard_core::di::DependencyContainer>>,
+) -> Result<AxumRouter, String> {
+    build_router_with_handlers_inner(routes, hooks, di_container)
+}
+
+fn build_router_with_handlers_inner(
+    routes: Vec<(crate::Route, Arc<dyn Handler>)>,
+    hooks: Option<Arc<crate::LifecycleHooks>>,
+    #[cfg(feature = "di")] di_container: Option<Arc<spikard_core::di::DependencyContainer>>,
+    #[cfg(not(feature = "di"))] _di_container: Option<()>,
 ) -> Result<AxumRouter, String> {
     let mut app = AxumRouter::new();
 
@@ -304,6 +332,22 @@ pub fn build_router_with_handlers(
 
         let mut handlers_by_method: HashMap<crate::Method, (crate::Route, Arc<dyn Handler>)> = HashMap::new();
         for (route, handler) in route_handlers {
+            #[cfg(feature = "di")]
+            let handler = if let Some(ref container) = di_container {
+                let required_deps = extract_handler_dependencies(&route);
+                if !required_deps.is_empty() {
+                    Arc::new(crate::di_handler::DependencyInjectingHandler::new(
+                        handler,
+                        Arc::clone(container),
+                        required_deps,
+                    )) as Arc<dyn Handler>
+                } else {
+                    handler
+                }
+            } else {
+                handler
+            };
+
             let validating_handler = Arc::new(handler::ValidatingHandler::new(handler, &route));
             handlers_by_method.insert(route.method.clone(), (route, validating_handler));
         }
@@ -321,7 +365,6 @@ pub fn build_router_with_handlers(
         for (_method, (route, handler)) in handlers_by_method {
             let method_router: MethodRouter = match route.method.as_str() {
                 "OPTIONS" => {
-                    // OPTIONS is special - handle CORS separately
                     if let Some(ref cors_cfg) = route.cors {
                         let cors_config = cors_cfg.clone();
                         axum::routing::options(move |req: axum::extract::Request| async move {
@@ -385,6 +428,9 @@ pub fn build_router_with_handlers_and_config(
 ) -> Result<AxumRouter, String> {
     let hooks = config.lifecycle_hooks.clone();
 
+    #[cfg(feature = "di")]
+    let mut app = build_router_with_handlers(routes, hooks, config.di_container.clone())?;
+    #[cfg(not(feature = "di"))]
     let mut app = build_router_with_handlers(routes, hooks)?;
 
     app = app.layer(SetSensitiveRequestHeadersLayer::new([
@@ -587,6 +633,8 @@ impl Server {
                 is_async: route.is_async,
                 cors: route.cors.clone(),
                 body_param_name: None,
+                #[cfg(feature = "di")]
+                handler_dependencies: Some(route.handler_dependencies.clone()),
             })
             .collect();
         build_router_with_handlers_and_config(routes, config, metadata)

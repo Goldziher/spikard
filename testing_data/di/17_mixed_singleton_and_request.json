@@ -1,0 +1,53 @@
+{
+	"name": "Mixed singleton and per-request caching - success",
+	"description": "Tests mixing singleton dependencies (shared across requests) with per-request dependencies (cached within request)",
+	"category": "dependency_injection",
+	"source": {
+		"framework": "spikard",
+		"adapted": false
+	},
+	"handler": {
+		"route": "/api/mixed-caching",
+		"method": "GET",
+		"dependencies": {
+			"app_config": {
+				"type": "value",
+				"value": {
+					"app_name": "MyApp",
+					"version": "2.0"
+				},
+				"value_type": "object",
+				"singleton": true
+			},
+			"db_pool": {
+				"type": "factory",
+				"factory": "create_db_pool",
+				"depends_on": ["app_config"],
+				"singleton": true,
+				"cacheable": false
+			},
+			"request_context": {
+				"type": "factory",
+				"factory": "create_request_context",
+				"depends_on": ["db_pool"],
+				"singleton": false,
+				"cacheable": true
+			}
+		},
+		"handler_dependencies": ["app_config", "db_pool", "request_context"]
+	},
+	"request": {
+		"method": "GET",
+		"path": "/api/mixed-caching"
+	},
+	"expected_response": {
+		"status_code": 200,
+		"body": {
+			"app_name": "MyApp",
+			"pool_id": "<<uuid>>",
+			"context_id": "<<uuid>>"
+		}
+	},
+	"notes": "app_config and db_pool are singletons (same across requests). request_context is per-request (new for each request). Multiple requests should show same pool_id but different context_id.",
+	"tags": ["dependency_injection", "singleton", "per-request", "mixed", "advanced"]
+}

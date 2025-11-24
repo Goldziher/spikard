@@ -27,7 +27,7 @@ use std::sync::Arc;
 
 /// Global Python event loop for async handlers
 /// Managed by a dedicated Python thread
-static PYTHON_EVENT_LOOP: OnceCell<Py<PyAny>> = OnceCell::new();
+pub static PYTHON_EVENT_LOOP: OnceCell<Py<PyAny>> = OnceCell::new();
 
 /// Initialize Python event loop that runs in a dedicated thread
 /// This allows proper async/await support without blocking the Rust event loop
@@ -508,6 +508,35 @@ fn python_to_json(py: Python<'_>, obj: &Bound<'_, PyAny>) -> PyResult<Value> {
     python_to_json(py, &builtin_obj)
 }
 
+/// Inject DI dependencies into kwargs dict
+///
+/// Extracts resolved dependencies from request_data and adds them to the kwargs
+/// dict so they can be passed to the Python handler.
+#[cfg(feature = "di")]
+fn inject_di_dependencies<'py>(
+    py: Python<'py>,
+    kwargs: &Bound<'py, PyDict>,
+    request_data: &RequestData,
+) -> PyResult<()> {
+    if let Some(ref dependencies) = request_data.dependencies {
+        // Get all dependency keys
+        let keys = dependencies.keys();
+
+        for key in keys {
+            // Get the value for this key using public API
+            if let Some(value) = dependencies.get_arc(&key) {
+                // Try to downcast to Py<PyAny> (Python objects stored by PythonValueDependency/PythonFactoryDependency)
+                if let Ok(py_obj) = value.downcast::<pyo3::Py<PyAny>>() {
+                    // Convert to Python object and add to kwargs
+                    let obj_ref = py_obj.bind(py);
+                    kwargs.set_item(&key, obj_ref)?;
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
 /// Convert validated parameters to Python keyword arguments using pythonize
 /// This uses already-validated parameter values and converts them directly to Python
 /// objects using the optimized pythonize crate, then lets Python's convert_params
@@ -533,6 +562,10 @@ fn validated_params_to_py_kwargs<'py>(
         let py_body = pythonize::pythonize(py, &request_data.body)?;
         params_dict.set_item("body", py_body)?;
     }
+
+    // Inject DI dependencies if present
+    #[cfg(feature = "di")]
+    inject_di_dependencies(py, &params_dict, request_data)?;
 
     // Call convert_params to filter parameters to match handler signature
     let converter_module = py.import("spikard._internal.converters")?;
@@ -600,6 +633,10 @@ fn request_data_to_py_kwargs<'py>(
         let py_body = json_to_python(py, &request_data.body)?;
         kwargs.set_item(body_param_name, py_body)?;
     }
+
+    // Inject DI dependencies if present
+    #[cfg(feature = "di")]
+    inject_di_dependencies(py, &kwargs, request_data)?;
 
     // Always call convert_params to filter parameters to match handler signature
     // When needs_conversion=False, it will skip type conversion but still filter params

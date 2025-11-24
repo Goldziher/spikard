@@ -1,0 +1,16 @@
+[package]
+name = "di-example"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[[bin]]
+name = "rust_basic"
+path = "rust_basic.rs"
+
+[dependencies]
+spikard-http = { path = "../../crates/spikard-http", features = ["di"] }
+spikard-core = { path = "../../crates/spikard-core", features = ["di"] }
+tokio = { version = "1", features = ["full"] }
+axum = "0.8"
+serde_json = "1.0"

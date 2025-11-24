@@ -9,6 +9,8 @@ pub mod bindings;
 pub mod body_metadata;
 pub mod cors;
 pub mod debug;
+#[cfg(feature = "di")]
+pub mod di_handler;
 pub mod handler_response;
 pub mod handler_trait;
 pub mod lifecycle;
@@ -38,6 +40,8 @@ pub use background::{
     BackgroundTaskConfig,
 };
 pub use body_metadata::ResponseBodySize;
+#[cfg(feature = "di")]
+pub use di_handler::DependencyInjectingHandler;
 pub use handler_response::HandlerResponse;
 pub use handler_trait::{Handler, HandlerResult, RequestData, ValidatedParams};
 pub use lifecycle::{HookResult, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, request_hook, response_hook};
@@ -139,6 +143,9 @@ pub struct ServerConfig {
     pub lifecycle_hooks: Option<std::sync::Arc<LifecycleHooks>>,
     /// Background task executor configuration
     pub background_tasks: BackgroundTaskConfig,
+    /// Dependency injection container (requires 'di' feature)
+    #[cfg(feature = "di")]
+    pub di_container: Option<std::sync::Arc<spikard_core::di::DependencyContainer>>,
 }
 
 impl Default for ServerConfig {
@@ -160,7 +167,360 @@ impl Default for ServerConfig {
             openapi: None,
             lifecycle_hooks: None,
             background_tasks: BackgroundTaskConfig::default(),
+            #[cfg(feature = "di")]
+            di_container: None,
         }
+    }
+}
+
+impl ServerConfig {
+    /// Create a new builder for ServerConfig
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use spikard_http::ServerConfig;
+    ///
+    /// let config = ServerConfig::builder()
+    ///     .port(3000)
+    ///     .host("0.0.0.0")
+    ///     .build();
+    /// ```
+    pub fn builder() -> ServerConfigBuilder {
+        ServerConfigBuilder::default()
+    }
+}
+
+/// Builder for ServerConfig
+///
+/// Provides a fluent API for configuring a Spikard server with dependency injection support.
+///
+/// # Dependency Injection
+///
+/// The builder provides methods to register dependencies that will be injected into handlers:
+///
+/// ```rust
+/// # #[cfg(feature = "di")]
+/// # {
+/// use spikard_http::ServerConfig;
+/// use std::sync::Arc;
+///
+/// let config = ServerConfig::builder()
+///     .port(3000)
+///     .provide_value("app_name", "MyApp".to_string())
+///     .provide_value("max_connections", 100)
+///     .build();
+/// # }
+/// ```
+///
+/// For factory dependencies that create values on-demand:
+///
+/// ```rust
+/// # #[cfg(feature = "di")]
+/// # {
+/// use spikard_http::ServerConfig;
+///
+/// let config = ServerConfig::builder()
+///     .port(3000)
+///     .provide_value("db_url", "postgresql://localhost/mydb".to_string())
+///     .build();
+/// # }
+/// ```
+#[derive(Debug, Clone, Default)]
+pub struct ServerConfigBuilder {
+    config: ServerConfig,
+}
+
+impl ServerConfigBuilder {
+    /// Set the host address to bind to
+    pub fn host(mut self, host: impl Into<String>) -> Self {
+        self.config.host = host.into();
+        self
+    }
+
+    /// Set the port to bind to
+    pub fn port(mut self, port: u16) -> Self {
+        self.config.port = port;
+        self
+    }
+
+    /// Set the number of worker threads (unused with tokio, kept for compatibility)
+    pub fn workers(mut self, workers: usize) -> Self {
+        self.config.workers = workers;
+        self
+    }
+
+    /// Enable or disable request ID generation and propagation
+    pub fn enable_request_id(mut self, enable: bool) -> Self {
+        self.config.enable_request_id = enable;
+        self
+    }
+
+    /// Set maximum request body size in bytes (None = unlimited, not recommended)
+    pub fn max_body_size(mut self, size: Option<usize>) -> Self {
+        self.config.max_body_size = size;
+        self
+    }
+
+    /// Set request timeout in seconds (None = no timeout)
+    pub fn request_timeout(mut self, timeout: Option<u64>) -> Self {
+        self.config.request_timeout = timeout;
+        self
+    }
+
+    /// Set compression configuration
+    pub fn compression(mut self, compression: Option<CompressionConfig>) -> Self {
+        self.config.compression = compression;
+        self
+    }
+
+    /// Set rate limiting configuration
+    pub fn rate_limit(mut self, rate_limit: Option<RateLimitConfig>) -> Self {
+        self.config.rate_limit = rate_limit;
+        self
+    }
+
+    /// Set JWT authentication configuration
+    pub fn jwt_auth(mut self, jwt_auth: Option<JwtConfig>) -> Self {
+        self.config.jwt_auth = jwt_auth;
+        self
+    }
+
+    /// Set API key authentication configuration
+    pub fn api_key_auth(mut self, api_key_auth: Option<ApiKeyConfig>) -> Self {
+        self.config.api_key_auth = api_key_auth;
+        self
+    }
+
+    /// Add static file serving configuration
+    pub fn static_files(mut self, static_files: Vec<StaticFilesConfig>) -> Self {
+        self.config.static_files = static_files;
+        self
+    }
+
+    /// Add a single static file serving configuration
+    pub fn add_static_files(mut self, static_file: StaticFilesConfig) -> Self {
+        self.config.static_files.push(static_file);
+        self
+    }
+
+    /// Enable or disable graceful shutdown on SIGTERM/SIGINT
+    pub fn graceful_shutdown(mut self, enable: bool) -> Self {
+        self.config.graceful_shutdown = enable;
+        self
+    }
+
+    /// Set graceful shutdown timeout in seconds
+    pub fn shutdown_timeout(mut self, timeout: u64) -> Self {
+        self.config.shutdown_timeout = timeout;
+        self
+    }
+
+    /// Set OpenAPI documentation configuration
+    pub fn openapi(mut self, openapi: Option<crate::openapi::OpenApiConfig>) -> Self {
+        self.config.openapi = openapi;
+        self
+    }
+
+    /// Set lifecycle hooks for request/response processing
+    pub fn lifecycle_hooks(mut self, hooks: Option<std::sync::Arc<LifecycleHooks>>) -> Self {
+        self.config.lifecycle_hooks = hooks;
+        self
+    }
+
+    /// Set background task executor configuration
+    pub fn background_tasks(mut self, config: BackgroundTaskConfig) -> Self {
+        self.config.background_tasks = config;
+        self
+    }
+
+    /// Register a value dependency (like Fastify decorate)
+    ///
+    /// Value dependencies are static values that are cloned when injected into handlers.
+    /// Use this for configuration objects, constants, or small shared state.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # #[cfg(feature = "di")]
+    /// # {
+    /// use spikard_http::ServerConfig;
+    ///
+    /// let config = ServerConfig::builder()
+    ///     .provide_value("app_name", "MyApp".to_string())
+    ///     .provide_value("version", "1.0.0".to_string())
+    ///     .provide_value("max_connections", 100)
+    ///     .build();
+    /// # }
+    /// ```
+    #[cfg(feature = "di")]
+    pub fn provide_value<T: Clone + Send + Sync + 'static>(mut self, key: impl Into<String>, value: T) -> Self {
+        use spikard_core::di::{DependencyContainer, ValueDependency};
+        use std::sync::Arc;
+
+        let key_str = key.into();
+
+        // Get or create DI container (mutable)
+        let container = if let Some(container) = self.config.di_container.take() {
+            // Try to get mutable access - this will only work if we're the only owner
+            Arc::try_unwrap(container).unwrap_or_else(|_arc| {
+                // If we can't unwrap, we lose existing dependencies
+                // This is a fallback that shouldn't happen in normal builder usage (linear chaining)
+                DependencyContainer::new()
+            })
+        } else {
+            DependencyContainer::new()
+        };
+
+        let mut container = container;
+
+        // Create ValueDependency
+        let dep = ValueDependency::new(key_str.clone(), value);
+
+        // Register (panic on error for builder pattern)
+        container
+            .register(key_str, Arc::new(dep))
+            .expect("Failed to register dependency");
+
+        self.config.di_container = Some(Arc::new(container));
+        self
+    }
+
+    /// Register a factory dependency (like Litestar Provide)
+    ///
+    /// Factory dependencies create values on-demand, optionally depending on other
+    /// registered dependencies. Factories are async and have access to resolved dependencies.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `F` - Factory function type
+    /// * `Fut` - Future returned by the factory
+    /// * `T` - Type of value produced by the factory
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - Unique identifier for this dependency
+    /// * `factory` - Async function that creates the dependency value
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # #[cfg(feature = "di")]
+    /// # {
+    /// use spikard_http::ServerConfig;
+    /// use std::sync::Arc;
+    ///
+    /// let config = ServerConfig::builder()
+    ///     .provide_value("db_url", "postgresql://localhost/mydb".to_string())
+    ///     .provide_factory("db_pool", |resolved| async move {
+    ///         let url: Arc<String> = resolved.get("db_url").ok_or("Missing db_url")?;
+    ///         // Create database pool...
+    ///         Ok(format!("Pool: {}", url))
+    ///     })
+    ///     .build();
+    /// # }
+    /// ```
+    #[cfg(feature = "di")]
+    pub fn provide_factory<F, Fut, T>(mut self, key: impl Into<String>, factory: F) -> Self
+    where
+        F: Fn(&spikard_core::di::ResolvedDependencies) -> Fut + Send + Sync + Clone + 'static,
+        Fut: std::future::Future<Output = Result<T, String>> + Send + 'static,
+        T: Send + Sync + 'static,
+    {
+        use futures::future::BoxFuture;
+        use spikard_core::di::{DependencyContainer, DependencyError, FactoryDependency};
+        use std::sync::Arc;
+
+        let key_str = key.into();
+
+        // Get or create DI container (mutable)
+        let container = if let Some(container) = self.config.di_container.take() {
+            Arc::try_unwrap(container).unwrap_or_else(|_| DependencyContainer::new())
+        } else {
+            DependencyContainer::new()
+        };
+
+        let mut container = container;
+
+        // Clone factory for the closure
+        let factory_clone = factory.clone();
+
+        // Create FactoryDependency using builder
+        let dep = FactoryDependency::builder(key_str.clone())
+            .factory(
+                move |_req: &axum::http::Request<()>,
+                      _data: &spikard_core::RequestData,
+                      resolved: &spikard_core::di::ResolvedDependencies| {
+                    let factory = factory_clone.clone();
+                    let factory_result = factory(resolved);
+                    Box::pin(async move {
+                        let result = factory_result
+                            .await
+                            .map_err(|e| DependencyError::ResolutionFailed { message: e })?;
+                        Ok(Arc::new(result) as Arc<dyn std::any::Any + Send + Sync>)
+                    })
+                        as BoxFuture<'static, Result<Arc<dyn std::any::Any + Send + Sync>, DependencyError>>
+                },
+            )
+            .build();
+
+        container
+            .register(key_str, Arc::new(dep))
+            .expect("Failed to register dependency");
+
+        self.config.di_container = Some(Arc::new(container));
+        self
+    }
+
+    /// Register a dependency with full control (advanced API)
+    ///
+    /// This method allows you to register custom dependency implementations
+    /// that implement the `Dependency` trait. Use this for advanced use cases
+    /// where you need fine-grained control over dependency resolution.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # #[cfg(feature = "di")]
+    /// # {
+    /// use spikard_http::ServerConfig;
+    /// use spikard_core::di::ValueDependency;
+    /// use std::sync::Arc;
+    ///
+    /// let dep = ValueDependency::new("custom", "value".to_string());
+    ///
+    /// let config = ServerConfig::builder()
+    ///     .provide(Arc::new(dep))
+    ///     .build();
+    /// # }
+    /// ```
+    #[cfg(feature = "di")]
+    pub fn provide(mut self, dependency: std::sync::Arc<dyn spikard_core::di::Dependency>) -> Self {
+        use spikard_core::di::DependencyContainer;
+        use std::sync::Arc;
+
+        let key = dependency.key().to_string();
+
+        // Get or create DI container (mutable)
+        let container = if let Some(container) = self.config.di_container.take() {
+            Arc::try_unwrap(container).unwrap_or_else(|_| DependencyContainer::new())
+        } else {
+            DependencyContainer::new()
+        };
+
+        let mut container = container;
+
+        container
+            .register(key, dependency)
+            .expect("Failed to register dependency");
+
+        self.config.di_container = Some(Arc::new(container));
+        self
+    }
+
+    /// Build the ServerConfig
+    pub fn build(self) -> ServerConfig {
+        self.config
     }
 }
 

@@ -187,8 +187,20 @@ module Spikard
     def lifecycle_hooks: () -> Hash[Symbol, Array[Proc]]
   end
 
+  module ProvideSupport
+    def provide: (
+      String | Symbol,
+      ?untyped,
+      ?depends_on: Array[String | Symbol],
+      ?singleton: bool,
+      ?cacheable: bool
+    ) ?{ (**untyped) -> untyped } -> self
+    def dependencies: () -> Hash[String, untyped]
+  end
+
   class App
     include LifecycleHooks
+    include ProvideSupport
 
     attr_reader routes: Array[untyped]
 
@@ -242,7 +254,8 @@ module Spikard
       ServerConfig,
       Hash[Symbol, Array[Proc]],
       Hash[String, Proc],
-      Hash[String, Proc]
+      Hash[String, Proc],
+      Hash[String, untyped]
     ) -> void
 
     class TestClient
