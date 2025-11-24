@@ -1,3 +1,12 @@
 ```ruby
-# WebSocket support is planned; use SSE or HTTP for now.
+require "spikard"
+
+class ChatHandler < Spikard::WebSocketHandler
+  def handle_message(message)
+    # Echo JSON message back
+    message
+  end
+end
+
+app.websocket("/chat") { ChatHandler.new }
 ```
