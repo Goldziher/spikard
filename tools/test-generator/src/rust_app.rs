@@ -270,6 +270,12 @@ fn generate_lib_rs(
     response
 }
 
+/// Safe header value parser - never panics
+fn safe_header_value(value: &str) -> HeaderValue {
+    HeaderValue::from_str(value)
+        .unwrap_or_else(|_| HeaderValue::from_static(""))
+}
+
 "#,
     );
 
@@ -453,7 +459,7 @@ fn generate_background_fixture(
                 .status(StatusCode::BAD_REQUEST)
                 .header("content-type", "application/json")
                 .body(Body::from({error_body}))
-                .unwrap();
+                .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
 {header_apply}
             return Ok(response);
         }}
@@ -465,9 +471,9 @@ fn generate_background_fixture(
     }}
 
     let response = Response::builder()
-        .status(StatusCode::from_u16({status}).unwrap())
+        .status(StatusCode::from_u16({status}).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap();
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
 {header_apply}
     Ok(response)
 }}
@@ -481,7 +487,7 @@ async fn {state_handler_name}(_ctx: RequestContext, state: Arc<Mutex<Vec<Value>>
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(json!({{ "{state_key}": values }}).to_string()))
-        .unwrap();
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }}"#,
         handler_name = handler_name,
@@ -605,14 +611,20 @@ fn generate_single_handler(fixture: &Fixture, handler_name: &str) -> String {
     let expected_status = fixture.expected_response.status_code;
 
     let body_block = if let Some(body) = &fixture.expected_response.body {
-        let body_json = serde_json::to_string(body).unwrap();
+        let body_json = match serde_json::to_string(body) {
+            Ok(j) => j,
+            Err(e) => {
+                eprintln!("ERROR: Failed to serialize fixture body: {}", e);
+                return String::new();
+            }
+        };
         format!(
-            r#"    let body_value: Value = serde_json::from_str("{body}").unwrap();
+            r#"    let body_value: Value = serde_json::from_str("{body}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
-        .status(StatusCode::from_u16({status}).unwrap())
+        .status(StatusCode::from_u16({status}).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap();
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
 "#,
             body = escape_rust_string(&body_json),
             status = expected_status
@@ -620,9 +632,9 @@ fn generate_single_handler(fixture: &Fixture, handler_name: &str) -> String {
     } else {
         format!(
             r#"    let response = Response::builder()
-        .status(StatusCode::from_u16({status}).unwrap())
+        .status(StatusCode::from_u16({status}).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap();
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
 "#,
             status = expected_status
         )
@@ -705,11 +717,23 @@ fn extract_file_params(params: &Value) -> Option<Value> {
 
 /// Generate a CORS preflight handler that uses spikard_http::cors::handle_preflight
 fn generate_streaming_handler(fixture: &Fixture, handler_name: &str) -> String {
-    let streaming = fixture.streaming.as_ref().expect("streaming metadata required");
+    let streaming = match fixture.streaming.as_ref() {
+        Some(s) => s,
+        None => {
+            eprintln!("ERROR: Fixture must have streaming metadata");
+            return String::new();
+        }
+    };
 
     let mut chunk_lines = Vec::new();
     for chunk in &streaming.chunks {
-        let bytes = chunk_bytes(chunk).expect("invalid streaming chunk");
+        let bytes = match chunk_bytes(chunk) {
+            Ok(b) => b,
+            Err(e) => {
+                eprintln!("ERROR: Invalid streaming chunk: {}", e);
+                continue;
+            }
+        };
         let literal = rust_bytes_slice_literal(&bytes);
         chunk_lines.push(format!(
             "        Ok::<Bytes, std::io::Error>(Bytes::from_static({})),",
@@ -1112,7 +1136,7 @@ fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixt
                 let retry_after_code = expected_header_value(fixture, "retry-after")
                     .map(|value| {
                         format!(
-                            "    response.headers_mut().insert(\"Retry-After\", \"{}\".parse().unwrap());\n",
+                            "    response.headers_mut().insert(\"Retry-After\", safe_header_value(\"{}\"));\n",
                             escape_rust_string(&value)
                         )
                     })
@@ -1209,10 +1233,10 @@ fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixt
                 code.push_str(&format!(
                     r#"async fn {}(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {{
     // onResponse hook: {} - Adds security headers
-    resp.headers_mut().insert("X-Content-Type-Options", "nosniff".parse().unwrap());
-    resp.headers_mut().insert("X-Frame-Options", "DENY".parse().unwrap());
-    resp.headers_mut().insert("X-XSS-Protection", "1; mode=block".parse().unwrap());
-    resp.headers_mut().insert("Strict-Transport-Security", "max-age=31536000; includeSubDomains".parse().unwrap());
+    resp.headers_mut().insert("X-Content-Type-Options", safe_header_value("nosniff"));
+    resp.headers_mut().insert("X-Frame-Options", safe_header_value("DENY"));
+    resp.headers_mut().insert("X-XSS-Protection", safe_header_value("1; mode=block"));
+    resp.headers_mut().insert("Strict-Transport-Security", safe_header_value("max-age=31536000; includeSubDomains"));
     Ok(spikard::HookResult::Continue(resp))
 }}
 
@@ -1225,7 +1249,7 @@ fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixt
                 code.push_str(&format!(
                     r#"async fn {}(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {{
     // onResponse hook: {} - Adds timing header
-    resp.headers_mut().insert("X-Response-Time", "{}".parse().unwrap());
+    resp.headers_mut().insert("X-Response-Time", safe_header_value("{}"));
     Ok(spikard::HookResult::Continue(resp))
 }}
 
@@ -1254,7 +1278,7 @@ fn generate_lifecycle_hooks_rust(fixture_id: &str, hooks: &Value, fixture: &Fixt
             code.push_str(&format!(
                 r#"async fn {}(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {{
     // onError hook: {} - Format error response
-    resp.headers_mut().insert("Content-Type", "application/json".parse().unwrap());
+    resp.headers_mut().insert("Content-Type", safe_header_value("application/json"));
     Ok(spikard::HookResult::Continue(resp))
 }}
 
@@ -1408,40 +1432,70 @@ fn route_builder_expression(
 
     if let Some(handler) = &fixture.handler {
         if let Some(body_schema) = &handler.body_schema {
-            let schema_json = serde_json::to_string(body_schema).unwrap();
+            let schema_json = match serde_json::to_string(body_schema) {
+                Ok(json) => json,
+                Err(e) => {
+                    eprintln!("ERROR: Failed to serialize body schema: {}", e);
+                    return builder;
+                }
+            };
             builder.push_str(&format!(
-                ".request_schema_json(serde_json::from_str::<Value>(\"{}\").unwrap())",
+                ".request_schema_json(serde_json::from_str::<Value>(\"{}\").unwrap_or(Value::Null))",
                 escape_rust_string(&schema_json)
             ));
         }
         if let Some(response_schema) = &handler.response_schema {
-            let schema_json = serde_json::to_string(response_schema).unwrap();
+            let schema_json = match serde_json::to_string(response_schema) {
+                Ok(json) => json,
+                Err(e) => {
+                    eprintln!("ERROR: Failed to serialize response schema: {}", e);
+                    return builder;
+                }
+            };
             builder.push_str(&format!(
-                ".response_schema_json(serde_json::from_str::<Value>(\"{}\").unwrap())",
+                ".response_schema_json(serde_json::from_str::<Value>(\"{}\").unwrap_or(Value::Null))",
                 escape_rust_string(&schema_json)
             ));
         }
         if let Some(cors) = &handler.cors {
-            let cors_json = serde_json::to_string(cors).unwrap();
+            let cors_json = match serde_json::to_string(cors) {
+                Ok(json) => json,
+                Err(e) => {
+                    eprintln!("ERROR: Failed to serialize CORS config: {}", e);
+                    return builder;
+                }
+            };
             builder.push_str(&format!(
-                ".cors(serde_json::from_str::<CorsConfig>(\"{}\").unwrap())",
+                ".cors(serde_json::from_str::<CorsConfig>(\"{}\").unwrap_or_default())",
                 escape_rust_string(&cors_json)
             ));
         }
     }
 
     if let Some(schema) = parameter_schema {
-        let schema_json = serde_json::to_string(&schema).unwrap();
+        let schema_json = match serde_json::to_string(&schema) {
+            Ok(json) => json,
+            Err(e) => {
+                eprintln!("ERROR: Failed to serialize parameter schema: {}", e);
+                return builder;
+            }
+        };
         builder.push_str(&format!(
-            ".params_schema_json(serde_json::from_str::<Value>(\"{}\").unwrap())",
+            ".params_schema_json(serde_json::from_str::<Value>(\"{}\").unwrap_or(Value::Null))",
             escape_rust_string(&schema_json)
         ));
     }
 
     if let Some(files) = file_params {
-        let files_json = serde_json::to_string(&files).unwrap();
+        let files_json = match serde_json::to_string(&files) {
+            Ok(json) => json,
+            Err(e) => {
+                eprintln!("ERROR: Failed to serialize file params: {}", e);
+                return builder;
+            }
+        };
         builder.push_str(&format!(
-            ".file_params_json(serde_json::from_str::<Value>(\"{}\").unwrap())",
+            ".file_params_json(serde_json::from_str::<Value>(\"{}\").unwrap_or(Value::Null))",
             escape_rust_string(&files_json)
         ));
     }

@@ -33,7 +33,11 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
         let path = entry.path();
 
         if path.is_dir() {
-            let category = path.file_name().unwrap().to_str().unwrap().to_string();
+            let category = path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .ok_or_else(|| anyhow::anyhow!("Invalid fixture directory name: {:?}", path))?
+                .to_string();
             let fixtures = load_fixtures_from_dir(&path)?;
 
             if !fixtures.is_empty() {

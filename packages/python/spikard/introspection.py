@@ -23,7 +23,6 @@ def extract_parameter_schema(func: Callable[..., Any], path: str | None = None) 
     and creates a JSON Schema that describes all parameters, their types, and
     validation rules. This works with:
     - Native Python types (str, int, list, dict, etc.)
-    - Pydantic models and Field() (optional dependency)
     - Dataclasses
     - TypedDict
     - Annotated types with constraints
@@ -110,7 +109,7 @@ def _is_upload_file_type(annotation: Any) -> bool:
 def _is_structured_type(annotation: Any) -> bool:
     """Check if an annotation is a structured type (body parameter).
 
-    Detects dataclasses, Pydantic models, TypedDicts, NamedTuples, msgspec.Struct,
+    Detects dataclasses, TypedDicts, NamedTuples, msgspec.Struct,
     attrs classes, or any class with similar structure via duck-typing.
 
     Args:
@@ -130,14 +129,6 @@ def _is_structured_type(annotation: Any) -> bool:
 
     if hasattr(annotation, "_fields") and hasattr(annotation, "_field_types"):
         return True
-
-    try:
-        from pydantic import BaseModel  # noqa: PLC0415
-
-        if issubclass(annotation, BaseModel):
-            return True
-    except (ImportError, TypeError):
-        pass
 
     try:
         import msgspec  # noqa: PLC0415

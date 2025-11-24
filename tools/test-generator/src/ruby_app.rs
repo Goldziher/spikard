@@ -561,10 +561,9 @@ fn build_streaming_response_block(
     handler_status: u16,
     sanitized_headers: &HashMap<String, String>,
 ) -> Result<String> {
-    let streaming = fixture
-        .streaming
-        .as_ref()
-        .expect("streaming metadata should exist when building streaming block");
+    let streaming = fixture.streaming.as_ref().ok_or_else(|| {
+        anyhow::anyhow!("Fixture must have streaming metadata when building streaming response block")
+    })?;
 
     let mut block = String::new();
     block.push_str("      stream = Enumerator.new do |yielder|\n");
