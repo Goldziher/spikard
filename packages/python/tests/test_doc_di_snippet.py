@@ -5,6 +5,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
+
 
 def _extract_python_snippet(path: Path) -> str:
     content = path.read_text(encoding="utf-8")
@@ -15,6 +17,8 @@ def _extract_python_snippet(path: Path) -> str:
 
 
 def test_di_snippet_builds_app() -> None:
+    pytest.importorskip("_spikard")
+
     snippet_path = Path(__file__).parents[3] / "docs" / "snippets" / "python" / "dependency_injection.md"
     code = _extract_python_snippet(snippet_path)
 
