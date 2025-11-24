@@ -2,47 +2,104 @@
 
 Routing is uniform across bindings: define an `App`, register routes with typed parameters, and return typed responses.
 
-## Patterns
-- **Path params**: `/users/{id:int}` (Python) or `/users/:id` (TypeScript/Ruby/Rust)
-- **Query params**: automatically parsed into dictionaries/objects; add validators to enforce shapes.
-- **HTTP verbs**: `get`, `post`, `put`, `patch`, `delete`, and `options` share the same naming across bindings.
+## Declare routes
 
-## Python Example
-```python
-from spikard import App
-from msgspec import Struct
+=== "Python"
 
-class User(Struct):
-    id: int
-    name: str
+    ```python
+    from spikard import App
 
-app = App()
+    app = App()
 
-@app.get("/users/{id:int}")
-async def get_user(id: int) -> User:
-    return User(id=id, name="Alice")
-```
+    @app.get("/health")
+    async def health() -> dict:
+        return {"status": "ok"}
 
-## TypeScript Example
-```typescript
-import { App } from "spikard";
-import { z } from "zod";
+    @app.post("/users")
+    async def create_user(user: User) -> User:
+        return user
+    ```
 
-const app = new App();
-const User = z.object({ id: z.number(), name: z.string() });
+=== "TypeScript"
 
-app.get("/users/:id", ({ params }) => ({
-  id: Number(params.id),
-  name: "Alice",
-}));
+    ```typescript
+    import { App } from "spikard";
 
-app.post("/users", ({ body }) => User.parse(body));
-```
+    const app = new App();
 
-## Middleware per Route
-Attach middleware at the app level or per route to handle auth/logging selectively. See [Middleware guide](middleware.md) for patterns.
+    app.get("/health", () => ({ status: "ok" }));
+    app.post("/users", ({ body }) => body);
+    ```
 
-## Best Practices
-- Keep handlers pure and push IO to services; the runtime will handle serialization and validation.
-- Prefer DTO structs/classes for shared schemas so codegen can derive OpenAPI.
-- Group related routes into modules or routers to keep startup organized.
+=== "Ruby"
+
+    ```ruby
+    require "spikard"
+
+    App = Spikard::App.new
+
+    App.get("/health") { { status: "ok" } }
+    App.post("/users") { |ctx| ctx.json }
+    ```
+
+=== "Rust"
+
+    ```rust
+    use spikard::prelude::*;
+
+    let mut app = App::new();
+
+    app.route(get("/health"), |_ctx: Context| async { Ok(Json(json!({"status": "ok"}))) })?;
+    app.route(post("/users"), |ctx: Context| async move {
+        let user: serde_json::Value = ctx.json()?;
+        Ok(Json(user))
+    })?;
+    ```
+
+## Path and query params
+
+=== "Python"
+
+    ```python
+    @app.get("/orders/{order_id:int}")
+    async def get_order(order_id: int, include_details: bool = False) -> dict:
+        return {"id": order_id, "details": include_details}
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    app.get("/orders/:orderId", ({ params, query }) => ({
+      id: Number(params.orderId),
+      details: query.details === "true",
+    }));
+    ```
+
+=== "Ruby"
+
+    ```ruby
+    App.get("/orders/:order_id") do |ctx|
+      {
+        id: ctx.params[:order_id].to_i,
+        details: ctx.query["details"] == "true",
+      }
+    end
+    ```
+
+=== "Rust"
+
+    ```rust
+    app.route(get("/orders/:order_id"), |ctx: Context| async move {
+        let id = ctx.path_param("order_id").unwrap_or("0");
+        let details: serde_json::Value = ctx.query()?;
+        Ok(Json(json!({
+            "id": id.parse::<i64>().unwrap_or_default(),
+            "details": details.get("details").and_then(|d| d.as_bool()).unwrap_or(false)
+        })))
+    })?;
+    ```
+
+## Best practices
+- Keep handlers small and pure; push IO into services.
+- Prefer DTOs for shared schemas so codegen can derive OpenAPI/AsyncAPI.
+- Use per-route middleware when sensitive endpoints need extra auth/logging.

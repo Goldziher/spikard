@@ -2,35 +2,94 @@
 
 Handlers receive a context object tailored to each binding but backed by the same Rust data model.
 
-## Request Data
-- **Path params**: type-coerced when a converter is provided (e.g., `:id:int`).
-- **Query params**: parsed into dicts/objects; validate with schemas or DTOs.
-- **Headers & cookies**: accessible via the context; add middleware for cross-cutting auth/trace IDs.
-- **Bodies**: JSON by default with optional form/multipart/file helpers depending on binding.
+## Read request data
 
-## Responses
-- Return plain values (auto-serialized JSON) or explicit response types (JSON, stream, redirect, error).
-- Streaming responses can yield chunks/frames and integrate with SSE/WebSockets.
-- Use typed DTOs to keep schemas consistent across languages.
+=== "Python"
 
-## Examples
-### Python
-```python
-@app.post("/orders")
-async def create_order(order: Order) -> Order:
-    return order
-```
+    ```python
+    from typing import Optional
 
-### Rust
-```rust
-app.post("/orders", |ctx: Context| async move {
-    let order: Order = ctx.json()?;
-    Ok(Json(order))
-});
-```
+    @app.post("/orders/{order_id:int}")
+    async def update_order(order_id: int, order: Order, verbose: Optional[bool] = False) -> Order:
+        # order is validated before the handler runs
+        if verbose:
+            print("updating", order_id)
+        return order
+    ```
 
-### Error Handling
-- Raise/return typed errors; the runtime maps them to RFC 9457-style payloads.
-- Middleware can standardize error envelopes and logging.
+=== "TypeScript"
 
-See [Types reference](../reference/types.md) for the canonical shapes across bindings.
+    ```typescript
+    app.post("/orders/:orderId", ({ params, query, headers, body }) => {
+      const order = Order.parse(body);
+      return {
+        ...order,
+        id: Number(params.orderId),
+        requestId: headers["x-request-id"],
+        verbose: query.verbose === "true",
+      };
+    });
+    ```
+
+=== "Ruby"
+
+    ```ruby
+    App.post("/orders/:order_id") do |ctx|
+      order = ctx.json
+      {
+        **order,
+        id: ctx.params[:order_id].to_i,
+        request_id: ctx.headers["x-request-id"],
+      }
+    end
+    ```
+
+=== "Rust"
+
+    ```rust
+    app.route(post("/orders/:order_id"), |ctx: Context| async move {
+        let mut order: serde_json::Value = ctx.json()?;
+        let id = ctx.path_param("order_id").unwrap_or("0");
+        let verbose: serde_json::Value = ctx.query().unwrap_or_default();
+        if let Some(map) = order.as_object_mut() {
+            map.insert("id".into(), serde_json::json!(id.parse::<i64>().unwrap_or_default()));
+            map.insert("verbose".into(), verbose.get("verbose").cloned().unwrap_or(serde_json::json!(false)));
+        }
+        Ok(Json(order))
+    })?;
+    ```
+
+## Return responses
+
+=== "Python"
+
+    ```python
+    @app.get("/health")
+    async def health() -> dict:
+        return {"status": "ok"}
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    app.get("/health", () => ({ status: "ok" }));
+    ```
+
+=== "Ruby"
+
+    ```ruby
+    App.get("/health") { { status: "ok" } }
+    ```
+
+=== "Rust"
+
+    ```rust
+    app.route(get("/health"), |_ctx: Context| async {
+        Ok(Json(serde_json::json!({"status": "ok"})))
+    })?;
+    ```
+
+## Tips
+- Use DTOs/schemas so validation runs before your handler executes.
+- Prefer returning plain values/structs; the runtime will serialize and set content types.
+- For streaming/WebSocket/SSE, see the streaming section in the concepts docs.
