@@ -341,11 +341,12 @@ module Spikard
       params.each do |param_type, param_name|
         # Skip the request parameter (usually first positional param)
         # Only collect keyword parameters
-        if [:keyreq, :key].include?(param_type)
-          dep_name = param_name.to_s
-          # Only add if it's registered in our dependencies
-          dependencies << dep_name if @dependencies.key?(dep_name)
-        end
+        next unless %i[keyreq key].include?(param_type)
+
+        dep_name = param_name.to_s
+        # Collect ALL keyword parameters, not just registered ones
+        # This allows the DI system to validate missing dependencies
+        dependencies << dep_name
       end
 
       dependencies

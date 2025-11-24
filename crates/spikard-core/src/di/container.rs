@@ -234,9 +234,7 @@ impl DependencyContainer {
             let mut sorted_keys: Vec<_> = batch.iter().collect();
 
             // Sort by insertion order (index in IndexMap) instead of alphabetically
-            sorted_keys.sort_by_key(|key| {
-                self.dependencies.get_index_of(*key).unwrap_or(usize::MAX)
-            });
+            sorted_keys.sort_by_key(|key| self.dependencies.get_index_of(*key).unwrap_or(usize::MAX));
 
             for key in sorted_keys {
                 // Get the dependency

@@ -53,6 +53,7 @@ RSpec.describe "di" do
     app = E2ERubyApp.create_app_di_5_missing_dependency_error
     client = Spikard::Testing.create_test_client(app)
     response = client.get("/api/missing-dep")
+    puts "DEBUG Missing-dep: Status=#{response.status_code}, Body=#{response.body[0..300]}"
     expect(response.status_code).to eq(500)
     body = response.json
     expect(body).to be_a(Hash)
@@ -90,6 +91,7 @@ RSpec.describe "di" do
     app = E2ERubyApp.create_app_di_7_multiple_dependencies_with_cleanup_success
     client = Spikard::Testing.create_test_client(app)
     response = client.get("/api/multi-cleanup-test")
+    puts "DEBUG Multi-cleanup: Status=#{response.status_code}, Body=#{response.body[0..200]}"
     expect(response.status_code).to eq(200)
 
     # Allow async cleanup to complete

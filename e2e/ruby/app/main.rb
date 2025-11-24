@@ -978,10 +978,13 @@ module E2ERubyApp
   def create_db_pool_singleton(app_config = nil)
     # Singleton with counter
     singleton_key = 'singleton_db_pool'
-    BACKGROUND_STATE[singleton_key] ||= {
-      id: '00000000-0000-0000-0000-000000000063',
-      count: 0
-    }
+    # Don't use ||= with BACKGROUND_STATE because default proc returns []
+    unless BACKGROUND_STATE.key?(singleton_key) && BACKGROUND_STATE[singleton_key].is_a?(Hash)
+      BACKGROUND_STATE[singleton_key] = {
+        id: '00000000-0000-0000-0000-000000000063',
+        count: 0
+      }
+    end
     BACKGROUND_STATE[singleton_key][:count] += 1
     BACKGROUND_STATE[singleton_key]
   end
@@ -993,7 +996,8 @@ module E2ERubyApp
   def create_app_di_6_mixed_singleton_and_per_request_caching_success
     app = Spikard::App.new
     app.get("/api/mixed-caching", handler_name: "di_6_mixed_singleton_and_per_request_caching_success") do |_request, app_config:, db_pool:, request_context:|
-      build_response(content: {"app_name" => "MyApp", "context_id" => "<<uuid>>", "pool_id" => "<<uuid>>"}, status: 200, headers: nil)
+      # Return the actual db_pool data so test can verify singleton behavior
+      build_response(content: db_pool, status: 200, headers: nil)
     end
 
     # Register dependencies
@@ -1007,12 +1011,12 @@ module E2ERubyApp
     # Create resource
     CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_opened'
     resource = { id: '00000000002d', active: true }
-    
+
     # Return resource and cleanup proc
     cleanup_proc = -> do
       CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_closed'
     end
-    
+
     [resource, cleanup_proc]
   end
 
@@ -1020,12 +1024,12 @@ module E2ERubyApp
     # Create resource
     CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_opened'
     resource = { id: '00000000002d', active: true }
-    
+
     # Return resource and cleanup proc
     cleanup_proc = -> do
       CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_closed'
     end
-    
+
     [resource, cleanup_proc]
   end
 
@@ -1033,25 +1037,19 @@ module E2ERubyApp
     # Create resource
     CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_opened'
     resource = { id: '00000000002d', active: true }
-    
+
     # Return resource and cleanup proc
     cleanup_proc = -> do
       CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_closed'
     end
-    
+
     [resource, cleanup_proc]
   end
 
   def create_app_di_7_multiple_dependencies_with_cleanup_success
     app = Spikard::App.new
     app.get("/api/multi-cleanup-test", handler_name: "di_7_multiple_dependencies_with_cleanup_success") do |_request, session:|
-      body = request[:body]
-      raise ArgumentError, 'background handler requires JSON body' unless body.is_a?(Hash)
-      value = body["event"]
-      raise ArgumentError, 'background handler missing value' if value.nil?
-      Spikard::Background.run do
-        BACKGROUND_STATE["di_7_multiple_dependencies_with_cleanup_success"] << value
-      end
+      # Session is injected via DI, just return success
       build_response(content: {"session_active" => true}, status: 200, headers: nil)
     end
     app.get("/api/multi-cleanup-state", handler_name: "di_7_multiple_dependencies_with_cleanup_success_background_state") do |_req|
@@ -1150,25 +1148,19 @@ module E2ERubyApp
     # Create resource
     CLEANUP_STATE[:di_resource_cleanup_after_request_success] << 'session_opened'
     resource = { id: '000000000029', active: true }
-    
+
     # Return resource and cleanup proc
     cleanup_proc = -> do
       CLEANUP_STATE[:di_resource_cleanup_after_request_success] << 'session_closed'
     end
-    
+
     [resource, cleanup_proc]
   end
 
   def create_app_di_13_resource_cleanup_after_request_success
     app = Spikard::App.new
     app.get("/api/cleanup-test", handler_name: "di_13_resource_cleanup_after_request_success") do |_request, db_session:|
-      body = request[:body]
-      raise ArgumentError, 'background handler requires JSON body' unless body.is_a?(Hash)
-      value = body["session_id"]
-      raise ArgumentError, 'background handler missing value' if value.nil?
-      Spikard::Background.run do
-        BACKGROUND_STATE["di_13_resource_cleanup_after_request_success"] << value
-      end
+      # db_session is injected via DI, just return success
       build_response(content: {"session_id" => "<<uuid>>", "status" => "completed"}, status: 200, headers: nil)
     end
     app.get("/api/cleanup-state", handler_name: "di_13_resource_cleanup_after_request_success_background_state") do |_req|
@@ -1209,10 +1201,13 @@ module E2ERubyApp
   def create_app_counter()
     # Singleton with counter
     singleton_key = 'singleton_app_counter'
-    BACKGROUND_STATE[singleton_key] ||= {
-      id: '00000000-0000-0000-0000-000000000063',
-      count: 0
-    }
+    # Don't use ||= with BACKGROUND_STATE because default proc returns []
+    unless BACKGROUND_STATE.key?(singleton_key) && BACKGROUND_STATE[singleton_key].is_a?(Hash)
+      BACKGROUND_STATE[singleton_key] = {
+        id: '00000000-0000-0000-0000-000000000063',
+        count: 0
+      }
+    end
     BACKGROUND_STATE[singleton_key][:count] += 1
     BACKGROUND_STATE[singleton_key]
   end
@@ -1220,7 +1215,8 @@ module E2ERubyApp
   def create_app_di_16_singleton_dependency_caching_success
     app = Spikard::App.new
     app.get("/api/app-counter", handler_name: "di_16_singleton_dependency_caching_success") do |_request, app_counter:|
-      build_response(content: {"count" => 1, "counter_id" => "<<uuid>>"}, status: 200, headers: nil)
+      # Return the actual app_counter data so test can verify singleton behavior
+      build_response(content: app_counter, status: 200, headers: nil)
     end
 
     # Register dependencies

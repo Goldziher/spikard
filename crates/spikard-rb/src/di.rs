@@ -127,13 +127,24 @@ impl Dependency for RubyFactoryDependency {
         Box::pin(async move {
             let ruby = Ruby::get().map_err(|e| DependencyError::ResolutionFailed { message: e.to_string() })?;
 
-            // Build kwargs array from resolved dependencies
-            let kwargs: Vec<(String, Value)> = resolved_deps
+            // Build positional arguments array from resolved dependencies
+            // Dependencies must be passed in the order specified by depends_on
+            // Important: preserve the order from depends_on, not from resolved_deps iteration
+            let args: Result<Vec<Value>, DependencyError> = depends_on
                 .iter()
-                .filter_map(|(dep_key, dep_value)| json_to_ruby(&ruby, dep_value).ok().map(|v| (dep_key.clone(), v)))
+                .filter_map(|dep_key| {
+                    // Find this dependency in resolved_deps
+                    resolved_deps.iter().find(|(k, _)| k == dep_key).map(|(_, v)| v)
+                })
+                .map(|dep_value| {
+                    json_to_ruby(&ruby, dep_value).map_err(|e| DependencyError::ResolutionFailed {
+                        message: format!("Failed to convert dependency value: {}", e),
+                    })
+                })
                 .collect();
+            let args = args?;
 
-            // Call the factory Proc with keyword arguments
+            // Call the factory Proc with positional arguments
             let factory_value = factory.get_inner_with(&ruby);
 
             // Check if factory responds to call
@@ -146,47 +157,32 @@ impl Dependency for RubyFactoryDependency {
                 });
             }
 
-            let result = if !kwargs.is_empty() {
-                // Build Ruby keyword arguments hash
-                let kwargs_hash = ruby.hash_new();
-                for (dep_key, value) in kwargs {
-                    kwargs_hash.aset(ruby.to_symbol(&dep_key), value).map_err(|e| {
-                        DependencyError::ResolutionFailed {
-                            message: format!("Failed to set dependency {}: {}", dep_key, e),
-                        }
+            // Call factory with positional arguments
+            // Use a Ruby helper to call with splatted arguments
+            let result: Value = if !args.is_empty() {
+                // Create a Ruby array of arguments
+                let args_array = ruby.ary_new();
+                for arg in &args {
+                    args_array.push(*arg).map_err(|e| DependencyError::ResolutionFailed {
+                        message: format!("Failed to push arg to array: {}", e),
                     })?;
                 }
 
-                // Use Ruby lambda wrapper to convert hash to keyword arguments
-                // Equivalent to: proc.call(**kwargs)
-                let wrapper_code = ruby.eval::<Value>(r#"
-                    lambda do |proc, kwargs|
-                        proc.call(**kwargs)
-                    end
-                "#).map_err(|e| DependencyError::ResolutionFailed {
-                    message: format!("Failed to create kwarg wrapper for factory '{}': {}", key, e),
-                })?;
-
-                // Try to call with keyword arguments
-                match wrapper_code.funcall::<_, _, Value>("call", (factory_value, kwargs_hash)) {
-                    Ok(result) => result,
-                    Err(_) => {
-                        // If that fails, try calling without arguments (factory might not expect deps)
-                        factory_value
-                            .funcall("call", ())
-                            .map_err(|e| DependencyError::ResolutionFailed {
-                                message: format!("Failed to call factory for '{}': {}", key, e),
-                            })?
-                    }
-                }
-            } else {
-                // Call with no arguments
-                factory_value
-                    .funcall("call", ())
+                // Use Ruby's send with * to splat arguments
+                // Equivalent to: factory_value.call(*args_array)
+                let splat_lambda = ruby
+                    .eval::<Value>("lambda { |proc, args| proc.call(*args) }")
                     .map_err(|e| DependencyError::ResolutionFailed {
-                        message: format!("Failed to call factory for '{}': {}", key, e),
-                    })?
-            };
+                        message: format!("Failed to create splat lambda: {}", e),
+                    })?;
+
+                splat_lambda.funcall("call", (factory_value, args_array))
+            } else {
+                factory_value.funcall("call", ())
+            }
+            .map_err(|e| DependencyError::ResolutionFailed {
+                message: format!("Failed to call factory for '{}': {}", key, e),
+            })?;
 
             // Check if result is an array with cleanup callback (Ruby pattern: [resource, cleanup_proc])
             let (value_to_convert, _cleanup_callback) = if result.is_kind_of(ruby.class_array()) {

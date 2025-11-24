@@ -130,7 +130,9 @@ impl Dependency for NodeFactoryDependency {
         let resolved_deps: Vec<(String, String)> = depends_on
             .iter()
             .filter_map(|dep_key| {
-                resolved.get::<String>(dep_key).map(|v| (dep_key.clone(), v.to_string()))
+                resolved
+                    .get::<String>(dep_key)
+                    .map(|v| (dep_key.clone(), v.to_string()))
             })
             .collect();
 
@@ -171,10 +173,15 @@ impl Dependency for NodeFactoryDependency {
             // (This marker is set by JavaScript code when it returns an AsyncGenerator)
             let result_value: serde_json::Value = serde_json::from_str(&result).unwrap_or(serde_json::Value::Null);
 
-            if let Some(obj) = result_value.as_object() {
-                if obj.get("__async_generator__").and_then(|v| v.as_bool()).unwrap_or(false) {
+            if let Some(obj) = result_value.as_object()
+                && obj
+                    .get("__async_generator__")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false)
+                {
                     // This is an async generator - extract the yielded value and generator handle
-                    let value_str = obj.get("value")
+                    let value_str = obj
+                        .get("value")
                         .and_then(|v| serde_json::to_string(v).ok())
                         .ok_or_else(|| spikard_core::di::DependencyError::ResolutionFailed {
                             message: format!("AsyncGenerator missing 'value' field for {}", key),
@@ -194,7 +201,6 @@ impl Dependency for NodeFactoryDependency {
 
                     return Ok(Arc::new(value_str) as Arc<dyn Any + Send + Sync>);
                 }
-            }
 
             // Store result as JSON string
             Ok(Arc::new(result) as Arc<dyn Any + Send + Sync>)
@@ -233,7 +239,7 @@ pub fn extract_dependency_container(app: &Object) -> Result<Option<Arc<spikard_c
 
     for key in &dep_keys {
         let dep_obj: Object = dependencies
-            .get(&key)?
+            .get(key)?
             .ok_or_else(|| Error::from_reason(format!("Dependency {} not found", key)))?;
 
         // Check if it's a factory or a value

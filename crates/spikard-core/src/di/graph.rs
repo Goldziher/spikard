@@ -350,11 +350,7 @@ impl DependencyGraph {
                 // e.g., [A, B, A] or [B, A, B]
                 if cycle.len() > 1 {
                     // Find the index of the smallest element (ignoring the last closing element)
-                    if let Some((min_idx, _)) = cycle[..cycle.len() - 1]
-                        .iter()
-                        .enumerate()
-                        .min_by_key(|(_, s)| *s)
-                    {
+                    if let Some((min_idx, _)) = cycle[..cycle.len() - 1].iter().enumerate().min_by_key(|(_, s)| *s) {
                         cycle.rotate_left(min_idx);
                         // After rotation, update the closing element to match the new first element
                         if let Some(first) = cycle.first().cloned() {
