@@ -6,82 +6,19 @@ Spikard is a polyglot API toolkit with a Rust core and first-class bindings for 
 
 === "Python"
 
-    ```python
-    from spikard import App
-    from msgspec import Struct
-
-    class User(Struct):
-        id: int
-        name: str
-
-    app = App()
-
-    @app.get("/users/{id:int}")
-    async def get_user(id: int) -> User:
-        return User(id=id, name="Alice")
-
-    if __name__ == "__main__":
-        app.run(port=8000)
-    ```
+    --8<-- "snippets/python/hello_route.md"
 
 === "TypeScript"
 
-    ```typescript
-    import { App } from "spikard";
-    import { z } from "zod";
-
-    const User = z.object({ id: z.number(), name: z.string() });
-    type User = z.infer<typeof User>;
-
-    const app = new App();
-
-    app.get("/users/:id", ({ params }): User => ({
-      id: Number(params.id),
-      name: "Alice",
-    }));
-
-    app.listen({ port: 8000 });
-    ```
+    --8<-- "snippets/typescript/hello_route.md"
 
 === "Ruby"
 
-    ```ruby
-    require "spikard"
-
-    App = Spikard::App.new
-
-    App.get("/users/:id") do |ctx|
-      { id: ctx.params[:id].to_i, name: "Alice" }
-    end
-
-    App.run(port: 8000)
-    ```
+    --8<-- "snippets/ruby/hello_route.md"
 
 === "Rust"
 
-    ```rust
-    use serde::{Deserialize, Serialize};
-    use spikard::prelude::*;
-
-    #[derive(Serialize, Deserialize)]
-    struct User {
-        id: i64,
-        name: String,
-    }
-
-    #[tokio::main]
-    async fn main() -> Result<(), Box<dyn std::error::Error>> {
-        let mut app = App::new();
-
-        app.route(get("/users/:id"), |ctx: Context| async move {
-            let id = ctx.path_param("id").unwrap_or("0").parse::<i64>().unwrap_or_default();
-            Ok(Json(User { id, name: "Alice".into() }))
-        })?;
-
-        app.run().await?;
-        Ok(())
-    }
-    ```
+    --8<-- "snippets/rust/hello_route.md"
 
 ## Documentation Map
 

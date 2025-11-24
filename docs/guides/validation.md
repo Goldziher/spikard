@@ -6,64 +6,19 @@ Validation keeps handlers simple by enforcing contracts at the edge.
 
 === "Python"
 
-    ```python
-    from msgspec import Struct
-
-    class Payment(Struct):
-        id: str
-        amount: float
-
-    @app.post("/payments")
-    async def create_payment(payment: Payment) -> Payment:
-        return payment
-    ```
+    --8<-- "snippets/python/validation_basic.md"
 
 === "TypeScript"
 
-    ```typescript
-    import { z } from "zod";
-
-    const Payment = z.object({
-      id: z.string().uuid(),
-      amount: z.number().positive(),
-    });
-
-    app.post("/payments", ({ body }) => Payment.parse(body));
-    ```
+    --8<-- "snippets/typescript/validation_basic.md"
 
 === "Ruby"
 
-    ```ruby
-    PaymentSchema = Dry::Schema.Params do
-      required(:id).filled(:string)
-      required(:amount).filled(:float)
-    end
-
-    App.post("/payments") do |ctx|
-      PaymentSchema.call(ctx.json)
-    end
-    ```
+    --8<-- "snippets/ruby/validation_basic.md"
 
 === "Rust"
 
-    ```rust
-    use schemars::JsonSchema;
-    use serde::Deserialize;
-
-    #[derive(Deserialize, JsonSchema)]
-    struct Payment {
-        id: String,
-        amount: f64,
-    }
-
-    app.route(
-        post("/payments").request_body::<Payment>().response_body::<Payment>(),
-        |ctx: Context| async move {
-            let payment: Payment = ctx.json()?;
-            Ok(Json(payment))
-        },
-    )?;
-    ```
+    --8<-- "snippets/rust/validation_basic.md"
 
 ## Validate responses
 
