@@ -40,7 +40,9 @@ Decorators (`get`, `post`, etc.) are available for metadata-only definitions, bu
 ## Deployment
 - Local: `node app.js`/`ts-node app.ts`; set `PORT` via `app.run({ port })`.
 - Containers: build native module ahead of time (`pnpm build:native`) to avoid runtime compilation.
-- WASM/Deno/Edge: use `spikard-wasm` and `createFetchHandler` (see WASM package README) for fetch-based runtimes.
+- WASM/Deno/Edge: use `spikard-wasm` and `createFetchHandler` for fetch-based runtimes:
+
+    --8<-- "snippets/typescript/fetch_handler.md"
 
 ## Troubleshooting
 - Requires Node 20+; ensure Rust toolchain for native builds.
