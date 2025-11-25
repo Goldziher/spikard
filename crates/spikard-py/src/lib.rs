@@ -108,7 +108,6 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
         Some(body_param_name.extract()?)
     };
 
-    #[cfg(feature = "di")]
     let handler_dependencies = {
         let deps = match route.getattr("handler_dependencies") {
             Ok(value) => value,
@@ -128,7 +127,6 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
         is_async,
         cors: None,
         body_param_name: body_param_name_value,
-        #[cfg(feature = "di")]
         handler_dependencies,
     })
 }
@@ -148,8 +146,6 @@ fn process() -> PyResult<()> {
 ///     TestClient: A test client for making requests to the app
 #[pyfunction]
 fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_client::TestClient> {
-    use std::sync::Arc;
-
     // DEBUG: Log test client creation
     let _ = std::fs::write("/tmp/create_test_client.log", "create_test_client() called\n");
     eprintln!("[UNCONDITIONAL DEBUG] create_test_client() called");
@@ -190,7 +186,18 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
         format!("Converted {} routes\n", routes.len()),
     );
 
+    #[cfg(feature = "di")]
     let mut config = if let Ok(py_config) = app.getattr("_config") {
+        if !py_config.is_none() {
+            extract_server_config(py, &py_config)?
+        } else {
+            spikard_http::ServerConfig::default()
+        }
+    } else {
+        spikard_http::ServerConfig::default()
+    };
+    #[cfg(not(feature = "di"))]
+    let config = if let Ok(py_config) = app.getattr("_config") {
         if !py_config.is_none() {
             extract_server_config(py, &py_config)?
         } else {
@@ -203,6 +210,8 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<test_c
     // Extract and register dependencies
     #[cfg(feature = "di")]
     {
+        use std::sync::Arc;
+
         let dependencies = app.call_method0("get_dependencies")?;
         if !dependencies.is_none() {
             config.di_container = Some(Arc::new(build_dependency_container(py, &dependencies)?));
