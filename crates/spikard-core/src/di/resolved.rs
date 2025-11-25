@@ -339,7 +339,7 @@ mod tests {
 
     #[test]
     fn test_get_arc() {
-        let mut resolved = ResolvedDependencies::new();
+        let resolved = ResolvedDependencies::new();
         resolved.insert("data".to_string(), Arc::new(vec![1, 2, 3]));
 
         let any_ref = resolved.get_arc("data");
@@ -352,7 +352,7 @@ mod tests {
 
     #[test]
     fn test_contains() {
-        let mut resolved = ResolvedDependencies::new();
+        let resolved = ResolvedDependencies::new();
         resolved.insert("exists".to_string(), Arc::new(true));
 
         assert!(resolved.contains("exists"));
