@@ -44,7 +44,7 @@ clap_mangen = "0.2"
 axum = "0.8"
 tokio = { version = "1", features = ["full"] }
 tower = "0.5"
-tower-http = { version = "0.6", features = [
+tower-http = { version = "0.6.7", features = [
     "trace",
     "request-id",
     "compression-gzip",
