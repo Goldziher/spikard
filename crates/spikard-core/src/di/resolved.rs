@@ -363,7 +363,7 @@ mod tests {
     async fn test_cleanup_order() {
         let order = Arc::new(Mutex::new(Vec::new()));
 
-        let mut resolved = ResolvedDependencies::new();
+        let resolved = ResolvedDependencies::new();
 
         let order1 = order.clone();
         resolved.add_cleanup_task(Box::new(move || {
@@ -394,7 +394,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_cleanup_empty() {
-        let mut resolved = ResolvedDependencies::new();
+        let resolved = ResolvedDependencies::new();
         resolved.cleanup().await; // Should not panic
     }
 
