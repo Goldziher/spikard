@@ -312,7 +312,7 @@ mod tests {
 
     #[test]
     fn test_insert_and_get() {
-        let mut resolved = ResolvedDependencies::new();
+        let resolved = ResolvedDependencies::new();
         let value = Arc::new(42i32);
         resolved.insert("answer".to_string(), value.clone());
 
@@ -322,7 +322,7 @@ mod tests {
 
     #[test]
     fn test_get_type_mismatch() {
-        let mut resolved = ResolvedDependencies::new();
+        let resolved = ResolvedDependencies::new();
         resolved.insert("number".to_string(), Arc::new(42i32));
 
         // Wrong type returns None
