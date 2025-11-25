@@ -479,7 +479,6 @@ fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyRes
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
         openapi: openapi_config,
         lifecycle_hooks: None,
-        #[cfg(feature = "di")]
         di_container: None,
     })
 }
