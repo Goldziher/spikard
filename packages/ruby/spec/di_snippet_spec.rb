@@ -18,7 +18,8 @@ RSpec.describe 'DI doc snippet' do
     raise 'DI snippet not found' unless snippet
 
     code = snippet[:code]
-    eval(code) # rubocop:disable Security/Eval
+    app = nil
+    eval(code, binding) # rubocop:disable Security/Eval
 
     expect(defined?(app)).to eq('local-variable')
     deps = app.instance_variable_get(:@dependencies) || {}
