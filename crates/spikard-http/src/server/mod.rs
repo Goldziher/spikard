@@ -12,6 +12,7 @@ use crate::{CorsConfig, Router, ServerConfig};
 use axum::Router as AxumRouter;
 use axum::body::Body;
 use axum::extract::{DefaultBodyLimit, Path};
+use axum::http::StatusCode;
 use axum::routing::{MethodRouter, get};
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -554,7 +555,10 @@ pub fn build_router_with_handlers_and_config(
     }
 
     if let Some(timeout_secs) = config.request_timeout {
-        app = app.layer(TimeoutLayer::new(Duration::from_secs(timeout_secs)));
+        app = app.layer(TimeoutLayer::with_status_code(
+            StatusCode::REQUEST_TIMEOUT,
+            Duration::from_secs(timeout_secs),
+        ));
     }
 
     if config.enable_request_id {
