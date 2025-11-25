@@ -339,7 +339,7 @@ mod tests {
 
     #[test]
     fn test_get_arc() {
-        let resolved = ResolvedDependencies::new();
+        let mut resolved = ResolvedDependencies::new();
         resolved.insert("data".to_string(), Arc::new(vec![1, 2, 3]));
 
         let any_ref = resolved.get_arc("data");
@@ -352,7 +352,7 @@ mod tests {
 
     #[test]
     fn test_contains() {
-        let resolved = ResolvedDependencies::new();
+        let mut resolved = ResolvedDependencies::new();
         resolved.insert("exists".to_string(), Arc::new(true));
 
         assert!(resolved.contains("exists"));
@@ -394,7 +394,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_cleanup_empty() {
-        let resolved = ResolvedDependencies::new();
+        let mut resolved = ResolvedDependencies::new();
         resolved.cleanup().await; // Should not panic
     }
 
