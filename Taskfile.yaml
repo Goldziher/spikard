@@ -22,6 +22,7 @@ tasks:
       - task: python:install
       - task: js:install
       - task: ruby:install
+      - task: php:install
       - task: pre-commit:install
       - task: python:build
       - echo "Setup complete - safe to re-run anytime"
@@ -37,6 +38,8 @@ tasks:
       - task: js:update
       - echo "Updating Ruby gems..."
       - task: ruby:update
+      - echo "Updating PHP dependencies..."
+      - task: php:update
       - echo "Refreshing Python bindings..."
       - task: python:build
       - echo "Updating pre-commit hooks..."
@@ -61,6 +64,7 @@ tasks:
       - task: python:test
       - task: js:test
       - task: ruby:test
+      - task: php:test
       - task: test:e2e
   check:
     desc: "Run all checks without modifications (lint + format checks)"
@@ -93,6 +97,7 @@ tasks:
       - task: python:format
       - task: js:format
       - task: ruby:format
+      - task: php:format
 
   format:check:
     desc: "Check code formatting without modifications"
@@ -101,6 +106,7 @@ tasks:
       - task: python:format:check
       - task: js:format:check
       - task: ruby:format:check
+      - task: php:format:check
 
   python:install:
     desc: "Install Python dependencies with uv"
@@ -382,25 +388,57 @@ tasks:
     cmds:
       - task: node:test
 
-  php:lint:
-    desc: "Lint PHP code with auto-fix (phpstan + phpcbf)"
+  php:install:
+    desc: "Install PHP dependencies via Composer"
+    dir: packages/php
     cmds:
-      - echo "PHP linting (placeholder for future PHP binding integration)"
+      - composer install --no-interaction --no-progress
+
+  php:update:
+    desc: "Update PHP dependencies"
+    dir: packages/php
+    cmds:
+      - composer update --no-interaction --no-progress
+
+  php:test:
+    desc: "Run PHP test suite"
+    deps:
+      - php:install
+    dir: packages/php
+    cmds:
+      - composer run test
+
+  php:lint:
+    desc: "Run PHP static analysis WITH auto-fix (phpstan + php-cs-fixer)"
+    deps:
+      - php:install
+    dir: packages/php
+    cmds:
+      - composer run lint:fix
 
   php:lint:check:
-    desc: "Check PHP code without auto-fix (phpstan + phpcs)"
+    desc: "Run PHP static analysis WITHOUT auto-fix (check-only)"
+    deps:
+      - php:install
+    dir: packages/php
     cmds:
-      - echo "PHP linting check (placeholder for future PHP binding integration)"
+      - composer run lint
 
   php:format:
-    desc: "Format PHP code"
+    desc: "Format PHP code (with modifications)"
+    deps:
+      - php:install
+    dir: packages/php
     cmds:
-      - echo "PHP formatting (placeholder for future PHP binding integration)"
+      - composer run format
 
   php:format:check:
     desc: "Check PHP formatting without modifications"
+    deps:
+      - php:install
+    dir: packages/php
     cmds:
-      - echo "PHP format check (placeholder for future PHP binding integration)"
+      - composer run format:check
 
   build:rust:
     desc: "Build Rust workspace in release mode"
@@ -509,6 +547,12 @@ tasks:
     cmds:
       - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang ruby --output e2e/ruby
 
+  generate:tests:php:
+    desc: "Generate PHP e2e test suite from fixtures"
+    cmds:
+      - rm -rf e2e/php
+      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang php --output e2e/php
+
   generate:tests:
     desc: "Generate all e2e test suites from fixtures"
     cmds:
@@ -517,6 +561,7 @@ tasks:
       - task: generate:tests:node
       - task: generate:tests:wasm
       - task: generate:tests:ruby
+      - task: generate:tests:php
 
   verify:tests:rust:
     desc: "Regenerate and run Rust e2e suite, ensuring no diff"
@@ -546,6 +591,13 @@ tasks:
       - task: test:e2e:ruby
       - git diff --exit-code
 
+  verify:tests:php:
+    desc: "Regenerate and run PHP e2e suite, ensuring no diff"
+    cmds:
+      - task: generate:tests:php
+      - task: test:e2e:php
+      - git diff --exit-code
+
   verify:tests:
     desc: "Verify all e2e suites are up to date and pass"
     cmds:
@@ -553,6 +605,7 @@ tasks:
       - task: verify:tests:python
       - task: verify:tests:node
       - task: verify:tests:ruby
+      - task: verify:tests:php
 
   clean:generated:
     desc: "Remove all generated e2e test infrastructure"
@@ -595,6 +648,14 @@ tasks:
       - BUNDLE_GEMFILE=../../packages/ruby/Gemfile RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rake -C ../../packages/ruby ext:build
       - BUNDLE_GEMFILE=../../packages/ruby/Gemfile RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rspec
 
+  test:e2e:php:
+    desc: "Run PHP e2e tests (fixture-driven integration tests)"
+    dir: e2e/php
+    deps:
+      - php:install
+    cmds:
+      - ../../packages/php/vendor/bin/phpunit --configuration phpunit.xml
+
   test:e2e:
     desc: "Run all e2e fixture-driven integration tests"
     cmds:
@@ -603,6 +664,7 @@ tasks:
       - task: test:e2e:node
       - task: test:e2e:wasm
       - task: test:e2e:ruby
+      - task: test:e2e:php
 
   build:js:
     desc: "Build all JavaScript/TypeScript packages (node, wasm)"
