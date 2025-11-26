@@ -127,6 +127,24 @@ final class App
         return null;
     }
 
+    /**
+     * Routes formatted for the native (Rust) test client.
+     *
+     * @return array<int, array{method: string, path: string, handler: HandlerInterface}>
+     */
+    public function nativeRoutes(): array
+    {
+        $routes = [];
+        foreach ($this->routes as $route) {
+            $routes[] = [
+                'method' => \strtoupper($route['method']),
+                'path' => $route['path'],
+                'handler' => $route['handler'],
+            ];
+        }
+        return $routes;
+    }
+
     /** @return array<string, WebSocketHandlerInterface> */
     public function websocketHandlers(): array
     {
