@@ -20,6 +20,11 @@ final class TestClient
         return new self($app);
     }
 
+    private function useNative(): bool
+    {
+        return \class_exists('\\Spikard\\Native\\TestClient') && \function_exists('spikard_version');
+    }
+
     public function app(): App
     {
         return $this->app;
@@ -30,6 +35,14 @@ final class TestClient
      */
     public function request(string $method, string $path, array $options = []): Response
     {
+        if ($this->useNative()) {
+            /** @var array<int, array{method: string, path: string, handler: \Spikard\Handlers\HandlerInterface}> $routes */
+            $routes = $this->app->nativeRoutes();
+            /** @psalm-suppress MixedArgument */
+            $native = new \Spikard\Native\TestClient($routes);
+            return $native->request($method, $path, $options);
+        }
+
         /** @var array<string, string> $headers */
         $headers = \is_array($options['headers'] ?? null) ? $options['headers'] : [];
         /** @var array<string, string> $cookies */

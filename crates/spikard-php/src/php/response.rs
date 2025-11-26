@@ -46,4 +46,11 @@ impl PhpResponse {
             headers,
         }
     }
+
+    pub fn with_headers(mut self, headers: HashMap<String, String>) -> Self {
+        for (k, v) in headers {
+            self.headers.insert(k.to_ascii_lowercase(), v);
+        }
+        self
+    }
 }
