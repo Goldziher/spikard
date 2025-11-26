@@ -11,6 +11,7 @@ use ext_php_rs::types::Zval;
 use serde_json::Value;
 use spikard_http::lifecycle::{HookResult, LifecycleHooks};
 use spikard_http::testing::{call_test_server, snapshot_response};
+use spikard_http::websocket::{WebSocketHandler as CoreWebSocketHandler, WebSocketState};
 use spikard_http::{
     CompressionConfig, CorsConfig, Handler, HandlerResult, RateLimitConfig, RequestData, Route, Router, Server,
     ServerConfig, StaticFilesConfig,
@@ -93,6 +94,11 @@ struct PhpHandlerWrapper {
     handler: Zval,
 }
 
+#[derive(Clone)]
+struct PhpWebSocketWrapper {
+    handler: Zval,
+}
+
 impl Handler for PhpHandlerWrapper {
     fn call(
         &self,
@@ -117,6 +123,37 @@ impl Handler for PhpHandlerWrapper {
             let axum_resp = axum_response_from_php(&php_resp);
             Ok(axum_resp)
         })
+    }
+}
+
+impl CoreWebSocketHandler for PhpWebSocketWrapper {
+    fn handle_message(
+        &self,
+        message: serde_json::Value,
+    ) -> impl std::future::Future<Output = Option<serde_json::Value>> + Send {
+        let handler = self.handler.clone();
+        async move {
+            let payload = Zval::from(message.to_string());
+            handler
+                .try_call_method("onMessage", vec![&payload])
+                .ok()
+                .and_then(|zv| zv.string())
+                .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+        }
+    }
+
+    fn on_connect(&self) -> impl std::future::Future<Output = ()> + Send {
+        let handler = self.handler.clone();
+        async move {
+            let _ = handler.try_call_method("onConnect", vec![]);
+        }
+    }
+
+    fn on_disconnect(&self) -> impl std::future::Future<Output = ()> + Send {
+        let handler = self.handler.clone();
+        async move {
+            let _ = handler.try_call_method("onClose", vec![&Zval::from(1000i64), &Zval::from("")]);
+        }
     }
 }
 
@@ -380,12 +417,31 @@ fn build_router_from_php(routes: Vec<Zval>) -> Result<(Router, Vec<spikard_core:
             .and_then(|z| z.string())
             .ok_or_else(|| PhpException::default("missing path".into()))?
             .to_string();
+        let is_ws = array
+            .get("websocket")
+            .ok()
+            .flatten()
+            .and_then(|v| v.bool())
+            .unwrap_or(false);
+        let is_sse = array.get("sse").ok().flatten().and_then(|v| v.bool()).unwrap_or(false);
+
         let handler_zval = array
             .get("handler")
             .ok()
             .flatten()
             .cloned()
             .unwrap_or_else(|| Zval::new());
+
+        if is_ws {
+            let handler = Arc::new(PhpWebSocketWrapper { handler: handler_zval });
+            let state = WebSocketState::new(handler);
+            router.route_ws(&path, state);
+            continue;
+        }
+
+        if is_sse {
+            // TODO: implement native SSE mapping; for now fall through to HTTP handler semantics.
+        }
 
         let route = Route {
             method: method.parse().map_err(|e: String| PhpException::default(e))?,
