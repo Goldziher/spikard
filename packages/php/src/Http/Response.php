@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Spikard\Http;
 
+// When the native extension is loaded, alias the internal response to this class name.
+if (\class_exists(\Spikard\Internal\Response::class)) {
+    \class_alias(\Spikard\Internal\Response::class, __NAMESPACE__ . '\Response');
+    return;
+}
+
 final class Response
 {
     /**
