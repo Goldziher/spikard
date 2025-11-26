@@ -7,3 +7,5 @@ parameters:
     bootstrapFiles:
         - vendor/autoload.php
         - tests/bootstrap.php
+    scanFiles:
+        - stubs/ext.php

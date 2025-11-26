@@ -25,6 +25,7 @@ final class App
     private ?ServerConfig $config;
     private ?LifecycleHooks $hooks = null;
     private ?DependencyContainer $dependencies = null;
+    private ?int $serverHandle = null;
 
     /** @var array<int, array{method: string, path: string, handler: HandlerInterface}> */
     private array $routes = [];
@@ -158,11 +159,7 @@ final class App
         return $this->sseProducers;
     }
 
-    /**
-     * Start the server using the configured bindings.
-     *
-     * For now this is a placeholder until the ext-php-rs integration is wired.
-     */
+    /** Start the server using the native extension (background). */
     public function run(?ServerConfig $config = null): void
     {
         $configToUse = $config ?? $this->config;
@@ -170,13 +167,27 @@ final class App
             throw new RuntimeException('ServerConfig is required to run the Spikard server.');
         }
 
-        if (!\function_exists('spikard_version')) {
+        if (!\function_exists('spikard_version') || !\function_exists('spikard_start_server')) {
             throw new RuntimeException('Spikard PHP extension is not loaded; build with extension-module feature.');
         }
 
-        // For now, reuse the native TestClient server (axum-test) to mirror other bindings’ test/run API.
-        // TODO: expose a background server handle when ext-php-rs runtime is ready.
-        new NativeClient($this->nativeRoutes());
+        $configPayload = $this->configToNative($configToUse);
+        $lifecyclePayload = $this->hooks ? $this->hooksToNative($this->hooks) : [];
+
+        // Extension entrypoint is guaranteed by the guard above; call directly.
+        $start = 'spikard_start_server';
+        /** @var int $handle */
+        $handle = $start($this->nativeRoutes(), $configPayload, $lifecyclePayload);
+        $this->serverHandle = $handle;
+    }
+
+    /** Stop a running server (no-op if not started). */
+    public function close(): void
+    {
+        if ($this->serverHandle !== null && \function_exists('spikard_stop_server')) {
+            \spikard_stop_server($this->serverHandle);
+        }
+        $this->serverHandle = null;
     }
 
     /**
@@ -185,5 +196,78 @@ final class App
     public static function singleRoute(string $method, string $path, HandlerInterface $handler): self
     {
         return (new self())->addRoute($method, $path, $handler);
+    }
+
+    /**
+     * Convert ServerConfig to the native array expected by the extension.
+     *
+     * @return array<string, mixed>
+     */
+    private function configToNative(ServerConfig $config): array
+    {
+        $payload = [];
+
+        if ($config->compression !== null) {
+            $payload['compression'] = [
+                'gzip' => $config->compression->enabled,
+                'brotli' => $config->compression->enabled,
+                'minSize' => 1024,
+                'quality' => $config->compression->quality,
+            ];
+        }
+
+        if ($config->rateLimit !== null) {
+            $payload['rateLimit'] = [
+                'perSecond' => $config->rateLimit->refill,
+                'burst' => $config->rateLimit->burst,
+                'ipBased' => true,
+            ];
+        }
+
+        if ($config->cors !== null && $config->cors->enabled) {
+            $payload['cors'] = [
+                'allowOrigins' => $config->cors->allowedOrigins,
+                'allowMethods' => $config->cors->allowedMethods,
+                'allowHeaders' => $config->cors->allowedHeaders,
+                'exposeHeaders' => $config->cors->exposedHeaders,
+                'allowCredentials' => $config->cors->allowCredentials,
+                'maxAge' => $config->cors->maxAgeSeconds,
+            ];
+        }
+
+        if ($config->staticFiles !== null && $config->staticFiles->enabled && $config->staticFiles->root !== null) {
+            $payload['staticFiles'] = [[
+                'directory' => $config->staticFiles->root,
+                'routePrefix' => '/',
+                'indexFile' => $config->staticFiles->indexFile !== null,
+                'cacheControl' => $config->staticFiles->cache ? 'public, max-age=3600' : null,
+            ]];
+        }
+
+        return $payload;
+    }
+
+    /**
+     * @return array<string, callable>
+     */
+    private function hooksToNative(LifecycleHooks $hooks): array
+    {
+        $payload = [];
+        if ($hooks->onRequest !== null) {
+            $payload['onRequest'] = $hooks->onRequest;
+        }
+        if ($hooks->preValidation !== null) {
+            $payload['preValidation'] = $hooks->preValidation;
+        }
+        if ($hooks->preHandler !== null) {
+            $payload['preHandler'] = $hooks->preHandler;
+        }
+        if ($hooks->onError !== null) {
+            $payload['onError'] = $hooks->onError;
+        }
+        if ($hooks->onResponse !== null) {
+            $payload['onResponse'] = $hooks->onResponse;
+        }
+        return $payload;
     }
 }

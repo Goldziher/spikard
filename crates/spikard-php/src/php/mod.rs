@@ -165,10 +165,9 @@ pub fn spikard_start_server(
     Ok(handle_id)
 }
 
-/// Stop server by handle (no-op placeholder until a real handle is wired).
 #[php_function]
-pub fn spikard_stop_server(_handle: i64) -> bool {
-    HANDLE_REGISTRY.stop(_handle)
+pub fn spikard_stop_server(handle: i64) -> bool {
+    HANDLE_REGISTRY.stop(handle)
 }
 
 /// Native TestClient backed by spikard_http router and axum-test.
@@ -258,6 +257,7 @@ fn php_request_from_request_data(data: &RequestData) -> PhpRequest {
         Some((*data.headers).clone()),
         Some((*data.cookies).clone()),
         Some((*data.raw_query_params).clone()),
+        Some((*data.path_params).clone()),
     )
 }
 
