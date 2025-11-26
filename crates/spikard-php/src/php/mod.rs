@@ -229,10 +229,26 @@ impl NativeTestClient {
             }
         }
 
-        let request = Request::builder()
+        let mut builder = Request::builder()
             .method(&uppercase_method)
-            .uri(path)
-            .body(Body::empty())
+            .uri(&path)
+            .map_err(|e| PhpException::default(e.to_string()))?;
+
+        for (k, v) in &headers {
+            builder = builder.header(k, v);
+        }
+        if !cookies.is_empty() {
+            let cookie_header = cookies
+                .iter()
+                .map(|(k, v)| format!("{k}={v}"))
+                .collect::<Vec<_>>()
+                .join("; ");
+            builder = builder.header("cookie", cookie_header);
+        }
+
+        let body_bytes = body_to_bytes(&body);
+        let request = builder
+            .body(Body::from(body_bytes))
             .map_err(|e| PhpException::default(e.to_string()))?;
 
         let snapshot = async_std::task::block_on(async {
@@ -254,6 +270,7 @@ fn php_request_from_request_data(data: &RequestData) -> PhpRequest {
         data.method.clone(),
         data.path.clone(),
         Some(data.body.clone()),
+        data.raw_body.as_ref().map(|b| b.to_vec()),
         Some((*data.headers).clone()),
         Some((*data.cookies).clone()),
         Some((*data.raw_query_params).clone()),
@@ -302,6 +319,14 @@ fn zval_to_json(value: &Zval) -> Result<Value, serde_json::Error> {
         Ok(Value::Bool(b))
     } else {
         Ok(Value::Null)
+    }
+}
+
+fn body_to_bytes(body: &Value) -> Vec<u8> {
+    match body {
+        Value::String(s) => s.as_bytes().to_vec(),
+        Value::Null => Vec::new(),
+        other => serde_json::to_vec(other).unwrap_or_default(),
     }
 }
 

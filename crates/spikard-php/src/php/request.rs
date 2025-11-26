@@ -9,6 +9,7 @@ pub struct PhpRequest {
     path: String,
     path_params: HashMap<String, String>,
     body: Value,
+    raw_body: Option<Vec<u8>>,
     raw_query: HashMap<String, Vec<String>>,
     headers: HashMap<String, String>,
     cookies: HashMap<String, String>,
@@ -21,6 +22,7 @@ impl PhpRequest {
         method: String,
         path: String,
         body: Option<Value>,
+        raw_body: Option<Vec<u8>>,
         headers: Option<HashMap<String, String>>,
         cookies: Option<HashMap<String, String>>,
         raw_query: Option<HashMap<String, Vec<String>>>,
@@ -31,6 +33,7 @@ impl PhpRequest {
             path,
             path_params: path_params.unwrap_or_default(),
             body: body.unwrap_or(Value::Null),
+            raw_body,
             raw_query: raw_query.unwrap_or_default(),
             headers: headers.unwrap_or_default(),
             cookies: cookies.unwrap_or_default(),
@@ -50,6 +53,12 @@ impl PhpRequest {
     #[getter]
     pub fn body(&self) -> &Value {
         &self.body
+    }
+
+    /// Raw body bytes (if present).
+    #[getter(name = "rawBody")]
+    pub fn raw_body(&self) -> Option<&Vec<u8>> {
+        self.raw_body.as_ref()
     }
 
     /// Lowercase header map for case-insensitive lookup.
