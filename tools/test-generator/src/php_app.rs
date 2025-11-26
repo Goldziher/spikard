@@ -69,7 +69,14 @@ fn build_app_factory(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> S
         for (index, fixture) in fixtures.iter().enumerate() {
             let handler_name = format!("Handler{}_{}", sanitize_identifier(category), index + 1);
             let method = fixture.request.method.to_ascii_uppercase();
-            let path = &fixture.request.path;
+            let mut path = fixture.request.path.clone();
+            if let Some(query) = fixture.request.query_params.as_ref() {
+                if !query.is_empty() {
+                    if let Some(encoded) = build_query_string(query) {
+                        path = format!("{}?{}", path, encoded);
+                    }
+                }
+            }
             let status = fixture.expected_response.status_code;
             let body_literal = value_to_php(
                 fixture
@@ -152,4 +159,30 @@ fn string_map_to_php(map: Option<&std::collections::HashMap<String, String>>) ->
         }
     }
     format!("[{}]", parts.join(", "))
+}
+
+fn build_query_string(query: &std::collections::HashMap<String, serde_json::Value>) -> Option<String> {
+    if query.is_empty() {
+        return None;
+    }
+    let mut parts = Vec::new();
+    for (key, value) in query {
+        match value {
+            serde_json::Value::Array(items) => {
+                for item in items {
+                    parts.push(format!(
+                        "{}={}",
+                        urlencoding::encode(key),
+                        urlencoding::encode(&item.to_string())
+                    ));
+                }
+            }
+            _ => parts.push(format!(
+                "{}={}",
+                urlencoding::encode(key),
+                urlencoding::encode(&value.to_string())
+            )),
+        }
+    }
+    Some(parts.join("&"))
 }
