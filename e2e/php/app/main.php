@@ -237,7 +237,7 @@ final class AppFactory
         class Handlercompression_1 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response(['message' => 'Compressed payload', 'payload' => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'], 200, ['vary' => 'Accept-Encoding', 'content-encoding' => 'gzip']);
+                $response = new Response(['message' => 'Compressed payload', 'payload' => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'], 200, ['content-encoding' => 'gzip', 'vary' => 'Accept-Encoding']);
                 return $response;
             }
         }
@@ -342,7 +342,7 @@ final class AppFactory
         class Handlercontent_types_10 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response('binary_data_placeholder', 200, ['content-type' => 'application/octet-stream', 'content-disposition' => 'attachment; filename=file.bin']);
+                $response = new Response('binary_data_placeholder', 200, ['content-disposition' => 'attachment; filename=file.bin', 'content-type' => 'application/octet-stream']);
                 return $response;
             }
         }
@@ -707,7 +707,7 @@ final class AppFactory
         class Handlercors_3 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response(null, 204, ['Access-Control-Allow-Headers' => 'Content-Type', 'Access-Control-Max-Age' => '3600', 'Access-Control-Allow-Methods' => 'POST', 'Access-Control-Allow-Origin' => 'https://example.com']);
+                $response = new Response(null, 204, ['Access-Control-Allow-Headers' => 'Content-Type', 'Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Allow-Methods' => 'POST', 'Access-Control-Max-Age' => '3600']);
                 return $response;
             }
         }
@@ -716,7 +716,7 @@ final class AppFactory
         class Handlercors_4 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response(null, 200, ['X-Request-Id' => 'abc123', 'Access-Control-Expose-Headers' => 'X-Total-Count, X-Request-Id', 'X-Total-Count' => '42', 'Access-Control-Allow-Origin' => 'https://example.com']);
+                $response = new Response(null, 200, ['X-Request-Id' => 'abc123', 'Access-Control-Allow-Origin' => 'https://example.com', 'X-Total-Count' => '42', 'Access-Control-Expose-Headers' => 'X-Total-Count, X-Request-Id']);
                 return $response;
             }
         }
@@ -734,7 +734,7 @@ final class AppFactory
         class Handlercors_6 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response(null, 204, ['Access-Control-Allow-Private-Network' => 'true', 'Access-Control-Allow-Origin' => 'https://public.example.com', 'Vary' => 'Origin', 'Access-Control-Allow-Methods' => 'GET, POST']);
+                $response = new Response(null, 204, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://public.example.com', 'Access-Control-Allow-Methods' => 'GET, POST', 'Access-Control-Allow-Private-Network' => 'true']);
                 return $response;
             }
         }
@@ -743,7 +743,7 @@ final class AppFactory
         class Handlercors_7 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response(['data' => 'cacheable resource'], 200, ['Access-Control-Allow-Origin' => 'https://app.example.com', 'Vary' => 'Origin', 'Cache-Control' => 'public, max-age=3600']);
+                $response = new Response(['data' => 'cacheable resource'], 200, ['Vary' => 'Origin', 'Cache-Control' => 'public, max-age=3600', 'Access-Control-Allow-Origin' => 'https://app.example.com']);
                 return $response;
             }
         }
@@ -752,7 +752,7 @@ final class AppFactory
         class Handlercors_8 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response(['data' => 'resource data'], 200, ['Access-Control-Allow-Origin' => 'https://admin.example.com', 'Vary' => 'Origin']);
+                $response = new Response(['data' => 'resource data'], 200, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://admin.example.com']);
                 return $response;
             }
         }
@@ -770,7 +770,7 @@ final class AppFactory
         class Handlercors_10 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response(null, 204, ['Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE', 'Vary' => 'Origin', 'Access-Control-Max-Age' => '3600', 'Access-Control-Allow-Origin' => 'https://app.example.com']);
+                $response = new Response(null, 204, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Max-Age' => '3600', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE']);
                 return $response;
             }
         }
@@ -779,7 +779,7 @@ final class AppFactory
         class Handlercors_11 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response(null, 204, ['Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Allow-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE', 'Access-Control-Max-Age' => '3600', 'Vary' => 'Origin']);
+                $response = new Response(null, 204, ['Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE', 'Access-Control-Allow-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Max-Age' => '3600', 'Vary' => 'Origin']);
                 return $response;
             }
         }
@@ -788,7 +788,7 @@ final class AppFactory
         class Handlercors_12 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response(null, 200, ['Access-Control-Allow-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS', 'Access-Control-Max-Age' => '600', 'Access-Control-Allow-Origin' => 'https://example.com']);
+                $response = new Response(null, 200, ['Access-Control-Allow-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Max-Age' => '600', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS', 'Access-Control-Allow-Origin' => 'https://example.com']);
                 return $response;
             }
         }
@@ -797,7 +797,7 @@ final class AppFactory
         class Handlercors_13 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response(['data' => 'resource data'], 200, ['Access-Control-Allow-Origin' => 'https://subdomain.example.com', 'Vary' => 'Origin']);
+                $response = new Response(['data' => 'resource data'], 200, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://subdomain.example.com']);
                 return $response;
             }
         }
@@ -833,7 +833,7 @@ final class AppFactory
         class Handlercors_17 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response(['username' => 'john'], 200, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Allow-Credentials' => 'true']);
+                $response = new Response(['username' => 'john'], 200, ['Access-Control-Allow-Origin' => 'https://app.example.com', 'Vary' => 'Origin', 'Access-Control-Allow-Credentials' => 'true']);
                 return $response;
             }
         }
@@ -842,7 +842,7 @@ final class AppFactory
         class Handlercors_18 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response(['items' => []], 200, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://example.com']);
+                $response = new Response(['items' => []], 200, ['Access-Control-Allow-Origin' => 'https://example.com', 'Vary' => 'Origin']);
                 return $response;
             }
         }
@@ -1021,7 +1021,7 @@ final class AppFactory
     public static function create_edge_cases(): App
     {
         $app = new App();
-        $app = $app->addRoute('GET', '/search', new Handleredge_cases_1());
+        $app = $app->addRoute('GET', '/search?term=%22caf%C3%A9%22', new Handleredge_cases_1());
         class Handleredge_cases_1 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -1030,7 +1030,7 @@ final class AppFactory
             }
         }
 
-        $app = $app->addRoute('GET', '/search?term=hi%20there', new Handleredge_cases_2());
+        $app = $app->addRoute('GET', '/search?term=hi%20there?term=%22hi%20there%22', new Handleredge_cases_2());
         class Handleredge_cases_2 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -1039,7 +1039,7 @@ final class AppFactory
             }
         }
 
-        $app = $app->addRoute('GET', '/items?filter=', new Handleredge_cases_3());
+        $app = $app->addRoute('GET', '/items?filter=?filter=%22%22', new Handleredge_cases_3());
         class Handleredge_cases_3 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -1048,7 +1048,7 @@ final class AppFactory
             }
         }
 
-        $app = $app->addRoute('GET', '/items', new Handleredge_cases_4());
+        $app = $app->addRoute('GET', '/items?id=%229007199254740991%22', new Handleredge_cases_4());
         class Handleredge_cases_4 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -1120,7 +1120,7 @@ final class AppFactory
             }
         }
 
-        $app = $app->addRoute('GET', '/data', new Handleredge_cases_12());
+        $app = $app->addRoute('GET', '/data?value=%220123%22', new Handleredge_cases_12());
         class Handleredge_cases_12 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -1543,7 +1543,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         class Handlerhttp_methods_4 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response(null, 200, ['Content-Type' => 'application/json', 'Content-Length' => '85']);
+                $response = new Response(null, 200, ['Content-Length' => '85', 'Content-Type' => 'application/json']);
                 return $response;
             }
         }
@@ -1552,7 +1552,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         class Handlerhttp_methods_5 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response(null, 200, ['Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS', 'Access-Control-Allow-Headers' => 'Content-Type', 'Access-Control-Max-Age' => '86400', 'Access-Control-Allow-Origin' => 'https://example.com']);
+                $response = new Response(null, 200, ['Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS', 'Access-Control-Allow-Headers' => 'Content-Type', 'Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Max-Age' => '86400']);
                 return $response;
             }
         }
@@ -1842,7 +1842,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('POST', '/items/?limit=10', new Handlerjson_bodies_25());
+        $app = $app->addRoute('POST', '/items/?limit=10?limit=10', new Handlerjson_bodies_25());
         class Handlerjson_bodies_25 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2086,7 +2086,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         class Handlerlifecycle_hooks_2 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response(['action' => 'update_profile', 'message' => 'Action completed successfully', 'request_id' => '.*', 'user_id' => 'user-123'], 200, ['X-Request-ID' => '.*', 'X-Frame-Options' => 'DENY', 'X-Response-Time' => '.*ms', 'X-Content-Type-Options' => 'nosniff']);
+                $response = new Response(['action' => 'update_profile', 'message' => 'Action completed successfully', 'request_id' => '.*', 'user_id' => 'user-123'], 200, ['X-Response-Time' => '.*ms', 'X-Content-Type-Options' => 'nosniff', 'X-Request-ID' => '.*', 'X-Frame-Options' => 'DENY']);
                 return $response;
             }
         }
@@ -2122,7 +2122,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         class Handlerlifecycle_hooks_6 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response(['message' => 'Response with security headers'], 200, ['Strict-Transport-Security' => 'max-age=31536000; includeSubDomains', 'X-Content-Type-Options' => 'nosniff', 'X-XSS-Protection' => '1; mode=block', 'X-Frame-Options' => 'DENY']);
+                $response = new Response(['message' => 'Response with security headers'], 200, ['X-XSS-Protection' => '1; mode=block', 'X-Content-Type-Options' => 'nosniff', 'X-Frame-Options' => 'DENY', 'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains']);
                 return $response;
             }
         }
@@ -2730,7 +2730,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
     public static function create_query_params(): App
     {
         $app = new App();
-        $app = $app->addRoute('GET', '/items/negative', new Handlerquery_params_1());
+        $app = $app->addRoute('GET', '/items/negative?offset=%22-10%22', new Handlerquery_params_1());
         class Handlerquery_params_1 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2739,7 +2739,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/stats', new Handlerquery_params_2());
+        $app = $app->addRoute('GET', '/stats?threshold=%221.5e-3%22', new Handlerquery_params_2());
         class Handlerquery_params_2 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2748,7 +2748,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/search', new Handlerquery_params_3());
+        $app = $app->addRoute('GET', '/search?term=%22foo%22', new Handlerquery_params_3());
         class Handlerquery_params_3 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2757,7 +2757,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/search', new Handlerquery_params_4());
+        $app = $app->addRoute('GET', '/search?term=%22ab%22', new Handlerquery_params_4());
         class Handlerquery_params_4 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2766,7 +2766,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/search', new Handlerquery_params_5());
+        $app = $app->addRoute('GET', '/search?term=%22this_is_way_too_long%22', new Handlerquery_params_5());
         class Handlerquery_params_5 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2775,7 +2775,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/subscribe', new Handlerquery_params_6());
+        $app = $app->addRoute('GET', '/subscribe?email=%22user%40example.com%22', new Handlerquery_params_6());
         class Handlerquery_params_6 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2784,7 +2784,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/subscribe', new Handlerquery_params_7());
+        $app = $app->addRoute('GET', '/subscribe?email=%22invalid-email%22', new Handlerquery_params_7());
         class Handlerquery_params_7 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2793,7 +2793,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/items', new Handlerquery_params_8());
+        $app = $app->addRoute('GET', '/items?limit=%225%22', new Handlerquery_params_8());
         class Handlerquery_params_8 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2802,7 +2802,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/items', new Handlerquery_params_9());
+        $app = $app->addRoute('GET', '/items?limit=%220%22', new Handlerquery_params_9());
         class Handlerquery_params_9 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2811,7 +2811,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/items', new Handlerquery_params_10());
+        $app = $app->addRoute('GET', '/items?offset=%220%22', new Handlerquery_params_10());
         class Handlerquery_params_10 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2820,7 +2820,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/items', new Handlerquery_params_11());
+        $app = $app->addRoute('GET', '/items?limit=%22100%22', new Handlerquery_params_11());
         class Handlerquery_params_11 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2829,7 +2829,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/items', new Handlerquery_params_12());
+        $app = $app->addRoute('GET', '/items?limit=%22101%22', new Handlerquery_params_12());
         class Handlerquery_params_12 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2838,7 +2838,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/items', new Handlerquery_params_13());
+        $app = $app->addRoute('GET', '/items?ids=%221%22&ids=%222%22&ids=%223%22', new Handlerquery_params_13());
         class Handlerquery_params_13 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2847,7 +2847,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/items', new Handlerquery_params_14());
+        $app = $app->addRoute('GET', '/items?ids=%221%22', new Handlerquery_params_14());
         class Handlerquery_params_14 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2856,7 +2856,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/items', new Handlerquery_params_15());
+        $app = $app->addRoute('GET', '/items?tags=%22a%22&tags=%22b%22&tags=%22c%22&tags=%22d%22&tags=%22e%22&tags=%22f%22', new Handlerquery_params_15());
         class Handlerquery_params_15 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2865,7 +2865,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/items', new Handlerquery_params_16());
+        $app = $app->addRoute('GET', '/items?active=%22%22', new Handlerquery_params_16());
         class Handlerquery_params_16 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2874,7 +2874,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/subscribe', new Handlerquery_params_17());
+        $app = $app->addRoute('GET', '/subscribe?email=%22user%40example.com%22', new Handlerquery_params_17());
         class Handlerquery_params_17 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2883,7 +2883,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/subscribe', new Handlerquery_params_18());
+        $app = $app->addRoute('GET', '/subscribe?email=%22not-an-email%22', new Handlerquery_params_18());
         class Handlerquery_params_18 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2892,7 +2892,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/network', new Handlerquery_params_19());
+        $app = $app->addRoute('GET', '/network?ip=%22192.168.1.1%22', new Handlerquery_params_19());
         class Handlerquery_params_19 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2901,7 +2901,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/network', new Handlerquery_params_20());
+        $app = $app->addRoute('GET', '/network?ip=%22999.999.999.999%22', new Handlerquery_params_20());
         class Handlerquery_params_20 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2910,7 +2910,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/network/ipv6', new Handlerquery_params_21());
+        $app = $app->addRoute('GET', '/network/ipv6?ip=%222001%3A0db8%3A85a3%3A0000%3A0000%3A8a2e%3A0370%3A7334%22', new Handlerquery_params_21());
         class Handlerquery_params_21 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2919,7 +2919,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/redirect', new Handlerquery_params_22());
+        $app = $app->addRoute('GET', '/redirect?url=%22https%3A%2F%2Fexample.com%2Fpath%3Fquery%3Dvalue%22', new Handlerquery_params_22());
         class Handlerquery_params_22 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2928,7 +2928,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/redirect', new Handlerquery_params_23());
+        $app = $app->addRoute('GET', '/redirect?url=%22not%20a%20uri%22', new Handlerquery_params_23());
         class Handlerquery_params_23 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2937,7 +2937,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/dns', new Handlerquery_params_24());
+        $app = $app->addRoute('GET', '/dns?host=%22api.example.com%22', new Handlerquery_params_24());
         class Handlerquery_params_24 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2946,7 +2946,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/items', new Handlerquery_params_25());
+        $app = $app->addRoute('GET', '/items?quantity=%2215%22', new Handlerquery_params_25());
         class Handlerquery_params_25 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2955,7 +2955,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/items', new Handlerquery_params_26());
+        $app = $app->addRoute('GET', '/items?quantity=%2217%22', new Handlerquery_params_26());
         class Handlerquery_params_26 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2964,7 +2964,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/items', new Handlerquery_params_27());
+        $app = $app->addRoute('GET', '/items?ids=%221%22&ids=%222%22&ids=%223%22&ids=%224%22', new Handlerquery_params_27());
         class Handlerquery_params_27 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2973,7 +2973,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/items', new Handlerquery_params_28());
+        $app = $app->addRoute('GET', '/items?ids=%221%22&ids=%222%22&ids=%222%22&ids=%223%22', new Handlerquery_params_28());
         class Handlerquery_params_28 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2982,7 +2982,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/items?tags=python|rust|typescript', new Handlerquery_params_29());
+        $app = $app->addRoute('GET', '/items?tags=python|rust|typescript?tags=%22python%7Crust%7Ctypescript%22', new Handlerquery_params_29());
         class Handlerquery_params_29 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -2991,7 +2991,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/items?colors=red;green;blue', new Handlerquery_params_30());
+        $app = $app->addRoute('GET', '/items?colors=red;green;blue?colors=%22red%3Bgreen%3Bblue%22', new Handlerquery_params_30());
         class Handlerquery_params_30 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3000,7 +3000,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/search?keywords=rust%20web%20framework', new Handlerquery_params_31());
+        $app = $app->addRoute('GET', '/search?keywords=rust%20web%20framework?keywords=%22rust%20web%20framework%22', new Handlerquery_params_31());
         class Handlerquery_params_31 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3018,7 +3018,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/list-default', new Handlerquery_params_33());
+        $app = $app->addRoute('GET', '/query/list-default?tags=%22apple%22', new Handlerquery_params_33());
         class Handlerquery_params_33 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3027,7 +3027,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/bool', new Handlerquery_params_34());
+        $app = $app->addRoute('GET', '/query/bool?flag=%221%22', new Handlerquery_params_34());
         class Handlerquery_params_34 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3036,7 +3036,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/bool', new Handlerquery_params_35());
+        $app = $app->addRoute('GET', '/query/bool?flag=%22true%22', new Handlerquery_params_35());
         class Handlerquery_params_35 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3045,7 +3045,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/date', new Handlerquery_params_36());
+        $app = $app->addRoute('GET', '/query/date?event_date=%222024-01-15%22', new Handlerquery_params_36());
         class Handlerquery_params_36 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3054,7 +3054,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/datetime', new Handlerquery_params_37());
+        $app = $app->addRoute('GET', '/query/datetime?timestamp=%222024-01-15T10%3A30%3A00Z%22', new Handlerquery_params_37());
         class Handlerquery_params_37 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3063,7 +3063,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/enum', new Handlerquery_params_38());
+        $app = $app->addRoute('GET', '/query/enum?model=%22vgg16%22', new Handlerquery_params_38());
         class Handlerquery_params_38 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3072,7 +3072,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/enum', new Handlerquery_params_39());
+        $app = $app->addRoute('GET', '/query/enum?model=%22alexnet%22', new Handlerquery_params_39());
         class Handlerquery_params_39 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3081,7 +3081,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/float-ge', new Handlerquery_params_40());
+        $app = $app->addRoute('GET', '/query/float-ge?price=%220.01%22', new Handlerquery_params_40());
         class Handlerquery_params_40 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3090,7 +3090,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/int-ge', new Handlerquery_params_41());
+        $app = $app->addRoute('GET', '/query/int-ge?value=%2210%22', new Handlerquery_params_41());
         class Handlerquery_params_41 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3099,7 +3099,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/int-gt', new Handlerquery_params_42());
+        $app = $app->addRoute('GET', '/query/int-gt?value=%221%22', new Handlerquery_params_42());
         class Handlerquery_params_42 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3108,7 +3108,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/int-le', new Handlerquery_params_43());
+        $app = $app->addRoute('GET', '/query/int-le?value=%22100%22', new Handlerquery_params_43());
         class Handlerquery_params_43 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3117,7 +3117,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/int-lt', new Handlerquery_params_44());
+        $app = $app->addRoute('GET', '/query/int-lt?value=%2249%22', new Handlerquery_params_44());
         class Handlerquery_params_44 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3135,7 +3135,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/int/default', new Handlerquery_params_46());
+        $app = $app->addRoute('GET', '/query/int/default?query=50', new Handlerquery_params_46());
         class Handlerquery_params_46 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3144,7 +3144,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/list', new Handlerquery_params_47());
+        $app = $app->addRoute('GET', '/query/list?device_ids=1&device_ids=2', new Handlerquery_params_47());
         class Handlerquery_params_47 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3153,7 +3153,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/items/', new Handlerquery_params_48());
+        $app = $app->addRoute('GET', '/items/?q=%22foo%22&q=%22bar%22', new Handlerquery_params_48());
         class Handlerquery_params_48 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3180,7 +3180,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/multi-type', new Handlerquery_params_51());
+        $app = $app->addRoute('GET', '/query/multi-type?active=%22true%22&age=%2230%22&name=%22john%22&score=%2295.5%22', new Handlerquery_params_51());
         class Handlerquery_params_51 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3216,7 +3216,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/optional', new Handlerquery_params_55());
+        $app = $app->addRoute('GET', '/query/optional?query=%22baz%22', new Handlerquery_params_55());
         class Handlerquery_params_55 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3225,7 +3225,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/basic', new Handlerquery_params_56());
+        $app = $app->addRoute('GET', '/query/basic?name=%22hello%20world%22', new Handlerquery_params_56());
         class Handlerquery_params_56 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3234,7 +3234,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/basic', new Handlerquery_params_57());
+        $app = $app->addRoute('GET', '/query/basic?name=%22test%26value%3D123%22', new Handlerquery_params_57());
         class Handlerquery_params_57 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3243,7 +3243,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/test', new Handlerquery_params_58());
+        $app = $app->addRoute('GET', '/test?special=%22%26%40A.ac%22&email=%22x%40test.com%22', new Handlerquery_params_58());
         class Handlerquery_params_58 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3252,7 +3252,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/int', new Handlerquery_params_59());
+        $app = $app->addRoute('GET', '/query/int?query=%2242.5%22', new Handlerquery_params_59());
         class Handlerquery_params_59 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3261,7 +3261,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/int', new Handlerquery_params_60());
+        $app = $app->addRoute('GET', '/query/int?query=%22baz%22', new Handlerquery_params_60());
         class Handlerquery_params_60 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3279,7 +3279,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/int', new Handlerquery_params_62());
+        $app = $app->addRoute('GET', '/query/int?query=42', new Handlerquery_params_62());
         class Handlerquery_params_62 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3297,7 +3297,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query', new Handlerquery_params_64());
+        $app = $app->addRoute('GET', '/query?query=%22baz%22', new Handlerquery_params_64());
         class Handlerquery_params_64 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3306,7 +3306,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/str-max-length', new Handlerquery_params_65());
+        $app = $app->addRoute('GET', '/query/str-max-length?name=%22this_is_way_too_long%22', new Handlerquery_params_65());
         class Handlerquery_params_65 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3315,7 +3315,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/str-min-length', new Handlerquery_params_66());
+        $app = $app->addRoute('GET', '/query/str-min-length?name=%22ab%22', new Handlerquery_params_66());
         class Handlerquery_params_66 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3324,7 +3324,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/pattern', new Handlerquery_params_67());
+        $app = $app->addRoute('GET', '/query/pattern?code=%22abc123%22', new Handlerquery_params_67());
         class Handlerquery_params_67 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3333,7 +3333,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/items/', new Handlerquery_params_68());
+        $app = $app->addRoute('GET', '/items/?item_query=%22nonregexquery%22', new Handlerquery_params_68());
         class Handlerquery_params_68 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3342,7 +3342,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/items/', new Handlerquery_params_69());
+        $app = $app->addRoute('GET', '/items/?item_query=%22fixedquery%22', new Handlerquery_params_69());
         class Handlerquery_params_69 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3351,7 +3351,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/uuid', new Handlerquery_params_70());
+        $app = $app->addRoute('GET', '/query/uuid?item_id=%22not-a-uuid%22', new Handlerquery_params_70());
         class Handlerquery_params_70 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3360,7 +3360,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
             }
         }
 
-        $app = $app->addRoute('GET', '/query/uuid', new Handlerquery_params_71());
+        $app = $app->addRoute('GET', '/query/uuid?item_id=%22c892496f-b1fd-4b91-bdb8-b46f92df1716%22', new Handlerquery_params_71());
         class Handlerquery_params_71 implements HandlerInterface {
             public function handle(Request $request): Response
             {
@@ -3535,7 +3535,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         class Handlerstatus_codes_6 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response('binary_data_1024_bytes', 206, ['Content-Range' => 'bytes 0-1023/5000', 'Accept-Ranges' => 'bytes', 'Content-Type' => 'application/pdf', 'Content-Length' => '1024']);
+                $response = new Response('binary_data_1024_bytes', 206, ['Content-Type' => 'application/pdf', 'Content-Range' => 'bytes 0-1023/5000', 'Content-Length' => '1024', 'Accept-Ranges' => 'bytes']);
                 return $response;
             }
         }
@@ -3670,7 +3670,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         class Handlerstatus_codes_21 implements HandlerInterface {
             public function handle(Request $request): Response
             {
-                $response = new Response(['detail' => 'Rate limit exceeded. Try again in 60 seconds.'], 429, ['X-RateLimit-Remaining' => '0', 'X-RateLimit-Limit' => '100', 'Retry-After' => '60', 'X-RateLimit-Reset' => '1609459200']);
+                $response = new Response(['detail' => 'Rate limit exceeded. Try again in 60 seconds.'], 429, ['X-RateLimit-Reset' => '1609459200', 'Retry-After' => '60', 'X-RateLimit-Limit' => '100', 'X-RateLimit-Remaining' => '0']);
                 return $response;
             }
         }
