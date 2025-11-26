@@ -30,28 +30,35 @@ final class TestClient
      */
     public function request(string $method, string $path, array $options = []): Response
     {
-        $handler = $this->app->findHandler($method, $path);
-        if ($handler === null) {
-            throw new RuntimeException(\sprintf('No handler registered for %s %s', $method, $path));
-        }
-
         /** @var array<string, string> $headers */
         $headers = \is_array($options['headers'] ?? null) ? $options['headers'] : [];
         /** @var array<string, string> $cookies */
         $cookies = \is_array($options['cookies'] ?? null) ? $options['cookies'] : [];
-        $body = $options['body'] ?? null;
+        /** @var array<string, mixed> $files */
+        $files = \is_array($options['files'] ?? null) ? $options['files'] : [];
         $queryParams = $this->parseQueryParams($path);
+        $pathOnly = \explode('?', $path, 2)[0];
+        $body = $options['body'] ?? null;
+        if ($body === null && $files !== []) {
+            $body = $files;
+        }
 
         $request = new Request(
             method: \strtoupper($method),
-            path: $path,
+            path: $pathOnly,
             body: $body,
             headers: $headers,
             cookies: $cookies,
             queryParams: $queryParams,
             pathParams: [],
+            files: $files,
             dependencies: null,
         );
+
+        $handler = $this->app->findHandler($request);
+        if ($handler === null) {
+            throw new RuntimeException(\sprintf('No handler registered for %s %s', $method, $path));
+        }
 
         return $handler->handle($request);
     }
@@ -82,18 +89,20 @@ final class TestClient
         }
 
         $result = [];
-        \parse_str($parsed, $output);
-        foreach ($output as $key => $value) {
-            if (\is_array($value)) {
-                $coerced = [];
-                foreach ($value as $item) {
-                    if (\is_scalar($item) || $item === null) {
-                        $coerced[] = (string) $item;
-                    }
-                }
-                $result[(string) $key] = $coerced;
-            } elseif (\is_scalar($value)) {
-                $result[(string) $key] = [(string) $value];
+        foreach (\explode('&', $parsed) as $pair) {
+            if ($pair === '') {
+                continue;
+            }
+            [$key, $value] = \array_pad(\explode('=', $pair, 2), 2, '');
+            $decodedKey = \urldecode($key);
+            $decodedValue = \urldecode($value);
+            if ($decodedKey === '') {
+                continue;
+            }
+            if (\array_key_exists($decodedKey, $result)) {
+                $result[$decodedKey][] = $decodedValue;
+            } else {
+                $result[$decodedKey] = [$decodedValue];
             }
         }
 

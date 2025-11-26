@@ -12,7 +12,7 @@ final class GeneratedTest extends TestCase
 {
     public function test_auth_api_key_authentication_invalid_key(): void
     {
-        $app = AppFactory::create_auth();
+        $app = AppFactory::create_auth_api_key_authentication_invalid_key_1();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/data', ['headers' => ['X-API-Key' => 'invalid_key_12345']]);
 
@@ -22,7 +22,7 @@ final class GeneratedTest extends TestCase
 
     public function test_auth_api_key_authentication_missing_header(): void
     {
-        $app = AppFactory::create_auth();
+        $app = AppFactory::create_auth_api_key_authentication_missing_header_2();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/data', []);
 
@@ -32,7 +32,7 @@ final class GeneratedTest extends TestCase
 
     public function test_auth_api_key_authentication_valid_key(): void
     {
-        $app = AppFactory::create_auth();
+        $app = AppFactory::create_auth_api_key_authentication_valid_key_3();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/data', ['headers' => ['X-API-Key' => 'sk_test_123456']]);
 
@@ -42,7 +42,7 @@ final class GeneratedTest extends TestCase
 
     public function test_auth_api_key_in_query_parameter(): void
     {
-        $app = AppFactory::create_auth();
+        $app = AppFactory::create_auth_api_key_in_query_parameter_4();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/data?api_key=sk_test_123456', []);
 
@@ -52,7 +52,7 @@ final class GeneratedTest extends TestCase
 
     public function test_auth_api_key_rotation_old_key_still_valid(): void
     {
-        $app = AppFactory::create_auth();
+        $app = AppFactory::create_auth_api_key_rotation_old_key_still_valid_5();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/data', ['headers' => ['X-API-Key' => 'sk_test_old_123456']]);
 
@@ -62,7 +62,7 @@ final class GeneratedTest extends TestCase
 
     public function test_auth_api_key_with_custom_header_name(): void
     {
-        $app = AppFactory::create_auth();
+        $app = AppFactory::create_auth_api_key_with_custom_header_name_6();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/data', ['headers' => ['X-API-Token' => 'sk_test_123456']]);
 
@@ -72,7 +72,7 @@ final class GeneratedTest extends TestCase
 
     public function test_auth_bearer_token_without_prefix(): void
     {
-        $app = AppFactory::create_auth();
+        $app = AppFactory::create_auth_bearer_token_without_prefix_7();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/protected', ['headers' => ['Authorization' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.8yXqZ9jKCR0BwqJc7pN_QvD3mYLxHfWzUeIaGkTnOsA']]);
 
@@ -82,7 +82,7 @@ final class GeneratedTest extends TestCase
 
     public function test_auth_jwt_authentication_expired_token(): void
     {
-        $app = AppFactory::create_auth();
+        $app = AppFactory::create_auth_jwt_authentication_expired_token_8();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/protected/user', ['headers' => ['Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoxNjAwMDAwMDAwLCJpYXQiOjE1OTAwMDAwMDB9.n4oBw9XuO2aAJWi1e4Bz9Y_m2iEyJHGAODcetNuwYFo']]);
 
@@ -92,7 +92,7 @@ final class GeneratedTest extends TestCase
 
     public function test_auth_jwt_authentication_invalid_audience(): void
     {
-        $app = AppFactory::create_auth();
+        $app = AppFactory::create_auth_jwt_authentication_invalid_audience_9();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/protected/user', ['headers' => ['Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNTM0MDIzMDA3OTk5LCJpYXQiOjE3MzEyNTIwMDAsImF1ZCI6WyJodHRwczovL3dyb25nLXNlcnZpY2UuY29tIl19.YR2a9fSJjhen7ksYFI2djSBSC7Pc29FDCloBGhkj3kU']]);
 
@@ -102,7 +102,7 @@ final class GeneratedTest extends TestCase
 
     public function test_auth_jwt_authentication_invalid_signature(): void
     {
-        $app = AppFactory::create_auth();
+        $app = AppFactory::create_auth_jwt_authentication_invalid_signature_10();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/protected/user', ['headers' => ['Authorization' => 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNTM0MDIzMDA3OTksImlhdCI6MTczMTI1MjAwMH0.invalid_signature_here']]);
 
@@ -112,7 +112,7 @@ final class GeneratedTest extends TestCase
 
     public function test_auth_jwt_authentication_missing_authorization_header(): void
     {
-        $app = AppFactory::create_auth();
+        $app = AppFactory::create_auth_jwt_authentication_missing_authorization_header_11();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/protected/user', []);
 
@@ -122,7 +122,7 @@ final class GeneratedTest extends TestCase
 
     public function test_auth_jwt_authentication_valid_token(): void
     {
-        $app = AppFactory::create_auth();
+        $app = AppFactory::create_auth_jwt_authentication_valid_token_12();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/protected/user', ['headers' => ['Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg']]);
 
@@ -132,7 +132,7 @@ final class GeneratedTest extends TestCase
 
     public function test_auth_jwt_invalid_issuer(): void
     {
-        $app = AppFactory::create_auth();
+        $app = AppFactory::create_auth_jwt_invalid_issuer_13();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/protected', ['headers' => ['Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2V2aWwuY29tIn0.mbL5L04_hpaaiz0SPABap6ZWfBLu18aiexBjzwQ1nnA']]);
 
@@ -142,7 +142,7 @@ final class GeneratedTest extends TestCase
 
     public function test_auth_jwt_malformed_token_format(): void
     {
-        $app = AppFactory::create_auth();
+        $app = AppFactory::create_auth_jwt_malformed_token_format_14();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/protected', ['headers' => ['Authorization' => 'Bearer invalid.token']]);
 
@@ -152,7 +152,7 @@ final class GeneratedTest extends TestCase
 
     public function test_auth_jwt_missing_required_custom_claims(): void
     {
-        $app = AppFactory::create_auth();
+        $app = AppFactory::create_auth_jwt_missing_required_custom_claims_15();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/admin', ['headers' => ['Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg']]);
 
@@ -162,7 +162,7 @@ final class GeneratedTest extends TestCase
 
     public function test_auth_jwt_not_before_claim_in_future(): void
     {
-        $app = AppFactory::create_auth();
+        $app = AppFactory::create_auth_jwt_not_before_claim_in_future_16();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/protected', ['headers' => ['Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsIm5iZiI6MjYyNjc4Mzk0NiwiYXVkIjpbImh0dHBzOi8vYXBpLmV4YW1wbGUuY29tIl0sImlzcyI6Imh0dHBzOi8vYXV0aC5leGFtcGxlLmNvbSJ9.hG4I76_3kJfsbJ_jmxoP1NSYnkcqdyBFcPpdo-jYU4E']]);
 
@@ -172,7 +172,7 @@ final class GeneratedTest extends TestCase
 
     public function test_auth_jwt_with_multiple_audiences(): void
     {
-        $app = AppFactory::create_auth();
+        $app = AppFactory::create_auth_jwt_with_multiple_audiences_17();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/protected', ['headers' => ['Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSIsImh0dHBzOi8vYWRtaW4uZXhhbXBsZS5jb20iXSwiaXNzIjoiaHR0cHM6Ly9hdXRoLmV4YW1wbGUuY29tIn0.9MBL_XccGXfu9cDUnCpQruDMOl2hHYydzeGn-20dQOs']]);
 
@@ -182,9 +182,9 @@ final class GeneratedTest extends TestCase
 
     public function test_auth_multiple_authentication_schemes_jwt_precedence(): void
     {
-        $app = AppFactory::create_auth();
+        $app = AppFactory::create_auth_multiple_authentication_schemes_jwt_precedence_18();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/api/data', ['headers' => ['Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg', 'X-API-Key' => 'sk_test_123456']]);
+        $response = $client->request('GET', '/api/data', ['headers' => ['X-API-Key' => 'sk_test_123456', 'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['auth_method' => 'jwt', 'message' => 'Access granted', 'user_id' => 'user123'], $response->body);
@@ -192,7 +192,7 @@ final class GeneratedTest extends TestCase
 
     public function test_background_background_event_logging(): void
     {
-        $app = AppFactory::create_background();
+        $app = AppFactory::create_background_background_event_logging_1();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/background/events', ['body' => ['event' => 'alpha']]);
 
@@ -202,7 +202,7 @@ final class GeneratedTest extends TestCase
 
     public function test_background_background_event_logging_second_payload(): void
     {
-        $app = AppFactory::create_background();
+        $app = AppFactory::create_background_background_event_logging_second_payload_2();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/background/events', ['body' => ['event' => 'beta']]);
 
@@ -212,7 +212,7 @@ final class GeneratedTest extends TestCase
 
     public function test_body_limits_body_over_limit_returns_413(): void
     {
-        $app = AppFactory::create_body_limits();
+        $app = AppFactory::create_body_limits_body_over_limit_returns_413_1();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/body-limit/over', ['body' => ['note' => 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx']]);
 
@@ -222,7 +222,7 @@ final class GeneratedTest extends TestCase
 
     public function test_body_limits_body_under_limit_succeeds(): void
     {
-        $app = AppFactory::create_body_limits();
+        $app = AppFactory::create_body_limits_body_under_limit_succeeds_2();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/body-limit/under', ['body' => ['note' => 'small']]);
 
@@ -232,7 +232,7 @@ final class GeneratedTest extends TestCase
 
     public function test_compression_compression_gzip_applied(): void
     {
-        $app = AppFactory::create_compression();
+        $app = AppFactory::create_compression_compression_gzip_applied_1();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/compression/gzip', ['headers' => ['Accept-Encoding' => 'gzip']]);
 
@@ -242,7 +242,7 @@ final class GeneratedTest extends TestCase
 
     public function test_compression_compression_payload_below_min_size_is_not_compressed(): void
     {
-        $app = AppFactory::create_compression();
+        $app = AppFactory::create_compression_compression_payload_below_min_size_is_not_compressed_2();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/compression/skip', ['headers' => ['Accept-Encoding' => 'gzip']]);
 
@@ -252,7 +252,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_13_json_with_charset_utf16(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_13_json_with_charset_utf16_1();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/data', ['headers' => ['Content-Type' => 'application/json; charset=utf-16'], 'body' => ['value' => 'test']]);
 
@@ -262,7 +262,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_14_content_type_case_insensitive(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_14_content_type_case_insensitive_2();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/data', ['headers' => ['Content-Type' => 'APPLICATION/JSON'], 'body' => ['name' => 'test']]);
 
@@ -272,7 +272,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_15_multipart_boundary_required(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_15_multipart_boundary_required_3();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/upload', ['headers' => ['Content-Type' => 'multipart/form-data']]);
 
@@ -282,7 +282,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_16_text_plain_not_accepted(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_16_text_plain_not_accepted_4();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/data', ['headers' => ['Content-Type' => 'text/plain'], 'body' => '{"data": "value"}']);
 
@@ -292,7 +292,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_17_vendor_json_accepted(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_17_vendor_json_accepted_5();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/api/v1/resource', ['headers' => ['Content-Type' => 'application/vnd.api+json'], 'body' => ['data' => 'value']]);
 
@@ -302,7 +302,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_18_content_type_with_multiple_params(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_18_content_type_with_multiple_params_6();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/data', ['headers' => ['Content-Type' => 'application/json; charset=utf-8; boundary=something'], 'body' => ['value' => 'test']]);
 
@@ -312,7 +312,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_19_missing_content_type_default_json(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_19_missing_content_type_default_json_7();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/data', ['body' => ['name' => 'test']]);
 
@@ -322,9 +322,9 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_20_content_length_mismatch(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_20_content_length_mismatch_8();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/data', ['headers' => ['Content-Type' => 'application/json', 'Content-Length' => '100'], 'body' => ['value' => 'short']]);
+        $response = $client->request('POST', '/data', ['headers' => ['Content-Length' => '100', 'Content-Type' => 'application/json'], 'body' => ['value' => 'short']]);
 
         $this->assertSame(400, $response->statusCode);
         $this->assertEquals(['error' => 'Content-Length header does not match actual body size'], $response->body);
@@ -332,7 +332,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_415_unsupported_media_type(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_415_unsupported_media_type_9();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/xml'], 'body' => '<?xml version="1.0"?><item><name>Item</name></item>']);
 
@@ -342,7 +342,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_binary_response_application_octet_stream(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_binary_response_application_octet_stream_10();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/download/file.bin', []);
 
@@ -352,7 +352,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_csv_response_text_csv(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_csv_response_text_csv_11();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/export/data.csv', []);
 
@@ -364,7 +364,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_content_negotiation_accept_header(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_content_negotiation_accept_header_12();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/accept-test/1', ['headers' => ['Accept' => 'application/json']]);
 
@@ -374,7 +374,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_html_response_text_html(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_html_response_text_html_13();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/html', []);
 
@@ -384,7 +384,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_jpeg_image_response_image_jpeg(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_jpeg_image_response_image_jpeg_14();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/images/photo.jpg', []);
 
@@ -394,7 +394,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_json_response_application_json(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_json_response_application_json_15();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/json', []);
 
@@ -404,7 +404,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_json_with_utf_8_charset(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_json_with_utf_8_charset_16();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/unicode', []);
 
@@ -414,7 +414,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_pdf_response_application_pdf(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_pdf_response_application_pdf_17();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/download/document.pdf', []);
 
@@ -424,7 +424,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_png_image_response_image_png(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_png_image_response_image_png_18();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/images/logo.png', []);
 
@@ -434,7 +434,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_plain_text_response_text_plain(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_plain_text_response_text_plain_19();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/text', []);
 
@@ -444,7 +444,7 @@ final class GeneratedTest extends TestCase
 
     public function test_content_types_xml_response_application_xml(): void
     {
-        $app = AppFactory::create_content_types();
+        $app = AppFactory::create_content_types_xml_response_application_xml_20();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/xml', []);
 
@@ -454,7 +454,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_24_cookie_samesite_strict(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_24_cookie_samesite_strict_1();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/secure', ['cookies' => ['session_id' => 'abc123xyz789']]);
 
@@ -464,7 +464,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_25_cookie_samesite_lax(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_25_cookie_samesite_lax_2();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/data', ['cookies' => ['tracking' => 'track123']]);
 
@@ -474,7 +474,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_26_cookie_secure_flag(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_26_cookie_secure_flag_3();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/secure', ['cookies' => ['auth_token' => 'secure_token_xyz']]);
 
@@ -484,7 +484,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_27_cookie_httponly_flag(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_27_cookie_httponly_flag_4();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/secure', ['cookies' => ['session' => 'session_abc123']]);
 
@@ -494,7 +494,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_apikey_cookie_authentication_missing(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_apikey_cookie_authentication_missing_5();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/users/me/auth', []);
 
@@ -504,7 +504,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_apikey_cookie_authentication_success(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_apikey_cookie_authentication_success_6();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/users/me', ['cookies' => ['key' => 'secret']]);
 
@@ -514,7 +514,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_cookie_regex_pattern_validation_fail(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_cookie_regex_pattern_validation_fail_7();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/cookies/pattern', ['cookies' => ['tracking_id' => 'invalid-format']]);
 
@@ -524,7 +524,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_cookie_regex_pattern_validation_success(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_cookie_regex_pattern_validation_success_8();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/cookies/pattern', ['cookies' => ['tracking_id' => 'ABC12345']]);
 
@@ -534,7 +534,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_cookie_validation_max_length_constraint_fail(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_cookie_validation_max_length_constraint_fail_9();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/cookies/validated', ['cookies' => ['session_id' => 'this_cookie_value_is_way_too_long']]);
 
@@ -544,7 +544,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_cookie_validation_min_length_constraint_success(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_cookie_validation_min_length_constraint_success_10();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/cookies/min-length', ['cookies' => ['token' => 'abc']]);
 
@@ -554,7 +554,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_cookie_validation_min_length_failure(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_cookie_validation_min_length_failure_11();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/', ['cookies' => ['tracking_id' => 'ab']]);
 
@@ -564,7 +564,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_multiple_cookies_success(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_multiple_cookies_success_12();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/', ['cookies' => ['fatebook_tracker' => 'tracker456', 'session_id' => 'session123', 'googall_tracker' => 'ga789']]);
 
@@ -574,7 +574,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_optional_apikey_cookie_missing(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_optional_apikey_cookie_missing_13();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/users/me', []);
 
@@ -584,7 +584,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_optional_cookie_parameter_missing(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_optional_cookie_parameter_missing_14();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/', []);
 
@@ -594,7 +594,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_optional_cookie_parameter_success(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_optional_cookie_parameter_success_15();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/', ['cookies' => ['ads_id' => 'abc123']]);
 
@@ -604,7 +604,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_required_cookie_missing(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_required_cookie_missing_16();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/cookies', ['cookies' => ['fatebook_tracker' => 'tracker456']]);
 
@@ -614,7 +614,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_response_delete_cookie(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_response_delete_cookie_17();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/cookies/delete', ['cookies' => ['session' => 'old_session_123']]);
 
@@ -624,7 +624,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_response_multiple_cookies(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_response_multiple_cookies_18();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/cookies/multiple', ['body' => ['session' => 'session123', 'user' => 'john']]);
 
@@ -634,7 +634,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_response_session_cookie_no_max_age(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_response_session_cookie_no_max_age_19();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/cookies/session', ['body' => ['value' => 'session_abc123']]);
 
@@ -644,7 +644,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_response_cookie_with_samesite_lax(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_response_cookie_with_samesite_lax_20();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/cookies/samesite-lax', ['body' => ['value' => 'lax_cookie']]);
 
@@ -654,7 +654,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_response_cookie_with_samesite_none(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_response_cookie_with_samesite_none_21();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/cookies/samesite-none', ['body' => ['value' => 'none_cookie']]);
 
@@ -664,7 +664,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_response_cookie_with_samesite_strict(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_response_cookie_with_samesite_strict_22();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/cookies/samesite-strict', ['body' => ['value' => 'strict_cookie']]);
 
@@ -674,7 +674,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_response_cookie_with_attributes(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_response_cookie_with_attributes_23();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/cookie/set', []);
 
@@ -684,7 +684,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_response_cookie_with_domain_attribute(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_response_cookie_with_domain_attribute_24();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/cookies/set-with-domain', ['body' => ['value' => 'domain_test']]);
 
@@ -694,7 +694,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_response_cookie_with_path_attribute(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_response_cookie_with_path_attribute_25();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/cookies/set-with-path', ['body' => ['value' => 'path_test']]);
 
@@ -704,7 +704,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cookies_response_set_cookie_basic(): void
     {
-        $app = AppFactory::create_cookies();
+        $app = AppFactory::create_cookies_response_set_cookie_basic_26();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/cookie/', []);
 
@@ -714,9 +714,9 @@ final class GeneratedTest extends TestCase
 
     public function test_cors_06_cors_preflight_method_not_allowed(): void
     {
-        $app = AppFactory::create_cors();
+        $app = AppFactory::create_cors_06_cors_preflight_method_not_allowed_1();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Headers' => 'Content-Type', 'Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'DELETE']]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Method' => 'DELETE', 'Access-Control-Request-Headers' => 'Content-Type', 'Origin' => 'https://example.com']]);
 
         $this->assertSame(403, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -724,9 +724,9 @@ final class GeneratedTest extends TestCase
 
     public function test_cors_07_cors_preflight_header_not_allowed(): void
     {
-        $app = AppFactory::create_cors();
+        $app = AppFactory::create_cors_07_cors_preflight_header_not_allowed_2();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Headers' => 'X-Custom-Header', 'Access-Control-Request-Method' => 'POST', 'Origin' => 'https://example.com']]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Method' => 'POST', 'Origin' => 'https://example.com', 'Access-Control-Request-Headers' => 'X-Custom-Header']]);
 
         $this->assertSame(403, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -734,9 +734,9 @@ final class GeneratedTest extends TestCase
 
     public function test_cors_08_cors_max_age(): void
     {
-        $app = AppFactory::create_cors();
+        $app = AppFactory::create_cors_08_cors_max_age_3();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'Content-Type', 'Origin' => 'https://example.com']]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Method' => 'POST', 'Origin' => 'https://example.com', 'Access-Control-Request-Headers' => 'Content-Type']]);
 
         $this->assertSame(204, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -744,7 +744,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cors_09_cors_expose_headers(): void
     {
-        $app = AppFactory::create_cors();
+        $app = AppFactory::create_cors_09_cors_expose_headers_4();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/data', ['headers' => ['Origin' => 'https://example.com']]);
 
@@ -754,7 +754,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cors_10_cors_origin_null(): void
     {
-        $app = AppFactory::create_cors();
+        $app = AppFactory::create_cors_10_cors_origin_null_5();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/data', ['headers' => ['Origin' => 'null']]);
 
@@ -764,9 +764,9 @@ final class GeneratedTest extends TestCase
 
     public function test_cors_cors_private_network_access(): void
     {
-        $app = AppFactory::create_cors();
+        $app = AppFactory::create_cors_cors_private_network_access_6();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/local-resource', ['headers' => ['Access-Control-Request-Method' => 'GET', 'Access-Control-Request-Private-Network' => 'true', 'Origin' => 'https://public.example.com']]);
+        $response = $client->request('OPTIONS', '/api/local-resource', ['headers' => ['Access-Control-Request-Method' => 'GET', 'Origin' => 'https://public.example.com', 'Access-Control-Request-Private-Network' => 'true']]);
 
         $this->assertSame(204, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -774,9 +774,9 @@ final class GeneratedTest extends TestCase
 
     public function test_cors_cors_vary_header_for_proper_caching(): void
     {
-        $app = AppFactory::create_cors();
+        $app = AppFactory::create_cors_cors_vary_header_for_proper_caching_7();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/api/cached-resource', ['headers' => ['Origin' => 'https://app.example.com', 'Cache-Control' => 'max-age=3600']]);
+        $response = $client->request('GET', '/api/cached-resource', ['headers' => ['Cache-Control' => 'max-age=3600', 'Origin' => 'https://app.example.com']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['data' => 'cacheable resource'], $response->body);
@@ -784,7 +784,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cors_cors_multiple_allowed_origins(): void
     {
-        $app = AppFactory::create_cors();
+        $app = AppFactory::create_cors_cors_multiple_allowed_origins_8();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/data', ['headers' => ['Origin' => 'https://admin.example.com']]);
 
@@ -794,7 +794,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cors_cors_origin_case_sensitivity(): void
     {
-        $app = AppFactory::create_cors();
+        $app = AppFactory::create_cors_cors_origin_case_sensitivity_9();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/data', ['headers' => ['Origin' => 'https://EXAMPLE.COM']]);
 
@@ -804,9 +804,9 @@ final class GeneratedTest extends TestCase
 
     public function test_cors_cors_preflight_for_delete_method(): void
     {
-        $app = AppFactory::create_cors();
+        $app = AppFactory::create_cors_cors_preflight_for_delete_method_10();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/resource/456', ['headers' => ['Access-Control-Request-Method' => 'DELETE', 'Origin' => 'https://app.example.com']]);
+        $response = $client->request('OPTIONS', '/api/resource/456', ['headers' => ['Origin' => 'https://app.example.com', 'Access-Control-Request-Method' => 'DELETE']]);
 
         $this->assertSame(204, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -814,9 +814,9 @@ final class GeneratedTest extends TestCase
 
     public function test_cors_cors_preflight_for_put_method(): void
     {
-        $app = AppFactory::create_cors();
+        $app = AppFactory::create_cors_cors_preflight_for_put_method_11();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/resource/123', ['headers' => ['Origin' => 'https://app.example.com', 'Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Request-Method' => 'PUT']]);
+        $response = $client->request('OPTIONS', '/api/resource/123', ['headers' => ['Access-Control-Request-Method' => 'PUT', 'Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header', 'Origin' => 'https://app.example.com']]);
 
         $this->assertSame(204, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -824,9 +824,9 @@ final class GeneratedTest extends TestCase
 
     public function test_cors_cors_preflight_request(): void
     {
-        $app = AppFactory::create_cors();
+        $app = AppFactory::create_cors_cors_preflight_request_12();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/items/', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header']]);
+        $response = $client->request('OPTIONS', '/items/', ['headers' => ['Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header', 'Origin' => 'https://example.com']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -834,7 +834,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cors_cors_regex_pattern_matching_for_origins(): void
     {
-        $app = AppFactory::create_cors();
+        $app = AppFactory::create_cors_cors_regex_pattern_matching_for_origins_13();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/data', ['headers' => ['Origin' => 'https://subdomain.example.com']]);
 
@@ -844,7 +844,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cors_cors_request_blocked(): void
     {
-        $app = AppFactory::create_cors();
+        $app = AppFactory::create_cors_cors_request_blocked_14();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/', ['headers' => ['Origin' => 'https://malicious-site.com']]);
 
@@ -854,9 +854,9 @@ final class GeneratedTest extends TestCase
 
     public function test_cors_cors_safelisted_headers_without_preflight(): void
     {
-        $app = AppFactory::create_cors();
+        $app = AppFactory::create_cors_cors_safelisted_headers_without_preflight_15();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/api/form', ['headers' => ['Content-Type' => 'text/plain', 'Origin' => 'https://app.example.com', 'Accept' => 'application/json', 'Accept-Language' => 'en-US']]);
+        $response = $client->request('POST', '/api/form', ['headers' => ['Accept-Language' => 'en-US', 'Content-Type' => 'text/plain', 'Origin' => 'https://app.example.com', 'Accept' => 'application/json']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['message' => 'Success'], $response->body);
@@ -864,7 +864,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cors_cors_wildcard_origin(): void
     {
-        $app = AppFactory::create_cors();
+        $app = AppFactory::create_cors_cors_wildcard_origin_16();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/public/data', ['headers' => ['Origin' => 'https://random-site.com']]);
 
@@ -874,7 +874,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cors_cors_with_credentials(): void
     {
-        $app = AppFactory::create_cors();
+        $app = AppFactory::create_cors_cors_with_credentials_17();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/user/profile', ['headers' => ['Origin' => 'https://app.example.com', 'Cookie' => 'session=abc123']]);
 
@@ -884,7 +884,7 @@ final class GeneratedTest extends TestCase
 
     public function test_cors_simple_cors_request(): void
     {
-        $app = AppFactory::create_cors();
+        $app = AppFactory::create_cors_simple_cors_request_18();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/', ['headers' => ['Origin' => 'https://example.com']]);
 
@@ -894,7 +894,7 @@ final class GeneratedTest extends TestCase
 
     public function test_di_async_factory_dependency_success(): void
     {
-        $app = AppFactory::create_di();
+        $app = AppFactory::create_di_async_factory_dependency_success_1();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/db-status', []);
 
@@ -904,7 +904,7 @@ final class GeneratedTest extends TestCase
 
     public function test_di_circular_dependency_detection_error(): void
     {
-        $app = AppFactory::create_di();
+        $app = AppFactory::create_di_circular_dependency_detection_error_2();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/circular', []);
 
@@ -914,7 +914,7 @@ final class GeneratedTest extends TestCase
 
     public function test_di_dependency_injection_in_lifecycle_hooks_success(): void
     {
-        $app = AppFactory::create_di();
+        $app = AppFactory::create_di_dependency_injection_in_lifecycle_hooks_success_3();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/hook-di-test', ['headers' => ['authorization' => 'Bearer valid_token']]);
 
@@ -924,7 +924,7 @@ final class GeneratedTest extends TestCase
 
     public function test_di_factory_dependency_success(): void
     {
-        $app = AppFactory::create_di();
+        $app = AppFactory::create_di_factory_dependency_success_4();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/timestamp', []);
 
@@ -934,7 +934,7 @@ final class GeneratedTest extends TestCase
 
     public function test_di_missing_dependency_error(): void
     {
-        $app = AppFactory::create_di();
+        $app = AppFactory::create_di_missing_dependency_error_5();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/missing-dep', []);
 
@@ -944,7 +944,7 @@ final class GeneratedTest extends TestCase
 
     public function test_di_mixed_singleton_and_per_request_caching_success(): void
     {
-        $app = AppFactory::create_di();
+        $app = AppFactory::create_di_mixed_singleton_and_per_request_caching_success_6();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/mixed-caching', []);
 
@@ -954,7 +954,7 @@ final class GeneratedTest extends TestCase
 
     public function test_di_multiple_dependencies_with_cleanup_success(): void
     {
-        $app = AppFactory::create_di();
+        $app = AppFactory::create_di_multiple_dependencies_with_cleanup_success_7();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/multi-cleanup-test', []);
 
@@ -964,7 +964,7 @@ final class GeneratedTest extends TestCase
 
     public function test_di_nested_dependencies_3_levels_success(): void
     {
-        $app = AppFactory::create_di();
+        $app = AppFactory::create_di_nested_dependencies_3_levels_success_8();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/auth-status', []);
 
@@ -974,7 +974,7 @@ final class GeneratedTest extends TestCase
 
     public function test_di_node_js_object_destructuring_injection_success(): void
     {
-        $app = AppFactory::create_di();
+        $app = AppFactory::create_di_node_js_object_destructuring_injection_success_9();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/node-destructure', []);
 
@@ -984,7 +984,7 @@ final class GeneratedTest extends TestCase
 
     public function test_di_per_request_dependency_caching_success(): void
     {
-        $app = AppFactory::create_di();
+        $app = AppFactory::create_di_per_request_dependency_caching_success_10();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/request-id', []);
 
@@ -994,7 +994,7 @@ final class GeneratedTest extends TestCase
 
     public function test_di_python_parameter_name_based_injection_success(): void
     {
-        $app = AppFactory::create_di();
+        $app = AppFactory::create_di_python_parameter_name_based_injection_success_11();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/python-name-inject', []);
 
@@ -1004,7 +1004,7 @@ final class GeneratedTest extends TestCase
 
     public function test_di_python_type_annotation_based_injection_success(): void
     {
-        $app = AppFactory::create_di();
+        $app = AppFactory::create_di_python_type_annotation_based_injection_success_12();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/python-type-inject', []);
 
@@ -1014,7 +1014,7 @@ final class GeneratedTest extends TestCase
 
     public function test_di_resource_cleanup_after_request_success(): void
     {
-        $app = AppFactory::create_di();
+        $app = AppFactory::create_di_resource_cleanup_after_request_success_13();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/cleanup-test', []);
 
@@ -1024,7 +1024,7 @@ final class GeneratedTest extends TestCase
 
     public function test_di_route_level_dependency_override_success(): void
     {
-        $app = AppFactory::create_di();
+        $app = AppFactory::create_di_route_level_dependency_override_success_14();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/override-test', []);
 
@@ -1034,7 +1034,7 @@ final class GeneratedTest extends TestCase
 
     public function test_di_ruby_keyword_argument_injection_success(): void
     {
-        $app = AppFactory::create_di();
+        $app = AppFactory::create_di_ruby_keyword_argument_injection_success_15();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/ruby-kwargs', []);
 
@@ -1044,7 +1044,7 @@ final class GeneratedTest extends TestCase
 
     public function test_di_singleton_dependency_caching_success(): void
     {
-        $app = AppFactory::create_di();
+        $app = AppFactory::create_di_singleton_dependency_caching_success_16();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/app-counter', []);
 
@@ -1054,7 +1054,7 @@ final class GeneratedTest extends TestCase
 
     public function test_di_type_mismatch_in_dependency_resolution_error(): void
     {
-        $app = AppFactory::create_di();
+        $app = AppFactory::create_di_type_mismatch_in_dependency_resolution_error_17();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/type-mismatch', []);
 
@@ -1064,7 +1064,7 @@ final class GeneratedTest extends TestCase
 
     public function test_di_value_dependency_injection_success(): void
     {
-        $app = AppFactory::create_di();
+        $app = AppFactory::create_di_value_dependency_injection_success_18();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/config', []);
 
@@ -1074,9 +1074,9 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_11_utf8_query_parameter(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_11_utf8_query_parameter_1();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/search?term=%22caf%C3%A9%22', []);
+        $response = $client->request('GET', '/search?term=caf%C3%A9', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['term' => 'café'], $response->body);
@@ -1084,9 +1084,9 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_12_percent_encoded_special_chars(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_12_percent_encoded_special_chars_2();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/search?term=hi%20there?term=%22hi%20there%22', []);
+        $response = $client->request('GET', '/search?term=hi%20there&term=hi%20there', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['term' => 'hi there'], $response->body);
@@ -1094,9 +1094,9 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_13_empty_string_query_param_preserved(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_13_empty_string_query_param_preserved_3();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items?filter=?filter=%22%22', []);
+        $response = $client->request('GET', '/items?filter=&filter=', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['filter' => ''], $response->body);
@@ -1104,9 +1104,9 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_14_large_integer_boundary(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_14_large_integer_boundary_4();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items?id=%229007199254740991%22', []);
+        $response = $client->request('GET', '/items?id=9007199254740991', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['id' => 9007199254740991], $response->body);
@@ -1114,7 +1114,7 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_15_float_precision_preservation(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_15_float_precision_preservation_5();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/calculate', ['body' => ['value' => 3.141592653589793]]);
 
@@ -1124,7 +1124,7 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_16_negative_zero_handling(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_16_negative_zero_handling_6();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/data', ['body' => ['offset' => -0.0]]);
 
@@ -1134,7 +1134,7 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_17_extremely_long_string(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_17_extremely_long_string_7();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/text', ['body' => ['content' => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa']]);
 
@@ -1144,7 +1144,7 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_18_unicode_normalization(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_18_unicode_normalization_8();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/users', ['body' => ['name' => 'café']]);
 
@@ -1154,7 +1154,7 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_19_emoji_in_strings(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_19_emoji_in_strings_9();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/messages', ['body' => ['text' => 'Hello 👋 World 🌍']]);
 
@@ -1164,7 +1164,7 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_20_null_byte_in_string(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_20_null_byte_in_string_10();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/files', ['body' => ['filename' => 'file .txt']]);
 
@@ -1174,7 +1174,7 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_21_scientific_notation_number(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_21_scientific_notation_number_11();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/calculate', ['body' => ['value' => 123000.0]]);
 
@@ -1184,9 +1184,9 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_22_leading_zeros_integer(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_22_leading_zeros_integer_12();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/data?value=%220123%22', []);
+        $response = $client->request('GET', '/data?value=0123', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['value' => 123], $response->body);
@@ -1194,7 +1194,7 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_23_deeply_nested_json_limit(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_23_deeply_nested_json_limit_13();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/data', ['body' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['nested' => ['value' => 'deep']]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]);
 
@@ -1204,7 +1204,7 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_24_array_with_holes(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_24_array_with_holes_14();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded'], 'body' => 'items[0]=first&items[2]=third&items[5]=sixth']);
 
@@ -1214,7 +1214,7 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_deeply_nested_structure_10_levels(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_deeply_nested_structure_10_levels_15();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/nested/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['level1' => ['level2' => ['level3' => ['level4' => ['level5' => ['level6' => ['level7' => ['level8' => ['level9' => ['level10' => ['depth' => 10, 'value' => 'deep']]]]]]]]]]]]);
 
@@ -1224,7 +1224,7 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_empty_and_null_value_handling(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_empty_and_null_value_handling_16();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/nulls/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['empty_array' => [], 'empty_object' => [], 'empty_string' => '', 'explicit_null' => null, 'false_boolean' => false, 'zero_number' => 0]]);
 
@@ -1234,7 +1234,7 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_float_precision_and_rounding(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_float_precision_and_rounding_17();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/calculations/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['expected_sum' => 0.3, 'precise_value' => 3.141592653589793, 'value1' => 0.1, 'value2' => 0.2, 'very_large' => 1.7976931348623157e308, 'very_small' => 1e-10]]);
 
@@ -1244,7 +1244,7 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_large_integer_boundary_values(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_large_integer_boundary_values_18();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/numbers/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['large_int' => 9223372036854775807, 'max_safe_int' => 9007199254740991, 'negative_large' => -9223372036854775808]]);
 
@@ -1254,7 +1254,7 @@ final class GeneratedTest extends TestCase
 
     public function test_edge_cases_special_string_values_and_escaping(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_special_string_values_and_escaping_19();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/strings/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['backslashes' => 'C:\\\\Users\\\\Path', 'empty_string' => '', 'quotes' => 'He said "hello" and \'goodbye\'', 'special_chars' => '!@#$%^&*()_+-=[]{}|;\':",./<>?', 'tabs_newlines' => 'line1
 	line2
@@ -1268,7 +1268,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_edge_cases_unicode_and_emoji_handling(): void
     {
-        $app = AppFactory::create_edge_cases();
+        $app = AppFactory::create_edge_cases_unicode_and_emoji_handling_20();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json; charset=utf-8'], 'body' => ['description' => 'Best café in München 🇩🇪', 'emoji_reactions' => '👍❤️😂🎉', 'name' => 'Coffee Shop ☕', 'tags' => ['食べ物', '音楽', '💰']]]);
 
@@ -1278,7 +1278,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_30_bearer_token_format_valid(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_30_bearer_token_format_valid_1();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/protected', ['headers' => ['Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U']]);
 
@@ -1288,7 +1288,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_31_bearer_token_format_invalid(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_31_bearer_token_format_invalid_2();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/protected', ['headers' => ['Authorization' => 'Bearer invalid token with spaces']]);
 
@@ -1298,7 +1298,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_32_bearer_token_missing_prefix(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_32_bearer_token_missing_prefix_3();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/protected', ['headers' => ['Authorization' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9']]);
 
@@ -1308,7 +1308,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_33_api_key_header_valid(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_33_api_key_header_valid_4();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/data', ['headers' => ['X-API-Key' => 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4']]);
 
@@ -1318,7 +1318,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_34_api_key_header_invalid(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_34_api_key_header_invalid_5();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/data', ['headers' => ['X-API-Key' => 'invalid-key']]);
 
@@ -1328,7 +1328,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_accept_header_json(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_accept_header_json_6();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/headers/accept', ['headers' => ['Accept' => 'application/json']]);
 
@@ -1338,7 +1338,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_accept_encoding_header(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_accept_encoding_header_7();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/headers/accept-encoding', ['headers' => ['Accept-Encoding' => 'gzip, deflate, br']]);
 
@@ -1348,7 +1348,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_accept_language_header(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_accept_language_header_8();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/headers/accept-language', ['headers' => ['Accept-Language' => 'en-US,en;q=0.9']]);
 
@@ -1358,7 +1358,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_authorization_header_missing(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_authorization_header_missing_9();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/users/me', []);
 
@@ -1368,7 +1368,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_authorization_header_success(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_authorization_header_success_10();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/users/me', ['headers' => ['Authorization' => 'Digest foobar']]);
 
@@ -1378,7 +1378,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_authorization_header_wrong_scheme(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_authorization_header_wrong_scheme_11();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/users/me', ['headers' => ['Authorization' => 'Other invalidauthorization']]);
 
@@ -1388,7 +1388,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_basic_authentication_success(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_basic_authentication_success_12();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/headers/basic-auth', ['headers' => ['Authorization' => 'Basic dXNlcm5hbWU6cGFzc3dvcmQ=']]);
 
@@ -1398,7 +1398,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_bearer_token_authentication_missing(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_bearer_token_authentication_missing_13();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/headers/bearer-auth', []);
 
@@ -1408,7 +1408,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_bearer_token_authentication_success(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_bearer_token_authentication_success_14();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/headers/bearer-auth', ['headers' => ['Authorization' => 'Bearer valid_token_123']]);
 
@@ -1418,7 +1418,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_content_type_header_application_json(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_content_type_header_application_json_15();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/headers/content-type', ['headers' => ['Content-Type' => 'application/json']]);
 
@@ -1428,7 +1428,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_header_case_insensitivity_access(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_header_case_insensitivity_access_16();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/echo', ['headers' => ['content-type' => 'application/json'], 'body' => ['test' => 'data']]);
 
@@ -1438,7 +1438,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_header_regex_validation_fail(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_header_regex_validation_fail_17();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/headers/pattern', ['headers' => ['X-Request-Id' => 'invalid-format']]);
 
@@ -1448,7 +1448,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_header_regex_validation_success(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_header_regex_validation_success_18();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/headers/pattern', ['headers' => ['X-Request-Id' => '12345']]);
 
@@ -1458,7 +1458,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_header_validation_max_length_constraint_fail(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_header_validation_max_length_constraint_fail_19();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/headers/max-length', ['headers' => ['X-Session-Id' => 'this_is_way_too_long_for_validation']]);
 
@@ -1468,7 +1468,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_header_validation_min_length_constraint(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_header_validation_min_length_constraint_20();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/headers/validated', ['headers' => ['X-Token' => 'ab']]);
 
@@ -1478,7 +1478,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_header_with_underscore_conversion_explicit(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_header_with_underscore_conversion_explicit_21();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/headers/underscore', ['headers' => ['X-Token' => 'secret123']]);
 
@@ -1488,7 +1488,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_host_header(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_host_header_22();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/headers/host', ['headers' => ['Host' => 'example.com:8080']]);
 
@@ -1498,9 +1498,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_multiple_custom_headers(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_multiple_custom_headers_23();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/headers/multiple', ['headers' => ['X-Trace-Id' => 'trace-abc', 'X-Client-Version' => '1.2.3', 'X-Request-Id' => 'req-12345']]);
+        $response = $client->request('GET', '/headers/multiple', ['headers' => ['X-Client-Version' => '1.2.3', 'X-Trace-Id' => 'trace-abc', 'X-Request-Id' => 'req-12345']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['x_client_version' => '1.2.3', 'x_request_id' => 'req-12345', 'x_trace_id' => 'trace-abc'], $response->body);
@@ -1508,7 +1508,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_multiple_header_values_x_token(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_multiple_header_values_x_token_24();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/', ['headers' => ['x-token' => 'foo, bar']]);
 
@@ -1518,7 +1518,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_optional_header_with_none_default_missing(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_optional_header_with_none_default_missing_25();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/', []);
 
@@ -1528,7 +1528,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_origin_header(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_origin_header_26();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/headers/origin', ['headers' => ['Origin' => 'https://example.com']]);
 
@@ -1538,7 +1538,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_referer_header(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_referer_header_27();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/headers/referer', ['headers' => ['Referer' => 'https://example.com/page']]);
 
@@ -1548,7 +1548,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_user_agent_header_custom_value(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_user_agent_header_custom_value_28();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/', ['headers' => ['User-Agent' => 'Mozilla/5.0 Custom Browser']]);
 
@@ -1558,7 +1558,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_user_agent_header_default_value(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_user_agent_header_default_value_29();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/', []);
 
@@ -1568,7 +1568,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_x_api_key_optional_header_missing(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_x_api_key_optional_header_missing_30();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/users/me', []);
 
@@ -1578,7 +1578,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_x_api_key_optional_header_success(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_x_api_key_optional_header_success_31();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/users/me', ['headers' => ['key' => 'secret']]);
 
@@ -1588,7 +1588,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_x_api_key_required_header_missing(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_x_api_key_required_header_missing_32();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/users/me', []);
 
@@ -1598,7 +1598,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_headers_x_api_key_required_header_success(): void
     {
-        $app = AppFactory::create_headers();
+        $app = AppFactory::create_headers_x_api_key_required_header_success_33();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/users/me', ['headers' => ['key' => 'secret']]);
 
@@ -1608,7 +1608,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_http_methods_delete_remove_resource(): void
     {
-        $app = AppFactory::create_http_methods();
+        $app = AppFactory::create_http_methods_delete_remove_resource_1();
         $client = TestClient::create($app);
         $response = $client->request('DELETE', '/items/1', []);
 
@@ -1618,7 +1618,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_http_methods_delete_resource_not_found(): void
     {
-        $app = AppFactory::create_http_methods();
+        $app = AppFactory::create_http_methods_delete_resource_not_found_2();
         $client = TestClient::create($app);
         $response = $client->request('DELETE', '/items/999', []);
 
@@ -1628,7 +1628,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_http_methods_delete_with_response_body(): void
     {
-        $app = AppFactory::create_http_methods();
+        $app = AppFactory::create_http_methods_delete_with_response_body_3();
         $client = TestClient::create($app);
         $response = $client->request('DELETE', '/items/1', []);
 
@@ -1638,7 +1638,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_http_methods_head_get_metadata_without_body(): void
     {
-        $app = AppFactory::create_http_methods();
+        $app = AppFactory::create_http_methods_head_get_metadata_without_body_4();
         $client = TestClient::create($app);
         $response = $client->request('HEAD', '/items/1', []);
 
@@ -1648,9 +1648,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_http_methods_options_cors_preflight_request(): void
     {
-        $app = AppFactory::create_http_methods();
+        $app = AppFactory::create_http_methods_options_cors_preflight_request_5();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/items/', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'Content-Type']]);
+        $response = $client->request('OPTIONS', '/items/', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Headers' => 'Content-Type', 'Access-Control-Request-Method' => 'POST']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -1658,7 +1658,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_http_methods_patch_partial_update(): void
     {
-        $app = AppFactory::create_http_methods();
+        $app = AppFactory::create_http_methods_patch_partial_update_6();
         $client = TestClient::create($app);
         $response = $client->request('PATCH', '/items/1', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['price' => 79.99]]);
 
@@ -1668,7 +1668,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_http_methods_patch_update_multiple_fields(): void
     {
-        $app = AppFactory::create_http_methods();
+        $app = AppFactory::create_http_methods_patch_update_multiple_fields_7();
         $client = TestClient::create($app);
         $response = $client->request('PATCH', '/items/1', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['in_stock' => false, 'name' => 'Updated Name', 'price' => 89.99]]);
 
@@ -1678,7 +1678,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_http_methods_put_complete_resource_replacement(): void
     {
-        $app = AppFactory::create_http_methods();
+        $app = AppFactory::create_http_methods_put_complete_resource_replacement_8();
         $client = TestClient::create($app);
         $response = $client->request('PUT', '/items/1', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['description' => 'Completely replaced', 'id' => 1, 'in_stock' => true, 'name' => 'Updated Item', 'price' => 99.99]]);
 
@@ -1688,7 +1688,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_http_methods_put_create_resource_if_doesn_t_exist(): void
     {
-        $app = AppFactory::create_http_methods();
+        $app = AppFactory::create_http_methods_put_create_resource_if_doesn_t_exist_9();
         $client = TestClient::create($app);
         $response = $client->request('PUT', '/items/999', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['id' => 999, 'name' => 'New Item', 'price' => 49.99]]);
 
@@ -1698,7 +1698,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_http_methods_put_idempotent_operation(): void
     {
-        $app = AppFactory::create_http_methods();
+        $app = AppFactory::create_http_methods_put_idempotent_operation_10();
         $client = TestClient::create($app);
         $response = $client->request('PUT', '/items/1', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['id' => 1, 'name' => 'Fixed Name', 'price' => 50.0]]);
 
@@ -1708,7 +1708,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_http_methods_put_missing_required_field(): void
     {
-        $app = AppFactory::create_http_methods();
+        $app = AppFactory::create_http_methods_put_missing_required_field_11();
         $client = TestClient::create($app);
         $response = $client->request('PUT', '/items/1', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['id' => 1, 'name' => 'Item Name']]);
 
@@ -1718,7 +1718,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_http_methods_put_validation_error(): void
     {
-        $app = AppFactory::create_http_methods();
+        $app = AppFactory::create_http_methods_put_validation_error_12();
         $client = TestClient::create($app);
         $response = $client->request('PUT', '/items/1', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['id' => 1, 'name' => 'X', 'price' => -10]]);
 
@@ -1728,7 +1728,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_29_nested_object_validation_success(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_29_nested_object_validation_success_1();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/users', ['body' => ['profile' => ['email' => 'john@example.com', 'name' => 'John Doe']]]);
 
@@ -1738,7 +1738,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_30_nested_object_missing_field(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_30_nested_object_missing_field_2();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/users', ['body' => ['profile' => ['name' => 'John Doe']]]);
 
@@ -1748,7 +1748,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_31_nullable_property_null_value(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_31_nullable_property_null_value_3();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/users', ['body' => ['description' => null, 'name' => 'Test User']]);
 
@@ -1758,7 +1758,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_32_schema_ref_definitions(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_32_schema_ref_definitions_4();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/products', ['body' => ['product' => ['name' => 'Widget', 'price' => 9.99]]]);
 
@@ -1768,7 +1768,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_33_allof_schema_composition(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_33_allof_schema_composition_5();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items', ['body' => ['name' => 'Product', 'price' => 29.99]]);
 
@@ -1778,7 +1778,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_34_additional_properties_false(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_34_additional_properties_false_6();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/users', ['body' => ['email' => 'john@example.com', 'extra_field' => 'should fail', 'name' => 'John']]);
 
@@ -1788,7 +1788,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_35_oneof_schema_success(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_35_oneof_schema_success_7();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/payment', ['body' => ['credit_card' => '1234567812345678']]);
 
@@ -1798,7 +1798,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_36_oneof_schema_multiple_match_failure(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_36_oneof_schema_multiple_match_failure_8();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/payment', ['body' => ['credit_card' => '1234567812345678', 'paypal_email' => 'user@example.com']]);
 
@@ -1808,7 +1808,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_37_oneof_schema_no_match_failure(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_37_oneof_schema_no_match_failure_9();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/payment', ['body' => ['bitcoin_address' => '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa']]);
 
@@ -1818,7 +1818,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_38_anyof_schema_success(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_38_anyof_schema_success_10();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/contact', ['body' => ['email' => 'john@example.com', 'name' => 'John Doe']]);
 
@@ -1828,7 +1828,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_39_anyof_schema_multiple_match_success(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_39_anyof_schema_multiple_match_success_11();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/contact', ['body' => ['email' => 'john@example.com', 'name' => 'John Doe', 'phone' => '+1-555-0100']]);
 
@@ -1838,7 +1838,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_40_anyof_schema_failure(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_40_anyof_schema_failure_12();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/contact', ['body' => ['name' => 'John Doe']]);
 
@@ -1848,7 +1848,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_41_not_schema_success(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_41_not_schema_success_13();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/users', ['body' => ['username' => 'john_doe']]);
 
@@ -1858,7 +1858,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_42_not_schema_failure(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_42_not_schema_failure_14();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/users', ['body' => ['username' => 'admin']]);
 
@@ -1868,7 +1868,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_43_const_validation_success(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_43_const_validation_success_15();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/api/v1/data', ['body' => ['data' => 'test', 'version' => '1.0']]);
 
@@ -1878,7 +1878,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_44_const_validation_failure(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_44_const_validation_failure_16();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/api/v1/data', ['body' => ['data' => 'test', 'version' => '2.0']]);
 
@@ -1888,7 +1888,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_45_minproperties_validation_success(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_45_minproperties_validation_success_17();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/config', ['body' => ['host' => 'localhost', 'port' => 8080]]);
 
@@ -1898,7 +1898,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_46_minproperties_validation_failure(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_46_minproperties_validation_failure_18();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/config', ['body' => ['host' => 'localhost']]);
 
@@ -1908,7 +1908,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_47_maxproperties_validation_failure(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_47_maxproperties_validation_failure_19();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/config', ['body' => ['debug' => false, 'host' => 'localhost', 'port' => 8080, 'ssl' => true]]);
 
@@ -1918,7 +1918,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_48_dependencies_validation_success(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_48_dependencies_validation_success_20();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/billing', ['body' => ['billing_address' => '123 Main St', 'credit_card' => '1234567812345678', 'name' => 'John Doe']]);
 
@@ -1928,7 +1928,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_49_dependencies_validation_failure(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_49_dependencies_validation_failure_21();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/billing', ['body' => ['credit_card' => '1234567812345678', 'name' => 'John Doe']]);
 
@@ -1938,7 +1938,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_50_deep_nesting_4_levels(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_50_deep_nesting_4_levels_22();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/data', ['body' => ['user' => ['profile' => ['contact' => ['address' => ['street' => '123 Main St']]]]]]);
 
@@ -1948,7 +1948,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_array_of_objects_success(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_array_of_objects_success_23();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/list', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['images' => [['name' => 'Front', 'url' => 'https://example.com/img1.jpg'], ['name' => 'Back', 'url' => 'https://example.com/img2.jpg']], 'name' => 'Product Bundle', 'tags' => ['electronics', 'gadget']]]);
 
@@ -1958,7 +1958,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_array_of_primitive_values(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_array_of_primitive_values_24();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'Product', 'ratings' => [4.5, 4.8, 5.0, 4.2], 'tags' => ['electronics', 'gadget', 'new']]]);
 
@@ -1968,9 +1968,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_body_with_query_parameters(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_body_with_query_parameters_25();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/items/?limit=10?limit=10', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'Item', 'price' => 42.0]]);
+        $response = $client->request('POST', '/items/?limit=10&limit=10', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'Item', 'price' => 42.0]]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['item' => ['name' => 'Item', 'price' => 42.0], 'limit' => 10], $response->body);
@@ -1978,7 +1978,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_boolean_field_success(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_boolean_field_success_26();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['in_stock' => true, 'name' => 'Item', 'price' => 42.0]]);
 
@@ -1988,7 +1988,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_date_field_success(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_date_field_success_27();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/events/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['event_date' => '2024-03-15', 'name' => 'Conference']]);
 
@@ -1998,7 +1998,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_datetime_field_success(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_datetime_field_success_28();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/events/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['created_at' => '2024-03-15T10:30:00Z', 'name' => 'Meeting']]);
 
@@ -2008,7 +2008,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_deeply_nested_objects(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_deeply_nested_objects_29();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/nested', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'Product', 'price' => 100.0, 'seller' => ['address' => ['city' => 'Springfield', 'country' => ['code' => 'US', 'name' => 'USA'], 'street' => '123 Main St'], 'name' => 'John Doe']]]);
 
@@ -2018,7 +2018,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_empty_json_object(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_empty_json_object_30();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/optional-all', ['headers' => ['Content-Type' => 'application/json'], 'body' => []]);
 
@@ -2028,7 +2028,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_empty_array_validation_fail(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_empty_array_validation_fail_31();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/list-validated', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'Product', 'tags' => []]]);
 
@@ -2038,7 +2038,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_enum_field_invalid_value(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_enum_field_invalid_value_32();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['category' => 'furniture', 'name' => 'Item']]);
 
@@ -2048,7 +2048,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_enum_field_success(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_enum_field_success_33();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['category' => 'electronics', 'name' => 'Item']]);
 
@@ -2058,7 +2058,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_extra_fields_ignored_no_additionalproperties(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_extra_fields_ignored_no_additionalproperties_34();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['another_extra' => 123, 'extra_field' => 'this should be ignored', 'name' => 'Item', 'price' => 42.0]]);
 
@@ -2068,7 +2068,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_field_type_validation_invalid_type(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_field_type_validation_invalid_type_35();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['description' => 'A very nice Item', 'name' => 'Foo', 'price' => 'not a number', 'tax' => 3.2]]);
 
@@ -2078,7 +2078,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_nested_object_success(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_nested_object_success_36();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/nested', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['image' => ['name' => 'Product Image', 'url' => 'https://example.com/image.jpg'], 'name' => 'Foo', 'price' => 42.0]]);
 
@@ -2088,7 +2088,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_null_value_for_optional_field(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_null_value_for_optional_field_37();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['description' => null, 'name' => 'Item', 'price' => 42.0, 'tax' => null]]);
 
@@ -2098,7 +2098,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_numeric_ge_validation_fail(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_numeric_ge_validation_fail_38();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/validated', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'Item', 'price' => 0.5]]);
 
@@ -2108,7 +2108,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_numeric_le_validation_success(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_numeric_le_validation_success_39();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/validated', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'Item', 'price' => 100.0]]);
 
@@ -2118,7 +2118,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_optional_fields_omitted(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_optional_fields_omitted_40();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'Foo', 'price' => 35.4]]);
 
@@ -2128,7 +2128,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_patch_partial_update(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_patch_partial_update_41();
         $client = TestClient::create($app);
         $response = $client->request('PATCH', '/items/1', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['price' => 45.0]]);
 
@@ -2138,7 +2138,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_required_field_missing_validation_error(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_required_field_missing_validation_error_42();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['description' => 'A very nice Item', 'price' => 35.4]]);
 
@@ -2148,7 +2148,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_simple_json_object_success(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_simple_json_object_success_43();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['description' => 'A very nice Item', 'name' => 'Foo', 'price' => 35.4, 'tax' => 3.2]]);
 
@@ -2158,7 +2158,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_string_max_length_validation_fail(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_string_max_length_validation_fail_44();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/validated', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'This is a very long name that exceeds the maximum length', 'price' => 35.4]]);
 
@@ -2168,7 +2168,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_string_min_length_validation_fail(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_string_min_length_validation_fail_45();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/validated', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'ab', 'price' => 35.4]]);
 
@@ -2178,7 +2178,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_string_pattern_validation_fail(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_string_pattern_validation_fail_46();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/validated', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'Item', 'sku' => 'ABC-123']]);
 
@@ -2188,7 +2188,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_string_pattern_validation_success(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_string_pattern_validation_success_47();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/validated', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'Item', 'sku' => 'ABC1234']]);
 
@@ -2198,7 +2198,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_uuid_field_invalid_format(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_uuid_field_invalid_format_48();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['item_id' => 'not-a-valid-uuid', 'name' => 'Item']]);
 
@@ -2208,7 +2208,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_json_bodies_uuid_field_success(): void
     {
-        $app = AppFactory::create_json_bodies();
+        $app = AppFactory::create_json_bodies_uuid_field_success_49();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['item_id' => 'c892496f-b1fd-4b91-bdb8-b46f92df1716', 'name' => 'Item']]);
 
@@ -2218,7 +2218,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_lifecycle_hooks_hook_execution_order(): void
     {
-        $app = AppFactory::create_lifecycle_hooks();
+        $app = AppFactory::create_lifecycle_hooks_hook_execution_order_1();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/test-hook-order', []);
 
@@ -2228,9 +2228,9 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_lifecycle_hooks_multiple_hooks_all_phases(): void
     {
-        $app = AppFactory::create_lifecycle_hooks();
+        $app = AppFactory::create_lifecycle_hooks_multiple_hooks_all_phases_2();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/api/full-lifecycle', ['headers' => ['Authorization' => 'Bearer valid-token-12345', 'Content-Type' => 'application/json'], 'body' => ['action' => 'update_profile', 'user_id' => 'user-123']]);
+        $response = $client->request('POST', '/api/full-lifecycle', ['headers' => ['Content-Type' => 'application/json', 'Authorization' => 'Bearer valid-token-12345'], 'body' => ['action' => 'update_profile', 'user_id' => 'user-123']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['action' => 'update_profile', 'message' => 'Action completed successfully', 'request_id' => '.*', 'user_id' => 'user-123'], $response->body);
@@ -2238,7 +2238,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_lifecycle_hooks_onerror_error_logging(): void
     {
-        $app = AppFactory::create_lifecycle_hooks();
+        $app = AppFactory::create_lifecycle_hooks_onerror_error_logging_3();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/test-error', []);
 
@@ -2248,7 +2248,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_lifecycle_hooks_onrequest_request_logging(): void
     {
-        $app = AppFactory::create_lifecycle_hooks();
+        $app = AppFactory::create_lifecycle_hooks_onrequest_request_logging_4();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/test-on-request', []);
 
@@ -2258,7 +2258,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_lifecycle_hooks_onresponse_response_timing(): void
     {
-        $app = AppFactory::create_lifecycle_hooks();
+        $app = AppFactory::create_lifecycle_hooks_onresponse_response_timing_5();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/test-timing', []);
 
@@ -2268,7 +2268,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_lifecycle_hooks_onresponse_security_headers(): void
     {
-        $app = AppFactory::create_lifecycle_hooks();
+        $app = AppFactory::create_lifecycle_hooks_onresponse_security_headers_6();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/test-security-headers', []);
 
@@ -2278,7 +2278,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_lifecycle_hooks_prehandler_authentication_failed_short_circuit(): void
     {
-        $app = AppFactory::create_lifecycle_hooks();
+        $app = AppFactory::create_lifecycle_hooks_prehandler_authentication_failed_short_circuit_7();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/protected-resource-fail', ['headers' => ['Authorization' => 'Bearer invalid-token']]);
 
@@ -2288,7 +2288,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_lifecycle_hooks_prehandler_authentication_success(): void
     {
-        $app = AppFactory::create_lifecycle_hooks();
+        $app = AppFactory::create_lifecycle_hooks_prehandler_authentication_success_8();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/protected-resource', ['headers' => ['Authorization' => 'Bearer valid-token-12345']]);
 
@@ -2298,7 +2298,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_lifecycle_hooks_prehandler_authorization_check(): void
     {
-        $app = AppFactory::create_lifecycle_hooks();
+        $app = AppFactory::create_lifecycle_hooks_prehandler_authorization_check_9();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/admin-only', ['headers' => ['Authorization' => 'Bearer admin-token-67890']]);
 
@@ -2308,7 +2308,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_lifecycle_hooks_prehandler_authorization_forbidden_short_circuit(): void
     {
-        $app = AppFactory::create_lifecycle_hooks();
+        $app = AppFactory::create_lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_10();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/admin-only-forbidden', ['headers' => ['Authorization' => 'Bearer user-token-11111']]);
 
@@ -2318,7 +2318,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit(): void
     {
-        $app = AppFactory::create_lifecycle_hooks();
+        $app = AppFactory::create_lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_11();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/api/test-rate-limit-exceeded', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['data' => 'test']]);
 
@@ -2328,7 +2328,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_lifecycle_hooks_prevalidation_rate_limiting(): void
     {
-        $app = AppFactory::create_lifecycle_hooks();
+        $app = AppFactory::create_lifecycle_hooks_prevalidation_rate_limiting_12();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/api/test-rate-limit', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['data' => 'test']]);
 
@@ -2338,7 +2338,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_multipart_17_file_magic_number_png_success(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_17_file_magic_number_png_success_1();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/upload', ['files' => [['content_type' => 'image/png', 'field_name' => 'image', 'filename' => 'test.png', 'magic_bytes' => '89504e470d0a1a0a']]]);
 
@@ -2348,7 +2348,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_multipart_18_file_magic_number_jpeg_success(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_18_file_magic_number_jpeg_success_2();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/upload', ['files' => [['content_type' => 'image/jpeg', 'field_name' => 'image', 'filename' => 'test.jpg', 'magic_bytes' => 'ffd8ffe0']]]);
 
@@ -2358,7 +2358,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_multipart_19_file_mime_spoofing_png_as_jpeg(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_19_file_mime_spoofing_png_as_jpeg_3();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/upload', ['files' => [['content_type' => 'image/jpeg', 'field_name' => 'image', 'filename' => 'fake.jpg', 'magic_bytes' => '89504e470d0a1a0a']]]);
 
@@ -2368,7 +2368,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_multipart_20_file_mime_spoofing_jpeg_as_png(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_20_file_mime_spoofing_jpeg_as_png_4();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/upload', ['files' => [['content_type' => 'image/png', 'field_name' => 'image', 'filename' => 'fake.png', 'magic_bytes' => 'ffd8ffe0']]]);
 
@@ -2378,7 +2378,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_multipart_21_file_pdf_magic_number_success(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_21_file_pdf_magic_number_success_5();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/upload', ['files' => [['content_type' => 'application/pdf', 'field_name' => 'document', 'filename' => 'test.pdf', 'magic_bytes' => '25504446']]]);
 
@@ -2388,7 +2388,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_multipart_22_file_empty_buffer(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_22_file_empty_buffer_6();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/upload', ['files' => [['content_type' => 'text/plain', 'field_name' => 'file', 'filename' => 'empty.txt', 'magic_bytes' => '']]]);
 
@@ -2398,7 +2398,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
 
     public function test_multipart_content_type_validation_invalid_type(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_content_type_validation_invalid_type_7();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/files/images-only', ['files' => [['content' => '#!/bin/bash
 echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'filename' => 'script.sh']]]);
@@ -2409,7 +2409,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_multipart_empty_file_upload(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_empty_file_upload_8();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/files/upload', ['files' => [['content' => '', 'content_type' => 'text/plain', 'field_name' => 'file', 'filename' => 'empty.txt']]]);
 
@@ -2419,7 +2419,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_multipart_file_list_upload_array_of_files(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_file_list_upload_array_of_files_9();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/files/list', ['files' => [['content' => 'content of file 1', 'content_type' => 'text/plain', 'field_name' => 'files', 'filename' => 'file1.txt'], ['content' => 'content of file 2', 'content_type' => 'text/plain', 'field_name' => 'files', 'filename' => 'file2.txt']]]);
 
@@ -2429,7 +2429,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_multipart_file_size_validation_too_large(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_file_size_validation_too_large_10();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/files/validated', ['files' => [['content' => 'x', 'content_type' => 'text/plain', 'field_name' => 'file', 'filename' => 'large.txt']]]);
 
@@ -2439,7 +2439,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_multipart_file_upload_with_custom_headers(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_file_upload_with_custom_headers_11();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/', ['files' => [['content' => '<file2 content>', 'content_encoding' => 'text', 'content_type' => 'text/plain', 'field_name' => 'test2', 'filename' => 'test2.txt']]]);
 
@@ -2449,7 +2449,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_multipart_file_upload_without_filename(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_file_upload_without_filename_12();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/', ['files' => [['content' => '<file1 content>', 'content_encoding' => 'text', 'field_name' => 'test1']]]);
 
@@ -2459,7 +2459,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_multipart_form_data_without_files(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_form_data_without_files_13();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/', []);
 
@@ -2469,7 +2469,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_multipart_image_file_upload(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_image_file_upload_14();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/files/image', ['files' => [['content' => 'fake_jpeg_content_here', 'content_type' => 'image/jpeg', 'field_name' => 'image', 'filename' => 'photo.jpg']]]);
 
@@ -2479,7 +2479,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_multipart_mixed_files_and_form_data(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_mixed_files_and_form_data_15();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/', ['files' => [['content' => 'file data here', 'content_encoding' => 'text', 'content_type' => 'text/plain', 'field_name' => 'file', 'filename' => 'upload.txt']]]);
 
@@ -2489,7 +2489,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_multipart_multiple_file_uploads(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_multiple_file_uploads_16();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/', ['files' => [['content' => '<file1 content>', 'content_encoding' => 'text', 'content_type' => 'text/plain', 'field_name' => 'test1', 'filename' => 'test1.txt'], ['content' => '<file2 content>', 'content_encoding' => 'text', 'content_type' => 'text/plain', 'field_name' => 'test2', 'filename' => 'test2.txt']]]);
 
@@ -2499,7 +2499,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_multipart_multiple_values_for_same_field_name(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_multiple_values_for_same_field_name_17();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/', ['files' => [['content' => 'first file', 'content_encoding' => 'text', 'content_type' => 'text/plain', 'field_name' => 'files', 'filename' => 'file1.txt'], ['content' => 'second file', 'content_encoding' => 'text', 'content_type' => 'text/plain', 'field_name' => 'files', 'filename' => 'file2.txt']]]);
 
@@ -2509,7 +2509,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_multipart_optional_file_upload_missing(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_optional_file_upload_missing_18();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/files/optional', []);
 
@@ -2519,7 +2519,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_multipart_optional_file_upload_provided(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_optional_file_upload_provided_19();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/files/optional', ['files' => [['content' => 'optional file content', 'content_type' => 'text/plain', 'field_name' => 'file', 'filename' => 'optional.txt']]]);
 
@@ -2529,7 +2529,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_multipart_pdf_file_upload(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_pdf_file_upload_20();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/files/document', ['files' => [['content' => 'fake_pdf_content', 'content_type' => 'application/pdf', 'field_name' => 'document', 'filename' => 'report.pdf']]]);
 
@@ -2539,7 +2539,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_multipart_required_file_upload_missing(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_required_file_upload_missing_21();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/files/required', []);
 
@@ -2549,7 +2549,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_multipart_simple_file_upload(): void
     {
-        $app = AppFactory::create_multipart();
+        $app = AppFactory::create_multipart_simple_file_upload_22();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/', ['files' => [['content' => '<file content>', 'content_encoding' => 'text', 'content_type' => 'text/plain', 'field_name' => 'test', 'filename' => 'test.txt']]]);
 
@@ -2559,7 +2559,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_20_uuid_v3_path_param_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_20_uuid_v3_path_param_success_1();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/e8b5a51d-11c8-3310-a6ab-367563f20686', []);
 
@@ -2569,7 +2569,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_21_uuid_v5_path_param_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_21_uuid_v5_path_param_success_2();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/630eb68f-e0fa-5ecc-887a-7c7a62614681', []);
 
@@ -2579,7 +2579,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_24_date_format_path_param_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_24_date_format_path_param_success_3();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/events/2025-10-30', []);
 
@@ -2589,7 +2589,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_25_date_format_invalid_failure(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_25_date_format_invalid_failure_4();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/events/2025-13-45', []);
 
@@ -2599,7 +2599,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_27_datetime_format_path_param_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_27_datetime_format_path_param_success_5();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/bookings/2025-10-30T14:30:00Z', []);
 
@@ -2609,7 +2609,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_28_duration_format_path_param_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_28_duration_format_path_param_success_6();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/delays/P1DT2H30M', []);
 
@@ -2619,7 +2619,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_29_decimal_path_param_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_29_decimal_path_param_success_7();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/prices/19.99', []);
 
@@ -2629,7 +2629,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_30_string_minlength_path_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_30_string_minlength_path_success_8();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/users/alice', []);
 
@@ -2639,7 +2639,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_31_string_minlength_path_failure(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_31_string_minlength_path_failure_9();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/users/ab', []);
 
@@ -2649,7 +2649,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_32_string_maxlength_path_failure(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_32_string_maxlength_path_failure_10();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/users/this_username_is_way_too_long_to_be_valid', []);
 
@@ -2659,7 +2659,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_33_string_pattern_path_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_33_string_pattern_path_success_11();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/repos/spikard-labs/spikard-http', []);
 
@@ -2669,7 +2669,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_34_string_pattern_path_failure(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_34_string_pattern_path_failure_12();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/repos/invalid@owner', []);
 
@@ -2679,7 +2679,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_35_negative_integer_path_param(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_35_negative_integer_path_param_13();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/offset/-100', []);
 
@@ -2689,7 +2689,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_boolean_path_parameter_true(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_boolean_path_parameter_true_14();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/path/bool/True', []);
 
@@ -2699,7 +2699,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_boolean_path_parameter_numeric_1(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_boolean_path_parameter_numeric_1_15();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/path/bool/1', []);
 
@@ -2709,7 +2709,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_date_path_parameter_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_date_path_parameter_success_16();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/date/2023-07-15', []);
 
@@ -2719,7 +2719,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_enum_path_parameter_invalid_value(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_enum_path_parameter_invalid_value_17();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/models/foo', []);
 
@@ -2729,7 +2729,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_enum_path_parameter_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_enum_path_parameter_success_18();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/models/alexnet', []);
 
@@ -2739,7 +2739,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_float_path_parameter_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_float_path_parameter_success_19();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/path/float/42.5', []);
 
@@ -2749,7 +2749,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_integer_path_parameter_invalid_string(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_integer_path_parameter_invalid_string_20();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/path/int/foobar', []);
 
@@ -2759,7 +2759,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_integer_path_parameter_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_integer_path_parameter_success_21();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/path/int/42', []);
 
@@ -2769,7 +2769,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success_22();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/path/param-lt-gt/2', []);
 
@@ -2779,7 +2779,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_integer_path_parameter_with_ge_constraint_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_integer_path_parameter_with_ge_constraint_success_23();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/path/param-ge/3', []);
 
@@ -2789,7 +2789,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_integer_path_parameter_with_gt_constraint_failure(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_integer_path_parameter_with_gt_constraint_failure_24();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/path/param-gt/2', []);
 
@@ -2799,7 +2799,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_integer_path_parameter_with_gt_constraint_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_integer_path_parameter_with_gt_constraint_success_25();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/path/param-gt/42', []);
 
@@ -2809,7 +2809,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_integer_path_parameter_with_le_constraint_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_integer_path_parameter_with_le_constraint_success_26();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/path/param-le/3', []);
 
@@ -2819,7 +2819,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_integer_path_parameter_with_lt_constraint_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_integer_path_parameter_with_lt_constraint_success_27();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/path/param-lt/2', []);
 
@@ -2829,7 +2829,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_multiple_path_parameters_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_multiple_path_parameters_success_28();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/1.0/1/abc/c892496f-b1fd-4b91-bdb8-b46f92df1716', []);
 
@@ -2839,7 +2839,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_path_parameter_type_syntax_invalid_uuid(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_path_parameter_type_syntax_invalid_uuid_29();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/type-syntax/items/not-a-uuid', []);
 
@@ -2849,7 +2849,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_path_parameter_type_syntax_with_override(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_path_parameter_type_syntax_with_override_30();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/type-syntax/items-count/50', []);
 
@@ -2859,7 +2859,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_path_parameter_with_type_syntax_uuid(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_path_parameter_with_type_syntax_uuid_31();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/type-syntax/items/550e8400-e29b-41d4-a716-446655440000', []);
 
@@ -2869,7 +2869,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_path_parameter_with_type_syntax_integer(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_path_parameter_with_type_syntax_integer_32();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/type-syntax/users/42', []);
 
@@ -2879,7 +2879,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_path_type_parameter_file_path(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_path_type_parameter_file_path_33();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/files/home/johndoe/myfile.txt', []);
 
@@ -2889,7 +2889,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_string_path_parameter_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_string_path_parameter_success_34();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/path/str/foobar', []);
 
@@ -2899,7 +2899,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_string_path_parameter_with_max_length_failure(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_string_path_parameter_with_max_length_failure_35();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/path/param-maxlength/foobar', []);
 
@@ -2909,7 +2909,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_string_path_parameter_with_min_length_failure(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_string_path_parameter_with_min_length_failure_36();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/path/param-minlength/fo', []);
 
@@ -2919,7 +2919,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_path_params_uuid_path_parameter_success(): void
     {
-        $app = AppFactory::create_path_params();
+        $app = AppFactory::create_path_params_uuid_path_parameter_success_37();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/ec38df32-ceda-4cfa-9b4a-1aeb94ad551a', []);
 
@@ -2929,9 +2929,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_42_negative_integer_query_param(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_42_negative_integer_query_param_1();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items/negative?offset=%22-10%22', []);
+        $response = $client->request('GET', '/items/negative?offset=-10', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['offset' => -10], $response->body);
@@ -2939,9 +2939,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_43_scientific_notation_float(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_43_scientific_notation_float_2();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/stats?threshold=%221.5e-3%22', []);
+        $response = $client->request('GET', '/stats?threshold=1.5e-3', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['threshold' => 0.0015], $response->body);
@@ -2949,9 +2949,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_44_string_minlength_validation_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_44_string_minlength_validation_success_3();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/search?term=%22foo%22', []);
+        $response = $client->request('GET', '/search?term=foo', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['term' => 'foo'], $response->body);
@@ -2959,9 +2959,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_45_string_minlength_validation_failure(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_45_string_minlength_validation_failure_4();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/search?term=%22ab%22', []);
+        $response = $client->request('GET', '/search?term=ab', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['actual_length' => 2, 'min_length' => 3], 'loc' => ['query', 'term'], 'msg' => 'String length must be at least 3', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -2969,9 +2969,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_46_string_maxlength_validation_failure(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_46_string_maxlength_validation_failure_5();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/search?term=%22this_is_way_too_long%22', []);
+        $response = $client->request('GET', '/search?term=this_is_way_too_long', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['actual_length' => 21, 'max_length' => 10], 'loc' => ['query', 'term'], 'msg' => 'String length must not exceed 10', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -2979,9 +2979,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_47_pattern_validation_email_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_47_pattern_validation_email_success_6();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/subscribe?email=%22user%40example.com%22', []);
+        $response = $client->request('GET', '/subscribe?email=user%40example.com', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['email' => 'user@example.com'], $response->body);
@@ -2989,9 +2989,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_48_pattern_validation_email_failure(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_48_pattern_validation_email_failure_7();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/subscribe?email=%22invalid-email%22', []);
+        $response = $client->request('GET', '/subscribe?email=invalid-email', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['pattern' => '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$', 'value' => 'invalid-email'], 'loc' => ['query', 'email'], 'msg' => 'String does not match pattern', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -2999,9 +2999,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_49_integer_gt_constraint_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_49_integer_gt_constraint_success_8();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items?limit=%225%22', []);
+        $response = $client->request('GET', '/items?limit=5', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['limit' => 5], $response->body);
@@ -3009,9 +3009,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_50_integer_gt_constraint_failure(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_50_integer_gt_constraint_failure_9();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items?limit=%220%22', []);
+        $response = $client->request('GET', '/items?limit=0', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['exclusive_minimum' => 0, 'value' => 0], 'loc' => ['query', 'limit'], 'msg' => 'Value must be greater than 0', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -3019,9 +3019,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_51_integer_ge_constraint_boundary(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_51_integer_ge_constraint_boundary_10();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items?offset=%220%22', []);
+        $response = $client->request('GET', '/items?offset=0', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['offset' => 0], $response->body);
@@ -3029,9 +3029,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_52_integer_le_constraint_boundary(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_52_integer_le_constraint_boundary_11();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items?limit=%22100%22', []);
+        $response = $client->request('GET', '/items?limit=100', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['limit' => 100], $response->body);
@@ -3039,9 +3039,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_53_integer_le_constraint_failure(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_53_integer_le_constraint_failure_12();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items?limit=%22101%22', []);
+        $response = $client->request('GET', '/items?limit=101', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['maximum' => 100, 'value' => 101], 'loc' => ['query', 'limit'], 'msg' => 'Value must not exceed 100', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -3049,9 +3049,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_54_array_minitems_constraint_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_54_array_minitems_constraint_success_13();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items?ids=%221%22&ids=%222%22&ids=%223%22', []);
+        $response = $client->request('GET', '/items?ids=1&ids=2&ids=3', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['ids' => [1, 2, 3]], $response->body);
@@ -3059,9 +3059,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_55_array_minitems_constraint_failure(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_55_array_minitems_constraint_failure_14();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items?ids=%221%22', []);
+        $response = $client->request('GET', '/items?ids=1', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['actual_items' => 1, 'min_items' => 2], 'loc' => ['query', 'ids'], 'msg' => 'Array must contain at least 2 items', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -3069,9 +3069,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_56_array_maxitems_constraint_failure(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_56_array_maxitems_constraint_failure_15();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items?tags=%22a%22&tags=%22b%22&tags=%22c%22&tags=%22d%22&tags=%22e%22&tags=%22f%22', []);
+        $response = $client->request('GET', '/items?tags=a&tags=b&tags=c&tags=d&tags=e&tags=f', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['actual_items' => 6, 'max_items' => 5], 'loc' => ['query', 'tags'], 'msg' => 'Array must not contain more than 5 items', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -3079,9 +3079,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_57_boolean_empty_string_coercion(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_57_boolean_empty_string_coercion_16();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items?active=%22%22', []);
+        $response = $client->request('GET', '/items?active=', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['active' => false], $response->body);
@@ -3089,9 +3089,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_58_format_email_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_58_format_email_success_17();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/subscribe?email=%22user%40example.com%22', []);
+        $response = $client->request('GET', '/subscribe?email=user%40example.com', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['email' => 'user@example.com'], $response->body);
@@ -3099,9 +3099,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_59_format_email_failure(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_59_format_email_failure_18();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/subscribe?email=%22not-an-email%22', []);
+        $response = $client->request('GET', '/subscribe?email=not-an-email', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['format' => 'email', 'value' => 'not-an-email'], 'loc' => ['query', 'email'], 'msg' => 'Invalid email format', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -3109,9 +3109,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_60_format_ipv4_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_60_format_ipv4_success_19();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/network?ip=%22192.168.1.1%22', []);
+        $response = $client->request('GET', '/network?ip=192.168.1.1', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['ip' => '192.168.1.1'], $response->body);
@@ -3119,9 +3119,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_61_format_ipv4_failure(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_61_format_ipv4_failure_20();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/network?ip=%22999.999.999.999%22', []);
+        $response = $client->request('GET', '/network?ip=999.999.999.999', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['format' => 'ipv4', 'value' => '999.999.999.999'], 'loc' => ['query', 'ip'], 'msg' => 'Invalid IPv4 address format', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -3129,9 +3129,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_62_format_ipv6_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_62_format_ipv6_success_21();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/network/ipv6?ip=%222001%3A0db8%3A85a3%3A0000%3A0000%3A8a2e%3A0370%3A7334%22', []);
+        $response = $client->request('GET', '/network/ipv6?ip=2001%3A0db8%3A85a3%3A0000%3A0000%3A8a2e%3A0370%3A7334', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['ip' => '2001:0db8:85a3:0000:0000:8a2e:0370:7334'], $response->body);
@@ -3139,9 +3139,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_63_format_uri_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_63_format_uri_success_22();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/redirect?url=%22https%3A%2F%2Fexample.com%2Fpath%3Fquery%3Dvalue%22', []);
+        $response = $client->request('GET', '/redirect?url=https%3A%2F%2Fexample.com%2Fpath%3Fquery%3Dvalue', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['url' => 'https://example.com/path?query=value'], $response->body);
@@ -3149,9 +3149,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_64_format_uri_failure(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_64_format_uri_failure_23();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/redirect?url=%22not%20a%20uri%22', []);
+        $response = $client->request('GET', '/redirect?url=not%20a%20uri', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['format' => 'uri', 'value' => 'not a uri'], 'loc' => ['query', 'url'], 'msg' => 'Invalid URI format', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -3159,9 +3159,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_65_format_hostname_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_65_format_hostname_success_24();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/dns?host=%22api.example.com%22', []);
+        $response = $client->request('GET', '/dns?host=api.example.com', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['host' => 'api.example.com'], $response->body);
@@ -3169,9 +3169,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_66_multipleof_constraint_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_66_multipleof_constraint_success_25();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items?quantity=%2215%22', []);
+        $response = $client->request('GET', '/items?quantity=15', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['quantity' => 15], $response->body);
@@ -3179,9 +3179,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_67_multipleof_constraint_failure(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_67_multipleof_constraint_failure_26();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items?quantity=%2217%22', []);
+        $response = $client->request('GET', '/items?quantity=17', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['multiple_of' => 5, 'value' => 17], 'loc' => ['query', 'quantity'], 'msg' => 'Value must be a multiple of 5', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -3189,9 +3189,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_68_array_uniqueitems_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_68_array_uniqueitems_success_27();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items?ids=%221%22&ids=%222%22&ids=%223%22&ids=%224%22', []);
+        $response = $client->request('GET', '/items?ids=1&ids=2&ids=3&ids=4', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['ids' => [1, 2, 3, 4]], $response->body);
@@ -3199,9 +3199,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_69_array_uniqueitems_failure(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_69_array_uniqueitems_failure_28();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items?ids=%221%22&ids=%222%22&ids=%222%22&ids=%223%22', []);
+        $response = $client->request('GET', '/items?ids=1&ids=2&ids=2&ids=3', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['duplicate_index' => 2, 'duplicate_value' => 2, 'unique_items' => true], 'loc' => ['query', 'ids'], 'msg' => 'Array items must be unique', 'type' => 'validation_error']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -3209,9 +3209,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_70_array_separator_pipe(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_70_array_separator_pipe_29();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items?tags=python|rust|typescript?tags=%22python%7Crust%7Ctypescript%22', []);
+        $response = $client->request('GET', '/items?tags=python%7Crust%7Ctypescript&tags=python%7Crust%7Ctypescript', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['tags' => ['python', 'rust', 'typescript']], $response->body);
@@ -3219,9 +3219,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_71_array_separator_semicolon(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_71_array_separator_semicolon_30();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items?colors=red;green;blue?colors=%22red%3Bgreen%3Bblue%22', []);
+        $response = $client->request('GET', '/items?colors=red%3Bgreen%3Bblue&colors=red%3Bgreen%3Bblue', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['colors' => ['red', 'green', 'blue']], $response->body);
@@ -3229,9 +3229,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_72_array_separator_space(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_72_array_separator_space_31();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/search?keywords=rust%20web%20framework?keywords=%22rust%20web%20framework%22', []);
+        $response = $client->request('GET', '/search?keywords=rust%20web%20framework&keywords=rust%20web%20framework', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['keywords' => ['rust', 'web', 'framework']], $response->body);
@@ -3239,7 +3239,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_array_query_parameter_empty_array(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_array_query_parameter_empty_array_32();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/query/list-default', []);
 
@@ -3249,9 +3249,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_array_query_parameter_single_value(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_array_query_parameter_single_value_33();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/list-default?tags=%22apple%22', []);
+        $response = $client->request('GET', '/query/list-default?tags=apple', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['apple'], $response->body);
@@ -3259,9 +3259,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_boolean_query_parameter_numeric_1(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_boolean_query_parameter_numeric_1_34();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/bool?flag=%221%22', []);
+        $response = $client->request('GET', '/query/bool?flag=1', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['flag' => true], $response->body);
@@ -3269,9 +3269,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_boolean_query_parameter_true(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_boolean_query_parameter_true_35();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/bool?flag=%22true%22', []);
+        $response = $client->request('GET', '/query/bool?flag=true', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['flag' => true], $response->body);
@@ -3279,9 +3279,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_date_query_parameter_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_date_query_parameter_success_36();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/date?event_date=%222024-01-15%22', []);
+        $response = $client->request('GET', '/query/date?event_date=2024-01-15', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['event_date' => '2024-01-15'], $response->body);
@@ -3289,9 +3289,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_datetime_query_parameter_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_datetime_query_parameter_success_37();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/datetime?timestamp=%222024-01-15T10%3A30%3A00Z%22', []);
+        $response = $client->request('GET', '/query/datetime?timestamp=2024-01-15T10%3A30%3A00Z', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['timestamp' => '2024-01-15T10:30:00Z'], $response->body);
@@ -3299,9 +3299,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_enum_query_parameter_invalid_value(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_enum_query_parameter_invalid_value_38();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/enum?model=%22vgg16%22', []);
+        $response = $client->request('GET', '/query/enum?model=vgg16', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['expected' => '\'alexnet\', \'resnet\' or \'lenet\''], 'input' => 'vgg16', 'loc' => ['query', 'model'], 'msg' => 'Input should be \'alexnet\', \'resnet\' or \'lenet\'', 'type' => 'enum']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -3309,9 +3309,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_enum_query_parameter_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_enum_query_parameter_success_39();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/enum?model=%22alexnet%22', []);
+        $response = $client->request('GET', '/query/enum?model=alexnet', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['model' => 'alexnet'], $response->body);
@@ -3319,9 +3319,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_float_query_param_with_ge_constraint_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_float_query_param_with_ge_constraint_success_40();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/float-ge?price=%220.01%22', []);
+        $response = $client->request('GET', '/query/float-ge?price=0.01', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['price' => 0.01], $response->body);
@@ -3329,9 +3329,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_integer_query_param_with_ge_constraint_boundary(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_integer_query_param_with_ge_constraint_boundary_41();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/int-ge?value=%2210%22', []);
+        $response = $client->request('GET', '/query/int-ge?value=10', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['value' => 10], $response->body);
@@ -3339,9 +3339,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_integer_query_param_with_gt_constraint_valid(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_integer_query_param_with_gt_constraint_valid_42();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/int-gt?value=%221%22', []);
+        $response = $client->request('GET', '/query/int-gt?value=1', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['value' => 1], $response->body);
@@ -3349,9 +3349,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_integer_query_param_with_le_constraint_boundary(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_integer_query_param_with_le_constraint_boundary_43();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/int-le?value=%22100%22', []);
+        $response = $client->request('GET', '/query/int-le?value=100', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['value' => 100], $response->body);
@@ -3359,9 +3359,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_integer_query_param_with_lt_constraint_valid(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_integer_query_param_with_lt_constraint_valid_44();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/int-lt?value=%2249%22', []);
+        $response = $client->request('GET', '/query/int-lt?value=49', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['value' => 49], $response->body);
@@ -3369,7 +3369,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_integer_with_default_value_not_provided(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_integer_with_default_value_not_provided_45();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/query/int/default', []);
 
@@ -3379,7 +3379,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_integer_with_default_value_override(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_integer_with_default_value_override_46();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/query/int/default?query=50', []);
 
@@ -3389,7 +3389,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_list_of_integers_multiple_values(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_list_of_integers_multiple_values_47();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/query/list?device_ids=1&device_ids=2', []);
 
@@ -3399,9 +3399,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_list_of_strings_multiple_values(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_list_of_strings_multiple_values_48();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items/?q=%22foo%22&q=%22bar%22', []);
+        $response = $client->request('GET', '/items/?q=foo&q=bar', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['q' => ['foo', 'bar']], $response->body);
@@ -3409,7 +3409,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_list_query_parameter_required_but_missing(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_list_query_parameter_required_but_missing_49();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/query/list', []);
 
@@ -3419,7 +3419,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_list_with_default_empty_array_no_values_provided(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_list_with_default_empty_array_no_values_provided_50();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/query/list-default', []);
 
@@ -3429,9 +3429,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_multiple_query_parameters_with_different_types(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_multiple_query_parameters_with_different_types_51();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/multi-type?age=%2230%22&score=%2295.5%22&active=%22true%22&name=%22john%22', []);
+        $response = $client->request('GET', '/query/multi-type?active=true&age=30&name=john&score=95.5', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['active' => true, 'age' => 30, 'name' => 'john', 'score' => 95.5], $response->body);
@@ -3439,7 +3439,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_optional_integer_query_parameter_missing(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_optional_integer_query_parameter_missing_52();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/query/int/optional', []);
 
@@ -3449,7 +3449,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_optional_query_parameter_with_default_value(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_optional_query_parameter_with_default_value_53();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/query/optional-default', []);
 
@@ -3459,7 +3459,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_optional_string_query_parameter_missing(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_optional_string_query_parameter_missing_54();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/query/optional', []);
 
@@ -3469,9 +3469,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_optional_string_query_parameter_provided(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_optional_string_query_parameter_provided_55();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/optional?query=%22baz%22', []);
+        $response = $client->request('GET', '/query/optional?query=baz', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals('foo bar baz', $response->body);
@@ -3479,9 +3479,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_query_parameter_with_url_encoded_space(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_query_parameter_with_url_encoded_space_56();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/basic?name=%22hello%20world%22', []);
+        $response = $client->request('GET', '/query/basic?name=hello%20world', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['name' => 'hello world'], $response->body);
@@ -3489,9 +3489,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_query_parameter_with_url_encoded_special_characters(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_query_parameter_with_url_encoded_special_characters_57();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/basic?name=%22test%26value%3D123%22', []);
+        $response = $client->request('GET', '/query/basic?name=test%26value%3D123', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['name' => 'test&value=123'], $response->body);
@@ -3499,9 +3499,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_query_parameter_with_special_characters_url_encoding(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_query_parameter_with_special_characters_url_encoding_58();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/test?special=%22%26%40A.ac%22&email=%22x%40test.com%22', []);
+        $response = $client->request('GET', '/test?email=x%40test.com&special=%26%40A.ac', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['email' => 'x@test.com', 'special' => '&@A.ac'], $response->body);
@@ -3509,9 +3509,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_required_integer_query_parameter_float_value(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_required_integer_query_parameter_float_value_59();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/int?query=%2242.5%22', []);
+        $response = $client->request('GET', '/query/int?query=42.5', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['input' => 42.5, 'loc' => ['query', 'query'], 'msg' => 'Input should be a valid integer, unable to parse string as an integer', 'type' => 'int_parsing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -3519,9 +3519,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_required_integer_query_parameter_invalid_type(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_required_integer_query_parameter_invalid_type_60();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/int?query=%22baz%22', []);
+        $response = $client->request('GET', '/query/int?query=baz', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['input' => 'baz', 'loc' => ['query', 'query'], 'msg' => 'Input should be a valid integer, unable to parse string as an integer', 'type' => 'int_parsing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -3529,7 +3529,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_required_integer_query_parameter_missing(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_required_integer_query_parameter_missing_61();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/query/int', []);
 
@@ -3539,7 +3539,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_required_integer_query_parameter_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_required_integer_query_parameter_success_62();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/query/int?query=42', []);
 
@@ -3549,7 +3549,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_required_string_query_parameter_missing(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_required_string_query_parameter_missing_63();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/query', []);
 
@@ -3559,9 +3559,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_required_string_query_parameter_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_required_string_query_parameter_success_64();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query?query=%22baz%22', []);
+        $response = $client->request('GET', '/query?query=baz', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals('foo bar baz', $response->body);
@@ -3569,9 +3569,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_string_query_param_with_max_length_constraint_fail(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_string_query_param_with_max_length_constraint_fail_65();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/str-max-length?name=%22this_is_way_too_long%22', []);
+        $response = $client->request('GET', '/query/str-max-length?name=this_is_way_too_long', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['max_length' => 10], 'input' => 'this_is_way_too_long', 'loc' => ['query', 'name'], 'msg' => 'String should have at most 10 characters', 'type' => 'string_too_long']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -3579,9 +3579,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_string_query_param_with_min_length_constraint_fail(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_string_query_param_with_min_length_constraint_fail_66();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/str-min-length?name=%22ab%22', []);
+        $response = $client->request('GET', '/query/str-min-length?name=ab', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['min_length' => 3], 'input' => 'ab', 'loc' => ['query', 'name'], 'msg' => 'String should have at least 3 characters', 'type' => 'string_too_short']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -3589,9 +3589,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_string_query_param_with_regex_pattern_fail(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_string_query_param_with_regex_pattern_fail_67();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/pattern?code=%22abc123%22', []);
+        $response = $client->request('GET', '/query/pattern?code=abc123', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['pattern' => '^[0-9]{3,}$'], 'input' => 'abc123', 'loc' => ['query', 'code'], 'msg' => 'String should match pattern \'^[0-9]{3,}$\'', 'type' => 'string_pattern_mismatch']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -3599,9 +3599,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_string_validation_with_regex_failure(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_string_validation_with_regex_failure_68();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items/?item_query=%22nonregexquery%22', []);
+        $response = $client->request('GET', '/items/?item_query=nonregexquery', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['pattern' => '^fixedquery$'], 'input' => 'nonregexquery', 'loc' => ['query', 'item_query'], 'msg' => 'String should match pattern \'^fixedquery$\'', 'type' => 'string_pattern_mismatch']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -3609,9 +3609,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_string_validation_with_regex_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_string_validation_with_regex_success_69();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items/?item_query=%22fixedquery%22', []);
+        $response = $client->request('GET', '/items/?item_query=fixedquery', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['item_query' => 'fixedquery'], $response->body);
@@ -3619,9 +3619,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_uuid_query_parameter_invalid_format(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_uuid_query_parameter_invalid_format_70();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/uuid?item_id=%22not-a-uuid%22', []);
+        $response = $client->request('GET', '/query/uuid?item_id=not-a-uuid', []);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['input' => 'not-a-uuid', 'loc' => ['query', 'item_id'], 'msg' => 'Input should be a valid UUID', 'type' => 'uuid_parsing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -3629,9 +3629,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_query_params_uuid_query_parameter_success(): void
     {
-        $app = AppFactory::create_query_params();
+        $app = AppFactory::create_query_params_uuid_query_parameter_success_71();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/uuid?item_id=%22c892496f-b1fd-4b91-bdb8-b46f92df1716%22', []);
+        $response = $client->request('GET', '/query/uuid?item_id=c892496f-b1fd-4b91-bdb8-b46f92df1716', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['item_id' => 'c892496f-b1fd-4b91-bdb8-b46f92df1716'], $response->body);
@@ -3639,7 +3639,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_rate_limit_rate_limit_below_threshold_succeeds(): void
     {
-        $app = AppFactory::create_rate_limit();
+        $app = AppFactory::create_rate_limit_rate_limit_below_threshold_succeeds_1();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/rate-limit/basic', []);
 
@@ -3649,7 +3649,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_rate_limit_rate_limit_exceeded_returns_429(): void
     {
-        $app = AppFactory::create_rate_limit();
+        $app = AppFactory::create_rate_limit_rate_limit_exceeded_returns_429_2();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/rate-limit/exceeded', []);
 
@@ -3659,7 +3659,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_request_id_request_id_header_is_preserved(): void
     {
-        $app = AppFactory::create_request_id();
+        $app = AppFactory::create_request_id_request_id_header_is_preserved_1();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/request-id/preserved', ['headers' => ['X-Request-ID' => 'trace-123']]);
 
@@ -3669,7 +3669,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_request_id_request_id_is_generated_when_not_provided(): void
     {
-        $app = AppFactory::create_request_id();
+        $app = AppFactory::create_request_id_request_id_is_generated_when_not_provided_2();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/request-id/generated', []);
 
@@ -3679,7 +3679,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_request_id_request_id_middleware_can_be_disabled(): void
     {
-        $app = AppFactory::create_request_id();
+        $app = AppFactory::create_request_id_request_id_middleware_can_be_disabled_3();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/request-id/disabled', ['headers' => ['X-Request-ID' => 'external-id']]);
 
@@ -3689,7 +3689,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_request_timeout_request_completes_before_timeout(): void
     {
-        $app = AppFactory::create_request_timeout();
+        $app = AppFactory::create_request_timeout_request_completes_before_timeout_1();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/timeouts/fast', []);
 
@@ -3699,7 +3699,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_request_timeout_request_exceeds_timeout(): void
     {
-        $app = AppFactory::create_request_timeout();
+        $app = AppFactory::create_request_timeout_request_exceeds_timeout_2();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/timeouts/slow', []);
 
@@ -3709,7 +3709,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_static_files_static_file_server_returns_text_file(): void
     {
-        $app = AppFactory::create_static_files();
+        $app = AppFactory::create_static_files_static_file_server_returns_text_file_1();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/public/hello.txt', []);
 
@@ -3719,7 +3719,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_static_files_static_server_returns_index_html_for_directory(): void
     {
-        $app = AppFactory::create_static_files();
+        $app = AppFactory::create_static_files_static_server_returns_index_html_for_directory_2();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/app/', []);
 
@@ -3729,7 +3729,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_19_413_payload_too_large(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_19_413_payload_too_large_1();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/upload', ['body' => ['data' => '{{ repeat \'x\' 2000 times }}']]);
 
@@ -3739,7 +3739,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_200_ok_success(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_200_ok_success_2();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/status-test/200', []);
 
@@ -3749,7 +3749,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_201_created_resource_created(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_201_created_resource_created_3();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'New Item']]);
 
@@ -3759,7 +3759,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_202_accepted_request_accepted_for_processing(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_202_accepted_request_accepted_for_processing_4();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/tasks/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['task' => 'process_data']]);
 
@@ -3769,7 +3769,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_204_no_content_success_with_no_body(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_204_no_content_success_with_no_body_5();
         $client = TestClient::create($app);
         $response = $client->request('DELETE', '/status-test/204', []);
 
@@ -3779,7 +3779,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_206_partial_content(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_206_partial_content_6();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/files/document.pdf', ['headers' => ['Range' => 'bytes=0-1023']]);
 
@@ -3789,7 +3789,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_20_414_uri_too_long(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_20_414_uri_too_long_7();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/data?skip_template_expansion=true', []);
 
@@ -3799,7 +3799,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_21_431_request_header_fields_too_large(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_21_431_request_header_fields_too_large_8();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/data', ['headers' => ['X-Large-Header' => '{{ repeat \'x\' 10000 times }}']]);
 
@@ -3809,7 +3809,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_22_501_not_implemented(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_22_501_not_implemented_9();
         $client = TestClient::create($app);
         $response = $client->request('TRACE', '/data', []);
 
@@ -3819,7 +3819,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_23_503_service_unavailable(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_23_503_service_unavailable_10();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/data', []);
 
@@ -3829,7 +3829,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_301_moved_permanently_permanent_redirect(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_301_moved_permanently_permanent_redirect_11();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/old-path', []);
 
@@ -3839,7 +3839,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_302_found_temporary_redirect(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_302_found_temporary_redirect_12();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/temp-redirect', []);
 
@@ -3849,7 +3849,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_304_not_modified_cached_content_valid(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_304_not_modified_cached_content_valid_13();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/status-test/304', ['headers' => ['If-None-Match' => '"abc123"']]);
 
@@ -3859,7 +3859,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_307_temporary_redirect_method_preserved(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_307_temporary_redirect_method_preserved_14();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/redirect-post', ['headers' => ['Content-Type' => 'application/json'], 'body' => []]);
 
@@ -3869,7 +3869,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_400_bad_request_invalid_request(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_400_bad_request_invalid_request_15();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => 'not valid json']);
 
@@ -3879,7 +3879,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_401_unauthorized_missing_authentication(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_401_unauthorized_missing_authentication_16();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/users/me', []);
 
@@ -3889,7 +3889,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_403_forbidden_insufficient_permissions(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_403_forbidden_insufficient_permissions_17();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/admin/users', ['headers' => ['Authorization' => 'Bearer valid_token']]);
 
@@ -3899,7 +3899,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_404_not_found_resource_not_found(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_404_not_found_resource_not_found_18();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/status-test/404', []);
 
@@ -3909,7 +3909,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_408_request_timeout(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_408_request_timeout_19();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/slow-endpoint', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['data' => 'large_data']]);
 
@@ -3919,7 +3919,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_422_unprocessable_entity_validation_error(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_422_unprocessable_entity_validation_error_20();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['price' => 'not a number']]);
 
@@ -3929,7 +3929,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_429_too_many_requests(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_429_too_many_requests_21();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/api/resource', []);
 
@@ -3939,7 +3939,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_500_internal_server_error_server_error(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_500_internal_server_error_server_error_22();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/error', []);
 
@@ -3949,7 +3949,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_status_codes_503_service_unavailable_server_overload(): void
     {
-        $app = AppFactory::create_status_codes();
+        $app = AppFactory::create_status_codes_503_service_unavailable_server_overload_23();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/health', []);
 
@@ -3959,7 +3959,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_streaming_binary_log_download(): void
     {
-        $app = AppFactory::create_streaming();
+        $app = AppFactory::create_streaming_binary_log_download_1();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/stream/logfile', []);
 
@@ -3969,7 +3969,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_streaming_chunked_csv_export(): void
     {
-        $app = AppFactory::create_streaming();
+        $app = AppFactory::create_streaming_chunked_csv_export_2();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/stream/csv-report', []);
 
@@ -3979,7 +3979,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_streaming_stream_json_lines(): void
     {
-        $app = AppFactory::create_streaming();
+        $app = AppFactory::create_streaming_stream_json_lines_3();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/stream/json-lines', []);
 
@@ -3989,7 +3989,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_13_array_field_success(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_13_array_field_success_1();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/register', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded'], 'body' => 'tags[]=python&tags[]=rust&tags[]=typescript']);
 
@@ -3999,7 +3999,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_14_nested_object_bracket_notation(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_14_nested_object_bracket_notation_2();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/profile', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded'], 'body' => 'user[name]=John%20Doe&user[email]=john@example.com&user[age]=30']);
 
@@ -4009,7 +4009,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_15_special_characters_field_names(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_15_special_characters_field_names_3();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/data', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded'], 'body' => 'user-name=JohnDoe&contact.email=john%40example.com']);
 
@@ -4019,7 +4019,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_16_minlength_validation_failure(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_16_minlength_validation_failure_4();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/users', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded'], 'body' => 'username=ab']);
 
@@ -4029,7 +4029,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_17_pattern_validation_failure(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_17_pattern_validation_failure_5();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/accounts', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded'], 'body' => 'account_id=INVALID123']);
 
@@ -4039,7 +4039,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_18_integer_minimum_validation_failure(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_18_integer_minimum_validation_failure_6();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/products', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded'], 'body' => 'quantity=0']);
 
@@ -4049,7 +4049,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_19_array_minitems_validation_failure(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_19_array_minitems_validation_failure_7();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/tags', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded'], 'body' => 'tags[]=single']);
 
@@ -4059,7 +4059,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_20_format_email_validation_failure(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_20_format_email_validation_failure_8();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/subscribe', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded'], 'body' => 'email=not-an-email']);
 
@@ -4069,7 +4069,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_21_integer_type_coercion_failure(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_21_integer_type_coercion_failure_9();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/products', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded'], 'body' => 'price=not-a-number']);
 
@@ -4079,7 +4079,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_22_additional_properties_strict_failure(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_22_additional_properties_strict_failure_10();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/settings', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded'], 'body' => 'theme=dark&unknown_field=value']);
 
@@ -4089,7 +4089,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_boolean_field_conversion(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_boolean_field_conversion_11();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/form/', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded']]);
 
@@ -4099,7 +4099,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_empty_string_value(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_empty_string_value_12();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/form/', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded']]);
 
@@ -4109,7 +4109,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_multiple_values_for_same_field(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_multiple_values_for_same_field_13();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/form/tags', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded']]);
 
@@ -4119,7 +4119,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_numeric_field_type_conversion(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_numeric_field_type_conversion_14();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/form/', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded']]);
 
@@ -4129,7 +4129,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_oauth2_password_grant_flow(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_oauth2_password_grant_flow_15();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/token', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded']]);
 
@@ -4139,7 +4139,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_optional_field_missing_success(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_optional_field_missing_success_16();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/register/', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded']]);
 
@@ -4149,7 +4149,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_pattern_validation_fail(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_pattern_validation_fail_17();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/form/validated', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded']]);
 
@@ -4159,7 +4159,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_required_field_missing_validation_error(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_required_field_missing_validation_error_18();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/login/', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded']]);
 
@@ -4169,7 +4169,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_simple_form_submission_success(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_simple_form_submission_success_19();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/login/', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded']]);
 
@@ -4179,7 +4179,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_special_characters_encoding(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_special_characters_encoding_20();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/form/', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded']]);
 
@@ -4189,7 +4189,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_string_max_length_validation_fail(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_string_max_length_validation_fail_21();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/form/validated', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded']]);
 
@@ -4199,7 +4199,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_url_encoded_string_min_length_validation_fail(): void
     {
-        $app = AppFactory::create_url_encoded();
+        $app = AppFactory::create_url_encoded_string_min_length_validation_fail_22();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/form/validated', ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded']]);
 
@@ -4209,7 +4209,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_09_multiple_validation_errors(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_09_multiple_validation_errors_1();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/users', ['body' => ['age' => 15, 'email' => 'invalid-email', 'name' => 'ab']]);
 
@@ -4219,7 +4219,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_10_nested_error_path(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_10_nested_error_path_2();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/profiles', ['body' => ['profile' => ['contact' => ['email' => 'invalid']]]]);
 
@@ -4229,7 +4229,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_array_item_validation_error(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_array_item_validation_error_3();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'Item', 'price' => 10.0, 'tags' => ['tag1', 'tag2', 123]]]);
 
@@ -4239,7 +4239,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_array_max_items_constraint_violation(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_array_max_items_constraint_violation_4();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'Item', 'price' => 10.0, 'tags' => ['tag1', 'tag2', 'tag3', 'tag4', 'tag5', 'tag6', 'tag7', 'tag8', 'tag9', 'tag10', 'tag11']]]);
 
@@ -4249,7 +4249,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_array_min_items_constraint_violation(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_array_min_items_constraint_violation_5();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'Item', 'price' => 10.0, 'tags' => []]]);
 
@@ -4259,7 +4259,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_body_field_type_error_string_for_float(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_body_field_type_error_string_for_float_6();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'Item', 'price' => 'not_a_float']]);
 
@@ -4269,7 +4269,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_header_validation_error(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_header_validation_error_7();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/?q=test', []);
 
@@ -4279,7 +4279,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_invalid_uuid_format(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_invalid_uuid_format_8();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/not-a-uuid', []);
 
@@ -4289,9 +4289,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_invalid_boolean_value(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_invalid_boolean_value_9();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items/?q=test&is_active=maybe', ['headers' => ['x-token' => 'test-token']]);
+        $response = $client->request('GET', '/items/?is_active=maybe&q=test', ['headers' => ['x-token' => 'test-token']]);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['input' => 'maybe', 'loc' => ['query', 'is_active'], 'msg' => 'Input should be a valid boolean, unable to interpret input', 'type' => 'bool_parsing']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -4299,7 +4299,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_invalid_datetime_format(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_invalid_datetime_format_10();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['created_at' => 'not-a-datetime', 'name' => 'Item', 'price' => 10.0]]);
 
@@ -4309,7 +4309,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_invalid_enum_value(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_invalid_enum_value_11();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/models/invalid_model', []);
 
@@ -4319,7 +4319,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_malformed_json_body(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_malformed_json_body_12();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => '{"name": "Item", "price": }']);
 
@@ -4329,7 +4329,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_missing_required_body_field(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_missing_required_body_field_13();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'Item']]);
 
@@ -4339,7 +4339,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_missing_required_query_parameter(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_missing_required_query_parameter_14();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/', ['headers' => ['x-token' => 'test-token']]);
 
@@ -4349,7 +4349,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_multiple_validation_errors(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_multiple_validation_errors_15();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'X', 'price' => -10, 'quantity' => 'not_a_number']]);
 
@@ -4359,7 +4359,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_nested_object_validation_error(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_nested_object_validation_error_16();
         $client = TestClient::create($app);
         $response = $client->request('POST', '/items/', ['headers' => ['Content-Type' => 'application/json'], 'body' => ['name' => 'Product', 'price' => 10.0, 'seller' => ['address' => ['city' => 'SF', 'zip_code' => '123'], 'name' => 'Jo']]]);
 
@@ -4369,9 +4369,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_numeric_constraint_violation_gt_greater_than(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_numeric_constraint_violation_gt_greater_than_17();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items/?q=test&price=0', ['headers' => ['x-token' => 'test-token']]);
+        $response = $client->request('GET', '/items/?price=0&q=test', ['headers' => ['x-token' => 'test-token']]);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['gt' => 0], 'input' => '0', 'loc' => ['query', 'price'], 'msg' => 'Input should be greater than 0', 'type' => 'greater_than']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -4379,9 +4379,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_numeric_constraint_violation_le_less_than_or_equal(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_numeric_constraint_violation_le_less_than_or_equal_18();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items/?q=test&limit=101', ['headers' => ['x-token' => 'test-token']]);
+        $response = $client->request('GET', '/items/?limit=101&q=test', ['headers' => ['x-token' => 'test-token']]);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['le' => 100], 'input' => '101', 'loc' => ['query', 'limit'], 'msg' => 'Input should be less than or equal to 100', 'type' => 'less_than_equal']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
@@ -4389,7 +4389,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_query_param_type_error_string_provided_for_int(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_query_param_type_error_string_provided_for_int_19();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/?q=test&skip=not_a_number', ['headers' => ['x-token' => 'test-token']]);
 
@@ -4399,7 +4399,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_string_max_length_constraint_violation(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_string_max_length_constraint_violation_20();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/?q=this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter', ['headers' => ['x-token' => 'test-token']]);
 
@@ -4409,7 +4409,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_string_min_length_constraint_violation(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_string_min_length_constraint_violation_21();
         $client = TestClient::create($app);
         $response = $client->request('GET', '/items/?q=ab', ['headers' => ['x-token' => 'test-token']]);
 
@@ -4419,9 +4419,9 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_validation_errors_string_regex_pattern_mismatch(): void
     {
-        $app = AppFactory::create_validation_errors();
+        $app = AppFactory::create_validation_errors_string_regex_pattern_mismatch_22();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items/?q=invalid!', ['headers' => ['x-token' => 'test-token']]);
+        $response = $client->request('GET', '/items/?q=invalid%21', ['headers' => ['x-token' => 'test-token']]);
 
         $this->assertSame(422, $response->statusCode);
         $this->assertEquals(['detail' => '1 validation error in request', 'errors' => [['ctx' => ['pattern' => '^[a-zA-Z0-9_-]+$'], 'input' => 'invalid!', 'loc' => ['query', 'q'], 'msg' => 'String should match pattern \'^[a-zA-Z0-9_-]+$\'', 'type' => 'string_pattern_mismatch']], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error'], $response->body);
