@@ -2,7 +2,7 @@ use ext_php_rs::prelude::*;
 use serde_json::Value;
 use std::collections::HashMap;
 
-/// PHP-visible Response container (placeholder).
+/// PHP-visible HTTP response container.
 #[php_class(name = "Spikard\\Internal\\Response")]
 pub struct PhpResponse {
     status: i64,
@@ -26,6 +26,12 @@ impl PhpResponse {
         self.status
     }
 
+    /// Alias for compatibility with language bindings.
+    #[getter(name = "statusCode")]
+    pub fn status_code(&self) -> i64 {
+        self.status
+    }
+
     #[getter]
     pub fn body(&self) -> &Value {
         &self.body
@@ -43,6 +49,17 @@ impl PhpResponse {
         Self {
             status: status.unwrap_or(200),
             body,
+            headers,
+        }
+    }
+
+    /// Build a plain-text response.
+    pub fn text(body: String, status: Option<i64>) -> Self {
+        let mut headers = HashMap::new();
+        headers.insert("content-type".to_string(), "text/plain".to_string());
+        Self {
+            status: status.unwrap_or(200),
+            body: Value::String(body),
             headers,
         }
     }

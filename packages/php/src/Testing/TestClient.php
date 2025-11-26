@@ -85,7 +85,7 @@ final class TestClient
 
     public function close(): void
     {
-        // placeholder for resource cleanup once HTTP runtime is wired
+        $this->app->close();
     }
 
     /**
