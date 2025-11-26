@@ -25,6 +25,8 @@
 .pytest_cache/
 .python-version
 .ruff_cache/
+.phpunit.result.cache
+.phpunit.cache
 .task/
 .venv/
 .vscode/
