@@ -4,6 +4,7 @@
 //! incomplete until the PHP bindings are implemented, but assertions are
 //! emitted to drive TDD once the runtime is ready.
 
+use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use anyhow::{Context, Result};
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::BTreeMap;
@@ -19,7 +20,9 @@ pub fn generate_php_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()> 
     fs::create_dir_all(&tests_dir).context("Failed to create PHP tests directory")?;
 
     let fixtures_by_category = load_fixtures_grouped(fixtures_dir)?;
-    let test_code = build_test_file(&fixtures_by_category);
+    let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
+    let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
+    let test_code = build_test_file(&fixtures_by_category, &sse_fixtures, &websocket_fixtures);
     fs::write(tests_dir.join("GeneratedTest.php"), test_code).context("Failed to write GeneratedTest.php")?;
 
     let bootstrap = r#"<?php
@@ -60,7 +63,11 @@ fn load_fixtures_grouped(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<Fix
     Ok(grouped)
 }
 
-fn build_test_file(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> String {
+fn build_test_file(
+    fixtures_by_category: &BTreeMap<String, Vec<Fixture>>,
+    sse_fixtures: &[AsyncFixture],
+    websocket_fixtures: &[AsyncFixture],
+) -> String {
     let mut code = String::new();
     code.push_str(
         "<?php\ndeclare(strict_types=1);\n\nuse PHPUnit\\Framework\\TestCase;\nuse Spikard\\Testing\\TestClient;\nuse E2E\\Php\\AppFactory;\n\n/**\n * Generated from testing_data fixtures.\n */\nfinal class GeneratedTest extends TestCase\n{\n",
@@ -70,6 +77,26 @@ fn build_test_file(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> Str
         for (index, fixture) in fixtures.iter().enumerate() {
             code.push_str(&build_fixture_test(category, index, fixture));
         }
+    }
+
+    for (idx, fixture) in sse_fixtures.iter().enumerate() {
+        let channel = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
+        code.push_str(&format!(
+            "    public function test_sse_{}_{}(): void\n    {{\n        $this->markTestIncomplete('SSE support for PHP bindings not implemented yet (fixture: {}).');\n    }}\n\n",
+            sanitize_identifier(&channel),
+            idx + 1,
+            fixture.name
+        ));
+    }
+
+    for (idx, fixture) in websocket_fixtures.iter().enumerate() {
+        let channel = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
+        code.push_str(&format!(
+            "    public function test_websocket_{}_{}(): void\n    {{\n        $this->markTestIncomplete('WebSocket support for PHP bindings not implemented yet (fixture: {}).');\n    }}\n\n",
+            sanitize_identifier(&channel),
+            idx + 1,
+            fixture.name
+        ));
     }
 
     code.push_str("}\n");
