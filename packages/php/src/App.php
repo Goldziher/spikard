@@ -108,6 +108,21 @@ final class App
         return $this->routes;
     }
 
+    /**
+     * Find a handler for the given method and path.
+     */
+    public function findHandler(string $method, string $path): ?HandlerInterface
+    {
+        $needleMethod = \strtoupper($method);
+        foreach ($this->routes as $route) {
+            if (\strtoupper($route['method']) === $needleMethod && $route['path'] === $path) {
+                return $route['handler'];
+            }
+        }
+
+        return null;
+    }
+
     /** @return array<string, WebSocketHandlerInterface> */
     public function websocketHandlers(): array
     {
