@@ -53,6 +53,10 @@ packages/node/index.d.ts
 packages/node/index.js
 packages/wasm/runtime/
 pnpm-debug.log*
+packages/php/vendor/
+packages/php/var/*
+!packages/php/var/.gitkeep
+!packages/php/var/cache/.gitkeep
 reports/
 results/
 rust-coverage.lcov

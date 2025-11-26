@@ -6,6 +6,7 @@ members = [
     "crates/spikard-codegen",
     "crates/spikard-core",
     "crates/spikard-http",
+    "crates/spikard-php",
     "crates/spikard-py",
     "crates/spikard-node",
     "crates/spikard-wasm",

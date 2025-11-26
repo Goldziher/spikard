@@ -389,6 +389,32 @@ jobs:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
         run: bundle exec rspec
 
+  php-tests:
+    name: PHP Tests
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          tools: composer
+          coverage: none
+
+      - name: Install PHP dependencies
+        working-directory: packages/php
+        run: composer install --no-interaction --no-progress
+
+      - name: PHPStan
+        working-directory: packages/php
+        run: composer run lint
+
+      - name: PHPUnit
+        working-directory: packages/php
+        run: composer run test
   smoke-cli:
     name: Smoke Test CLI (${{ matrix.target }})
     needs: [cli-binaries]

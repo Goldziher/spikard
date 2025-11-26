@@ -102,7 +102,7 @@ repos:
         exclude: ^scripts/|^examples/|^e2e/|^tools/
       - id: phpstan
         name: PHPStan
-        entry: phpstan analyse --memory-limit=2G --no-progress
+        entry: phpstan analyse --memory-limit=2G --no-progress --configuration packages/php/phpstan.neon packages/php/src packages/php/tests
         language: system
         types: [php]
         pass_filenames: false
