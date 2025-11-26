@@ -27,6 +27,8 @@
 .ruff_cache/
 .phpunit.result.cache
 .phpunit.cache
+**/.phpunit.result.cache
+**/.phpunit.cache
 .task/
 .venv/
 .vscode/
