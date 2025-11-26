@@ -182,8 +182,8 @@ impl NativeTestClient {
     #[constructor]
     pub fn __construct(routes: Vec<Zval>) -> Result<Self, PhpException> {
         let (router, route_metadata) = build_router_from_php(routes)?;
-        let axum_router = spikard_http::router::build_router_for_testing(router, route_metadata)
-            .map_err(|e| PhpException::default(e))?;
+        let axum_router =
+            spikard_http::router::build_router_for_testing(router, route_metadata).map_err(PhpException::default)?;
         let server = TestServer::new(axum_router)
             .map_err(|e| PhpException::default(format!("Failed to create test server: {e}")))?;
 
@@ -357,9 +357,10 @@ fn build_router_from_php(routes: Vec<Zval>) -> Result<(Router, Vec<spikard_core:
             .to_string();
         let handler_zval = array
             .get("handler")
-            .map_err(|e| PhpException::default(e.to_string()))?
-            .ok_or_else(|| PhpException::default("missing handler".into()))?
-            .clone();
+            .ok()
+            .flatten()
+            .cloned()
+            .unwrap_or_else(|| Zval::new());
 
         let route = Route {
             method: method.parse().map_err(|e: String| PhpException::default(e))?,
