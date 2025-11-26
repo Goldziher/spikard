@@ -9,8 +9,12 @@ use axum_test::TestServer;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
 use serde_json::Value;
+use spikard_http::lifecycle::{HookResult, LifecycleHooks};
 use spikard_http::testing::{call_test_server, snapshot_response};
-use spikard_http::{Handler, HandlerResult, RequestData, Route, Router, Server, ServerConfig};
+use spikard_http::{
+    CompressionConfig, CorsConfig, Handler, HandlerResult, RateLimitConfig, RequestData, Route, Router, Server,
+    ServerConfig, StaticFilesConfig,
+};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
@@ -142,18 +146,21 @@ pub fn spikard_echo_response(body: &str) -> PhpResponse {
 
 /// Start a background server; returns a handle id.
 #[php_function]
-pub fn spikard_start_server(routes: Vec<Zval>, config: HashMap<String, Zval>) -> Result<i64, PhpException> {
+pub fn spikard_start_server(
+    routes: Vec<Zval>,
+    config: HashMap<String, Zval>,
+    lifecycle: Option<HashMap<String, Zval>>,
+) -> Result<i64, PhpException> {
     let runtime = Runtime::new().map_err(|e| PhpException::default(e.to_string()))?;
 
-    // Build router and handlers
     let (router, metadata) = build_router_from_php(routes)?;
+    let server_config = extract_server_config(config)?;
+    let hooks = extract_lifecycle_hooks(lifecycle.unwrap_or_default())?;
 
-    // TODO: parse lifecycle hooks, DI, SSE/WS once exposed on PHP side.
-    let server_config = ServerConfig::default();
-    let axum_router = spikard_http::router::build_router_with_config(router, server_config.clone(), metadata)
-        .map_err(|e| PhpException::default(e.to_string()))?;
+    let axum_router =
+        spikard_http::router::build_router_with_config_and_hooks(router, server_config.clone(), metadata, hooks)
+            .map_err(|e| PhpException::default(e.to_string()))?;
 
-    // Bind and serve in background; capture handle
     let handle_id = HANDLE_REGISTRY.register(runtime, axum_router, server_config)?;
     Ok(handle_id)
 }
@@ -279,7 +286,12 @@ fn zval_to_json(value: &Zval) -> Result<Value, serde_json::Error> {
         let mut map = serde_json::Map::new();
         for (k, v) in arr.iter() {
             let key = k.string().unwrap_or_else(|| "".into()).to_string();
-            map.insert(key, Value::String(v.to_string()));
+            // Try to coerce to JSON if possible
+            if let Ok(nested) = zval_to_json(&v) {
+                map.insert(key, nested);
+            } else {
+                map.insert(key, Value::String(v.to_string()));
+            }
         }
         Ok(Value::Object(map))
     } else if let Some(str_val) = value.string() {
@@ -387,4 +399,175 @@ fn build_router_from_php(routes: Vec<Zval>) -> Result<(Router, Vec<spikard_core:
     }
 
     Ok((router, route_metadata))
+}
+
+fn extract_server_config(config: HashMap<String, Zval>) -> Result<ServerConfig, PhpException> {
+    let mut server = ServerConfig::default();
+
+    if let Some(c) = config.get("compression") {
+        if let Ok(arr) = ext_php_rs::types::array::Array::try_from(c) {
+            let gzip = arr.get("gzip").ok().and_then(|v| v.bool()).unwrap_or(true);
+            let brotli = arr.get("brotli").ok().and_then(|v| v.bool()).unwrap_or(true);
+            let min_size = arr.get("minSize").ok().and_then(|v| v.long()).unwrap_or(1024) as usize;
+            let quality = arr.get("quality").ok().and_then(|v| v.long()).unwrap_or(6) as u32;
+            server.compression = Some(CompressionConfig {
+                gzip,
+                brotli,
+                min_size,
+                quality,
+            });
+        }
+    }
+
+    if let Some(r) = config.get("rateLimit") {
+        if let Ok(arr) = ext_php_rs::types::array::Array::try_from(r) {
+            if let (Some(per_second), Some(burst)) = (
+                arr.get("perSecond").ok().and_then(|v| v.long()),
+                arr.get("burst").ok().and_then(|v| v.long()),
+            ) {
+                let ip_based = arr.get("ipBased").ok().and_then(|v| v.bool()).unwrap_or(true);
+                server.rate_limit = Some(RateLimitConfig {
+                    per_second: per_second as u64,
+                    burst: burst as u32,
+                    ip_based,
+                });
+            }
+        }
+    }
+
+    if let Some(c) = config.get("cors") {
+        if let Ok(arr) = ext_php_rs::types::array::Array::try_from(c) {
+            let allow_origins = arr
+                .get("allowOrigins")
+                .ok()
+                .and_then(|v| to_string_vec(v))
+                .unwrap_or_default();
+            let allow_methods = arr
+                .get("allowMethods")
+                .ok()
+                .and_then(|v| to_string_vec(v))
+                .unwrap_or_default();
+            let allow_headers = arr
+                .get("allowHeaders")
+                .ok()
+                .and_then(|v| to_string_vec(v))
+                .unwrap_or_default();
+            let expose_headers = arr
+                .get("exposeHeaders")
+                .ok()
+                .and_then(|v| to_string_vec(v))
+                .unwrap_or_default();
+            let allow_credentials = arr.get("allowCredentials").ok().and_then(|v| v.bool()).unwrap_or(true);
+            let max_age = arr.get("maxAge").ok().and_then(|v| v.long()).map(|v| v as u64);
+
+            server.cors = Some(CorsConfig {
+                allow_origins,
+                allow_methods,
+                allow_headers,
+                expose_headers,
+                allow_credentials,
+                max_age,
+            });
+        }
+    }
+
+    if let Some(s) = config.get("staticFiles") {
+        if let Ok(arr) = ext_php_rs::types::array::Array::try_from(s) {
+            let mut files = Vec::new();
+            for (_, item) in arr.iter() {
+                if let Ok(item_arr) = ext_php_rs::types::array::Array::try_from(item) {
+                    if let (Some(directory), Some(route_prefix)) = (
+                        item_arr.get("directory").ok().and_then(|v| v.string()),
+                        item_arr.get("routePrefix").ok().and_then(|v| v.string()),
+                    ) {
+                        let index_file = item_arr.get("indexFile").ok().and_then(|v| v.bool()).unwrap_or(true);
+                        let cache_control = item_arr
+                            .get("cacheControl")
+                            .ok()
+                            .and_then(|v| v.string())
+                            .map(|s| s.to_string());
+                        files.push(StaticFilesConfig {
+                            directory: directory.to_string(),
+                            route_prefix: route_prefix.to_string(),
+                            index_file,
+                            cache_control,
+                        });
+                    }
+                }
+            }
+            server.static_files = files;
+        }
+    }
+
+    // Host/port
+    if let Some(h) = config.get("host").and_then(|v| v.string()) {
+        server.host = h.to_string();
+    }
+    if let Some(p) = config.get("port").and_then(|v| v.long()) {
+        server.port = p as u16;
+    }
+
+    Ok(server)
+}
+
+fn extract_lifecycle_hooks(hooks: HashMap<String, Zval>) -> Result<LifecycleHooks, PhpException> {
+    let make_hook = |key: &str, hooks: &HashMap<String, Zval>| -> Option<Arc<PhpHandlerWrapper>> {
+        hooks
+            .get(key)
+            .map(|cb| Arc::new(PhpHandlerWrapper { handler: cb.clone() }))
+    };
+
+    let on_request = make_hook("onRequest", &hooks);
+    let pre_validation = make_hook("preValidation", &hooks);
+    let pre_handler = make_hook("preHandler", &hooks);
+    let on_error = make_hook("onError", &hooks);
+    let on_response = make_hook("onResponse", &hooks);
+
+    Ok(LifecycleHooks {
+        on_request: on_request.map(|handler| {
+            Box::new(move |_req, _ctx| {
+                let _ = handler
+                    .handler
+                    .try_call_method("invoke", vec![])
+                    .map_err(|e| eprintln!("onRequest hook error: {}", e));
+                HookResult::Continue
+            }) as _
+        }),
+        pre_validation: pre_validation.map(|handler| {
+            Box::new(move |_req, _ctx| {
+                let _ = handler
+                    .handler
+                    .try_call_method("invoke", vec![])
+                    .map_err(|e| eprintln!("preValidation hook error: {}", e));
+                HookResult::Continue
+            }) as _
+        }),
+        pre_handler: pre_handler.map(|handler| {
+            Box::new(move |_req, _ctx| {
+                let _ = handler
+                    .handler
+                    .try_call_method("invoke", vec![])
+                    .map_err(|e| eprintln!("preHandler hook error: {}", e));
+                HookResult::Continue
+            }) as _
+        }),
+        on_error: on_error.map(|handler| {
+            Box::new(move |_req, _err, _ctx| {
+                let _ = handler
+                    .handler
+                    .try_call_method("invoke", vec![])
+                    .map_err(|e| eprintln!("onError hook error: {}", e));
+                HookResult::Continue
+            }) as _
+        }),
+        on_response: on_response.map(|handler| {
+            Box::new(move |_req, _res, _ctx| {
+                let _ = handler
+                    .handler
+                    .try_call_method("invoke", vec![])
+                    .map_err(|e| eprintln!("onResponse hook error: {}", e));
+                HookResult::Continue
+            }) as _
+        }),
+    })
 }
