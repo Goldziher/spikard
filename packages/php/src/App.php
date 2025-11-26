@@ -12,6 +12,7 @@ use Spikard\Handlers\HandlerInterface;
 use Spikard\Handlers\SseEventProducerInterface;
 use Spikard\Handlers\WebSocketHandlerInterface;
 use Spikard\Http\Request;
+use Spikard\Native\TestClient as NativeClient;
 
 /**
  * Spikard application facade for PHP bindings.
@@ -169,7 +170,13 @@ final class App
             throw new RuntimeException('ServerConfig is required to run the Spikard server.');
         }
 
-        throw new RuntimeException('PHP runtime bindings are not implemented yet.');
+        if (!\function_exists('spikard_version')) {
+            throw new RuntimeException('Spikard PHP extension is not loaded; build with extension-module feature.');
+        }
+
+        // For now, reuse the native TestClient server (axum-test) to mirror other bindings’ test/run API.
+        // TODO: expose a background server handle when ext-php-rs runtime is ready.
+        new NativeClient($this->nativeRoutes());
     }
 
     /**

@@ -10,9 +10,10 @@ use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
 use serde_json::Value;
 use spikard_http::testing::{call_test_server, snapshot_response};
-use spikard_http::{Handler, HandlerResult, RequestData, Route, Router};
+use spikard_http::{Handler, HandlerResult, RequestData, Route, Router, Server, ServerConfig};
 use std::collections::HashMap;
 use std::sync::Arc;
+use tokio::runtime::Runtime;
 use urlencoding::decode;
 
 mod request;
@@ -20,6 +21,68 @@ mod response;
 
 pub use request::PhpRequest;
 pub use response::PhpResponse;
+
+/// Simple registry to keep runtimes and servers alive and allow shutdown.
+struct HandleRegistry {
+    next_id: std::sync::atomic::AtomicI64,
+    handles: parking_lot::RwLock<HashMap<i64, RuntimeHandle>>,
+}
+
+struct RuntimeHandle {
+    runtime: Runtime,
+    shutdown_tx: tokio::sync::oneshot::Sender<()>,
+}
+
+impl HandleRegistry {
+    const fn new() -> Self {
+        Self {
+            next_id: std::sync::atomic::AtomicI64::new(1),
+            handles: parking_lot::RwLock::new(HashMap::new()),
+        }
+    }
+
+    fn register(&self, runtime: Runtime, router: axum::Router, config: ServerConfig) -> Result<i64, PhpException> {
+        let (tx, rx) = tokio::sync::oneshot::channel::<()>();
+        let id = self.next_id.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+
+        runtime.spawn(async move {
+            let addr = format!("{}:{}", config.host, config.port);
+            let listener = match tokio::net::TcpListener::bind(&addr).await {
+                Ok(l) => l,
+                Err(e) => {
+                    eprintln!("spikard-php: failed to bind {}: {}", addr, e);
+                    return;
+                }
+            };
+
+            let server_fut = axum::serve(listener, router);
+            tokio::select! {
+                _ = server_fut => {},
+                _ = rx => {},
+            }
+        });
+
+        self.handles.write().insert(
+            id,
+            RuntimeHandle {
+                runtime,
+                shutdown_tx: tx,
+            },
+        );
+        Ok(id)
+    }
+
+    fn stop(&self, id: i64) -> bool {
+        if let Some(handle) = self.handles.write().remove(&id) {
+            let _ = handle.shutdown_tx.send(());
+            true
+        } else {
+            false
+        }
+    }
+}
+
+static HANDLE_REGISTRY: HandleRegistry = HandleRegistry::new();
 
 #[derive(Clone)]
 struct PhpHandlerWrapper {
@@ -58,6 +121,8 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     module
         .function("spikard_version", spikard_version)
         .function("spikard_echo_response", spikard_echo_response)
+        .function("spikard_start_server", spikard_start_server)
+        .function("spikard_stop_server", spikard_stop_server)
         .class::<NativeTestClient>()
         .class::<PhpRequest>()
         .class::<PhpResponse>()
@@ -75,6 +140,30 @@ pub fn spikard_echo_response(body: &str) -> PhpResponse {
     PhpResponse::json(body.into(), Some(200))
 }
 
+/// Start a background server; returns a handle id.
+#[php_function]
+pub fn spikard_start_server(routes: Vec<Zval>, config: HashMap<String, Zval>) -> Result<i64, PhpException> {
+    let runtime = Runtime::new().map_err(|e| PhpException::default(e.to_string()))?;
+
+    // Build router and handlers
+    let (router, metadata) = build_router_from_php(routes)?;
+
+    // TODO: parse lifecycle hooks, DI, SSE/WS once exposed on PHP side.
+    let server_config = ServerConfig::default();
+    let axum_router = spikard_http::router::build_router_with_config(router, server_config.clone(), metadata)
+        .map_err(|e| PhpException::default(e.to_string()))?;
+
+    // Bind and serve in background; capture handle
+    let handle_id = HANDLE_REGISTRY.register(runtime, axum_router, server_config)?;
+    Ok(handle_id)
+}
+
+/// Stop server by handle (no-op placeholder until a real handle is wired).
+#[php_function]
+pub fn spikard_stop_server(_handle: i64) -> bool {
+    HANDLE_REGISTRY.stop(_handle)
+}
+
 /// Native TestClient backed by spikard_http router and axum-test.
 #[php_class(name = "Spikard\\Native\\TestClient")]
 pub struct NativeTestClient {
@@ -85,67 +174,7 @@ pub struct NativeTestClient {
 impl NativeTestClient {
     #[constructor]
     pub fn __construct(routes: Vec<Zval>) -> Result<Self, PhpException> {
-        let mut router = Router::new();
-        let mut route_metadata = Vec::new();
-
-        for route_val in routes {
-            let array = ext_php_rs::types::array::Array::try_from(&route_val)
-                .map_err(|e| PhpException::default(e.to_string()))?;
-            let method: String = array
-                .get("method")
-                .map_err(|e| PhpException::default(e.to_string()))?
-                .and_then(|z| z.string())
-                .ok_or_else(|| PhpException::default("missing method".into()))?
-                .to_string();
-            let path: String = array
-                .get("path")
-                .map_err(|e| PhpException::default(e.to_string()))?
-                .and_then(|z| z.string())
-                .ok_or_else(|| PhpException::default("missing path".into()))?
-                .to_string();
-            let handler_zval = array
-                .get("handler")
-                .map_err(|e| PhpException::default(e.to_string()))?
-                .ok_or_else(|| PhpException::default("missing handler".into()))?
-                .clone();
-
-            let route = Route {
-                method: method.parse().map_err(|e: String| PhpException::default(e))?,
-                path: path.clone(),
-                handler_name: "php".to_string(),
-                request_validator: None,
-                response_validator: None,
-                parameter_validator: None,
-                file_params: None,
-                is_async: true,
-                cors: None,
-                expects_json_body: false,
-                #[cfg(feature = "di")]
-                handler_dependencies: Vec::new(),
-            };
-            router.add_route(route.clone());
-            route_metadata.push(spikard_core::RouteMetadata {
-                method,
-                path,
-                handler_name: "php".to_string(),
-                request_schema: None,
-                response_schema: None,
-                parameter_schema: None,
-                file_params: None,
-                is_async: true,
-                cors: None,
-                body_param_name: None,
-                #[cfg(feature = "di")]
-                handler_dependencies: None,
-            });
-
-            spikard_http::bindings::register_handler(
-                &router,
-                route.handler_name.clone(),
-                Arc::new(PhpHandlerWrapper { handler: handler_zval }),
-            );
-        }
-
+        let (router, route_metadata) = build_router_from_php(routes)?;
         let axum_router = spikard_http::router::build_router_for_testing(router, route_metadata)
             .map_err(|e| PhpException::default(e))?;
         let server = TestServer::new(axum_router)
@@ -293,4 +322,69 @@ fn axum_response_from_php(resp: &PhpResponse) -> AxumResponse<Body> {
     builder
         .body(Body::from(body_bytes))
         .unwrap_or_else(|_| AxumResponse::new(Body::empty()))
+}
+
+fn build_router_from_php(routes: Vec<Zval>) -> Result<(Router, Vec<spikard_core::RouteMetadata>), PhpException> {
+    let mut router = Router::new();
+    let mut route_metadata = Vec::new();
+
+    for route_val in routes {
+        let array =
+            ext_php_rs::types::array::Array::try_from(&route_val).map_err(|e| PhpException::default(e.to_string()))?;
+        let method: String = array
+            .get("method")
+            .map_err(|e| PhpException::default(e.to_string()))?
+            .and_then(|z| z.string())
+            .ok_or_else(|| PhpException::default("missing method".into()))?
+            .to_string();
+        let path: String = array
+            .get("path")
+            .map_err(|e| PhpException::default(e.to_string()))?
+            .and_then(|z| z.string())
+            .ok_or_else(|| PhpException::default("missing path".into()))?
+            .to_string();
+        let handler_zval = array
+            .get("handler")
+            .map_err(|e| PhpException::default(e.to_string()))?
+            .ok_or_else(|| PhpException::default("missing handler".into()))?
+            .clone();
+
+        let route = Route {
+            method: method.parse().map_err(|e: String| PhpException::default(e))?,
+            path: path.clone(),
+            handler_name: "php".to_string(),
+            request_validator: None,
+            response_validator: None,
+            parameter_validator: None,
+            file_params: None,
+            is_async: true,
+            cors: None,
+            expects_json_body: false,
+            #[cfg(feature = "di")]
+            handler_dependencies: Vec::new(),
+        };
+        router.add_route(route.clone());
+        route_metadata.push(spikard_core::RouteMetadata {
+            method,
+            path,
+            handler_name: "php".to_string(),
+            request_schema: None,
+            response_schema: None,
+            parameter_schema: None,
+            file_params: None,
+            is_async: true,
+            cors: None,
+            body_param_name: None,
+            #[cfg(feature = "di")]
+            handler_dependencies: None,
+        });
+
+        spikard_http::bindings::register_handler(
+            &router,
+            route.handler_name.clone(),
+            Arc::new(PhpHandlerWrapper { handler: handler_zval }),
+        );
+    }
+
+    Ok((router, route_metadata))
 }
