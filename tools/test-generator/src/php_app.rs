@@ -1,10 +1,10 @@
 //! PHP test app generator.
 //!
-//! Generates a namespaced `AppFactory` with per-category creators. Each
-//! factory registers handlers that return the fixture's expected response to
-//! drive TDD for the PHP bindings.
+//! Generates AppFactory with per-fixture handlers (for phpunit) and also writes
+//! routes.json for the native runtime bridge.
 
 use anyhow::{Context, Result};
+use serde_json::json;
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::BTreeMap;
 use std::fs;
@@ -20,6 +20,9 @@ pub fn generate_php_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     let fixtures_by_category = load_fixtures_grouped(fixtures_dir)?;
     let code = build_app_factory(&fixtures_by_category);
     fs::write(app_dir.join("main.php"), code).context("Failed to write PHP app main.php")?;
+
+    let routes_json = build_routes_json(&fixtures_by_category)?;
+    fs::write(app_dir.join("routes.json"), routes_json).context("Failed to write routes.json")?;
     Ok(())
 }
 
@@ -48,6 +51,7 @@ fn load_fixtures_grouped(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<Fix
     Ok(grouped)
 }
 
+// Original handler-based AppFactory (for phpunit harness)
 fn build_app_factory(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> String {
     let mut code = String::new();
     let mut handler_defs = String::new();
@@ -71,7 +75,7 @@ fn build_app_factory(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> S
                 index + 1
             );
             let method = fixture.request.method.to_ascii_uppercase();
-            let (path, merged_query) = normalize_path_and_query(fixture);
+            let (path, merged_query) = normalize_path_and_query(fixture, fixture.request.path.as_str());
             let status = fixture.expected_response.status_code;
             let body_literal = value_to_php(
                 fixture
@@ -247,6 +251,55 @@ fn build_app_factory(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> S
     code
 }
 
+// routes.json for native runtime
+fn build_routes_json(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> Result<String> {
+    let mut routes = Vec::new();
+    for (_category, fixtures) in fixtures_by_category {
+        for fixture in fixtures {
+            let handler = match &fixture.handler {
+                Some(h) => h,
+                None => continue,
+            };
+
+            let (path, merged_query) = normalize_path_and_query(fixture, handler.route.as_str());
+
+            let mut metadata = json!({
+                "method": handler.method.to_ascii_uppercase(),
+                "path": path,
+                "handler_name": fixture.name,
+                "request_schema": handler.body_schema.as_ref().unwrap_or(&serde_json::Value::Null),
+                "response_schema": handler.response_schema.as_ref().unwrap_or(&serde_json::Value::Null),
+                "parameters": handler.parameters,
+                "middleware": handler.middleware,
+                "cors": handler.cors.as_ref().unwrap_or(&serde_json::Value::Null),
+                "is_async": true,
+            });
+
+            if !merged_query.is_empty() {
+                metadata["expected_query"] = serde_json::to_value(merged_query.clone()).unwrap_or_default();
+            }
+            if let Some(headers) = &fixture.request.headers {
+                if !headers.is_empty() {
+                    metadata["expected_headers"] = serde_json::to_value(headers).unwrap_or_default();
+                }
+            }
+            if let Some(cookies) = &fixture.request.cookies {
+                if !cookies.is_empty() {
+                    metadata["expected_cookies"] = serde_json::to_value(cookies).unwrap_or_default();
+                }
+            }
+            if let Some(body) = fixture.request.body.as_ref() {
+                if !body.is_null() {
+                    metadata["expected_body"] = body.clone();
+                }
+            }
+
+            routes.push(metadata);
+        }
+    }
+    serde_json::to_string_pretty(&routes).context("Failed to serialize routes JSON")
+}
+
 fn sanitize_identifier(input: &str) -> String {
     let mut s = input
         .chars()
@@ -304,64 +357,13 @@ fn string_map_to_php(map: Option<&std::collections::HashMap<String, String>>) ->
 }
 
 fn string_map_to_php_lower(map: Option<&std::collections::HashMap<String, String>>) -> String {
-    let mut keys: Vec<_> = map.map(|m| m.keys().cloned().collect()).unwrap_or_default();
-    keys.sort();
-    let mut parts = Vec::new();
+    let mut lowered: std::collections::HashMap<String, String> = std::collections::HashMap::new();
     if let Some(map) = map {
-        for k in keys {
-            if let Some(v) = map.get(&k) {
-                parts.push(format!(
-                    "{} => {}",
-                    php_string_literal(&k.to_ascii_lowercase()),
-                    php_string_literal(v)
-                ));
-            }
+        for (k, v) in map {
+            lowered.insert(k.to_ascii_lowercase(), v.clone());
         }
     }
-    format!("[{}]", parts.join(", "))
-}
-
-fn specificity(fixture: &Fixture) -> usize {
-    let headers = fixture.request.headers.as_ref().map(|h| h.len()).unwrap_or(0);
-    let cookies = fixture.request.cookies.as_ref().map(|c| c.len()).unwrap_or(0);
-    let query = fixture.request.query_params.as_ref().map(|q| q.len()).unwrap_or(0);
-    let body = fixture
-        .request
-        .body
-        .as_ref()
-        .map(|b| if b.is_null() { 0 } else { 2 })
-        .unwrap_or(0);
-    headers * 4 + cookies * 2 + query * 2 + body
-}
-
-fn build_query_string(query: &std::collections::HashMap<String, serde_json::Value>) -> Option<String> {
-    if query.is_empty() {
-        return None;
-    }
-    let mut parts = Vec::new();
-    let mut keys: Vec<_> = query.keys().collect();
-    keys.sort();
-    for key in keys {
-        if let Some(value) = query.get(key) {
-            match value {
-                serde_json::Value::Array(items) => {
-                    for item in items {
-                        parts.push(format!(
-                            "{}={}",
-                            urlencoding::encode(key),
-                            urlencoding::encode(&query_value_str(item))
-                        ));
-                    }
-                }
-                _ => parts.push(format!(
-                    "{}={}",
-                    urlencoding::encode(key),
-                    urlencoding::encode(&query_value_str(value))
-                )),
-            }
-        }
-    }
-    Some(parts.join("&"))
+    string_map_to_php(Some(&lowered))
 }
 
 fn query_to_php(query: Option<&std::collections::HashMap<String, serde_json::Value>>) -> String {
@@ -405,12 +407,15 @@ fn query_value_str(value: &serde_json::Value) -> String {
     }
 }
 
-fn normalize_path_and_query(fixture: &Fixture) -> (String, std::collections::HashMap<String, serde_json::Value>) {
-    let mut base_path = fixture.request.path.clone();
+fn normalize_path_and_query(
+    fixture: &Fixture,
+    handler_route: &str,
+) -> (String, std::collections::HashMap<String, serde_json::Value>) {
+    let mut base_path = handler_route.to_string();
     let mut merged: std::collections::HashMap<String, serde_json::Value> =
         fixture.request.query_params.clone().unwrap_or_default();
 
-    if let Some((path_part, query_part)) = fixture.request.path.split_once('?') {
+    if let Some((path_part, query_part)) = handler_route.split_once('?') {
         base_path = path_part.to_string();
         let parsed = parse_query_map(query_part);
         for (k, v) in parsed {
@@ -418,11 +423,9 @@ fn normalize_path_and_query(fixture: &Fixture) -> (String, std::collections::Has
                 .entry(k)
                 .and_modify(|existing| match (existing, v.clone()) {
                     (serde_json::Value::Array(arr), serde_json::Value::Array(mut incoming)) => {
-                        arr.append(&mut incoming);
+                        arr.append(&mut incoming)
                     }
-                    (serde_json::Value::Array(arr), other) => {
-                        arr.push(other);
-                    }
+                    (serde_json::Value::Array(arr), other) => arr.push(other),
                     (existing_val, serde_json::Value::Array(incoming)) => {
                         let mut combined = vec![existing_val.take()];
                         combined.extend(incoming);

@@ -6,6 +6,8 @@ namespace Spikard\Native;
 
 use RuntimeException;
 use Spikard\Http\Response;
+use function file_get_contents;
+use function json_decode;
 
 /**
  * Placeholder definition for the native test client when the extension
@@ -13,8 +15,8 @@ use Spikard\Http\Response;
  */
 final class TestClient
 {
-    /** @param array<int, mixed> $routes */
-    public function __construct(array $routes)
+    /** @param array<int, mixed>|null $routes */
+    public function __construct(?array $routes = null)
     {
         unset($routes);
         if (!\function_exists('spikard_version')) {

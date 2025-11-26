@@ -36,10 +36,7 @@ final class TestClient
     public function request(string $method, string $path, array $options = []): Response
     {
         if ($this->useNative()) {
-            /** @var array<int, array{method: string, path: string, handler: \Spikard\Handlers\HandlerInterface}> $routes */
-            $routes = $this->app->nativeRoutes();
-            /** @psalm-suppress MixedArgument */
-            $native = new \Spikard\Native\TestClient($routes);
+            $native = new \Spikard\Native\TestClient($this->app->nativeRoutes());
             return $native->request($method, $path, $options);
         }
 
