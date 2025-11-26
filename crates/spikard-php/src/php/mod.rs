@@ -1,9 +1,16 @@
-//! ext-php-rs implementation.
+//! ext-php-rs implementation bridging PHP handlers to the Rust core.
+//!
+//! This module exposes a native TestClient backed by spikard_http's router and
+//! axum-test so PHPUnit exercises the real middleware/validation stack.
 
+use axum::body::Body;
+use axum::http::{Request, Response as AxumResponse};
+use axum_test::TestServer;
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::{ZendCallable, Zval};
+use ext_php_rs::types::Zval;
 use serde_json::Value;
-use spikard_http::{Handler, RequestData};
+use spikard_http::testing::{call_test_server, snapshot_response};
+use spikard_http::{Handler, HandlerResult, RequestData, Route, Router};
 use std::collections::HashMap;
 use std::sync::Arc;
 use urlencoding::decode;
@@ -15,79 +22,33 @@ pub use request::PhpRequest;
 pub use response::PhpResponse;
 
 #[derive(Clone)]
-struct PhpHandlerEntry {
+struct PhpHandlerWrapper {
     handler: Zval,
-}
-
-impl PhpHandlerEntry {
-    fn matches(&self, req: &PhpRequest) -> Result<bool, ext_php_rs::error::Error> {
-        self.handler
-            .try_call_method("matches", vec![req])
-            .map(|z| z.bool().unwrap_or(false))
-    }
-
-    fn handle(&self, req: &PhpRequest) -> Result<Zval, ext_php_rs::error::Error> {
-        self.handler.try_call_method("handle", vec![req])
-    }
-}
-
-#[derive(Clone)]
-struct PhpRoute {
-    method: String,
-    path: String,
-    handlers: Vec<PhpHandlerEntry>,
-}
-
-impl PhpRoute {
-    fn from_php(value: &Zval) -> Result<Self, ext_php_rs::error::Error> {
-        let array = ext_php_rs::types::array::Array::try_from(value)?;
-        let method: String = array
-            .get("method")?
-            .and_then(|z| z.string())
-            .ok_or(ext_php_rs::error::Error::Internal("missing method".into()))?
-            .to_string();
-        let path: String = array
-            .get("path")?
-            .and_then(|z| z.string())
-            .ok_or(ext_php_rs::error::Error::Internal("missing path".into()))?
-            .to_string();
-
-        let mut handlers = Vec::new();
-        if let Some(handler_arr) = array.get("handler")? {
-            handlers.push(PhpHandlerEntry {
-                handler: handler_arr.clone(),
-            });
-        } else if let Some(handlers_arr) = array.get("handlers")? {
-            if let Ok(arr) = ext_php_rs::types::array::Array::try_from(handlers_arr) {
-                for (_, handler_zval) in arr.iter() {
-                    handlers.push(PhpHandlerEntry {
-                        handler: handler_zval.clone(),
-                    });
-                }
-            }
-        }
-
-        if handlers.is_empty() {
-            return Err(ext_php_rs::error::Error::Internal(
-                "route requires at least one handler".into(),
-            ));
-        }
-
-        Ok(Self { method, path, handlers })
-    }
 }
 
 impl Handler for PhpHandlerWrapper {
     fn call(
         &self,
-        _request: axum::http::Request<axum::body::Body>,
-        _request_data: RequestData,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard_http::HandlerResult> + Send + '_>> {
-        Box::pin(async {
-            Err((
-                axum::http::StatusCode::NOT_IMPLEMENTED,
-                "php handler bridge not implemented".into(),
-            ))
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HandlerResult> + Send + '_>> {
+        let handler = self.handler.clone();
+        Box::pin(async move {
+            let php_req = php_request_from_request_data(&request_data);
+            let matches = handler
+                .try_call_method("matches", vec![&php_req])
+                .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+            if !matches.bool().unwrap_or(false) {
+                return Err((axum::http::StatusCode::NOT_FOUND, "No handler matched".to_string()));
+            }
+
+            let resp_zval = handler
+                .try_call_method("handle", vec![&php_req])
+                .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+            let php_resp = response_from_zval(&resp_zval)
+                .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+            let axum_resp = axum_response_from_php(&php_resp);
+            Ok(axum_resp)
         })
     }
 }
@@ -114,24 +75,88 @@ pub fn spikard_echo_response(body: &str) -> PhpResponse {
     PhpResponse::json(body.into(), Some(200))
 }
 
-/// Native TestClient for driving PHP handlers through Rust.
+/// Native TestClient backed by spikard_http router and axum-test.
 #[php_class(name = "Spikard\\Native\\TestClient")]
 pub struct NativeTestClient {
-    routes: Vec<PhpRoute>,
+    server: Arc<TestServer>,
 }
 
 #[php_impl]
 impl NativeTestClient {
     #[constructor]
     pub fn __construct(routes: Vec<Zval>) -> Result<Self, PhpException> {
-        let mut parsed = Vec::new();
-        for route in routes {
-            parsed.push(PhpRoute::from_php(&route).map_err(|e| PhpException::default(e.to_string()))?);
+        let mut router = Router::new();
+        let mut route_metadata = Vec::new();
+
+        for route_val in routes {
+            let array = ext_php_rs::types::array::Array::try_from(&route_val)
+                .map_err(|e| PhpException::default(e.to_string()))?;
+            let method: String = array
+                .get("method")
+                .map_err(|e| PhpException::default(e.to_string()))?
+                .and_then(|z| z.string())
+                .ok_or_else(|| PhpException::default("missing method".into()))?
+                .to_string();
+            let path: String = array
+                .get("path")
+                .map_err(|e| PhpException::default(e.to_string()))?
+                .and_then(|z| z.string())
+                .ok_or_else(|| PhpException::default("missing path".into()))?
+                .to_string();
+            let handler_zval = array
+                .get("handler")
+                .map_err(|e| PhpException::default(e.to_string()))?
+                .ok_or_else(|| PhpException::default("missing handler".into()))?
+                .clone();
+
+            let route = Route {
+                method: method.parse().map_err(|e: String| PhpException::default(e))?,
+                path: path.clone(),
+                handler_name: "php".to_string(),
+                request_validator: None,
+                response_validator: None,
+                parameter_validator: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+                expects_json_body: false,
+                #[cfg(feature = "di")]
+                handler_dependencies: Vec::new(),
+            };
+            router.add_route(route.clone());
+            route_metadata.push(spikard_core::RouteMetadata {
+                method,
+                path,
+                handler_name: "php".to_string(),
+                request_schema: None,
+                response_schema: None,
+                parameter_schema: None,
+                file_params: None,
+                is_async: true,
+                cors: None,
+                body_param_name: None,
+                #[cfg(feature = "di")]
+                handler_dependencies: None,
+            });
+
+            spikard_http::bindings::register_handler(
+                &router,
+                route.handler_name.clone(),
+                Arc::new(PhpHandlerWrapper { handler: handler_zval }),
+            );
         }
-        Ok(Self { routes: parsed })
+
+        let axum_router = spikard_http::router::build_router_for_testing(router, route_metadata)
+            .map_err(|e| PhpException::default(e))?;
+        let server = TestServer::new(axum_router)
+            .map_err(|e| PhpException::default(format!("Failed to create test server: {e}")))?;
+
+        Ok(Self {
+            server: Arc::new(server),
+        })
     }
 
-    /// Minimal request dispatcher used by PHP TestClient.
+    /// Dispatch an HTTP request through the Rust router and return a PHP response.
     pub fn request(
         &self,
         method: String,
@@ -141,10 +166,8 @@ impl NativeTestClient {
         let uppercase_method = method.to_ascii_uppercase();
         let (path_only, query) = split_path_and_query(&path);
 
-        // Build PhpRequest to feed into handler::matches/handle
         let mut headers: HashMap<String, String> = HashMap::new();
         let mut cookies: HashMap<String, String> = HashMap::new();
-        let mut files: HashMap<String, Value> = HashMap::new();
         let mut body: Value = Value::Null;
 
         if let Some(opts) = options {
@@ -152,7 +175,7 @@ impl NativeTestClient {
                 if let Ok(arr) = ext_php_rs::types::array::Array::try_from(h) {
                     for (k, v) in arr.iter() {
                         if let (Some(key), Some(val)) = (k.string(), v.string()) {
-                            headers.insert(key.to_string(), val.to_string());
+                            headers.insert(key.to_ascii_lowercase().to_string(), val.to_string());
                         }
                     }
                 }
@@ -166,53 +189,40 @@ impl NativeTestClient {
                     }
                 }
             }
-            if let Some(f) = opts.get("files") {
-                if let Ok(arr) = ext_php_rs::types::array::Array::try_from(f) {
-                    for (k, v) in arr.iter() {
-                        if let Some(key) = k.string() {
-                            if let Ok(json_val) = serde_json::to_value(v.to_string()) {
-                                files.insert(key.to_string(), json_val);
-                            }
-                        }
-                    }
-                }
-            }
             if let Some(b) = opts.get("body") {
                 body = zval_to_json(b).unwrap_or(Value::Null);
-            } else if !files.is_empty() {
-                body = serde_json::to_value(files.clone()).unwrap_or(Value::Null);
             }
         }
 
-        let req = PhpRequest::new(
-            uppercase_method.clone(),
-            path_only.clone(),
-            Some(body),
-            Some(headers.clone()),
-            Some(cookies.clone()),
-            Some(query.clone()),
-        );
+        let request = Request::builder()
+            .method(&uppercase_method)
+            .uri(path)
+            .body(Body::empty())
+            .map_err(|e| PhpException::default(e.to_string()))?;
 
-        for route in &self.routes {
-            if route.method == uppercase_method && route.path == path_only {
-                for handler in &route.handlers {
-                    let matches = handler
-                        .matches(&req)
-                        .map_err(|e| PhpException::default(e.to_string()))?;
-                    if matches {
-                        let zval_resp = handler.handle(&req).map_err(|e| PhpException::default(e.to_string()))?;
-                        let response = response_from_zval(&zval_resp)?;
-                        return Ok(response);
-                    }
-                }
-            }
-        }
+        let snapshot = async_std::task::block_on(async {
+            let resp: AxumResponse<Body> = call_test_server(&self.server, request).await.into();
+            snapshot_response(resp).await
+        })
+        .map_err(|e| PhpException::default(e.to_string()))?;
 
-        Err(PhpException::default(format!(
-            "No handler registered for {} {}",
-            uppercase_method, path
-        )))
+        Ok(PhpResponse::json(
+            serde_json::from_slice(&snapshot.body).unwrap_or(Value::Null),
+            Some(snapshot.status as i64),
+        )
+        .with_headers(snapshot.headers))
     }
+}
+
+fn php_request_from_request_data(data: &RequestData) -> PhpRequest {
+    PhpRequest::new(
+        data.method.clone(),
+        data.path.clone(),
+        Some(data.body.clone()),
+        Some((*data.headers).clone()),
+        Some((*data.cookies).clone()),
+        Some((*data.raw_query_params).clone()),
+    )
 }
 
 fn split_path_and_query(path: &str) -> (String, HashMap<String, Vec<String>>) {
@@ -255,7 +265,6 @@ fn zval_to_json(value: &Zval) -> Result<Value, serde_json::Error> {
 }
 
 fn response_from_zval(z: &Zval) -> Result<PhpResponse, PhpException> {
-    // Attempt to extract properties (body, statusCode, headers)
     let status = z.get_property("statusCode").ok().and_then(|v| v.long()).unwrap_or(200) as i64;
 
     let mut headers = HashMap::new();
@@ -273,4 +282,15 @@ fn response_from_zval(z: &Zval) -> Result<PhpResponse, PhpException> {
     let body_val = zval_to_json(&body_zval).unwrap_or(Value::Null);
 
     Ok(PhpResponse::json(body_val, Some(status)).with_headers(headers))
+}
+
+fn axum_response_from_php(resp: &PhpResponse) -> AxumResponse<Body> {
+    let mut builder = axum::http::Response::builder().status(resp.status as u16);
+    for (k, v) in &resp.headers {
+        builder = builder.header(k, v);
+    }
+    let body_bytes = serde_json::to_vec(&resp.body).unwrap_or_default();
+    builder
+        .body(Body::from(body_bytes))
+        .unwrap_or_else(|_| AxumResponse::new(Body::empty()))
 }
