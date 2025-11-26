@@ -24,14 +24,22 @@ final class TestClient
         return $this->app;
     }
 
-    public function get(string $path): Response
+    /**
+     * @param array<string, mixed> $options
+     */
+    public function request(string $method, string $path, array $options = []): Response
     {
         throw new RuntimeException('TestClient not implemented for PHP bindings yet.');
     }
 
+    public function get(string $path): Response
+    {
+        return $this->request('GET', $path);
+    }
+
     public function post(string $path, mixed $body = null): Response
     {
-        throw new RuntimeException('TestClient not implemented for PHP bindings yet.');
+        return $this->request('POST', $path, ['body' => $body]);
     }
 
     public function close(): void
