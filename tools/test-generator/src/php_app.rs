@@ -50,6 +50,8 @@ fn load_fixtures_grouped(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<Fix
 
 fn build_app_factory(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> String {
     let mut code = String::new();
+    let mut handler_defs = String::new();
+
     code.push_str(
         "<?php\n\ndeclare(strict_types=1);\n\nnamespace E2E\\Php;\n\nuse Spikard\\App;\nuse Spikard\\Handlers\\HandlerInterface;\nuse Spikard\\Http\\Request;\nuse Spikard\\Http\\Response;\n\n/**\n * Generated App factory for PHP e2e tests.\n */\nfinal class AppFactory\n{\n",
     );
@@ -93,8 +95,9 @@ fn build_app_factory(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> S
                 path = path,
                 handler_name = handler_name
             ));
-            code.push_str(&format!(
-                "        class {handler_name} implements HandlerInterface {{\n            public function handle(Request $request): Response\n            {{\n                $response = new Response({body}, {status}, {headers});\n                return $response;\n            }}\n        }}\n\n",
+
+            handler_defs.push_str(&format!(
+                "final class {handler_name} implements HandlerInterface {{\n    public function handle(Request $request): Response\n    {{\n        return new Response({body}, {status}, {headers});\n    }}\n}}\n\n",
                 handler_name = handler_name,
                 body = body_literal,
                 status = status,
@@ -105,7 +108,8 @@ fn build_app_factory(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> S
         code.push_str("        return $app;\n    }\n\n");
     }
 
-    code.push_str("}\n");
+    code.push_str("}\n\n");
+    code.push_str(&handler_defs);
     code
 }
 

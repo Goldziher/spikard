@@ -448,14 +448,14 @@ final class AppFactory
         $app = $app->addRoute('GET', '/items/?q=%22foo%22&q=%22bar%22', new Handlerquery_params_48());
         $app = $app->addRoute('GET', '/query/list', new Handlerquery_params_49());
         $app = $app->addRoute('GET', '/query/list-default', new Handlerquery_params_50());
-        $app = $app->addRoute('GET', '/query/multi-type?age=%2230%22&name=%22john%22&score=%2295.5%22&active=%22true%22', new Handlerquery_params_51());
+        $app = $app->addRoute('GET', '/query/multi-type?active=%22true%22&name=%22john%22&age=%2230%22&score=%2295.5%22', new Handlerquery_params_51());
         $app = $app->addRoute('GET', '/query/int/optional', new Handlerquery_params_52());
         $app = $app->addRoute('GET', '/query/optional-default', new Handlerquery_params_53());
         $app = $app->addRoute('GET', '/query/optional', new Handlerquery_params_54());
         $app = $app->addRoute('GET', '/query/optional?query=%22baz%22', new Handlerquery_params_55());
         $app = $app->addRoute('GET', '/query/basic?name=%22hello%20world%22', new Handlerquery_params_56());
         $app = $app->addRoute('GET', '/query/basic?name=%22test%26value%3D123%22', new Handlerquery_params_57());
-        $app = $app->addRoute('GET', '/test?email=%22x%40test.com%22&special=%22%26%40A.ac%22', new Handlerquery_params_58());
+        $app = $app->addRoute('GET', '/test?special=%22%26%40A.ac%22&email=%22x%40test.com%22', new Handlerquery_params_58());
         $app = $app->addRoute('GET', '/query/int?query=%2242.5%22', new Handlerquery_params_59());
         $app = $app->addRoute('GET', '/query/int?query=%22baz%22', new Handlerquery_params_60());
         $app = $app->addRoute('GET', '/query/int', new Handlerquery_params_61());
@@ -841,7 +841,7 @@ final class Handlercontent_types_9 implements HandlerInterface {
 final class Handlercontent_types_10 implements HandlerInterface {
     public function handle(Request $request): Response
     {
-        return new Response('binary_data_placeholder', 200, ['content-disposition' => 'attachment; filename=file.bin', 'content-type' => 'application/octet-stream']);
+        return new Response('binary_data_placeholder', 200, ['content-type' => 'application/octet-stream', 'content-disposition' => 'attachment; filename=file.bin']);
     }
 }
 
@@ -850,7 +850,7 @@ final class Handlercontent_types_11 implements HandlerInterface {
     {
         return new Response('id,name,price
 1,Item A,10.0
-2,Item B,20.0', 200, ['content-disposition' => 'attachment; filename=data.csv', 'content-type' => 'text/csv; charset=utf-8']);
+2,Item B,20.0', 200, ['content-type' => 'text/csv; charset=utf-8', 'content-disposition' => 'attachment; filename=data.csv']);
     }
 }
 
@@ -1116,14 +1116,14 @@ final class Handlercors_2 implements HandlerInterface {
 final class Handlercors_3 implements HandlerInterface {
     public function handle(Request $request): Response
     {
-        return new Response(null, 204, ['Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Allow-Headers' => 'Content-Type', 'Access-Control-Max-Age' => '3600', 'Access-Control-Allow-Methods' => 'POST']);
+        return new Response(null, 204, ['Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Max-Age' => '3600', 'Access-Control-Allow-Headers' => 'Content-Type', 'Access-Control-Allow-Methods' => 'POST']);
     }
 }
 
 final class Handlercors_4 implements HandlerInterface {
     public function handle(Request $request): Response
     {
-        return new Response(null, 200, ['Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Expose-Headers' => 'X-Total-Count, X-Request-Id', 'X-Total-Count' => '42', 'X-Request-Id' => 'abc123']);
+        return new Response(null, 200, ['Access-Control-Allow-Origin' => 'https://example.com', 'X-Total-Count' => '42', 'X-Request-Id' => 'abc123', 'Access-Control-Expose-Headers' => 'X-Total-Count, X-Request-Id']);
     }
 }
 
@@ -1137,21 +1137,21 @@ final class Handlercors_5 implements HandlerInterface {
 final class Handlercors_6 implements HandlerInterface {
     public function handle(Request $request): Response
     {
-        return new Response(null, 204, ['Access-Control-Allow-Private-Network' => 'true', 'Access-Control-Allow-Origin' => 'https://public.example.com', 'Vary' => 'Origin', 'Access-Control-Allow-Methods' => 'GET, POST']);
+        return new Response(null, 204, ['Access-Control-Allow-Methods' => 'GET, POST', 'Vary' => 'Origin', 'Access-Control-Allow-Private-Network' => 'true', 'Access-Control-Allow-Origin' => 'https://public.example.com']);
     }
 }
 
 final class Handlercors_7 implements HandlerInterface {
     public function handle(Request $request): Response
     {
-        return new Response(['data' => 'cacheable resource'], 200, ['Cache-Control' => 'public, max-age=3600', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Vary' => 'Origin']);
+        return new Response(['data' => 'cacheable resource'], 200, ['Access-Control-Allow-Origin' => 'https://app.example.com', 'Vary' => 'Origin', 'Cache-Control' => 'public, max-age=3600']);
     }
 }
 
 final class Handlercors_8 implements HandlerInterface {
     public function handle(Request $request): Response
     {
-        return new Response(['data' => 'resource data'], 200, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://admin.example.com']);
+        return new Response(['data' => 'resource data'], 200, ['Access-Control-Allow-Origin' => 'https://admin.example.com', 'Vary' => 'Origin']);
     }
 }
 
@@ -1165,21 +1165,21 @@ final class Handlercors_9 implements HandlerInterface {
 final class Handlercors_10 implements HandlerInterface {
     public function handle(Request $request): Response
     {
-        return new Response(null, 204, ['Vary' => 'Origin', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Max-Age' => '3600']);
+        return new Response(null, 204, ['Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE', 'Vary' => 'Origin', 'Access-Control-Max-Age' => '3600']);
     }
 }
 
 final class Handlercors_11 implements HandlerInterface {
     public function handle(Request $request): Response
     {
-        return new Response(null, 204, ['Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Max-Age' => '3600', 'Vary' => 'Origin', 'Access-Control-Allow-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE']);
+        return new Response(null, 204, ['Access-Control-Allow-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Vary' => 'Origin', 'Access-Control-Max-Age' => '3600']);
     }
 }
 
 final class Handlercors_12 implements HandlerInterface {
     public function handle(Request $request): Response
     {
-        return new Response(null, 200, ['Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS', 'Access-Control-Max-Age' => '600', 'Access-Control-Allow-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Allow-Origin' => 'https://example.com']);
+        return new Response(null, 200, ['Access-Control-Allow-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS', 'Access-Control-Max-Age' => '600']);
     }
 }
 
@@ -1200,7 +1200,7 @@ final class Handlercors_14 implements HandlerInterface {
 final class Handlercors_15 implements HandlerInterface {
     public function handle(Request $request): Response
     {
-        return new Response(['message' => 'Success'], 200, ['Access-Control-Allow-Origin' => 'https://app.example.com', 'Vary' => 'Origin']);
+        return new Response(['message' => 'Success'], 200, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://app.example.com']);
     }
 }
 
@@ -1214,7 +1214,7 @@ final class Handlercors_16 implements HandlerInterface {
 final class Handlercors_17 implements HandlerInterface {
     public function handle(Request $request): Response
     {
-        return new Response(['username' => 'john'], 200, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Allow-Credentials' => 'true']);
+        return new Response(['username' => 'john'], 200, ['Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Allow-Credentials' => 'true', 'Vary' => 'Origin']);
     }
 }
 
@@ -1748,14 +1748,14 @@ final class Handlerhttp_methods_3 implements HandlerInterface {
 final class Handlerhttp_methods_4 implements HandlerInterface {
     public function handle(Request $request): Response
     {
-        return new Response(null, 200, ['Content-Type' => 'application/json', 'Content-Length' => '85']);
+        return new Response(null, 200, ['Content-Length' => '85', 'Content-Type' => 'application/json']);
     }
 }
 
 final class Handlerhttp_methods_5 implements HandlerInterface {
     public function handle(Request $request): Response
     {
-        return new Response(null, 200, ['Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS', 'Access-Control-Max-Age' => '86400', 'Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Allow-Headers' => 'Content-Type']);
+        return new Response(null, 200, ['Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS', 'Access-Control-Max-Age' => '86400', 'Access-Control-Allow-Headers' => 'Content-Type']);
     }
 }
 
@@ -2161,7 +2161,7 @@ final class Handlerlifecycle_hooks_1 implements HandlerInterface {
 final class Handlerlifecycle_hooks_2 implements HandlerInterface {
     public function handle(Request $request): Response
     {
-        return new Response(['action' => 'update_profile', 'message' => 'Action completed successfully', 'request_id' => '.*', 'user_id' => 'user-123'], 200, ['X-Request-ID' => '.*', 'X-Response-Time' => '.*ms', 'X-Frame-Options' => 'DENY', 'X-Content-Type-Options' => 'nosniff']);
+        return new Response(['action' => 'update_profile', 'message' => 'Action completed successfully', 'request_id' => '.*', 'user_id' => 'user-123'], 200, ['X-Response-Time' => '.*ms', 'X-Content-Type-Options' => 'nosniff', 'X-Request-ID' => '.*', 'X-Frame-Options' => 'DENY']);
     }
 }
 
@@ -2189,7 +2189,7 @@ final class Handlerlifecycle_hooks_5 implements HandlerInterface {
 final class Handlerlifecycle_hooks_6 implements HandlerInterface {
     public function handle(Request $request): Response
     {
-        return new Response(['message' => 'Response with security headers'], 200, ['X-Frame-Options' => 'DENY', 'X-Content-Type-Options' => 'nosniff', 'X-XSS-Protection' => '1; mode=block', 'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains']);
+        return new Response(['message' => 'Response with security headers'], 200, ['X-Frame-Options' => 'DENY', 'X-XSS-Protection' => '1; mode=block', 'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains', 'X-Content-Type-Options' => 'nosniff']);
     }
 }
 
@@ -3246,7 +3246,7 @@ final class Handlerstatus_codes_5 implements HandlerInterface {
 final class Handlerstatus_codes_6 implements HandlerInterface {
     public function handle(Request $request): Response
     {
-        return new Response('binary_data_1024_bytes', 206, ['Content-Type' => 'application/pdf', 'Content-Length' => '1024', 'Accept-Ranges' => 'bytes', 'Content-Range' => 'bytes 0-1023/5000']);
+        return new Response('binary_data_1024_bytes', 206, ['Content-Length' => '1024', 'Content-Range' => 'bytes 0-1023/5000', 'Accept-Ranges' => 'bytes', 'Content-Type' => 'application/pdf']);
     }
 }
 
@@ -3351,7 +3351,7 @@ final class Handlerstatus_codes_20 implements HandlerInterface {
 final class Handlerstatus_codes_21 implements HandlerInterface {
     public function handle(Request $request): Response
     {
-        return new Response(['detail' => 'Rate limit exceeded. Try again in 60 seconds.'], 429, ['Retry-After' => '60', 'X-RateLimit-Limit' => '100', 'X-RateLimit-Reset' => '1609459200', 'X-RateLimit-Remaining' => '0']);
+        return new Response(['detail' => 'Rate limit exceeded. Try again in 60 seconds.'], 429, ['X-RateLimit-Reset' => '1609459200', 'Retry-After' => '60', 'X-RateLimit-Remaining' => '0', 'X-RateLimit-Limit' => '100']);
     }
 }
 

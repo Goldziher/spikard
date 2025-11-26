@@ -63,7 +63,7 @@ fn load_fixtures_grouped(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<Fix
 fn build_test_file(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> String {
     let mut code = String::new();
     code.push_str(
-        "<?php\ndeclare(strict_types=1);\n\nuse PHPUnit\\Framework\\TestCase;\nuse Spikard\\Testing\\TestClient;\nuse E2E\\Php\\AppFactory;\n\n/**\n * Generated from testing_data fixtures.\n */\nfinal class GeneratedTest extends TestCase\n{\n    protected function setUp(): void\n    {\n        $this->markTestIncomplete('PHP bindings not implemented yet.');\n    }\n\n",
+        "<?php\ndeclare(strict_types=1);\n\nuse PHPUnit\\Framework\\TestCase;\nuse Spikard\\Testing\\TestClient;\nuse E2E\\Php\\AppFactory;\n\n/**\n * Generated from testing_data fixtures.\n */\nfinal class GeneratedTest extends TestCase\n{\n",
     );
 
     for (category, fixtures) in fixtures_by_category {
