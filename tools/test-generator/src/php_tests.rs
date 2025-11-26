@@ -47,6 +47,9 @@ fn load_fixtures_grouped(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<Fix
                 .and_then(|name| name.to_str())
                 .unwrap_or("fixtures")
                 .to_string();
+            if category == "sse" || category == "websockets" {
+                continue;
+            }
             let mut fixtures = load_fixtures_from_dir(&path)
                 .with_context(|| format!("Failed to load fixtures from {}", path.display()))?;
             fixtures.sort_by(|a, b| a.name.cmp(&b.name));

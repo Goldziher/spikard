@@ -572,7 +572,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cookies();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items/', ['cookies' => ['session_id' => 'session123', 'fatebook_tracker' => 'tracker456', 'googall_tracker' => 'ga789']]);
+        $response = $client->request('GET', '/items/', ['cookies' => ['fatebook_tracker' => 'tracker456', 'session_id' => 'session123', 'googall_tracker' => 'ga789']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['fatebook_tracker' => 'tracker456', 'googall_tracker' => 'ga789', 'session_id' => 'session123'], $response->body);
@@ -722,7 +722,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Method' => 'DELETE', 'Origin' => 'https://example.com', 'Access-Control-Request-Headers' => 'Content-Type']]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Headers' => 'Content-Type', 'Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'DELETE']]);
 
         $this->assertSame(403, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -732,7 +732,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Headers' => 'X-Custom-Header', 'Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'POST']]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Headers' => 'X-Custom-Header', 'Access-Control-Request-Method' => 'POST']]);
 
         $this->assertSame(403, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -742,7 +742,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'Content-Type', 'Origin' => 'https://example.com']]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Headers' => 'Content-Type', 'Access-Control-Request-Method' => 'POST']]);
 
         $this->assertSame(204, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -772,7 +772,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/local-resource', ['headers' => ['Origin' => 'https://public.example.com', 'Access-Control-Request-Method' => 'GET', 'Access-Control-Request-Private-Network' => 'true']]);
+        $response = $client->request('OPTIONS', '/api/local-resource', ['headers' => ['Access-Control-Request-Private-Network' => 'true', 'Origin' => 'https://public.example.com', 'Access-Control-Request-Method' => 'GET']]);
 
         $this->assertSame(204, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -822,7 +822,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/resource/123', ['headers' => ['Access-Control-Request-Method' => 'PUT', 'Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header', 'Origin' => 'https://app.example.com']]);
+        $response = $client->request('OPTIONS', '/api/resource/123', ['headers' => ['Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Request-Method' => 'PUT', 'Origin' => 'https://app.example.com']]);
 
         $this->assertSame(204, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -832,7 +832,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/items/', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header']]);
+        $response = $client->request('OPTIONS', '/items/', ['headers' => ['Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header', 'Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'POST']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -882,7 +882,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/api/user/profile', ['headers' => ['Origin' => 'https://app.example.com', 'Cookie' => 'session=abc123']]);
+        $response = $client->request('GET', '/api/user/profile', ['headers' => ['Cookie' => 'session=abc123', 'Origin' => 'https://app.example.com']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['username' => 'john'], $response->body);
@@ -1506,7 +1506,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
     {
         $app = AppFactory::create_headers();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/headers/multiple', ['headers' => ['X-Request-Id' => 'req-12345', 'X-Client-Version' => '1.2.3', 'X-Trace-Id' => 'trace-abc']]);
+        $response = $client->request('GET', '/headers/multiple', ['headers' => ['X-Request-Id' => 'req-12345', 'X-Trace-Id' => 'trace-abc', 'X-Client-Version' => '1.2.3']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['x_client_version' => '1.2.3', 'x_request_id' => 'req-12345', 'x_trace_id' => 'trace-abc'], $response->body);
@@ -1656,7 +1656,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
     {
         $app = AppFactory::create_http_methods();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/items/', ['headers' => ['Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'Content-Type', 'Origin' => 'https://example.com']]);
+        $response = $client->request('OPTIONS', '/items/', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'Content-Type']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -2236,7 +2236,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
     {
         $app = AppFactory::create_lifecycle_hooks();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/api/full-lifecycle', ['headers' => ['Authorization' => 'Bearer valid-token-12345', 'Content-Type' => 'application/json'], 'body' => ['action' => 'update_profile', 'user_id' => 'user-123']]);
+        $response = $client->request('POST', '/api/full-lifecycle', ['headers' => ['Content-Type' => 'application/json', 'Authorization' => 'Bearer valid-token-12345'], 'body' => ['action' => 'update_profile', 'user_id' => 'user-123']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['action' => 'update_profile', 'message' => 'Action completed successfully', 'request_id' => '.*', 'user_id' => 'user-123'], $response->body);
@@ -3437,7 +3437,7 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
     {
         $app = AppFactory::create_query_params();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/query/multi-type?score=%2295.5%22&active=%22true%22&name=%22john%22&age=%2230%22', []);
+        $response = $client->request('GET', '/query/multi-type?name=%22john%22&score=%2295.5%22&age=%2230%22&active=%22true%22', []);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['active' => true, 'age' => 30, 'name' => 'john', 'score' => 95.5], $response->body);

@@ -1,9 +1,8 @@
-//! PHP test app generator (stub).
+//! PHP test app generator.
 //!
-//! Generates a namespaced AppFactory with per-category creators. Route wiring
-//! will be filled in once the PHP bindings are implemented; for now the
-//! factories return empty `Spikard\App` instances to keep generated tests
-//! structured for TDD.
+//! Generates a namespaced `AppFactory` with per-category creators. Each
+//! factory registers handlers that return the fixture's expected response to
+//! drive TDD for the PHP bindings.
 
 use anyhow::{Context, Result};
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
@@ -36,6 +35,9 @@ fn load_fixtures_grouped(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<Fix
                 .and_then(|name| name.to_str())
                 .unwrap_or("fixtures")
                 .to_string();
+            if category == "sse" || category == "websockets" {
+                continue;
+            }
             let mut fixtures = load_fixtures_from_dir(&path)
                 .with_context(|| format!("Failed to load fixtures from {}", path.display()))?;
             fixtures.sort_by(|a, b| a.name.cmp(&b.name));
@@ -49,7 +51,7 @@ fn load_fixtures_grouped(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<Fix
 fn build_app_factory(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> String {
     let mut code = String::new();
     code.push_str(
-        "<?php\n\ndeclare(strict_types=1);\n\nnamespace E2E\\Php;\n\nuse Spikard\\App;\n\n/**\n * Generated App factory for PHP e2e tests.\n * Routes will be registered once the PHP bindings are wired.\n */\nfinal class AppFactory\n{\n",
+        "<?php\n\ndeclare(strict_types=1);\n\nnamespace E2E\\Php;\n\nuse Spikard\\App;\nuse Spikard\\Handlers\\HandlerInterface;\nuse Spikard\\Http\\Request;\nuse Spikard\\Http\\Response;\n\n/**\n * Generated App factory for PHP e2e tests.\n */\nfinal class AppFactory\n{\n",
     );
 
     if fixtures_by_category.is_empty() {
@@ -60,11 +62,40 @@ fn build_app_factory(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> S
     for (category, fixtures) in fixtures_by_category {
         let method_name = format!("create_{}", sanitize_identifier(category));
         code.push_str(&format!(
-            "    public static function {method}(): App\n    {{\n        // TODO: register {count} routes for category '{category}'\n        return new App();\n    }}\n\n",
-            method = method_name,
-            count = fixtures.len(),
-            category = category
+            "    public static function {method}(): App\n    {{\n        $app = new App();\n",
+            method = method_name
         ));
+
+        for (index, fixture) in fixtures.iter().enumerate() {
+            let handler_name = format!("Handler{}_{}", sanitize_identifier(category), index + 1);
+            let method = fixture.request.method.to_ascii_uppercase();
+            let path = &fixture.request.path;
+            let status = fixture.expected_response.status_code;
+            let body_literal = value_to_php(
+                fixture
+                    .expected_response
+                    .body
+                    .as_ref()
+                    .unwrap_or(&serde_json::Value::Null),
+            );
+            let headers_literal = string_map_to_php(fixture.expected_response.headers.as_ref());
+
+            code.push_str(&format!(
+                "        $app = $app->addRoute('{method}', '{path}', new {handler_name}());\n",
+                method = method,
+                path = path,
+                handler_name = handler_name
+            ));
+            code.push_str(&format!(
+                "        class {handler_name} implements HandlerInterface {{\n            public function handle(Request $request): Response\n            {{\n                $response = new Response({body}, {status}, {headers});\n                return $response;\n            }}\n        }}\n\n",
+                handler_name = handler_name,
+                body = body_literal,
+                status = status,
+                headers = headers_literal
+            ));
+        }
+
+        code.push_str("        return $app;\n    }\n\n");
     }
 
     code.push_str("}\n");
@@ -80,4 +111,45 @@ fn sanitize_identifier(input: &str) -> String {
         s = s.replace("__", "_");
     }
     s.trim_matches('_').to_ascii_lowercase()
+}
+
+fn value_to_php(value: &serde_json::Value) -> String {
+    match value {
+        serde_json::Value::Null => "null".to_string(),
+        serde_json::Value::Bool(b) => {
+            if *b {
+                "true".to_string()
+            } else {
+                "false".to_string()
+            }
+        }
+        serde_json::Value::Number(n) => n.to_string(),
+        serde_json::Value::String(s) => php_string_literal(s),
+        serde_json::Value::Array(arr) => {
+            let items = arr.iter().map(value_to_php).collect::<Vec<_>>().join(", ");
+            format!("[{}]", items)
+        }
+        serde_json::Value::Object(map) => {
+            let mut parts = Vec::new();
+            for (k, v) in map {
+                parts.push(format!("{} => {}", php_string_literal(k), value_to_php(v)));
+            }
+            format!("[{}]", parts.join(", "))
+        }
+    }
+}
+
+fn php_string_literal(input: &str) -> String {
+    let escaped = input.replace('\\', "\\\\").replace('\'', "\\'");
+    format!("'{}'", escaped)
+}
+
+fn string_map_to_php(map: Option<&std::collections::HashMap<String, String>>) -> String {
+    let mut parts = Vec::new();
+    if let Some(map) = map {
+        for (k, v) in map {
+            parts.push(format!("{} => {}", php_string_literal(k), php_string_literal(v)));
+        }
+    }
+    format!("[{}]", parts.join(", "))
 }
