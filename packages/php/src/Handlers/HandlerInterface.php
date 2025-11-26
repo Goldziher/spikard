@@ -9,5 +9,7 @@ use Spikard\Http\Response;
 
 interface HandlerInterface
 {
+    public function matches(\Spikard\Http\Request $request): bool;
+
     public function handle(Request $request): Response;
 }

@@ -82,17 +82,19 @@ fn build_fixture_test(category: &str, index: usize, fixture: &Fixture) -> String
         sanitize_identifier(category),
         sanitize_identifier(&fixture.name)
     );
-    let factory = format!("create_{}", sanitize_identifier(category));
+    let factory = format!(
+        "create_{}_{}_{}",
+        sanitize_identifier(category),
+        sanitize_identifier(&fixture.name),
+        index + 1
+    );
     let method = fixture.request.method.to_ascii_uppercase();
-    let mut path = fixture.request.path.clone();
-
-    if let Some(query) = fixture.request.query_params.as_ref() {
-        if !query.is_empty() {
-            if let Some(encoded) = build_query_string(query) {
-                path = format!("{}?{}", path, encoded);
-            }
-        }
-    }
+    let (path_only, merged_query) = normalize_path_and_query(fixture);
+    let path = if let Some(encoded) = build_query_string(&merged_query) {
+        format!("{}?{}", path_only, encoded)
+    } else {
+        path_only
+    };
 
     let mut options = Vec::new();
     if let Some(headers) = fixture.request.headers.as_ref() {
@@ -145,14 +147,18 @@ fn build_query_string(query: &std::collections::HashMap<String, serde_json::Valu
         return None;
     }
     let mut parts = Vec::new();
-    for (key, value) in query {
-        match value {
-            serde_json::Value::Array(items) => {
-                for item in items {
-                    parts.push(format!("{}={}", encode(key), encode(&item.to_string())));
+    let mut keys: Vec<_> = query.keys().collect();
+    keys.sort();
+    for key in keys {
+        if let Some(value) = query.get(key) {
+            match value {
+                serde_json::Value::Array(items) => {
+                    for item in items {
+                        parts.push(format!("{}={}", encode(key), encode(&query_value_str(item))));
+                    }
                 }
+                _ => parts.push(format!("{}={}", encode(key), encode(&query_value_str(value)))),
             }
-            _ => parts.push(format!("{}={}", encode(key), encode(&value.to_string()))),
         }
     }
     Some(parts.join("&"))
@@ -206,6 +212,79 @@ fn sanitize_identifier(input: &str) -> String {
         s = s.replace("__", "_");
     }
     s.trim_matches('_').to_ascii_lowercase()
+}
+
+fn normalize_path_and_query(fixture: &Fixture) -> (String, std::collections::HashMap<String, serde_json::Value>) {
+    let mut base_path = fixture.request.path.clone();
+    let mut merged: std::collections::HashMap<String, serde_json::Value> =
+        fixture.request.query_params.clone().unwrap_or_default();
+
+    if let Some((path_part, query_part)) = fixture.request.path.split_once('?') {
+        base_path = path_part.to_string();
+        let parsed = parse_query_map(query_part);
+        for (k, v) in parsed {
+            merged
+                .entry(k)
+                .and_modify(|existing| match (existing, v.clone()) {
+                    (serde_json::Value::Array(arr), serde_json::Value::Array(mut incoming)) => {
+                        arr.append(&mut incoming);
+                    }
+                    (serde_json::Value::Array(arr), other) => {
+                        arr.push(other);
+                    }
+                    (existing_val, serde_json::Value::Array(incoming)) => {
+                        let mut combined = vec![existing_val.take()];
+                        combined.extend(incoming);
+                        *existing_val = serde_json::Value::Array(combined);
+                    }
+                    (existing_val, other) => {
+                        let prev = existing_val.take();
+                        *existing_val = serde_json::Value::Array(vec![prev, other]);
+                    }
+                })
+                .or_insert(v);
+        }
+    }
+
+    (base_path, merged)
+}
+
+fn parse_query_map(raw: &str) -> std::collections::HashMap<String, serde_json::Value> {
+    let mut map = std::collections::HashMap::new();
+    for pair in raw.split('&') {
+        if pair.is_empty() {
+            continue;
+        }
+        let mut split = pair.splitn(2, '=');
+        let key = split.next().unwrap_or("").to_string();
+        let val = split.next().unwrap_or("");
+        let decoded_key = urlencoding::decode(&key)
+            .unwrap_or_else(|_| key.clone().into())
+            .to_string();
+        let decoded_val = urlencoding::decode(val).unwrap_or_else(|_| val.into()).to_string();
+        map.entry(decoded_key)
+            .and_modify(|existing| {
+                if let serde_json::Value::Array(arr) = existing {
+                    arr.push(serde_json::Value::String(decoded_val.clone()));
+                } else {
+                    let prev = existing.take();
+                    *existing = serde_json::Value::Array(vec![prev, serde_json::Value::String(decoded_val.clone())]);
+                }
+            })
+            .or_insert_with(|| serde_json::Value::String(decoded_val));
+    }
+    map
+}
+
+fn query_value_str(value: &serde_json::Value) -> String {
+    match value {
+        serde_json::Value::String(s) => s.clone(),
+        serde_json::Value::Number(n) => n.to_string(),
+        serde_json::Value::Bool(b) => b.to_string(),
+        serde_json::Value::Null => "".to_string(),
+        serde_json::Value::Array(arr) => arr.iter().map(query_value_str).collect::<Vec<_>>().join(","),
+        serde_json::Value::Object(_) => value.to_string(),
+    }
 }
 
 fn phpunit_config() -> Result<String> {

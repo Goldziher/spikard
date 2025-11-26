@@ -1,12 +1,17 @@
-//! PHP bindings scaffold for Spikard.
-//!
-//! This crate will host the ext-php-rs integration that mirrors the existing
-//! Python/Node/Ruby bindings. For now it exposes only metadata helpers to keep
-//! the workspace aligned while the FFI surface is designed.
-
 #![deny(clippy::unwrap_used)]
 
-/// Return the crate version.
-pub const fn version() -> &'static str {
+#[cfg(feature = "extension-module")]
+mod php;
+
+#[cfg(feature = "extension-module")]
+pub use php::*;
+
+#[cfg(not(feature = "extension-module"))]
+pub fn spikard_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
+}
+
+#[cfg(not(feature = "extension-module"))]
+pub fn spikard_echo_response(body: &str) -> String {
+    body.to_string()
 }

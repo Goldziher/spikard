@@ -11,6 +11,7 @@ use Spikard\DI\DependencyContainer;
 use Spikard\Handlers\HandlerInterface;
 use Spikard\Handlers\SseEventProducerInterface;
 use Spikard\Handlers\WebSocketHandlerInterface;
+use Spikard\Http\Request;
 
 /**
  * Spikard application facade for PHP bindings.
@@ -109,14 +110,17 @@ final class App
     }
 
     /**
-     * Find a handler for the given method and path.
+     * Find a handler for the given request (method/path already set).
      */
-    public function findHandler(string $method, string $path): ?HandlerInterface
+    public function findHandler(Request $request): ?HandlerInterface
     {
-        $needleMethod = \strtoupper($method);
+        $needleMethod = \strtoupper($request->method);
+        $path = $request->path;
         foreach ($this->routes as $route) {
             if (\strtoupper($route['method']) === $needleMethod && $route['path'] === $path) {
-                return $route['handler'];
+                if ($route['handler']->matches($request)) {
+                    return $route['handler'];
+                }
             }
         }
 
