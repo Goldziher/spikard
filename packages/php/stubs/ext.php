@@ -24,3 +24,27 @@ if (false) {
         return true;
     }
 }
+
+namespace Spikard\Native {
+    class TestClient
+    {
+        /** @param array<int, array{method: string, path: string, handler?: object, websocket?: bool, sse?: bool}> $routes */
+        public function __construct(array $routes) {}
+        /** @param array<string, mixed> $options */
+        public function request(string $method, string $path, array $options = []): object {}
+        public function websocket(string $path, ?string $sendText = null): WebSocket {}
+        public function sse(string $path): SseStream {}
+    }
+
+    class WebSocket
+    {
+        public function recv_text(): ?string {}
+        public function send_text(string $message): bool {}
+    }
+
+    class SseStream
+    {
+        /** @return array<int, string> */
+        public function events(): array {}
+    }
+}

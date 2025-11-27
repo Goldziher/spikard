@@ -324,7 +324,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_content_types_20_content_length_mismatch_8();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/data', ['headers' => ['Content-Length' => '100', 'Content-Type' => 'application/json'], 'body' => ['value' => 'short']]);
+        $response = $client->request('POST', '/data', ['headers' => ['Content-Type' => 'application/json', 'Content-Length' => '100'], 'body' => ['value' => 'short']]);
 
         $this->assertSame(400, $response->statusCode);
         $this->assertEquals(['error' => 'Content-Length header does not match actual body size'], $response->body);
@@ -566,7 +566,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cookies_multiple_cookies_success_12();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items/', ['cookies' => ['fatebook_tracker' => 'tracker456', 'session_id' => 'session123', 'googall_tracker' => 'ga789']]);
+        $response = $client->request('GET', '/items/', ['cookies' => ['session_id' => 'session123', 'googall_tracker' => 'ga789', 'fatebook_tracker' => 'tracker456']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['fatebook_tracker' => 'tracker456', 'googall_tracker' => 'ga789', 'session_id' => 'session123'], $response->body);
@@ -716,7 +716,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_06_cors_preflight_method_not_allowed_1();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Headers' => 'Content-Type', 'Access-Control-Request-Method' => 'DELETE', 'Origin' => 'https://example.com']]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Headers' => 'Content-Type', 'Access-Control-Request-Method' => 'DELETE']]);
 
         $this->assertSame(403, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -726,7 +726,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_07_cors_preflight_header_not_allowed_2();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Method' => 'POST', 'Origin' => 'https://example.com', 'Access-Control-Request-Headers' => 'X-Custom-Header']]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'X-Custom-Header']]);
 
         $this->assertSame(403, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -736,7 +736,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_08_cors_max_age_3();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Headers' => 'Content-Type', 'Access-Control-Request-Method' => 'POST', 'Origin' => 'https://example.com']]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'Content-Type']]);
 
         $this->assertSame(204, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -766,7 +766,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_private_network_access_6();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/local-resource', ['headers' => ['Access-Control-Request-Private-Network' => 'true', 'Origin' => 'https://public.example.com', 'Access-Control-Request-Method' => 'GET']]);
+        $response = $client->request('OPTIONS', '/api/local-resource', ['headers' => ['Access-Control-Request-Method' => 'GET', 'Origin' => 'https://public.example.com', 'Access-Control-Request-Private-Network' => 'true']]);
 
         $this->assertSame(204, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -776,7 +776,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_vary_header_for_proper_caching_7();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/api/cached-resource', ['headers' => ['Origin' => 'https://app.example.com', 'Cache-Control' => 'max-age=3600']]);
+        $response = $client->request('GET', '/api/cached-resource', ['headers' => ['Cache-Control' => 'max-age=3600', 'Origin' => 'https://app.example.com']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['data' => 'cacheable resource'], $response->body);
@@ -816,7 +816,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_preflight_for_put_method_11();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/resource/123', ['headers' => ['Access-Control-Request-Method' => 'PUT', 'Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header', 'Origin' => 'https://app.example.com']]);
+        $response = $client->request('OPTIONS', '/api/resource/123', ['headers' => ['Origin' => 'https://app.example.com', 'Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Request-Method' => 'PUT']]);
 
         $this->assertSame(204, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -826,7 +826,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_preflight_request_12();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/items/', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Request-Method' => 'POST']]);
+        $response = $client->request('OPTIONS', '/items/', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -856,7 +856,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_safelisted_headers_without_preflight_15();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/api/form', ['headers' => ['Accept-Language' => 'en-US', 'Content-Type' => 'text/plain', 'Origin' => 'https://app.example.com', 'Accept' => 'application/json']]);
+        $response = $client->request('POST', '/api/form', ['headers' => ['Origin' => 'https://app.example.com', 'Content-Type' => 'text/plain', 'Accept-Language' => 'en-US', 'Accept' => 'application/json']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['message' => 'Success'], $response->body);
@@ -1650,7 +1650,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
     {
         $app = AppFactory::create_http_methods_options_cors_preflight_request_5();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/items/', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'Content-Type']]);
+        $response = $client->request('OPTIONS', '/items/', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Headers' => 'Content-Type', 'Access-Control-Request-Method' => 'POST']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -2230,7 +2230,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
     {
         $app = AppFactory::create_lifecycle_hooks_multiple_hooks_all_phases_2();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/api/full-lifecycle', ['headers' => ['Content-Type' => 'application/json', 'Authorization' => 'Bearer valid-token-12345'], 'body' => ['action' => 'update_profile', 'user_id' => 'user-123']]);
+        $response = $client->request('POST', '/api/full-lifecycle', ['headers' => ['Authorization' => 'Bearer valid-token-12345', 'Content-Type' => 'application/json'], 'body' => ['action' => 'update_profile', 'user_id' => 'user-123']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['action' => 'update_profile', 'message' => 'Action completed successfully', 'request_id' => '.*', 'user_id' => 'user-123'], $response->body);
@@ -4429,57 +4429,130 @@ echo hello', 'content_type' => 'application/x-sh', 'field_name' => 'file', 'file
 
     public function test_sse_notifications_1(): void
     {
-        $this->markTestIncomplete('SSE support for PHP bindings not implemented yet (fixture: systemAlert).');
+        if (!\function_exists('spikard_version')) {
+            $this->markTestSkipped('Native extension required for SSE.');
+        }
+        $app = AppFactory::create_sse_notifications_1();
+        $client = TestClient::create($app);
+        $stream = $client->connectSse('/notifications');
+        $this->assertEquals([['level' => 'critical', 'message' => 'Database connection pool exhausted', 'source' => 'database-service', 'timestamp' => '2024-01-15T10:30:00Z', 'type' => 'system_alert']], $stream->events());
     }
 
     public function test_sse_notifications_2(): void
     {
-        $this->markTestIncomplete('SSE support for PHP bindings not implemented yet (fixture: notificationBatch).');
+        if (!\function_exists('spikard_version')) {
+            $this->markTestSkipped('Native extension required for SSE.');
+        }
+        $app = AppFactory::create_sse_notifications_2();
+        $client = TestClient::create($app);
+        $stream = $client->connectSse('/notifications');
+        $this->assertEquals([[['message' => 'example_message', 'timestamp' => '2024-01-15T10:30:00Z', 'type' => 'example_type'], ['message' => 'example_message', 'timestamp' => '2024-01-15T10:30:00Z', 'type' => 'example_type']]], $stream->events());
     }
 
     public function test_sse_notifications_3(): void
     {
-        $this->markTestIncomplete('SSE support for PHP bindings not implemented yet (fixture: userNotification).');
+        if (!\function_exists('spikard_version')) {
+            $this->markTestSkipped('Native extension required for SSE.');
+        }
+        $app = AppFactory::create_sse_notifications_3();
+        $client = TestClient::create($app);
+        $stream = $client->connectSse('/notifications');
+        $this->assertEquals([['body' => 'You have received a new direct message', 'priority' => 'high', 'timestamp' => '2024-01-15T10:30:00Z', 'title' => 'New message from John', 'type' => 'user_notification', 'userId' => 'user_12345']], $stream->events());
     }
 
     public function test_sse_notifications_4(): void
     {
-        $this->markTestIncomplete('SSE support for PHP bindings not implemented yet (fixture: statusUpdate).');
+        if (!\function_exists('spikard_version')) {
+            $this->markTestSkipped('Native extension required for SSE.');
+        }
+        $app = AppFactory::create_sse_notifications_4();
+        $client = TestClient::create($app);
+        $stream = $client->connectSse('/notifications');
+        $this->assertEquals([['message' => 'All systems operational', 'metadata' => ['region' => 'us-east-1', 'uptime' => 99.99], 'service' => 'payment-gateway', 'status' => 'operational', 'timestamp' => '2024-01-15T10:30:00Z', 'type' => 'status_update']], $stream->events());
     }
 
     public function test_websocket_systemalert_1(): void
     {
-        $this->markTestIncomplete('WebSocket support for PHP bindings not implemented yet (fixture: systemAlert).');
+        if (!\function_exists('spikard_version')) {
+            $this->markTestSkipped('Native extension required for WebSocket.');
+        }
+        $app = AppFactory::create_websocket_systemalert_1();
+        $client = TestClient::create($app);
+        $ws = $client->connectWebSocket('systemAlert', '{"level":"example_level","message":"example_message","source":"example_source","timestamp":"2024-01-15T10:30:00Z","type":"system_alert"}');
+        $received = $ws->recv_text();
+        $this->assertNotNull($received);
     }
 
     public function test_websocket_chat_2(): void
     {
-        $this->markTestIncomplete('WebSocket support for PHP bindings not implemented yet (fixture: chatMessage).');
+        if (!\function_exists('spikard_version')) {
+            $this->markTestSkipped('Native extension required for WebSocket.');
+        }
+        $app = AppFactory::create_websocket_chat_2();
+        $client = TestClient::create($app);
+        $ws = $client->connectWebSocket('/chat', '{"text":"Hello, everyone!","timestamp":"2024-01-15T10:30:00Z","type":"message","user":"alice"}');
+        $received = $ws->recv_text();
+        $this->assertNotNull($received);
     }
 
     public function test_websocket_chatack_3(): void
     {
-        $this->markTestIncomplete('WebSocket support for PHP bindings not implemented yet (fixture: chatAck).');
+        if (!\function_exists('spikard_version')) {
+            $this->markTestSkipped('Native extension required for WebSocket.');
+        }
+        $app = AppFactory::create_websocket_chatack_3();
+        $client = TestClient::create($app);
+        $ws = $client->connectWebSocket('chatAck', '{"messageId":"ack-123","status":"delivered","timestamp":"2024-01-15T10:31:00Z","type":"chatAck"}');
+        $received = $ws->recv_text();
+        $this->assertNotNull($received);
     }
 
     public function test_websocket_chat_4(): void
     {
-        $this->markTestIncomplete('WebSocket support for PHP bindings not implemented yet (fixture: userLeft).');
+        if (!\function_exists('spikard_version')) {
+            $this->markTestSkipped('Native extension required for WebSocket.');
+        }
+        $app = AppFactory::create_websocket_chat_4();
+        $client = TestClient::create($app);
+        $ws = $client->connectWebSocket('/chat', '{"timestamp":"2024-01-15T10:35:00Z","type":"userLeft","user":"charlie"}');
+        $received = $ws->recv_text();
+        $this->assertNotNull($received);
     }
 
     public function test_websocket_chat_5(): void
     {
-        $this->markTestIncomplete('WebSocket support for PHP bindings not implemented yet (fixture: userJoined).');
+        if (!\function_exists('spikard_version')) {
+            $this->markTestSkipped('Native extension required for WebSocket.');
+        }
+        $app = AppFactory::create_websocket_chat_5();
+        $client = TestClient::create($app);
+        $ws = $client->connectWebSocket('/chat', '{"timestamp":"2024-01-15T10:29:55Z","type":"userJoined","user":"bob"}');
+        $received = $ws->recv_text();
+        $this->assertNotNull($received);
     }
 
     public function test_websocket_usernotification_6(): void
     {
-        $this->markTestIncomplete('WebSocket support for PHP bindings not implemented yet (fixture: userNotification).');
+        if (!\function_exists('spikard_version')) {
+            $this->markTestSkipped('Native extension required for WebSocket.');
+        }
+        $app = AppFactory::create_websocket_usernotification_6();
+        $client = TestClient::create($app);
+        $ws = $client->connectWebSocket('userNotification', '{"body":"example_body","priority":"example_priority","timestamp":"2024-01-15T10:30:00Z","title":"example_title","type":"user_notification","userId":"example_userId"}');
+        $received = $ws->recv_text();
+        $this->assertNotNull($received);
     }
 
     public function test_websocket_statusupdate_7(): void
     {
-        $this->markTestIncomplete('WebSocket support for PHP bindings not implemented yet (fixture: statusUpdate).');
+        if (!\function_exists('spikard_version')) {
+            $this->markTestSkipped('Native extension required for WebSocket.');
+        }
+        $app = AppFactory::create_websocket_statusupdate_7();
+        $client = TestClient::create($app);
+        $ws = $client->connectWebSocket('statusUpdate', '{"message":"example_message","metadata":{},"service":"example_service","status":"example_status","timestamp":"2024-01-15T10:30:00Z","type":"status_update"}');
+        $received = $ws->recv_text();
+        $this->assertNotNull($received);
     }
 
 }
