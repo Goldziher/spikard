@@ -196,6 +196,106 @@ impl PhpServer {
         self.config.max_body_size = None;
     }
 
+    /// Configure JWT auth
+    #[php(name = "setJwtAuth")]
+    pub fn set_jwt_auth(
+        &mut self,
+        secret: String,
+        algorithm: Option<String>,
+        audience: Option<Vec<String>>,
+        issuer: Option<String>,
+        leeway: Option<i64>,
+    ) {
+        let mut cfg = spikard_http::JwtConfig {
+            secret,
+            algorithm: algorithm.unwrap_or_else(|| "HS256".to_string()),
+            audience,
+            issuer,
+            leeway: leeway.unwrap_or(0) as u64,
+        };
+        self.config.jwt_auth = Some(cfg);
+    }
+
+    /// Disable JWT auth
+    #[php(name = "disableJwtAuth")]
+    pub fn disable_jwt_auth(&mut self) {
+        self.config.jwt_auth = None;
+    }
+
+    /// Configure API key auth
+    #[php(name = "setApiKeyAuth")]
+    pub fn set_api_key_auth(&mut self, keys: Vec<String>, header_name: Option<String>) {
+        let mut cfg = spikard_http::ApiKeyConfig {
+            keys,
+            header_name: header_name.unwrap_or_else(|| "X-API-Key".to_string()),
+        };
+        self.config.api_key_auth = Some(cfg);
+    }
+
+    /// Disable API key auth
+    #[php(name = "disableApiKeyAuth")]
+    pub fn disable_api_key_auth(&mut self) {
+        self.config.api_key_auth = None;
+    }
+
+    /// Configure CORS
+    #[php(name = "setCors")]
+    pub fn set_cors(
+        &mut self,
+        allow_origin: Vec<String>,
+        allow_methods: Vec<String>,
+        allow_headers: Vec<String>,
+        expose_headers: Vec<String>,
+        allow_credentials: bool,
+        max_age_seconds: Option<i64>,
+    ) {
+        let cfg = spikard_core::CorsConfig {
+            allow_origin,
+            allow_methods,
+            allow_headers,
+            expose_headers,
+            allow_credentials,
+            max_age_seconds: max_age_seconds.map(|v| v as u64),
+        };
+        self.config.cors = Some(cfg);
+    }
+
+    /// Disable CORS
+    #[php(name = "disableCors")]
+    pub fn disable_cors(&mut self) {
+        self.config.cors = None;
+    }
+
+    /// Add static files config
+    #[php(name = "addStaticFiles")]
+    pub fn add_static_files(
+        &mut self,
+        directory: String,
+        route_prefix: String,
+        index_file: Option<bool>,
+        cache_control: Option<String>,
+    ) {
+        let cfg = spikard_http::StaticFilesConfig {
+            directory,
+            route_prefix,
+            index_file: index_file.unwrap_or(true),
+            cache_control,
+        };
+        self.config.static_files.push(cfg);
+    }
+
+    /// Clear static files configs
+    #[php(name = "clearStaticFiles")]
+    pub fn clear_static_files(&mut self) {
+        self.config.static_files.clear();
+    }
+
+    /// Enable/disable graceful shutdown
+    #[php(name = "enableGracefulShutdown")]
+    pub fn enable_graceful_shutdown(&mut self, enabled: bool) {
+        self.config.graceful_shutdown = enabled;
+    }
+
     /// Configure rate limiting
     #[php(name = "setRateLimit")]
     pub fn set_rate_limit(&mut self, per_second: i64, burst: Option<i64>, ip_based: Option<bool>) {
