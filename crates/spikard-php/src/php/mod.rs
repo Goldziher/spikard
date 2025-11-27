@@ -18,6 +18,7 @@ mod server;
 mod testing;
 
 pub use handler::GLOBAL_RUNTIME;
+pub use handler::PhpHandler;
 pub use request::PhpRequest;
 pub use response::PhpResponse;
 pub use server::PhpServer;
