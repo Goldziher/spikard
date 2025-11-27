@@ -32,6 +32,7 @@ struct RegisteredRoute {
     request_schema: Option<serde_json::Value>,
     response_schema: Option<serde_json::Value>,
     parameter_schema: Option<serde_json::Value>,
+    cors: Option<spikard_core::CorsConfig>,
 }
 
 /// PHP-visible HTTP server class.
@@ -48,6 +49,8 @@ pub struct PhpServer {
     config: ServerConfig,
     /// Lifecycle hooks (not yet exposed to PHP; placeholder for parity)
     lifecycle_hooks: Option<LifecycleHooks>,
+    /// Global CORS configuration to apply to all routes
+    global_cors: Option<spikard_core::CorsConfig>,
 }
 
 #[php_impl]
@@ -61,6 +64,7 @@ impl PhpServer {
             handlers: Vec::new(),
             config: ServerConfig::default(),
             lifecycle_hooks: None,
+            global_cors: None,
         }
     }
 
@@ -76,6 +80,7 @@ impl PhpServer {
             request_schema: None,
             response_schema: None,
             parameter_schema: None,
+            cors: self.global_cors.clone(),
         });
         self.handlers.push(handler.shallow_clone());
     }
@@ -92,6 +97,7 @@ impl PhpServer {
             request_schema: None,
             response_schema: None,
             parameter_schema: None,
+            cors: self.global_cors.clone(),
         });
         self.handlers.push(handler.shallow_clone());
     }
@@ -108,6 +114,7 @@ impl PhpServer {
             request_schema: None,
             response_schema: None,
             parameter_schema: None,
+            cors: self.global_cors.clone(),
         });
         self.handlers.push(handler.shallow_clone());
     }
@@ -124,6 +131,7 @@ impl PhpServer {
             request_schema: None,
             response_schema: None,
             parameter_schema: None,
+            cors: self.global_cors.clone(),
         });
         self.handlers.push(handler.shallow_clone());
     }
@@ -140,6 +148,7 @@ impl PhpServer {
             request_schema: None,
             response_schema: None,
             parameter_schema: None,
+            cors: self.global_cors.clone(),
         });
         self.handlers.push(handler.shallow_clone());
     }
@@ -171,6 +180,7 @@ impl PhpServer {
             request_schema,
             response_schema,
             parameter_schema,
+            cors: self.global_cors.clone(),
         });
         Ok(())
     }
@@ -296,28 +306,35 @@ impl PhpServer {
         self.config.api_key_auth = None;
     }
 
-    /// Configure CORS
-    /// TODO: CORS configuration moved to middleware layer - needs reimplementation
+    /// Configure global CORS for all routes
     #[php(name = "setCors")]
     pub fn set_cors(
         &mut self,
-        _allow_origin: Vec<String>,
-        _allow_methods: Vec<String>,
-        _allow_headers: Vec<String>,
-        _expose_headers: Vec<String>,
-        _allow_credentials: bool,
-        _max_age_seconds: Option<i64>,
+        allow_origin: Vec<String>,
+        allow_methods: Vec<String>,
+        allow_headers: Vec<String>,
+        expose_headers: Vec<String>,
+        allow_credentials: bool,
+        max_age_seconds: Option<i64>,
     ) {
-        // CORS is no longer a ServerConfig field - handled via middleware layers
-        // TODO: Implement CORS middleware configuration
+        self.global_cors = Some(spikard_core::CorsConfig {
+            allowed_origins: allow_origin,
+            allowed_methods: allow_methods,
+            allowed_headers: allow_headers,
+            expose_headers: if expose_headers.is_empty() {
+                None
+            } else {
+                Some(expose_headers)
+            },
+            max_age: max_age_seconds.map(|s| s as u32),
+            allow_credentials: Some(allow_credentials),
+        });
     }
 
-    /// Disable CORS
-    /// TODO: CORS configuration moved to middleware layer - needs reimplementation
+    /// Disable global CORS
     #[php(name = "disableCors")]
     pub fn disable_cors(&mut self) {
-        // CORS is no longer a ServerConfig field - handled via middleware layers
-        // TODO: Implement CORS middleware configuration
+        self.global_cors = None;
     }
 
     /// Add static files config
@@ -522,7 +539,7 @@ impl PhpServer {
                 parameter_schema: r.parameter_schema.clone(),
                 file_params: None,
                 is_async: true, // PHP handlers are always async in our implementation
-                cors: None,
+                cors: r.cors.clone(), // Use route-specific CORS config
                 body_param_name: None,
                 #[cfg(feature = "di")]
                 dependencies: Vec::new(),
