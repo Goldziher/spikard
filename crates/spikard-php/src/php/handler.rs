@@ -85,7 +85,7 @@ impl Handler for PhpHandler {
 /// Invoke the PHP callable registered at index and return a HandlerResult.
 fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &RequestData) -> HandlerResult {
     let registry = PHP_HANDLER_REGISTRY.get().ok_or_else(|| {
-        internal_problem(
+        crate::php::server::to_problem(
             StatusCode::INTERNAL_SERVER_ERROR,
             "PHP handler registry not initialised",
         )
@@ -94,7 +94,7 @@ fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &R
     // Build PhpRequest from RequestData and convert to Zval
     let php_request = crate::php::request::PhpRequest::from_request_data(request_data);
     let request_zval = php_request.into_zval(false).map_err(|e| {
-        internal_problem(
+        crate::php::server::to_problem(
             StatusCode::INTERNAL_SERVER_ERROR,
             format!("Failed to convert request for PHP handler: {:?}", e),
         )
@@ -104,14 +104,14 @@ fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &R
     let response_zval = {
         let mut guard = registry.lock();
         let callable = guard.get_mut(handler_index).ok_or_else(|| {
-            internal_problem(
+            crate::php::server::to_problem(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 format!("PHP handler not found: index {}", handler_index),
             )
         })?;
 
         callable.try_call(vec![&request_zval]).map_err(|e| {
-            internal_problem(
+            crate::php::server::to_problem(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 format!("PHP handler '{handler_name}' failed: {:?}", e),
             )
