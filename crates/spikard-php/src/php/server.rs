@@ -9,7 +9,9 @@ use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendCallable, ZendHashTable, Zval};
 use spikard_http::server::build_router_with_handlers_and_config;
-use spikard_http::{Handler, HandlerResult, Method, RequestData, Route, Router, ServerConfig};
+use spikard_http::{
+    Handler, HandlerResult, LifecycleHooks, Method, RequestData, Route, Router, ServerConfig, ServerConfigBuilder,
+};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -37,6 +39,8 @@ pub struct PhpServer {
     handlers: Vec<ZendCallable>,
     /// Optional server configuration (populated via setters)
     config: ServerConfig,
+    /// Lifecycle hooks (not yet exposed to PHP; placeholder for parity)
+    lifecycle_hooks: Option<LifecycleHooks>,
 }
 
 #[php_impl]
@@ -49,6 +53,7 @@ impl PhpServer {
             port: port.map(|p| p as u16).unwrap_or(8000),
             handlers: Vec::new(),
             config: ServerConfig::default(),
+            lifecycle_hooks: None,
         }
     }
 
@@ -160,6 +165,18 @@ impl PhpServer {
     #[php(name = "enableRequestId")]
     pub fn enable_request_id(&mut self, enabled: bool) {
         self.config.enable_request_id = enabled;
+    }
+
+    /// Set maximum body size (bytes)
+    #[php(name = "setMaxBodySize")]
+    pub fn set_max_body_size(&mut self, max_bytes: i64) {
+        self.config.max_body_size = Some(max_bytes as usize);
+    }
+
+    /// Disable max body size limit
+    #[php(name = "disableMaxBodySize")]
+    pub fn disable_max_body_size(&mut self) {
+        self.config.max_body_size = None;
     }
 
     /// Set host
