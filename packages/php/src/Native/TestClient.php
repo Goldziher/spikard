@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Spikard\Native;
 
-use RuntimeException;
-use Spikard\Http\Response;
 use function file_get_contents;
 use function json_decode;
+
+use RuntimeException;
+use Spikard\Http\Response;
 
 /**
  * Placeholder definition for the native test client when the extension

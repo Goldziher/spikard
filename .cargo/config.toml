@@ -1,2 +1,6 @@
-[env]
+# macOS ARM64 needs -undefined dynamic_lookup for bundled Ruby (homebrew)
+[target.'cfg(target_os = "macos")']
+rustflags = ["-C", "link-arg=-Wl,-undefined,dynamic_lookup"]
+
+[target.'cfg(target_os = "macos")'.env]
 RUBY = "/opt/homebrew/opt/ruby/bin/ruby"

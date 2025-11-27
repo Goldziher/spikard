@@ -206,7 +206,7 @@ final class App
     public function close(): void
     {
         if ($this->serverHandle !== null && \function_exists('spikard_stop_server')) {
-            \spikard_stop_server($this->serverHandle);
+            spikard_stop_server($this->serverHandle);
         }
         $this->serverHandle = null;
     }

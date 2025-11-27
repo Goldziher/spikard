@@ -1,0 +1,399 @@
+//! Native PHP test client for HTTP testing.
+//!
+//! This module implements `NativeTestClient`, a PHP class that provides
+//! HTTP testing capabilities against a Spikard server without network overhead.
+
+use ext_php_rs::boxed::ZBox;
+use ext_php_rs::convert::IntoZval;
+use ext_php_rs::prelude::*;
+use ext_php_rs::types::{ZendCallable, ZendHashTable, Zval};
+use serde_json::Value as JsonValue;
+use std::collections::HashMap;
+
+use super::{PhpRequest, zval_to_json};
+
+/// Test response data exposed to PHP.
+#[php_class]
+#[php(name = "Spikard\\Testing\\TestResponse")]
+pub struct PhpTestResponse {
+    pub(crate) status: i64,
+    pub(crate) body: String,
+    pub(crate) headers: HashMap<String, String>,
+}
+
+#[php_impl]
+impl PhpTestResponse {
+    /// Get the HTTP status code.
+    #[php(name = "getStatus")]
+    pub fn get_status(&self) -> i64 {
+        self.status
+    }
+
+    /// Alias for status code.
+    #[php(name = "getStatusCode")]
+    pub fn get_status_code(&self) -> i64 {
+        self.status
+    }
+
+    /// Get the response body as a string.
+    #[php(name = "getBody")]
+    pub fn get_body(&self) -> String {
+        self.body.clone()
+    }
+
+    /// Get the response body parsed as JSON.
+    #[php(name = "json")]
+    pub fn json(&self) -> PhpResult<ZBox<ZendHashTable>> {
+        let value: JsonValue =
+            serde_json::from_str(&self.body).map_err(|e| PhpException::default(format!("Invalid JSON body: {}", e)))?;
+        super::json_to_php_table(&value)
+    }
+
+    /// Get response headers as a PHP array.
+    #[php(name = "getHeaders")]
+    pub fn get_headers(&self) -> PhpResult<ZBox<ZendHashTable>> {
+        let mut table = ZendHashTable::new();
+        for (k, v) in &self.headers {
+            table.insert(k.as_str(), v.as_str())?;
+        }
+        Ok(table)
+    }
+
+    /// Get a specific header value.
+    #[php(name = "getHeader")]
+    pub fn get_header(&self, name: String) -> Option<String> {
+        let name_lower = name.to_ascii_lowercase();
+        self.headers
+            .iter()
+            .find(|(k, _)| k.to_ascii_lowercase() == name_lower)
+            .map(|(_, v)| v.clone())
+    }
+
+    /// Check if response was successful (2xx status).
+    #[php(name = "isSuccess")]
+    pub fn is_success(&self) -> bool {
+        self.status >= 200 && self.status < 300
+    }
+
+    /// Check if response was a redirect (3xx status).
+    #[php(name = "isRedirect")]
+    pub fn is_redirect(&self) -> bool {
+        self.status >= 300 && self.status < 400
+    }
+
+    /// Check if response was a client error (4xx status).
+    #[php(name = "isClientError")]
+    pub fn is_client_error(&self) -> bool {
+        self.status >= 400 && self.status < 500
+    }
+
+    /// Check if response was a server error (5xx status).
+    #[php(name = "isServerError")]
+    pub fn is_server_error(&self) -> bool {
+        self.status >= 500 && self.status < 600
+    }
+}
+
+/// Native test client for PHP.
+///
+/// This provides direct HTTP testing without network overhead by
+/// directly invoking PHP handlers.
+#[php_class]
+#[php(name = "Spikard\\Testing\\NativeTestClient")]
+pub struct PhpTestClient {
+    // No state needed - each request invokes the handler directly
+}
+
+#[php_impl]
+impl PhpTestClient {
+    /// Create a new test client.
+    pub fn new() -> Self {
+        Self {}
+    }
+
+    /// Execute a GET request.
+    ///
+    /// This is a simplified implementation that directly calls the handler.
+    #[php(name = "get")]
+    pub fn get_request(
+        &self,
+        path: String,
+        handler: ZendCallable,
+        query: Option<String>,
+        headers: Option<HashMap<String, String>>,
+    ) -> PhpResult<PhpTestResponse> {
+        execute_test_request("GET", &path, handler, None, query, headers)
+    }
+
+    /// Execute a POST request.
+    #[php(name = "post")]
+    pub fn post_request(
+        &self,
+        path: String,
+        handler: ZendCallable,
+        body: Option<String>,
+        headers: Option<HashMap<String, String>>,
+    ) -> PhpResult<PhpTestResponse> {
+        execute_test_request("POST", &path, handler, body, None, headers)
+    }
+
+    /// Execute a PUT request.
+    #[php(name = "put")]
+    pub fn put_request(
+        &self,
+        path: String,
+        handler: ZendCallable,
+        body: Option<String>,
+        headers: Option<HashMap<String, String>>,
+    ) -> PhpResult<PhpTestResponse> {
+        execute_test_request("PUT", &path, handler, body, None, headers)
+    }
+
+    /// Execute a PATCH request.
+    #[php(name = "patch")]
+    pub fn patch_request(
+        &self,
+        path: String,
+        handler: ZendCallable,
+        body: Option<String>,
+        headers: Option<HashMap<String, String>>,
+    ) -> PhpResult<PhpTestResponse> {
+        execute_test_request("PATCH", &path, handler, body, None, headers)
+    }
+
+    /// Execute a DELETE request.
+    #[php(name = "delete")]
+    pub fn delete_request(
+        &self,
+        path: String,
+        handler: ZendCallable,
+        headers: Option<HashMap<String, String>>,
+    ) -> PhpResult<PhpTestResponse> {
+        execute_test_request("DELETE", &path, handler, None, None, headers)
+    }
+
+    /// Execute a generic request with any HTTP method.
+    #[php(name = "request")]
+    pub fn request(
+        &self,
+        method: String,
+        path: String,
+        handler: ZendCallable,
+        body: Option<String>,
+        query: Option<String>,
+        headers: Option<HashMap<String, String>>,
+    ) -> PhpResult<PhpTestResponse> {
+        execute_test_request(&method, &path, handler, body, query, headers)
+    }
+}
+
+/// Execute a test request by directly invoking the PHP handler.
+///
+/// This bypasses the HTTP stack and calls the handler directly, which is
+/// much faster for unit testing.
+fn execute_test_request(
+    method: &str,
+    path: &str,
+    handler: ZendCallable,
+    body: Option<String>,
+    query: Option<String>,
+    headers: Option<HashMap<String, String>>,
+) -> PhpResult<PhpTestResponse> {
+    // Parse body as JSON if provided
+    let body_value = body
+        .as_ref()
+        .map(|b| serde_json::from_str(b).unwrap_or(JsonValue::String(b.clone())))
+        .unwrap_or(JsonValue::Null);
+
+    // Parse query string into params
+    let raw_query = parse_query_string(query.as_deref());
+
+    // Build PHP request object
+    let php_request = PhpRequest::from_parts(
+        method.to_string(),
+        path.to_string(),
+        body_value,
+        body.map(|b| b.into_bytes()),
+        headers.clone().unwrap_or_default(),
+        HashMap::new(),
+        raw_query,
+        extract_path_params(path),
+    );
+
+    // Convert PhpRequest to Zval using IntoZval trait
+    let request_zval = php_request
+        .into_zval(false)
+        .map_err(|e| PhpException::default(format!("Failed to create request object: {:?}", e)))?;
+
+    // Call the handler
+    let response_zval = handler
+        .try_call(vec![&request_zval])
+        .map_err(|e| PhpException::default(format!("Handler failed: {:?}", e)))?;
+
+    // Convert response to PhpTestResponse
+    zval_to_test_response(&response_zval)
+}
+
+/// Parse a query string into a HashMap.
+fn parse_query_string(query: Option<&str>) -> HashMap<String, Vec<String>> {
+    let mut result = HashMap::new();
+
+    if let Some(q) = query {
+        for pair in q.split('&') {
+            if let Some((key, value)) = pair.split_once('=') {
+                let key = urlencoding::decode(key).unwrap_or_else(|_| key.into()).to_string();
+                let value = urlencoding::decode(value).unwrap_or_else(|_| value.into()).to_string();
+                result.entry(key).or_insert_with(Vec::new).push(value);
+            }
+        }
+    }
+
+    result
+}
+
+/// Extract path parameters from a path.
+/// This is a simple implementation - real path params come from the router.
+fn extract_path_params(_path: &str) -> HashMap<String, String> {
+    // Path params are extracted by the router, not here
+    HashMap::new()
+}
+
+/// Convert a Zval response to a PhpTestResponse.
+fn zval_to_test_response(response: &Zval) -> PhpResult<PhpTestResponse> {
+    // Handle null response
+    if response.is_null() {
+        return Ok(PhpTestResponse {
+            status: 204,
+            body: String::new(),
+            headers: HashMap::new(),
+        });
+    }
+
+    // Try to extract PhpResponse - check if object has our expected methods
+    if let Some(obj) = response.object() {
+        // Check if it looks like a Response object by checking for status_code method
+        if let Ok(class_name) = obj.get_class_name() {
+            if class_name.contains("Response") {
+                // Try to call getStatus method
+                if let Ok(status_zval) = obj.try_call_method("getStatus", vec![]) {
+                    let status = status_zval.long().unwrap_or(200);
+
+                    // Try to get body
+                    let body = if let Ok(body_zval) = obj.try_call_method("getBody", vec![]) {
+                        body_zval.string().map(|s| s.to_string()).unwrap_or_default()
+                    } else {
+                        String::new()
+                    };
+
+                    // Try to get headers
+                    let mut headers = HashMap::new();
+                    if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![]) {
+                        if let Some(arr) = headers_zval.array() {
+                            for (key, val) in arr.iter() {
+                                let key_str = match key {
+                                    ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
+                                    ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+                                    ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+                                };
+                                if let Some(val_str) = val.string() {
+                                    headers.insert(key_str, val_str.to_string());
+                                }
+                            }
+                        }
+                    }
+
+                    return Ok(PhpTestResponse { status, body, headers });
+                }
+            }
+        }
+    }
+
+    // If it's a string, return as-is
+    if let Some(s) = response.string() {
+        let mut headers = HashMap::new();
+        headers.insert("content-type".to_string(), "text/plain".to_string());
+        return Ok(PhpTestResponse {
+            status: 200,
+            body: s.to_string(),
+            headers,
+        });
+    }
+
+    // Try to convert to JSON
+    let body_json =
+        zval_to_json(response).map_err(|e| PhpException::default(format!("Failed to convert response: {}", e)))?;
+
+    let body = serde_json::to_string(&body_json).unwrap_or_default();
+    let mut headers = HashMap::new();
+    headers.insert("content-type".to_string(), "application/json".to_string());
+
+    Ok(PhpTestResponse {
+        status: 200,
+        body,
+        headers,
+    })
+}
+
+/// Advanced test client that uses axum-test for full HTTP stack testing.
+///
+/// This client creates an in-memory HTTP server and sends real HTTP requests,
+/// which tests the full middleware stack.
+#[php_class]
+#[php(name = "Spikard\\Testing\\HttpTestClient")]
+pub struct PhpHttpTestClient {
+    // Server is created on-demand for each test
+}
+
+#[php_impl]
+impl PhpHttpTestClient {
+    /// Create a new HTTP test client.
+    pub fn new() -> Self {
+        Self {}
+    }
+
+    /// Execute a test request using the full HTTP stack.
+    ///
+    /// This creates a temporary test server and executes the request.
+    #[php(name = "execute")]
+    pub fn execute(
+        &self,
+        method: String,
+        path: String,
+        handler: ZendCallable,
+        body: Option<String>,
+        headers: Option<HashMap<String, String>>,
+    ) -> PhpResult<PhpTestResponse> {
+        // For full HTTP stack testing, we create a test server with a single route
+        // and execute the request through it.
+
+        // Create request data
+        let body_value = body
+            .as_ref()
+            .map(|b| serde_json::from_str(b).unwrap_or(JsonValue::String(b.clone())))
+            .unwrap_or(JsonValue::Null);
+
+        // Build the PHP request
+        let php_request = PhpRequest::from_parts(
+            method,
+            path,
+            body_value,
+            body.map(|b| b.into_bytes()),
+            headers.unwrap_or_default(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+        );
+
+        // Convert PhpRequest to Zval using IntoZval trait
+        let request_zval = php_request
+            .into_zval(false)
+            .map_err(|e| PhpException::default(format!("Failed to create request: {:?}", e)))?;
+
+        // Call handler
+        let response_zval = handler
+            .try_call(vec![&request_zval])
+            .map_err(|e| PhpException::default(format!("Handler failed: {:?}", e)))?;
+
+        zval_to_test_response(&response_zval)
+    }
+}

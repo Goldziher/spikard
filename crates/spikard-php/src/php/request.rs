@@ -1,38 +1,46 @@
+//! PHP-visible HTTP request struct.
+
+use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
+use ext_php_rs::types::ZendHashTable;
 use serde_json::Value;
 use std::collections::HashMap;
 
 /// PHP-visible HTTP request mirroring `RequestData`.
-#[php_class(name = "Spikard\\Internal\\Request")]
+#[php_class]
+#[php(name = "Spikard\\Internal\\Request")]
 pub struct PhpRequest {
-    method: String,
-    path: String,
-    path_params: HashMap<String, String>,
-    body: Value,
-    raw_body: Option<Vec<u8>>,
-    raw_query: HashMap<String, Vec<String>>,
-    headers: HashMap<String, String>,
-    cookies: HashMap<String, String>,
+    pub(crate) method: String,
+    pub(crate) path: String,
+    pub(crate) path_params: HashMap<String, String>,
+    pub(crate) body: Value,
+    pub(crate) raw_body: Option<Vec<u8>>,
+    pub(crate) raw_query: HashMap<String, Vec<String>>,
+    pub(crate) headers: HashMap<String, String>,
+    pub(crate) cookies: HashMap<String, String>,
 }
 
 #[php_impl]
 impl PhpRequest {
-    #[constructor]
-    pub fn __construct(
+    /// Create a new request from JSON body string.
+    pub fn new(
         method: String,
         path: String,
-        body: Option<Value>,
+        body: Option<String>,
         raw_body: Option<Vec<u8>>,
         headers: Option<HashMap<String, String>>,
         cookies: Option<HashMap<String, String>>,
         raw_query: Option<HashMap<String, Vec<String>>>,
         path_params: Option<HashMap<String, String>>,
     ) -> Self {
+        let body_value = body
+            .map(|b| serde_json::from_str(&b).unwrap_or(Value::String(b)))
+            .unwrap_or(Value::Null);
         Self {
             method,
             path,
             path_params: path_params.unwrap_or_default(),
-            body: body.unwrap_or(Value::Null),
+            body: body_value,
             raw_body,
             raw_query: raw_query.unwrap_or_default(),
             headers: headers.unwrap_or_default(),
@@ -40,47 +48,96 @@ impl PhpRequest {
         }
     }
 
-    #[getter]
-    pub fn method(&self) -> &str {
-        &self.method
+    /// Get the HTTP method.
+    #[php(name = "getMethod")]
+    pub fn get_method(&self) -> String {
+        self.method.clone()
     }
 
-    #[getter]
-    pub fn path(&self) -> &str {
-        &self.path
+    /// Get the request path.
+    #[php(name = "getPath")]
+    pub fn get_path(&self) -> String {
+        self.path.clone()
     }
 
-    #[getter]
-    pub fn body(&self) -> &Value {
-        &self.body
+    /// Get the body as a JSON string.
+    #[php(name = "getBody")]
+    pub fn get_body(&self) -> String {
+        serde_json::to_string(&self.body).unwrap_or_default()
     }
 
-    /// Raw body bytes (if present).
-    #[getter(name = "rawBody")]
-    pub fn raw_body(&self) -> Option<&Vec<u8>> {
-        self.raw_body.as_ref()
+    /// Get raw body bytes.
+    #[php(name = "getRawBody")]
+    pub fn get_raw_body(&self) -> Option<Vec<u8>> {
+        self.raw_body.clone()
     }
 
-    /// Lowercase header map for case-insensitive lookup.
-    #[getter]
-    pub fn headers(&self) -> &HashMap<String, String> {
-        &self.headers
+    /// Get headers as a PHP array.
+    #[php(name = "getHeaders")]
+    pub fn get_headers(&self) -> PhpResult<ZBox<ZendHashTable>> {
+        let mut table = ZendHashTable::new();
+        for (k, v) in &self.headers {
+            table.insert(k.as_str(), v.as_str())?;
+        }
+        Ok(table)
     }
 
-    #[getter]
-    pub fn cookies(&self) -> &HashMap<String, String> {
-        &self.cookies
+    /// Get cookies as a PHP array.
+    #[php(name = "getCookies")]
+    pub fn get_cookies(&self) -> PhpResult<ZBox<ZendHashTable>> {
+        let mut table = ZendHashTable::new();
+        for (k, v) in &self.cookies {
+            table.insert(k.as_str(), v.as_str())?;
+        }
+        Ok(table)
     }
 
-    /// Raw query parameters (multi-valued).
-    #[getter(name = "queryParams")]
-    pub fn raw_query(&self) -> &HashMap<String, Vec<String>> {
-        &self.raw_query
+    /// Get query params as a PHP array.
+    #[php(name = "getQueryParams")]
+    pub fn get_query_params(&self) -> PhpResult<ZBox<ZendHashTable>> {
+        let mut table = ZendHashTable::new();
+        for (k, values) in &self.raw_query {
+            let mut inner = ZendHashTable::new();
+            for v in values {
+                inner.push(v.as_str())?;
+            }
+            table.insert(k.as_str(), inner)?;
+        }
+        Ok(table)
     }
 
-    /// Path parameters extracted by the router.
-    #[getter(name = "pathParams")]
-    pub fn path_params(&self) -> &HashMap<String, String> {
-        &self.path_params
+    /// Get path params as a PHP array.
+    #[php(name = "getPathParams")]
+    pub fn get_path_params(&self) -> PhpResult<ZBox<ZendHashTable>> {
+        let mut table = ZendHashTable::new();
+        for (k, v) in &self.path_params {
+            table.insert(k.as_str(), v.as_str())?;
+        }
+        Ok(table)
+    }
+}
+
+impl PhpRequest {
+    /// Internal constructor for Rust code (not exposed to PHP).
+    pub fn from_parts(
+        method: String,
+        path: String,
+        body: Value,
+        raw_body: Option<Vec<u8>>,
+        headers: HashMap<String, String>,
+        cookies: HashMap<String, String>,
+        raw_query: HashMap<String, Vec<String>>,
+        path_params: HashMap<String, String>,
+    ) -> Self {
+        Self {
+            method,
+            path,
+            path_params,
+            body,
+            raw_body,
+            raw_query,
+            headers,
+            cookies,
+        }
     }
 }
