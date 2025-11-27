@@ -1,10 +1,10 @@
 <!--
 🤖 AI-RULEZ :: GENERATED FILE — DO NOT EDIT DIRECTLY
 Project: spikard
-Generated: 2025-11-22 09:42:09
+Generated: 2025-11-27 17:11:15
 Source of truth: ai-rulez.yaml
 Target file: CLAUDE.md
-Content summary: rules=24, sections=11, agents=14
+Content summary: rules=24, sections=12, agents=14
 
 UPDATE WORKFLOW
 1. Modify ai-rulez.yaml
@@ -23,11 +23,11 @@ Need help? /capability-plan or https://github.com/Goldziher/ai-rulez
 
 Spikard is a Rust-centric multi-language toolkit that provides a core library,
 command-line interface, and HTTP runtime with tower-http middleware surfaced
-through Python (PyO3), Node.js (napi-rs), Ruby (magnus), and WebAssembly bindings
-to build and validate typed web services. The monorepo couples Rust 2024 workspace
-crates with Python/uv, Node.js/pnpm, Ruby, and taskfile automation, backed by
-extensive fixture-driven tests to ensure consistent request handling across platforms.
-Future bindings planned for PHP (ext-php-rs).
+through Python (PyO3), Node.js (napi-rs), Ruby (magnus), PHP (ext-php-rs), and
+WebAssembly bindings to build and validate typed web services. The monorepo couples
+Rust 2024 workspace crates with Python/uv, Node.js/pnpm, Ruby, PHP/Composer, and
+taskfile automation, backed by extensive fixture-driven tests to ensure consistent
+request handling across platforms.
 
 
 Version: 1.0.0
@@ -68,9 +68,9 @@ match the CI configuration.
 
 Consolidate heavy computation inside the shared Rust core (crates/spikard) and expose
 thin bindings in crates/spikard-py, packages/python, crates/spikard-node, crates/spikard-rb,
-and crates/spikard-wasm; stress-test large or deeply nested payloads with
+crates/spikard-php, and crates/spikard-wasm; stress-test large or deeply nested payloads with
 testing_data/edge_cases and verify optimized builds via task build:rust, task build:py,
-task build:node, and task build:ruby.
+task build:node, task build:ruby, and task build:php.
 
 
 ### Lint & Formatting Discipline
@@ -103,10 +103,10 @@ introducing new modules, register them in the relevant `Cargo.toml`, mirror usag
 ### Binding-Level Configuration Only
 **Priority:** high
 
-Language bindings (spikard-py, spikard-node, spikard-rb) must NOT duplicate middleware
-logic. All middleware lives in Rust (tower-http). Bindings only expose configuration APIs
-that construct ServerConfig and pass it to the Rust server. Ruby bindings use magnus for
-FFI, TypeScript uses napi-rs, Python uses PyO3. Future PHP bindings will use ext-php-rs.
+Language bindings (spikard-py, spikard-node, spikard-rb, spikard-php) must NOT duplicate
+middleware logic. All middleware lives in Rust (tower-http). Bindings only expose configuration
+APIs that construct ServerConfig and pass it to the Rust server. Python uses PyO3, TypeScript
+uses napi-rs, Ruby uses magnus, PHP uses ext-php-rs.
 
 
 ### HTTP Error Contracts
@@ -144,10 +144,10 @@ intact.
 
 Implement cross-cutting logic in `crates/spikard/src` and expose it through thin adapters
 in `crates/spikard-http`, `crates/spikard-py`, `crates/spikard-node`, `crates/spikard-rb`,
-and `crates/spikard-wasm`. Keep build metadata confined to each binding's manifest
-(`pyproject.toml`, `crates/spikard-node/package.json`, `crates/spikard-wasm/package.json`)
-and register new workflows in `Taskfile.yaml` so `task build`/`task lint` continue to
-orchestrate the monorepo.
+`crates/spikard-php`, and `crates/spikard-wasm`. Keep build metadata confined to each
+binding's manifest (`pyproject.toml`, `crates/spikard-node/package.json`,
+`crates/spikard-wasm/package.json`, `composer.json`) and register new workflows in
+`Taskfile.yaml` so `task build`/`task lint` continue to orchestrate the monorepo.
 
 
 ### Lifecycle Hooks Implementation
@@ -208,7 +208,8 @@ Rust code in `crates/spikard`, `crates/spikard-http`, and the binding crates mus
 avoid panics; expose fallible APIs as `Result<T, E>` and propagate with `?`. When
 exporting to Python (`crates/spikard-py/src`), always return `PyResult<T>` and convert
 domain failures with `PyErr::new_err(...)`; for Node (`crates/spikard-node/src`),
-return `napi::Result<T>` and build errors via `napi::Error::from_reason`. Never let
+return `napi::Result<T>` and build errors via `napi::Error::from_reason`; for PHP
+(`crates/spikard-php/src`), return ext-php-rs Result and throw exceptions. Never let
 an unwrap cross the FFI boundary.
 
 
@@ -218,9 +219,9 @@ an unwrap cross the FFI boundary.
 Keep every fallible path in the Rust workspace (`crates/spikard`, `crates/spikard-http`,
 bindings crates) returning the structured payload described in
 `testing_data/validation_errors/schema.json`. Reuse the shared error constructor so
-Python (`crates/spikard-py`) and Node (`crates/spikard-node`) adapters raise translated
-host-language errors while preserving the same JSON body that
-`packages/python/tests/test_all_fixtures.py` asserts on.
+Python (`crates/spikard-py`), Node (`crates/spikard-node`), Ruby (`crates/spikard-rb`),
+and PHP (`crates/spikard-php`) adapters raise translated host-language errors while
+preserving the same JSON body that `packages/python/tests/test_all_fixtures.py` asserts on.
 
 
 ### Fixture-Backed Testing
@@ -257,9 +258,9 @@ local runs match CI.
 
 In `crates/spikard-http`, define language-agnostic Handler trait with
 `Pin<Box<dyn Future<Output = HandlerResult> + Send>>` return type. Language bindings
-(`spikard-py`, `spikard-node`, `spikard-rb`) implement this trait with Arc<dyn Handler>
-wrappers. The HTTP server accepts `Vec<(Route, Arc<dyn Handler>)>` enabling clean
-separation: spikard-http has zero FFI dependencies, all Python/Node/Ruby/WASM code
+(`spikard-py`, `spikard-node`, `spikard-rb`, `spikard-php`) implement this trait with
+Arc<dyn Handler> wrappers. The HTTP server accepts `Vec<(Route, Arc<dyn Handler>)>` enabling
+clean separation: spikard-http has zero FFI dependencies, all Python/Node/Ruby/PHP/WASM code
 lives in binding crates.
 
 
@@ -293,9 +294,9 @@ libpython; extensions (maturin builds) enable it for manylinux compliance.
 
 ADRs (docs/adr/): 0001 (architecture, layering), 0002 (tower-http, config), 0003 (fixtures, msgspec), 0005 (lifecycle hooks), 0006 (async, streaming). Update when architecture changes.
 
-Code Documentation: Rust rustdoc on ALL public items with examples. Python docstrings (NumPy style) with type hints. TypeScript JSDoc; .d.ts auto-generated by napi-rs. Ruby RBS files with YARD docs.
+Code Documentation: Rust rustdoc on ALL public items with examples. Python docstrings (NumPy style) with type hints. TypeScript JSDoc; .d.ts auto-generated by napi-rs. Ruby RBS files with YARD docs. PHP PHPDoc with type declarations and @psalm annotations.
 
-Examples (examples/): Runnable illustrations for Python, Node, Ruby, WASM. Load fixtures from testing_data/; show error handling.
+Examples (examples/): Runnable illustrations for Python, Node, Ruby, PHP, WASM. Load fixtures from testing_data/; show error handling.
 
 
 ### HTTP Routing & Middleware Design
@@ -308,6 +309,20 @@ Middleware Stack: Compression → RateLimit → Timeout → RequestId → Auth �
 Handler Trait: Language-agnostic `trait Handler { fn handle(&self, req: Request) -> Pin<Box<dyn Future<...>>> }`. Binding wrappers implement Arc<dyn Handler>. HTTP server accepts `Vec<(Route, Arc<dyn Handler>)>`.
 
 Lifecycle Hooks (docs/adr/0005-lifecycle-hooks.md): onRequest, preValidation, preHandler, onResponse, onError. Zero-cost: Option<Arc<dyn Fn>>. Async via pyo3_async_runtimes (Python) and ThreadsafeFunction (TypeScript).
+
+
+### PHP 8.2+ with PHPStan & PSR Standards
+**Priority:** high
+
+**PHP 8.2+ · ext-php-rs FFI · PSR compliance · PHPStan · Composer**
+- PHP 8.2+ with .php-version; strict_types=1 in all files
+- ext-php-rs for Rust FFI bindings; maintain type safety across boundary
+- PSR compliance: PSR-4 (autoloading), PSR-12 (coding style), PSR-7 (HTTP)
+- PHPStan level max for static analysis; never use @phpstan-ignore
+- Composer for dependency management; composer.lock committed
+- PHPUnit testing: 80%+ coverage, data providers for parametrized tests
+- Code quality: methods <15 lines, typed properties, return types required
+- Never: mixed types, eval(), suppress errors with @, global state
 
 
 ### Ruby 3.2+ with RBS & Steep
@@ -327,11 +342,11 @@ Lifecycle Hooks (docs/adr/0005-lifecycle-hooks.md): onRequest, preValidation, pr
 
 **Multi-crate Rust workspace · Layered binding architecture · Fixture-driven testing**
 
-Rust Workspace: `crates/spikard/` (core), `crates/spikard-http/` (tower-http), `crates/spikard-cli/` (CLI), `crates/spikard-py/` (PyO3), `crates/spikard-node/` (napi-rs), `crates/spikard-rb/` (magnus), `crates/spikard-wasm/` (wasm-bindgen).
+Rust Workspace: `crates/spikard/` (core), `crates/spikard-http/` (tower-http), `crates/spikard-cli/` (CLI), `crates/spikard-py/` (PyO3), `crates/spikard-node/` (napi-rs), `crates/spikard-rb/` (magnus), `crates/spikard-php/` (ext-php-rs), `crates/spikard-wasm/` (wasm-bindgen).
 
-Binding Principles: All middleware in Rust; bindings expose config APIs only. Language-neutral Handler trait: `Pin<Box<dyn Future<Output = HandlerResult> + Send>>`. Each binding wraps with Arc<dyn Handler>. No PyO3/napi/magnus in core crates.
+Binding Principles: All middleware in Rust; bindings expose config APIs only. Language-neutral Handler trait: `Pin<Box<dyn Future<Output = HandlerResult> + Send>>`. Each binding wraps with Arc<dyn Handler>. No PyO3/napi/magnus/ext-php-rs in core crates.
 
-Python & Testing: Package scaffold `packages/python/spikard`; integration tests in `packages/python/tests/` with conftest.py. Shared fixtures `testing_data/` with schema.json per scenario. Fixture-driven: `testing_data/{headers,cookies,json_bodies,validation_errors,edge_cases}/`. Coverage: 95% Rust core, 80%+ Python/JS/Ruby.
+Python & Testing: Package scaffold `packages/python/spikard`; integration tests in `packages/python/tests/` with conftest.py. Shared fixtures `testing_data/` with schema.json per scenario. Fixture-driven: `testing_data/{headers,cookies,json_bodies,validation_errors,edge_cases}/`. Coverage: 95% Rust core, 80%+ Python/JS/Ruby/PHP.
 
 
 ### Task Automation & Build Orchestration
@@ -339,11 +354,11 @@ Python & Testing: Package scaffold `packages/python/spikard`; integration tests 
 
 **Taskfile.yaml · Multi-language coordination · Dependency management · CI/CD parity**
 
-Root Commands: `task setup` (install tooling, build bindings), `task update` (upgrade all), `task build` (all languages), `task lint` (mypy, clippy, biome, steep), `task format` (all), `task test` (all suites).
+Root Commands: `task setup` (install tooling, build bindings), `task update` (upgrade all), `task build` (all languages), `task lint` (mypy, clippy, biome, steep, phpstan), `task format` (all), `task test` (all suites).
 
-Language-Specific: `task rust:build`, `task python:build` (maturin), `task python:test`, `task js:build`, `task js:test`, `task ruby:build`, `task wasm:build`.
+Language-Specific: `task rust:build`, `task python:build` (maturin), `task python:test`, `task js:build`, `task js:test`, `task ruby:build`, `task php:build`, `task wasm:build`.
 
-Dependency Files (committed): Cargo.lock, uv.lock, pnpm-lock.yaml, Gemfile.lock. All mandatory in version control.
+Dependency Files (committed): Cargo.lock, uv.lock, pnpm-lock.yaml, Gemfile.lock, composer.lock. All mandatory in version control.
 
 
 ### WebAssembly & wasm-bindgen Standards
@@ -363,9 +378,9 @@ Dependency Files (committed): Cargo.lock, uv.lock, pnpm-lock.yaml, Gemfile.lock.
 
 **Structured error payloads · FFI boundaries · Validation schema alignment**
 
-Error Structure: All errors return JSON { "error": string, "code": string, "details": {} }. Rust uses Result<T, E> with thiserror. Python: PyResult<T> → PyErr. Node: napi::Result<T> → napi::Error. Ruby: raise_error. All preserve same JSON payload.
+Error Structure: All errors return JSON { "error": string, "code": string, "details": {} }. Rust uses Result<T, E> with thiserror. Python: PyResult<T> → PyErr. Node: napi::Result<T> → napi::Error. Ruby: raise_error. PHP: ext-php-rs Result → exceptions. All preserve same JSON payload.
 
-FFI Boundaries: Rust core returns Result<T, E> to handlers. Adapters (PyO3/napi/magnus) convert to language errors while preserving JSON. Python: PyErr::new_err(json_string). Node: Error::from_reason(json_string). Never let unwrap cross FFI boundary.
+FFI Boundaries: Rust core returns Result<T, E> to handlers. Adapters (PyO3/napi/magnus/ext-php-rs) convert to language errors while preserving JSON. Python: PyErr::new_err(json_string). Node: Error::from_reason(json_string). PHP: throw exceptions. Never let unwrap cross FFI boundary.
 
 Validation: HTTP handlers validate against testing_data/{headers,cookies,json_bodies}. Reject with errors matching testing_data/validation_errors/schema.json. Assert in packages/python/tests/test_all_fixtures.py. Keep schema.json in sync with handler code.
 
@@ -377,11 +392,11 @@ Validation: HTTP handlers validate against testing_data/{headers,cookies,json_bo
 
 Fixture Organization: Central `testing_data/` with JSON files per scenario (headers, cookies, bodies, errors, edge_cases). Each directory has schema.json. Python tests parametrized: test_all_fixtures.py loads all JSONs. Rust: unit tests embed JSON; integration tests load from testing_data/.
 
-Coverage: Rust 95% minimum (tarpaulin). Python/JS/Ruby 80%+ minimum. Enforce in CI; fail if < threshold.
+Coverage: Rust 95% minimum (tarpaulin). Python/JS/Ruby/PHP 80%+ minimum. Enforce in CI; fail if < threshold.
 
 Three-Tier Testing: Unit (pure functions, fast), Integration (real DB, PostgreSQL, fixtures), E2E (full HTTP stack, all bindings).
 
-Running: `cargo test -p spikard`, `uv run pytest packages/python/tests/test_all_fixtures.py`, `pnpm test`, `bundle exec rspec`. All: `task test`.
+Running: `cargo test -p spikard`, `uv run pytest packages/python/tests/test_all_fixtures.py`, `pnpm test`, `bundle exec rspec`, `composer test`. All: `task test`.
 
 
 ### Python Modern & Performance Standards
@@ -430,7 +445,7 @@ Running: `cargo test -p spikard`, `uv run pytest packages/python/tests/test_all_
 
 Curates Taskfile.yaml, CI workflows, and release automation to keep multi-language
 toolchains reproducible. Maintains lock files (Cargo.lock, uv.lock, pnpm-lock.yaml,
-Gemfile.lock) and ensures task commands mirror CI execution.
+Gemfile.lock, composer.lock) and ensures task commands mirror CI execution.
 
 
 ### docs-scribe
@@ -460,16 +475,16 @@ and coordinates fixture-first test expansion with integration-qa.
 **Priority:** medium
 
 Expands fixture-driven coverage and hunts for regressions across Rust, Python, Node,
-and Ruby integration suites. Manages testing_data/ fixture schemas and ensures all
+Ruby, and PHP integration suites. Manages testing_data/ fixture schemas and ensures all
 handlers respect documented contracts. Enforces 95% Rust / 80%+ language coverage.
 
 
 ### interop-build-engineer
 **Priority:** medium
 
-Ensures binding build scripts for PyO3, napi-rs, magnus/rb-sys, and wasm-pack stay
-in sync and optimized. Manages Cargo.toml/pyproject.toml/package.json/Gemfile manifest
-coordination and plans for future ext-php-rs integration.
+Ensures binding build scripts for PyO3, napi-rs, magnus/rb-sys, ext-php-rs, and wasm-pack
+stay in sync and optimized. Manages Cargo.toml/pyproject.toml/package.json/Gemfile/composer.json
+manifest coordination across all language bindings.
 
 
 ### middleware-architect
@@ -483,8 +498,8 @@ structures and ensures configuration APIs are properly exposed to all bindings.
 ### php-engineer
 **Priority:** medium
 
-(FUTURE) Implements and maintains PHP bindings via ext-php-rs, ensuring PSR compliance
-and idiomatic PHP patterns while integrating with Rust core. Will follow similar FFI
+Implements and maintains PHP bindings via ext-php-rs, ensuring PSR compliance
+and idiomatic PHP patterns while integrating with Rust core. Follows similar FFI
 isolation and error handling conventions as Python/Node/Ruby bindings.
 
 
@@ -507,10 +522,9 @@ files and Steep type checking for binding APIs.
 ### rust-polyglot-architect
 **Priority:** medium
 
-Designs Rust-first APIs and keeps Python, Node, Ruby, and WASM bindings aligned
-with shared memory-safety and error contracts. Plans for future PHP bindings.
-Responsible for workspace structure, Handler trait design, FFI boundaries, and
-cross-language error handling semantics.
+Designs Rust-first APIs and keeps Python, Node, Ruby, PHP, and WASM bindings aligned
+with shared memory-safety and error contracts. Responsible for workspace structure,
+Handler trait design, FFI boundaries, and cross-language error handling semantics.
 
 
 ### typescript-engineer
