@@ -77,7 +77,6 @@ pub fn spikard_parse_json(json: String) -> PhpResult<ZBox<ZendHashTable>> {
     let value: Value = serde_json::from_str(&json).map_err(|e| PhpException::default(format!("Invalid JSON: {e}")))?;
     json_to_php_table(&value)
 }
-
 /// Convert a serde_json Value to a ZendHashTable.
 pub fn json_to_php_table(value: &Value) -> PhpResult<ZBox<ZendHashTable>> {
     let mut table = ZendHashTable::new();
