@@ -184,7 +184,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_auth_multiple_authentication_schemes_jwt_precedence_18();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/api/data', ['headers' => ['X-API-Key' => 'sk_test_123456', 'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg']]);
+        $response = $client->request('GET', '/api/data', ['headers' => ['Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg', 'X-API-Key' => 'sk_test_123456']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['auth_method' => 'jwt', 'message' => 'Access granted', 'user_id' => 'user123'], $response->body);
@@ -566,7 +566,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cookies_multiple_cookies_success_12();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items/', ['cookies' => ['googall_tracker' => 'ga789', 'session_id' => 'session123', 'fatebook_tracker' => 'tracker456']]);
+        $response = $client->request('GET', '/items/', ['cookies' => ['fatebook_tracker' => 'tracker456', 'session_id' => 'session123', 'googall_tracker' => 'ga789']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['fatebook_tracker' => 'tracker456', 'googall_tracker' => 'ga789', 'session_id' => 'session123'], $response->body);
@@ -726,7 +726,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_07_cors_preflight_header_not_allowed_2();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'X-Custom-Header', 'Origin' => 'https://example.com']]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Method' => 'POST', 'Origin' => 'https://example.com', 'Access-Control-Request-Headers' => 'X-Custom-Header']]);
 
         $this->assertSame(403, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -736,7 +736,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_08_cors_max_age_3();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Headers' => 'Content-Type', 'Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'POST']]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ['Access-Control-Request-Headers' => 'Content-Type', 'Access-Control-Request-Method' => 'POST', 'Origin' => 'https://example.com']]);
 
         $this->assertSame(204, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -766,7 +766,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_private_network_access_6();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/local-resource', ['headers' => ['Access-Control-Request-Method' => 'GET', 'Origin' => 'https://public.example.com', 'Access-Control-Request-Private-Network' => 'true']]);
+        $response = $client->request('OPTIONS', '/api/local-resource', ['headers' => ['Access-Control-Request-Private-Network' => 'true', 'Origin' => 'https://public.example.com', 'Access-Control-Request-Method' => 'GET']]);
 
         $this->assertSame(204, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -776,7 +776,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_vary_header_for_proper_caching_7();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/api/cached-resource', ['headers' => ['Cache-Control' => 'max-age=3600', 'Origin' => 'https://app.example.com']]);
+        $response = $client->request('GET', '/api/cached-resource', ['headers' => ['Origin' => 'https://app.example.com', 'Cache-Control' => 'max-age=3600']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['data' => 'cacheable resource'], $response->body);
@@ -806,7 +806,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_preflight_for_delete_method_10();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/resource/456', ['headers' => ['Access-Control-Request-Method' => 'DELETE', 'Origin' => 'https://app.example.com']]);
+        $response = $client->request('OPTIONS', '/api/resource/456', ['headers' => ['Origin' => 'https://app.example.com', 'Access-Control-Request-Method' => 'DELETE']]);
 
         $this->assertSame(204, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -816,7 +816,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_preflight_for_put_method_11();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/resource/123', ['headers' => ['Origin' => 'https://app.example.com', 'Access-Control-Request-Method' => 'PUT', 'Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header']]);
+        $response = $client->request('OPTIONS', '/api/resource/123', ['headers' => ['Access-Control-Request-Method' => 'PUT', 'Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header', 'Origin' => 'https://app.example.com']]);
 
         $this->assertSame(204, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -826,7 +826,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_preflight_request_12();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/items/', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header']]);
+        $response = $client->request('OPTIONS', '/items/', ['headers' => ['Origin' => 'https://example.com', 'Access-Control-Request-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Request-Method' => 'POST']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(null, $response->body);
@@ -856,7 +856,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_safelisted_headers_without_preflight_15();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/api/form', ['headers' => ['Origin' => 'https://app.example.com', 'Accept' => 'application/json', 'Content-Type' => 'text/plain', 'Accept-Language' => 'en-US']]);
+        $response = $client->request('POST', '/api/form', ['headers' => ['Accept-Language' => 'en-US', 'Content-Type' => 'text/plain', 'Origin' => 'https://app.example.com', 'Accept' => 'application/json']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['message' => 'Success'], $response->body);
@@ -876,7 +876,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_with_credentials_17();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/api/user/profile', ['headers' => ['Cookie' => 'session=abc123', 'Origin' => 'https://app.example.com']]);
+        $response = $client->request('GET', '/api/user/profile', ['headers' => ['Origin' => 'https://app.example.com', 'Cookie' => 'session=abc123']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['username' => 'john'], $response->body);
@@ -1500,7 +1500,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], $response->body);
     {
         $app = AppFactory::create_headers_multiple_custom_headers_23();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/headers/multiple', ['headers' => ['X-Client-Version' => '1.2.3', 'X-Request-Id' => 'req-12345', 'X-Trace-Id' => 'trace-abc']]);
+        $response = $client->request('GET', '/headers/multiple', ['headers' => ['X-Request-Id' => 'req-12345', 'X-Client-Version' => '1.2.3', 'X-Trace-Id' => 'trace-abc']]);
 
         $this->assertSame(200, $response->statusCode);
         $this->assertEquals(['x_client_version' => '1.2.3', 'x_request_id' => 'req-12345', 'x_trace_id' => 'trace-abc'], $response->body);
