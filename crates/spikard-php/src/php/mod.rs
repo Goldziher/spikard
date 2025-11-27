@@ -16,6 +16,7 @@ mod hooks;
 mod request;
 mod response;
 mod server;
+mod start;
 mod testing;
 
 pub use handler::GLOBAL_RUNTIME;
@@ -37,6 +38,8 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .function(wrap_function!(spikard_echo_response))
         .function(wrap_function!(spikard_json_response))
         .function(wrap_function!(spikard_parse_json))
+        .function(wrap_function!(spikard_start_server))
+        .function(wrap_function!(spikard_stop_server))
         // Core classes
         .class::<PhpRequest>()
         .class::<PhpResponse>()
