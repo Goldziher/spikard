@@ -12,6 +12,7 @@ use ext_php_rs::types::ZendHashTable;
 use serde_json::Value;
 
 mod handler;
+mod hooks;
 mod request;
 mod response;
 mod server;
@@ -19,6 +20,7 @@ mod testing;
 
 pub use handler::GLOBAL_RUNTIME;
 pub use handler::PhpHandler;
+pub use hooks::{PhpHookResult, PhpLifecycleHooks};
 pub use request::PhpRequest;
 pub use response::PhpResponse;
 pub use server::PhpServer;

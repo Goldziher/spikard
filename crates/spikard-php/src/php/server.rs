@@ -9,14 +9,13 @@ use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendCallable, ZendHashTable, Zval};
 use spikard_http::server::build_router_with_handlers_and_config;
-use spikard_http::{
-    Handler, HandlerResult, LifecycleHooks, Method, RequestData, Route, Router, ServerConfig, ServerConfigBuilder,
-};
+use spikard_http::{Handler, HandlerResult, LifecycleHooks, Method, RequestData, Route, Router, ServerConfig};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
 use crate::php::handler::PhpHandler;
+use crate::php::hooks::PhpLifecycleHooks;
 
 use super::zval_to_json;
 
@@ -296,10 +295,10 @@ impl PhpServer {
         self.config.graceful_shutdown = enabled;
     }
 
-    /// Set lifecycle hooks (placeholder: to be wired via PHP API)
-    #[allow(dead_code)]
-    pub fn set_lifecycle_hooks(&mut self, hooks: LifecycleHooks) {
-        self.lifecycle_hooks = Some(hooks);
+    /// Set lifecycle hooks (onRequest/onResponse). Short-circuit supported.
+    #[php(name = "setLifecycleHooks")]
+    pub fn set_lifecycle_hooks(&mut self, hooks: PhpLifecycleHooks) {
+        self.lifecycle_hooks = Some(hooks.build());
     }
 
     /// Configure rate limiting
