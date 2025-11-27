@@ -16,6 +16,7 @@ use spikard_http::{
     CompressionConfig, CorsConfig, Handler, HandlerResult, RateLimitConfig, RequestData, Route, Router, Server,
     ServerConfig, StaticFilesConfig,
 };
+use spikard_http::{SseEvent as CoreSseEvent, SseEventProducer as CoreSseProducer, SseState};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
@@ -99,6 +100,11 @@ struct PhpWebSocketWrapper {
     handler: Zval,
 }
 
+#[derive(Clone)]
+struct PhpSseProducerWrapper {
+    handler: Zval,
+}
+
 impl Handler for PhpHandlerWrapper {
     fn call(
         &self,
@@ -153,6 +159,21 @@ impl CoreWebSocketHandler for PhpWebSocketWrapper {
         let handler = self.handler.clone();
         async move {
             let _ = handler.try_call_method("onClose", vec![&Zval::from(1000i64), &Zval::from("")]);
+        }
+    }
+}
+
+impl CoreSseProducer for PhpSseProducerWrapper {
+    fn next_event(&self) -> impl std::future::Future<Output = Option<CoreSseEvent>> + Send {
+        let handler = self.handler.clone();
+        async move {
+            let result = handler.try_call_method("__invoke", vec![]).ok()?;
+            if let Some(str_val) = result.string() {
+                let data: serde_json::Value =
+                    serde_json::from_str(str_val).unwrap_or(serde_json::Value::String(str_val.to_string()));
+                return Some(CoreSseEvent::default().with_data(data));
+            }
+            None
         }
     }
 }
@@ -440,7 +461,10 @@ fn build_router_from_php(routes: Vec<Zval>) -> Result<(Router, Vec<spikard_core:
         }
 
         if is_sse {
-            // TODO: implement native SSE mapping; for now fall through to HTTP handler semantics.
+            let producer = Arc::new(PhpSseProducerWrapper { handler: handler_zval });
+            let state = SseState::new(producer);
+            router.route_sse(&path, state);
+            continue;
         }
 
         let route = Route {
