@@ -33,6 +33,32 @@ jobs:
         with:
           cache-key-prefix: validate
 
+      - name: Install LLVM/Clang (for ext-php-rs bindgen)
+        run: |
+          set -euo pipefail
+          if [[ "${RUNNER_OS}" == "Linux" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y llvm-dev libclang-dev clang
+            LLVM_LIBDIR="$(llvm-config --libdir)"
+            LLVM_VERSION="$(llvm-config --version | cut -d. -f1)"
+            echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+            echo "BINDGEN_EXTRA_CLANG_ARGS=-I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include" >> "$GITHUB_ENV"
+          elif [[ "${RUNNER_OS}" == "macOS" ]]; then
+            brew install llvm
+            LLVM_PREFIX="$(brew --prefix llvm)"
+            LLVM_LIBDIR="${LLVM_PREFIX}/lib"
+            LLVM_VERSION="$(\"${LLVM_PREFIX}/bin/llvm-config\" --version | cut -d. -f1)"
+            SDK_PATH="$(xcrun --show-sdk-path)"
+            echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+            echo "DYLD_FALLBACK_LIBRARY_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+            echo "BINDGEN_EXTRA_CLANG_ARGS=-nostdinc -I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include -isysroot ${SDK_PATH} -I${SDK_PATH}/usr/include" >> "$GITHUB_ENV"
+            echo "${LLVM_PREFIX}/bin" >> "$GITHUB_PATH"
+          else
+            choco install llvm --version 18.1.8 -y
+            LLVM_LIBDIR="C:\\Program Files\\LLVM\\bin"
+            echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+          fi
+
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
@@ -98,6 +124,32 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.13"
+
+      - name: Install LLVM/Clang (for ext-php-rs bindgen)
+        run: |
+          set -euo pipefail
+          if [[ "${RUNNER_OS}" == "Linux" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y llvm-dev libclang-dev clang
+            LLVM_LIBDIR="$(llvm-config --libdir)"
+            LLVM_VERSION="$(llvm-config --version | cut -d. -f1)"
+            echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+            echo "BINDGEN_EXTRA_CLANG_ARGS=-I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include" >> "$GITHUB_ENV"
+          elif [[ "${RUNNER_OS}" == "macOS" ]]; then
+            brew install llvm
+            LLVM_PREFIX="$(brew --prefix llvm)"
+            LLVM_LIBDIR="${LLVM_PREFIX}/lib"
+            LLVM_VERSION="$(\"${LLVM_PREFIX}/bin/llvm-config\" --version | cut -d. -f1)"
+            SDK_PATH="$(xcrun --show-sdk-path)"
+            echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+            echo "DYLD_FALLBACK_LIBRARY_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+            echo "BINDGEN_EXTRA_CLANG_ARGS=-nostdinc -I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include -isysroot ${SDK_PATH} -I${SDK_PATH}/usr/include" >> "$GITHUB_ENV"
+            echo "${LLVM_PREFIX}/bin" >> "$GITHUB_PATH"
+          else
+            choco install llvm --version 18.1.8 -y
+            LLVM_LIBDIR="C:\\Program Files\\LLVM\\bin"
+            echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+          fi
 
       - name: Run unit tests
         env:

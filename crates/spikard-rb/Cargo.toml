@@ -27,7 +27,7 @@ serde_qs = "0.15"
 urlencoding = "2.1"
 once_cell = "1.21"
 async-stream = "0.3"
-http = "1.3"
+http = "1.4"
 
 [features]
 default = ["di"]

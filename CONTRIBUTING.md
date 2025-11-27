@@ -27,6 +27,7 @@ Thank you for your interest in contributing to Spikard! This document provides g
 **Optional:**
 - **Docker** for isolated testing environments
 - **PostgreSQL** for integration tests (if using database fixtures)
+- **macOS only (PHP extension)**: Homebrew LLVM (`brew install llvm`) so `LIBCLANG_PATH` and `BINDGEN_EXTRA_CLANG_ARGS` resolve when building `spikard-php` with `--all-features`; the Taskfile auto-sets these on macOS if LLVM is present.
 
 ### Initial Setup
 

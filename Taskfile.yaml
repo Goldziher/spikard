@@ -246,19 +246,52 @@ tasks:
   check:rust:
     desc: "Fast check of Rust code (no codegen)"
     cmds:
-      - cargo check --workspace --all-features
+      - |
+        if [[ "$(uname -s)" == "Darwin" ]]; then
+          if [[ -z "${LIBCLANG_PATH:-}" && -d "/opt/homebrew/opt/llvm/lib" ]]; then
+            export LIBCLANG_PATH="/opt/homebrew/opt/llvm/lib"
+            export DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/llvm/lib"
+          fi
+          if [[ -z "${BINDGEN_EXTRA_CLANG_ARGS:-}" && -x "/usr/bin/xcrun" ]]; then
+            export MACOS_SDK_PATH="$(xcrun --show-sdk-path)"
+            export BINDGEN_EXTRA_CLANG_ARGS="-nostdinc -I${LIBCLANG_PATH:-/opt/homebrew/opt/llvm/lib}/clang/21/include -isysroot ${MACOS_SDK_PATH} -I${MACOS_SDK_PATH}/usr/include"
+          fi
+        fi
+        cargo check --workspace --all-features
 
   rust:lint:
     desc: "Run Rust linter with auto-fix (clippy + format)"
     cmds:
       - cargo fmt --all
-      - cargo clippy --workspace --all-features -- -D warnings
+      - |
+        if [[ "$(uname -s)" == "Darwin" ]]; then
+          if [[ -z "${LIBCLANG_PATH:-}" && -d "/opt/homebrew/opt/llvm/lib" ]]; then
+            export LIBCLANG_PATH="/opt/homebrew/opt/llvm/lib"
+            export DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/llvm/lib"
+          fi
+          if [[ -z "${BINDGEN_EXTRA_CLANG_ARGS:-}" && -x "/usr/bin/xcrun" ]]; then
+            export MACOS_SDK_PATH="$(xcrun --show-sdk-path)"
+            export BINDGEN_EXTRA_CLANG_ARGS="-nostdinc -I${LIBCLANG_PATH:-/opt/homebrew/opt/llvm/lib}/clang/21/include -isysroot ${MACOS_SDK_PATH} -I${MACOS_SDK_PATH}/usr/include"
+          fi
+        fi
+        cargo clippy --workspace --all-features -- -D warnings
 
   rust:lint:check:
     desc: "Check Rust code without auto-fix (clippy + format check)"
     cmds:
       - cargo fmt --all --check
-      - cargo clippy --workspace --all-features -- -D warnings
+      - |
+        if [[ "$(uname -s)" == "Darwin" ]]; then
+          if [[ -z "${LIBCLANG_PATH:-}" && -d "/opt/homebrew/opt/llvm/lib" ]]; then
+            export LIBCLANG_PATH="/opt/homebrew/opt/llvm/lib"
+            export DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/llvm/lib"
+          fi
+          if [[ -z "${BINDGEN_EXTRA_CLANG_ARGS:-}" && -x "/usr/bin/xcrun" ]]; then
+            export MACOS_SDK_PATH="$(xcrun --show-sdk-path)"
+            export BINDGEN_EXTRA_CLANG_ARGS="-nostdinc -I${LIBCLANG_PATH:-/opt/homebrew/opt/llvm/lib}/clang/21/include -isysroot ${MACOS_SDK_PATH} -I${MACOS_SDK_PATH}/usr/include"
+          fi
+        fi
+        cargo clippy --workspace --all-features -- -D warnings
 
   rust:format:
     desc: "Format Rust code"
