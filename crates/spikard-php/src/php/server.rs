@@ -7,11 +7,13 @@ use axum::body::Body;
 use axum::http::{HeaderName, HeaderValue, Request, Response, StatusCode};
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::{ZendHashTable, Zval};
-use spikard_http::{Handler, HandlerResult, RequestData, ServerConfig};
+use ext_php_rs::types::{ZendCallable, ZendHashTable, Zval};
+use spikard_http::{Handler, HandlerResult, Method, RequestData, Route, Router, ServerConfig};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
+
+use crate::php::handler::PhpHandler;
 
 use super::zval_to_json;
 
@@ -20,6 +22,7 @@ struct RegisteredRoute {
     method: String,
     path: String,
     handler_name: String,
+    handler_index: usize,
 }
 
 /// PHP-visible HTTP server class.
@@ -29,6 +32,10 @@ pub struct PhpServer {
     routes: Vec<RegisteredRoute>,
     host: String,
     port: u16,
+    /// Stored PHP callables for registered routes
+    handlers: Vec<ZendCallable>,
+    /// Optional server configuration (populated via setters)
+    config: ServerConfig,
 }
 
 #[php_impl]
@@ -39,57 +46,74 @@ impl PhpServer {
             routes: Vec::new(),
             host: host.unwrap_or_else(|| "127.0.0.1".to_string()),
             port: port.map(|p| p as u16).unwrap_or(8000),
+            handlers: Vec::new(),
+            config: ServerConfig::default(),
         }
     }
 
     /// Register a GET route.
     #[php(name = "get")]
-    pub fn register_get(&mut self, path: String, handler_name: String) {
+    pub fn register_get(&mut self, path: String, handler: ZendCallable, handler_name: String) {
+        let idx = self.handlers.len();
         self.routes.push(RegisteredRoute {
             method: "GET".to_string(),
             path,
             handler_name,
+            handler_index: idx,
         });
+        self.handlers.push(handler);
     }
 
     /// Register a POST route.
     #[php(name = "post")]
-    pub fn register_post(&mut self, path: String, handler_name: String) {
+    pub fn register_post(&mut self, path: String, handler: ZendCallable, handler_name: String) {
+        let idx = self.handlers.len();
         self.routes.push(RegisteredRoute {
             method: "POST".to_string(),
             path,
             handler_name,
+            handler_index: idx,
         });
+        self.handlers.push(handler);
     }
 
     /// Register a PUT route.
     #[php(name = "put")]
-    pub fn register_put(&mut self, path: String, handler_name: String) {
+    pub fn register_put(&mut self, path: String, handler: ZendCallable, handler_name: String) {
+        let idx = self.handlers.len();
         self.routes.push(RegisteredRoute {
             method: "PUT".to_string(),
             path,
             handler_name,
+            handler_index: idx,
         });
+        self.handlers.push(handler);
     }
 
     /// Register a PATCH route.
     #[php(name = "patch")]
-    pub fn register_patch(&mut self, path: String, handler_name: String) {
+    pub fn register_patch(&mut self, path: String, handler: ZendCallable, handler_name: String) {
+        let idx = self.handlers.len();
         self.routes.push(RegisteredRoute {
             method: "PATCH".to_string(),
             path,
             handler_name,
+            handler_index: idx,
         });
+        self.handlers.push(handler);
     }
 
     /// Register a DELETE route.
     #[php(name = "delete")]
-    pub fn register_delete(&mut self, path: String, handler_name: String) {
+    pub fn register_delete(&mut self, path: String, handler: ZendCallable, handler_name: String) {
+        let idx = self.handlers.len();
         self.routes.push(RegisteredRoute {
             method: "DELETE".to_string(),
             path,
             handler_name,
+            handler_index: idx,
         });
+        self.handlers.push(handler);
     }
 
     /// Get registered routes as a PHP array.
@@ -118,6 +142,38 @@ impl PhpServer {
     pub fn get_port(&self) -> i64 {
         self.port as i64
     }
+
+    /// Set request timeout (milliseconds)
+    #[php(name = "setTimeoutMs")]
+    pub fn set_timeout_ms(&mut self, timeout_ms: i64) {
+        self.config.timeout_ms = Some(timeout_ms as u64);
+    }
+
+    /// Enable/disable compression
+    #[php(name = "enableCompression")]
+    pub fn enable_compression(&mut self, enabled: bool) {
+        self.config.enable_compression = enabled;
+    }
+
+    /// Enable/disable request ID middleware
+    #[php(name = "enableRequestId")]
+    pub fn enable_request_id(&mut self, enabled: bool) {
+        self.config.enable_request_id = enabled;
+    }
+
+    /// Set host
+    #[php(name = "setHost")]
+    pub fn set_host(&mut self, host: String) {
+        self.host = host;
+        self.config.host = host;
+    }
+
+    /// Set port
+    #[php(name = "setPort")]
+    pub fn set_port(&mut self, port: i64) {
+        self.port = port as u16;
+        self.config.port = self.port;
+    }
 }
 
 impl PhpServer {
@@ -127,8 +183,45 @@ impl PhpServer {
         ServerConfig {
             host: self.host.clone(),
             port: self.port,
-            ..Default::default()
+            ..self.config.clone()
         }
+    }
+
+    /// Build a Router from registered routes, wiring PHP handlers through the registry.
+    pub fn build_router(&self) -> Router {
+        let mut router = Router::new();
+
+        for route in &self.routes {
+            let method = match route.method.as_str() {
+                "GET" => Method::GET,
+                "POST" => Method::POST,
+                "PUT" => Method::PUT,
+                "PATCH" => Method::PATCH,
+                "DELETE" => Method::DELETE,
+                _ => Method::GET,
+            };
+
+            // Register the PHP callable in the handler registry to get a Handler
+            let handler = PhpHandler::register(
+                self.handlers
+                    .get(route.handler_index)
+                    .expect("handler index should be valid")
+                    .clone(),
+                route.handler_name.clone(),
+                route.method.clone(),
+                route.path.clone(),
+            );
+
+            router = router.route(Route {
+                method,
+                path: route.path.clone(),
+                handler: Arc::new(handler) as Arc<dyn Handler>,
+                #[cfg(feature = "di")]
+                dependencies: None,
+            });
+        }
+
+        router
     }
 }
 

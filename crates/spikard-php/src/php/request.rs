@@ -118,6 +118,20 @@ impl PhpRequest {
 }
 
 impl PhpRequest {
+    /// Build from RequestData (used by Handler bridge).
+    pub fn from_request_data(data: &spikard_http::RequestData) -> Self {
+        Self {
+            method: data.method.clone(),
+            path: data.path.clone(),
+            path_params: (*data.path_params).clone(),
+            body: data.body.clone(),
+            raw_body: data.raw_body.as_ref().map(|b| b.to_vec()),
+            raw_query: (*data.raw_query_params).clone(),
+            headers: (*data.headers).clone(),
+            cookies: (*data.cookies).clone(),
+        }
+    }
+
     /// Internal constructor for Rust code (not exposed to PHP).
     pub fn from_parts(
         method: String,
