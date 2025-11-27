@@ -1,8 +1,7 @@
 //! PHP PHPUnit test generator.
 //!
-//! Generates per-fixture tests that exercise the HTTP surface. Tests are marked
-//! incomplete until the PHP bindings are implemented, but assertions are
-//! emitted to drive TDD once the runtime is ready.
+//! Generates per-fixture tests that exercise the HTTP surface. Includes SSE/WS
+//! tests when the native extension is available.
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use anyhow::{Context, Result};
@@ -81,21 +80,39 @@ fn build_test_file(
 
     for (idx, fixture) in sse_fixtures.iter().enumerate() {
         let channel = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
+        let method_name = format!("test_sse_{}_{}", sanitize_identifier(&channel), idx + 1);
+        let factory = format!("create_sse_{}_{}", sanitize_identifier(&channel), idx + 1);
+        let expected_events = if fixture.examples.is_empty() {
+            "[]".to_string()
+        } else {
+            let items = fixture.examples.iter().map(value_to_php).collect::<Vec<_>>().join(", ");
+            format!("[{items}]")
+        };
         code.push_str(&format!(
-            "    public function test_sse_{}_{}(): void\n    {{\n        $this->markTestIncomplete('SSE support for PHP bindings not implemented yet (fixture: {}).');\n    }}\n\n",
-            sanitize_identifier(&channel),
-            idx + 1,
-            fixture.name
+            "    public function {method}(): void\n    {{\n        if (!\\function_exists('spikard_version')) {{\n            $this->markTestSkipped('Native extension required for SSE.');\n        }}\n        $app = AppFactory::{factory}();\n        $client = TestClient::create($app);\n        $stream = $client->connectSse('{path}');\n        $this->assertEquals({expected}, $stream->events());\n    }}\n\n",
+            method = method_name,
+            factory = factory,
+            path = channel,
+            expected = expected_events
         ));
     }
 
     for (idx, fixture) in websocket_fixtures.iter().enumerate() {
         let channel = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
+        let method_name = format!("test_websocket_{}_{}", sanitize_identifier(&channel), idx + 1);
+        let factory = format!("create_websocket_{}_{}", sanitize_identifier(&channel), idx + 1);
+        let payload = fixture
+            .examples
+            .get(0)
+            .cloned()
+            .unwrap_or_else(|| serde_json::json!({}));
+        let send_text = php_string_literal(&payload.to_string());
         code.push_str(&format!(
-            "    public function test_websocket_{}_{}(): void\n    {{\n        $this->markTestIncomplete('WebSocket support for PHP bindings not implemented yet (fixture: {}).');\n    }}\n\n",
-            sanitize_identifier(&channel),
-            idx + 1,
-            fixture.name
+            "    public function {method}(): void\n    {{\n        if (!\\function_exists('spikard_version')) {{\n            $this->markTestSkipped('Native extension required for WebSocket.');\n        }}\n        $app = AppFactory::{factory}();\n        $client = TestClient::create($app);\n        $ws = $client->connectWebSocket('{path}', {send});\n        $received = $ws->recv_text();\n        $this->assertNotNull($received);\n    }}\n\n",
+            method = method_name,
+            factory = factory,
+            path = channel,
+            send = send_text
         ));
     }
 
@@ -213,7 +230,7 @@ fn value_to_php(value: &serde_json::Value) -> String {
         serde_json::Value::String(s) => php_string_literal(s),
         serde_json::Value::Array(arr) => {
             let items = arr.iter().map(value_to_php).collect::<Vec<_>>().join(", ");
-            format!("[{}]", items)
+            format!("[{items}]")
         }
         serde_json::Value::Object(map) => {
             let mut parts = Vec::new();

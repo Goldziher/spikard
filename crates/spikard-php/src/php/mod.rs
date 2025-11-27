@@ -10,7 +10,7 @@ use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
 use serde_json::Value;
 use spikard_http::lifecycle::{HookResult, LifecycleHooks};
-use spikard_http::testing::{call_test_server, snapshot_response};
+use spikard_http::testing::{call_test_server, connect_websocket, snapshot_response, sse_stream};
 use spikard_http::websocket::{WebSocketHandler as CoreWebSocketHandler, WebSocketState};
 use spikard_http::{
     CompressionConfig, CorsConfig, Handler, HandlerResult, RateLimitConfig, RequestData, Route, Router, Server,
@@ -186,6 +186,8 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .function("spikard_start_server", spikard_start_server)
         .function("spikard_stop_server", spikard_stop_server)
         .class::<NativeTestClient>()
+        .class::<NativeWebSocket>()
+        .class::<NativeSseStream>()
         .class::<PhpRequest>()
         .class::<PhpResponse>()
 }
@@ -320,6 +322,72 @@ impl NativeTestClient {
             Some(snapshot.status as i64),
         )
         .with_headers(snapshot.headers))
+    }
+
+    /// Connect to a WebSocket route and optionally send a text message.
+    pub fn websocket(&self, path: String, send_text: Option<String>) -> Result<NativeWebSocket, PhpException> {
+        let connection = async_std::task::block_on(async {
+            let ws = connect_websocket(&self.server, &path).await;
+            if let Some(text) = send_text {
+                let _ = ws.send_text(text).await;
+            }
+            ws
+        });
+
+        Ok(NativeWebSocket {
+            inner: Arc::new(connection),
+        })
+    }
+
+    /// Open an SSE stream and collect all events.
+    pub fn sse(&self, path: String) -> Result<NativeSseStream, PhpException> {
+        let events = async_std::task::block_on(async {
+            let mut stream = sse_stream(&self.server, &path).await;
+            let mut collected = Vec::new();
+            while let Some(evt) = stream.next().await {
+                if let Ok(event) = evt {
+                    collected.push(event);
+                }
+            }
+            collected
+        });
+
+        Ok(NativeSseStream { events })
+    }
+}
+
+/// Minimal WebSocket client wrapper for PHP tests.
+#[php_class(name = "Spikard\\Native\\WebSocket")]
+pub struct NativeWebSocket {
+    inner: Arc<spikard_http::testing::WebSocketConnection>,
+}
+
+#[php_impl]
+impl NativeWebSocket {
+    pub fn recv_text(&self) -> Option<String> {
+        async_std::task::block_on(async { self.inner.recv_text().await.ok() })
+    }
+
+    pub fn send_text(&self, message: String) -> bool {
+        async_std::task::block_on(async { self.inner.send_text(message).await.is_ok() })
+    }
+}
+
+/// SSE stream result wrapper for PHP tests.
+#[php_class(name = "Spikard\\Native\\SseStream")]
+pub struct NativeSseStream {
+    events: Vec<spikard_http::testing::SseEvent>,
+}
+
+#[php_impl]
+impl NativeSseStream {
+    /// Return all event data payloads as JSON strings.
+    pub fn events(&self) -> Vec<String> {
+        self.events
+            .iter()
+            .filter_map(|e| e.as_json().ok())
+            .map(|v| v.to_string())
+            .collect()
     }
 }
 

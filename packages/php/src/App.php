@@ -191,7 +191,6 @@ final class App
         $lifecyclePayload = $this->hooks ? $this->hooksToNative($this->hooks) : [];
 
         // Extension entrypoint is guaranteed by the guard above; call directly.
-        $start = 'spikard_start_server';
         $routes = $this->nativeRoutes();
         // Ensure handler key exists for ws/sse entries to satisfy native expectations.
         $normalizedRoutes = \array_map(
@@ -199,7 +198,7 @@ final class App
             $routes
         );
         /** @var int $handle */
-        $handle = $start($normalizedRoutes, $configPayload, $lifecyclePayload);
+        $handle = spikard_start_server($normalizedRoutes, $configPayload, $lifecyclePayload);
         $this->serverHandle = $handle;
     }
 
