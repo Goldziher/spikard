@@ -76,6 +76,34 @@ final class App
         return $clone;
     }
 
+    /**
+     * Register an HTTP route with JSON schemas (request/response/parameters).
+     * Schemas must already match the fixture schema.json shapes.
+     *
+     * @param array<string,mixed>|null $requestSchema
+     * @param array<string,mixed>|null $responseSchema
+     * @param array<string,mixed>|null $parameterSchema
+     */
+    public function addRouteWithSchemas(
+        string $method,
+        string $path,
+        HandlerInterface $handler,
+        ?array $requestSchema,
+        ?array $responseSchema,
+        ?array $parameterSchema
+    ): self {
+        $clone = clone $this;
+        $clone->routes[] = [
+            'method' => $method,
+            'path' => $path,
+            'handler' => $handler,
+            'request_schema' => $requestSchema,
+            'response_schema' => $responseSchema,
+            'parameter_schema' => $parameterSchema,
+        ];
+        return $clone;
+    }
+
     public function addWebSocket(string $path, WebSocketHandlerInterface $handler): self
     {
         $clone = clone $this;
