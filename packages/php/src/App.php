@@ -132,7 +132,7 @@ final class App
     /**
      * Routes formatted for the native (Rust) test client.
      *
-     * @return array<int, array{method: string, path: string, handler: HandlerInterface}>
+     * @return array<int, array{method: string, path: string, handler?: object, websocket?: bool, sse?: bool}>
      */
     public function nativeRoutes(): array
     {
@@ -142,6 +142,22 @@ final class App
                 'method' => \strtoupper($route['method']),
                 'path' => $route['path'],
                 'handler' => $route['handler'],
+            ];
+        }
+        foreach ($this->websocketHandlers as $path => $handler) {
+            $routes[] = [
+                'method' => 'GET',
+                'path' => $path,
+                'handler' => $handler,
+                'websocket' => true,
+            ];
+        }
+        foreach ($this->sseProducers as $path => $producer) {
+            $routes[] = [
+                'method' => 'GET',
+                'path' => $path,
+                'handler' => $producer,
+                'sse' => true,
             ];
         }
         return $routes;
@@ -176,8 +192,14 @@ final class App
 
         // Extension entrypoint is guaranteed by the guard above; call directly.
         $start = 'spikard_start_server';
+        $routes = $this->nativeRoutes();
+        // Ensure handler key exists for ws/sse entries to satisfy native expectations.
+        $normalizedRoutes = \array_map(
+            static fn (array $route) => $route + ['handler' => $route['handler'] ?? new \stdClass()],
+            $routes
+        );
         /** @var int $handle */
-        $handle = $start($this->nativeRoutes(), $configPayload, $lifecyclePayload);
+        $handle = $start($normalizedRoutes, $configPayload, $lifecyclePayload);
         $this->serverHandle = $handle;
     }
 
