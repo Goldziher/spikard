@@ -296,6 +296,12 @@ impl PhpServer {
         self.config.graceful_shutdown = enabled;
     }
 
+    /// Set lifecycle hooks (placeholder: to be wired via PHP API)
+    #[allow(dead_code)]
+    pub fn set_lifecycle_hooks(&mut self, hooks: LifecycleHooks) {
+        self.lifecycle_hooks = Some(hooks);
+    }
+
     /// Configure rate limiting
     #[php(name = "setRateLimit")]
     pub fn set_rate_limit(&mut self, per_second: i64, burst: Option<i64>, ip_based: Option<bool>) {
@@ -416,7 +422,8 @@ impl PhpServer {
     /// Build an Axum router using the shared tower-http stack.
     pub fn build_axum_router(&self) -> Result<axum::Router, String> {
         let routes = self.build_routes_with_handlers();
-        build_router_with_handlers_and_config(routes, self.config.clone(), Vec::new())
+        let hooks = self.lifecycle_hooks.as_ref().map(Arc::new);
+        build_router_with_handlers_and_config(routes, self.config.clone(), hooks)
     }
 }
 
