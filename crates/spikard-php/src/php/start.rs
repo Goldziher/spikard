@@ -472,11 +472,17 @@ pub fn spikard_start_server_impl(routes_zval: &Zval, config: &Zval, hooks: &Zval
     let server_config = extract_server_config_from_php(config)
         .map_err(|e| PhpException::default(format!("Invalid server config: {}", e)))?;
 
-    // TODO: Extract lifecycle hooks from PHP (currently not supported)
-    // For now, hooks are ignored. Future implementation should:
-    // 1. Check if hooks is a PHP object/array with hook definitions
-    // 2. Create PhpLifecycleHooks from the PHP callables
-    // 3. Build and attach to server_config
+    // Lifecycle hooks are not yet supported due to ext-php-rs ZendCallable lifetime constraints.
+    // PhpLifecycleHooks exists but all hooks are currently no-ops.
+    //
+    // Future implementation requires:
+    // 1. Extract hook definitions from PHP (check if hooks is a PHP object/array)
+    // 2. Store PHP callables as Zval in thread_local! registries (see sse.rs/websocket.rs)
+    // 3. Create actual PhpLifecycleHooks with functional hooks that invoke stored callables
+    // 4. Pass Some(hooks) to ServerConfig.lifecycle_hooks
+    //
+    // For now, hooks parameter is ignored and no lifecycle hooks are registered.
+    let _hooks_ignored = hooks; // Explicitly mark as unused
     let lifecycle_hooks: Option<LifecycleHooks> = None;
 
     // Parse routes array from Zval
@@ -579,8 +585,18 @@ pub fn spikard_start_server_impl(routes_zval: &Zval, config: &Zval, hooks: &Zval
     Ok(id)
 }
 
-/// Stop server placeholder (no-op).
+/// Stop server by handle.
+///
+/// Currently a no-op. The server relies on SIGTERM/SIGINT signal handling for graceful shutdown,
+/// which is handled automatically by spikard_http::Server.
+///
+/// Future enhancement: Implement programmatic shutdown via handle registry by:
+/// 1. Creating a oneshot channel per server instance
+/// 2. Passing the receiver to axum::serve().with_graceful_shutdown()
+/// 3. Storing the sender in a static HashMap<u64, oneshot::Sender<()>>
+/// 4. Triggering shutdown by sending () through the channel
+///
+/// For now, use process signals (SIGTERM/SIGINT) to shut down PHP servers.
 pub fn spikard_stop_server_impl(_handle: u64) -> PhpResult<()> {
-    // TODO: Implement graceful shutdown tracking handles.
     Ok(())
 }

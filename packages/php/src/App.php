@@ -388,12 +388,19 @@ final class App
      */
     private function hooksToNative(LifecycleHooks $hooks): array
     {
-        // TODO: Implement lifecycle hooks support by:
-        // 1. Create PhpLifecycleHooks instance in Rust extension
-        // 2. Register each PHP callable via onRequest/preValidation/etc methods
-        // 3. Build the hooks and pass Arc<LifecycleHooks> to server
-        // 4. Update spikard_start_server to accept hooks differently (not JSON)
-
-        return []; // Empty for now - hooks not yet supported
+        // Lifecycle hooks are not yet supported in PHP bindings.
+        //
+        // The Rust PhpLifecycleHooks class exists but creates no-op hooks due to
+        // ext-php-rs ZendCallable lifetime constraints that prevent storing PHP callables
+        // across async boundaries.
+        //
+        // Future implementation strategy (similar to SSE/WebSocket):
+        // 1. Store PHP callables as Zval in thread_local! registries
+        // 2. Reconstruct ZendCallable when invoking hooks
+        // 3. Run hook invocations in tokio::task::spawn_blocking for thread safety
+        // 4. Convert between PHP objects and Rust Request/Response types
+        //
+        // For now, this returns empty array and hooks are not registered.
+        return [];
     }
 }
