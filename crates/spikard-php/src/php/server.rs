@@ -8,6 +8,7 @@ use axum::http::{HeaderName, HeaderValue, Request, Response, StatusCode};
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendCallable, ZendHashTable, Zval};
+use spikard_http::server::build_router_with_handlers_and_config;
 use spikard_http::{Handler, HandlerResult, Method, RequestData, Route, Router, ServerConfig};
 use std::future::Future;
 use std::pin::Pin;
@@ -187,41 +188,75 @@ impl PhpServer {
         }
     }
 
-    /// Build a Router from registered routes, wiring PHP handlers through the registry.
+    /// Build a metadata Router (no handler binding) from registered routes.
     pub fn build_router(&self) -> Router {
         let mut router = Router::new();
 
         for route in &self.routes {
-            let method = match route.method.as_str() {
-                "GET" => Method::GET,
-                "POST" => Method::POST,
-                "PUT" => Method::PUT,
-                "PATCH" => Method::PATCH,
-                "DELETE" => Method::DELETE,
-                _ => Method::GET,
-            };
+            let method = route.method.parse().unwrap_or_else(|_| Method::GET);
 
-            // Register the PHP callable in the handler registry to get a Handler
-            let handler = PhpHandler::register(
-                self.handlers
-                    .get(route.handler_index)
-                    .expect("handler index should be valid")
-                    .clone(),
-                route.handler_name.clone(),
-                route.method.clone(),
-                route.path.clone(),
-            );
-
-            router = router.route(Route {
+            let route_meta = Route {
                 method,
                 path: route.path.clone(),
-                handler: Arc::new(handler) as Arc<dyn Handler>,
+                handler_name: route.handler_name.clone(),
+                request_validator: None,
+                response_validator: None,
+                parameter_validator: None,
+                file_params: None,
+                is_async: false,
+                cors: None,
+                expects_json_body: false,
                 #[cfg(feature = "di")]
-                dependencies: None,
-            });
+                handler_dependencies: Vec::new(),
+            };
+
+            router.add_route(route_meta);
         }
 
         router
+    }
+
+    /// Build route/handler pairs for Server::with_handlers.
+    pub fn build_routes_with_handlers(&self) -> Vec<(Route, Arc<dyn Handler>)> {
+        self.routes
+            .iter()
+            .map(|route| {
+                let method = route.method.parse().unwrap_or_else(|_| Method::GET);
+
+                let handler = PhpHandler::register(
+                    self.handlers
+                        .get(route.handler_index)
+                        .expect("handler index should be valid")
+                        .clone(),
+                    route.handler_name.clone(),
+                    route.method.clone(),
+                    route.path.clone(),
+                );
+
+                let metadata = Route {
+                    method: method.clone(),
+                    path: route.path.clone(),
+                    handler_name: route.handler_name.clone(),
+                    request_validator: None,
+                    response_validator: None,
+                    parameter_validator: None,
+                    file_params: None,
+                    is_async: false,
+                    cors: None,
+                    expects_json_body: false,
+                    #[cfg(feature = "di")]
+                    handler_dependencies: Vec::new(),
+                };
+
+                (metadata, Arc::new(handler) as Arc<dyn Handler>)
+            })
+            .collect()
+    }
+
+    /// Build an Axum router using the shared tower-http stack.
+    pub fn build_axum_router(&self) -> Result<axum::Router, String> {
+        let routes = self.build_routes_with_handlers();
+        build_router_with_handlers_and_config(routes, self.config.clone(), Vec::new())
     }
 }
 
