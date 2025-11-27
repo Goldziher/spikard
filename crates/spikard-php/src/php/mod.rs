@@ -8,7 +8,7 @@
 
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::ZendHashTable;
+use ext_php_rs::types::{Zval, ZendHashTable};
 use serde_json::Value;
 
 mod handler;
@@ -16,8 +16,10 @@ mod hooks;
 mod request;
 mod response;
 mod server;
-mod start;
+mod sse;
+pub(crate) mod start;
 mod testing;
+mod websocket;
 
 pub use handler::GLOBAL_RUNTIME;
 pub use handler::PhpHandler;
@@ -25,7 +27,27 @@ pub use hooks::{PhpHookResult, PhpLifecycleHooks};
 pub use request::PhpRequest;
 pub use response::PhpResponse;
 pub use server::PhpServer;
-pub use testing::{PhpHttpTestClient, PhpTestClient, PhpTestResponse};
+pub use sse::{create_sse_state, PhpSseEventProducer};
+// Start module functions are wrapped above and don't need re-export
+pub use testing::{
+    PhpHttpTestClient, PhpSseEvent, PhpSseStream, PhpTestClient, PhpTestResponse,
+    PhpWebSocketTestConnection,
+};
+pub use websocket::{create_websocket_state, PhpWebSocketHandler};
+
+/// Start server wrapper for PHP.
+#[php_function]
+#[php(name = "spikard_start_server")]
+pub fn spikard_start_server(routes_zval: &Zval, config: &Zval, hooks: &Zval) -> PhpResult<u64> {
+    start::spikard_start_server_impl(routes_zval, config, hooks)
+}
+
+/// Stop server wrapper for PHP.
+#[php_function]
+#[php(name = "spikard_stop_server")]
+pub fn spikard_stop_server(_handle: u64) -> PhpResult<()> {
+    start::spikard_stop_server_impl(_handle)
+}
 
 /// Register the PHP module.
 #[php_module]
@@ -49,6 +71,9 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<PhpTestClient>()
         .class::<PhpTestResponse>()
         .class::<PhpHttpTestClient>()
+        .class::<PhpWebSocketTestConnection>()
+        .class::<PhpSseStream>()
+        .class::<PhpSseEvent>()
 }
 
 /// Return the crate version.

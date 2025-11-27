@@ -22,7 +22,7 @@ pub fn generate_php_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     let fixtures_by_category = load_fixtures_grouped(fixtures_dir)?;
     let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
     let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
-    let code = build_app_factory(&fixtures_by_category);
+    let code = build_app_factory(&fixtures_by_category, &sse_fixtures, &websocket_fixtures);
     fs::write(app_dir.join("main.php"), code).context("Failed to write PHP app main.php")?;
 
     let routes_json = build_routes_json(&fixtures_by_category, &sse_fixtures, &websocket_fixtures)?;
@@ -56,18 +56,90 @@ fn load_fixtures_grouped(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<Fix
 }
 
 // Simplified AppFactory: routes call into native extension with schemas; no PHP-side matching.
-fn build_app_factory(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> String {
+fn build_app_factory(
+    fixtures_by_category: &BTreeMap<String, Vec<Fixture>>,
+    sse_fixtures: &[AsyncFixture],
+    websocket_fixtures: &[AsyncFixture],
+) -> String {
     let mut code = String::new();
+    let mut handler_classes = String::new();
 
     code.push_str(
-        "<?php\n\ndeclare(strict_types=1);\n\nnamespace E2E\\Php;\n\nuse Spikard\\App;\nuse Spikard\\Handlers\\HandlerInterface;\nuse Spikard\\Http\\Request;\nuse Spikard\\Http\\Response;\n\n/**\n * Generated App factory for PHP e2e tests.\n * Routes are registered with schemas and executed via the native Rust stack.\n */\nfinal class AppFactory\n{\n",
+        "<?php\n\ndeclare(strict_types=1);\n\nnamespace E2E\\Php;\n\nuse Spikard\\App;\nuse Spikard\\Handlers\\HandlerInterface;\nuse Spikard\\Handlers\\SseEventProducerInterface;\nuse Spikard\\Handlers\\WebSocketHandlerInterface;\nuse Spikard\\Http\\Request;\nuse Spikard\\Http\\Response;\n\n/**\n * Generated App factory for PHP e2e tests.\n * Routes are registered with schemas and executed via the native Rust stack.\n */\nfinal class AppFactory\n{\n",
     );
 
-    if fixtures_by_category.is_empty() {
+    if fixtures_by_category.is_empty() && sse_fixtures.is_empty() && websocket_fixtures.is_empty() {
         code.push_str("    public static function create(): App\n    {\n        return new App();\n    }\n}\n");
         return code;
     }
 
+    // Generate SSE factory methods
+    for (index, fixture) in sse_fixtures.iter().enumerate() {
+        let channel = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
+        let factory_method = format!("create_sse_{}_{}", sanitize_identifier(&fixture.name), index + 1);
+        let producer_class = format!("SseProducer_{}", index + 1);
+
+        code.push_str(&format!(
+            "    public static function {factory_method}(): App\n    {{\n        $app = new App();\n        $app = $app->addSse('{channel}', new {producer_class}());\n        return $app;\n    }}\n\n",
+            factory_method = factory_method,
+            channel = channel,
+            producer_class = producer_class
+        ));
+
+        // Generate SSE producer class
+        let events_literal = if fixture.examples.is_empty() {
+            "[]".to_string()
+        } else {
+            let events = fixture
+                .examples
+                .iter()
+                .map(|v| value_to_php(v))
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!("[{events}]")
+        };
+
+        handler_classes.push_str(&format!(
+            "final class {producer_class} implements SseEventProducerInterface\n{{\n    /** @return \\Generator<int, string, mixed, void> */\n    public function __invoke(): \\Generator\n    {{\n        $events = {events};\n        foreach ($events as $event) {{\n            yield 'data: ' . json_encode($event) . \"\\n\\n\";\n        }}\n    }}\n}}\n\n",
+            producer_class = producer_class,
+            events = events_literal
+        ));
+    }
+
+    // Generate WebSocket factory methods
+    for (index, fixture) in websocket_fixtures.iter().enumerate() {
+        let channel = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
+        let factory_method = format!("create_websocket_{}_{}", sanitize_identifier(&fixture.name), index + 1);
+        let handler_class = format!("WebSocketHandler_{}", index + 1);
+
+        code.push_str(&format!(
+            "    public static function {factory_method}(): App\n    {{\n        $app = new App();\n        $app = $app->addWebSocket('{channel}', new {handler_class}());\n        return $app;\n    }}\n\n",
+            factory_method = factory_method,
+            channel = channel,
+            handler_class = handler_class
+        ));
+
+        // Generate WebSocket handler class with example messages
+        let messages_literal = if fixture.examples.is_empty() {
+            "[]".to_string()
+        } else {
+            let messages = fixture
+                .examples
+                .iter()
+                .map(|v| value_to_php(v))
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!("[{messages}]")
+        };
+
+        handler_classes.push_str(&format!(
+            "final class {handler_class} implements WebSocketHandlerInterface\n{{\n    private array $messages = {messages};\n    private int $messageIndex = 0;\n\n    public function onConnect(): void\n    {{\n        // Connection established\n    }}\n\n    public function onMessage(string $message): void\n    {{\n        // Handle incoming message\n    }}\n\n    public function onClose(int $code, ?string $reason = null): void\n    {{\n        // Connection closed\n    }}\n\n    public function getNextMessage(): ?array\n    {{\n        if ($this->messageIndex < count($this->messages)) {{\n            return $this->messages[$this->messageIndex++];\n        }}\n        return null;\n    }}\n}}\n\n",
+            handler_class = handler_class,
+            messages = messages_literal
+        ));
+    }
+
+    // Generate regular HTTP route factory methods
     for (category, fixtures) in fixtures_by_category {
         for (index, fixture) in fixtures.iter().enumerate() {
             let factory_method = format!(
@@ -95,8 +167,40 @@ fn build_app_factory(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> S
         }
     }
 
-    code.push_str("}\n");
+    code.push_str("}\n\n");
+    code.push_str(&handler_classes);
     code
+}
+
+fn value_to_php(value: &serde_json::Value) -> String {
+    match value {
+        serde_json::Value::Null => "null".to_string(),
+        serde_json::Value::Bool(b) => {
+            if *b {
+                "true".to_string()
+            } else {
+                "false".to_string()
+            }
+        }
+        serde_json::Value::Number(n) => n.to_string(),
+        serde_json::Value::String(s) => php_string_literal(s),
+        serde_json::Value::Array(arr) => {
+            let items = arr.iter().map(value_to_php).collect::<Vec<_>>().join(", ");
+            format!("[{}]", items)
+        }
+        serde_json::Value::Object(map) => {
+            let mut parts = Vec::new();
+            for (k, v) in map {
+                parts.push(format!("{} => {}", php_string_literal(k), value_to_php(v)));
+            }
+            format!("[{}]", parts.join(", "))
+        }
+    }
+}
+
+fn php_string_literal(input: &str) -> String {
+    let escaped = input.replace('\\', "\\\\").replace('\'', "\\'");
+    format!("'{}'", escaped)
 }
 
 fn escape_php_string(input: &str) -> String {

@@ -57,6 +57,7 @@ tasks:
       - task: js:build
       - task: wasm:build
       - task: ruby:build
+      - task: php:build
   test:
     desc: "Run test suites for all languages"
     cmds:
@@ -472,6 +473,15 @@ tasks:
     dir: packages/php
     cmds:
       - composer run format:check
+
+  php:build:
+    desc: "Build PHP native extension (note: currently disabled due to ext-php-rs ARM bindgen issues)"
+    deps:
+      - php:install
+    cmds:
+      - echo "PHP build skipped - native extension disabled (ext-php-rs ARM neon bindgen issue)"
+      - echo "PHP e2e tests use pure PHP fallback implementation in TestClient"
+      # - cargo build -p spikard-php --features extension-module --release
 
   build:rust:
     desc: "Build Rust workspace in release mode"

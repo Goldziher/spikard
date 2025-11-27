@@ -1,11 +1,14 @@
 //! Native entrypoints for starting/stopping the server from PHP.
 
 use ext_php_rs::prelude::*;
+use ext_php_rs::types::Zval;
 use spikard_http::server::build_router_with_handlers_and_config;
 use spikard_http::{LifecycleHooks, Route};
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::php::handler::PhpHandler;
+use crate::php::zval_to_json;
 
 /// Payload for a registered route coming from PHP.
 #[derive(Debug, serde::Deserialize)]
@@ -14,7 +17,8 @@ pub struct RegisteredRoutePayload {
     pub path: String,
     pub handler_name: String,
     #[serde(skip)]
-    pub handler: Option<ext_php_rs::types::ZendCallable>,
+    /// Handler stored as Zval to avoid lifetime issues
+    pub handler: Option<ext_php_rs::types::Zval>,
     pub request_schema: Option<serde_json::Value>,
     pub response_schema: Option<serde_json::Value>,
     pub parameter_schema: Option<serde_json::Value>,
@@ -42,63 +46,514 @@ impl RegisteredRoutePayload {
     }
 }
 
-/// Start a server from PHP, given route/config payloads.
-#[php_function]
-#[php(name = "spikard_start_server")]
-pub fn spikard_start_server(
-    routes: Vec<serde_json::Value>,
-    config: serde_json::Value,
-    hooks: serde_json::Value,
-) -> PhpResult<u64> {
-    // Deserialize config and hooks into ServerConfig/LifecycleHooks
-    let server_config: spikard_http::ServerConfig =
-        serde_json::from_value(config).map_err(|e| PhpException::default(format!("Invalid server config: {}", e)))?;
+/// Extract ServerConfig from a PHP associative array (Zval).
+///
+/// Follows the pattern from Python's extract_server_config() in crates/spikard-py/src/lib.rs:287-463.
+/// PHP sends an associative array from App::configToNative(), which becomes a Zval array in Rust.
+///
+/// This function manually extracts each field and constructs ServerConfig directly, avoiding
+/// JSON deserialization which fails on non-serializable fields like lifecycle_hooks and di_container.
+fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::ServerConfig, String> {
+    use spikard_http::{
+        ApiKeyConfig, CompressionConfig, ContactInfo, JwtConfig, LicenseInfo, OpenApiConfig, RateLimitConfig,
+        SecuritySchemeInfo, ServerConfig, ServerInfo, StaticFilesConfig,
+    };
 
-    // Rehydrate hooks (optional)
-    let lifecycle_hooks = serde_json::from_value::<Option<LifecycleHooks>>(hooks)
-        .map_err(|e| PhpException::default(format!("Invalid lifecycle hooks: {}", e)))?;
+    // Get the PHP array
+    let config_array = config_zval
+        .array()
+        .ok_or_else(|| "Config must be an associative array".to_string())?;
+
+    // Helper function to get an optional field (all fields have defaults, so we only need this)
+    let get_optional_field = |key: &str| -> Option<&Zval> { config_array.get(key) };
+
+    // Extract required fields with defaults
+    let host = get_optional_field("host")
+        .and_then(|v| v.string())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| "127.0.0.1".to_string());
+
+    let port = get_optional_field("port")
+        .and_then(|v| v.long())
+        .map(|p| p as u16)
+        .unwrap_or(8000);
+
+    let workers = get_optional_field("workers")
+        .and_then(|v| v.long())
+        .map(|w| w as usize)
+        .unwrap_or(1);
+
+    let enable_request_id = get_optional_field("enable_request_id")
+        .and_then(|v| v.bool())
+        .unwrap_or(true);
+
+    let graceful_shutdown = get_optional_field("graceful_shutdown")
+        .and_then(|v| v.bool())
+        .unwrap_or(true);
+
+    let shutdown_timeout = get_optional_field("shutdown_timeout")
+        .and_then(|v| v.long())
+        .map(|t| t as u64)
+        .unwrap_or(30);
+
+    // Extract optional fields
+    let max_body_size = get_optional_field("max_body_size")
+        .and_then(|v| v.long())
+        .map(|s| s as usize);
+
+    let request_timeout = get_optional_field("request_timeout")
+        .and_then(|v| v.long())
+        .map(|t| t as u64);
+
+    // Extract compression config
+    let compression_config = get_optional_field("compression")
+        .and_then(|v| v.array())
+        .map(|arr| {
+            let gzip = arr.get("gzip").and_then(|v| v.bool()).unwrap_or(true);
+            let brotli = arr.get("brotli").and_then(|v| v.bool()).unwrap_or(true);
+            let min_size = arr
+                .get("min_size")
+                .and_then(|v| v.long())
+                .map(|s| s as usize)
+                .unwrap_or(1024);
+            let quality = arr
+                .get("quality")
+                .and_then(|v| v.long())
+                .map(|q| q as u32)
+                .unwrap_or(6);
+
+            CompressionConfig {
+                gzip,
+                brotli,
+                min_size,
+                quality,
+            }
+        });
+
+    // Extract rate limit config
+    let rate_limit_config = get_optional_field("rate_limit")
+        .and_then(|v| v.array())
+        .map(|arr| {
+            let per_second = arr
+                .get("per_second")
+                .and_then(|v| v.long())
+                .map(|p| p as u64)
+                .unwrap_or(100);
+            let burst = arr
+                .get("burst")
+                .and_then(|v| v.long())
+                .map(|b| b as u32)
+                .unwrap_or(10);
+            let ip_based = arr.get("ip_based").and_then(|v| v.bool()).unwrap_or(true);
+
+            RateLimitConfig {
+                per_second,
+                burst,
+                ip_based,
+            }
+        });
+
+    // Extract JWT auth config
+    let jwt_auth_config = get_optional_field("jwt_auth")
+        .and_then(|v| v.array())
+        .map(|arr| -> Result<JwtConfig, String> {
+            let secret = arr
+                .get("secret")
+                .and_then(|v| v.string())
+                .ok_or_else(|| "JWT auth requires 'secret' field".to_string())?
+                .to_string();
+
+            let algorithm = arr
+                .get("algorithm")
+                .and_then(|v| v.string())
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| "HS256".to_string());
+
+            let audience = arr
+                .get("audience")
+                .and_then(|v| v.array())
+                .map(|aud_arr| {
+                    aud_arr
+                        .iter()
+                        .filter_map(|(_, v)| v.string().map(|s| s.to_string()))
+                        .collect::<Vec<_>>()
+                });
+
+            let issuer = arr.get("issuer").and_then(|v| v.string()).map(|s| s.to_string());
+
+            let leeway = arr
+                .get("leeway")
+                .and_then(|v| v.long())
+                .map(|l| l as u64)
+                .unwrap_or(0);
+
+            Ok(JwtConfig {
+                secret,
+                algorithm,
+                audience,
+                issuer,
+                leeway,
+            })
+        })
+        .transpose()?;
+
+    // Extract API key auth config
+    let api_key_auth_config = get_optional_field("api_key_auth")
+        .and_then(|v| v.array())
+        .map(|arr| -> Result<ApiKeyConfig, String> {
+            let keys = arr
+                .get("keys")
+                .and_then(|v| v.array())
+                .ok_or_else(|| "API key auth requires 'keys' array".to_string())?
+                .iter()
+                .filter_map(|(_, v)| v.string().map(|s| s.to_string()))
+                .collect::<Vec<_>>();
+
+            let header_name = arr
+                .get("header_name")
+                .and_then(|v| v.string())
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| "X-API-Key".to_string());
+
+            Ok(ApiKeyConfig { keys, header_name })
+        })
+        .transpose()?;
+
+    // Extract static files config
+    let static_files = get_optional_field("static_files")
+        .and_then(|v| v.array())
+        .map(|files_arr| -> Result<Vec<StaticFilesConfig>, String> {
+            let mut configs = Vec::new();
+            for (_, file_config_zval) in files_arr.iter() {
+                if let Some(file_arr) = file_config_zval.array() {
+                    let directory = file_arr
+                        .get("directory")
+                        .and_then(|v| v.string())
+                        .ok_or_else(|| "Static file config requires 'directory'".to_string())?
+                        .to_string();
+
+                    let route_prefix = file_arr
+                        .get("route_prefix")
+                        .and_then(|v| v.string())
+                        .ok_or_else(|| "Static file config requires 'route_prefix'".to_string())?
+                        .to_string();
+
+                    let index_file = file_arr
+                        .get("index_file")
+                        .and_then(|v| v.bool())
+                        .unwrap_or(true);
+
+                    let cache_control = file_arr
+                        .get("cache_control")
+                        .and_then(|v| v.string())
+                        .map(|s| s.to_string());
+
+                    configs.push(StaticFilesConfig {
+                        directory,
+                        route_prefix,
+                        index_file,
+                        cache_control,
+                    });
+                }
+            }
+            Ok(configs)
+        })
+        .transpose()?
+        .unwrap_or_default();
+
+    // Extract OpenAPI config (optional, complex structure)
+    let openapi_config = get_optional_field("openapi")
+        .and_then(|v| v.array())
+        .map(|openapi_arr| -> Result<OpenApiConfig, String> {
+            let enabled = openapi_arr
+                .get("enabled")
+                .and_then(|v| v.bool())
+                .unwrap_or(false);
+
+            let title = openapi_arr
+                .get("title")
+                .and_then(|v| v.string())
+                .ok_or_else(|| "OpenAPI config requires 'title'".to_string())?
+                .to_string();
+
+            let version = openapi_arr
+                .get("version")
+                .and_then(|v| v.string())
+                .ok_or_else(|| "OpenAPI config requires 'version'".to_string())?
+                .to_string();
+
+            let description = openapi_arr
+                .get("description")
+                .and_then(|v| v.string())
+                .map(|s| s.to_string());
+
+            let swagger_ui_path = openapi_arr
+                .get("swagger_ui_path")
+                .and_then(|v| v.string())
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| "/docs".to_string());
+
+            let redoc_path = openapi_arr
+                .get("redoc_path")
+                .and_then(|v| v.string())
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| "/redoc".to_string());
+
+            let openapi_json_path = openapi_arr
+                .get("openapi_json_path")
+                .and_then(|v| v.string())
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| "/openapi.json".to_string());
+
+            // Extract contact info
+            let contact = openapi_arr
+                .get("contact")
+                .and_then(|v| v.array())
+                .map(|contact_arr| ContactInfo {
+                    name: contact_arr.get("name").and_then(|v| v.string()).map(|s| s.to_string()),
+                    email: contact_arr
+                        .get("email")
+                        .and_then(|v| v.string())
+                        .map(|s| s.to_string()),
+                    url: contact_arr.get("url").and_then(|v| v.string()).map(|s| s.to_string()),
+                });
+
+            // Extract license info
+            let license = openapi_arr
+                .get("license")
+                .and_then(|v| v.array())
+                .map(|license_arr| -> Result<LicenseInfo, String> {
+                    let name = license_arr
+                        .get("name")
+                        .and_then(|v| v.string())
+                        .ok_or_else(|| "License requires 'name'".to_string())?
+                        .to_string();
+                    let url = license_arr.get("url").and_then(|v| v.string()).map(|s| s.to_string());
+                    Ok(LicenseInfo { name, url })
+                })
+                .transpose()?;
+
+            // Extract servers
+            let servers = openapi_arr
+                .get("servers")
+                .and_then(|v| v.array())
+                .map(|servers_arr| -> Result<Vec<ServerInfo>, String> {
+                    let mut server_list = Vec::new();
+                    for (_, server_zval) in servers_arr.iter() {
+                        if let Some(server_arr) = server_zval.array() {
+                            let url = server_arr
+                                .get("url")
+                                .and_then(|v| v.string())
+                                .ok_or_else(|| "Server requires 'url'".to_string())?
+                                .to_string();
+                            let description = server_arr
+                                .get("description")
+                                .and_then(|v| v.string())
+                                .map(|s| s.to_string());
+                            server_list.push(ServerInfo { url, description });
+                        }
+                    }
+                    Ok(server_list)
+                })
+                .transpose()?
+                .unwrap_or_default();
+
+            // Extract security schemes
+            let security_schemes = openapi_arr
+                .get("security_schemes")
+                .and_then(|v| v.array())
+                .map(|schemes_arr| -> Result<HashMap<String, SecuritySchemeInfo>, String> {
+                    let mut schemes = HashMap::new();
+                    for (key, scheme_zval) in schemes_arr.iter() {
+                        let key_str = match key {
+                            ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+                            ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+                            ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
+                        };
+
+                        if let Some(scheme_arr) = scheme_zval.array() {
+                            let scheme_type = scheme_arr
+                                .get("type")
+                                .and_then(|v| v.string())
+                                .ok_or_else(|| "Security scheme requires 'type'".to_string())?;
+
+                            let scheme_info = match scheme_type.to_string().as_str() {
+                                "http" => {
+                                    let scheme = scheme_arr
+                                        .get("scheme")
+                                        .and_then(|v| v.string())
+                                        .ok_or_else(|| "HTTP security scheme requires 'scheme'".to_string())?
+                                        .to_string();
+                                    let bearer_format = scheme_arr
+                                        .get("bearer_format")
+                                        .and_then(|v| v.string())
+                                        .map(|s| s.to_string());
+                                    SecuritySchemeInfo::Http {
+                                        scheme,
+                                        bearer_format,
+                                    }
+                                }
+                                "apiKey" => {
+                                    let location = scheme_arr
+                                        .get("location")
+                                        .and_then(|v| v.string())
+                                        .ok_or_else(|| "API key security scheme requires 'location'".to_string())?
+                                        .to_string();
+                                    let name = scheme_arr
+                                        .get("name")
+                                        .and_then(|v| v.string())
+                                        .ok_or_else(|| "API key security scheme requires 'name'".to_string())?
+                                        .to_string();
+                                    SecuritySchemeInfo::ApiKey { location, name }
+                                }
+                                other => {
+                                    return Err(format!("Invalid security scheme type: {}", other));
+                                }
+                            };
+
+                            schemes.insert(key_str, scheme_info);
+                        }
+                    }
+                    Ok(schemes)
+                })
+                .transpose()?
+                .unwrap_or_default();
+
+            Ok(OpenApiConfig {
+                enabled,
+                title,
+                version,
+                description,
+                swagger_ui_path,
+                redoc_path,
+                openapi_json_path,
+                contact,
+                license,
+                servers,
+                security_schemes,
+            })
+        })
+        .transpose()?;
+
+    // Construct ServerConfig directly
+    Ok(ServerConfig {
+        host,
+        port,
+        workers,
+        enable_request_id,
+        max_body_size,
+        request_timeout,
+        compression: compression_config,
+        rate_limit: rate_limit_config,
+        jwt_auth: jwt_auth_config,
+        api_key_auth: api_key_auth_config,
+        static_files,
+        graceful_shutdown,
+        shutdown_timeout,
+        background_tasks: spikard_http::BackgroundTaskConfig::default(),
+        openapi: openapi_config,
+        lifecycle_hooks: None, // Set separately via hooks parameter
+        #[cfg(feature = "di")]
+        di_container: None, // DI not yet supported in PHP bindings
+    })
+}
+
+/// Start a server from PHP, given route/config payloads.
+///
+/// This function now accepts PHP objects directly instead of JSON:
+/// - `routes`: Array of route payload arrays (still JSON for now, to be refactored)
+/// - `config`: PHP associative array from App::configToNative()
+/// - `hooks`: PHP associative array (currently unused, hooks not yet supported)
+///
+/// The config is extracted manually using extract_server_config_from_php() to avoid
+/// JSON deserialization issues with non-serializable fields like lifecycle_hooks.
+pub fn spikard_start_server_impl(routes_zval: &Zval, config: &Zval, hooks: &Zval) -> PhpResult<u64> {
+    // Extract ServerConfig from PHP array
+    let server_config = extract_server_config_from_php(config)
+        .map_err(|e| PhpException::default(format!("Invalid server config: {}", e)))?;
+
+    // TODO: Extract lifecycle hooks from PHP (currently not supported)
+    // For now, hooks are ignored. Future implementation should:
+    // 1. Check if hooks is a PHP object/array with hook definitions
+    // 2. Create PhpLifecycleHooks from the PHP callables
+    // 3. Build and attach to server_config
+    let lifecycle_hooks: Option<LifecycleHooks> = None;
+
+    // Parse routes array from Zval
+    let routes_array = routes_zval.array()
+        .ok_or_else(|| PhpException::default("Routes must be an array".to_string()))?;
 
     // Rebuild routes with handlers
     let mut route_pairs: Vec<(spikard_http::Route, Arc<dyn spikard_http::Handler>)> = Vec::new();
-    for route_val in routes {
-        let reg = serde_json::from_value::<RegisteredRoutePayload>(route_val)
+    let mut route_metadata: Vec<spikard_core::RouteMetadata> = Vec::new();
+
+    for (_idx, route_val) in routes_array.iter() {
+        // Convert Zval to JSON Value
+        let json_val = crate::php::zval_to_json(route_val)
+            .map_err(|e| PhpException::default(format!("Failed to convert route to JSON: {}", e)))?;
+
+        let reg = serde_json::from_value::<RegisteredRoutePayload>(json_val)
             .map_err(|e| PhpException::default(format!("Invalid route payload: {}", e)))?;
 
         // Handler is provided via separate array in PHP (handler index not used here)
         let handler_callable = reg
             .handler
-            .ok_or_else(|| PhpException::default("Missing handler callable"))?;
-        let handler = PhpHandler::register(
+            .as_ref()
+            .ok_or_else(|| PhpException::default("Missing handler callable".to_string()))?;
+        // Extract schemas before consuming reg
+        let method = reg.method.clone();
+        let path = reg.path.clone();
+        let handler_name = reg.handler_name.clone();
+        let request_schema = reg.request_schema.clone();
+        let response_schema = reg.response_schema.clone();
+        let parameter_schema = reg.parameter_schema.clone();
+
+        let handler = PhpHandler::register_from_zval(
             handler_callable,
-            reg.handler_name.clone(),
-            reg.method.clone(),
-            reg.path.clone(),
-        );
+            handler_name.clone(),
+            method.clone(),
+            path.clone(),
+        ).map_err(|e| PhpException::default(format!("Failed to register handler: {}", e)))?;
 
         let mut route = reg.into_route()?;
 
         // Apply schemas if provided
-        if let Some(schema) = reg.request_schema {
+        if let Some(schema) = request_schema.clone() {
             let compiled = spikard_core::validation::SchemaValidator::new(schema)
                 .map_err(|e| PhpException::default(format!("Invalid request schema: {}", e)))?;
             route.request_validator = Some(Arc::new(compiled));
         }
-        if let Some(schema) = reg.response_schema {
+        if let Some(schema) = response_schema.clone() {
             let compiled = spikard_core::validation::SchemaValidator::new(schema)
                 .map_err(|e| PhpException::default(format!("Invalid response schema: {}", e)))?;
             route.response_validator = Some(Arc::new(compiled));
         }
-        if let Some(schema) = reg.parameter_schema {
+        if let Some(schema) = parameter_schema.clone() {
             let compiled =
                 spikard_http::ParameterValidator::new(schema).map_err(|e| PhpException::default(format!("{}", e)))?;
             route.parameter_validator = Some(compiled);
         }
 
+        // Build metadata for this route
+        route_metadata.push(spikard_core::RouteMetadata {
+            method,
+            path,
+            handler_name,
+            request_schema,
+            response_schema,
+            parameter_schema,
+            file_params: None,
+            is_async: true,
+            cors: None,
+            body_param_name: None,
+            #[cfg(feature = "di")]
+            dependencies: Vec::new(),
+        });
+
         route_pairs.push((route, Arc::new(handler) as Arc<dyn spikard_http::Handler>));
     }
 
-    let hooks_arc = lifecycle_hooks.as_ref().map(Arc::new);
-    let app = build_router_with_handlers_and_config(route_pairs, server_config.clone(), hooks_arc)
+    let app = build_router_with_handlers_and_config(route_pairs, server_config.clone(), route_metadata)
         .map_err(|e| PhpException::default(format!("Failed to build router: {}", e)))?;
 
     // Spawn server in background
@@ -111,16 +566,21 @@ pub fn spikard_start_server(
         });
     });
 
-    // Return a fake id; real shutdown tracking TBD.
-    let id = handle.thread().id().as_u64().unwrap_or(0);
+    // Return a handle ID for this server
+    // We use a simple hash of the thread ID since as_u64() is unstable
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+
+    let mut hasher = DefaultHasher::new();
+    handle.thread().id().hash(&mut hasher);
+    let id = hasher.finish();
+
     std::mem::forget(handle);
     Ok(id)
 }
 
 /// Stop server placeholder (no-op).
-#[php_function]
-#[php(name = "spikard_stop_server")]
-pub fn spikard_stop_server(_handle: u64) -> PhpResult<()> {
+pub fn spikard_stop_server_impl(_handle: u64) -> PhpResult<()> {
     // TODO: Implement graceful shutdown tracking handles.
     Ok(())
 }

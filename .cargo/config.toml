@@ -2,5 +2,8 @@
 [target.'cfg(target_os = "macos")']
 rustflags = ["-C", "link-arg=-Wl,-undefined,dynamic_lookup"]
 
-[target.'cfg(target_os = "macos")'.env]
-RUBY = "/opt/homebrew/opt/ruby/bin/ruby"
+# Note: env table is not supported in Cargo config.toml
+# Set these in your shell or Taskfile instead:
+# export LIBCLANG_PATH=/opt/homebrew/opt/llvm/lib
+# export LLVM_CONFIG_PATH=/opt/homebrew/opt/llvm/bin/llvm-config
+# export BINDGEN_EXTRA_CLANG_ARGS="-isysroot $(xcrun --sdk macosx --show-sdk-path)"

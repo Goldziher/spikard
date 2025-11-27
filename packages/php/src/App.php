@@ -203,7 +203,20 @@ final class App
         return $this->sseProducers;
     }
 
-    /** Start the server using the native extension (background). */
+    /**
+     * Start the server using the native extension (background).
+     *
+     * This implementation follows Python's pattern (crates/spikard-py/src/lib.rs:287-463):
+     * 1. Converts PHP ServerConfig to native array via configToNative()
+     * 2. Passes array directly to spikard_start_server() FFI function
+     * 3. Rust extracts fields manually using extract_server_config_from_php()
+     * 4. Constructs ServerConfig struct directly, avoiding JSON deserialization
+     * 5. This properly handles non-serializable fields like lifecycle_hooks
+     *
+     * Implementation:
+     * - PHP side: packages/php/src/App.php:282-350 (configToNative)
+     * - Rust side: crates/spikard-php/src/php/start.rs:48-465 (extract_server_config_from_php)
+     */
     public function run(?ServerConfig $config = null): void
     {
         $configToUse = $config ?? $this->config;
@@ -250,73 +263,137 @@ final class App
     /**
      * Convert ServerConfig to the native array expected by the extension.
      *
+     * Serializes PHP ServerConfig to a format matching Rust's ServerConfig struct
+     * in crates/spikard-http/src/lib.rs:112-149.
+     *
+     * IMPORTANT: All field names MUST use snake_case (Rust serde default).
+     * Reference: Python implementation in crates/spikard-py/src/lib.rs:287-463
+     *
      * @return array<string, mixed>
      */
     private function configToNative(ServerConfig $config): array
     {
-        $payload = [];
+        // Basic server settings (using actual config values)
+        $payload = [
+            'host' => $config->host,
+            'port' => $config->port,
+            'workers' => $config->workers,
+            'enable_request_id' => $config->enableRequestId,
+            'max_body_size' => $config->maxBodySize,
+            'request_timeout' => $config->requestTimeout,
+            'graceful_shutdown' => $config->gracefulShutdown,
+            'shutdown_timeout' => $config->shutdownTimeout,
+        ];
 
+        // Compression middleware (snake_case field names)
         if ($config->compression !== null) {
             $payload['compression'] = [
                 'gzip' => $config->compression->enabled,
                 'brotli' => $config->compression->enabled,
-                'minSize' => 1024,
+                'min_size' => 1024, // bytes, matches default
                 'quality' => $config->compression->quality,
             ];
         }
 
+        // Rate limiting middleware (snake_case field names)
         if ($config->rateLimit !== null) {
-            $payload['rateLimit'] = [
-                'perSecond' => $config->rateLimit->refill,
+            $payload['rate_limit'] = [
+                'per_second' => $config->rateLimit->refill,
                 'burst' => $config->rateLimit->burst,
-                'ipBased' => true,
+                'ip_based' => true,
             ];
         }
 
+        // JWT authentication (snake_case field names)
+        if ($config->jwtAuth !== null) {
+            $payload['jwt_auth'] = [
+                'secret' => $config->jwtAuth->secret,
+                'algorithm' => $config->jwtAuth->algorithm,
+                'audience' => $config->jwtAuth->audience,
+                'issuer' => $config->jwtAuth->issuer,
+                'leeway' => $config->jwtAuth->leeway,
+            ];
+        }
+
+        // API Key authentication (snake_case field names)
+        if ($config->apiKeyAuth !== null) {
+            $payload['api_key_auth'] = [
+                'keys' => $config->apiKeyAuth->keys,
+                'header_name' => $config->apiKeyAuth->headerName,
+            ];
+        }
+
+        // CORS middleware (snake_case field names)
+        // Maps to spikard_core::http::CorsConfig
         if ($config->cors !== null && $config->cors->enabled) {
             $payload['cors'] = [
-                'allowOrigins' => $config->cors->allowedOrigins,
-                'allowMethods' => $config->cors->allowedMethods,
-                'allowHeaders' => $config->cors->allowedHeaders,
-                'exposeHeaders' => $config->cors->exposedHeaders,
-                'allowCredentials' => $config->cors->allowCredentials,
-                'maxAge' => $config->cors->maxAgeSeconds,
+                'allowed_origins' => $config->cors->allowedOrigins,
+                'allowed_methods' => $config->cors->allowedMethods,
+                'allowed_headers' => $config->cors->allowedHeaders,
+                'expose_headers' => $config->cors->exposedHeaders,
+                'max_age' => $config->cors->maxAgeSeconds,
+                'allow_credentials' => $config->cors->allowCredentials,
             ];
         }
 
+        // Static files serving (snake_case field names)
+        // Maps to Vec<StaticFilesConfig> in Rust
         if ($config->staticFiles !== null && $config->staticFiles->enabled && $config->staticFiles->root !== null) {
-            $payload['staticFiles'] = [[
+            $payload['static_files'] = [[
                 'directory' => $config->staticFiles->root,
-                'routePrefix' => '/',
-                'indexFile' => $config->staticFiles->indexFile !== null,
-                'cacheControl' => $config->staticFiles->cache ? 'public, max-age=3600' : null,
+                'route_prefix' => '/',
+                'index_file' => $config->staticFiles->indexFile !== null,
+                'cache_control' => $config->staticFiles->cache ? 'public, max-age=3600' : null,
             ]];
+        } else {
+            $payload['static_files'] = [];
         }
+
+        // OpenAPI configuration (snake_case field names)
+        if ($config->openapi !== null) {
+            $payload['openapi'] = [
+                'enabled' => $config->openapi->enabled,
+                'title' => $config->openapi->title,
+                'version' => $config->openapi->version,
+                'description' => $config->openapi->description,
+                'swagger_ui_path' => $config->openapi->swaggerUiPath,
+                'redoc_path' => $config->openapi->redocPath,
+                'openapi_json_path' => $config->openapi->openapiJsonPath,
+            ];
+        }
+
+        // Background tasks configuration uses default
+        // (BackgroundTaskConfig::default() in Rust)
 
         return $payload;
     }
 
     /**
-     * @return array<string, callable>
+     * Convert LifecycleHooks to native format.
+     *
+     * NOTE: Lifecycle hooks CANNOT be serialized to JSON and passed through
+     * spikard_start_server() because they contain PHP callables. The Rust
+     * LifecycleHooks struct expects trait objects (Arc<dyn LifecycleHook>)
+     * which cannot be deserialized from JSON.
+     *
+     * SOLUTION: Lifecycle hooks must be registered directly through the PHP
+     * extension using PhpLifecycleHooks class (Spikard\Lifecycle\Hooks) which
+     * wraps PHP callables into Rust trait objects. See:
+     * crates/spikard-php/src/php/hooks.rs
+     *
+     * For now, this returns an empty array to satisfy the spikard_start_server
+     * signature, but hooks are not yet supported through the App::run() path.
+     *
+     * @return array<string, mixed>
      */
     private function hooksToNative(LifecycleHooks $hooks): array
     {
-        $payload = [];
-        if ($hooks->onRequest !== null) {
-            $payload['onRequest'] = $hooks->onRequest;
-        }
-        if ($hooks->preValidation !== null) {
-            $payload['preValidation'] = $hooks->preValidation;
-        }
-        if ($hooks->preHandler !== null) {
-            $payload['preHandler'] = $hooks->preHandler;
-        }
-        if ($hooks->onError !== null) {
-            $payload['onError'] = $hooks->onError;
-        }
-        if ($hooks->onResponse !== null) {
-            $payload['onResponse'] = $hooks->onResponse;
-        }
-        return $payload;
+        // TODO: Implement lifecycle hooks support by:
+        // 1. Create PhpLifecycleHooks instance in Rust extension
+        // 2. Register each PHP callable via onRequest/preValidation/etc methods
+        // 3. Build the hooks and pass Arc<LifecycleHooks> to server
+        // 4. Update spikard_start_server to accept hooks differently (not JSON)
+
+        return []; // Empty for now - hooks not yet supported
     }
 }

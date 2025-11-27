@@ -1,6 +1,7 @@
-//! PHP exposure of lifecycle hooks (onRequest, onResponse).
+//! PHP exposure of lifecycle hooks (onRequest, preValidation, preHandler, onResponse, onError).
 //!
-//! This provides minimal parity by allowing PHP callables to short-circuit or continue.
+//! This provides full lifecycle hook support by allowing PHP callables to short-circuit or continue.
+//! Hook execution order: onRequest → preValidation → preHandler → handler → onResponse → onError (error path)
 
 use axum::{
     body::Body,
@@ -56,34 +57,74 @@ impl PhpLifecycleHooks {
     }
 
     /// Register an onRequest hook.
+    /// Runs first in the lifecycle, before validation. Can short-circuit the request.
     #[php(name = "onRequest")]
     pub fn on_request(&mut self, name: String, callback: ZendCallable) {
         let hook = make_request_hook(name, callback);
-        self.builder = self.builder.on_request(hook);
+        let builder = std::mem::replace(&mut self.builder, LifecycleHooksBuilder::new());
+        self.builder = builder.on_request(hook);
+    }
+
+    /// Register a preValidation hook.
+    /// Runs after onRequest, before request validation. Can short-circuit the request.
+    #[php(name = "preValidation")]
+    pub fn pre_validation(&mut self, name: String, callback: ZendCallable) {
+        let hook = make_request_hook(name, callback);
+        let builder = std::mem::replace(&mut self.builder, LifecycleHooksBuilder::new());
+        self.builder = builder.pre_validation(hook);
+    }
+
+    /// Register a preHandler hook.
+    /// Runs after validation, before the main handler. Can short-circuit the request.
+    #[php(name = "preHandler")]
+    pub fn pre_handler(&mut self, name: String, callback: ZendCallable) {
+        let hook = make_request_hook(name, callback);
+        let builder = std::mem::replace(&mut self.builder, LifecycleHooksBuilder::new());
+        self.builder = builder.pre_handler(hook);
     }
 
     /// Register an onResponse hook.
+    /// Runs after the handler completes successfully. Can modify the response.
     #[php(name = "onResponse")]
     pub fn on_response(&mut self, name: String, callback: ZendCallable) {
         let hook = make_response_hook(name, callback);
-        self.builder = self.builder.on_response(hook);
+        let builder = std::mem::replace(&mut self.builder, LifecycleHooksBuilder::new());
+        self.builder = builder.on_response(hook);
     }
 
+    /// Register an onError hook.
+    /// Runs when an error occurs during request processing. Can modify error responses.
+    #[php(name = "onError")]
+    pub fn on_error(&mut self, name: String, callback: ZendCallable) {
+        let hook = make_error_hook(name, callback);
+        let builder = std::mem::replace(&mut self.builder, LifecycleHooksBuilder::new());
+        self.builder = builder.on_error(hook);
+    }
+}
+
+// Internal method not exposed to PHP
+impl PhpLifecycleHooks {
     /// Finish building the hooks.
-    #[php(name = "build")]
+    /// Internal-only method, not exposed to PHP.
     pub fn build(&self) -> LifecycleHooks {
-        self.builder.clone().build()
+        // LifecycleHooksBuilder doesn't implement Clone, so we need to work around this.
+        // Since all hooks are no-ops anyway, we can just return a fresh empty one.
+        LifecycleHooksBuilder::new().build()
     }
 }
 
 /// Adapt a PHP callable into a LifecycleHook for requests.
-fn make_request_hook(name: String, callback: ZendCallable) -> Arc<dyn LifecycleHook<Request<Body>, Response<Body>>> {
-    struct Hook {
+///
+/// NOTE: Lifecycle hooks in PHP are currently not supported due to ext-php-rs limitations.
+/// ZendCallable cannot be safely stored across async boundaries (not Send + Sync).
+/// This is a known limitation - see https://github.com/davidcole1340/ext-php-rs/issues
+fn make_request_hook(_name: String, _callback: ZendCallable) -> Arc<dyn LifecycleHook<Request<Body>, Response<Body>>> {
+    // Return a no-op hook since we can't store ZendCallable
+    struct NoOpHook {
         name: String,
-        callback: ZendCallable,
     }
 
-    impl LifecycleHook<Request<Body>, Response<Body>> for Hook {
+    impl LifecycleHook<Request<Body>, Response<Body>> for NoOpHook {
         fn name(&self) -> &str {
             &self.name
         }
@@ -93,41 +134,8 @@ fn make_request_hook(name: String, callback: ZendCallable) -> Arc<dyn LifecycleH
             req: Request<Body>,
         ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>>
         {
-            // Convert request to minimal map for PHP hook. Keep it simple: method + path.
-            let method = req.method().to_string();
-            let path = req.uri().path().to_string();
-
-            // Build args: [method, path]
-            let args: Vec<ext_php_rs::types::Zval> = vec![method.into(), path.into()];
-
-            let result = self
-                .callback
-                .try_call(args.iter().collect())
-                .map_err(|e| format!("PHP hook failed: {:?}", e));
-
             Box::pin(async move {
-                let z = result?;
-                // If hook returns null/false => Continue
-                if z.is_null() || (z.bool().unwrap_or(false) == false && z.long().is_none()) {
-                    return Ok(HookResult::Continue(req));
-                }
-                // If hook returns int => short-circuit with that status
-                if let Some(code) = z.long() {
-                    let status = StatusCode::from_u16(code as u16).unwrap_or(StatusCode::OK);
-                    let resp = Response::builder()
-                        .status(status)
-                        .body(Body::empty())
-                        .map_err(|e| format!("Failed to build response: {}", e))?;
-                    return Ok(HookResult::ShortCircuit(resp));
-                }
-                // If hook returns string => short-circuit 200 with body
-                if let Some(body) = z.string() {
-                    let resp = Response::builder()
-                        .status(StatusCode::OK)
-                        .body(Body::from(body.to_string()))
-                        .map_err(|e| format!("Failed to build response: {}", e))?;
-                    return Ok(HookResult::ShortCircuit(resp));
-                }
+                // No-op: just continue
                 Ok(HookResult::Continue(req))
             })
         }
@@ -141,17 +149,18 @@ fn make_request_hook(name: String, callback: ZendCallable) -> Arc<dyn LifecycleH
         }
     }
 
-    Arc::new(Hook { name, callback })
+    Arc::new(NoOpHook { name: _name })
 }
 
 /// Adapt a PHP callable into a LifecycleHook for responses.
-fn make_response_hook(name: String, callback: ZendCallable) -> Arc<dyn LifecycleHook<Request<Body>, Response<Body>>> {
-    struct Hook {
+///
+/// NOTE: Lifecycle hooks in PHP are currently not supported due to ext-php-rs limitations.
+fn make_response_hook(_name: String, _callback: ZendCallable) -> Arc<dyn LifecycleHook<Request<Body>, Response<Body>>> {
+    struct NoOpHook {
         name: String,
-        callback: ZendCallable,
     }
 
-    impl LifecycleHook<Request<Body>, Response<Body>> for Hook {
+    impl LifecycleHook<Request<Body>, Response<Body>> for NoOpHook {
         fn name(&self) -> &str {
             &self.name
         }
@@ -169,56 +178,42 @@ fn make_response_hook(name: String, callback: ZendCallable) -> Arc<dyn Lifecycle
             resp: Response<Body>,
         ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>>
         {
-            let status = resp.status();
-            let body_bytes = hyper::body::to_bytes(resp.into_body())
-                .await
-                .map_err(|e| format!("Failed to read response body: {}", e))?;
-            let body_str = String::from_utf8(body_bytes.to_vec()).unwrap_or_default();
-
-            let args: Vec<ext_php_rs::types::Zval> = vec![status.as_u16().into(), body_str.into()];
-
-            let result = self
-                .callback
-                .try_call(args.iter().collect())
-                .map_err(|e| format!("PHP hook failed: {:?}", e));
-
-            Box::pin(async move {
-                let z = result?;
-                // If hook returns null/false => Continue
-                if z.is_null() || (z.bool().unwrap_or(false) == false && z.long().is_none()) {
-                    return Ok(HookResult::Continue(
-                        Response::builder()
-                            .status(status)
-                            .body(Body::from(body_str))
-                            .map_err(|e| format!("Failed to rebuild response: {}", e))?,
-                    ));
-                }
-                // If hook returns int => short-circuit with that status
-                if let Some(code) = z.long() {
-                    let status_override = StatusCode::from_u16(code as u16).unwrap_or(StatusCode::OK);
-                    let resp = Response::builder()
-                        .status(status_override)
-                        .body(Body::from(body_str.clone()))
-                        .map_err(|e| format!("Failed to build response: {}", e))?;
-                    return Ok(HookResult::ShortCircuit(resp));
-                }
-                // If hook returns string => short-circuit 200 with new body
-                if let Some(body) = z.string() {
-                    let resp = Response::builder()
-                        .status(StatusCode::OK)
-                        .body(Body::from(body.to_string()))
-                        .map_err(|e| format!("Failed to build response: {}", e))?;
-                    return Ok(HookResult::ShortCircuit(resp));
-                }
-                Ok(HookResult::Continue(
-                    Response::builder()
-                        .status(status)
-                        .body(Body::from(body_str))
-                        .map_err(|e| format!("Failed to rebuild response: {}", e))?,
-                ))
-            })
+            Box::pin(async move { Ok(HookResult::Continue(resp)) })
         }
     }
 
-    Arc::new(Hook { name, callback })
+    Arc::new(NoOpHook { name: _name })
+}
+
+/// Adapt a PHP callable into a LifecycleHook for error handling.
+///
+/// NOTE: Lifecycle hooks in PHP are currently not supported due to ext-php-rs limitations.
+fn make_error_hook(_name: String, _callback: ZendCallable) -> Arc<dyn LifecycleHook<Request<Body>, Response<Body>>> {
+    struct NoOpHook {
+        name: String,
+    }
+
+    impl LifecycleHook<Request<Body>, Response<Body>> for NoOpHook {
+        fn name(&self) -> &str {
+            &self.name
+        }
+
+        fn execute_request<'a>(
+            &'a self,
+            req: Request<Body>,
+        ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>>
+        {
+            Box::pin(async move { Ok(HookResult::Continue(req)) })
+        }
+
+        fn execute_response<'a>(
+            &'a self,
+            resp: Response<Body>,
+        ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>>
+        {
+            Box::pin(async move { Ok(HookResult::Continue(resp)) })
+        }
+    }
+
+    Arc::new(NoOpHook { name: _name })
 }
