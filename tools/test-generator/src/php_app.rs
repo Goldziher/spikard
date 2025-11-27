@@ -3,6 +3,7 @@
 //! Generates AppFactory with per-fixture handlers (for phpunit) and also writes
 //! routes.json for the native runtime bridge.
 
+use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use anyhow::{Context, Result};
 use serde_json::json;
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
@@ -18,10 +19,12 @@ pub fn generate_php_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()> {
     fs::create_dir_all(&app_dir).context("Failed to create PHP app directory")?;
 
     let fixtures_by_category = load_fixtures_grouped(fixtures_dir)?;
-    let code = build_app_factory(&fixtures_by_category);
+    let sse_fixtures = load_sse_fixtures(fixtures_dir).context("Failed to load SSE fixtures")?;
+    let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
+    let code = build_app_factory(&fixtures_by_category, &sse_fixtures, &websocket_fixtures);
     fs::write(app_dir.join("main.php"), code).context("Failed to write PHP app main.php")?;
 
-    let routes_json = build_routes_json(&fixtures_by_category)?;
+    let routes_json = build_routes_json(&fixtures_by_category, &sse_fixtures, &websocket_fixtures)?;
     fs::write(app_dir.join("routes.json"), routes_json).context("Failed to write routes.json")?;
     Ok(())
 }
@@ -52,7 +55,11 @@ fn load_fixtures_grouped(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<Fix
 }
 
 // Original handler-based AppFactory (for phpunit harness)
-fn build_app_factory(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> String {
+fn build_app_factory(
+    fixtures_by_category: &BTreeMap<String, Vec<Fixture>>,
+    sse_fixtures: &[AsyncFixture],
+    websocket_fixtures: &[AsyncFixture],
+) -> String {
     let mut code = String::new();
     let mut handler_defs = String::new();
 
@@ -63,6 +70,52 @@ fn build_app_factory(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> S
     if fixtures_by_category.is_empty() {
         code.push_str("    public static function create(): App\n    {\n        return new App();\n    }\n}\n");
         return code;
+    }
+
+    // SSE factory methods
+    for (idx, fixture) in sse_fixtures.iter().enumerate() {
+        let channel = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
+        let method_name = format!("create_sse_{}_{}", sanitize_identifier(&channel), idx + 1);
+        let producer_name = format!("SseProducer{}", idx + 1);
+        let events_literal = if fixture.examples.is_empty() {
+            "[]".to_string()
+        } else {
+            let events = fixture
+                .examples
+                .iter()
+                .map(|v| value_to_php(v))
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!("[{events}]")
+        };
+        code.push_str(&format!(
+            "    public static function {method}(): App\n    {{\n        $app = new App();\n        $app = $app->addSse('{path}', new {producer_name}());\n        return $app;\n    }}\n\n",
+            method = method_name,
+            path = channel,
+            producer_name = producer_name
+        ));
+        handler_defs.push_str(&format!(
+            "final class {producer_name} implements \\Spikard\\Handlers\\SseEventProducerInterface {{\n    public function __invoke(): \\Generator {{\n        foreach ({events} as $event) {{\n            yield 'data: ' . json_encode($event) . \"\\n\\n\";\n        }}\n    }}\n}}\n\n",
+            producer_name = producer_name,
+            events = events_literal
+        ));
+    }
+
+    // WebSocket factory methods (no-op handlers)
+    for (idx, fixture) in websocket_fixtures.iter().enumerate() {
+        let channel = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
+        let method_name = format!("create_websocket_{}_{}", sanitize_identifier(&channel), idx + 1);
+        let handler_name = format!("WebSocketHandler{}", idx + 1);
+        code.push_str(&format!(
+            "    public static function {method}(): App\n    {{\n        $app = new App();\n        $app = $app->addWebSocket('{path}', new {handler}());\n        return $app;\n    }}\n\n",
+            method = method_name,
+            path = channel,
+            handler = handler_name
+        ));
+        handler_defs.push_str(&format!(
+            "final class {handler} implements \\Spikard\\Handlers\\WebSocketHandlerInterface {{\n    public function onConnect(): void {{}}\n    public function onMessage(string $message): void {{}}\n    public function onClose(int $code, ?string $reason = null): void {{}}\n}}\n\n",
+            handler = handler_name
+        ));
     }
 
     for (category, fixtures) in fixtures_by_category {
@@ -252,7 +305,11 @@ fn build_app_factory(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> S
 }
 
 // routes.json for native runtime
-fn build_routes_json(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> Result<String> {
+fn build_routes_json(
+    fixtures_by_category: &BTreeMap<String, Vec<Fixture>>,
+    sse_fixtures: &[AsyncFixture],
+    websocket_fixtures: &[AsyncFixture],
+) -> Result<String> {
     let mut routes = Vec::new();
     for (_category, fixtures) in fixtures_by_category {
         for fixture in fixtures {
@@ -296,6 +353,28 @@ fn build_routes_json(fixtures_by_category: &BTreeMap<String, Vec<Fixture>>) -> R
 
             routes.push(metadata);
         }
+    }
+
+    for fixture in sse_fixtures {
+        let channel = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
+        routes.push(json!({
+            "method": "GET",
+            "path": channel,
+            "handler_name": fixture.name,
+            "sse": true,
+            "is_async": true,
+        }));
+    }
+
+    for fixture in websocket_fixtures {
+        let channel = fixture.channel.clone().unwrap_or_else(|| fixture.name.clone());
+        routes.push(json!({
+            "method": "GET",
+            "path": channel,
+            "handler_name": fixture.name,
+            "websocket": true,
+            "is_async": true,
+        }));
     }
     serde_json::to_string_pretty(&routes).context("Failed to serialize routes JSON")
 }

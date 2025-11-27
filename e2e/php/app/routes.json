@@ -10052,5 +10052,82 @@
 		"path": "/items/",
 		"request_schema": null,
 		"response_schema": null
+	},
+	{
+		"handler_name": "systemAlert",
+		"is_async": true,
+		"method": "GET",
+		"path": "/notifications",
+		"sse": true
+	},
+	{
+		"handler_name": "notificationBatch",
+		"is_async": true,
+		"method": "GET",
+		"path": "/notifications",
+		"sse": true
+	},
+	{
+		"handler_name": "userNotification",
+		"is_async": true,
+		"method": "GET",
+		"path": "/notifications",
+		"sse": true
+	},
+	{
+		"handler_name": "statusUpdate",
+		"is_async": true,
+		"method": "GET",
+		"path": "/notifications",
+		"sse": true
+	},
+	{
+		"handler_name": "systemAlert",
+		"is_async": true,
+		"method": "GET",
+		"path": "systemAlert",
+		"websocket": true
+	},
+	{
+		"handler_name": "chatMessage",
+		"is_async": true,
+		"method": "GET",
+		"path": "/chat",
+		"websocket": true
+	},
+	{
+		"handler_name": "chatAck",
+		"is_async": true,
+		"method": "GET",
+		"path": "chatAck",
+		"websocket": true
+	},
+	{
+		"handler_name": "userLeft",
+		"is_async": true,
+		"method": "GET",
+		"path": "/chat",
+		"websocket": true
+	},
+	{
+		"handler_name": "userJoined",
+		"is_async": true,
+		"method": "GET",
+		"path": "/chat",
+		"websocket": true
+	},
+	{
+		"handler_name": "userNotification",
+		"is_async": true,
+		"method": "GET",
+		"path": "userNotification",
+		"websocket": true
+	},
+	{
+		"handler_name": "statusUpdate",
+		"is_async": true,
+		"method": "GET",
+		"path": "statusUpdate",
+		"websocket": true
 	}
 ]

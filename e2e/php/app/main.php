@@ -14,6 +14,83 @@ use Spikard\Http\Response;
  */
 final class AppFactory
 {
+    public static function create_sse_notifications_1(): App
+    {
+        $app = new App();
+        $app = $app->addSse('/notifications', new SseProducer1());
+        return $app;
+    }
+
+    public static function create_sse_notifications_2(): App
+    {
+        $app = new App();
+        $app = $app->addSse('/notifications', new SseProducer2());
+        return $app;
+    }
+
+    public static function create_sse_notifications_3(): App
+    {
+        $app = new App();
+        $app = $app->addSse('/notifications', new SseProducer3());
+        return $app;
+    }
+
+    public static function create_sse_notifications_4(): App
+    {
+        $app = new App();
+        $app = $app->addSse('/notifications', new SseProducer4());
+        return $app;
+    }
+
+    public static function create_websocket_systemalert_1(): App
+    {
+        $app = new App();
+        $app = $app->addWebSocket('systemAlert', new WebSocketHandler1());
+        return $app;
+    }
+
+    public static function create_websocket_chat_2(): App
+    {
+        $app = new App();
+        $app = $app->addWebSocket('/chat', new WebSocketHandler2());
+        return $app;
+    }
+
+    public static function create_websocket_chatack_3(): App
+    {
+        $app = new App();
+        $app = $app->addWebSocket('chatAck', new WebSocketHandler3());
+        return $app;
+    }
+
+    public static function create_websocket_chat_4(): App
+    {
+        $app = new App();
+        $app = $app->addWebSocket('/chat', new WebSocketHandler4());
+        return $app;
+    }
+
+    public static function create_websocket_chat_5(): App
+    {
+        $app = new App();
+        $app = $app->addWebSocket('/chat', new WebSocketHandler5());
+        return $app;
+    }
+
+    public static function create_websocket_usernotification_6(): App
+    {
+        $app = new App();
+        $app = $app->addWebSocket('userNotification', new WebSocketHandler6());
+        return $app;
+    }
+
+    public static function create_websocket_statusupdate_7(): App
+    {
+        $app = new App();
+        $app = $app->addWebSocket('statusUpdate', new WebSocketHandler7());
+        return $app;
+    }
+
     public static function create_auth_api_key_authentication_invalid_key_1(): App
     {
         $app = new App();
@@ -3101,6 +3178,80 @@ final class AppFactory
         return $app;
     }
 
+}
+
+final class SseProducer1 implements \Spikard\Handlers\SseEventProducerInterface {
+    public function __invoke(): \Generator {
+        foreach ([['level' => 'critical', 'message' => 'Database connection pool exhausted', 'source' => 'database-service', 'timestamp' => '2024-01-15T10:30:00Z', 'type' => 'system_alert']] as $event) {
+            yield 'data: ' . json_encode($event) . "\n\n";
+        }
+    }
+}
+
+final class SseProducer2 implements \Spikard\Handlers\SseEventProducerInterface {
+    public function __invoke(): \Generator {
+        foreach ([[['message' => 'example_message', 'timestamp' => '2024-01-15T10:30:00Z', 'type' => 'example_type'], ['message' => 'example_message', 'timestamp' => '2024-01-15T10:30:00Z', 'type' => 'example_type']]] as $event) {
+            yield 'data: ' . json_encode($event) . "\n\n";
+        }
+    }
+}
+
+final class SseProducer3 implements \Spikard\Handlers\SseEventProducerInterface {
+    public function __invoke(): \Generator {
+        foreach ([['body' => 'You have received a new direct message', 'priority' => 'high', 'timestamp' => '2024-01-15T10:30:00Z', 'title' => 'New message from John', 'type' => 'user_notification', 'userId' => 'user_12345']] as $event) {
+            yield 'data: ' . json_encode($event) . "\n\n";
+        }
+    }
+}
+
+final class SseProducer4 implements \Spikard\Handlers\SseEventProducerInterface {
+    public function __invoke(): \Generator {
+        foreach ([['message' => 'All systems operational', 'metadata' => ['region' => 'us-east-1', 'uptime' => 99.99], 'service' => 'payment-gateway', 'status' => 'operational', 'timestamp' => '2024-01-15T10:30:00Z', 'type' => 'status_update']] as $event) {
+            yield 'data: ' . json_encode($event) . "\n\n";
+        }
+    }
+}
+
+final class WebSocketHandler1 implements \Spikard\Handlers\WebSocketHandlerInterface {
+    public function onConnect(): void {}
+    public function onMessage(string $message): void {}
+    public function onClose(int $code, ?string $reason = null): void {}
+}
+
+final class WebSocketHandler2 implements \Spikard\Handlers\WebSocketHandlerInterface {
+    public function onConnect(): void {}
+    public function onMessage(string $message): void {}
+    public function onClose(int $code, ?string $reason = null): void {}
+}
+
+final class WebSocketHandler3 implements \Spikard\Handlers\WebSocketHandlerInterface {
+    public function onConnect(): void {}
+    public function onMessage(string $message): void {}
+    public function onClose(int $code, ?string $reason = null): void {}
+}
+
+final class WebSocketHandler4 implements \Spikard\Handlers\WebSocketHandlerInterface {
+    public function onConnect(): void {}
+    public function onMessage(string $message): void {}
+    public function onClose(int $code, ?string $reason = null): void {}
+}
+
+final class WebSocketHandler5 implements \Spikard\Handlers\WebSocketHandlerInterface {
+    public function onConnect(): void {}
+    public function onMessage(string $message): void {}
+    public function onClose(int $code, ?string $reason = null): void {}
+}
+
+final class WebSocketHandler6 implements \Spikard\Handlers\WebSocketHandlerInterface {
+    public function onConnect(): void {}
+    public function onMessage(string $message): void {}
+    public function onClose(int $code, ?string $reason = null): void {}
+}
+
+final class WebSocketHandler7 implements \Spikard\Handlers\WebSocketHandlerInterface {
+    public function onConnect(): void {}
+    public function onMessage(string $message): void {}
+    public function onClose(int $code, ?string $reason = null): void {}
 }
 
 final class Handlerauth_1 implements HandlerInterface {
