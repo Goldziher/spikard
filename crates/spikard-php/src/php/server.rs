@@ -8,9 +8,12 @@ use axum::http::{HeaderName, HeaderValue, Request, Response, StatusCode};
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendCallable, ZendHashTable, Zval};
+use spikard_http::ParameterValidator;
 use spikard_http::server::build_router_with_handlers_and_config;
 use spikard_http::{CONTENT_TYPE_PROBLEM_JSON, ProblemDetails};
-use spikard_http::{Handler, HandlerResult, LifecycleHooks, Method, RequestData, Route, Router, ServerConfig};
+use spikard_http::{
+    Handler, HandlerResult, LifecycleHooks, Method, RequestData, Route, Router, SchemaRegistry, ServerConfig,
+};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -26,6 +29,9 @@ struct RegisteredRoute {
     path: String,
     handler_name: String,
     handler_index: usize,
+    request_schema: Option<serde_json::Value>,
+    response_schema: Option<serde_json::Value>,
+    parameter_schema: Option<serde_json::Value>,
 }
 
 /// PHP-visible HTTP server class.
@@ -66,6 +72,9 @@ impl PhpServer {
             path,
             handler_name,
             handler_index: idx,
+            request_schema: None,
+            response_schema: None,
+            parameter_schema: None,
         });
         self.handlers.push(handler);
     }
@@ -79,6 +88,9 @@ impl PhpServer {
             path,
             handler_name,
             handler_index: idx,
+            request_schema: None,
+            response_schema: None,
+            parameter_schema: None,
         });
         self.handlers.push(handler);
     }
@@ -92,6 +104,9 @@ impl PhpServer {
             path,
             handler_name,
             handler_index: idx,
+            request_schema: None,
+            response_schema: None,
+            parameter_schema: None,
         });
         self.handlers.push(handler);
     }
@@ -105,6 +120,9 @@ impl PhpServer {
             path,
             handler_name,
             handler_index: idx,
+            request_schema: None,
+            response_schema: None,
+            parameter_schema: None,
         });
         self.handlers.push(handler);
     }
@@ -118,8 +136,42 @@ impl PhpServer {
             path,
             handler_name,
             handler_index: idx,
+            request_schema: None,
+            response_schema: None,
+            parameter_schema: None,
         });
         self.handlers.push(handler);
+    }
+
+    /// Register a route with optional schemas (request/response/parameters).
+    #[php(name = "register")]
+    pub fn register_with_schemas(
+        &mut self,
+        method: String,
+        path: String,
+        handler: ZendCallable,
+        handler_name: String,
+        request_schema_json: Option<String>,
+        response_schema_json: Option<String>,
+        parameter_schema_json: Option<String>,
+    ) -> PhpResult<()> {
+        let idx = self.handlers.len();
+        self.handlers.push(handler);
+
+        let request_schema = parse_schema(request_schema_json)?;
+        let response_schema = parse_schema(response_schema_json)?;
+        let parameter_schema = parse_schema(parameter_schema_json)?;
+
+        self.routes.push(RegisteredRoute {
+            method: method.to_uppercase(),
+            path,
+            handler_name,
+            handler_index: idx,
+            request_schema,
+            response_schema,
+            parameter_schema,
+        });
+        Ok(())
     }
 
     /// Get registered routes as a PHP array.
@@ -371,7 +423,7 @@ impl PhpServer {
                 file_params: None,
                 is_async: false,
                 cors: None,
-                expects_json_body: false,
+                expects_json_body: route.request_schema.is_some(),
                 #[cfg(feature = "di")]
                 handler_dependencies: Vec::new(),
             };
@@ -383,47 +435,91 @@ impl PhpServer {
     }
 
     /// Build route/handler pairs for Server::with_handlers.
-    pub fn build_routes_with_handlers(&self) -> Vec<(Route, Arc<dyn Handler>)> {
-        self.routes
-            .iter()
-            .map(|route| {
-                let method = route.method.parse().unwrap_or_else(|_| Method::GET);
+    pub fn build_routes_with_handlers(&self) -> Result<Vec<(Route, Arc<dyn Handler>)>, String> {
+        let registry = SchemaRegistry::new();
 
-                let handler = PhpHandler::register(
-                    self.handlers
-                        .get(route.handler_index)
-                        .expect("handler index should be valid")
-                        .clone(),
-                    route.handler_name.clone(),
-                    route.method.clone(),
-                    route.path.clone(),
-                );
+        let mut routes_with_handlers = Vec::new();
 
-                let metadata = Route {
-                    method: method.clone(),
-                    path: route.path.clone(),
-                    handler_name: route.handler_name.clone(),
-                    request_validator: None,
-                    response_validator: None,
-                    parameter_validator: None,
-                    file_params: None,
-                    is_async: false,
-                    cors: None,
-                    expects_json_body: false,
-                    #[cfg(feature = "di")]
-                    handler_dependencies: Vec::new(),
-                };
+        for route in &self.routes {
+            let method = route.method.parse().unwrap_or_else(|_| Method::GET);
 
-                (metadata, Arc::new(handler) as Arc<dyn Handler>)
-            })
-            .collect()
+            let handler = PhpHandler::register(
+                self.handlers
+                    .get(route.handler_index)
+                    .expect("handler index should be valid")
+                    .clone(),
+                route.handler_name.clone(),
+                route.method.clone(),
+                route.path.clone(),
+            );
+
+            let request_validator = match &route.request_schema {
+                Some(schema) => Some(registry.get_or_compile(schema).map_err(|e| {
+                    format!(
+                        "Failed to compile request schema for {} {}: {}",
+                        route.method, route.path, e
+                    )
+                })?),
+                None => None,
+            };
+
+            let response_validator = match &route.response_schema {
+                Some(schema) => Some(registry.get_or_compile(schema).map_err(|e| {
+                    format!(
+                        "Failed to compile response schema for {} {}: {}",
+                        route.method, route.path, e
+                    )
+                })?),
+                None => None,
+            };
+
+            let parameter_validator = match &route.parameter_schema {
+                Some(schema) => Some(ParameterValidator::new(schema.clone()).map_err(|e| {
+                    format!(
+                        "Failed to compile parameter schema for {} {}: {}",
+                        route.method, route.path, e
+                    )
+                })?),
+                None => None,
+            };
+
+            let metadata = Route {
+                method: method.clone(),
+                path: route.path.clone(),
+                handler_name: route.handler_name.clone(),
+                request_validator,
+                response_validator,
+                parameter_validator,
+                file_params: None,
+                is_async: false,
+                cors: None,
+                expects_json_body: route.request_schema.is_some(),
+                #[cfg(feature = "di")]
+                handler_dependencies: Vec::new(),
+            };
+
+            routes_with_handlers.push((metadata, Arc::new(handler) as Arc<dyn Handler>));
+        }
+
+        Ok(routes_with_handlers)
     }
 
     /// Build an Axum router using the shared tower-http stack.
     pub fn build_axum_router(&self) -> Result<axum::Router, String> {
-        let routes = self.build_routes_with_handlers();
+        let routes = self.build_routes_with_handlers()?;
         let hooks = self.lifecycle_hooks.as_ref().map(Arc::new);
         build_router_with_handlers_and_config(routes, self.config.clone(), hooks)
+    }
+}
+
+/// Parse an optional JSON schema string to Value.
+fn parse_schema(schema: Option<String>) -> PhpResult<Option<serde_json::Value>> {
+    if let Some(s) = schema {
+        let value: serde_json::Value =
+            serde_json::from_str(&s).map_err(|e| PhpException::default(format!("Invalid JSON schema: {}", e)))?;
+        Ok(Some(value))
+    } else {
+        Ok(None)
     }
 }
 
