@@ -41,8 +41,9 @@ pub struct PhpServer {
     routes: Vec<RegisteredRoute>,
     host: String,
     port: u16,
-    /// Stored PHP callables for registered routes
-    handlers: Vec<ZendCallable>,
+    /// Stored PHP callables for registered routes (as Zvals)
+    /// We store Zval instead of ZendCallable to avoid lifetime issues
+    handlers: Vec<ext_php_rs::types::Zval>,
     /// Optional server configuration (populated via setters)
     config: ServerConfig,
     /// Lifecycle hooks (not yet exposed to PHP; placeholder for parity)
@@ -65,7 +66,7 @@ impl PhpServer {
 
     /// Register a GET route.
     #[php(name = "get")]
-    pub fn register_get(&mut self, path: String, handler: ZendCallable, handler_name: String) {
+    pub fn register_get(&mut self, path: String, handler: &ext_php_rs::types::Zval, handler_name: String) {
         let idx = self.handlers.len();
         self.routes.push(RegisteredRoute {
             method: "GET".to_string(),
@@ -76,12 +77,12 @@ impl PhpServer {
             response_schema: None,
             parameter_schema: None,
         });
-        self.handlers.push(handler);
+        self.handlers.push(handler.shallow_clone());
     }
 
     /// Register a POST route.
     #[php(name = "post")]
-    pub fn register_post(&mut self, path: String, handler: ZendCallable, handler_name: String) {
+    pub fn register_post(&mut self, path: String, handler: &ext_php_rs::types::Zval, handler_name: String) {
         let idx = self.handlers.len();
         self.routes.push(RegisteredRoute {
             method: "POST".to_string(),
@@ -92,12 +93,12 @@ impl PhpServer {
             response_schema: None,
             parameter_schema: None,
         });
-        self.handlers.push(handler);
+        self.handlers.push(handler.shallow_clone());
     }
 
     /// Register a PUT route.
     #[php(name = "put")]
-    pub fn register_put(&mut self, path: String, handler: ZendCallable, handler_name: String) {
+    pub fn register_put(&mut self, path: String, handler: &ext_php_rs::types::Zval, handler_name: String) {
         let idx = self.handlers.len();
         self.routes.push(RegisteredRoute {
             method: "PUT".to_string(),
@@ -108,12 +109,12 @@ impl PhpServer {
             response_schema: None,
             parameter_schema: None,
         });
-        self.handlers.push(handler);
+        self.handlers.push(handler.shallow_clone());
     }
 
     /// Register a PATCH route.
     #[php(name = "patch")]
-    pub fn register_patch(&mut self, path: String, handler: ZendCallable, handler_name: String) {
+    pub fn register_patch(&mut self, path: String, handler: &ext_php_rs::types::Zval, handler_name: String) {
         let idx = self.handlers.len();
         self.routes.push(RegisteredRoute {
             method: "PATCH".to_string(),
@@ -124,12 +125,12 @@ impl PhpServer {
             response_schema: None,
             parameter_schema: None,
         });
-        self.handlers.push(handler);
+        self.handlers.push(handler.shallow_clone());
     }
 
     /// Register a DELETE route.
     #[php(name = "delete")]
-    pub fn register_delete(&mut self, path: String, handler: ZendCallable, handler_name: String) {
+    pub fn register_delete(&mut self, path: String, handler: &ext_php_rs::types::Zval, handler_name: String) {
         let idx = self.handlers.len();
         self.routes.push(RegisteredRoute {
             method: "DELETE".to_string(),
@@ -140,7 +141,7 @@ impl PhpServer {
             response_schema: None,
             parameter_schema: None,
         });
-        self.handlers.push(handler);
+        self.handlers.push(handler.shallow_clone());
     }
 
     /// Register a route with optional schemas (request/response/parameters).
@@ -149,14 +150,14 @@ impl PhpServer {
         &mut self,
         method: String,
         path: String,
-        handler: ZendCallable,
+        handler: &Zval,
         handler_name: String,
         request_schema_json: Option<String>,
         response_schema_json: Option<String>,
         parameter_schema_json: Option<String>,
     ) -> PhpResult<()> {
         let idx = self.handlers.len();
-        self.handlers.push(handler);
+        self.handlers.push(handler.shallow_clone());
 
         let request_schema = parse_schema(request_schema_json)?;
         let response_schema = parse_schema(response_schema_json)?;
@@ -204,13 +205,18 @@ impl PhpServer {
     /// Set request timeout (milliseconds)
     #[php(name = "setTimeoutMs")]
     pub fn set_timeout_ms(&mut self, timeout_ms: i64) {
-        self.config.timeout_ms = Some(timeout_ms as u64);
+        // Convert milliseconds to seconds for ServerConfig.request_timeout
+        self.config.request_timeout = Some((timeout_ms as u64 + 999) / 1000); // Round up
     }
 
     /// Enable/disable compression
     #[php(name = "enableCompression")]
     pub fn enable_compression(&mut self, enabled: bool) {
-        self.config.enable_compression = enabled;
+        if enabled {
+            self.config.compression = Some(spikard_core::CompressionConfig::default());
+        } else {
+            self.config.compression = None;
+        }
     }
 
     /// Configure compression (quality and minimum size)
@@ -219,7 +225,7 @@ impl PhpServer {
         if enabled {
             let mut cfg = spikard_core::CompressionConfig::default();
             if let Some(q) = quality {
-                cfg.quality = q as u8;
+                cfg.quality = q as u32;
             }
             if let Some(sz) = min_size {
                 cfg.min_size = sz as usize;
@@ -291,31 +297,27 @@ impl PhpServer {
     }
 
     /// Configure CORS
+    /// TODO: CORS configuration moved to middleware layer - needs reimplementation
     #[php(name = "setCors")]
     pub fn set_cors(
         &mut self,
-        allow_origin: Vec<String>,
-        allow_methods: Vec<String>,
-        allow_headers: Vec<String>,
-        expose_headers: Vec<String>,
-        allow_credentials: bool,
-        max_age_seconds: Option<i64>,
+        _allow_origin: Vec<String>,
+        _allow_methods: Vec<String>,
+        _allow_headers: Vec<String>,
+        _expose_headers: Vec<String>,
+        _allow_credentials: bool,
+        _max_age_seconds: Option<i64>,
     ) {
-        let cfg = spikard_core::CorsConfig {
-            allow_origin,
-            allow_methods,
-            allow_headers,
-            expose_headers,
-            allow_credentials,
-            max_age_seconds: max_age_seconds.map(|v| v as u64),
-        };
-        self.config.cors = Some(cfg);
+        // CORS is no longer a ServerConfig field - handled via middleware layers
+        // TODO: Implement CORS middleware configuration
     }
 
     /// Disable CORS
+    /// TODO: CORS configuration moved to middleware layer - needs reimplementation
     #[php(name = "disableCors")]
     pub fn disable_cors(&mut self) {
-        self.config.cors = None;
+        // CORS is no longer a ServerConfig field - handled via middleware layers
+        // TODO: Implement CORS middleware configuration
     }
 
     /// Add static files config
@@ -350,7 +352,7 @@ impl PhpServer {
 
     /// Set lifecycle hooks (onRequest/onResponse). Short-circuit supported.
     #[php(name = "setLifecycleHooks")]
-    pub fn set_lifecycle_hooks(&mut self, hooks: PhpLifecycleHooks) {
+    pub fn set_lifecycle_hooks(&mut self, hooks: &PhpLifecycleHooks) {
         self.lifecycle_hooks = Some(hooks.build());
     }
 
@@ -383,7 +385,7 @@ impl PhpServer {
     /// Set host
     #[php(name = "setHost")]
     pub fn set_host(&mut self, host: String) {
-        self.host = host;
+        self.host = host.clone();
         self.config.host = host;
     }
 
@@ -411,7 +413,7 @@ impl PhpServer {
         let mut router = Router::new();
 
         for route in &self.routes {
-            let method = route.method.parse().unwrap_or_else(|_| Method::GET);
+            let method = route.method.parse().unwrap_or_else(|_| Method::Get);
 
             let route_meta = Route {
                 method,
@@ -441,17 +443,18 @@ impl PhpServer {
         let mut routes_with_handlers = Vec::new();
 
         for route in &self.routes {
-            let method = route.method.parse().unwrap_or_else(|_| Method::GET);
+            let method = route.method.parse().unwrap_or_else(|_| Method::Get);
 
-            let handler = PhpHandler::register(
-                self.handlers
-                    .get(route.handler_index)
-                    .expect("handler index should be valid")
-                    .clone(),
+            let handler_zval = self.handlers
+                .get(route.handler_index)
+                .expect("handler index should be valid");
+
+            let handler = PhpHandler::register_from_zval(
+                handler_zval,
                 route.handler_name.clone(),
                 route.method.clone(),
                 route.path.clone(),
-            );
+            ).map_err(|e| format!("Failed to register handler: {}", e))?;
 
             let request_validator = match &route.request_schema {
                 Some(schema) => Some(registry.get_or_compile(schema).map_err(|e| {
@@ -507,8 +510,26 @@ impl PhpServer {
     /// Build an Axum router using the shared tower-http stack.
     pub fn build_axum_router(&self) -> Result<axum::Router, String> {
         let routes = self.build_routes_with_handlers()?;
-        let hooks = self.lifecycle_hooks.as_ref().map(Arc::new);
-        build_router_with_handlers_and_config(routes, self.config.clone(), hooks)
+
+        // Convert RegisteredRoute to RouteMetadata
+        let metadata: Vec<spikard_core::RouteMetadata> = self.routes.iter().map(|r| {
+            spikard_core::RouteMetadata {
+                method: r.method.clone(),
+                path: r.path.clone(),
+                handler_name: r.handler_name.clone(),
+                request_schema: r.request_schema.clone(),
+                response_schema: r.response_schema.clone(),
+                parameter_schema: r.parameter_schema.clone(),
+                file_params: None,
+                is_async: true, // PHP handlers are always async in our implementation
+                cors: None,
+                body_param_name: None,
+                #[cfg(feature = "di")]
+                dependencies: Vec::new(),
+            }
+        }).collect();
+
+        build_router_with_handlers_and_config(routes, self.config.clone(), metadata)
     }
 }
 

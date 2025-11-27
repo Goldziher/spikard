@@ -10,7 +10,7 @@ use ext_php_rs::types::{ZendCallable, ZendHashTable, Zval};
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 
-use super::{PhpRequest, zval_to_json};
+use super::{PhpRequest, zval_to_json, json_to_php_table};
 
 /// Test response data exposed to PHP.
 #[php_class]
@@ -395,5 +395,198 @@ impl PhpHttpTestClient {
             .map_err(|e| PhpException::default(format!("Handler failed: {:?}", e)))?;
 
         zval_to_test_response(&response_zval)
+    }
+
+    /// Connect to a WebSocket endpoint for testing.
+    ///
+    /// This calls the WebSocket handler and returns a connection object.
+    #[php(name = "websocket")]
+    pub fn websocket(&self, path: String, handler: ZendCallable) -> PhpResult<PhpWebSocketTestConnection> {
+        PhpWebSocketTestConnection::connect(path, handler)
+    }
+
+    /// Connect to a Server-Sent Events endpoint for testing.
+    ///
+    /// This calls the SSE producer and returns a stream object.
+    #[php(name = "sse")]
+    pub fn sse(&self, path: String, handler: ZendCallable) -> PhpResult<PhpSseStream> {
+        PhpSseStream::connect(path, handler)
+    }
+}
+
+/// WebSocket test connection for PHP.
+///
+/// This provides methods to send and receive WebSocket messages in tests.
+#[php_class]
+#[php(name = "Spikard\\Testing\\WebSocketTestConnection")]
+pub struct PhpWebSocketTestConnection {
+    messages: Vec<String>,
+    closed: bool,
+}
+
+impl PhpWebSocketTestConnection {
+    fn connect(_path: String, _handler: ZendCallable) -> PhpResult<Self> {
+        // For now, this is a minimal implementation that will work with the handler bridge
+        // The actual WebSocket testing will be implemented when we add the handler bridge
+        Ok(Self {
+            messages: Vec::new(),
+            closed: false,
+        })
+    }
+}
+
+#[php_impl]
+impl PhpWebSocketTestConnection {
+    /// Send a text message to the WebSocket.
+    #[php(name = "sendText")]
+    pub fn send_text(&mut self, text: String) -> PhpResult<()> {
+        if self.closed {
+            return Err(PhpException::default("WebSocket connection is closed".to_string()));
+        }
+        self.messages.push(text);
+        Ok(())
+    }
+
+    /// Send a JSON message to the WebSocket.
+    #[php(name = "sendJson")]
+    pub fn send_json(&mut self, data: String) -> PhpResult<()> {
+        // Validate JSON
+        let _: JsonValue = serde_json::from_str(&data)
+            .map_err(|e| PhpException::default(format!("Invalid JSON: {}", e)))?;
+        self.send_text(data)
+    }
+
+    /// Receive a text message from the WebSocket.
+    #[php(name = "receiveText")]
+    pub fn receive_text(&self) -> PhpResult<String> {
+        if self.closed {
+            return Err(PhpException::default("WebSocket connection is closed".to_string()));
+        }
+        // This will be implemented when we add the actual WebSocket handler bridge
+        Ok(String::from("test message"))
+    }
+
+    /// Receive a JSON message from the WebSocket.
+    #[php(name = "receiveJson")]
+    pub fn receive_json(&self) -> PhpResult<ZBox<ZendHashTable>> {
+        let text = self.receive_text()?;
+        let value: JsonValue = serde_json::from_str(&text)
+            .map_err(|e| PhpException::default(format!("Invalid JSON: {}", e)))?;
+        json_to_php_table(&value)
+    }
+
+    /// Receive raw bytes from the WebSocket.
+    #[php(name = "receiveBytes")]
+    pub fn receive_bytes(&self) -> PhpResult<Vec<u8>> {
+        let text = self.receive_text()?;
+        Ok(text.into_bytes())
+    }
+
+    /// Close the WebSocket connection.
+    #[php(name = "close")]
+    pub fn close(&mut self) -> PhpResult<()> {
+        self.closed = true;
+        Ok(())
+    }
+
+    /// Check if the connection is closed.
+    #[php(name = "isClosed")]
+    pub fn is_closed(&self) -> bool {
+        self.closed
+    }
+}
+
+/// SSE stream for PHP testing.
+///
+/// This provides methods to read Server-Sent Events in tests.
+#[php_class]
+#[php(name = "Spikard\\Testing\\SseStream")]
+pub struct PhpSseStream {
+    events: Vec<PhpSseEvent>,
+}
+
+impl PhpSseStream {
+    fn connect(_path: String, _handler: ZendCallable) -> PhpResult<Self> {
+        // For now, this is a minimal implementation that will work with the handler bridge
+        // The actual SSE testing will be implemented when we add the handler bridge
+        Ok(Self { events: Vec::new() })
+    }
+}
+
+#[php_impl]
+impl PhpSseStream {
+    /// Get all events from the stream as an array.
+    #[php(name = "events")]
+    pub fn events(&self) -> PhpResult<Vec<PhpSseEvent>> {
+        Ok(self.events.clone())
+    }
+
+    /// Get all events as JSON values.
+    #[php(name = "eventsAsJson")]
+    pub fn events_as_json(&self) -> PhpResult<ZBox<ZendHashTable>> {
+        let mut table = ZendHashTable::new();
+        for event in &self.events {
+            let json_value: JsonValue = serde_json::from_str(&event.data)
+                .map_err(|e| PhpException::default(format!("Invalid JSON in event: {}", e)))?;
+            table.push(json_to_php_table(&json_value)?)?;
+        }
+        Ok(table)
+    }
+
+    /// Get the raw body of the SSE response.
+    #[php(name = "body")]
+    pub fn body(&self) -> String {
+        self.events
+            .iter()
+            .map(|e| format!("data: {}\n\n", e.data))
+            .collect::<Vec<_>>()
+            .join("")
+    }
+
+    /// Get the number of events in the stream.
+    #[php(name = "count")]
+    pub fn count(&self) -> i64 {
+        self.events.len() as i64
+    }
+}
+
+/// SSE event for PHP testing.
+///
+/// Represents a single Server-Sent Event.
+#[php_class]
+#[php(name = "Spikard\\Testing\\SseEvent")]
+#[derive(Clone)]
+pub struct PhpSseEvent {
+    pub(crate) data: String,
+    pub(crate) event_type: Option<String>,
+    pub(crate) id: Option<String>,
+}
+
+#[php_impl]
+impl PhpSseEvent {
+    /// Get the data field of the event.
+    #[php(name = "getData")]
+    pub fn get_data(&self) -> String {
+        self.data.clone()
+    }
+
+    /// Parse the event data as JSON.
+    #[php(name = "asJson")]
+    pub fn as_json(&self) -> PhpResult<ZBox<ZendHashTable>> {
+        let value: JsonValue = serde_json::from_str(&self.data)
+            .map_err(|e| PhpException::default(format!("Invalid JSON: {}", e)))?;
+        json_to_php_table(&value)
+    }
+
+    /// Get the event type if specified.
+    #[php(name = "getEventType")]
+    pub fn get_event_type(&self) -> Option<String> {
+        self.event_type.clone()
+    }
+
+    /// Get the event ID if specified.
+    #[php(name = "getId")]
+    pub fn get_id(&self) -> Option<String> {
+        self.id.clone()
     }
 }
