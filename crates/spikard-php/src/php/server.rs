@@ -161,6 +161,23 @@ impl PhpServer {
         self.config.enable_compression = enabled;
     }
 
+    /// Configure compression (quality and minimum size)
+    #[php(name = "setCompression")]
+    pub fn set_compression(&mut self, enabled: bool, quality: Option<i64>, min_size: Option<i64>) {
+        if enabled {
+            let mut cfg = spikard_core::CompressionConfig::default();
+            if let Some(q) = quality {
+                cfg.quality = q as u8;
+            }
+            if let Some(sz) = min_size {
+                cfg.min_size = sz as usize;
+            }
+            self.config.compression = Some(cfg);
+        } else {
+            self.config.compression = None;
+        }
+    }
+
     /// Enable/disable request ID middleware
     #[php(name = "enableRequestId")]
     pub fn enable_request_id(&mut self, enabled: bool) {
@@ -177,6 +194,32 @@ impl PhpServer {
     #[php(name = "disableMaxBodySize")]
     pub fn disable_max_body_size(&mut self) {
         self.config.max_body_size = None;
+    }
+
+    /// Configure rate limiting
+    #[php(name = "setRateLimit")]
+    pub fn set_rate_limit(&mut self, per_second: i64, burst: Option<i64>, ip_based: Option<bool>) {
+        let mut cfg = spikard_core::RateLimitConfig::default();
+        cfg.per_second = per_second as u64;
+        if let Some(b) = burst {
+            cfg.burst = b as u32;
+        }
+        if let Some(ip) = ip_based {
+            cfg.ip_based = ip;
+        }
+        self.config.rate_limit = Some(cfg);
+    }
+
+    /// Disable rate limiting
+    #[php(name = "disableRateLimit")]
+    pub fn disable_rate_limit(&mut self) {
+        self.config.rate_limit = None;
+    }
+
+    /// Set graceful shutdown timeout (seconds)
+    #[php(name = "setShutdownTimeout")]
+    pub fn set_shutdown_timeout(&mut self, seconds: i64) {
+        self.config.shutdown_timeout = seconds as u64;
     }
 
     /// Set host
