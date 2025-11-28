@@ -5,12 +5,20 @@
 //! - Factory dependencies (callables)
 //! - Scoped dependencies (per-request)
 //!
-//! Uses thread-local storage for PHP Zvals (non-Send/Sync).
+//! ## Thread Safety Architecture
+//!
+//! PHP Zvals contain raw pointers and cannot be Send+Sync. This module uses
+//! thread-local storage to safely handle Zvals across async boundaries:
+//!
+//! 1. All Zvals are stored in thread_local! registries
+//! 2. Dependencies hold only numeric IDs (which ARE Send+Sync)
+//! 3. When resolving, IDs are used to look up Zvals from thread-local storage
+//! 4. Resolved values are wrapped in ZvalHandle (Send+Sync wrapper with ID)
 
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
 use spikard_core::di::{Dependency, DependencyContainer, DependencyError, ResolvedDependencies};
-use spikard_http::RequestData;
+use spikard_core::RequestData;
 use http::Request;
 use std::any::Any;
 use std::cell::RefCell;
@@ -21,28 +29,78 @@ use std::sync::Arc;
 type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
 
 thread_local! {
+    /// Registry of PHP value dependencies (singletons).
+    /// Maps value_id -> Zval. Thread-local to avoid Send+Sync issues.
+    static PHP_VALUE_REGISTRY: RefCell<Vec<Zval>> = RefCell::new(Vec::new());
+
     /// Registry of PHP factory callables.
-    /// Stores Zval references to PHP closures/callables for factory dependencies.
-    /// Indexed by factory_id from PhpFactoryDependency.
+    /// Maps factory_id -> Zval callable. Thread-local to avoid Send+Sync issues.
     static PHP_FACTORY_REGISTRY: RefCell<Vec<Zval>> = RefCell::new(Vec::new());
 }
 
+/// Send+Sync wrapper around a Zval ID.
+///
+/// This type is safe to send across threads because it only holds a numeric ID.
+/// The actual Zval is stored in thread-local storage and retrieved when needed.
+#[derive(Debug, Clone)]
+pub struct ZvalHandle {
+    /// Index into PHP_VALUE_REGISTRY
+    value_id: usize,
+}
+
+impl ZvalHandle {
+    /// Create a new handle from a value ID
+    fn new(value_id: usize) -> Self {
+        Self { value_id }
+    }
+
+    /// Get the Zval from thread-local storage
+    pub fn get(&self) -> Result<Zval, DependencyError> {
+        PHP_VALUE_REGISTRY.with(|registry| {
+            let reg = registry.borrow();
+            reg.get(self.value_id)
+                .map(|z| z.shallow_clone())
+                .ok_or_else(|| DependencyError::ResolutionFailed {
+                    message: format!("Zval handle {} not found in registry", self.value_id)
+                })
+        })
+    }
+}
+
+// SAFETY: ZvalHandle only contains a numeric ID, not raw pointers
+// The actual Zval is stored in thread-local storage
+unsafe impl Send for ZvalHandle {}
+unsafe impl Sync for ZvalHandle {}
+
 /// PHP value dependency (singleton instance).
 ///
-/// Wraps a Zval containing a PHP object/value that's reused across requests.
-/// The Zval is cloned (shallow) when resolving the dependency.
+/// Stores a Zval in thread-local storage and returns a Send+Sync handle.
+/// The actual Zval is registered once and accessed via ID.
 #[derive(Clone)]
 pub struct PhpValueDependency {
     key: String,
-    value: Arc<Zval>,
+    /// Index into PHP_VALUE_REGISTRY (Send+Sync safe)
+    value_id: usize,
 }
 
 impl PhpValueDependency {
+    /// Register a PHP value and return a dependency that references it.
+    ///
+    /// # Arguments
+    /// * `key` - Unique dependency key
+    /// * `value` - PHP Zval to store (will be moved to thread-local storage)
+    ///
+    /// # Returns
+    /// PhpValueDependency with registered value_id
     pub fn new(key: String, value: Zval) -> Self {
-        Self {
-            key,
-            value: Arc::new(value),
-        }
+        let value_id = PHP_VALUE_REGISTRY.with(|registry| {
+            let mut reg = registry.borrow_mut();
+            let id = reg.len();
+            reg.push(value);
+            id
+        });
+
+        Self { key, value_id }
     }
 }
 
@@ -61,13 +119,11 @@ impl Dependency for PhpValueDependency {
         _request_data: &RequestData,
         _resolved: &ResolvedDependencies,
     ) -> BoxFuture<'_, Result<Arc<dyn Any + Send + Sync>, DependencyError>> {
-        // Clone the Zval (shallow copy)
-        let value_clone = self.value.shallow_clone();
+        // Create a Send+Sync handle that references the value
+        let handle = ZvalHandle::new(self.value_id);
 
-        // Wrap in Arc<Any> for the DI system
-        // Note: Zval is not Send+Sync, but we handle it carefully in thread-local context
-        let boxed: Arc<dyn Any + Send + Sync> =
-            Arc::new(value_clone) as Arc<dyn Any + Send + Sync>;
+        // Wrap the handle (which IS Send+Sync) in Arc<Any>
+        let boxed: Arc<dyn Any + Send + Sync> = Arc::new(handle);
 
         Box::pin(async move { Ok(boxed) })
     }
@@ -112,41 +168,64 @@ impl PhpFactoryDependency {
     /// Invoke the PHP factory with resolved dependencies.
     ///
     /// # Arguments
-    /// * `resolved` - ResolvedDependencies containing already-resolved dependencies
+    /// * `resolved` - ResolvedDependencies containing ZvalHandles for dependencies
     ///
     /// # Returns
-    /// Result containing the created instance as Zval
-    fn invoke_factory(&self, resolved: &ResolvedDependencies) -> Result<Zval, DependencyError> {
-        PHP_FACTORY_REGISTRY.with(|registry| {
+    /// Result containing the created instance value ID
+    fn invoke_factory(&self, resolved: &ResolvedDependencies) -> Result<usize, DependencyError> {
+        // Collect resolved Zvals from handles
+        let mut zvals = Vec::new();
+        for dep_name in &self.dependencies {
+            let resolved_value = resolved
+                .get(dep_name)
+                .ok_or_else(|| DependencyError::ResolutionFailed {
+                    message: format!("Dependency '{}' not resolved", dep_name)
+                })?;
+
+            // Downcast to ZvalHandle
+            let handle = resolved_value
+                .downcast_ref::<ZvalHandle>()
+                .ok_or_else(|| DependencyError::ResolutionFailed {
+                    message: format!("Dependency '{}' is not a ZvalHandle", dep_name)
+                })?;
+
+            // Get the actual Zval from thread-local storage
+            let zval = handle.get()?;
+            zvals.push(zval);
+        }
+
+        // Invoke factory callable with the resolved Zvals
+        let result_zval = PHP_FACTORY_REGISTRY.with(|registry| {
             let reg = registry.borrow();
             let callable_zval = reg
                 .get(self.factory_id)
-                .ok_or_else(|| DependencyError::ResolutionFailed(format!("Factory {} not found in registry", self.factory_id)))?;
+                .ok_or_else(|| DependencyError::ResolutionFailed {
+                    message: format!("Factory {} not found in registry", self.factory_id)
+                })?;
 
-            // Build argument array from dependencies
-            let mut args = Vec::new();
-            for dep_name in &self.dependencies {
-                // Get resolved dependency using the new API
-                let resolved_value = resolved
-                    .get(dep_name)
-                    .ok_or_else(|| DependencyError::ResolutionFailed(format!("Dependency '{}' not resolved", dep_name)))?;
-
-                // Downcast Arc<Any> back to Zval
-                let zval_ref = resolved_value
-                    .downcast_ref::<Zval>()
-                    .ok_or_else(|| DependencyError::ResolutionFailed(format!("Dependency '{}' is not a Zval", dep_name)))?;
-
-                args.push(zval_ref);
-            }
+            // Build argument references for try_call
+            let args: Vec<&Zval> = zvals.iter().collect();
 
             // Invoke PHP callable
             let callable = ZendCallable::new(callable_zval.clone(), None);
             let result = callable
                 .try_call(args)
-                .map_err(|e| DependencyError::ResolutionFailed(format!("Factory invocation failed: {:?}", e)))?;
+                .map_err(|e| DependencyError::ResolutionFailed {
+                    message: format!("Factory invocation failed: {:?}", e)
+                })?;
 
             Ok(result)
-        })
+        })?;
+
+        // Store the result in the value registry and return its ID
+        let value_id = PHP_VALUE_REGISTRY.with(|registry| {
+            let mut reg = registry.borrow_mut();
+            let id = reg.len();
+            reg.push(result_zval);
+            id
+        });
+
+        Ok(value_id)
     }
 }
 
@@ -167,12 +246,17 @@ impl Dependency for PhpFactoryDependency {
     ) -> BoxFuture<'_, Result<Arc<dyn Any + Send + Sync>, DependencyError>> {
         // Invoke factory synchronously (PHP has no async)
         // The DI container has already resolved all dependencies we declared in depends_on()
-        let result = match self.invoke_factory(resolved) {
-            Ok(zval) => Arc::new(zval) as Arc<dyn Any + Send + Sync>,
+        // Returns a value_id, which we wrap in a ZvalHandle
+        let value_id = match self.invoke_factory(resolved) {
+            Ok(id) => id,
             Err(e) => return Box::pin(async move { Err(e) }),
         };
 
-        Box::pin(async move { Ok(result) })
+        // Create a Send+Sync handle that references the factory result
+        let handle = ZvalHandle::new(value_id);
+        let boxed: Arc<dyn Any + Send + Sync> = Arc::new(handle);
+
+        Box::pin(async move { Ok(boxed) })
     }
 }
 
