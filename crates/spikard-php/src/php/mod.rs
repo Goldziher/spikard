@@ -8,7 +8,7 @@
 
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::{Zval, ZendHashTable};
+use ext_php_rs::types::{ZendHashTable, Zval};
 use serde_json::Value;
 
 mod handler;
@@ -27,13 +27,12 @@ pub use hooks::{PhpHookResult, PhpLifecycleHooks};
 pub use request::PhpRequest;
 pub use response::PhpResponse;
 pub use server::PhpServer;
-pub use sse::{create_sse_state, PhpSseEventProducer};
+pub use sse::{PhpSseEventProducer, create_sse_state};
 // Start module functions are wrapped above and don't need re-export
 pub use testing::{
-    PhpHttpTestClient, PhpSseEvent, PhpSseStream, PhpTestClient, PhpTestResponse,
-    PhpWebSocketTestConnection,
+    PhpHttpTestClient, PhpSseEvent, PhpSseStream, PhpTestClient, PhpTestResponse, PhpWebSocketTestConnection,
 };
-pub use websocket::{create_websocket_state, PhpWebSocketHandler};
+pub use websocket::{PhpWebSocketHandler, create_websocket_state};
 
 /// Start server wrapper for PHP.
 #[php_function]

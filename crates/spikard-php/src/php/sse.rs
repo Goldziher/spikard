@@ -25,11 +25,9 @@
 //! All PHP-to-Rust boundary crossings use PhpResult for proper error propagation.
 //! Errors during event generation log and return None to gracefully end the stream.
 
-use ext_php_rs::prelude::*;
 use ext_php_rs::types::ZendCallable;
 use serde_json::Value;
 use spikard_http::{SseEvent, SseEventProducer};
-use std::sync::Arc;
 use tracing::{debug, error};
 
 /// PHP implementation of SseEventProducer
@@ -98,9 +96,7 @@ impl PhpSseEventProducer {
             idx
         });
 
-        Ok(Self {
-            producer_index: idx,
-        })
+        Ok(Self { producer_index: idx })
     }
 
     /// Convert PHP Generator yielded value (JSON string) to SseEvent
@@ -118,8 +114,8 @@ impl PhpSseEventProducer {
     /// * `Ok(SseEvent)` - Successfully parsed event
     /// * `Err(String)` - Parse error with message
     fn parse_event_json(json_str: &str) -> Result<SseEvent, String> {
-        let value: Value = serde_json::from_str(json_str)
-            .map_err(|e| format!("Failed to parse SSE event JSON: {}", e))?;
+        let value: Value =
+            serde_json::from_str(json_str).map_err(|e| format!("Failed to parse SSE event JSON: {}", e))?;
 
         // Extract required data field
         let data = value
@@ -128,15 +124,9 @@ impl PhpSseEventProducer {
             .clone();
 
         // Extract optional fields
-        let event_type = value
-            .get("event_type")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
+        let event_type = value.get("event_type").and_then(|v| v.as_str()).map(|s| s.to_string());
 
-        let id = value
-            .get("id")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
+        let id = value.get("id").and_then(|v| v.as_str()).map(|s| s.to_string());
 
         let retry = value.get("retry").and_then(|v| v.as_u64());
 
@@ -256,9 +246,7 @@ impl SseEventProducer for PhpSseEventProducer {
 
         // Run synchronously in spawn_blocking since PHP operations are not async
         let result = tokio::task::spawn_blocking(move || {
-            let producer = PhpSseEventProducer {
-                producer_index,
-            };
+            let producer = PhpSseEventProducer { producer_index };
             producer.get_next_event_sync()
         })
         .await;
