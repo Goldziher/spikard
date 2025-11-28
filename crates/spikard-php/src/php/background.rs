@@ -72,36 +72,33 @@ pub fn spikard_background_run(callable: &Zval, args: Option<&Zval>) -> PhpResult
     let callable_owned = callable.shallow_clone();
     let args_owned = args.map(|a| a.shallow_clone());
 
-    // Spawn blocking task
+    // Execute PHP callable directly (PHP is single-threaded, cannot use spawn_blocking)
+    // This runs "in the background" from the request's perspective but on the same thread
     handle
         .spawn_with_metadata(
             async move {
-                tokio::task::spawn_blocking(move || -> Result<(), BackgroundJobError> {
-                    // Reconstruct ZendCallable in blocking context
-                    let call_result = if let Some(args_zval) = args_owned {
-                        // Extract args array
-                        let args_array = args_zval
-                            .array()
-                            .ok_or_else(|| BackgroundJobError::from("Arguments must be an array"))?;
+                // Execute PHP callable synchronously within async context
+                let call_result = if let Some(args_zval) = args_owned {
+                    // Extract args array
+                    let args_array = args_zval
+                        .array()
+                        .ok_or_else(|| BackgroundJobError::from("Arguments must be an array"))?;
 
-                        let args_vec: Vec<&dyn ext_php_rs::convert::IntoZvalDyn> =
-                            args_array.values().map(|v| v as &dyn ext_php_rs::convert::IntoZvalDyn).collect();
+                    let args_vec: Vec<&dyn ext_php_rs::convert::IntoZvalDyn> =
+                        args_array.values().map(|v| v as &dyn ext_php_rs::convert::IntoZvalDyn).collect();
 
-                        ZendCallable::new(&callable_owned)
-                            .map_err(|e| BackgroundJobError::from(format!("Failed to create callable: {:?}", e)))?
-                            .try_call(args_vec)
-                    } else {
-                        ZendCallable::new(&callable_owned)
-                            .map_err(|e| BackgroundJobError::from(format!("Failed to create callable: {:?}", e)))?
-                            .try_call(vec![])
-                    };
+                    ZendCallable::new(&callable_owned)
+                        .map_err(|e| BackgroundJobError::from(format!("Failed to create callable: {:?}", e)))?
+                        .try_call(args_vec)
+                } else {
+                    ZendCallable::new(&callable_owned)
+                        .map_err(|e| BackgroundJobError::from(format!("Failed to create callable: {:?}", e)))?
+                        .try_call(vec![])
+                };
 
-                    call_result.map(|_| ()).map_err(|e| {
-                        BackgroundJobError::from(format!("Background task failed: {:?}", e))
-                    })
+                call_result.map(|_| ()).map_err(|e| {
+                    BackgroundJobError::from(format!("Background task failed: {:?}", e))
                 })
-                .await
-                .map_err(|e| BackgroundJobError::from(format!("Task join error: {}", e)))?
             },
             BackgroundJobMetadata::default(),
         )
