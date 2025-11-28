@@ -176,11 +176,12 @@ impl PhpFactoryDependency {
         // Collect resolved Zvals from handles
         let mut zvals = Vec::new();
         for dep_name in &self.dependencies {
-            let resolved_value: &Arc<dyn Any + Send + Sync> = resolved
-                .get(dep_name)
-                .ok_or_else(|| DependencyError::ResolutionFailed {
+            let resolved_value = match resolved.get_arc(dep_name) {
+                Some(v) => v,
+                None => return Err(DependencyError::ResolutionFailed {
                     message: format!("Dependency '{}' not resolved", dep_name)
-                })?;
+                }),
+            };
 
             // Downcast to ZvalHandle
             let handle = resolved_value
@@ -323,7 +324,7 @@ pub fn extract_di_container_from_php(container_zval: Option<&Zval>) -> Result<Op
                         Vec::new()
                     };
 
-                    let factory = PhpFactoryDependency::register(dep_name.clone(), factory_callable, depends_on);
+                    let factory = PhpFactoryDependency::register(dep_name.clone(), factory_callable.shallow_clone(), depends_on);
                     container.register(dep_name, Arc::new(factory))
                         .map_err(|e| format!("Failed to register factory: {:?}", e))?;
                 } else {

@@ -59,7 +59,7 @@ pub fn register_generator(
 ) -> Result<(usize, StreamingConfig), String> {
     // Verify it's a Generator object
     if let Some(obj) = generator_zval.object() {
-        if let Some(class_name) = obj.get_class_name() {
+        if let Ok(class_name) = obj.get_class_name() {
             if !class_name.contains("Generator") {
                 return Err(format!("Expected Generator, got {}", class_name));
             }
@@ -93,7 +93,7 @@ pub fn register_generator(
 /// Generator on each chunk using spawn_blocking.
 pub fn generator_to_stream(
     generator_idx: usize,
-) -> impl futures::Stream<Item = Result<Bytes, Box<dyn std::error::Error + Send>>> {
+) -> impl futures::Stream<Item = Result<Bytes, Box<dyn std::error::Error + Send + Sync>>> {
     stream! {
         loop {
             // Poll the generator on the PHP thread
@@ -110,11 +110,11 @@ pub fn generator_to_stream(
                     break;
                 }
                 Ok(Err(err)) => {
-                    yield Err(Box::new(io::Error::other(err)) as Box<dyn std::error::Error + Send>);
+                    yield Err(Box::new(io::Error::other(err)) as Box<dyn std::error::Error + Send + Sync>);
                     break;
                 }
                 Err(err) => {
-                    yield Err(Box::new(io::Error::other(format!("Task error: {}", err))) as Box<dyn std::error::Error + Send>);
+                    yield Err(Box::new(io::Error::other(format!("Task error: {}", err))) as Box<dyn std::error::Error + Send + Sync>);
                     break;
                 }
             }
