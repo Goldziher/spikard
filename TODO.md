@@ -1,32 +1,33 @@
 # Spikard PHP Bindings - Feature Parity TODO
 
 **Generated:** 2025-11-28
-**Last Updated:** 2025-11-28 (P0 complete, P2 documentation complete)
-**Status:** PHP bindings are ~85% complete (P0 ✅, P2 ✅, P1/P3-P6 remaining)
+**Last Updated:** 2025-11-28 (P0 partial, documentation complete)
+**Status:** PHP bindings are ~85% complete - documentation ready, native build and tooling remaining
 **Goal:** Achieve 95%+ parity with Python, Node.js, and Ruby bindings
 
 ---
 
 ## Executive Summary
 
-The PHP bindings have solid foundation and complete documentation. Remaining work focuses on advanced features, tooling, and benchmarking:
+The PHP bindings have complete documentation and working core features. Remaining work focuses on native extension build fixes, AsyncAPI support, and benchmarking:
 
-| Area | Current Status | Target | Effort |
-|------|---------------|--------|--------|
-| **Core Features** | 95% (P0 complete: background tasks, DI, streaming ✅) | 95% | DONE ✅ |
-| **Documentation** | 95% (snippets, examples, comprehensive README ✅) | 95% | DONE ✅ |
-| **CLI Codegen** | 65% (no AsyncAPI test apps) | 95% | 1 week |
-| **Benchmarks** | 0% (no apps or harness integration) | 100% | 3-4 weeks |
-| **CI/CD** | 60% (no publishing, disabled native build) | 95% | 1-2 weeks |
-| **Taskfile** | 80% (missing benchmark tasks) | 95% | 3-5 days |
+| Area | Current Status | Target | Effort | Priority |
+|------|---------------|--------|--------|----------|
+| **Core Features** | 95% (background tasks, DI, streaming ✅) | 95% | DONE ✅ | P0 |
+| **Native Extension** | BLOCKED (ARM bindgen issues) | 100% | 1 week | **P0** |
+| **Documentation** | 95% (snippets, examples, README ✅) | 95% | DONE ✅ | P2 |
+| **AsyncAPI Support** | 0% (no PHP test app generation) | 95% | 1 week | **P1** |
+| **Parameter Extraction** | 0% (no auto-injection) | 95% | 2-3 weeks | **P1** |
+| **Benchmarking** | 0% (no apps or harness) | 100% | 3-4 weeks | **P2** |
+| **Publishing** | 0% (no Packagist workflow) | 95% | 3-5 days | P3 |
 
-**Total Estimated Effort:** 7-15 weeks (can be parallelized)
+**Total Estimated Effort:** 7-11 weeks (can be parallelized)
 
 ---
 
-## Priority 0: Critical Blockers ✅ COMPLETE
+## Priority 0: Critical Blockers
 
-All P0 tasks have been implemented and tested.
+Core runtime features complete, native extension build blocked.
 
 ### 1. Background Tasks Implementation ✅
 
@@ -117,11 +118,109 @@ All P0 tasks have been implemented and tested.
 
 ---
 
-## Priority 1: High-Impact Features (2-3 weeks)
+### 4. Native Extension Build Fixes ⚠️
 
-These features significantly improve developer experience.
+**Status:** BLOCKED (ARM bindgen issues)
 
-### 4. Parameter Extraction Helpers
+**Current Blocker:**
+- ext-php-rs fails to build on ARM (macOS M-series, Linux ARM64)
+- Error: NEON intrinsics compilation issues during bindgen
+- Native build disabled in Taskfile.yaml
+
+**Files:**
+- `Taskfile.yaml` (re-enable `task php:build`)
+- `.cargo/config.toml` (ARM-specific build flags)
+- `crates/spikard-php/Cargo.toml` (bindgen configuration)
+- `crates/spikard-php/build.rs` (potential pre-generated bindings)
+
+**Tasks:**
+- [ ] Investigate `--features force-bindgen` flag
+- [ ] Try pre-generating bindings for ARM platforms
+- [ ] Test with different clang/LLVM versions
+- [ ] Document LIBCLANG_PATH and BINDGEN_EXTRA_CLANG_ARGS workarounds
+- [ ] Enable `task php:build` once fixed
+- [ ] Test extension loading in PHP 8.2, 8.3, 8.4
+- [ ] Verify all P0 features work with native extension
+
+**Acceptance Criteria:**
+```bash
+# Should work on macOS ARM64 and Linux ARM64
+task php:build
+php -d extension=target/release/libspikard_php.so --version
+```
+
+**Effort:** 1 week
+**Priority:** P0 - Critical (blocks production use on ARM platforms)
+
+---
+
+## Priority 1: Essential Tooling (3-4 weeks)
+
+Critical tooling for developer productivity and testing.
+
+### 5. AsyncAPI Test App Generation
+
+**Status:** NOT STARTED
+
+**Files:**
+- `crates/spikard-cli/src/codegen/asyncapi/generators/php.rs` (new)
+- `crates/spikard-cli/src/codegen/asyncapi/mod.rs` (update)
+- `crates/spikard-cli/src/codegen/engine.rs` (update)
+
+**Tasks:**
+- [ ] Create `php.rs` generator module
+- [ ] Implement `generate_php_test_app()` function
+- [ ] Generate WebSocket handler classes implementing WebSocketHandlerInterface
+- [ ] Generate SSE producer classes implementing SseEventProducerInterface
+- [ ] Generate message DTOs as readonly classes with fromJson()
+- [ ] Add PHP to AsyncAPI bundle generation (alongside Python/Node/Ruby)
+- [ ] Update CLI help text to mention PHP support
+- [ ] Add integration tests for PHP AsyncAPI generation
+
+**Acceptance Criteria:**
+```bash
+# Generate PHP WebSocket test app
+spikard testing asyncapi test-app schema.yaml --lang php --output test_app.php
+
+# Generate complete bundle including PHP
+spikard testing asyncapi all schema.yaml --output ./generated
+
+# Verify generated PHP:
+ls generated/php/
+# → test_app.php, ChatMessage.php, etc.
+```
+
+**Generated Code Example:**
+```php
+<?php
+// Generated WebSocket handler
+readonly class ChatMessage {
+    public function __construct(
+        public string $type,
+        public string $body,
+        public int $timestamp
+    ) {}
+
+    public static function fromJson(string $json): self {
+        $data = json_decode($json, true);
+        return new self($data['type'], $data['body'], $data['timestamp']);
+    }
+}
+
+class ChatHandler implements WebSocketHandlerInterface {
+    public function onMessage(string $message): void {
+        $msg = ChatMessage::fromJson($message);
+        // Test logic
+    }
+}
+```
+
+**Effort:** 1 week
+**Priority:** P1 - High (enables WebSocket/SSE testing)
+
+---
+
+### 6. Parameter Extraction Helpers
 
 **Files:**
 - `packages/php/src/Http/Query.php` (new)
@@ -149,12 +248,12 @@ $app->addRoute('GET', '/users/{id}',
 );
 ```
 
-**Effort:** 1-2 weeks
-**Priority:** P1 - High
+**Effort:** 2-3 weeks
+**Priority:** P1 - High (major DX improvement)
 
 ---
 
-### 5. Route Attributes (Decorator Pattern)
+### 7. Route Attributes (Decorator Pattern)
 
 **Files:**
 - `packages/php/src/Attributes/Route.php` (new)
@@ -190,11 +289,131 @@ $app->registerController(UserController::class);
 ```
 
 **Effort:** 1-2 weeks
-**Priority:** P1 - High
+**Priority:** P1 - Medium (nice to have, not critical)
 
 ---
 
-## Priority 2: Documentation ✅ COMPLETE
+## Priority 2: Benchmarking Infrastructure (3-4 weeks)
+
+Demonstrate performance vs Phalcon and other PHP frameworks.
+
+### 8. App Generator for PHP
+
+**Status:** NOT STARTED
+
+**Files:**
+- `tools/app-generator/src/generators/spikard_php.rs` (new)
+- `tools/app-generator/src/main.rs` (update to include PHP)
+- `Taskfile.yaml` (add `task php:generate:app`)
+
+**Tasks:**
+- [ ] Create PHP app generator mirroring Python generator
+- [ ] Parse fixture metadata (testing_data/**/schema.json)
+- [ ] Generate routes with correct handler signatures
+- [ ] Extract ServerConfig from fixture metadata
+- [ ] Generate expected responses matching fixtures
+- [ ] Test with all fixture categories (headers, cookies, json_bodies, etc.)
+- [ ] Add Taskfile task for easy generation
+
+**Acceptance Criteria:**
+```bash
+# Generate app from fixtures
+task php:generate:app FIXTURE_DIR=testing_data/json_bodies OUTPUT=generated_app.php
+
+# Generated app should:
+# - Have all routes from fixtures
+# - Return expected responses
+# - Pass fixture-driven tests
+```
+
+**Effort:** 1-2 weeks
+**Priority:** P2 - High (needed for benchmarks)
+
+---
+
+### 9. Benchmark Applications
+
+**Status:** NOT STARTED
+
+**Files:**
+- `tools/benchmark-harness/apps/spikard-php/` (new directory)
+- `tools/benchmark-harness/apps/phalcon/` (new directory)
+- `tools/benchmark-harness/apps/IMPLEMENTATION_SUMMARY.md` (update)
+
+**Tasks:**
+- [ ] Create Spikard PHP benchmark app
+  - `GET /` - Hello World (plain text)
+  - `GET /json` - JSON response
+  - `POST /echo` - Echo request body
+  - `GET /query?foo=bar` - Query parameter handling
+  - Production configuration (opcache, JIT, preloading)
+
+- [ ] Create Phalcon reference app
+  - Same endpoints as Spikard PHP
+  - Fair comparison configuration
+  - Production optimizations
+
+- [ ] Create implementation summary document
+- [ ] Add verification script to test both apps
+- [ ] Document performance tuning (opcache settings, JIT modes)
+
+**Effort:** 1-2 weeks
+**Priority:** P2 - High
+
+---
+
+### 10. Benchmark Harness Integration
+
+**Status:** NOT STARTED
+
+**Files:**
+- `tools/benchmark-harness/src/main.rs` (or Rust harness)
+- `tools/benchmark-harness/Taskfile.yaml` (update)
+- `Taskfile.yaml` (root - add PHP benchmark tasks)
+
+**Tasks:**
+- [ ] Add PHP app detection to harness
+- [ ] Configure PHP-FPM runner (production mode)
+- [ ] Ensure opcache + JIT enabled during benchmarks
+- [ ] Add Taskfile tasks:
+  - `task bench:install:spikard-php`
+  - `task bench:install:phalcon`
+  - `task bench:run:spikard-php`
+  - `task bench:run:phalcon`
+  - `task bench:compare:php` (Spikard vs Phalcon)
+
+- [ ] Test harness correctly measures PHP performance
+- [ ] Generate comparison reports
+- [ ] Document benchmark methodology
+
+**Effort:** 1 week
+**Priority:** P2 - High
+
+---
+
+### 11. Benchmark CI Workflow
+
+**Status:** NOT STARTED
+
+**Files:**
+- `.github/workflows/benchmarks.yml` (update)
+
+**Tasks:**
+- [ ] Add PHP to benchmark matrix
+- [ ] Install PHP 8.3, Composer, extensions in CI
+- [ ] Run Spikard PHP benchmarks
+- [ ] Run Phalcon benchmarks
+- [ ] Generate comparison reports
+- [ ] Publish results to GitHub Pages or artifact storage
+
+**Effort:** 3-5 days
+**Priority:** P2 - Medium
+
+---
+
+## Priority 3: Publishing & Documentation Gaps (1 week)
+
+### 12. Publishing Workflow
 
 All P2 documentation tasks have been implemented and committed (commits 02b23ba2, 6ebee9f1, 86a9128a).
 
@@ -249,9 +468,9 @@ All P2 documentation tasks have been implemented and committed (commits 02b23ba2
 
 ---
 
-### 7. User Documentation ✅
+### 13. User Documentation ✅
 
-**Status:** COMPLETE (README), PARTIAL (binding guide, root README)
+**Status:** COMPLETE (README only)
 
 **Files Created/Updated:**
 - `packages/php/README.md` - Comprehensive 770-line README ✅
@@ -273,244 +492,17 @@ All P2 documentation tasks have been implemented and committed (commits 02b23ba2
 - [x] Added all badges to WASM README
 - [x] Added all badges to PHP README
 
-**Remaining Tasks:**
-- [ ] Create comprehensive binding guide (`docs/bindings/php.md`)
-  - Architecture overview
-  - ext-php-rs FFI patterns
-  - Advanced handler patterns
-  - Performance tuning
+**Remaining Documentation (Optional):**
+- [ ] Update root `README.md` to promote PHP from "Future" to "Current Bindings"
+- [ ] Create binding guide `docs/bindings/php.md` (architecture, FFI patterns)
+- [ ] Create getting started guide `docs/guides/php-getting-started.md`
 
-- [ ] Create getting started guide (`docs/guides/php-getting-started.md`)
-  - Prerequisites
-  - Step-by-step installation
-  - First app tutorial
-  - Deployment guide
+**Note:** ADRs are for architecture decisions only, not language-specific examples.
 
-- [ ] Update root `README.md`
-  - Promote PHP from "Future" to "Current Bindings"
-  - Add PHP installation snippet
-  - Add PHP to feature matrix
-
-**Effort:** 3-5 days remaining (for binding guide and root README updates)
-**Priority:** P2 - Medium (core README complete)
+**Effort:** 3-5 days (optional polish)
+**Priority:** P3 - Low (core docs complete)
 
 ---
-
-### 8. ADR Updates & API Reference
-
-**Status:** PENDING
-
-**Files:**
-- `docs/adr/0001-architecture-overview.md` (needs PHP examples)
-- `docs/adr/0002-runtime-and-middleware.md` (needs PHP examples)
-- `docs/adr/0003-validation-and-fixtures.md` (needs PHP examples)
-- `docs/adr/0005-lifecycle-hooks.md` (needs PHP examples)
-- `docs/adr/0006-async-streaming.md` (needs PHP examples)
-- `docs/adr/0007-php-ffi-patterns.md` (new - to be created)
-- `phpDocumentor.xml` (new - to be created)
-
-**Tasks:**
-- [ ] Add PHP examples to all 5 existing ADRs
-- [ ] Create new ADR for PHP FFI patterns (ext-php-rs)
-  - Thread-local storage patterns
-  - Generator registry management
-  - Error conversion across FFI boundary
-  - Memory safety with PHP references
-- [ ] Configure phpDocumentor for API docs generation
-- [ ] Generate API reference documentation
-- [ ] Host documentation (GitHub Pages or docs.rs equivalent)
-
-**Effort:** 3-5 days
-**Priority:** P2 - Medium
-
----
-
-## Priority 3: CLI & Codegen (1 week)
-
-### 9. AsyncAPI Test App Generation
-
-**Files:**
-- `crates/spikard-cli/src/codegen/asyncapi/mod.rs`
-- `crates/spikard-cli/src/codegen/asyncapi/generators/php.rs`
-- `crates/spikard-cli/src/codegen/engine.rs`
-
-**Tasks:**
-- [ ] Implement `generate_php_test_app()` function
-- [ ] Generate PHP WebSocket/SSE test clients
-- [ ] Add PHP to AsyncAPI bundle generation
-- [ ] Update `features` command to mention PHP
-- [ ] Add CLI tests for PHP AsyncAPI test apps
-
-**Acceptance Criteria:**
-```bash
-# Should work (currently fails)
-spikard testing asyncapi test-app schema.yaml --lang php --output app.php
-
-# Should include PHP (currently omitted)
-spikard testing asyncapi all schema.yaml --output ./generated
-```
-
-**Effort:** 3-5 days
-**Priority:** P3 - Medium
-
----
-
-### 10. AsyncAPI Message Schema DTOs
-
-**Files:**
-- `crates/spikard-cli/src/codegen/asyncapi/generators/php.rs`
-
-**Tasks:**
-- [ ] Generate readonly class DTOs for AsyncAPI messages
-- [ ] Add JSON serialization helpers
-- [ ] Mirror Python's msgspec.Struct pattern
-- [ ] Test with complex message schemas
-
-**Acceptance Criteria:**
-```php
-// Generated from AsyncAPI schema
-readonly class ChatMessage
-{
-    public function __construct(
-        public string $type,
-        public string $body,
-        public string $userId
-    ) {}
-
-    public static function fromJson(string $json): self {
-        $data = json_decode($json, true);
-        return new self($data['type'], $data['body'], $data['userId']);
-    }
-}
-```
-
-**Effort:** 1 week
-**Priority:** P3 - Medium
-
----
-
-## Priority 4: Benchmarking (3-4 weeks)
-
-### 11. App Generator
-
-**Files:**
-- `tools/app-generator/src/generators/spikard_php.rs` (new)
-- `Taskfile.yaml` (add PHP app generator task)
-
-**Tasks:**
-- [ ] Create PHP app generator (mirror Python generator)
-- [ ] Generate routes from fixture metadata
-- [ ] Extract ServerConfig from fixtures
-- [ ] Generate handlers with expected responses
-- [ ] Test with all fixture categories
-- [ ] Add `task php:generate:app` to Taskfile
-
-**Acceptance Criteria:**
-```bash
-task php:generate:app FIXTURE_DIR=testing_data OUTPUT=generated-php-app
-```
-
-**Effort:** 1-2 weeks
-**Priority:** P4 - High
-
----
-
-### 12. Benchmark Apps
-
-**Files:**
-- `tools/benchmark-harness/apps/spikard-php/` (new)
-- `tools/benchmark-harness/apps/phalcon/` (new)
-
-**Tasks:**
-- [ ] Create Spikard PHP benchmark app
-  - [ ] `GET /` - Hello World
-  - [ ] `GET /json` - JSON response
-  - [ ] `POST /echo` - Echo request body
-  - [ ] `GET /query?foo=bar` - Query params
-  - [ ] Production configuration (opcache, JIT)
-
-- [ ] Create Phalcon reference app
-  - [ ] Same endpoints as Spikard PHP
-  - [ ] Fair comparison setup
-  - [ ] Production configuration
-
-- [ ] Document setup instructions
-- [ ] Test both apps run correctly
-
-**Effort:** 1-2 weeks
-**Priority:** P4 - High
-
----
-
-### 13. Benchmark Harness Integration
-
-**Files:**
-- `tools/benchmark-harness/src/main.rs` (or equivalent)
-- `tools/benchmark-harness/Taskfile.yaml`
-- `Taskfile.yaml` (root)
-
-**Tasks:**
-- [ ] Add PHP app detection to benchmark harness
-- [ ] Configure PHP-FPM or CLI runner
-- [ ] Ensure opcache and JIT enabled
-- [ ] Test harness runs PHP apps correctly
-
-- [ ] Add Taskfile tasks:
-  - [ ] `task bench:install:spikard-php`
-  - [ ] `task bench:install:phalcon`
-  - [ ] `task bench:run:spikard-php`
-  - [ ] `task bench:run:phalcon`
-  - [ ] `task bench:compare:php`
-
-**Effort:** 1 week
-**Priority:** P4 - High
-
----
-
-### 14. Benchmark CI Workflow
-
-**Files:**
-- `.github/workflows/benchmarks.yml` (update)
-
-**Tasks:**
-- [ ] Add PHP to benchmark matrix
-- [ ] Install PHP, Composer, extensions
-- [ ] Run PHP benchmarks in CI
-- [ ] Generate comparison reports
-- [ ] Publish benchmark results
-
-**Effort:** 3-5 days
-**Priority:** P4 - Medium
-
----
-
-## Priority 5: CI/CD & Publishing (1-2 weeks)
-
-### 15. Native Extension Build
-
-**Files:**
-- `Taskfile.yaml`
-- `.cargo/config.toml`
-- `crates/spikard-php/build.rs`
-
-**Tasks:**
-- [ ] Fix ext-php-rs ARM bindgen issues
-  - Current blocker: NEON intrinsics on ARM
-  - Investigate: `--features force-bindgen`
-  - Alternative: Pre-generate bindings for ARM
-
-- [ ] Enable `task php:build` in Taskfile
-- [ ] Test extension build on macOS ARM64
-- [ ] Test extension build on Linux x86_64
-- [ ] Test extension build on Linux ARM64
-- [ ] Document build requirements
-
-**Effort:** 1 week
-**Priority:** P5 - High
-
----
-
-### 16. Publishing Workflow
 
 **Files:**
 - `.github/workflows/publish.yml` (update)
@@ -533,12 +525,12 @@ composer require spikard/spikard
 https://packagist.org/packages/spikard/spikard
 ```
 
-**Effort:** 1 week
-**Priority:** P5 - High
+**Effort:** 3-5 days
+**Priority:** P3 - Medium
 
 ---
 
-### 17. CI/CD Enhancements
+### 14. CI/CD Enhancements
 
 **Files:**
 - `.github/workflows/ci.yml`
@@ -551,13 +543,13 @@ https://packagist.org/packages/spikard/spikard
 - [ ] Add Psalm static analysis (optional)
 
 **Effort:** 3-5 days
-**Priority:** P5 - Medium
+**Priority:** P3 - Low
 
 ---
 
-## Priority 6: Enhanced Features (3-4 weeks)
+## Priority 4: Enhanced Features (3-4 weeks - Optional)
 
-### 18. Async Integration (ReactPHP/Amp/Swoole)
+### 15. Async Integration (ReactPHP/Amp/Swoole)
 
 **Files:**
 - `packages/php/src/Runtime/AsyncAdapter.php` (new)
@@ -573,11 +565,11 @@ https://packagist.org/packages/spikard/spikard
 **Note:** PHP lacks native async/await. This would be adapter-based.
 
 **Effort:** 2-3 weeks
-**Priority:** P6 - Low (nice to have)
+**Priority:** P4 - Low (nice to have)
 
 ---
 
-### 19. Enhanced Error Messages
+### 16. Enhanced Error Messages
 
 **Files:**
 - `crates/spikard-php/src/php/handler.rs`
@@ -591,11 +583,11 @@ https://packagist.org/packages/spikard/spikard
 - [ ] Test error handling edge cases
 
 **Effort:** 1 week
-**Priority:** P6 - Low
+**Priority:** P4 - Low
 
 ---
 
-### 20. Testing Expansion
+### 17. Testing Expansion
 
 **Files:**
 - `e2e/php/tests/`
@@ -609,7 +601,7 @@ https://packagist.org/packages/spikard/spikard
 - [ ] Edge case testing
 
 **Effort:** 1-2 weeks
-**Priority:** P6 - Low
+**Priority:** P4 - Low
 
 ---
 
@@ -617,39 +609,44 @@ https://packagist.org/packages/spikard/spikard
 
 | Priority | Description | Tasks | Effort | Can Parallelize? |
 |----------|-------------|-------|--------|------------------|
-| P0 | Critical blockers | 3 | 3-4 weeks | Yes (different devs) |
-| P1 | High-impact features | 2 | 2-3 weeks | Yes |
-| P2 | Documentation | 3 | 2-3 weeks | Yes |
-| P3 | CLI & Codegen | 2 | 1 week | Yes |
-| P4 | Benchmarking | 4 | 3-4 weeks | Yes (separate from P0-P3) |
-| P5 | CI/CD & Publishing | 3 | 1-2 weeks | Depends on P0 completion |
-| P6 | Enhanced features | 3 | 3-4 weeks | Yes (optional) |
+| **P0** | Native extension build | 1 | 1 week | No (blocker) |
+| **P1** | AsyncAPI + Parameter Extraction | 3 | 3-4 weeks | Yes |
+| **P2** | Benchmarking infrastructure | 4 | 3-4 weeks | Yes (parallel with P1) |
+| **P3** | Publishing & docs gaps | 3 | 1 week | Depends on P0 |
+| **P4** | Enhanced features (optional) | 3 | 3-4 weeks | Yes |
 
-**Total Sequential:** 15-21 weeks
-**Total Parallelized:** 5-9 weeks (with 3-4 developers working concurrently)
+**Total Sequential:** 8-10 weeks
+**Total Parallelized:** 4-5 weeks (with 2-3 developers working concurrently)
 
 ---
 
 ## Recommended Phasing
 
-### Phase 1 (Weeks 1-3): Core Features
-- P0: Background tasks, DI, streaming responses
-- **Deliverable:** Feature-complete bindings
+### Phase 1 (Week 1): Critical Blocker
+- **P0:** Fix native extension ARM bindgen issues
+- **Deliverable:** Extension builds on all platforms (x86_64, ARM64)
 
-### Phase 2 (Weeks 2-4): Documentation & CLI
-- P1: Parameter extraction, route attributes
-- P2: Examples, guides, API docs
-- P3: AsyncAPI test apps, message DTOs
-- **Deliverable:** Production-ready with full docs
+### Phase 2 (Weeks 1-4): Essential Tooling (Parallel)
+- **P1:** AsyncAPI test app generation (Week 1-2)
+- **P1:** Parameter extraction helpers (Week 2-4)
+- **P2:** Benchmarking infrastructure (Week 1-4, separate dev)
+  - App generator
+  - Spikard PHP + Phalcon apps
+  - Harness integration
+  - CI workflow
+- **Deliverable:** Full AsyncAPI support, auto-injection, performance metrics
 
-### Phase 3 (Weeks 3-7): Benchmarking & Publishing
-- P4: App generator, benchmark apps, harness integration
-- P5: Native extension build, CI/CD, publishing
-- **Deliverable:** Published package with performance metrics
+### Phase 3 (Week 5): Publishing
+- **P3:** Packagist publishing workflow
+- **P3:** CI/CD enhancements
+- **P3:** Documentation polish (root README, binding guide)
+- **Deliverable:** Published package, complete docs
 
-### Phase 4 (Weeks 5-9): Polish & Enhancements
-- P6: Async integration, enhanced errors, expanded tests
-- **Deliverable:** Best-in-class PHP framework experience
+### Phase 4 (Weeks 6-9): Optional Enhancements
+- **P4:** Route attributes (decorator pattern)
+- **P4:** Async integration (ReactPHP/Amp/Swoole)
+- **P4:** Enhanced errors, expanded tests
+- **Deliverable:** Best-in-class developer experience
 
 ---
 
