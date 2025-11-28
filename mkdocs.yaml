@@ -12,7 +12,7 @@ copyright: |
 theme:
   name: material
   logo: assets/logo.svg
-  favicon: assets/favicon.svg
+  favicon: assets/favicon.ico
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
