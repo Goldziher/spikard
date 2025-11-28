@@ -10,12 +10,12 @@ use serde_json::Value;
 use spikard_http::WebSocketHandler;
 use tracing::{debug, error};
 
-/// Registry for PHP WebSocket handler callables.
-///
-/// We store Zval instead of ZendCallable because ZendCallable has a lifetime parameter
-/// that prevents storage in static. We reconstruct ZendCallable when invoking.
-///
-/// NOTE: thread_local because Zval is not Send/Sync (PHP is single-threaded).
+// Registry for PHP WebSocket handler callables.
+//
+// We store Zval instead of ZendCallable because ZendCallable has a lifetime parameter
+// that prevents storage in static. We reconstruct ZendCallable when invoking.
+//
+// NOTE: thread_local because Zval is not Send/Sync (PHP is single-threaded).
 thread_local! {
     static PHP_WS_HANDLER_REGISTRY: std::cell::RefCell<Vec<PhpWebSocketHandlerCallables>> = std::cell::RefCell::new(Vec::new());
 }

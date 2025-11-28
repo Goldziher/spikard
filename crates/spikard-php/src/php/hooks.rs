@@ -139,8 +139,8 @@ impl PhpLifecycleHooks {
     }
 }
 
-/// Registry for PHP lifecycle hook callables referenced by index.
-/// Similar to SSE/WebSocket pattern - store Zval, reconstruct ZendCallable when invoking.
+// Registry for PHP lifecycle hook callables referenced by index.
+// Similar to SSE/WebSocket pattern - store Zval, reconstruct ZendCallable when invoking.
 thread_local! {
     static PHP_HOOK_REGISTRY: std::cell::RefCell<Vec<ext_php_rs::types::Zval>> = std::cell::RefCell::new(Vec::new());
 }
