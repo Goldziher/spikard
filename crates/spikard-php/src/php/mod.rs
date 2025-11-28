@@ -43,7 +43,7 @@ pub use websocket::{PhpWebSocketHandler, create_websocket_state};
 /// Background task wrapper to make wrap_function! work
 #[php_function]
 #[php(name = "spikard_background_run")]
-pub fn spikard_background_run_wrapper(callable: &Zval, args: Option<&Zval>) -> PhpResult<()> {
+pub fn spikard_background_run_wrapper(callable: &Zval, args: &Zval) -> PhpResult<()> {
     background::spikard_background_run(callable, args)
 }
 
