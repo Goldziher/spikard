@@ -649,6 +649,10 @@ pub fn spikard_start_server_impl(routes_zval: &Zval, config: &Zval, hooks: &Zval
                 }
             };
 
+            // Start background task runtime
+            let background_runtime = spikard_http::BackgroundRuntime::start(server_config.background_tasks.clone()).await;
+            crate::php::install_handle(background_runtime.handle());
+
             // Custom shutdown signal that waits for either Ctrl+C or our shutdown channel
             let shutdown_signal = async move {
                 let ctrl_c = async {
@@ -667,6 +671,12 @@ pub fn spikard_start_server_impl(routes_zval: &Zval, config: &Zval, hooks: &Zval
 
             if let Err(e) = axum::serve(listener, app).with_graceful_shutdown(shutdown_signal).await {
                 eprintln!("Server error: {}", e);
+            }
+
+            // Shutdown background runtime
+            crate::php::clear_handle();
+            if let Err(e) = background_runtime.shutdown().await {
+                eprintln!("Failed to drain background tasks during shutdown: {}", e);
             }
         });
     });
