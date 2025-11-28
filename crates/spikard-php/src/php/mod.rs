@@ -68,7 +68,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .function(wrap_function!(spikard_parse_json))
         .function(wrap_function!(spikard_start_server))
         .function(wrap_function!(spikard_stop_server))
-        .function(wrap_function!(spikard_background_run))
+        .function(wrap_function!(background::spikard_background_run))
         // Core classes
         .class::<PhpRequest>()
         .class::<PhpResponse>()
