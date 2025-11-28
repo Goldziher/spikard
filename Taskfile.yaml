@@ -435,12 +435,13 @@ tasks:
       - composer update --no-interaction --no-progress
 
   php:test:
-    desc: "Run PHP test suite"
+    desc: "Run PHP test suite with native extension loaded"
     deps:
       - php:install
+      - php:build
     dir: packages/php
     cmds:
-      - composer run test
+      - php -d extension=../../target/release/libspikard_php.dylib vendor/bin/phpunit --configuration phpunit.xml
 
   php:lint:
     desc: "Run PHP static analysis WITH auto-fix (phpstan + php-cs-fixer)"
@@ -475,13 +476,12 @@ tasks:
       - composer run format:check
 
   php:build:
-    desc: "Build PHP native extension (note: currently disabled due to ext-php-rs ARM bindgen issues)"
+    desc: "Build PHP native extension"
     deps:
       - php:install
     cmds:
-      - echo "PHP build skipped - native extension disabled (ext-php-rs ARM neon bindgen issue)"
-      - echo "PHP e2e tests use pure PHP fallback implementation in TestClient"
-      # - cargo build -p spikard-php --features extension-module --release
+      - cargo build -p spikard-php --features extension-module --release
+      - echo "PHP extension built at target/release/libspikard_php.dylib"
 
   build:rust:
     desc: "Build Rust workspace in release mode"
