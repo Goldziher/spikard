@@ -1,7 +1,7 @@
 {
 	"name": "spikard/extension",
 	"description": "PHP bindings for the Spikard runtime (ext-php-rs scaffold).",
-	"version": "0.1.3",
+	"version": "0.2.0",
 	"type": "library",
 	"license": "MIT",
 	"homepage": "https://github.com/Goldziher/spikard",
