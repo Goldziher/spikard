@@ -14,6 +14,7 @@ use spikard_http::{CONTENT_TYPE_PROBLEM_JSON, ProblemDetails};
 use spikard_http::{
     Handler, HandlerResult, LifecycleHooks, Method, RequestData, Route, Router, SchemaRegistry, ServerConfig,
 };
+use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -621,7 +622,58 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
     // Try to extract Response - check if object has our expected methods
     if let Some(obj) = response.object() {
         if let Ok(class_name) = obj.get_class_name() {
-            if class_name.contains("Response") {
+            // Check for StreamingResponse first (before Response)
+            if class_name.contains("StreamingResponse") {
+                // Extract generator property
+                if let Ok(generator_zval) = obj.get_property("generator") {
+                    // Extract status code
+                    let status_code = if let Ok(status_zval) = obj.get_property("statusCode") {
+                        status_zval.long().unwrap_or(200) as u16
+                    } else {
+                        200
+                    };
+
+                    // Extract headers
+                    let headers = if let Ok(headers_zval) = obj.get_property("headers") {
+                        if let Some(arr) = headers_zval.array() {
+                            arr.iter()
+                                .filter_map(|(key, val)| {
+                                    let key_str = match key {
+                                        ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+                                        ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+                                        _ => return None,
+                                    };
+                                    val.string().map(|v| (key_str, v.to_string()))
+                                })
+                                .collect()
+                        } else {
+                            HashMap::new()
+                        }
+                    } else {
+                        HashMap::new()
+                    };
+
+                    let config = crate::php::StreamingConfig {
+                        status_code,
+                        headers,
+                    };
+
+                    // Register generator and create streaming response
+                    match crate::php::register_generator(&generator_zval, Some(config)) {
+                        Ok((idx, cfg)) => {
+                            return crate::php::create_streaming_response(idx, cfg)
+                                .map(|r| r.into_response())
+                                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e));
+                        }
+                        Err(e) => {
+                            return Err((
+                                StatusCode::INTERNAL_SERVER_ERROR,
+                                format!("Failed to register generator: {}", e),
+                            ));
+                        }
+                    }
+                }
+            } else if class_name.contains("Response") {
                 // Try to call getStatus method
                 if let Ok(status_zval) = obj.try_call_method("getStatus", vec![]) {
                     let status_code = status_zval.long().unwrap_or(200);
