@@ -15,7 +15,7 @@ declare(strict_types=1);
  * Run with: php -d detect_unicode=0 e2e/php/test_route_attributes.php
  */
 
-require_once __DIR__ . '/../../packages/php/vendor/autoload.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/app/UserController.php';
 
 use Spikard\App;

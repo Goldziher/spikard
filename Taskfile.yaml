@@ -424,13 +424,11 @@ tasks:
 
   php:install:
     desc: "Install PHP dependencies via Composer"
-    dir: packages/php
     cmds:
       - composer install --no-interaction --no-progress
 
   php:update:
     desc: "Update PHP dependencies"
-    dir: packages/php
     cmds:
       - composer update --no-interaction --no-progress
 
@@ -439,15 +437,13 @@ tasks:
     deps:
       - php:install
       - php:build
-    dir: packages/php
     cmds:
-      - php -d extension=../../target/release/libspikard_php.dylib vendor/bin/phpunit --configuration phpunit.xml
+      - php -d extension=target/release/libspikard_php.dylib vendor/bin/phpunit --configuration packages/php/phpunit.xml
 
   php:lint:
     desc: "Run PHP static analysis WITH auto-fix (phpstan + php-cs-fixer)"
     deps:
       - php:install
-    dir: packages/php
     cmds:
       - composer run lint:fix
 
@@ -455,7 +451,6 @@ tasks:
     desc: "Run PHP static analysis WITHOUT auto-fix (check-only)"
     deps:
       - php:install
-    dir: packages/php
     cmds:
       - composer run lint
 
@@ -463,7 +458,6 @@ tasks:
     desc: "Format PHP code (with modifications)"
     deps:
       - php:install
-    dir: packages/php
     cmds:
       - composer run format
 
@@ -471,7 +465,6 @@ tasks:
     desc: "Check PHP formatting without modifications"
     deps:
       - php:install
-    dir: packages/php
     cmds:
       - composer run format:check
 
