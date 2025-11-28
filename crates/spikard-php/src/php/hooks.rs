@@ -588,7 +588,6 @@ fn make_request_hook(
     name: String,
     callback: &ext_php_rs::types::Zval,
 ) -> Arc<dyn LifecycleHook<Request<Body>, Response<Body>>> {
-    // Store the callback as Zval to avoid lifetime issues
     let callback_index = PHP_HOOK_REGISTRY.with(|registry| {
         let mut registry = registry.borrow_mut();
         let idx = registry.len();
@@ -597,151 +596,10 @@ fn make_request_hook(
         idx
     });
 
-    pub struct PhpRequestHook {
-        name: String,
-        callback_index: usize,
-    }
-
-    impl PhpRequestHook {
-        pub fn new_from_zval(callback: &ext_php_rs::types::Zval) -> Result<Self, String> {
-            if !callback.is_callable() {
-                return Err("Callback is not callable".to_string());
-            }
-
-            let callback_index = PHP_HOOK_REGISTRY.with(|registry| {
-                let mut registry = registry.borrow_mut();
-                let idx = registry.len();
-                let zval = callback.shallow_clone();
-                registry.push(zval);
-                idx
-            });
-
-            Ok(Self {
-                name: "PhpRequestHook".to_string(),
-                callback_index,
-            })
-        }
-    }
-
-    impl LifecycleHook<Request<Body>, Response<Body>> for PhpRequestHook {
-        fn name(&self) -> &str {
-            &self.name
-        }
-
-        fn execute_request<'a>(
-            &'a self,
-            req: Request<Body>,
-        ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>>
-        {
-            let callback_index = self.callback_index;
-            Box::pin(async move {
-                // Convert axum Request to PhpRequest (synchronously extract data)
-                let php_req = axum_request_to_php_sync(&req);
-
-                // Run PHP callback synchronously in spawn_blocking
-                let result = tokio::task::spawn_blocking(move || {
-                    PHP_HOOK_REGISTRY.with(|registry| -> Option<Result<Option<PhpResponse>, String>> {
-                        let registry = registry.borrow();
-                        let callback_zval = registry.get(callback_index)?;
-
-                        // Reconstruct ZendCallable
-                        let callable = ext_php_rs::types::ZendCallable::new(callback_zval).ok()?;
-
-                        // Convert PhpRequest to Zval
-                        let req_zval = match php_req.into_zval(false) {
-                            Ok(z) => z,
-                            Err(e) => return Some(Err(format!("Failed to convert request to Zval: {:?}", e))),
-                        };
-
-                        // Invoke PHP callable
-                        let result_zval = match callable.try_call(vec![&req_zval]) {
-                            Ok(z) => z,
-                            Err(e) => return Some(Err(format!("PHP hook failed: {:?}", e))),
-                        };
-
-                        // Check if result is null (continue) or a PhpResponse (short-circuit)
-                        if result_zval.is_null() {
-                            Some(Ok(None))
-                        } else {
-                            // Try to extract PhpResponse from result by calling methods
-                            if let Some(obj) = result_zval.object() {
-                                let status = obj
-                                    .try_call_method("getStatus", vec![])
-                                    .ok()
-                                    .and_then(|v| v.long())
-                                    .unwrap_or(200);
-
-                                let body_str = obj
-                                    .try_call_method("getBody", vec![])
-                                    .ok()
-                                    .and_then(|v| v.string())
-                                    .map(|s| s.to_string())
-                                    .unwrap_or_else(|| "{}".to_string());
-
-                                let body: Value = serde_json::from_str(&body_str).unwrap_or(Value::Null);
-
-                                let mut headers = HashMap::new();
-                                if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![]) {
-                                    if let Some(arr) = headers_zval.array() {
-                                        for (key, val) in arr.iter() {
-                                            let key_str = match key {
-                                                ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
-                                                ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
-                                                ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
-                                            };
-                                            if let Some(val_str) = val.string() {
-                                                headers.insert(key_str, val_str.to_string());
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Some(Ok(Some(PhpResponse { status, body, headers })))
-                            } else {
-                                Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
-                            }
-                        }
-                    })
-                })
-                .await;
-
-                match result {
-                    Ok(Some(Ok(None))) => {
-                        // Continue with request
-                        Ok(HookResult::Continue(req))
-                    }
-                    Ok(Some(Ok(Some(php_resp)))) => {
-                        // Short-circuit with response
-                        match php_response_to_axum(&php_resp) {
-                            Ok(resp) => Ok(HookResult::ShortCircuit(resp)),
-                            Err(e) => {
-                                tracing_error!("Failed to convert PHP response: {}", e);
-                                Ok(HookResult::Continue(req))
-                            }
-                        }
-                    }
-                    Ok(Some(Err(e))) => {
-                        tracing_error!("Hook error: {}", e);
-                        Ok(HookResult::Continue(req))
-                    }
-                    _ => {
-                        // On any other error, continue
-                        Ok(HookResult::Continue(req))
-                    }
-                }
-            })
-        }
-
-        fn execute_response<'a>(
-            &'a self,
-            resp: Response<Body>,
-        ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>>
-        {
-            Box::pin(async move { Ok(HookResult::Continue(resp)) })
-        }
-    }
-
-    Arc::new(PhpRequestHook { name, callback_index })
+    Arc::new(PhpRequestHook {
+        name,
+        callback_index,
+    })
 }
 
 /// Adapt a PHP callable into a LifecycleHook for responses.
@@ -749,7 +607,6 @@ fn make_response_hook(
     name: String,
     callback: &ext_php_rs::types::Zval,
 ) -> Arc<dyn LifecycleHook<Request<Body>, Response<Body>>> {
-    // Store the callback as Zval to avoid lifetime issues
     let callback_index = PHP_HOOK_REGISTRY.with(|registry| {
         let mut registry = registry.borrow_mut();
         let idx = registry.len();
@@ -758,163 +615,10 @@ fn make_response_hook(
         idx
     });
 
-    pub struct PhpResponseHook {
-        name: String,
-        callback_index: usize,
-    }
-
-    impl PhpResponseHook {
-        pub fn new_from_zval(callback: &ext_php_rs::types::Zval) -> Result<Self, String> {
-            if !callback.is_callable() {
-                return Err("Callback is not callable".to_string());
-            }
-
-            let callback_index = PHP_HOOK_REGISTRY.with(|registry| {
-                let mut registry = registry.borrow_mut();
-                let idx = registry.len();
-                let zval = callback.shallow_clone();
-                registry.push(zval);
-                idx
-            });
-
-            Ok(Self {
-                name: "PhpResponseHook".to_string(),
-                callback_index,
-            })
-        }
-    }
-
-    impl LifecycleHook<Request<Body>, Response<Body>> for PhpResponseHook {
-        fn name(&self) -> &str {
-            &self.name
-        }
-
-        fn execute_request<'a>(
-            &'a self,
-            req: Request<Body>,
-        ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>>
-        {
-            Box::pin(async move { Ok(HookResult::Continue(req)) })
-        }
-
-        fn execute_response<'a>(
-            &'a self,
-            resp: Response<Body>,
-        ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>>
-        {
-            let callback_index = self.callback_index;
-            Box::pin(async move {
-                // Convert axum Response to PhpResponse
-                let (php_resp, original_resp) = match axum_response_to_php(resp).await {
-                    Ok(r) => r,
-                    Err(e) => {
-                        tracing_error!("Failed to convert response for hook: {}", e);
-                        // Can't continue with original response since we consumed it
-                        // Return an error response
-                        let error_resp = Response::builder()
-                            .status(StatusCode::INTERNAL_SERVER_ERROR)
-                            .body(Body::from(format!("Hook conversion error: {}", e)))
-                            .unwrap();
-                        return Ok(HookResult::Continue(error_resp));
-                    }
-                };
-
-                // Run PHP callback synchronously in spawn_blocking
-                let result = tokio::task::spawn_blocking(move || {
-                    PHP_HOOK_REGISTRY.with(|registry| -> Option<Result<Option<PhpResponse>, String>> {
-                        let registry = registry.borrow();
-                        let callback_zval = registry.get(callback_index)?;
-
-                        // Reconstruct ZendCallable
-                        let callable = ext_php_rs::types::ZendCallable::new(callback_zval).ok()?;
-
-                        // Convert PhpResponse to Zval
-                        let resp_zval = match php_resp.into_zval(false) {
-                            Ok(z) => z,
-                            Err(e) => return Some(Err(format!("Failed to convert response to Zval: {:?}", e))),
-                        };
-
-                        // Invoke PHP callable
-                        let result_zval = match callable.try_call(vec![&resp_zval]) {
-                            Ok(z) => z,
-                            Err(e) => return Some(Err(format!("PHP hook failed: {:?}", e))),
-                        };
-
-                        // Check if result is null (use original) or a PhpResponse (use modified)
-                        if result_zval.is_null() {
-                            Some(Ok(None))
-                        } else {
-                            // Try to extract PhpResponse from result by calling methods
-                            if let Some(obj) = result_zval.object() {
-                                let status = obj
-                                    .try_call_method("getStatus", vec![])
-                                    .ok()
-                                    .and_then(|v| v.long())
-                                    .unwrap_or(200);
-
-                                let body_str = obj
-                                    .try_call_method("getBody", vec![])
-                                    .ok()
-                                    .and_then(|v| v.string())
-                                    .map(|s| s.to_string())
-                                    .unwrap_or_else(|| "{}".to_string());
-
-                                let body: Value = serde_json::from_str(&body_str).unwrap_or(Value::Null);
-
-                                let mut headers = HashMap::new();
-                                if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![]) {
-                                    if let Some(arr) = headers_zval.array() {
-                                        for (key, val) in arr.iter() {
-                                            let key_str = match key {
-                                                ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
-                                                ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
-                                                ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
-                                            };
-                                            if let Some(val_str) = val.string() {
-                                                headers.insert(key_str, val_str.to_string());
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Some(Ok(Some(PhpResponse { status, body, headers })))
-                            } else {
-                                Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
-                            }
-                        }
-                    })
-                })
-                .await;
-
-                match result {
-                    Ok(Some(Ok(None))) => {
-                        // Use original response
-                        Ok(HookResult::Continue(original_resp))
-                    }
-                    Ok(Some(Ok(Some(modified_resp)))) => {
-                        // Use modified response from PHP
-                        match php_response_to_axum(&modified_resp) {
-                            Ok(resp) => Ok(HookResult::Continue(resp)),
-                            Err(e) => {
-                                tracing_error!("Failed to convert modified PHP response: {}", e);
-                                Ok(HookResult::Continue(original_resp))
-                            }
-                        }
-                    }
-                    Ok(Some(Err(e))) => {
-                        tracing_error!("Response hook error: {}", e);
-                        Ok(HookResult::Continue(original_resp))
-                    }
-                    _ => {
-                        // On any other error, use original
-                        Ok(HookResult::Continue(original_resp))
-                    }
-                }
-            })
-        }
-    }
-
-    Arc::new(PhpResponseHook { name, callback_index })
+    Arc::new(PhpResponseHook {
+        name,
+        callback_index,
+    })
 }
 
 /// Adapt a PHP callable into a LifecycleHook for error handling.
@@ -922,7 +626,6 @@ fn make_error_hook(
     name: String,
     callback: &ext_php_rs::types::Zval,
 ) -> Arc<dyn LifecycleHook<Request<Body>, Response<Body>>> {
-    // Store the callback as Zval to avoid lifetime issues
     let callback_index = PHP_HOOK_REGISTRY.with(|registry| {
         let mut registry = registry.borrow_mut();
         let idx = registry.len();
@@ -931,162 +634,8 @@ fn make_error_hook(
         idx
     });
 
-    pub struct PhpErrorHook {
-        name: String,
-        callback_index: usize,
-    }
-
-    impl PhpErrorHook {
-        pub fn new_from_zval(callback: &ext_php_rs::types::Zval) -> Result<Self, String> {
-            if !callback.is_callable() {
-                return Err("Callback is not callable".to_string());
-            }
-
-            let callback_index = PHP_HOOK_REGISTRY.with(|registry| {
-                let mut registry = registry.borrow_mut();
-                let idx = registry.len();
-                let zval = callback.shallow_clone();
-                registry.push(zval);
-                idx
-            });
-
-            Ok(Self {
-                name: "PhpErrorHook".to_string(),
-                callback_index,
-            })
-        }
-    }
-
-    impl LifecycleHook<Request<Body>, Response<Body>> for PhpErrorHook {
-        fn name(&self) -> &str {
-            &self.name
-        }
-
-        fn execute_request<'a>(
-            &'a self,
-            req: Request<Body>,
-        ) -> Pin<Box<dyn Future<Output = Result<HookResult<Request<Body>, Response<Body>>, String>> + Send + 'a>>
-        {
-            Box::pin(async move { Ok(HookResult::Continue(req)) })
-        }
-
-        fn execute_response<'a>(
-            &'a self,
-            resp: Response<Body>,
-        ) -> Pin<Box<dyn Future<Output = Result<HookResult<Response<Body>, Response<Body>>, String>> + Send + 'a>>
-        {
-            let callback_index = self.callback_index;
-            Box::pin(async move {
-                // Convert axum error Response to PhpResponse
-                let (php_resp, original_resp) = match axum_response_to_php(resp).await {
-                    Ok(r) => r,
-                    Err(e) => {
-                        tracing_error!("Failed to convert error response for hook: {}", e);
-                        // Return error as-is
-                        let error_resp = Response::builder()
-                            .status(StatusCode::INTERNAL_SERVER_ERROR)
-                            .body(Body::from(format!("Hook conversion error: {}", e)))
-                            .unwrap();
-                        return Ok(HookResult::Continue(error_resp));
-                    }
-                };
-
-                // Run PHP callback synchronously in spawn_blocking
-                let result = tokio::task::spawn_blocking(move || {
-                    PHP_HOOK_REGISTRY.with(|registry| -> Option<Result<Option<PhpResponse>, String>> {
-                        let registry = registry.borrow();
-                        let callback_zval = registry.get(callback_index)?;
-
-                        // Reconstruct ZendCallable
-                        let callable = ext_php_rs::types::ZendCallable::new(callback_zval).ok()?;
-
-                        // Convert PhpResponse to Zval
-                        let resp_zval = match php_resp.into_zval(false) {
-                            Ok(z) => z,
-                            Err(e) => return Some(Err(format!("Failed to convert error response to Zval: {:?}", e))),
-                        };
-
-                        // Invoke PHP callable
-                        let result_zval = match callable.try_call(vec![&resp_zval]) {
-                            Ok(z) => z,
-                            Err(e) => return Some(Err(format!("PHP error hook failed: {:?}", e))),
-                        };
-
-                        // Check if result is null (use original) or a PhpResponse (use modified)
-                        if result_zval.is_null() {
-                            Some(Ok(None))
-                        } else {
-                            // Try to extract PhpResponse from result by calling methods
-                            if let Some(obj) = result_zval.object() {
-                                let status = obj
-                                    .try_call_method("getStatus", vec![])
-                                    .ok()
-                                    .and_then(|v| v.long())
-                                    .unwrap_or(500);
-
-                                let body_str = obj
-                                    .try_call_method("getBody", vec![])
-                                    .ok()
-                                    .and_then(|v| v.string())
-                                    .map(|s| s.to_string())
-                                    .unwrap_or_else(|| "{}".to_string());
-
-                                let body: Value = serde_json::from_str(&body_str).unwrap_or(Value::Null);
-
-                                let mut headers = HashMap::new();
-                                if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![]) {
-                                    if let Some(arr) = headers_zval.array() {
-                                        for (key, val) in arr.iter() {
-                                            let key_str = match key {
-                                                ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
-                                                ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
-                                                ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
-                                            };
-                                            if let Some(val_str) = val.string() {
-                                                headers.insert(key_str, val_str.to_string());
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Some(Ok(Some(PhpResponse { status, body, headers })))
-                            } else {
-                                Some(Err(
-                                    "Error hook returned invalid type (expected null or Response)".to_string()
-                                ))
-                            }
-                        }
-                    })
-                })
-                .await;
-
-                match result {
-                    Ok(Some(Ok(None))) => {
-                        // Use original error response
-                        Ok(HookResult::Continue(original_resp))
-                    }
-                    Ok(Some(Ok(Some(modified_resp)))) => {
-                        // Use modified error response from PHP
-                        match php_response_to_axum(&modified_resp) {
-                            Ok(resp) => Ok(HookResult::Continue(resp)),
-                            Err(e) => {
-                                tracing_error!("Failed to convert modified error response: {}", e);
-                                Ok(HookResult::Continue(original_resp))
-                            }
-                        }
-                    }
-                    Ok(Some(Err(e))) => {
-                        tracing_error!("Error hook processing error: {}", e);
-                        Ok(HookResult::Continue(original_resp))
-                    }
-                    _ => {
-                        // On any other error, use original
-                        Ok(HookResult::Continue(original_resp))
-                    }
-                }
-            })
-        }
-    }
-
-    Arc::new(PhpErrorHook { name, callback_index })
+    Arc::new(PhpErrorHook {
+        name,
+        callback_index,
+    })
 }
