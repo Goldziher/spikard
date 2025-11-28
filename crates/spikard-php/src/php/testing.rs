@@ -100,6 +100,7 @@ impl PhpTestResponse {
 /// directly invoking PHP handlers.
 #[php_class]
 #[php(name = "Spikard\\Testing\\NativeTestClient")]
+#[derive(Default)]
 pub struct PhpTestClient {
     // No state needed - each request invokes the handler directly
 }
@@ -108,7 +109,7 @@ pub struct PhpTestClient {
 impl PhpTestClient {
     /// Create a new test client.
     pub fn new() -> Self {
-        Self {}
+        Self::default()
     }
 
     /// Execute a GET request.
@@ -270,41 +271,39 @@ fn zval_to_test_response(response: &Zval) -> PhpResult<PhpTestResponse> {
     }
 
     // Try to extract PhpResponse - check if object has our expected methods
-    if let Some(obj) = response.object() {
-        // Check if it looks like a Response object by checking for status_code method
-        if let Ok(class_name) = obj.get_class_name() {
-            if class_name.contains("Response") {
-                // Try to call getStatus method
-                if let Ok(status_zval) = obj.try_call_method("getStatus", vec![]) {
-                    let status = status_zval.long().unwrap_or(200);
+    if let Some(obj) = response.object()
+        && let Ok(class_name) = obj.get_class_name()
+        && class_name.contains("Response")
+    {
+        // Try to call getStatus method
+        if let Ok(status_zval) = obj.try_call_method("getStatus", vec![]) {
+            let status = status_zval.long().unwrap_or(200);
 
-                    // Try to get body
-                    let body = if let Ok(body_zval) = obj.try_call_method("getBody", vec![]) {
-                        body_zval.string().map(|s| s.to_string()).unwrap_or_default()
-                    } else {
-                        String::new()
+            // Try to get body
+            let body = if let Ok(body_zval) = obj.try_call_method("getBody", vec![]) {
+                body_zval.string().map(|s| s.to_string()).unwrap_or_default()
+            } else {
+                String::new()
+            };
+
+            // Try to get headers
+            let mut headers = HashMap::new();
+            if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
+                && let Some(arr) = headers_zval.array()
+            {
+                for (key, val) in arr.iter() {
+                    let key_str = match key {
+                        ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
+                        ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+                        ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
                     };
-
-                    // Try to get headers
-                    let mut headers = HashMap::new();
-                    if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![]) {
-                        if let Some(arr) = headers_zval.array() {
-                            for (key, val) in arr.iter() {
-                                let key_str = match key {
-                                    ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
-                                    ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
-                                    ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
-                                };
-                                if let Some(val_str) = val.string() {
-                                    headers.insert(key_str, val_str.to_string());
-                                }
-                            }
-                        }
+                    if let Some(val_str) = val.string() {
+                        headers.insert(key_str, val_str.to_string());
                     }
-
-                    return Ok(PhpTestResponse { status, body, headers });
                 }
             }
+
+            return Ok(PhpTestResponse { status, body, headers });
         }
     }
 
@@ -340,6 +339,7 @@ fn zval_to_test_response(response: &Zval) -> PhpResult<PhpTestResponse> {
 /// which tests the full middleware stack.
 #[php_class]
 #[php(name = "Spikard\\Testing\\HttpTestClient")]
+#[derive(Default)]
 pub struct PhpHttpTestClient {
     // Server is created on-demand for each test
 }
@@ -348,7 +348,7 @@ pub struct PhpHttpTestClient {
 impl PhpHttpTestClient {
     /// Create a new HTTP test client.
     pub fn new() -> Self {
-        Self {}
+        Self::default()
     }
 
     /// Execute a test request using the full HTTP stack.

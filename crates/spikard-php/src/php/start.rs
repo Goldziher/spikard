@@ -455,53 +455,53 @@ fn extract_lifecycle_hooks_from_php(hooks_zval: &Zval) -> Result<Option<Arc<Life
     let mut has_any_hook = false;
 
     // Extract onRequest hook
-    if let Some(on_request_zval) = hooks_array.get("onRequest") {
-        if on_request_zval.is_callable() {
-            let hook = PhpRequestHook::new_from_zval(on_request_zval)
-                .map_err(|e| format!("Failed to create onRequest hook: {}", e))?;
-            lifecycle_hooks.add_on_request(Arc::new(hook));
-            has_any_hook = true;
-        }
+    if let Some(on_request_zval) = hooks_array.get("onRequest")
+        && on_request_zval.is_callable()
+    {
+        let hook = PhpRequestHook::new_from_zval(on_request_zval)
+            .map_err(|e| format!("Failed to create onRequest hook: {}", e))?;
+        lifecycle_hooks.add_on_request(Arc::new(hook));
+        has_any_hook = true;
     }
 
     // Extract preValidation hook
-    if let Some(pre_validation_zval) = hooks_array.get("preValidation") {
-        if pre_validation_zval.is_callable() {
-            let hook = PhpRequestHook::new_from_zval(pre_validation_zval)
-                .map_err(|e| format!("Failed to create preValidation hook: {}", e))?;
-            lifecycle_hooks.add_pre_validation(Arc::new(hook));
-            has_any_hook = true;
-        }
+    if let Some(pre_validation_zval) = hooks_array.get("preValidation")
+        && pre_validation_zval.is_callable()
+    {
+        let hook = PhpRequestHook::new_from_zval(pre_validation_zval)
+            .map_err(|e| format!("Failed to create preValidation hook: {}", e))?;
+        lifecycle_hooks.add_pre_validation(Arc::new(hook));
+        has_any_hook = true;
     }
 
     // Extract preHandler hook
-    if let Some(pre_handler_zval) = hooks_array.get("preHandler") {
-        if pre_handler_zval.is_callable() {
-            let hook = PhpRequestHook::new_from_zval(pre_handler_zval)
-                .map_err(|e| format!("Failed to create preHandler hook: {}", e))?;
-            lifecycle_hooks.add_pre_handler(Arc::new(hook));
-            has_any_hook = true;
-        }
+    if let Some(pre_handler_zval) = hooks_array.get("preHandler")
+        && pre_handler_zval.is_callable()
+    {
+        let hook = PhpRequestHook::new_from_zval(pre_handler_zval)
+            .map_err(|e| format!("Failed to create preHandler hook: {}", e))?;
+        lifecycle_hooks.add_pre_handler(Arc::new(hook));
+        has_any_hook = true;
     }
 
     // Extract onResponse hook
-    if let Some(on_response_zval) = hooks_array.get("onResponse") {
-        if on_response_zval.is_callable() {
-            let hook = PhpResponseHook::new_from_zval(on_response_zval)
-                .map_err(|e| format!("Failed to create onResponse hook: {}", e))?;
-            lifecycle_hooks.add_on_response(Arc::new(hook));
-            has_any_hook = true;
-        }
+    if let Some(on_response_zval) = hooks_array.get("onResponse")
+        && on_response_zval.is_callable()
+    {
+        let hook = PhpResponseHook::new_from_zval(on_response_zval)
+            .map_err(|e| format!("Failed to create onResponse hook: {}", e))?;
+        lifecycle_hooks.add_on_response(Arc::new(hook));
+        has_any_hook = true;
     }
 
     // Extract onError hook
-    if let Some(on_error_zval) = hooks_array.get("onError") {
-        if on_error_zval.is_callable() {
-            let hook = PhpErrorHook::new_from_zval(on_error_zval)
-                .map_err(|e| format!("Failed to create onError hook: {}", e))?;
-            lifecycle_hooks.add_on_error(Arc::new(hook));
-            has_any_hook = true;
-        }
+    if let Some(on_error_zval) = hooks_array.get("onError")
+        && on_error_zval.is_callable()
+    {
+        let hook = PhpErrorHook::new_from_zval(on_error_zval)
+            .map_err(|e| format!("Failed to create onError hook: {}", e))?;
+        lifecycle_hooks.add_on_error(Arc::new(hook));
+        has_any_hook = true;
     }
 
     if has_any_hook {
@@ -593,7 +593,7 @@ pub fn spikard_start_server_impl(
         }
         if let Some(schema) = parameter_schema.clone() {
             let compiled =
-                spikard_http::ParameterValidator::new(schema).map_err(|e| PhpException::default(format!("{}", e)))?;
+                spikard_http::ParameterValidator::new(schema).map_err(|e| PhpException::default(e.to_string()))?;
             route.parameter_validator = Some(compiled);
         }
 
@@ -723,12 +723,12 @@ pub fn spikard_stop_server_impl(handle: u64) -> PhpResult<()> {
         .lock()
         .map_err(|e| PhpException::default(format!("Failed to lock shutdown registry: {}", e)))?;
 
-    if let Some(ref mut map) = *registry {
-        if let Some(shutdown_tx) = map.remove(&handle) {
-            // Send shutdown signal - ignore errors if receiver is already dropped
-            let _ = shutdown_tx.send(());
-            return Ok(());
-        }
+    if let Some(ref mut map) = *registry
+        && let Some(shutdown_tx) = map.remove(&handle)
+    {
+        // Send shutdown signal - ignore errors if receiver is already dropped
+        let _ = shutdown_tx.send(());
+        return Ok(());
     }
 
     // Server handle not found - already stopped or never existed

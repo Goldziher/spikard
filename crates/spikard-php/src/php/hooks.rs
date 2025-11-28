@@ -50,6 +50,7 @@ impl PhpHookResult {
 /// Lifecycle hooks wrapper exposed to PHP.
 #[php_class]
 #[php(name = "Spikard\\Lifecycle\\Hooks")]
+#[derive(Default)]
 pub struct PhpLifecycleHooks {
     on_request_hooks: Vec<Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>>,
     pre_validation_hooks: Vec<Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>>,
@@ -61,13 +62,7 @@ pub struct PhpLifecycleHooks {
 #[php_impl]
 impl PhpLifecycleHooks {
     pub fn new() -> Self {
-        Self {
-            on_request_hooks: Vec::new(),
-            pre_validation_hooks: Vec::new(),
-            pre_handler_hooks: Vec::new(),
-            on_response_hooks: Vec::new(),
-            on_error_hooks: Vec::new(),
-        }
+        Self::default()
     }
 
     /// Register an onRequest hook.
@@ -142,7 +137,7 @@ impl PhpLifecycleHooks {
 // Registry for PHP lifecycle hook callables referenced by index.
 // Similar to SSE/WebSocket pattern - store Zval, reconstruct ZendCallable when invoking.
 thread_local! {
-    static PHP_HOOK_REGISTRY: std::cell::RefCell<Vec<ext_php_rs::types::Zval>> = std::cell::RefCell::new(Vec::new());
+    static PHP_HOOK_REGISTRY: std::cell::RefCell<Vec<ext_php_rs::types::Zval>> = const { std::cell::RefCell::new(Vec::new()) };
 }
 
 /// Convert axum Request to PhpRequest for PHP hooks (synchronous extraction).
@@ -304,39 +299,37 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpRequestHook {
                     };
                     if result_zval.is_null() {
                         Some(Ok(None))
-                    } else {
-                        if let Some(obj) = result_zval.object() {
-                            let status = obj
-                                .try_call_method("getStatus", vec![])
-                                .ok()
-                                .and_then(|v| v.long())
-                                .unwrap_or(200);
-                            let body_str = obj
-                                .try_call_method("getBody", vec![])
-                                .ok()
-                                .and_then(|v| v.string())
-                                .map(|s| s.to_string())
-                                .unwrap_or_else(|| "{}".to_string());
-                            let body: Value = serde_json::from_str(&body_str).unwrap_or(Value::Null);
-                            let mut headers = HashMap::new();
-                            if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![]) {
-                                if let Some(arr) = headers_zval.array() {
-                                    for (key, val) in arr.iter() {
-                                        let key_str = match key {
-                                            ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
-                                            ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
-                                            ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
-                                        };
-                                        if let Some(val_str) = val.string() {
-                                            headers.insert(key_str, val_str.to_string());
-                                        }
-                                    }
+                    } else if let Some(obj) = result_zval.object() {
+                        let status = obj
+                            .try_call_method("getStatus", vec![])
+                            .ok()
+                            .and_then(|v| v.long())
+                            .unwrap_or(200);
+                        let body_str = obj
+                            .try_call_method("getBody", vec![])
+                            .ok()
+                            .and_then(|v| v.string())
+                            .map(|s| s.to_string())
+                            .unwrap_or_else(|| "{}".to_string());
+                        let body: Value = serde_json::from_str(&body_str).unwrap_or(Value::Null);
+                        let mut headers = HashMap::new();
+                        if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
+                            && let Some(arr) = headers_zval.array()
+                        {
+                            for (key, val) in arr.iter() {
+                                let key_str = match key {
+                                    ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
+                                    ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+                                    ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+                                };
+                                if let Some(val_str) = val.string() {
+                                    headers.insert(key_str, val_str.to_string());
                                 }
                             }
-                            Some(Ok(Some(PhpResponse { status, body, headers })))
-                        } else {
-                            Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
                         }
+                        Some(Ok(Some(PhpResponse { status, body, headers })))
+                    } else {
+                        Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
                     }
                 })
             })
@@ -414,14 +407,14 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpResponseHook {
         Box::pin(async move {
             let (php_resp, original_resp) = axum_response_to_php(resp).await.unwrap_or_else(|e| {
                 tracing_error!("Failed to convert response to PHP: {}", e);
-                return (
+                (
                     PhpResponse {
                         status: 500,
                         body: Value::Null,
                         headers: HashMap::new(),
                     },
                     Response::new(Body::empty()),
-                );
+                )
             });
             let result = tokio::task::spawn_blocking(move || {
                 PHP_HOOK_REGISTRY.with(|registry| -> Option<Result<Option<PhpResponse>, String>> {
@@ -438,39 +431,37 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpResponseHook {
                     };
                     if result_zval.is_null() {
                         Some(Ok(None))
-                    } else {
-                        if let Some(obj) = result_zval.object() {
-                            let status = obj
-                                .try_call_method("getStatus", vec![])
-                                .ok()
-                                .and_then(|v| v.long())
-                                .unwrap_or(200);
-                            let body_str = obj
-                                .try_call_method("getBody", vec![])
-                                .ok()
-                                .and_then(|v| v.string())
-                                .map(|s| s.to_string())
-                                .unwrap_or_else(|| "{}".to_string());
-                            let body: Value = serde_json::from_str(&body_str).unwrap_or(Value::Null);
-                            let mut headers = HashMap::new();
-                            if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![]) {
-                                if let Some(arr) = headers_zval.array() {
-                                    for (key, val) in arr.iter() {
-                                        let key_str = match key {
-                                            ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
-                                            ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
-                                            ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
-                                        };
-                                        if let Some(val_str) = val.string() {
-                                            headers.insert(key_str, val_str.to_string());
-                                        }
-                                    }
+                    } else if let Some(obj) = result_zval.object() {
+                        let status = obj
+                            .try_call_method("getStatus", vec![])
+                            .ok()
+                            .and_then(|v| v.long())
+                            .unwrap_or(200);
+                        let body_str = obj
+                            .try_call_method("getBody", vec![])
+                            .ok()
+                            .and_then(|v| v.string())
+                            .map(|s| s.to_string())
+                            .unwrap_or_else(|| "{}".to_string());
+                        let body: Value = serde_json::from_str(&body_str).unwrap_or(Value::Null);
+                        let mut headers = HashMap::new();
+                        if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
+                            && let Some(arr) = headers_zval.array()
+                        {
+                            for (key, val) in arr.iter() {
+                                let key_str = match key {
+                                    ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
+                                    ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+                                    ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+                                };
+                                if let Some(val_str) = val.string() {
+                                    headers.insert(key_str, val_str.to_string());
                                 }
                             }
-                            Some(Ok(Some(PhpResponse { status, body, headers })))
-                        } else {
-                            Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
                         }
+                        Some(Ok(Some(PhpResponse { status, body, headers })))
+                    } else {
+                        Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
                     }
                 })
             })
@@ -541,14 +532,14 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpErrorHook {
         Box::pin(async move {
             let (php_resp, original_resp) = axum_response_to_php(resp).await.unwrap_or_else(|e| {
                 tracing_error!("Failed to convert response to PHP: {}", e);
-                return (
+                (
                     PhpResponse {
                         status: 500,
                         body: Value::Null,
                         headers: HashMap::new(),
                     },
                     Response::new(Body::empty()),
-                );
+                )
             });
             let result = tokio::task::spawn_blocking(move || {
                 PHP_HOOK_REGISTRY.with(|registry| -> Option<Result<Option<PhpResponse>, String>> {
@@ -565,39 +556,37 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpErrorHook {
                     };
                     if result_zval.is_null() {
                         Some(Ok(None))
-                    } else {
-                        if let Some(obj) = result_zval.object() {
-                            let status = obj
-                                .try_call_method("getStatus", vec![])
-                                .ok()
-                                .and_then(|v| v.long())
-                                .unwrap_or(200);
-                            let body_str = obj
-                                .try_call_method("getBody", vec![])
-                                .ok()
-                                .and_then(|v| v.string())
-                                .map(|s| s.to_string())
-                                .unwrap_or_else(|| "{}".to_string());
-                            let body: Value = serde_json::from_str(&body_str).unwrap_or(Value::Null);
-                            let mut headers = HashMap::new();
-                            if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![]) {
-                                if let Some(arr) = headers_zval.array() {
-                                    for (key, val) in arr.iter() {
-                                        let key_str = match key {
-                                            ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
-                                            ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
-                                            ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
-                                        };
-                                        if let Some(val_str) = val.string() {
-                                            headers.insert(key_str, val_str.to_string());
-                                        }
-                                    }
+                    } else if let Some(obj) = result_zval.object() {
+                        let status = obj
+                            .try_call_method("getStatus", vec![])
+                            .ok()
+                            .and_then(|v| v.long())
+                            .unwrap_or(200);
+                        let body_str = obj
+                            .try_call_method("getBody", vec![])
+                            .ok()
+                            .and_then(|v| v.string())
+                            .map(|s| s.to_string())
+                            .unwrap_or_else(|| "{}".to_string());
+                        let body: Value = serde_json::from_str(&body_str).unwrap_or(Value::Null);
+                        let mut headers = HashMap::new();
+                        if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![])
+                            && let Some(arr) = headers_zval.array()
+                        {
+                            for (key, val) in arr.iter() {
+                                let key_str = match key {
+                                    ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
+                                    ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+                                    ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+                                };
+                                if let Some(val_str) = val.string() {
+                                    headers.insert(key_str, val_str.to_string());
                                 }
                             }
-                            Some(Ok(Some(PhpResponse { status, body, headers })))
-                        } else {
-                            Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
                         }
+                        Some(Ok(Some(PhpResponse { status, body, headers })))
+                    } else {
+                        Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
                     }
                 })
             })

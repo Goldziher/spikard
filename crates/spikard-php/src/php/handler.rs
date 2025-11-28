@@ -56,7 +56,7 @@ pub struct PhpHandler {
 // NOTE: This is thread_local because Zval is not Send/Sync (contains raw pointers
 // to PHP's internal structures which are single-threaded).
 thread_local! {
-    static PHP_HANDLER_REGISTRY: std::cell::RefCell<Vec<ext_php_rs::types::Zval>> = std::cell::RefCell::new(Vec::new());
+    static PHP_HANDLER_REGISTRY: std::cell::RefCell<Vec<ext_php_rs::types::Zval>> = const { std::cell::RefCell::new(Vec::new()) };
 }
 
 impl PhpHandler {
