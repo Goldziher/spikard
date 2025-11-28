@@ -1,7 +1,11 @@
 # Spikard Ruby
 
 [![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
+[![PyPI](https://badge.fury.io/py/spikard.svg)](https://badge.fury.io/py/spikard)
+[![npm](https://img.shields.io/npm/v/spikard)](https://www.npmjs.com/package/spikard)
+[![npm (WASM)](https://img.shields.io/npm/v/spikard-wasm?label=npm%20%28wasm%29)](https://www.npmjs.com/package/spikard-wasm)
 [![RubyGems](https://badge.fury.io/rb/spikard.svg)](https://rubygems.org/gems/spikard)
+[![Packagist](https://img.shields.io/packagist/v/spikard/spikard)](https://packagist.org/packages/spikard/spikard)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 High-performance Ruby web framework with a Rust core. Build REST APIs with Sinatra-style blocks backed by Axum and Tower-HTTP.
