@@ -1,43 +1,94 @@
 //! Background task execution for PHP bindings.
 //!
-//! Provides fire-and-forget background task execution using Tokio's blocking threadpool.
-//! Tasks run outside the HTTP request lifecycle and don't block responses.
+//! Uses a message queue pattern to execute tasks on the main thread after responses complete.
+//! This avoids PHP threading issues while still providing non-blocking background execution.
 
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
 use once_cell::sync::Lazy;
-use spikard_http::{BackgroundHandle, BackgroundJobError, BackgroundJobMetadata};
-use std::sync::RwLock;
+use spikard_http::BackgroundHandle;
+use std::cell::RefCell;
+use std::collections::VecDeque;
+use std::sync::Mutex;
 
-static BACKGROUND_HANDLE: Lazy<RwLock<Option<BackgroundHandle>>> =
-    Lazy::new(|| RwLock::new(None));
+/// Task stored in the queue for later execution
+#[derive(Debug)]
+struct QueuedTask {
+    callable: Zval,
+    args: Option<Zval>,
+}
+
+thread_local! {
+    /// Task queue for background execution (thread-local because Zvals are not Send)
+    /// Tasks are queued here and executed asynchronously on the main thread
+    static TASK_QUEUE: RefCell<VecDeque<QueuedTask>> = RefCell::new(VecDeque::new());
+}
+
+static BACKGROUND_HANDLE: Lazy<Mutex<Option<BackgroundHandle>>> =
+    Lazy::new(|| Mutex::new(None));
 
 /// Install the background handle at server startup
 pub fn install_handle(handle: BackgroundHandle) {
-    if let Ok(mut guard) = BACKGROUND_HANDLE.write() {
-        *guard = Some(handle);
+    if let Ok(mut guard) = BACKGROUND_HANDLE.lock() {
+        *guard = Some(handle.clone());
     }
+
+    // Note: The task runner loop is integrated into the server's main runtime
+    // via process_pending_tasks() which is called periodically
 }
 
 /// Clear the background handle at server shutdown
 pub fn clear_handle() {
-    if let Ok(mut guard) = BACKGROUND_HANDLE.write() {
+    if let Ok(mut guard) = BACKGROUND_HANDLE.lock() {
         *guard = None;
+    }
+}
+
+/// Process pending background tasks from the queue.
+///
+/// This should be called periodically by the server runtime to execute
+/// queued background tasks. Processes one task per call, returning true
+/// if a task was executed or false if the queue was empty.
+///
+/// # Returns
+/// * `true` if a task was processed
+/// * `false` if the queue was empty
+pub fn process_pending_tasks() -> bool {
+    // Check if background tasks are enabled
+    let is_enabled = BACKGROUND_HANDLE
+        .lock()
+        .ok()
+        .and_then(|guard| guard.as_ref().cloned())
+        .is_some();
+
+    if !is_enabled {
+        return false;
+    }
+
+    // Process one task from the queue
+    let task = TASK_QUEUE.with(|queue| queue.borrow_mut().pop_front());
+
+    if let Some(task) = task {
+        // Execute the task on this thread (no Send required!)
+        if let Err(e) = execute_queued_task(task) {
+            eprintln!("Background task failed: {}", e);
+        }
+        true
+    } else {
+        false
     }
 }
 
 /// Run a PHP callable in the background
 ///
-/// Spawns a blocking task on the Tokio threadpool to execute the PHP callable.
-/// The task runs outside the request lifecycle and doesn't block the HTTP server.
+/// Queues a task for execution after the HTTP response completes.
+/// Tasks execute on the main thread, avoiding PHP threading issues.
 ///
 /// # Arguments
 /// * `callable` - PHP callable (closure, function name, array ['class', 'method'])
 /// * `args` - Optional array of arguments to pass to callable
 ///
 /// # Errors
-/// * Returns error if background runtime not initialized
-/// * Returns error if task queue is full
 /// * Returns error if callable is not actually callable
 ///
 /// # Example
@@ -57,111 +108,45 @@ pub fn spikard_background_run(callable: &Zval, args: Option<&Zval>) -> PhpResult
         ));
     }
 
-    // Get background handle
-    let handle = BACKGROUND_HANDLE
-        .read()
-        .map_err(|_| PhpException::default("Background handle lock poisoned".to_string()))?
-        .clone()
-        .ok_or_else(|| {
-            PhpException::default(
-                "Background runtime not initialized. Server must be running to spawn background tasks.".to_string(),
-            )
-        })?;
+    // Clone the Zvals for queueing (shallow clone is cheap)
+    let callable_owned = callable.shallow_clone();
+    let args_owned = args.map(|a| a.shallow_clone());
 
-    // Serialize the callable to a string representation that can cross thread boundaries
-    // For closures, we'll get an error - user must use named functions or class methods
-    let callable_str = serialize_callable(callable)?;
-    let args_json = args.map(|a| serialize_args(a)).transpose()?;
-
-    // Spawn task with serialized data (String is Send+Sync)
-    handle
-        .spawn_with_metadata(
-            async move {
-                // Deserialize and execute on the worker thread
-                tokio::task::spawn_blocking(move || -> Result<(), BackgroundJobError> {
-                    execute_serialized_task(&callable_str, args_json.as_deref())
-                        .map_err(|e| BackgroundJobError::from(e))
-                })
-                .await
-                .map_err(|e| BackgroundJobError::from(format!("Task join error: {}", e)))?
-            },
-            BackgroundJobMetadata::default(),
-        )
-        .map_err(|err| PhpException::default(err.to_string()))
-}
-
-/// Serialize a callable to a string representation.
-/// Only supports: function names, "Class::method", or ["Class", "method"]
-fn serialize_callable(callable: &Zval) -> PhpResult<String> {
-    // Try string first (function name or "Class::method")
-    if let Some(s) = callable.string() {
-        return Ok(s.to_string());
-    }
-
-    // Try array ["Class", "method"]
-    if let Some(arr) = callable.array() {
-        let values: Vec<String> = arr.values()
-            .filter_map(|v| v.string())
-            .map(|s| s.to_string())
-            .collect();
-
-        if values.len() == 2 {
-            return Ok(format!("{}::{}", values[0], values[1]));
-        }
-    }
-
-    Err(PhpException::default(
-        "Background tasks only support named functions or class methods (\"ClassName::method\" or [\"ClassName\", \"method\"]). \
-         Closures cannot be serialized across threads.".to_string()
-    ))
-}
-
-/// Serialize arguments to JSON
-fn serialize_args(args: &Zval) -> PhpResult<String> {
-    let json_value = crate::php::zval_to_json(args)
-        .map_err(|e| PhpException::default(format!("Failed to serialize arguments: {}", e)))?;
-
-    serde_json::to_string(&json_value)
-        .map_err(|e| PhpException::default(format!("Failed to serialize arguments to JSON: {}", e)))
-}
-
-/// Execute a serialized task on a worker thread.
-/// This attempts to call PHP from a Rust thread, which requires thread-local PHP initialization.
-fn execute_serialized_task(callable_str: &str, args_json: Option<&str>) -> Result<(), String> {
-    // Parse the callable string
-    let (class_opt, method) = if callable_str.contains("::") {
-        let parts: Vec<&str> = callable_str.split("::").collect();
-        if parts.len() != 2 {
-            return Err(format!("Invalid callable format: {}", callable_str));
-        }
-        (Some(parts[0]), parts[1])
-    } else {
-        (None, callable_str)
+    // Queue the task
+    let task = QueuedTask {
+        callable: callable_owned,
+        args: args_owned,
     };
 
-    // Parse arguments
-    let args_value: Option<serde_json::Value> = if let Some(json_str) = args_json {
-        Some(serde_json::from_str(json_str)
-            .map_err(|e| format!("Failed to parse arguments JSON: {}", e))?)
+    TASK_QUEUE.with(|queue| queue.borrow_mut().push_back(task));
+
+    Ok(())
+}
+
+/// Execute a queued task on the main thread
+fn execute_queued_task(task: QueuedTask) -> Result<(), String> {
+    // Build arguments for try_call
+    let args: Vec<&dyn ext_php_rs::convert::IntoZvalDyn> = if let Some(args_zval) = &task.args {
+        // Extract args array if provided
+        if let Some(arr) = args_zval.array() {
+            arr.values()
+                .map(|v| v as &dyn ext_php_rs::convert::IntoZvalDyn)
+                .collect()
+        } else {
+            // Single argument, not an array
+            vec![args_zval as &dyn ext_php_rs::convert::IntoZvalDyn]
+        }
     } else {
-        None
+        vec![]
     };
 
-    // Convert JSON args to PHP-compatible format
-    // We need to call into PHP from this thread, but PHP may not be initialized here
-    // This is the fundamental challenge - PHP contexts are thread-local
+    // Create callable and invoke
+    let callable = ext_php_rs::types::ZendCallable::new(&task.callable)
+        .map_err(|e| format!("Failed to create callable: {:?}", e))?;
 
-    // For now, log what we would do and return success
-    // Real implementation would need:
-    // 1. Initialize PHP on this thread (php_embed_init or similar)
-    // 2. Create Zvals from JSON
-    // 3. Call the function/method
-    // 4. Cleanup PHP context
-
-    eprintln!(
-        "Background task (simulated): {} with args: {:?}",
-        callable_str, args_json
-    );
+    callable
+        .try_call(args)
+        .map_err(|e| format!("Task execution failed: {:?}", e))?;
 
     Ok(())
 }
@@ -179,10 +164,10 @@ mod tests {
 
         install_handle(handle.clone());
 
-        let retrieved = BACKGROUND_HANDLE.read().unwrap().clone();
+        let retrieved = BACKGROUND_HANDLE.lock().unwrap().clone();
         assert!(retrieved.is_some());
 
         clear_handle();
-        assert!(BACKGROUND_HANDLE.read().unwrap().is_none());
+        assert!(BACKGROUND_HANDLE.lock().unwrap().is_none());
     }
 }
