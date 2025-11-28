@@ -685,19 +685,38 @@ impl Server {
     ) -> Result<AxumRouter, String> {
         let metadata: Vec<crate::RouteMetadata> = routes
             .iter()
-            .map(|(route, _)| crate::RouteMetadata {
-                method: route.method.to_string(),
-                path: route.path.clone(),
-                handler_name: route.handler_name.clone(),
-                request_schema: None,
-                response_schema: None,
-                parameter_schema: None,
-                file_params: route.file_params.clone(),
-                is_async: route.is_async,
-                cors: route.cors.clone(),
-                body_param_name: None,
+            .map(|(route, _)| {
                 #[cfg(feature = "di")]
-                handler_dependencies: Some(route.handler_dependencies.clone()),
+                {
+                    crate::RouteMetadata {
+                        method: route.method.to_string(),
+                        path: route.path.clone(),
+                        handler_name: route.handler_name.clone(),
+                        request_schema: None,
+                        response_schema: None,
+                        parameter_schema: None,
+                        file_params: route.file_params.clone(),
+                        is_async: route.is_async,
+                        cors: route.cors.clone(),
+                        body_param_name: None,
+                        handler_dependencies: Some(route.handler_dependencies.clone()),
+                    }
+                }
+                #[cfg(not(feature = "di"))]
+                {
+                    crate::RouteMetadata {
+                        method: route.method.to_string(),
+                        path: route.path.clone(),
+                        handler_name: route.handler_name.clone(),
+                        request_schema: None,
+                        response_schema: None,
+                        parameter_schema: None,
+                        file_params: route.file_params.clone(),
+                        is_async: route.is_async,
+                        cors: route.cors.clone(),
+                        body_param_name: None,
+                    }
+                }
             })
             .collect();
         build_router_with_handlers_and_config(routes, config, metadata)

@@ -7,8 +7,8 @@
 //!
 //! Uses thread-local storage for PHP Zvals (non-Send/Sync).
 
+use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
-use ext_php_rs::zend::ZendCallable;
 use spikard_core::di::{Dependency, DependencyContainer, DependencyError};
 use std::cell::RefCell;
 use std::collections::HashMap;

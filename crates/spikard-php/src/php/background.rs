@@ -5,7 +5,6 @@
 
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
-use ext_php_rs::zend::ZendCallable;
 use once_cell::sync::Lazy;
 use spikard_http::{BackgroundHandle, BackgroundJobError, BackgroundJobMetadata};
 use std::sync::RwLock;
