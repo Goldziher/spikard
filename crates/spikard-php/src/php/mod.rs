@@ -11,6 +11,7 @@ use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
 use serde_json::Value;
 
+mod background;
 mod handler;
 mod hooks;
 mod request;
@@ -21,6 +22,7 @@ pub(crate) mod start;
 mod testing;
 mod websocket;
 
+pub use background::{clear_handle, install_handle};
 pub use handler::GLOBAL_RUNTIME;
 pub use handler::PhpHandler;
 pub use hooks::{PhpHookResult, PhpLifecycleHooks};
@@ -61,6 +63,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .function(wrap_function!(spikard_parse_json))
         .function(wrap_function!(spikard_start_server))
         .function(wrap_function!(spikard_stop_server))
+        .function(wrap_function!(background::spikard_background_run))
         // Core classes
         .class::<PhpRequest>()
         .class::<PhpResponse>()
