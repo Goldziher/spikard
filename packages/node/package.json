@@ -1,6 +1,6 @@
 {
 	"name": "spikard",
-	"version": "0.1.3",
+	"version": "0.2.0",
 	"description": "High-performance HTTP framework for Node.js and Bun. Type-safe routing, validation, and testing powered by Rust core.",
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",
