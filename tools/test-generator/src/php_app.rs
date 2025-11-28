@@ -338,7 +338,7 @@ fn generate_handler_class_php(fixture: &Fixture) -> String {
     let body_literal = if let Some(body_value) = expected_body {
         value_to_php(body_value)
     } else {
-        "[]".to_string()
+        "null".to_string()
     };
 
     // Build response headers
