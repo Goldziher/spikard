@@ -586,7 +586,21 @@ Ruby bindings use:
 
 ## Examples
 
-See `/examples/ruby/` for more examples.
+The [examples directory](../../examples/) contains comprehensive demonstrations:
+
+**Ruby-specific examples:**
+- [Basic Ruby Example](../../examples/di/ruby_basic.rb) - Simple server with DI
+- [Database Integration](../../examples/di/ruby_database.rb) - DI with database pools
+- Additional examples in [examples/](../../examples/)
+
+**API Schemas** (language-agnostic, can be used with code generation):
+- [Todo API](../../examples/schemas/todo-api.openapi.yaml) - REST CRUD with validation
+- [File Service](../../examples/schemas/file-service.openapi.yaml) - File uploads/downloads
+- [Auth Service](../../examples/schemas/auth-service.openapi.yaml) - JWT, API keys, OAuth
+- [Chat Service](../../examples/schemas/chat-service.asyncapi.yaml) - WebSocket messaging
+- [Event Streams](../../examples/schemas/events-stream.asyncapi.yaml) - SSE streaming
+
+See [examples/README.md](../../examples/README.md) for code generation instructions.
 
 ## Documentation
 

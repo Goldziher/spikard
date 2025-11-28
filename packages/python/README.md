@@ -18,13 +18,15 @@ High-performance Python web framework with a Rust core. Build REST APIs, WebSock
 
 ## Installation
 
-**Via pip (requires building from source):**
+**Via pip:**
 
 ```bash
 pip install spikard
 ```
 
-**From source:**
+Pre-built wheels are available for macOS, Linux, and Windows. If a wheel isn't available for your platform, pip will build from source (requires Rust toolchain).
+
+**From source (development):**
 
 ```bash
 cd packages/python
@@ -35,7 +37,7 @@ pip install -e .
 
 **Requirements:**
 - Python 3.10+
-- Rust toolchain (for building from source)
+- Rust toolchain (only required for building from source)
 
 ## Quick Start
 
@@ -579,13 +581,21 @@ app.run(config=config)
 
 ## Examples
 
-See `/examples/python/` for more examples including:
-- REST APIs with validation
-- WebSocket chat
-- SSE notifications
-- File uploads
-- Authentication
-- Background tasks
+The [examples directory](../../examples/) contains comprehensive demonstrations:
+
+**Python-specific examples:**
+- [Dependency Injection](../../examples/di/python_basic.py) - Basic DI patterns
+- [Database Integration](../../examples/di/python_database.py) - DI with database pools
+- Additional examples in [examples/](../../examples/)
+
+**API Schemas** (language-agnostic, can be used with code generation):
+- [Todo API](../../examples/schemas/todo-api.openapi.yaml) - REST CRUD with validation
+- [File Service](../../examples/schemas/file-service.openapi.yaml) - File uploads/downloads
+- [Auth Service](../../examples/schemas/auth-service.openapi.yaml) - JWT, API keys, OAuth
+- [Chat Service](../../examples/schemas/chat-service.asyncapi.yaml) - WebSocket messaging
+- [Event Streams](../../examples/schemas/events-stream.asyncapi.yaml) - SSE streaming
+
+See [examples/README.md](../../examples/README.md) for code generation instructions.
 
 ## Documentation
 
