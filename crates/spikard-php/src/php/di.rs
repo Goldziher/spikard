@@ -31,11 +31,11 @@ type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
 thread_local! {
     /// Registry of PHP value dependencies (singletons).
     /// Maps value_id -> Zval. Thread-local to avoid Send+Sync issues.
-    static PHP_VALUE_REGISTRY: RefCell<Vec<Zval>> = RefCell::new(Vec::new());
+    static PHP_VALUE_REGISTRY: RefCell<Vec<Zval>> = const { RefCell::new(Vec::new()) };
 
     /// Registry of PHP factory callables.
     /// Maps factory_id -> Zval callable. Thread-local to avoid Send+Sync issues.
-    static PHP_FACTORY_REGISTRY: RefCell<Vec<Zval>> = RefCell::new(Vec::new());
+    static PHP_FACTORY_REGISTRY: RefCell<Vec<Zval>> = const { RefCell::new(Vec::new()) };
 }
 
 /// Send+Sync wrapper around a Zval ID.

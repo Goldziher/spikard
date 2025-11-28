@@ -21,7 +21,7 @@ struct QueuedTask {
 thread_local! {
     /// Task queue for background execution (thread-local because Zvals are not Send)
     /// Tasks are queued here and executed asynchronously on the main thread
-    static TASK_QUEUE: RefCell<VecDeque<QueuedTask>> = RefCell::new(VecDeque::new());
+    static TASK_QUEUE: RefCell<VecDeque<QueuedTask>> = const { RefCell::new(VecDeque::new()) };
 }
 
 static BACKGROUND_HANDLE: Lazy<Mutex<Option<BackgroundHandle>>> = Lazy::new(|| Mutex::new(None));

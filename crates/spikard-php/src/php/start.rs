@@ -538,13 +538,10 @@ pub fn spikard_start_server_impl(
     server_config.lifecycle_hooks = lifecycle_hooks;
 
     // Extract and register dependencies
-    #[cfg(feature = "di")]
-    {
-        let di_container = crate::php::extract_di_container_from_php(Some(dependencies))
-            .map_err(|e| PhpException::default(format!("Invalid DI container: {}", e)))?;
-        if let Some(container) = di_container {
-            server_config.di_container = Some(std::sync::Arc::new(container));
-        }
+    let di_container = crate::php::extract_di_container_from_php(Some(dependencies))
+        .map_err(|e| PhpException::default(format!("Invalid DI container: {}", e)))?;
+    if let Some(container) = di_container {
+        server_config.di_container = Some(std::sync::Arc::new(container));
     }
 
     // Parse routes array from Zval
