@@ -522,7 +522,7 @@ fn extract_lifecycle_hooks_from_php(hooks_zval: &Zval) -> Result<Option<Arc<Life
 ///
 /// The config is extracted manually using extract_server_config_from_php() to avoid
 /// JSON deserialization issues with non-serializable fields like lifecycle_hooks.
-pub fn spikard_start_server_impl(routes_zval: &Zval, config: &Zval, hooks: &Zval) -> PhpResult<u64> {
+pub fn spikard_start_server_impl(routes_zval: &Zval, config: &Zval, hooks: &Zval, dependencies: &Zval) -> PhpResult<u64> {
     // Extract ServerConfig from PHP array
     let mut server_config = extract_server_config_from_php(config)
         .map_err(|e| PhpException::default(format!("Invalid server config: {}", e)))?;
@@ -533,6 +533,16 @@ pub fn spikard_start_server_impl(routes_zval: &Zval, config: &Zval, hooks: &Zval
 
     // Set lifecycle hooks in server config
     server_config.lifecycle_hooks = lifecycle_hooks;
+
+    // Extract and register dependencies
+    #[cfg(feature = "di")]
+    {
+        let di_container = crate::php::extract_di_container_from_php(Some(dependencies))
+            .map_err(|e| PhpException::default(format!("Invalid DI container: {}", e)))?;
+        if let Some(container) = di_container {
+            server_config.di_container = Some(std::sync::Arc::new(container));
+        }
+    }
 
     // Parse routes array from Zval
     let routes_array = routes_zval
