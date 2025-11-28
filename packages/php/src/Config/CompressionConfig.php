@@ -7,8 +7,10 @@ namespace Spikard\Config;
 final class CompressionConfig
 {
     public function __construct(
-        public readonly bool $enabled = true,
-        public readonly int $quality = 6,
+        public readonly ?bool $gzip = null,
+        public readonly ?bool $brotli = null,
+        public readonly ?int $minSize = null,
+        public readonly ?int $quality = null,
     ) {
     }
 }

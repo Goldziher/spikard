@@ -5,8 +5,9 @@
 //! other bindings.
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
+use crate::middleware::{MiddlewareMetadata, parse_middleware};
 use anyhow::{Context, Result};
-use serde_json::json;
+use serde_json::{Value, json};
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::BTreeMap;
 use std::fs;
@@ -65,7 +66,7 @@ fn build_app_factory(
     let mut handler_classes = String::new();
 
     code.push_str(
-        "<?php\n\ndeclare(strict_types=1);\n\nnamespace E2E\\Php;\n\nuse Spikard\\App;\nuse Spikard\\Handlers\\HandlerInterface;\nuse Spikard\\Handlers\\SseEventProducerInterface;\nuse Spikard\\Handlers\\WebSocketHandlerInterface;\nuse Spikard\\Http\\Request;\nuse Spikard\\Http\\Response;\n\n/**\n * Generated App factory for PHP e2e tests.\n * Routes are registered with schemas and executed via the native Rust stack.\n */\nfinal class AppFactory\n{\n",
+        "<?php\n\ndeclare(strict_types=1);\n\nnamespace E2E\\Php;\n\nuse Spikard\\App;\nuse Spikard\\Config\\ServerConfig;\nuse Spikard\\Config\\CompressionConfig;\nuse Spikard\\Config\\RateLimitConfig;\nuse Spikard\\Config\\ApiKeyConfig;\nuse Spikard\\Config\\JwtConfig;\nuse Spikard\\Config\\CorsConfig;\nuse Spikard\\Config\\OpenApiConfig;\nuse Spikard\\Handlers\\HandlerInterface;\nuse Spikard\\Handlers\\SseEventProducerInterface;\nuse Spikard\\Handlers\\WebSocketHandlerInterface;\nuse Spikard\\Http\\Request;\nuse Spikard\\Http\\Response;\n\n/**\n * Generated App factory for PHP e2e tests.\n * Routes are registered with schemas and executed via the native Rust stack.\n */\nfinal class AppFactory\n{\n",
     );
 
     if fixtures_by_category.is_empty() && sse_fixtures.is_empty() && websocket_fixtures.is_empty() {
@@ -151,19 +152,64 @@ fn build_app_factory(
             let method = fixture.request.method.to_ascii_uppercase();
             let (path, _) = normalize_path_and_query(fixture, fixture.request.path.as_str());
 
-            let request_schema = "null";
-            let response_schema = "null";
-            let parameter_schema = "null";
+            // Parse middleware metadata
+            let metadata = parse_middleware(fixture).unwrap_or_default();
 
-            code.push_str(&format!(
-                "    public static function {factory_method}(): App\n    {{\n        $app = new App();\n        $handler = new class implements HandlerInterface {{\n            public function matches(Request $request): bool {{ return true; }}\n            public function handle(Request $request): Response {{ return new Response([], 200); }}\n        }};\n        $app = $app->addRouteWithSchemas('{method}', '{path}', $handler, json_decode({req}, true), json_decode({resp}, true), json_decode({params}, true));\n        return $app;\n    }}\n\n",
-                factory_method = factory_method,
-                method = method,
-                path = path,
-                req = request_schema,
-                resp = response_schema,
-                params = parameter_schema
-            ));
+            // Extract schemas from fixture
+            let request_schema = if let Some(handler) = &fixture.handler {
+                if let Some(schema) = &handler.body_schema {
+                    php_encode_json_value(schema)
+                } else {
+                    "null".to_string()
+                }
+            } else {
+                "null".to_string()
+            };
+
+            let response_schema = "null".to_string(); // PHP doesn't validate response schemas yet
+
+            let parameter_schema = if let Some(handler) = &fixture.handler {
+                if let Some(params) = &handler.parameters {
+                    build_parameter_schema_php(params)
+                } else {
+                    "null".to_string()
+                }
+            } else {
+                "null".to_string()
+            };
+
+            // Build ServerConfig from middleware
+            let raw_middleware = fixture.handler.as_ref().and_then(|h| h.middleware.as_ref());
+            let config_str = generate_server_config_php(&metadata, raw_middleware);
+
+            // Generate handler with expected response
+            let handler_class = generate_handler_class_php(fixture);
+
+            // Generate factory method
+            if config_str == "null" {
+                code.push_str(&format!(
+                    "    public static function {factory_method}(): App\n    {{\n        $app = new App();\n{handler}\n        $app = $app->addRouteWithSchemas('{method}', '{path}', $handler, {req}, {resp}, {params});\n        return $app;\n    }}\n\n",
+                    factory_method = factory_method,
+                    method = method,
+                    path = path,
+                    handler = handler_class,
+                    req = request_schema,
+                    resp = response_schema,
+                    params = parameter_schema
+                ));
+            } else {
+                code.push_str(&format!(
+                    "    public static function {factory_method}(): App\n    {{\n        $config = {config};\n        $app = new App($config);\n{handler}\n        $app = $app->addRouteWithSchemas('{method}', '{path}', $handler, {req}, {resp}, {params});\n        return $app;\n    }}\n\n",
+                    factory_method = factory_method,
+                    config = config_str,
+                    method = method,
+                    path = path,
+                    handler = handler_class,
+                    req = request_schema,
+                    resp = response_schema,
+                    params = parameter_schema
+                ));
+            }
         }
     }
 
@@ -224,10 +270,14 @@ fn normalize_path_and_query(fixture: &Fixture, path: &str) -> (String, serde_jso
 }
 
 fn sanitize_identifier(input: &str) -> String {
-    input
+    let mut s = input
         .chars()
         .map(|c| if c.is_alphanumeric() { c } else { '_' })
-        .collect()
+        .collect::<String>();
+    while s.contains("__") {
+        s = s.replace("__", "_");
+    }
+    s.trim_matches('_').to_ascii_lowercase()
 }
 
 fn build_routes_json(
@@ -276,4 +326,217 @@ fn build_routes_json(
     }
 
     Ok(serde_json::to_string_pretty(&routes)?)
+}
+
+/// Generate handler class that returns expected response from fixture
+fn generate_handler_class_php(fixture: &Fixture) -> String {
+    let expected_status = fixture.expected_response.status_code;
+    let expected_body = fixture.expected_response.body.as_ref();
+    let expected_headers = &fixture.expected_response.headers;
+
+    // Build response body
+    let body_literal = if let Some(body_value) = expected_body {
+        value_to_php(body_value)
+    } else {
+        "[]".to_string()
+    };
+
+    // Build response headers
+    let headers_literal = if let Some(headers_map) = expected_headers {
+        let mut header_pairs = Vec::new();
+        for (key, value) in headers_map {
+            header_pairs.push(format!("{} => {}", php_string_literal(key), php_string_literal(value)));
+        }
+        if header_pairs.is_empty() {
+            "[]".to_string()
+        } else {
+            format!("[{}]", header_pairs.join(", "))
+        }
+    } else {
+        "[]".to_string()
+    };
+
+    format!(
+        "        $handler = new class implements HandlerInterface {{\n            public function matches(Request $request): bool {{ return true; }}\n            public function handle(Request $request): Response {{\n                return new Response({}, {}, {});\n            }}\n        }};",
+        body_literal, expected_status, headers_literal
+    )
+}
+
+/// Generate ServerConfig from middleware metadata
+fn generate_server_config_php(metadata: &MiddlewareMetadata, raw_middleware: Option<&Value>) -> String {
+    let mut config_lines = Vec::new();
+
+    // Compression config
+    if let Some(compression) = &metadata.compression {
+        let mut args = Vec::new();
+        if let Some(gzip) = compression.gzip {
+            args.push(format!("gzip: {}", if gzip { "true" } else { "false" }));
+        }
+        if let Some(brotli) = compression.brotli {
+            args.push(format!("brotli: {}", if brotli { "true" } else { "false" }));
+        }
+        if let Some(min_size) = compression.min_size {
+            args.push(format!("minSize: {}", min_size));
+        }
+        if let Some(quality) = compression.quality {
+            args.push(format!("quality: {}", quality));
+        }
+        if args.is_empty() {
+            config_lines.push("            compression: new CompressionConfig()".to_string());
+        } else {
+            config_lines.push(format!(
+                "            compression: new CompressionConfig({})",
+                args.join(", ")
+            ));
+        }
+    }
+
+    // Rate limit config
+    if let Some(rate_limit) = &metadata.rate_limit {
+        let mut args = vec![
+            format!("perSecond: {}", rate_limit.per_second),
+            format!("burst: {}", rate_limit.burst),
+        ];
+        if let Some(ip_based) = rate_limit.ip_based {
+            args.push(format!("ipBased: {}", if ip_based { "true" } else { "false" }));
+        }
+        config_lines.push(format!(
+            "            rateLimit: new RateLimitConfig({})",
+            args.join(", ")
+        ));
+    }
+
+    // Request timeout
+    if let Some(timeout) = &metadata.request_timeout {
+        config_lines.push(format!("            requestTimeout: {}", timeout.seconds));
+    }
+
+    // Request ID
+    if let Some(request_id) = &metadata.request_id {
+        if let Some(enabled) = request_id.enabled {
+            config_lines.push(format!(
+                "            enableRequestId: {}",
+                if enabled { "true" } else { "false" }
+            ));
+        }
+    }
+
+    // Body limit
+    if let Some(body_limit) = &metadata.body_limit {
+        if let Some(max_bytes) = body_limit.max_bytes {
+            config_lines.push(format!("            maxBodySize: {}", max_bytes));
+        } else {
+            config_lines.push("            maxBodySize: null".to_string());
+        }
+    }
+
+    // JWT auth
+    if let Some(middleware) = raw_middleware {
+        if let Some(jwt) = middleware.get("jwt_auth") {
+            config_lines.push(build_jwt_config_php(jwt));
+        }
+
+        // API Key auth
+        if let Some(api_key) = middleware.get("api_key_auth") {
+            config_lines.push(build_api_key_config_php(api_key));
+        }
+
+        // CORS
+        if let Some(cors) = middleware.get("cors") {
+            config_lines.push(build_cors_config_php(cors));
+        }
+
+        // OpenAPI
+        if let Some(openapi) = middleware.get("openapi") {
+            config_lines.push(build_openapi_config_php(openapi));
+        }
+    }
+
+    if config_lines.is_empty() {
+        "null".to_string()
+    } else {
+        format!("new ServerConfig(\n{}\n        )", config_lines.join(",\n"))
+    }
+}
+
+/// Build JWT config block for PHP
+fn build_jwt_config_php(jwt: &Value) -> String {
+    let mut args = Vec::new();
+    if let Some(secret) = jwt.get("secret") {
+        args.push(format!("secret: {}", value_to_php(secret)));
+    }
+    if let Some(algorithm) = jwt.get("algorithm") {
+        args.push(format!("algorithm: {}", value_to_php(algorithm)));
+    }
+    if let Some(audience) = jwt.get("audience") {
+        args.push(format!("audience: {}", value_to_php(audience)));
+    }
+    if let Some(issuer) = jwt.get("issuer") {
+        args.push(format!("issuer: {}", value_to_php(issuer)));
+    }
+    if let Some(leeway) = jwt.get("leeway") {
+        args.push(format!("leeway: {}", value_to_php(leeway)));
+    }
+    format!("            jwtAuth: new JwtConfig({})", args.join(", "))
+}
+
+/// Build API Key config block for PHP
+fn build_api_key_config_php(api_key: &Value) -> String {
+    let mut args = Vec::new();
+    if let Some(keys) = api_key.get("keys") {
+        args.push(format!("keys: {}", value_to_php(keys)));
+    }
+    if let Some(header_name) = api_key.get("header_name") {
+        args.push(format!("headerName: {}", value_to_php(header_name)));
+    }
+    format!("            apiKeyAuth: new ApiKeyConfig({})", args.join(", "))
+}
+
+/// Build CORS config block for PHP
+fn build_cors_config_php(cors: &Value) -> String {
+    let mut args = Vec::new();
+    if let Some(allowed_origins) = cors.get("allowed_origins") {
+        args.push(format!("allowedOrigins: {}", value_to_php(allowed_origins)));
+    }
+    if let Some(allowed_methods) = cors.get("allowed_methods") {
+        args.push(format!("allowedMethods: {}", value_to_php(allowed_methods)));
+    }
+    if let Some(allowed_headers) = cors.get("allowed_headers") {
+        args.push(format!("allowedHeaders: {}", value_to_php(allowed_headers)));
+    }
+    if let Some(allow_credentials) = cors.get("allow_credentials") {
+        args.push(format!("allowCredentials: {}", value_to_php(allow_credentials)));
+    }
+    if let Some(max_age) = cors.get("max_age") {
+        args.push(format!("maxAge: {}", value_to_php(max_age)));
+    }
+    format!("            cors: new CorsConfig({})", args.join(", "))
+}
+
+/// Build OpenAPI config block for PHP
+fn build_openapi_config_php(openapi: &Value) -> String {
+    let mut args = Vec::new();
+    if let Some(title) = openapi.get("title") {
+        args.push(format!("title: {}", value_to_php(title)));
+    }
+    if let Some(version) = openapi.get("version") {
+        args.push(format!("version: {}", value_to_php(version)));
+    }
+    if let Some(description) = openapi.get("description") {
+        args.push(format!("description: {}", value_to_php(description)));
+    }
+    format!("            openapi: new OpenApiConfig({})", args.join(", "))
+}
+
+/// Build parameter schema in PHP format
+fn build_parameter_schema_php(params: &Value) -> String {
+    php_encode_json_value(params)
+}
+
+/// Encode JSON value as PHP code that can be evaluated
+fn php_encode_json_value(value: &Value) -> String {
+    match serde_json::to_string(value) {
+        Ok(json_str) => format!("json_decode('{}', true)", escape_php_string(&json_str)),
+        Err(_) => "null".to_string(),
+    }
 }

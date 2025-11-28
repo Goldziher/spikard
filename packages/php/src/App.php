@@ -288,19 +288,19 @@ final class App
         // Compression middleware (snake_case field names)
         if ($config->compression !== null) {
             $payload['compression'] = [
-                'gzip' => $config->compression->enabled,
-                'brotli' => $config->compression->enabled,
-                'min_size' => 1024, // bytes, matches default
-                'quality' => $config->compression->quality,
+                'gzip' => $config->compression->gzip ?? true,
+                'brotli' => $config->compression->brotli ?? true,
+                'min_size' => $config->compression->minSize ?? 1024,
+                'quality' => $config->compression->quality ?? 6,
             ];
         }
 
         // Rate limiting middleware (snake_case field names)
         if ($config->rateLimit !== null) {
             $payload['rate_limit'] = [
-                'per_second' => $config->rateLimit->refill,
+                'per_second' => $config->rateLimit->perSecond,
                 'burst' => $config->rateLimit->burst,
-                'ip_based' => true,
+                'ip_based' => $config->rateLimit->ipBased ?? true,
             ];
         }
 

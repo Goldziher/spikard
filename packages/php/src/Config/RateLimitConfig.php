@@ -7,8 +7,9 @@ namespace Spikard\Config;
 final class RateLimitConfig
 {
     public function __construct(
-        public readonly int $burst = 20,
-        public readonly int $refill = 5,
+        public readonly int $perSecond,
+        public readonly int $burst,
+        public readonly ?bool $ipBased = null,
     ) {
     }
 }
