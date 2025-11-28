@@ -5,12 +5,13 @@
 [![npm](https://img.shields.io/npm/v/spikard)](https://www.npmjs.com/package/spikard)
 [![npm (WASM)](https://img.shields.io/npm/v/spikard-wasm?label=npm%20%28wasm%29)](https://www.npmjs.com/package/spikard-wasm)
 [![RubyGems](https://badge.fury.io/rb/spikard.svg)](https://rubygems.org/gems/spikard)
+[![Packagist](https://img.shields.io/packagist/v/spikard/spikard)](https://packagist.org/packages/spikard/spikard)
 [![Crates.io](https://img.shields.io/crates/v/spikard)](https://crates.io/crates/spikard)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **An experimental polyglot web development framework.**
 
-Spikard is a high-performance API toolkit built in Rust with bindings for Python, TypeScript, Ruby, and WebAssembly. Write REST APIs, JSON-RPC services, or Protobuf-based applications in the language you prefer—all sharing the same runtime, middleware, and validation engine.
+Spikard is a high-performance API toolkit built in Rust with bindings for Python, TypeScript, Ruby, PHP, and WebAssembly. Write REST APIs, JSON-RPC services, or Protobuf-based applications in the language you prefer—all sharing the same runtime, middleware, and validation engine.
 
 ## Why?
 
@@ -49,16 +50,37 @@ Spikard focuses on being the best HTTP/API layer—everything from the socket to
 - **Python** - Decorators, async/await, msgspec/Pydantic validation ([README](packages/python/README.md))
 - **TypeScript** - Node.js/Bun (native) and Deno/Edge (WASM) ([README](packages/node/README.md))
 - **Ruby** - Block-friendly routing, idiomatic patterns ([README](packages/ruby/README.md))
+- **PHP** - PSR-compliant, background tasks, streaming, WebSocket/SSE support ([README](packages/php/README.md))
 - **Rust** - Zero-cost native performance ([README](crates/spikard/README.md))
 
 ### Future Bindings
 
 **Planned:**
-- **PHP** (in progress via ext-php-rs)
 - **Go** (exploring FFI options)
 - **C#**, **Java/Kotlin**, **Elixir** (exploring)
 
 We're open to additional language bindings—both FFI-based (like potential Go support) and native binding approaches. Community contributions welcome.
+
+### Feature Parity Across Languages
+
+All language bindings share the same core features through the Rust runtime:
+
+| Feature | Python | TypeScript | Ruby | PHP | Rust |
+|---------|--------|------------|------|-----|------|
+| **HTTP/REST** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Path Parameters** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **JSON Validation** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Background Tasks** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Dependency Injection** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Streaming** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **WebSocket** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Server-Sent Events** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **AsyncAPI Support** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **OpenAPI Codegen** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Lifecycle Hooks** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Middleware Stack** | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+All features are implemented once in Rust and exposed through thin, idiomatic bindings for each language.
 
 ## Design Principles
 
@@ -170,6 +192,49 @@ end
 app.run(port: 8000)
 ```
 
+### PHP
+```php
+<?php
+use Spikard\App;
+use Spikard\Config\ServerConfig;
+use Spikard\Http\Request;
+use Spikard\Http\Response;
+use Spikard\Background\BackgroundTask;
+
+$app = new App(new ServerConfig(port: 8000));
+
+// Route with path parameter
+$app = $app->addRoute('GET', '/users/{id}', function (Request $req) {
+    $id = (int)$req->pathParams['id'];
+    return Response::json(['id' => $id, 'name' => 'Alice']);
+});
+
+// JSON body with validation
+$app = $app->addRoute('POST', '/users', function (Request $req) {
+    $user = $req->body;
+
+    // Run background task (e.g., send email)
+    BackgroundTask::run(function () use ($user) {
+        sendWelcomeEmail($user);
+    });
+
+    return Response::json($user, 201);
+});
+
+// Streaming response (SSE)
+$app = $app->addRoute('GET', '/events', function () {
+    $generator = function (): Generator {
+        for ($i = 0; $i < 10; $i++) {
+            yield "data: " . json_encode(['count' => $i]) . "\n\n";
+            sleep(1);
+        }
+    };
+    return \Spikard\Http\StreamingResponse::sse($generator());
+});
+
+$app->run();
+```
+
 ### Rust
 ```rust
 use schemars::JsonSchema;
@@ -256,6 +321,7 @@ Spikard integrates with native validation libraries in each language:
 - **Python**: msgspec (required - zero-copy, fastest), with automatic detection of Pydantic v2, attrs, and dataclasses
 - **TypeScript**: Zod (type inference and runtime validation)
 - **Ruby**: Automatic detection of dry-schema, dry-struct when present
+- **PHP**: Native array/object validation with PSR-7 HTTP message interfaces
 - **Rust**: serde with schemars for JSON Schema generation
 
 All validation approaches compile to the same JSON Schema contracts, ensuring cross-language consistency.
@@ -279,7 +345,7 @@ Fine-grained control over request processing:
 
 - Container-based DI for services and dependencies
 - Scoped injection (request cache, singleton, per-call)
-- Language-idiomatic integration (Python `Provide`, TypeScript `provide`, Ruby `provide` with keyword deps, Rust `ServerConfig::provide_*`)
+- Language-idiomatic integration (Python `Provide`, TypeScript `provide`, Ruby `provide` with keyword deps, PHP `DependencyContainer`, Rust `ServerConfig::provide_*`)
 
 ## Code Generation & CLI
 
@@ -345,10 +411,11 @@ Node.js, Ruby, and WASM benchmarks coming soon.
 
 **What works:**
 - ✅ Core HTTP server with full middleware stack
-- ✅ Python, TypeScript, Ruby, WASM, Rust bindings
+- ✅ Python, TypeScript, Ruby, PHP, WASM, Rust bindings
 - ✅ JSON validation with JSON Schema
 - ✅ Code generation from OpenAPI and AsyncAPI
 - ✅ Streaming, SSE, WebSockets
+- ✅ Background tasks and dependency injection (all bindings)
 - ✅ 400+ fixtures with comprehensive test coverage
 - ✅ Benchmark harness for performance testing
 
@@ -383,9 +450,9 @@ Node.js, Ruby, and WASM benchmarks coming soon.
 - [x] Python (PyO3 + msgspec/Pydantic)
 - [x] TypeScript/Node.js (napi-rs + Zod/ArkType/Valibot)
 - [x] Ruby (Magnus + DrySchema)
+- [x] PHP (ext-php-rs + PSR standards)
 - [x] WebAssembly (wasm-bindgen)
 - [x] Rust (native)
-- [ ] PHP (ext-php-rs) - *In progress*
 - [ ] Go (Maybe?)
 - [ ] C# (Maybe?)
 - [ ] Java/Kotlin (Maybe?)
@@ -423,6 +490,7 @@ Node.js, Ruby, and WASM benchmarks coming soon.
 - PyPI (Python)
 - npm (TypeScript/Node.js)
 - RubyGems (Ruby)
+- Packagist (PHP via Composer)
 - crates.io (Rust)
 
 ### From Source
@@ -432,6 +500,7 @@ Node.js, Ruby, and WASM benchmarks coming soon.
 - Python 3.11+ with `uv` or `pip`
 - Node.js 20+ with `pnpm`
 - Ruby 3.2+ with `bundler`
+- PHP 8.2+ with `composer`
 
 **Quick Start:**
 ```bash
@@ -448,6 +517,7 @@ uv sync
 task build:py      # Python
 task build:node    # Node.js
 task build:ruby    # Ruby
+task build:php     # PHP
 task build:wasm    # WebAssembly
 
 # Run tests
@@ -466,6 +536,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development setup.
   - [Python](packages/python/README.md)
   - [TypeScript/Node.js](packages/node/README.md)
   - [Ruby](packages/ruby/README.md)
+  - [PHP](packages/php/README.md)
   - [Rust](crates/spikard/README.md)
 
 - **Architecture Decision Records (ADRs):** [docs/adr/](docs/adr/)

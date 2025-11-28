@@ -13,12 +13,12 @@ Spikard currently lacks a dependency injection (DI) system, requiring developers
 2. **Tight coupling** - Handlers directly depend on concrete implementations
 3. **Testing difficulty** - Hard to mock dependencies without extensive setup
 4. **Resource management** - No standard pattern for cleanup (database connections, file handles, etc.)
-5. **Cross-language inconsistency** - Each binding (Python, Node, Ruby) implements its own patterns
+5. **Cross-language inconsistency** - Each binding (Python, Node, Ruby, PHP) implements its own patterns
 
 We need a DI system that is:
 - **Simple** - Minimal API surface (like Fastify's decoration pattern)
 - **Powerful** - Type-driven resolution with nested dependencies (like Litestar)
-- **Cross-language** - Same semantics across Python, TypeScript, Ruby, WASM
+- **Cross-language** - Same semantics across Python, TypeScript, Ruby, PHP, WASM
 - **Zero-cost** - No overhead when not used
 - **Rust-first** - Resolution logic in Rust core, not bindings
 
@@ -368,6 +368,38 @@ end
 - Blocks and procs supported
 - Symbol keys (Ruby convention)
 
+#### PHP
+
+```php
+<?php
+use Spikard\App;
+use Spikard\DI\Provide;
+
+$app = new App();
+
+// Simple value
+$app->provide('dbUrl', 'postgresql://localhost/mydb');
+
+// Factory with closure
+$app->provide('db', new Provide(
+    fn(string $dbUrl) => new PDO($dbUrl),
+    dependsOn: ['dbUrl'],
+    singleton: true
+));
+
+// Handler with dependency injection
+$app->addRoute('GET', '/users', function (Request $req, PDO $db) {
+    $stmt = $db->query('SELECT * FROM users');
+    return Response::json($stmt->fetchAll(PDO::FETCH_ASSOC));
+});
+```
+
+**Design rationale:**
+- Constructor property promotion (modern PHP)
+- Typed parameters for type safety
+- Closure-based factories
+- PSR-compliant (PSR-7 for HTTP, PSR-11 for containers)
+
 ## Performance Characteristics
 
 ### Zero-Cost When Unused
@@ -456,6 +488,7 @@ Each fixture includes:
 - Python binding: 80% minimum
 - Node binding: 80% minimum
 - Ruby binding: 80% minimum
+- PHP binding: 80% minimum
 
 ## Consequences
 
@@ -547,11 +580,12 @@ async fn handler(db: Arc<DatabasePool>) -> String {
 - **Week 5-6:** Python binding complete + examples
 - **Week 6-7:** Node/TypeScript binding + examples
 - **Week 7-8:** Ruby binding + examples
-- **Week 8:** WASM binding + examples
-- **Week 9:** Documentation + polish
-- **Week 10:** Review + merge
+- **Week 8:** PHP binding + examples
+- **Week 9:** WASM binding + examples
+- **Week 10:** Documentation + polish
+- **Week 11:** Review + merge
 
-**Total:** ~10 weeks for full cross-language DI system
+**Total:** ~11 weeks for full cross-language DI system
 
 ## References
 

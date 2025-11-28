@@ -1,0 +1,79 @@
+name: Build PHP Extension
+description: Builds PHP extension for specific platform and PHP version
+
+inputs:
+  php-version:
+    description: PHP version (8.2, 8.3)
+    required: true
+  target-platform:
+    description: Rust build target
+    required: false
+    default: ""
+  use-cross:
+    description: Use cross-rs for cross-compilation
+    type: boolean
+    default: false
+
+outputs:
+  extension-path:
+    description: Path to built extension file
+    value: ${{ steps.locate.outputs.extension }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup PHP ${{ inputs.php-version }}
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ inputs.php-version }}
+        tools: composer:2.9.1
+        coverage: none
+
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+
+    - name: Add Rust target
+      if: ${{ inputs.target-platform != '' }}
+      shell: bash
+      run: rustup target add ${{ inputs.target-platform }}
+
+    - name: Install cross
+      if: ${{ inputs.use-cross == 'true' }}
+      shell: bash
+      run: cargo install cross --git https://github.com/cross-rs/cross --locked
+
+    - name: Build extension
+      shell: bash
+      env:
+        TARGET: ${{ inputs.target-platform }}
+      run: |
+        set -euo pipefail
+
+        if [ "${{ inputs.use-cross }}" = "true" ]; then
+          cross build --release -p spikard-php --features extension-module --target "$TARGET"
+        else
+          cargo build --release -p spikard-php --features extension-module
+        fi
+
+    - name: Locate extension file
+      id: locate
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        # Determine extension pattern based on OS
+        if [[ "${{ runner.os }}" == "Windows" ]]; then
+          ext_pattern="target/release/*.dll"
+        elif [[ "${{ runner.os }}" == "macOS" ]]; then
+          ext_pattern="target/release/*.dylib"
+        else
+          ext_pattern="target/release/*.so"
+        fi
+
+        ext_file=$(find $ext_pattern 2>/dev/null | head -1)
+        if [[ -z "$ext_file" ]]; then
+          echo "Extension file not found!" >&2
+          exit 1
+        fi
+
+        echo "extension=$ext_file" >> "$GITHUB_OUTPUT"

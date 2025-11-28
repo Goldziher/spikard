@@ -1,0 +1,57 @@
+name: Test PHP Extension
+description: Loads extension and runs PHPUnit tests
+
+inputs:
+  extension-path:
+    description: Path to extension file
+    required: true
+  php-version:
+    description: PHP version being tested
+    required: true
+  working-directory:
+    description: PHP package working directory
+    required: false
+    default: packages/php
+
+runs:
+  using: composite
+  steps:
+    - name: Verify extension file exists
+      shell: bash
+      run: |
+        if [[ ! -f "${{ inputs.extension-path }}" ]]; then
+          echo "Extension file not found: ${{ inputs.extension-path }}" >&2
+          exit 1
+        fi
+        echo "Extension file verified: ${{ inputs.extension-path }}"
+
+    - name: Install PHP dependencies
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        composer install --no-interaction --no-progress
+
+    - name: Run PHPUnit tests with extension
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        set -euo pipefail
+
+        # Determine the extension name
+        ext_file="${{ inputs.extension-path }}"
+        ext_name=$(basename "$ext_file")
+
+        echo "Loading extension: $ext_name"
+        php -d "extension=${{ inputs.extension-path }}" \
+            vendor/bin/phpunit \
+            --configuration phpunit.xml \
+            --testdox
+
+    - name: Verify extension loads
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        # Quick sanity check that extension loads without errors
+        php -d "extension=${{ inputs.extension-path }}" \
+            -r "echo 'Extension loaded successfully for PHP ${{ inputs.php-version }}\n';"
