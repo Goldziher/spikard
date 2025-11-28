@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Spikard;
 
+use ReflectionClass;
 use RuntimeException;
+use Spikard\Attributes\Middleware;
+use Spikard\Attributes\Route;
 use Spikard\Config\LifecycleHooks;
 use Spikard\Config\ServerConfig;
 use Spikard\DI\DependencyContainer;
+use Spikard\Handlers\ControllerMethodHandler;
 use Spikard\Handlers\HandlerInterface;
 use Spikard\Handlers\SseEventProducerInterface;
 use Spikard\Handlers\WebSocketHandlerInterface;
@@ -27,7 +31,7 @@ final class App
     private ?DependencyContainer $dependencies = null;
     private ?int $serverHandle = null;
 
-    /** @var array<int, array{method: string, path: string, handler: HandlerInterface}> */
+    /** @var array<int, array{method: string, path: string, handler: HandlerInterface, request_schema?: array<mixed>|null, response_schema?: array<mixed>|null, parameter_schema?: array<mixed>|null}> */
     private array $routes = [];
 
     /** @var array<string, WebSocketHandlerInterface> */
@@ -118,6 +122,91 @@ final class App
         return $clone;
     }
 
+    /**
+     * Register a controller class by scanning for route attributes.
+     *
+     * This method uses reflection to discover methods annotated with route attributes
+     * (Get, Post, Put, Delete, Patch, etc.) and registers them as routes.
+     *
+     * Example:
+     * ```php
+     * use Spikard\Attributes\{Get, Post};
+     * use Spikard\Http\Params\Body;
+     *
+     * class UserController {
+     *     #[Get('/users')]
+     *     public function list(): array {
+     *         return ['users' => []];
+     *     }
+     *
+     *     #[Post('/users')]
+     *     public function create(#[Body] array $data): array {
+     *         return ['user' => $data];
+     *     }
+     * }
+     *
+     * $app->registerController(UserController::class);
+     * // or with an instance:
+     * $app->registerController(new UserController($dependency));
+     * ```
+     *
+     * @param class-string|object $controller Controller class name or instance
+     * @return self New app instance with registered routes
+     * @throws \ReflectionException If the class cannot be reflected
+     */
+    public function registerController(string|object $controller): self
+    {
+        $instance = is_object($controller) ? $controller : new $controller();
+        $reflection = new ReflectionClass($instance);
+        $clone = clone $this;
+
+        foreach ($reflection->getMethods() as $method) {
+            // Skip non-public methods
+            if (!$method->isPublic()) {
+                continue;
+            }
+
+            // Find route attributes
+            $routeAttributes = $method->getAttributes(Route::class, \ReflectionAttribute::IS_INSTANCEOF);
+            if (count($routeAttributes) === 0) {
+                continue;
+            }
+
+            // Get the first route attribute
+            $routeAttr = $routeAttributes[0]->newInstance();
+
+            // Collect middleware from Middleware attributes
+            $middlewareAttributes = $method->getAttributes(Middleware::class);
+            $middleware = array_merge(
+                $routeAttr->middleware,
+                array_map(static fn ($attr) => $attr->newInstance()->middleware, $middlewareAttributes)
+            );
+
+            // Create handler wrapper
+            $handler = new ControllerMethodHandler($instance, $method);
+
+            // Register the route
+            if ($routeAttr->requestSchema !== null || $routeAttr->responseSchema !== null || $routeAttr->parameterSchema !== null) {
+                $clone = $clone->addRouteWithSchemas(
+                    $routeAttr->method,
+                    $routeAttr->path,
+                    $handler,
+                    $routeAttr->requestSchema,
+                    $routeAttr->responseSchema,
+                    $routeAttr->parameterSchema
+                );
+            } else {
+                $clone = $clone->addRoute(
+                    $routeAttr->method,
+                    $routeAttr->path,
+                    $handler
+                );
+            }
+        }
+
+        return $clone;
+    }
+
     public function config(): ?ServerConfig
     {
         return $this->config;
@@ -133,7 +222,9 @@ final class App
         return $this->dependencies;
     }
 
-    /** @return array<int, array{method: string, path: string, handler: HandlerInterface}> */
+    /**
+     * @return array<int, array{method: string, path: string, handler: HandlerInterface, request_schema?: array<mixed>|null, response_schema?: array<mixed>|null, parameter_schema?: array<mixed>|null}>
+     */
     public function routes(): array
     {
         return $this->routes;

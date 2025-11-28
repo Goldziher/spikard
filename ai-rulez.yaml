@@ -360,6 +360,29 @@ rules:
       modules build correctly. Binaries (CLI, tests) build without extension-module to link
       libpython; extensions (maturin builds) enable it for manylinux compliance.
 
+  # ext-php-rs Binding Configuration
+  - name: ext-php-rs Binding Configuration
+    priority: critical
+    content: |
+      PHP bindings via ext-php-rs in `crates/spikard-php/` must maintain type safety across the
+      Rust-PHP FFI boundary. Configure ext-php-rs properly in Cargo.toml and ensure all Rust
+      errors convert to PHP exceptions with structured JSON payloads (error, code, details).
+      Never expose raw Rust panics; all fallible paths must return ext-php-rs Result types that
+      translate to thrown PHP exceptions. Maintain PSR-4 autoloading in `packages/php/src/`
+      and ensure PHPStan level max static analysis passes without @phpstan-ignore directives.
+
+  # PHP PSR Compliance & Standards Enforcement
+  - name: PHP PSR Compliance & Standards Enforcement
+    priority: critical
+    content: |
+      All PHP code in `packages/php/src/` must enforce PSR-4 (autoloading), PSR-12 (coding style),
+      and PSR-7 (HTTP interfaces). Use PHPStan level max (9) for static analysis; never suppress
+      errors with @phpstan-ignore directives. Declare strict_types=1 at the top of every file.
+      Use typed properties and return types on all methods; avoid mixed types. PHPUnit testing
+      must cover 80%+ of code; use data providers for parametrized tests. Composer dependencies
+      are committed (composer.lock) and managed strictly. Never use eval(), suppress errors with
+      @, or maintain global state. Methods must be <15 lines; use composition over inheritance.
+
   # Handler Trait Abstraction
   - name: Handler Trait Abstraction
     priority: critical

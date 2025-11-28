@@ -44,6 +44,10 @@ RUBY_VERSION_PATHS = [
     Path("crates/spikard-rb/lib/spikard/version.rb"),
 ]
 
+COMPOSER_JSON_PATHS = [
+    Path("packages/php/composer.json"),
+]
+
 
 def log_line(message: str) -> None:
     """Write a single message to stdout (ruff-safe helper)."""
@@ -149,6 +153,11 @@ def main() -> None:
     changed_files: list[Path] = []
 
     for rel in PACKAGE_JSON_PATHS:
+        path = REPO_ROOT / rel
+        if update_package_json(path, version):
+            changed_files.append(rel)
+
+    for rel in COMPOSER_JSON_PATHS:
         path = REPO_ROOT / rel
         if update_package_json(path, version):
             changed_files.append(rel)

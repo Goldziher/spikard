@@ -483,6 +483,48 @@ tasks:
       - cargo build -p spikard-php --features extension-module --release
       - echo "PHP extension built at target/release/libspikard_php.dylib"
 
+  php:build:pie-source:
+    desc: "Build PIE source bundle for PHP extension"
+    vars:
+      VERSION:
+        sh: grep '^version = ' Cargo.toml | head -1 | sed -E 's/version = "(.*)"/\1/'
+    cmds:
+      - mkdir -p build/php-releases
+      - chmod +x scripts/package_php_pie_source.sh
+      - ./scripts/package_php_pie_source.sh {{.VERSION}} build/php-releases
+      - echo "PIE bundle ready at build/php-releases/spikard-php-{{.VERSION}}-src.tgz"
+
+  release:php:dry-run:
+    desc: "Test PHP release workflow without publishing (dry-run)"
+    cmds:
+      - echo "Triggering dry-run release for PHP bindings..."
+      - gh workflow run release-php.yml --ref {{.REF}} -f tag={{.TAG}} -f dry_run=true
+    vars:
+      TAG: '{{.TAG | default "v0.1.3-test"}}'
+      REF: '{{.REF | default "main"}}'
+    preconditions:
+      - sh: command -v gh
+        msg: "GitHub CLI (gh) is required for release workflows"
+
+  release:php:
+    desc: "Trigger PHP release workflow (requires git tag)"
+    cmds:
+      - |
+        if [[ -z "{{.TAG}}" ]]; then
+          echo "Usage: task release:php -- --set TAG=v0.1.4"
+          exit 1
+        fi
+        echo "Triggering release for PHP bindings: {{.TAG}}"
+        gh workflow run release-php.yml --ref main -f tag={{.TAG}}
+    preconditions:
+      - sh: command -v gh
+        msg: "GitHub CLI (gh) is required for release workflows"
+
+  version:sync:php:
+    desc: "Sync PHP package version to workspace version"
+    cmds:
+      - python3 scripts/sync_versions.py
+
   build:rust:
     desc: "Build Rust workspace in release mode"
     cmds:
@@ -812,13 +854,23 @@ tasks:
       - ./tools/app-generator/target/release/app-generator generate --framework spikard-ruby --fixtures testing_data --categories query_params,json_bodies,path_params,multipart,url_encoded --output tools/benchmark-harness/apps/spikard-ruby
       - task: bench:lint:ruby
 
+  bench:generate:php:
+    desc: "Generate Spikard-PHP benchmark server from fixtures"
+    deps:
+      - bench:generator:build
+    cmds:
+      - rm -rf tools/benchmark-harness/apps/spikard-php
+      - ./tools/app-generator/target/release/app-generator generate --framework spikard-php --fixtures testing_data --categories query_params,json_bodies,path_params,multipart,url_encoded --output tools/benchmark-harness/apps/spikard-php
+      - task: bench:lint:php
+
   bench:generate:all:
-    desc: "Generate all benchmark servers (Python, Rust, Node, Ruby)"
+    desc: "Generate all benchmark servers (Python, Rust, Node, Ruby, PHP)"
     cmds:
       - task: bench:generate:python
       - task: bench:generate:rust
       - task: bench:generate:node
       - task: bench:generate:ruby
+      - task: bench:generate:php
 
   bench:format:python:
     desc: "Format generated Python benchmark code"
@@ -860,6 +912,11 @@ tasks:
     cmds:
       - RBENV_VERSION={{.RBENV_VERSION}} {{.RBENV_BIN}} exec bundle _{{.BUNDLER_VERSION}}_ exec rubocop tools/benchmark-harness/apps/spikard-ruby/ || true
 
+  bench:lint:php:
+    desc: "Lint generated PHP benchmark code"
+    cmds:
+      - cd tools/benchmark-harness/apps/spikard-php && php -l server.php
+
   bench:build:python:
     desc: "Verify generated Python benchmark app loads"
     deps:
@@ -877,12 +934,20 @@ tasks:
     cmds:
       - cargo build --release --manifest-path tools/benchmark-harness/apps/spikard-rust-gen/Cargo.toml
 
+  bench:build:php:
+    desc: "Verify generated PHP benchmark app syntax"
+    deps:
+      - build:php
+    cmds:
+      - php -l tools/benchmark-harness/apps/spikard-php/server.php
+
   bench:build:all:
     desc: "Build all benchmark servers"
     cmds:
       - task: bench:build:python
       - task: bench:build:rust
       - task: bench:build:rust:gen
+      - task: bench:build:php
 
   bench:run:python:
     desc: "Run benchmark against Spikard-Python server"
@@ -900,6 +965,14 @@ tasks:
     cmds:
       - ./target/release/benchmark-harness run --framework spikard-rust --app-dir tools/benchmark-harness/apps/spikard-rust --workload baseline --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-rust.json
 
+  bench:run:php:
+    desc: "Run benchmark against Spikard-PHP server"
+    deps:
+      - bench:harness:build
+      - bench:build:php
+    cmds:
+      - ./target/release/benchmark-harness run --framework spikard-php --app-dir tools/benchmark-harness/apps/spikard-php --workload json-bodies --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-php.json
+
   bench:run:ruby:
     desc: "Run benchmark against Spikard-Ruby server"
     deps:
@@ -916,6 +989,11 @@ tasks:
     cmds:
       - ./target/release/benchmark-harness run --framework spikard-node --app-dir tools/benchmark-harness/apps/spikard-node --workload baseline --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-node.json
 
+  bench:install:php:
+    desc: "Install dependencies for Spikard-PHP benchmark app"
+    cmds:
+      - echo "PHP benchmark app uses packages/php - no separate install needed"
+
   bench:run:all:
     desc: "Run benchmarks for all frameworks"
     cmds:
@@ -923,6 +1001,7 @@ tasks:
       - task: bench:run:rust
       - task: bench:run:ruby
       - task: bench:run:node
+      - task: bench:run:php
 
   # Workload-specific benchmarks (JSON bodies)
   bench:run:python:json:
