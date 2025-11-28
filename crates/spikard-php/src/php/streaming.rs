@@ -13,10 +13,10 @@ use std::collections::HashMap;
 use std::io;
 use std::str::FromStr;
 
-/// Global registry for PHP Generator objects.
-///
-/// Since Zval contains raw pointers to PHP's single-threaded structures,
-/// we use thread-local storage similar to PhpHandler registry.
+// Global registry for PHP Generator objects.
+//
+// Since Zval contains raw pointers to PHP's single-threaded structures,
+// we use thread-local storage similar to PhpHandler registry.
 thread_local! {
     static GENERATOR_REGISTRY: RefCell<Vec<GeneratorHandle>> = RefCell::new(Vec::new());
 }

@@ -40,12 +40,12 @@ pub struct PhpSseEventProducer {
     producer_index: usize,
 }
 
-/// Registry for PHP SSE producer callables referenced by index.
-///
-/// We store Zval instead of ZendCallable because ZendCallable has a lifetime parameter
-/// that prevents storage in static. We reconstruct ZendCallable when invoking.
-///
-/// NOTE: thread_local because Zval is not Send/Sync (PHP is single-threaded).
+// Registry for PHP SSE producer callables referenced by index.
+//
+// We store Zval instead of ZendCallable because ZendCallable has a lifetime parameter
+// that prevents storage in static. We reconstruct ZendCallable when invoking.
+//
+// NOTE: thread_local because Zval is not Send/Sync (PHP is single-threaded).
 thread_local! {
     static PHP_SSE_PRODUCER_REGISTRY: std::cell::RefCell<Vec<ext_php_rs::types::Zval>> = std::cell::RefCell::new(Vec::new());
 }
