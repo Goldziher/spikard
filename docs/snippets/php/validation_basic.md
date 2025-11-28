@@ -9,7 +9,7 @@ use Spikard\Http\Response;
 $app = new App(new ServerConfig(port: 8000));
 
 $app = $app->addRoute('POST', '/payments', function (Request $request) {
-    $payment = $request->jsonBody();
+    $payment = $request->body;
 
     // Validation
     if (!isset($payment['id'], $payment['amount'])) {

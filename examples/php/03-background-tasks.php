@@ -34,7 +34,7 @@ function logUserCreation(array $user): void {
 }
 
 $app = $app->addRoute('POST', '/users', function (Request $request) {
-    $data = $request->jsonBody();
+    $data = $request->body;
 
     // Synchronous work (fast)
     $user = [

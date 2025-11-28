@@ -80,7 +80,11 @@ $app = $app->addRoute('GET', '/', function () {
 </html>
 HTML;
 
-    return \Spikard\Http\Response::html($html);
+    return new \Spikard\Http\Response(
+        body: $html,
+        statusCode: 200,
+        headers: ['Content-Type' => 'text/html; charset=utf-8']
+    );
 });
 
 echo "Starting SSE server on http://127.0.0.1:8000\n";

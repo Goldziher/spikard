@@ -3,12 +3,17 @@
 
 use Spikard\App;
 use Spikard\Config\ServerConfig;
+use Spikard\Config\LifecycleHooks;
+use Spikard\Config\HookResult;
 use Spikard\Http\Request;
 
-$app = new App(new ServerConfig(port: 8000));
+$hooks = new LifecycleHooks(
+    onRequest: function (Request $request): HookResult {
+        error_log("{$request->method} {$request->path}");
+        return HookResult::Continue($request);
+    }
+);
 
-$app = $app->onRequest(function (Request $request) {
-    error_log("{$request->method()} {$request->path()}");
-    return $request;
-});
+$app = (new App(new ServerConfig(port: 8000)))
+    ->withLifecycleHooks($hooks);
 ```

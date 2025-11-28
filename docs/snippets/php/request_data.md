@@ -8,14 +8,15 @@ use Spikard\Http\Response;
 
 $app = new App(new ServerConfig(port: 8000));
 
-$app = $app->addRoute('POST', '/orders/{order_id}', function (Request $request, int $order_id) {
-    $order = $request->jsonBody();
-    $verbose = $request->query('verbose', false);
+$app = $app->addRoute('POST', '/orders/{order_id}', function (Request $request) {
+    $orderId = (int) $request->pathParams['order_id'];
+    $order = $request->body;
+    $verbose = $request->queryParams['verbose'][0] ?? 'false';
 
     return Response::json([
-        'id' => $order_id,
-        'item' => $order['item'],
-        'quantity' => $order['quantity'],
+        'id' => $orderId,
+        'item' => $order['item'] ?? '',
+        'quantity' => $order['quantity'] ?? 0,
         'verbose' => $verbose
     ]);
 });

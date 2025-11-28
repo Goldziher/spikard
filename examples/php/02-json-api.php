@@ -33,7 +33,7 @@ $app = $app->addRoute('GET', '/users', function () {
 
 // POST endpoint accepting JSON body
 $app = $app->addRoute('POST', '/users', function (Request $request) {
-    $data = $request->jsonBody();
+    $data = $request->body;
 
     // Validate required fields
     if (!isset($data['name'], $data['email'])) {
