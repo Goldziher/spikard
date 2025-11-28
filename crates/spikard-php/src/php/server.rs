@@ -444,8 +444,7 @@ impl PhpServer {
                 is_async: false,
                 cors: None,
                 expects_json_body: route.request_schema.is_some(),
-                #[cfg(feature = "di")]
-                handler_dependencies: Vec::new(),
+                handler_dependencies: vec![], // PHP routes don't currently declare dependencies
             };
 
             router.add_route(route_meta);
@@ -517,8 +516,7 @@ impl PhpServer {
                 is_async: false,
                 cors: None,
                 expects_json_body: route.request_schema.is_some(),
-                #[cfg(feature = "di")]
-                handler_dependencies: Vec::new(),
+                handler_dependencies: vec![],
             };
 
             routes_with_handlers.push((metadata, Arc::new(handler) as Arc<dyn Handler>));
@@ -547,8 +545,7 @@ impl PhpServer {
                     is_async: true,       // PHP handlers are always async in our implementation
                     cors: r.cors.clone(), // Use route-specific CORS config
                     body_param_name: None,
-                    #[cfg(feature = "di")]
-                    dependencies: Vec::new(),
+                    handler_dependencies: Some(Vec::new()),
                 }
             })
             .collect();
@@ -625,16 +622,16 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
             // Check for StreamingResponse first (before Response)
             if class_name.contains("StreamingResponse") {
                 // Extract generator property
-                if let Ok(generator_zval) = obj.get_property("generator") {
+                if let Ok(generator_zval) = obj.get_property::<&Zval>("generator") {
                     // Extract status code
-                    let status_code = if let Ok(status_zval) = obj.get_property("statusCode") {
+                    let status_code = if let Ok(status_zval) = obj.get_property::<&Zval>("statusCode") {
                         status_zval.long().unwrap_or(200) as u16
                     } else {
                         200
                     };
 
                     // Extract headers
-                    let headers = if let Ok(headers_zval) = obj.get_property("headers") {
+                    let headers = if let Ok(headers_zval) = obj.get_property::<&Zval>("headers") {
                         if let Some(arr) = headers_zval.array() {
                             arr.iter()
                                 .filter_map(|(key, val)| {

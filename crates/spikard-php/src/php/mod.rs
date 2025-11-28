@@ -11,7 +11,7 @@ use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
 use serde_json::Value;
 
-mod background;
+pub mod background;
 mod di;
 mod handler;
 mod hooks;
@@ -24,7 +24,7 @@ mod streaming;
 mod testing;
 mod websocket;
 
-pub use background::{clear_handle, install_handle, spikard_background_run};
+pub use background::{clear_handle, install_handle};
 pub use di::{PhpFactoryDependency, PhpValueDependency, extract_di_container_from_php};
 pub use handler::GLOBAL_RUNTIME;
 pub use handler::PhpHandler;
@@ -40,11 +40,19 @@ pub use testing::{
 };
 pub use websocket::{PhpWebSocketHandler, create_websocket_state};
 
+/// Background task wrapper to make wrap_function! work
+#[php_function]
+#[php(name = "spikard_background_run")]
+pub fn spikard_background_run_wrapper(callable: &Zval, args: Option<&Zval>) -> PhpResult<()> {
+    background::spikard_background_run(callable, args)
+}
+
 /// Start server wrapper for PHP.
 #[php_function]
 #[php(name = "spikard_start_server")]
 pub fn spikard_start_server(routes_zval: &Zval, config: &Zval, hooks: &Zval, dependencies: Option<&Zval>) -> PhpResult<u64> {
-    let deps = dependencies.unwrap_or(&Zval::new());
+    let default_deps = Zval::new();
+    let deps = dependencies.unwrap_or(&default_deps);
     start::spikard_start_server_impl(routes_zval, config, hooks, deps)
 }
 
@@ -68,7 +76,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .function(wrap_function!(spikard_parse_json))
         .function(wrap_function!(spikard_start_server))
         .function(wrap_function!(spikard_stop_server))
-        .function(wrap_function!(background::spikard_background_run))
+        .function(wrap_function!(spikard_background_run_wrapper))
         // Core classes
         .class::<PhpRequest>()
         .class::<PhpResponse>()

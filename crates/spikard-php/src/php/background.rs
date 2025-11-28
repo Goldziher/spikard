@@ -53,18 +53,18 @@ pub fn spikard_background_run(callable: &Zval, args: Option<&Zval>) -> PhpResult
     // Validate callable
     if !callable.is_callable() {
         return Err(PhpException::default(
-            "First argument to spikard_background_run must be callable",
+            "First argument to spikard_background_run must be callable".to_string(),
         ));
     }
 
     // Get background handle
     let handle = BACKGROUND_HANDLE
         .read()
-        .map_err(|_| PhpException::default("Background handle lock poisoned"))?
+        .map_err(|_| PhpException::default("Background handle lock poisoned".to_string()))?
         .clone()
         .ok_or_else(|| {
             PhpException::default(
-                "Background runtime not initialized. Server must be running to spawn background tasks.",
+                "Background runtime not initialized. Server must be running to spawn background tasks.".to_string(),
             )
         })?;
 
@@ -84,11 +84,16 @@ pub fn spikard_background_run(callable: &Zval, args: Option<&Zval>) -> PhpResult
                             .array()
                             .ok_or_else(|| BackgroundJobError::from("Arguments must be an array"))?;
 
-                        let args_vec: Vec<&Zval> = args_array.values().collect();
+                        let args_vec: Vec<&dyn ext_php_rs::convert::IntoZvalDyn> =
+                            args_array.values().map(|v| v as &dyn ext_php_rs::convert::IntoZvalDyn).collect();
 
-                        ZendCallable::new(callable_owned, None).try_call(args_vec)
+                        ZendCallable::new(&callable_owned)
+                            .map_err(|e| BackgroundJobError::from(format!("Failed to create callable: {:?}", e)))?
+                            .try_call(args_vec)
                     } else {
-                        ZendCallable::new(callable_owned, None).try_call(vec![])
+                        ZendCallable::new(&callable_owned)
+                            .map_err(|e| BackgroundJobError::from(format!("Failed to create callable: {:?}", e)))?
+                            .try_call(vec![])
                     };
 
                     call_result.map(|_| ()).map_err(|e| {
