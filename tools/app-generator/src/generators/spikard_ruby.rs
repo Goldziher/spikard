@@ -48,7 +48,7 @@ require 'spikard/handler_wrapper'
         header.push_str("require 'dry/struct'\n");
     }
 
-    header.push_str("\n");
+    header.push('\n');
     header
 }
 
@@ -117,7 +117,7 @@ fn generate_handler_block(route: &RouteInfo) -> (String, String) {
         lines.push(format!("response[:{name}] = params[:{name}]", name = param_name));
     }
 
-    for (name, _) in &route.params.query {
+    for name in route.params.query.keys() {
         lines.push(format!(
             "response[:{name}] = query[:{name}] if query[:{name}]",
             name = name

@@ -143,8 +143,8 @@ fn generate_handler_struct(route: &RouteInfo, handler_names: &mut HashMap<String
     }
 
     if has_path {
-        code.push_str("\n");
-        for (name, _) in &route.params.path {
+        code.push('\n');
+        for name in route.params.path.keys() {
             code.push_str(&format!(
                 "            if let Some(val) = request_data.path_params.get(\"{}\") {{\n",
                 name
@@ -155,8 +155,8 @@ fn generate_handler_struct(route: &RouteInfo, handler_names: &mut HashMap<String
     }
 
     if has_query {
-        code.push_str("\n");
-        for (name, _) in &route.params.query {
+        code.push('\n');
+        for name in route.params.query.keys() {
             code.push_str(&format!(
                 "            if let Some(val) = request_data.query_params.get(\"{}\") {{\n",
                 name
@@ -166,7 +166,7 @@ fn generate_handler_struct(route: &RouteInfo, handler_names: &mut HashMap<String
         }
     }
 
-    code.push_str("\n");
+    code.push('\n');
     code.push_str("            let body = serde_json::to_vec(&response)\n");
     code.push_str("                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;\n\n");
     code.push_str("            Response::builder()\n");
@@ -191,8 +191,7 @@ fn generate_base_handler_name(route: &RouteInfo) -> String {
         .trim_start_matches('/')
         .trim_end_matches('/')
         .replace('/', "_")
-        .replace('{', "")
-        .replace('}', "")
+        .replace(['{', '}'], "")
         .replace('-', "_");
 
     let name = if path.is_empty() {

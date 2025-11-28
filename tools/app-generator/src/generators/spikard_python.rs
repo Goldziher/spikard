@@ -69,15 +69,15 @@ fn generate_server_config(analysis: &RouteAnalysis) -> String {
 
     for route in &analysis.routes {
         if let Some(middleware) = &route.middleware {
-            if let Some(jwt) = &middleware.jwt_auth {
-                if jwt.enabled {
-                    jwt_config = Some(jwt.clone());
-                }
+            if let Some(jwt) = &middleware.jwt_auth
+                && jwt.enabled
+            {
+                jwt_config = Some(jwt.clone());
             }
-            if let Some(api_key) = &middleware.api_key_auth {
-                if api_key.enabled {
-                    api_key_config = Some(api_key.clone());
-                }
+            if let Some(api_key) = &middleware.api_key_auth
+                && api_key.enabled
+            {
+                api_key_config = Some(api_key.clone());
             }
         }
     }
@@ -87,15 +87,15 @@ fn generate_server_config(analysis: &RouteAnalysis) -> String {
         jwt_params.push(format!("        secret=\"{}\"", jwt.secret));
         jwt_params.push(format!("        algorithm=\"{}\"", jwt.algorithm));
 
-        if let Some(audience) = &jwt.audience {
-            if !audience.is_empty() {
-                let aud_str = audience
-                    .iter()
-                    .map(|s| format!("\"{}\"", s))
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                jwt_params.push(format!("        audience=[{}]", aud_str));
-            }
+        if let Some(audience) = &jwt.audience
+            && !audience.is_empty()
+        {
+            let aud_str = audience
+                .iter()
+                .map(|s| format!("\"{}\"", s))
+                .collect::<Vec<_>>()
+                .join(", ");
+            jwt_params.push(format!("        audience=[{}]", aud_str));
         }
 
         if let Some(issuer) = &jwt.issuer {
@@ -116,7 +116,7 @@ fn generate_server_config(analysis: &RouteAnalysis) -> String {
             .map(|k| format!("\"{}\"", k))
             .collect::<Vec<_>>()
             .join(", ");
-        let api_key_params = vec![
+        let api_key_params = [
             format!("        keys=[{}]", keys_str),
             format!("        header_name=\"{}\"", api_key.header_name),
         ];
@@ -200,7 +200,7 @@ fn generate_parameters(route: &RouteInfo) -> String {
             .params
             .path
             .get(param_name)
-            .map(|def| param_to_python_type(def))
+            .map(param_to_python_type)
             .unwrap_or_else(|| "str".to_string());
         params.push(format!("{}: {}", param_name, py_type));
     }
@@ -282,7 +282,7 @@ fn generate_handler_body(route: &RouteInfo) -> String {
         lines.push(format!("response[\"{}\"] = {}", param_name, param_name));
     }
 
-    for (name, _) in &route.params.query {
+    for name in route.params.query.keys() {
         lines.push(format!("if {} is not None:", name));
         lines.push(format!("        response[\"{}\"] = {}", name, name));
     }
