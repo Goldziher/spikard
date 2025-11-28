@@ -86,21 +86,26 @@ pub fn process_pending_tasks() -> bool {
 ///
 /// # Arguments
 /// * `callable` - PHP callable (closure, function name, array ['class', 'method'])
-/// * `args` - Optional array of arguments to pass to callable
+/// * `args` - Array of arguments to pass to callable (or null for no args)
 ///
 /// # Errors
 /// * Returns error if callable is not actually callable
 ///
 /// # Example
 /// ```php
+/// // Without arguments
 /// spikard_background_run(function() {
-///     sleep(5);
 ///     error_log("Background task complete");
-/// });
+/// }, null);
+///
+/// // With arguments
+/// spikard_background_run(function($x, $y) {
+///     error_log("Sum: " . ($x + $y));
+/// }, [1, 2]);
 /// ```
 #[php_function]
 #[php(name = "spikard_background_run")]
-pub fn spikard_background_run(callable: &Zval, args: Option<&Zval>) -> PhpResult<()> {
+pub fn spikard_background_run(callable: &Zval, args: &Zval) -> PhpResult<()> {
     // Validate callable
     if !callable.is_callable() {
         return Err(PhpException::default(
@@ -110,7 +115,11 @@ pub fn spikard_background_run(callable: &Zval, args: Option<&Zval>) -> PhpResult
 
     // Clone the Zvals for queueing (shallow clone is cheap)
     let callable_owned = callable.shallow_clone();
-    let args_owned = args.map(|a| a.shallow_clone());
+    let args_owned = if args.is_null() {
+        None
+    } else {
+        Some(args.shallow_clone())
+    };
 
     // Queue the task
     let task = QueuedTask {
