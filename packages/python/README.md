@@ -4,6 +4,8 @@
 [![PyPI](https://badge.fury.io/py/spikard.svg)](https://badge.fury.io/py/spikard)
 [![npm](https://img.shields.io/npm/v/spikard)](https://www.npmjs.com/package/spikard)
 [![npm (WASM)](https://img.shields.io/npm/v/spikard-wasm?label=npm%20%28wasm%29)](https://www.npmjs.com/package/spikard-wasm)
+[![RubyGems](https://badge.fury.io/rb/spikard.svg)](https://rubygems.org/gems/spikard)
+[![Packagist](https://img.shields.io/packagist/v/spikard/spikard)](https://packagist.org/packages/spikard/spikard)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 High-performance Python web framework with a Rust core. Build REST APIs, WebSockets, and SSE services with FastAPI/Litestar-style decorators backed by Axum and Tower-HTTP.
