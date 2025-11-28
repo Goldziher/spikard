@@ -45,8 +45,7 @@ impl RegisteredRoutePayload {
             is_async: false,
             cors: None,
             expects_json_body: self.request_schema.is_some(),
-            #[cfg(feature = "di")]
-            handler_dependencies: Vec::new(),
+            handler_dependencies: vec![],
         })
     }
 }
@@ -427,7 +426,6 @@ fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::Se
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
         openapi: openapi_config,
         lifecycle_hooks: None, // Set separately via hooks parameter
-        #[cfg(feature = "di")]
         di_container: None, // DI not yet supported in PHP bindings
     })
 }
@@ -609,8 +607,7 @@ pub fn spikard_start_server_impl(routes_zval: &Zval, config: &Zval, hooks: &Zval
             is_async: true,
             cors: None,
             body_param_name: None,
-            #[cfg(feature = "di")]
-            dependencies: Vec::new(),
+            handler_dependencies: Some(Vec::new()),
         });
 
         route_pairs.push((route, Arc::new(handler) as Arc<dyn spikard_http::Handler>));
@@ -686,7 +683,7 @@ pub fn spikard_start_server_impl(routes_zval: &Zval, config: &Zval, hooks: &Zval
             // Shutdown background runtime
             crate::php::clear_handle();
             if let Err(e) = background_runtime.shutdown().await {
-                eprintln!("Failed to drain background tasks during shutdown: {}", e);
+                eprintln!("Failed to drain background tasks during shutdown: {:?}", e);
             }
         });
     });

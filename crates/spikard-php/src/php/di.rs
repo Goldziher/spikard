@@ -176,7 +176,7 @@ impl PhpFactoryDependency {
         // Collect resolved Zvals from handles
         let mut zvals = Vec::new();
         for dep_name in &self.dependencies {
-            let resolved_value = resolved
+            let resolved_value: &Arc<dyn Any + Send + Sync> = resolved
                 .get(dep_name)
                 .ok_or_else(|| DependencyError::ResolutionFailed {
                     message: format!("Dependency '{}' not resolved", dep_name)
@@ -204,10 +204,14 @@ impl PhpFactoryDependency {
                 })?;
 
             // Build argument references for try_call
-            let args: Vec<&Zval> = zvals.iter().collect();
+            let args: Vec<&dyn ext_php_rs::convert::IntoZvalDyn> =
+                zvals.iter().map(|v| v as &dyn ext_php_rs::convert::IntoZvalDyn).collect();
 
             // Invoke PHP callable
-            let callable = ZendCallable::new(callable_zval.clone(), None);
+            let callable = ZendCallable::new(callable_zval)
+                .map_err(|e| DependencyError::ResolutionFailed {
+                    message: format!("Failed to create callable: {:?}", e)
+                })?;
             let result = callable
                 .try_call(args)
                 .map_err(|e| DependencyError::ResolutionFailed {
@@ -277,8 +281,8 @@ pub fn extract_di_container_from_php(container_zval: Option<&Zval>) -> Result<Op
     // Assumes: $container->dependencies is a public property or has getDependencies()
     let deps_array = if let Some(obj) = container_zval.object() {
         // Try to get 'dependencies' property
-        obj.get_property("dependencies")
-            .ok_or_else(|| "DependencyContainer must have 'dependencies' property".to_string())?
+        obj.get_property::<&Zval>("dependencies")
+            .map_err(|_| "DependencyContainer must have 'dependencies' property".to_string())?
     } else {
         return Err("DI container must be an object".to_string());
     };
@@ -299,16 +303,16 @@ pub fn extract_di_container_from_php(container_zval: Option<&Zval>) -> Result<Op
         // Check if it's a factory or value dependency
         if let Some(dep_obj) = dep_val.object() {
             // Check if it's a Provide instance (factory)
-            if let Some(class_name) = dep_obj.get_class_name() {
+            if let Ok(class_name) = dep_obj.get_class_name() {
                 if class_name.contains("Provide") {
                     // Extract factory callable and dependencies
                     let factory_callable = dep_obj
-                        .get_property("factory")
-                        .ok_or_else(|| format!("Provide instance '{}' missing 'factory' property", dep_name))?;
+                        .get_property::<&Zval>("factory")
+                        .map_err(|_| format!("Provide instance '{}' missing 'factory' property", dep_name))?;
 
                     let depends_on_zval = dep_obj
-                        .get_property("dependsOn")
-                        .ok_or_else(|| format!("Provide instance '{}' missing 'dependsOn' property", dep_name))?;
+                        .get_property::<&Zval>("dependsOn")
+                        .map_err(|_| format!("Provide instance '{}' missing 'dependsOn' property", dep_name))?;
 
                     let depends_on = if let Some(arr) = depends_on_zval.array() {
                         arr.values()
