@@ -612,7 +612,7 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
                     StatusCode::INTERNAL_SERVER_ERROR,
                     format!("Failed to build response: {}", e),
                 )
-                .unwrap()
+                .expect("Failed to build error response")
             }));
     }
 
@@ -737,7 +737,7 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
                     StatusCode::INTERNAL_SERVER_ERROR,
                     format!("Failed to build response: {}", e),
                 )
-                .unwrap()
+                .expect("Failed to build error response")
             }));
     }
 
@@ -763,7 +763,7 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
                 StatusCode::INTERNAL_SERVER_ERROR,
                 format!("Failed to build response: {}", e),
             )
-            .unwrap()
+            .expect("Failed to build error response")
         }))
 }
 
