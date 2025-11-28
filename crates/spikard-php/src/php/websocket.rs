@@ -312,8 +312,6 @@ pub fn create_websocket_state(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_websocket_handler_clone() {
         // Since we can't easily create PHP objects in Rust tests,

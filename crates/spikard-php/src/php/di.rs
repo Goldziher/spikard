@@ -362,8 +362,8 @@ mod tests {
     fn test_value_dependency() {
         // Test that PhpValueDependency can be created
         let zval = Zval::new(); // Create a null Zval for testing
-        let dep = PhpValueDependency::new(zval);
-        assert!(Arc::strong_count(&dep.value) == 1);
+        let dep = PhpValueDependency::new("test_key".to_string(), zval);
+        assert_eq!(dep.key(), "test_key");
     }
 
     #[test]
@@ -375,7 +375,7 @@ mod tests {
             assert_eq!(initial_len, 0);
 
             let callable = Zval::new();
-            let _factory = PhpFactoryDependency::register(callable, vec![]);
+            let _factory = PhpFactoryDependency::register("test_factory".to_string(), callable, vec![]);
 
             let final_len = registry.borrow().len();
             assert_eq!(final_len, 1);
