@@ -124,8 +124,10 @@ def update_cargo_versions(path: Path, version: str) -> bool:
     pattern_package = re.compile(r'(\[package\][^\[]*?^version\s*=\s*")([^"]+)(")', re.MULTILINE | re.DOTALL)
     content, _ = pattern_package.subn(rf"\g<1>{version}\g<3>", content, count=1)
 
-    # workspace dependencies that pin internal crates
-    pattern_internal_dep = re.compile(r'^(spikard(?:-core)?\s*=\s*\{\s*version\s*=\s*")([^"]+)(")', re.MULTILINE)
+    # workspace dependencies that pin internal crates (including _spikard alias)
+    pattern_internal_dep = re.compile(
+        r'^((?:_)?spikard(?:-[a-z]+)?\s*=\s*\{[^}]*version\s*=\s*")([^"]+)(")', re.MULTILINE
+    )
     content, _ = pattern_internal_dep.subn(rf"\g<1>{version}\g<3>", content)
 
     if content != original:
