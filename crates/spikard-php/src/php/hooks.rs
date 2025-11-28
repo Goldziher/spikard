@@ -192,8 +192,8 @@ fn php_response_to_axum(php_resp: &PhpResponse) -> Result<Response<Body>, String
     let status = StatusCode::from_u16(php_resp.status as u16)
         .map_err(|e| format!("Invalid status code {}: {}", php_resp.status, e))?;
 
-    let body_bytes = serde_json::to_vec(&php_resp.body)
-        .map_err(|e| format!("Failed to serialize response body: {}", e))?;
+    let body_bytes =
+        serde_json::to_vec(&php_resp.body).map_err(|e| format!("Failed to serialize response body: {}", e))?;
 
     let mut builder = Response::builder().status(status);
 
@@ -218,9 +218,8 @@ async fn axum_response_to_php(resp: Response<Body>) -> Result<(PhpResponse, Resp
         .to_bytes();
 
     // Parse body as JSON if possible
-    let body_value: Value = serde_json::from_slice(&body_bytes).unwrap_or_else(|_| {
-        Value::String(String::from_utf8_lossy(&body_bytes).to_string())
-    });
+    let body_value: Value = serde_json::from_slice(&body_bytes)
+        .unwrap_or_else(|_| Value::String(String::from_utf8_lossy(&body_bytes).to_string()));
 
     // Extract headers
     let mut headers = HashMap::new();
@@ -282,14 +281,8 @@ fn make_request_hook(
         {
             let callback_index = self.callback_index;
             Box::pin(async move {
-                // Convert axum Request to PhpRequest
-                let php_req = match axum_request_to_php(&req).await {
-                    Ok(r) => r,
-                    Err(e) => {
-                        tracing_error!("Failed to convert request for hook: {}", e);
-                        return Ok(HookResult::Continue(req));
-                    }
-                };
+                // Convert axum Request to PhpRequest (synchronously extract data)
+                let php_req = axum_request_to_php_sync(&req);
 
                 // Run PHP callback synchronously in spawn_blocking
                 let result = tokio::task::spawn_blocking(move || {
@@ -318,12 +311,14 @@ fn make_request_hook(
                         } else {
                             // Try to extract PhpResponse from result by calling methods
                             if let Some(obj) = result_zval.object() {
-                                let status = obj.try_call_method("getStatus", vec![])
+                                let status = obj
+                                    .try_call_method("getStatus", vec![])
                                     .ok()
                                     .and_then(|v| v.long())
                                     .unwrap_or(200);
 
-                                let body_str = obj.try_call_method("getBody", vec![])
+                                let body_str = obj
+                                    .try_call_method("getBody", vec![])
                                     .ok()
                                     .and_then(|v| v.string())
                                     .map(|s| s.to_string())
@@ -347,11 +342,7 @@ fn make_request_hook(
                                     }
                                 }
 
-                                Some(Ok(Some(PhpResponse {
-                                    status,
-                                    body,
-                                    headers,
-                                })))
+                                Some(Ok(Some(PhpResponse { status, body, headers })))
                             } else {
                                 Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
                             }
@@ -480,12 +471,14 @@ fn make_response_hook(
                         } else {
                             // Try to extract PhpResponse from result by calling methods
                             if let Some(obj) = result_zval.object() {
-                                let status = obj.try_call_method("getStatus", vec![])
+                                let status = obj
+                                    .try_call_method("getStatus", vec![])
                                     .ok()
                                     .and_then(|v| v.long())
                                     .unwrap_or(200);
 
-                                let body_str = obj.try_call_method("getBody", vec![])
+                                let body_str = obj
+                                    .try_call_method("getBody", vec![])
                                     .ok()
                                     .and_then(|v| v.string())
                                     .map(|s| s.to_string())
@@ -509,11 +502,7 @@ fn make_response_hook(
                                     }
                                 }
 
-                                Some(Ok(Some(PhpResponse {
-                                    status,
-                                    body,
-                                    headers,
-                                })))
+                                Some(Ok(Some(PhpResponse { status, body, headers })))
                             } else {
                                 Some(Err("Hook returned invalid type (expected null or Response)".to_string()))
                             }
@@ -633,12 +622,14 @@ fn make_error_hook(
                         } else {
                             // Try to extract PhpResponse from result by calling methods
                             if let Some(obj) = result_zval.object() {
-                                let status = obj.try_call_method("getStatus", vec![])
+                                let status = obj
+                                    .try_call_method("getStatus", vec![])
                                     .ok()
                                     .and_then(|v| v.long())
                                     .unwrap_or(500);
 
-                                let body_str = obj.try_call_method("getBody", vec![])
+                                let body_str = obj
+                                    .try_call_method("getBody", vec![])
                                     .ok()
                                     .and_then(|v| v.string())
                                     .map(|s| s.to_string())
@@ -662,13 +653,11 @@ fn make_error_hook(
                                     }
                                 }
 
-                                Some(Ok(Some(PhpResponse {
-                                    status,
-                                    body,
-                                    headers,
-                                })))
+                                Some(Ok(Some(PhpResponse { status, body, headers })))
                             } else {
-                                Some(Err("Error hook returned invalid type (expected null or Response)".to_string()))
+                                Some(Err(
+                                    "Error hook returned invalid type (expected null or Response)".to_string()
+                                ))
                             }
                         }
                     })
