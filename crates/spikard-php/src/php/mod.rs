@@ -24,7 +24,7 @@ mod streaming;
 mod testing;
 mod websocket;
 
-pub use background::{clear_handle, install_handle};
+pub use background::{clear_handle, install_handle, spikard_background_run};
 pub use di::{PhpFactoryDependency, PhpValueDependency, extract_di_container_from_php};
 pub use handler::GLOBAL_RUNTIME;
 pub use handler::PhpHandler;
@@ -68,7 +68,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .function(wrap_function!(spikard_parse_json))
         .function(wrap_function!(spikard_start_server))
         .function(wrap_function!(spikard_stop_server))
-        .function(wrap_function!(background::spikard_background_run))
+        .function(wrap_function!(spikard_background_run))
         // Core classes
         .class::<PhpRequest>()
         .class::<PhpResponse>()

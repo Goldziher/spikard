@@ -22,14 +22,14 @@ extension-module = [
 ]
 
 [dependencies]
-spikard = { workspace = true }
-spikard-core = { workspace = true }
-spikard-http = { path = "../spikard-http", optional = true }
+spikard = { workspace = true, features = ["di"] }
+spikard-core = { workspace = true, features = ["di"] }
+spikard-http = { path = "../spikard-http", features = ["di"], optional = true }
 axum = { version = "0.8", optional = true }
 axum-test = { version = "18", optional = true }
 urlencoding = { version = "2.1", optional = true }
 bytes = { version = "1", optional = true }
-ext-php-rs = { version = "0.15.1", default-features = false, optional = true }
+ext-php-rs = { version = "0.15.1", features = ["runtime"], default-features = false, optional = true }
 once_cell = "1.21"
 serde_json = { version = "1", features = ["preserve_order"] }
 serde = { version = "1", features = ["derive"] }
@@ -40,3 +40,4 @@ tracing = "0.1"
 hyper = "1"
 http-body-util = "0.1"
 url = "2"
+async-stream = "0.3"
