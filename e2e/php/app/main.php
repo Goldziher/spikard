@@ -396,7 +396,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 202, ['content-type' => 'application/json']);
+                return new Response(null, 202, ['content-type' => 'application/json']);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/background/events', $handler, json_decode('{"additionalProperties":false,"properties":{"event":{"type":"string"}},"required":["event"],"type":"object"}', true), null, null);
@@ -409,7 +409,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 202, ['content-type' => 'application/json']);
+                return new Response(null, 202, ['content-type' => 'application/json']);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/background/events', $handler, json_decode('{"additionalProperties":false,"properties":{"event":{"type":"string"}},"required":["event"],"type":"object"}', true), null, null);
@@ -425,7 +425,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 413, []);
+                return new Response(null, 413, []);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/body-limit/over', $handler, json_decode('{"additionalProperties":false,"properties":{"note":{"type":"string"}},"required":["note"],"type":"object"}', true), null, null);
@@ -457,7 +457,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(['message' => 'Compressed payload', 'payload' => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'], 200, ['vary' => 'Accept-Encoding', 'content-encoding' => 'gzip']);
+                return new Response(['message' => 'Compressed payload', 'payload' => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'], 200, ['content-encoding' => 'gzip', 'vary' => 'Accept-Encoding']);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/compression/gzip', $handler, null, null, null);
@@ -618,7 +618,7 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response('id,name,price
 1,Item A,10.0
-2,Item B,20.0', 200, ['content-disposition' => 'attachment; filename=data.csv', 'content-type' => 'text/csv; charset=utf-8']);
+2,Item B,20.0', 200, ['content-type' => 'text/csv; charset=utf-8', 'content-disposition' => 'attachment; filename=data.csv']);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/export/data.csv', $handler, null, null, null);
@@ -748,7 +748,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 200, []);
+                return new Response(null, 200, []);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/secure', $handler, null, null, json_decode('{"cookies":{"session_id":{"required":true,"samesite":"Strict","type":"string"}}}', true));
@@ -761,7 +761,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 200, []);
+                return new Response(null, 200, []);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/data', $handler, null, null, json_decode('{"cookies":{"tracking":{"required":true,"samesite":"Lax","type":"string"}}}', true));
@@ -774,7 +774,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 200, []);
+                return new Response(null, 200, []);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/secure', $handler, null, null, json_decode('{"cookies":{"auth_token":{"required":true,"secure":true,"type":"string"}}}', true));
@@ -787,7 +787,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 200, []);
+                return new Response(null, 200, []);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/secure', $handler, null, null, json_decode('{"cookies":{"session":{"httponly":true,"required":true,"type":"string"}}}', true));
@@ -1086,7 +1086,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 403, []);
+                return new Response(null, 403, []);
             }
         };
         $app = $app->addRouteWithSchemas('OPTIONS', '/api/data', $handler, null, null, json_decode('{"headers":{"Access-Control-Request-Headers":{"optional":true,"type":"string"},"Access-Control-Request-Method":{"optional":true,"type":"string"},"Origin":{"optional":true,"type":"string"}}}', true));
@@ -1099,7 +1099,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 403, []);
+                return new Response(null, 403, []);
             }
         };
         $app = $app->addRouteWithSchemas('OPTIONS', '/api/data', $handler, null, null, json_decode('{"headers":{"Access-Control-Request-Headers":{"optional":true,"type":"string"},"Access-Control-Request-Method":{"optional":true,"type":"string"},"Origin":{"optional":true,"type":"string"}}}', true));
@@ -1112,7 +1112,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 204, ['Access-Control-Max-Age' => '3600', 'Access-Control-Allow-Headers' => 'Content-Type', 'Access-Control-Allow-Methods' => 'POST', 'Access-Control-Allow-Origin' => 'https://example.com']);
+                return new Response(null, 204, ['Access-Control-Allow-Methods' => 'POST', 'Access-Control-Max-Age' => '3600', 'Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Allow-Headers' => 'Content-Type']);
             }
         };
         $app = $app->addRouteWithSchemas('OPTIONS', '/api/data', $handler, null, null, json_decode('{"headers":{"Access-Control-Request-Headers":{"optional":true,"type":"string"},"Access-Control-Request-Method":{"optional":true,"type":"string"},"Origin":{"optional":true,"type":"string"}}}', true));
@@ -1125,7 +1125,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 200, ['X-Total-Count' => '42', 'Access-Control-Expose-Headers' => 'X-Total-Count, X-Request-Id', 'Access-Control-Allow-Origin' => 'https://example.com', 'X-Request-Id' => 'abc123']);
+                return new Response(null, 200, ['Access-Control-Allow-Origin' => 'https://example.com', 'X-Total-Count' => '42', 'Access-Control-Expose-Headers' => 'X-Total-Count, X-Request-Id', 'X-Request-Id' => 'abc123']);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data', $handler, null, null, json_decode('{"headers":{"Origin":{"optional":true,"type":"string"}}}', true));
@@ -1151,7 +1151,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 204, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://public.example.com', 'Access-Control-Allow-Private-Network' => 'true', 'Access-Control-Allow-Methods' => 'GET, POST']);
+                return new Response(null, 204, ['Access-Control-Allow-Private-Network' => 'true', 'Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://public.example.com', 'Access-Control-Allow-Methods' => 'GET, POST']);
             }
         };
         $app = $app->addRouteWithSchemas('OPTIONS', '/api/local-resource', $handler, null, null, null);
@@ -1164,7 +1164,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(['data' => 'cacheable resource'], 200, ['Access-Control-Allow-Origin' => 'https://app.example.com', 'Vary' => 'Origin', 'Cache-Control' => 'public, max-age=3600']);
+                return new Response(['data' => 'cacheable resource'], 200, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Cache-Control' => 'public, max-age=3600']);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/cached-resource', $handler, null, null, null);
@@ -1177,7 +1177,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(['data' => 'resource data'], 200, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://admin.example.com']);
+                return new Response(['data' => 'resource data'], 200, ['Access-Control-Allow-Origin' => 'https://admin.example.com', 'Vary' => 'Origin']);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data', $handler, null, null, null);
@@ -1190,7 +1190,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 200, ['Vary' => 'Origin']);
+                return new Response(null, 200, ['Vary' => 'Origin']);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data', $handler, null, null, null);
@@ -1203,7 +1203,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 204, ['Access-Control-Max-Age' => '3600', 'Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE']);
+                return new Response(null, 204, ['Vary' => 'Origin', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Max-Age' => '3600']);
             }
         };
         $app = $app->addRouteWithSchemas('OPTIONS', '/api/resource/456', $handler, null, null, null);
@@ -1216,7 +1216,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 204, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE', 'Access-Control-Allow-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Max-Age' => '3600']);
+                return new Response(null, 204, ['Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE', 'Access-Control-Allow-Headers' => 'Content-Type, X-Custom-Header', 'Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Max-Age' => '3600']);
             }
         };
         $app = $app->addRouteWithSchemas('OPTIONS', '/api/resource/123', $handler, null, null, null);
@@ -1229,7 +1229,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 200, ['Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Allow-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Max-Age' => '600', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS']);
+                return new Response(null, 200, ['Access-Control-Max-Age' => '600', 'Access-Control-Allow-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS']);
             }
         };
         $app = $app->addRouteWithSchemas('OPTIONS', '/items/', $handler, null, null, null);
@@ -1242,7 +1242,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(['data' => 'resource data'], 200, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://subdomain.example.com']);
+                return new Response(['data' => 'resource data'], 200, ['Access-Control-Allow-Origin' => 'https://subdomain.example.com', 'Vary' => 'Origin']);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data', $handler, null, null, null);
@@ -1294,7 +1294,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(['username' => 'john'], 200, ['Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Allow-Credentials' => 'true', 'Vary' => 'Origin']);
+                return new Response(['username' => 'john'], 200, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Allow-Credentials' => 'true']);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/user/profile', $handler, null, null, null);
@@ -1307,7 +1307,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(['items' => []], 200, ['Access-Control-Allow-Origin' => 'https://example.com', 'Vary' => 'Origin']);
+                return new Response(['items' => []], 200, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://example.com']);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/items/', $handler, null, null, null);
@@ -1346,7 +1346,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(['authenticated' => true, 'logged' => true], 200, ['X-Log-Level' => 'debug', 'X-Auth-Mode' => 'strict']);
+                return new Response(['authenticated' => true, 'logged' => true], 200, ['X-Auth-Mode' => 'strict', 'X-Log-Level' => 'debug']);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/hook-di-test', $handler, null, null, null);
@@ -1816,7 +1816,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 200, []);
+                return new Response(null, 200, []);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/protected', $handler, null, null, json_decode('{"headers":{"Authorization":{"pattern":"^Bearer [A-Za-z0-9-._~+/]+=*$","required":true,"type":"string"}}}', true));
@@ -1855,7 +1855,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 200, []);
+                return new Response(null, 200, []);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/data', $handler, null, null, json_decode('{"headers":{"X-API-Key":{"pattern":"^[a-f0-9]{32}$","required":true,"type":"string"}}}', true));
@@ -2284,7 +2284,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 200, ['Content-Type' => 'application/json', 'Content-Length' => '85']);
+                return new Response(null, 200, ['Content-Length' => '85', 'Content-Type' => 'application/json']);
             }
         };
         $app = $app->addRouteWithSchemas('HEAD', '/items/1', $handler, null, null, json_decode('{"path":{"id":{"type":"string"}}}', true));
@@ -2297,7 +2297,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 200, ['Access-Control-Allow-Headers' => 'Content-Type', 'Access-Control-Max-Age' => '86400', 'Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS']);
+                return new Response(null, 200, ['Access-Control-Max-Age' => '86400', 'Access-Control-Allow-Headers' => 'Content-Type', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS', 'Access-Control-Allow-Origin' => 'https://example.com']);
             }
         };
         $app = $app->addRouteWithSchemas('OPTIONS', '/items/', $handler, null, null, null);
@@ -2401,7 +2401,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 201, []);
+                return new Response(null, 201, []);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/users', $handler, json_decode('{"properties":{"profile":{"properties":{"email":{"format":"email","type":"string"},"name":{"minLength":1,"type":"string"}},"required":["name","email"],"type":"object"}},"required":["profile"],"type":"object"}', true), null, null);
@@ -2427,7 +2427,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 201, []);
+                return new Response(null, 201, []);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/users', $handler, json_decode('{"properties":{"description":{"type":["string","null"]},"name":{"type":"string"}},"required":["name"],"type":"object"}', true), null, null);
@@ -2440,7 +2440,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 201, []);
+                return new Response(null, 201, []);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/products', $handler, json_decode('{"definitions":{"Product":{"properties":{"name":{"type":"string"},"price":{"minimum":0,"type":"number"}},"required":["name","price"],"type":"object"}},"properties":{"product":{"$ref":"#/definitions/Product"}},"required":["product"],"type":"object"}', true), null, null);
@@ -2453,7 +2453,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 201, []);
+                return new Response(null, 201, []);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/items', $handler, json_decode('{"allOf":[{"properties":{"name":{"type":"string"}},"required":["name"],"type":"object"},{"properties":{"price":{"minimum":0,"type":"number"}},"required":["price"],"type":"object"}]}', true), null, null);
@@ -2479,7 +2479,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 201, []);
+                return new Response(null, 201, []);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/payment', $handler, json_decode('{"oneOf":[{"properties":{"credit_card":{"pattern":"^[0-9]{16}$","type":"string"}},"required":["credit_card"],"type":"object"},{"properties":{"paypal_email":{"format":"email","type":"string"}},"required":["paypal_email"],"type":"object"}]}', true), null, null);
@@ -2518,7 +2518,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 201, []);
+                return new Response(null, 201, []);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/contact', $handler, json_decode('{"anyOf":[{"required":["email"]},{"required":["phone"]}],"properties":{"name":{"type":"string"}},"required":["name"],"type":"object"}', true), null, null);
@@ -2531,7 +2531,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 201, []);
+                return new Response(null, 201, []);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/contact', $handler, json_decode('{"anyOf":[{"required":["email"]},{"required":["phone"]}],"properties":{"email":{"format":"email","type":"string"},"name":{"type":"string"},"phone":{"type":"string"}},"required":["name"],"type":"object"}', true), null, null);
@@ -2557,7 +2557,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 201, []);
+                return new Response(null, 201, []);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/users', $handler, json_decode('{"properties":{"username":{"not":{"enum":["admin","root","system"]},"type":"string"}},"required":["username"],"type":"object"}', true), null, null);
@@ -2583,7 +2583,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 201, []);
+                return new Response(null, 201, []);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/api/v1/data', $handler, json_decode('{"properties":{"data":{"type":"string"},"version":{"const":"1.0","type":"string"}},"required":["version","data"],"type":"object"}', true), null, null);
@@ -2609,7 +2609,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 201, []);
+                return new Response(null, 201, []);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/config', $handler, json_decode('{"minProperties":2,"type":"object"}', true), null, null);
@@ -2648,7 +2648,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 201, []);
+                return new Response(null, 201, []);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/billing', $handler, json_decode('{"dependencies":{"credit_card":["billing_address"]},"properties":{"billing_address":{"type":"string"},"credit_card":{"type":"string"},"name":{"type":"string"}},"type":"object"}', true), null, null);
@@ -2674,7 +2674,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 201, []);
+                return new Response(null, 201, []);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/data', $handler, json_decode('{"properties":{"user":{"properties":{"profile":{"properties":{"contact":{"properties":{"address":{"properties":{"street":{"type":"string"}},"required":["street"],"type":"object"}},"required":["address"],"type":"object"}},"required":["contact"],"type":"object"}},"required":["profile"],"type":"object"}},"required":["user"],"type":"object"}', true), null, null);
@@ -3051,7 +3051,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(['action' => 'update_profile', 'message' => 'Action completed successfully', 'request_id' => '.*', 'user_id' => 'user-123'], 200, ['X-Request-ID' => '.*', 'X-Content-Type-Options' => 'nosniff', 'X-Response-Time' => '.*ms', 'X-Frame-Options' => 'DENY']);
+                return new Response(['action' => 'update_profile', 'message' => 'Action completed successfully', 'request_id' => '.*', 'user_id' => 'user-123'], 200, ['X-Content-Type-Options' => 'nosniff', 'X-Response-Time' => '.*ms', 'X-Request-ID' => '.*', 'X-Frame-Options' => 'DENY']);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/api/full-lifecycle', $handler, json_decode('{"properties":{"action":{"type":"string"},"user_id":{"type":"string"}},"required":["user_id","action"],"type":"object"}', true), null, null);
@@ -3103,7 +3103,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(['message' => 'Response with security headers'], 200, ['X-Content-Type-Options' => 'nosniff', 'X-Frame-Options' => 'DENY', 'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains', 'X-XSS-Protection' => '1; mode=block']);
+                return new Response(['message' => 'Response with security headers'], 200, ['Strict-Transport-Security' => 'max-age=31536000; includeSubDomains', 'X-XSS-Protection' => '1; mode=block', 'X-Content-Type-Options' => 'nosniff', 'X-Frame-Options' => 'DENY']);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/test-security-headers', $handler, null, null, null);
@@ -3194,7 +3194,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 201, []);
+                return new Response(null, 201, []);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/upload', $handler, null, null, json_decode('{"files":{"image":{"content_type":["image/png"],"required":true,"validate_magic_numbers":true}}}', true));
@@ -3207,7 +3207,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 201, []);
+                return new Response(null, 201, []);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/upload', $handler, null, null, json_decode('{"files":{"image":{"content_type":["image/jpeg"],"required":true,"validate_magic_numbers":true}}}', true));
@@ -3246,7 +3246,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 201, []);
+                return new Response(null, 201, []);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/upload', $handler, null, null, json_decode('{"files":{"document":{"content_type":["application/pdf"],"required":true,"validate_magic_numbers":true}}}', true));
@@ -3272,7 +3272,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 422, []);
+                return new Response(null, 422, []);
             }
         };
         $app = $app->addRouteWithSchemas('POST', '/files/images-only', $handler, json_decode('{"additionalProperties":false,"properties":{"file":{"format":"binary","type":"string"}},"type":"object"}', true), null, json_decode('{"files":{"file":{"content_type":["image/jpeg","image/png","image/gif"],"required":true}}}', true));
@@ -4903,7 +4903,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 429, []);
+                return new Response(null, 429, []);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/rate-limit/exceeded', $handler, null, null, null);
@@ -4980,7 +4980,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 408, []);
+                return new Response(null, 408, []);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/timeouts/slow', $handler, null, null, null);
@@ -5071,7 +5071,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 204, []);
+                return new Response(null, 204, []);
             }
         };
         $app = $app->addRouteWithSchemas('DELETE', '/status-test/204', $handler, null, null, json_decode('{"path":{"code":{"type":"string"}}}', true));
@@ -5084,7 +5084,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response('binary_data_1024_bytes', 206, ['Content-Type' => 'application/pdf', 'Content-Length' => '1024', 'Accept-Ranges' => 'bytes', 'Content-Range' => 'bytes 0-1023/5000']);
+                return new Response('binary_data_1024_bytes', 206, ['Content-Range' => 'bytes 0-1023/5000', 'Content-Type' => 'application/pdf', 'Accept-Ranges' => 'bytes', 'Content-Length' => '1024']);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/files/document.pdf', $handler, null, null, null);
@@ -5123,7 +5123,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 405, []);
+                return new Response(null, 405, []);
             }
         };
         $app = $app->addRouteWithSchemas('TRACE', '/data', $handler, null, null, null);
@@ -5149,7 +5149,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 301, ['location' => '/new-path']);
+                return new Response(null, 301, ['location' => '/new-path']);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/old-path', $handler, null, null, null);
@@ -5162,7 +5162,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 302, ['location' => '/target-path']);
+                return new Response(null, 302, ['location' => '/target-path']);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/temp-redirect', $handler, null, null, null);
@@ -5175,7 +5175,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response([], 304, []);
+                return new Response(null, 304, []);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/status-test/304', $handler, null, null, json_decode('{"headers":{"If-None-Match":{"optional":true,"type":"string"}},"path":{"code":{"type":"string"}}}', true));
@@ -5279,7 +5279,7 @@ line3', 'unicode_escapes' => 'Hello', 'whitespace' => '   '], 200, []);
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(['detail' => 'Rate limit exceeded. Try again in 60 seconds.'], 429, ['X-RateLimit-Remaining' => '0', 'X-RateLimit-Limit' => '100', 'X-RateLimit-Reset' => '1609459200', 'Retry-After' => '60']);
+                return new Response(['detail' => 'Rate limit exceeded. Try again in 60 seconds.'], 429, ['Retry-After' => '60', 'X-RateLimit-Limit' => '100', 'X-RateLimit-Reset' => '1609459200', 'X-RateLimit-Remaining' => '0']);
             }
         };
         $app = $app->addRouteWithSchemas('GET', '/api/resource', $handler, null, null, null);

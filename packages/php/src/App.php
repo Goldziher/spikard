@@ -147,7 +147,9 @@ final class App
         $needleMethod = \strtoupper($request->method);
         $path = $request->path;
         foreach ($this->routes as $route) {
-            if (\strtoupper($route['method']) === $needleMethod && $route['path'] === $path) {
+            // Strip query string from registered route path for comparison
+            $routePath = \explode('?', $route['path'], 2)[0];
+            if (\strtoupper($route['method']) === $needleMethod && $routePath === $path) {
                 if ($route['handler']->matches($request)) {
                     return $route['handler'];
                 }
