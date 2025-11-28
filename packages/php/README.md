@@ -15,7 +15,7 @@ High-performance PHP web framework with a Rust core. Build REST APIs, WebSockets
 
 ## Installation
 
-### Via Composer (when published to Packagist)
+### Via Composer
 
 ```bash
 composer require spikard/spikard
@@ -917,12 +917,23 @@ $app->run();
 
 ## Examples
 
-See `/examples/php/` for complete examples:
-- `01-hello-world.php` - Basic server
-- `02-json-api.php` - REST API with validation
-- `03-background-tasks.php` - Background job processing
-- `04-streaming-sse.php` - Server-Sent Events
-- `05-dependency-injection.php` - DI with factories
+The [examples directory](../../examples/) contains comprehensive demonstrations:
+
+**PHP-specific examples:**
+- [Hello World](../../examples/php/01-hello-world.php) - Basic server
+- [JSON API](../../examples/php/02-json-api.php) - REST API with validation
+- [Background Tasks](../../examples/php/03-background-tasks.php) - Background job processing
+- [Streaming SSE](../../examples/php/04-streaming-sse.php) - Server-Sent Events
+- [Dependency Injection](../../examples/php/05-dependency-injection.php) - DI with factories
+
+**API Schemas** (language-agnostic, can be used with code generation):
+- [Todo API](../../examples/schemas/todo-api.openapi.yaml) - REST CRUD with validation
+- [File Service](../../examples/schemas/file-service.openapi.yaml) - File uploads/downloads
+- [Auth Service](../../examples/schemas/auth-service.openapi.yaml) - JWT, API keys, OAuth
+- [Chat Service](../../examples/schemas/chat-service.asyncapi.yaml) - WebSocket messaging
+- [Event Streams](../../examples/schemas/events-stream.asyncapi.yaml) - SSE streaming
+
+See [examples/README.md](../../examples/README.md) for code generation instructions.
 
 ## Documentation
 
