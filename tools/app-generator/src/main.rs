@@ -90,9 +90,10 @@ fn main() -> Result<()> {
                 "spikard-python" | "python" => (generators::spikard_python::generate(&analysis)?, "py", false),
                 "spikard-node" | "node" => (generators::spikard_node::generate(&analysis)?, "ts", false),
                 "spikard-ruby" | "ruby" => (generators::spikard_ruby::generate(&analysis)?, "rb", false),
+                "spikard-php" | "php" => (generators::spikard_php::generate(&analysis)?, "php", false),
                 _ => {
                     return Err(anyhow::anyhow!(
-                        "Unknown framework: {}. Use: spikard-rust, spikard-python, spikard-node, spikard-ruby",
+                        "Unknown framework: {}. Use: spikard-rust, spikard-python, spikard-node, spikard-ruby, spikard-php",
                         framework
                     ));
                 }
