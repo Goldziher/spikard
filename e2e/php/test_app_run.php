@@ -8,7 +8,7 @@ declare(strict_types=1);
  * verifying that ServerConfig serialization works correctly.
  */
 
-require_once __DIR__ . '/../../packages/php/vendor/autoload.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Spikard\App;
 use Spikard\Config\ServerConfig;
