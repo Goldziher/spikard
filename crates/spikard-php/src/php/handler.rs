@@ -8,9 +8,9 @@ use axum::http::{Request, StatusCode};
 use ext_php_rs::convert::IntoZval;
 use ext_php_rs::types::ZendCallable;
 use once_cell::sync::Lazy;
-use spikard_http::{CONTENT_TYPE_PROBLEM_JSON, Handler, HandlerResult, ProblemDetails, RequestData};
+use spikard_http::{Handler, HandlerResult, RequestData};
 use std::pin::Pin;
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 use tokio::runtime::{Builder, Runtime};
 
 /// Global Tokio runtime for async operations.
@@ -66,7 +66,12 @@ impl PhpHandler {
     /// * `callable_zval` - The Zval containing the callable (not wrapped in ZendCallable yet)
     ///
     /// This allows us to clone the Zval before it gets wrapped in ZendCallable with a lifetime.
-    pub fn register_from_zval(callable_zval: &ext_php_rs::types::Zval, handler_name: String, method: String, path: String) -> Result<Self, String> {
+    pub fn register_from_zval(
+        callable_zval: &ext_php_rs::types::Zval,
+        handler_name: String,
+        method: String,
+        path: String,
+    ) -> Result<Self, String> {
         // Verify it's actually callable before storing
         if !callable_zval.is_callable() {
             return Err(format!("Handler '{}' is not callable", handler_name));
@@ -118,54 +123,32 @@ fn invoke_php_handler(handler_index: usize, handler_name: &str, request_data: &R
     })?;
 
     // Invoke PHP callable synchronously from thread-local registry
-    let response_zval = PHP_HANDLER_REGISTRY.with(|registry| -> Result<ext_php_rs::types::Zval, (StatusCode, String)> {
-        let registry = registry.borrow();
-        let callable_zval = registry.get(handler_index).ok_or_else(|| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("PHP handler not found: index {}", handler_index),
-            )
-        })?;
+    let response_zval =
+        PHP_HANDLER_REGISTRY.with(|registry| -> Result<ext_php_rs::types::Zval, (StatusCode, String)> {
+            let registry = registry.borrow();
+            let callable_zval = registry.get(handler_index).ok_or_else(|| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("PHP handler not found: index {}", handler_index),
+                )
+            })?;
 
-        // Reconstruct ZendCallable from stored Zval
-        let callable = ZendCallable::new(callable_zval).map_err(|e| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to reconstruct PHP callable: {:?}", e),
-            )
-        })?;
+            // Reconstruct ZendCallable from stored Zval
+            let callable = ZendCallable::new(callable_zval).map_err(|e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Failed to reconstruct PHP callable: {:?}", e),
+                )
+            })?;
 
-        callable.try_call(vec![&request_zval]).map_err(|e| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("PHP handler '{handler_name}' failed: {:?}", e),
-            )
-        })
-    })?;
+            callable.try_call(vec![&request_zval]).map_err(|e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("PHP handler '{handler_name}' failed: {:?}", e),
+                )
+            })
+        })?;
 
     // Interpret PHP response into HandlerResult
     crate::php::server::interpret_php_response(&response_zval, handler_name)
-}
-
-/// Build a structured ProblemDetails response with application/problem+json.
-fn internal_problem(status: StatusCode, detail: impl Into<String>) -> HandlerResult {
-    let problem = ProblemDetails::new(
-        ProblemDetails::TYPE_INTERNAL_SERVER_ERROR,
-        "Internal Server Error",
-        status,
-    )
-    .with_detail(detail);
-
-    let body = serde_json::to_vec(&problem).unwrap_or_else(|_| b"{}".to_vec());
-
-    axum::http::Response::builder()
-        .status(status)
-        .header("content-type", CONTENT_TYPE_PROBLEM_JSON)
-        .body(Body::from(body))
-        .map_err(|e| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to build error response: {}", e),
-            )
-        })
 }

@@ -10,7 +10,7 @@ use ext_php_rs::types::{ZendCallable, ZendHashTable, Zval};
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 
-use super::{PhpRequest, zval_to_json, json_to_php_table};
+use super::{PhpRequest, json_to_php_table, zval_to_json};
 
 /// Test response data exposed to PHP.
 #[php_class]
@@ -451,8 +451,8 @@ impl PhpWebSocketTestConnection {
     #[php(name = "sendJson")]
     pub fn send_json(&mut self, data: String) -> PhpResult<()> {
         // Validate JSON
-        let _: JsonValue = serde_json::from_str(&data)
-            .map_err(|e| PhpException::default(format!("Invalid JSON: {}", e)))?;
+        let _: JsonValue =
+            serde_json::from_str(&data).map_err(|e| PhpException::default(format!("Invalid JSON: {}", e)))?;
         self.send_text(data)
     }
 
@@ -470,8 +470,8 @@ impl PhpWebSocketTestConnection {
     #[php(name = "receiveJson")]
     pub fn receive_json(&self) -> PhpResult<ZBox<ZendHashTable>> {
         let text = self.receive_text()?;
-        let value: JsonValue = serde_json::from_str(&text)
-            .map_err(|e| PhpException::default(format!("Invalid JSON: {}", e)))?;
+        let value: JsonValue =
+            serde_json::from_str(&text).map_err(|e| PhpException::default(format!("Invalid JSON: {}", e)))?;
         json_to_php_table(&value)
     }
 
@@ -573,8 +573,8 @@ impl PhpSseEvent {
     /// Parse the event data as JSON.
     #[php(name = "asJson")]
     pub fn as_json(&self) -> PhpResult<ZBox<ZendHashTable>> {
-        let value: JsonValue = serde_json::from_str(&self.data)
-            .map_err(|e| PhpException::default(format!("Invalid JSON: {}", e)))?;
+        let value: JsonValue =
+            serde_json::from_str(&self.data).map_err(|e| PhpException::default(format!("Invalid JSON: {}", e)))?;
         json_to_php_table(&value)
     }
 

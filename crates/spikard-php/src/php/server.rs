@@ -7,7 +7,7 @@ use axum::body::Body;
 use axum::http::{HeaderName, HeaderValue, Request, Response, StatusCode};
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::{ZendCallable, ZendHashTable, Zval};
+use ext_php_rs::types::{ZendHashTable, Zval};
 use spikard_http::ParameterValidator;
 use spikard_http::server::build_router_with_handlers_and_config;
 use spikard_http::{CONTENT_TYPE_PROBLEM_JSON, ProblemDetails};
@@ -274,7 +274,7 @@ impl PhpServer {
         issuer: Option<String>,
         leeway: Option<i64>,
     ) {
-        let mut cfg = spikard_http::JwtConfig {
+        let cfg = spikard_http::JwtConfig {
             secret,
             algorithm: algorithm.unwrap_or_else(|| "HS256".to_string()),
             audience,
@@ -293,7 +293,7 @@ impl PhpServer {
     /// Configure API key auth
     #[php(name = "setApiKeyAuth")]
     pub fn set_api_key_auth(&mut self, keys: Vec<String>, header_name: Option<String>) {
-        let mut cfg = spikard_http::ApiKeyConfig {
+        let cfg = spikard_http::ApiKeyConfig {
             keys,
             header_name: header_name.unwrap_or_else(|| "X-API-Key".to_string()),
         };
@@ -462,7 +462,8 @@ impl PhpServer {
         for route in &self.routes {
             let method = route.method.parse().unwrap_or_else(|_| Method::Get);
 
-            let handler_zval = self.handlers
+            let handler_zval = self
+                .handlers
                 .get(route.handler_index)
                 .expect("handler index should be valid");
 
@@ -471,7 +472,8 @@ impl PhpServer {
                 route.handler_name.clone(),
                 route.method.clone(),
                 route.path.clone(),
-            ).map_err(|e| format!("Failed to register handler: {}", e))?;
+            )
+            .map_err(|e| format!("Failed to register handler: {}", e))?;
 
             let request_validator = match &route.request_schema {
                 Some(schema) => Some(registry.get_or_compile(schema).map_err(|e| {
@@ -529,22 +531,26 @@ impl PhpServer {
         let routes = self.build_routes_with_handlers()?;
 
         // Convert RegisteredRoute to RouteMetadata
-        let metadata: Vec<spikard_core::RouteMetadata> = self.routes.iter().map(|r| {
-            spikard_core::RouteMetadata {
-                method: r.method.clone(),
-                path: r.path.clone(),
-                handler_name: r.handler_name.clone(),
-                request_schema: r.request_schema.clone(),
-                response_schema: r.response_schema.clone(),
-                parameter_schema: r.parameter_schema.clone(),
-                file_params: None,
-                is_async: true, // PHP handlers are always async in our implementation
-                cors: r.cors.clone(), // Use route-specific CORS config
-                body_param_name: None,
-                #[cfg(feature = "di")]
-                dependencies: Vec::new(),
-            }
-        }).collect();
+        let metadata: Vec<spikard_core::RouteMetadata> = self
+            .routes
+            .iter()
+            .map(|r| {
+                spikard_core::RouteMetadata {
+                    method: r.method.clone(),
+                    path: r.path.clone(),
+                    handler_name: r.handler_name.clone(),
+                    request_schema: r.request_schema.clone(),
+                    response_schema: r.response_schema.clone(),
+                    parameter_schema: r.parameter_schema.clone(),
+                    file_params: None,
+                    is_async: true,       // PHP handlers are always async in our implementation
+                    cors: r.cors.clone(), // Use route-specific CORS config
+                    body_param_name: None,
+                    #[cfg(feature = "di")]
+                    dependencies: Vec::new(),
+                }
+            })
+            .collect();
 
         build_router_with_handlers_and_config(routes, self.config.clone(), metadata)
     }

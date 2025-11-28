@@ -5,10 +5,14 @@ use ext_php_rs::types::Zval;
 use spikard_http::server::build_router_with_handlers_and_config;
 use spikard_http::{LifecycleHooks, Route};
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+use tokio::sync::oneshot;
 
 use crate::php::handler::PhpHandler;
-use crate::php::zval_to_json;
+
+/// Registry for graceful shutdown channels.
+/// Maps server handle IDs to oneshot senders that trigger shutdown.
+static SERVER_SHUTDOWN_REGISTRY: Mutex<Option<HashMap<u64, oneshot::Sender<()>>>> = Mutex::new(None);
 
 /// Payload for a registered route coming from PHP.
 #[derive(Debug, serde::Deserialize)]
@@ -106,52 +110,40 @@ fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::Se
         .map(|t| t as u64);
 
     // Extract compression config
-    let compression_config = get_optional_field("compression")
-        .and_then(|v| v.array())
-        .map(|arr| {
-            let gzip = arr.get("gzip").and_then(|v| v.bool()).unwrap_or(true);
-            let brotli = arr.get("brotli").and_then(|v| v.bool()).unwrap_or(true);
-            let min_size = arr
-                .get("min_size")
-                .and_then(|v| v.long())
-                .map(|s| s as usize)
-                .unwrap_or(1024);
-            let quality = arr
-                .get("quality")
-                .and_then(|v| v.long())
-                .map(|q| q as u32)
-                .unwrap_or(6);
+    let compression_config = get_optional_field("compression").and_then(|v| v.array()).map(|arr| {
+        let gzip = arr.get("gzip").and_then(|v| v.bool()).unwrap_or(true);
+        let brotli = arr.get("brotli").and_then(|v| v.bool()).unwrap_or(true);
+        let min_size = arr
+            .get("min_size")
+            .and_then(|v| v.long())
+            .map(|s| s as usize)
+            .unwrap_or(1024);
+        let quality = arr.get("quality").and_then(|v| v.long()).map(|q| q as u32).unwrap_or(6);
 
-            CompressionConfig {
-                gzip,
-                brotli,
-                min_size,
-                quality,
-            }
-        });
+        CompressionConfig {
+            gzip,
+            brotli,
+            min_size,
+            quality,
+        }
+    });
 
     // Extract rate limit config
-    let rate_limit_config = get_optional_field("rate_limit")
-        .and_then(|v| v.array())
-        .map(|arr| {
-            let per_second = arr
-                .get("per_second")
-                .and_then(|v| v.long())
-                .map(|p| p as u64)
-                .unwrap_or(100);
-            let burst = arr
-                .get("burst")
-                .and_then(|v| v.long())
-                .map(|b| b as u32)
-                .unwrap_or(10);
-            let ip_based = arr.get("ip_based").and_then(|v| v.bool()).unwrap_or(true);
+    let rate_limit_config = get_optional_field("rate_limit").and_then(|v| v.array()).map(|arr| {
+        let per_second = arr
+            .get("per_second")
+            .and_then(|v| v.long())
+            .map(|p| p as u64)
+            .unwrap_or(100);
+        let burst = arr.get("burst").and_then(|v| v.long()).map(|b| b as u32).unwrap_or(10);
+        let ip_based = arr.get("ip_based").and_then(|v| v.bool()).unwrap_or(true);
 
-            RateLimitConfig {
-                per_second,
-                burst,
-                ip_based,
-            }
-        });
+        RateLimitConfig {
+            per_second,
+            burst,
+            ip_based,
+        }
+    });
 
     // Extract JWT auth config
     let jwt_auth_config = get_optional_field("jwt_auth")
@@ -169,23 +161,16 @@ fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::Se
                 .map(|s| s.to_string())
                 .unwrap_or_else(|| "HS256".to_string());
 
-            let audience = arr
-                .get("audience")
-                .and_then(|v| v.array())
-                .map(|aud_arr| {
-                    aud_arr
-                        .iter()
-                        .filter_map(|(_, v)| v.string().map(|s| s.to_string()))
-                        .collect::<Vec<_>>()
-                });
+            let audience = arr.get("audience").and_then(|v| v.array()).map(|aud_arr| {
+                aud_arr
+                    .iter()
+                    .filter_map(|(_, v)| v.string().map(|s| s.to_string()))
+                    .collect::<Vec<_>>()
+            });
 
             let issuer = arr.get("issuer").and_then(|v| v.string()).map(|s| s.to_string());
 
-            let leeway = arr
-                .get("leeway")
-                .and_then(|v| v.long())
-                .map(|l| l as u64)
-                .unwrap_or(0);
+            let leeway = arr.get("leeway").and_then(|v| v.long()).map(|l| l as u64).unwrap_or(0);
 
             Ok(JwtConfig {
                 secret,
@@ -238,10 +223,7 @@ fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::Se
                         .ok_or_else(|| "Static file config requires 'route_prefix'".to_string())?
                         .to_string();
 
-                    let index_file = file_arr
-                        .get("index_file")
-                        .and_then(|v| v.bool())
-                        .unwrap_or(true);
+                    let index_file = file_arr.get("index_file").and_then(|v| v.bool()).unwrap_or(true);
 
                     let cache_control = file_arr
                         .get("cache_control")
@@ -265,10 +247,7 @@ fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::Se
     let openapi_config = get_optional_field("openapi")
         .and_then(|v| v.array())
         .map(|openapi_arr| -> Result<OpenApiConfig, String> {
-            let enabled = openapi_arr
-                .get("enabled")
-                .and_then(|v| v.bool())
-                .unwrap_or(false);
+            let enabled = openapi_arr.get("enabled").and_then(|v| v.bool()).unwrap_or(false);
 
             let title = openapi_arr
                 .get("title")
@@ -311,10 +290,7 @@ fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::Se
                 .and_then(|v| v.array())
                 .map(|contact_arr| ContactInfo {
                     name: contact_arr.get("name").and_then(|v| v.string()).map(|s| s.to_string()),
-                    email: contact_arr
-                        .get("email")
-                        .and_then(|v| v.string())
-                        .map(|s| s.to_string()),
+                    email: contact_arr.get("email").and_then(|v| v.string()).map(|s| s.to_string()),
                     url: contact_arr.get("url").and_then(|v| v.string()).map(|s| s.to_string()),
                 });
 
@@ -388,10 +364,7 @@ fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::Se
                                         .get("bearer_format")
                                         .and_then(|v| v.string())
                                         .map(|s| s.to_string());
-                                    SecuritySchemeInfo::Http {
-                                        scheme,
-                                        bearer_format,
-                                    }
+                                    SecuritySchemeInfo::Http { scheme, bearer_format }
                                 }
                                 "apiKey" => {
                                     let location = scheme_arr
@@ -483,10 +456,11 @@ pub fn spikard_start_server_impl(routes_zval: &Zval, config: &Zval, hooks: &Zval
     //
     // For now, hooks parameter is ignored and no lifecycle hooks are registered.
     let _hooks_ignored = hooks; // Explicitly mark as unused
-    let lifecycle_hooks: Option<LifecycleHooks> = None;
+    let _lifecycle_hooks: Option<LifecycleHooks> = None;
 
     // Parse routes array from Zval
-    let routes_array = routes_zval.array()
+    let routes_array = routes_zval
+        .array()
         .ok_or_else(|| PhpException::default("Routes must be an array".to_string()))?;
 
     // Rebuild routes with handlers
@@ -514,12 +488,9 @@ pub fn spikard_start_server_impl(routes_zval: &Zval, config: &Zval, hooks: &Zval
         let response_schema = reg.response_schema.clone();
         let parameter_schema = reg.parameter_schema.clone();
 
-        let handler = PhpHandler::register_from_zval(
-            handler_callable,
-            handler_name.clone(),
-            method.clone(),
-            path.clone(),
-        ).map_err(|e| PhpException::default(format!("Failed to register handler: {}", e)))?;
+        let handler =
+            PhpHandler::register_from_zval(handler_callable, handler_name.clone(), method.clone(), path.clone())
+                .map_err(|e| PhpException::default(format!("Failed to register handler: {}", e)))?;
 
         let mut route = reg.into_route()?;
 
@@ -562,24 +533,67 @@ pub fn spikard_start_server_impl(routes_zval: &Zval, config: &Zval, hooks: &Zval
     let app = build_router_with_handlers_and_config(route_pairs, server_config.clone(), route_metadata)
         .map_err(|e| PhpException::default(format!("Failed to build router: {}", e)))?;
 
+    // Create shutdown channel
+    let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
+
+    // Generate server handle ID
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+    use std::time::SystemTime;
+
+    let mut hasher = DefaultHasher::new();
+    SystemTime::now().hash(&mut hasher);
+    let id = hasher.finish();
+
+    // Store shutdown sender in registry
+    {
+        let mut registry = SERVER_SHUTDOWN_REGISTRY
+            .lock()
+            .map_err(|e| PhpException::default(format!("Failed to lock shutdown registry: {}", e)))?;
+
+        if registry.is_none() {
+            *registry = Some(HashMap::new());
+        }
+
+        if let Some(ref mut map) = *registry {
+            map.insert(id, shutdown_tx);
+        }
+    }
+
     // Spawn server in background
     let handle = std::thread::spawn(move || {
         let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
         rt.block_on(async move {
-            if let Err(e) = spikard_http::Server::run_with_config(app, server_config).await {
-                eprintln!("Server error: {e}");
+            let addr = format!("{}:{}", server_config.host, server_config.port);
+            let listener = match tokio::net::TcpListener::bind(&addr).await {
+                Ok(l) => l,
+                Err(e) => {
+                    eprintln!("Failed to bind to {}: {}", addr, e);
+                    return;
+                }
+            };
+
+            // Custom shutdown signal that waits for either Ctrl+C or our shutdown channel
+            let shutdown_signal = async move {
+                let ctrl_c = async {
+                    tokio::signal::ctrl_c().await.expect("failed to install Ctrl+C handler");
+                };
+
+                let channel_shutdown = async {
+                    let _ = shutdown_rx.await;
+                };
+
+                tokio::select! {
+                    _ = ctrl_c => {},
+                    _ = channel_shutdown => {},
+                }
+            };
+
+            if let Err(e) = axum::serve(listener, app).with_graceful_shutdown(shutdown_signal).await {
+                eprintln!("Server error: {}", e);
             }
         });
     });
-
-    // Return a handle ID for this server
-    // We use a simple hash of the thread ID since as_u64() is unstable
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
-
-    let mut hasher = DefaultHasher::new();
-    handle.thread().id().hash(&mut hasher);
-    let id = hasher.finish();
 
     std::mem::forget(handle);
     Ok(id)
@@ -587,16 +601,22 @@ pub fn spikard_start_server_impl(routes_zval: &Zval, config: &Zval, hooks: &Zval
 
 /// Stop server by handle.
 ///
-/// Currently a no-op. The server relies on SIGTERM/SIGINT signal handling for graceful shutdown,
-/// which is handled automatically by spikard_http::Server.
-///
-/// Future enhancement: Implement programmatic shutdown via handle registry by:
-/// 1. Creating a oneshot channel per server instance
-/// 2. Passing the receiver to axum::serve().with_graceful_shutdown()
-/// 3. Storing the sender in a static HashMap<u64, oneshot::Sender<()>>
-/// 4. Triggering shutdown by sending () through the channel
-///
-/// For now, use process signals (SIGTERM/SIGINT) to shut down PHP servers.
-pub fn spikard_stop_server_impl(_handle: u64) -> PhpResult<()> {
-    Ok(())
+/// Triggers graceful shutdown of the server identified by the given handle.
+/// This sends a signal through the shutdown channel, causing the server to
+/// stop accepting new connections and finish processing existing requests.
+pub fn spikard_stop_server_impl(handle: u64) -> PhpResult<()> {
+    let mut registry = SERVER_SHUTDOWN_REGISTRY
+        .lock()
+        .map_err(|e| PhpException::default(format!("Failed to lock shutdown registry: {}", e)))?;
+
+    if let Some(ref mut map) = *registry {
+        if let Some(shutdown_tx) = map.remove(&handle) {
+            // Send shutdown signal - ignore errors if receiver is already dropped
+            let _ = shutdown_tx.send(());
+            return Ok(());
+        }
+    }
+
+    // Server handle not found - already stopped or never existed
+    Err(PhpException::default(format!("Server handle {} not found", handle)))
 }

@@ -4,13 +4,11 @@
 //! Unlike Python and Node.js, PHP doesn't have native async/await, so all handler calls are
 //! synchronous and wrapped in spawn_blocking to avoid blocking the async runtime.
 
-use ext_php_rs::convert::IntoZval;
+use ext_php_rs::convert::IntoZvalDyn;
 use ext_php_rs::types::{ZendCallable, Zval};
-use std::sync::OnceLock;
 use serde_json::Value;
 use spikard_http::WebSocketHandler;
-use std::sync::Arc;
-use tracing::{debug, error, warn};
+use tracing::{debug, error};
 
 /// Registry for PHP WebSocket handler callables.
 ///
@@ -124,7 +122,7 @@ impl PhpWebSocketHandler {
                 .map_err(|e| format!("Failed to reconstruct PHP callable for {}: {:?}", method_name, e))?;
 
             // Convert Zval refs for try_call - need to cast to &dyn IntoZvalDyn
-            let arg_refs: Vec<&dyn ext_php_rs::convert::IntoZvalDyn> = args.iter().map(|z| z as &dyn ext_php_rs::convert::IntoZvalDyn).collect();
+            let arg_refs: Vec<&dyn IntoZvalDyn> = args.iter().map(|z| z as &dyn IntoZvalDyn).collect();
 
             // Invoke the PHP callable
             let result = callable
@@ -212,7 +210,7 @@ impl WebSocketHandler for PhpWebSocketHandler {
             let mut code_zval = Zval::new();
             let _ = code_zval.set_long(1000); // Normal closure code
 
-            let mut reason_zval = Zval::new();
+            let reason_zval = Zval::new();
             // Leave reason as null
 
             match Self::invoke_php_method_sync(handler_index, "onClose", vec![code_zval, reason_zval]) {
