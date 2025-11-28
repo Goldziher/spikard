@@ -1,5 +1,6 @@
 # Spikard for Node.js
 
+[![Documentation](https://img.shields.io/badge/docs-spikard.dev-58FBDA)](https://spikard.dev)
 [![npm](https://img.shields.io/npm/v/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
 [![npm downloads](https://img.shields.io/npm/dm/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
 [![Node](https://img.shields.io/node/v/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)

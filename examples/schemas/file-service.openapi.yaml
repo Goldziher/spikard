@@ -1,0 +1,1017 @@
+openapi: 3.1.0
+info:
+  title: File Service API
+  version: 1.0.0
+  description: |
+    A comprehensive file management API demonstrating advanced Spikard features:
+    - Multipart/form-data file uploads
+    - Binary streaming responses (file downloads)
+    - File size and MIME type validation
+    - Rate limiting per authenticated user
+    - Conditional requests (ETag, If-Modified-Since)
+    - Large payload handling with progress tracking
+    - Streaming responses with proper content headers
+
+  contact:
+    name: Spikard Team
+  license:
+    name: MIT
+
+servers:
+  - url: https://files.example.com/v1
+    description: Production server
+  - url: http://localhost:8000/v1
+    description: Development server
+
+tags:
+  - name: Files
+    description: File operations
+  - name: Storage
+    description: Storage management
+
+paths:
+  /files/upload:
+    post:
+      tags:
+        - Files
+      summary: Upload a file
+      description: |
+        Uploads a file with validation and storage.
+
+        **Request Validation:**
+        - file: required, multipart/form-data
+        - MIME types allowed: image/jpeg, image/png, image/webp, application/pdf, text/plain
+        - Max file size: 50MB (configurable)
+        - Max filename length: 255 chars
+
+        **Response:**
+        - 201: File uploaded successfully
+        - 202: Accepted for async processing
+        - 400: Validation error (invalid MIME type, file too large)
+        - 413: Payload too large
+
+        **Lifecycle hooks used:**
+        - onRequest: Log upload attempt
+        - preValidation: Check file size before processing
+        - preHandler: Scan for malware, compute hash
+        - onResponse: Log successful upload
+        - onError: Cleanup temp files
+
+        **Rate limiting:**
+        - 10 uploads per minute per user
+      operationId: uploadFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: File to upload
+                metadata:
+                  type: object
+                  description: Optional file metadata
+                  properties:
+                    name:
+                      type: string
+                      maxLength: 255
+                      description: Override filename
+                    description:
+                      type: string
+                      maxLength: 1000
+                      description: File description
+                    tags:
+                      type: array
+                      items:
+                        type: string
+                      description: File tags
+                    isPublic:
+                      type: boolean
+                      default: false
+                      description: Make file publicly accessible
+            encoding:
+              file:
+                contentType: image/jpeg,image/png,image/webp,application/pdf,text/plain
+              metadata:
+                contentType: application/json
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: File uploaded successfully
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+              description: URL to access the uploaded file
+            X-File-Id:
+              schema:
+                type: string
+                format: uuid
+              description: Unique file identifier
+            X-Upload-Time-Ms:
+              schema:
+                type: integer
+              description: Upload processing time in milliseconds
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: Rate limit cap
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Requests remaining
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+              description: Unix timestamp when limit resets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadResponse'
+              examples:
+                success:
+                  summary: Successfully uploaded
+                  value:
+                    id: "550e8400-e29b-41d4-a716-446655440000"
+                    filename: "document.pdf"
+                    size: 1024000
+                    mimetype: "application/pdf"
+                    hash: "abc123def456"
+                    uploadedAt: "2024-01-15T10:30:00Z"
+                    url: "/v1/files/550e8400-e29b-41d4-a716-446655440000"
+
+        '202':
+          description: File accepted for async processing
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+              description: URL to check processing status
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileProcessingResponse'
+              examples:
+                accepted:
+                  summary: Processing in progress
+                  value:
+                    id: "550e8400-e29b-41d4-a716-446655440000"
+                    status: processing
+                    statusUrl: "/v1/files/550e8400-e29b-41d4-a716-446655440000/status"
+
+        '400':
+          description: Bad request - validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/FileErrorResponse'
+              examples:
+                missingFile:
+                  summary: Missing file
+                  value:
+                    type: "about:blank"
+                    title: "Bad Request"
+                    status: 400
+                    detail: "File is required"
+                    instance: "/files/upload"
+                    errors:
+                      - path: "/file"
+                        message: "File field is required"
+                        code: "REQUIRED"
+                invalidMime:
+                  summary: Invalid MIME type
+                  value:
+                    type: "about:blank"
+                    title: "Validation Error"
+                    status: 400
+                    detail: "File MIME type not allowed"
+                    instance: "/files/upload"
+                    errors:
+                      - path: "/file"
+                        message: "MIME type application/exe not allowed"
+                        code: "INVALID_ENUM"
+                        allowed: ["image/jpeg", "image/png", "image/webp", "application/pdf"]
+
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+
+        '413':
+          description: Payload Too Large - file exceeds size limit
+          headers:
+            X-Max-Size:
+              schema:
+                type: integer
+              description: Maximum allowed file size in bytes
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/FileErrorResponse'
+              examples:
+                fileTooLarge:
+                  summary: File size exceeds limit
+                  value:
+                    type: "about:blank"
+                    title: "Payload Too Large"
+                    status: 413
+                    detail: "File size exceeds maximum of 50MB"
+                    instance: "/files/upload"
+                    maxSize: 52428800
+
+        '429':
+          description: Too many requests - rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+            Retry-After:
+              schema:
+                type: integer
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /files:
+    get:
+      tags:
+        - Files
+      summary: List uploaded files
+      description: |
+        Lists files uploaded by the authenticated user with pagination.
+
+        **Query parameters:**
+        - page: Page number (default: 1)
+        - limit: Items per page (default: 20, max: 100)
+        - sort: Sort by (created_at, size, name) (default: created_at)
+        - order: asc/desc (default: desc)
+        - mimeType: Filter by MIME type
+
+        **Lifecycle hooks used:**
+        - preValidation: Validate pagination parameters
+        - onResponse: Add pagination headers
+      operationId: listFiles
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [created_at, size, name]
+            default: created_at
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: mimeType
+          in: query
+          schema:
+            type: string
+            example: image/jpeg
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Files listed successfully
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileListResponse'
+              examples:
+                withFiles:
+                  summary: Files listed
+                  value:
+                    files:
+                      - id: "550e8400-e29b-41d4-a716-446655440000"
+                        filename: "document.pdf"
+                        size: 1024000
+                        mimetype: "application/pdf"
+                        createdAt: "2024-01-15T10:30:00Z"
+                        url: "/v1/files/550e8400-e29b-41d4-a716-446655440000"
+                    pagination:
+                      page: 1
+                      limit: 20
+                      total: 1
+                      pages: 1
+
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+
+  /files/{fileId}:
+    parameters:
+      - name: fileId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags:
+        - Files
+      summary: Download a file
+      description: |
+        Downloads a file with streaming support.
+
+        **Features:**
+        - Binary streaming response
+        - Proper Content-Type header
+        - Content-Length header
+        - ETag support for caching
+        - Content-Range support for range requests
+        - Compression (gzip) for text files
+        - Cache-Control headers
+
+        **Lifecycle hooks used:**
+        - preValidation: Check file exists
+        - preHandler: Check access permissions
+        - onResponse: Set cache headers
+      operationId: downloadFile
+      parameters:
+        - name: If-Modified-Since
+          in: header
+          schema:
+            type: string
+            format: date-time
+          description: Return 304 if file not modified since
+        - name: If-None-Match
+          in: header
+          schema:
+            type: string
+          description: Return 304 if ETag matches
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: File downloaded successfully
+          headers:
+            Content-Type:
+              schema:
+                type: string
+              description: MIME type of the file
+            Content-Length:
+              schema:
+                type: integer
+              description: Size of the file
+            Content-Disposition:
+              schema:
+                type: string
+              description: File download metadata
+            ETag:
+              schema:
+                type: string
+              description: Entity tag for caching
+            Last-Modified:
+              schema:
+                type: string
+                format: date-time
+              description: Last modification time
+            Cache-Control:
+              schema:
+                type: string
+              description: Cache control directive
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+              examples:
+                binary:
+                  summary: Binary file content
+        image/jpeg:
+          schema:
+            type: string
+            format: binary
+        image/png:
+          schema:
+            type: string
+            format: binary
+        application/pdf:
+          schema:
+            type: string
+            format: binary
+
+        '304':
+          description: Not Modified - use cached version
+          headers:
+            ETag:
+              schema:
+                type: string
+            Cache-Control:
+              schema:
+                type: string
+
+        '206':
+          description: Partial Content - range request
+          headers:
+            Content-Range:
+              schema:
+                type: string
+              description: Range of bytes
+            Content-Length:
+              schema:
+                type: integer
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+
+        '404':
+          description: File not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+
+    delete:
+      tags:
+        - Files
+      summary: Delete a file
+      description: |
+        Deletes a file and all associated data.
+
+        **Lifecycle hooks used:**
+        - preValidation: Check file exists
+        - preHandler: Check permissions
+        - onResponse: Log deletion
+      operationId: deleteFile
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: File deleted successfully
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+
+        '403':
+          description: Forbidden - insufficient permissions
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '404':
+          description: File not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+
+  /files/{fileId}/info:
+    get:
+      tags:
+        - Files
+      summary: Get file metadata
+      description: |
+        Retrieves file metadata without downloading content.
+
+        **Returns:**
+        - File ID, name, size, MIME type
+        - Upload timestamp
+        - Download URL
+        - Access information
+      operationId: getFileInfo
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: File metadata retrieved
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileMetadataResponse'
+              examples:
+                metadata:
+                  summary: File metadata
+                  value:
+                    id: "550e8400-e29b-41d4-a716-446655440000"
+                    filename: "document.pdf"
+                    size: 1024000
+                    mimetype: "application/pdf"
+                    hash: "abc123def456"
+                    createdAt: "2024-01-15T10:30:00Z"
+                    downloadUrl: "/v1/files/550e8400-e29b-41d4-a716-446655440000"
+                    isPublic: false
+                    accessLevel: private
+
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+
+        '404':
+          description: File not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+
+  /files/{fileId}/verify:
+    post:
+      tags:
+        - Files
+      summary: Verify file integrity
+      description: |
+        Verifies that a file was uploaded correctly by comparing checksums.
+
+        **Request body:**
+        - hash: SHA-256 hash of the uploaded file (hex)
+
+        **Response:**
+        - verified: boolean indicating if hash matches
+        - serverHash: hash computed on server side
+
+        **Lifecycle hooks used:**
+        - preValidation: Validate hash format
+        - preHandler: Compute server hash and compare
+      operationId: verifyFile
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - hash
+              properties:
+                hash:
+                  type: string
+                  pattern: '^[a-f0-9]{64}$'
+                  description: SHA-256 hash in hex format
+            examples:
+              verify:
+                value:
+                  hash: "abc123def456abc123def456abc123def456abc123def456abc123def456abcd"
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Verification completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileVerificationResponse'
+              examples:
+                verified:
+                  summary: Hashes match
+                  value:
+                    fileId: "550e8400-e29b-41d4-a716-446655440000"
+                    verified: true
+                    message: "File integrity verified"
+                mismatch:
+                  summary: Hashes don't match
+                  value:
+                    fileId: "550e8400-e29b-41d4-a716-446655440000"
+                    verified: false
+                    message: "Hash mismatch - file may be corrupted"
+                    clientHash: "incorrect"
+                    serverHash: "correct"
+
+        '400':
+          description: Bad request - invalid hash format
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+
+        '404':
+          description: File not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+
+  /storage/quota:
+    get:
+      tags:
+        - Storage
+      summary: Get storage quota
+      description: |
+        Retrieves the user's storage quota and current usage.
+
+        **Returns:**
+        - Total quota in bytes
+        - Used space
+        - Available space
+        - Usage percentage
+      operationId: getQuota
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Quota information
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageQuotaResponse'
+              examples:
+                quota:
+                  summary: Storage quota
+                  value:
+                    quotaBytes: 10737418240
+                    usedBytes: 2147483648
+                    availableBytes: 8589934592
+                    usagePercent: 20.0
+                    fileCount: 42
+
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+
+components:
+  schemas:
+    # Upload/Download Responses
+    FileUploadResponse:
+      type: object
+      description: Successful file upload response
+      required:
+        - id
+        - filename
+        - size
+        - mimetype
+        - uploadedAt
+        - url
+      properties:
+        id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+        size:
+          type: integer
+          minimum: 1
+          description: File size in bytes
+        mimetype:
+          type: string
+        hash:
+          type: string
+          description: SHA-256 hash in hex format
+        uploadedAt:
+          type: string
+          format: date-time
+        url:
+          type: string
+          format: uri
+          description: URL to download the file
+
+    FileProcessingResponse:
+      type: object
+      description: File accepted for async processing
+      required:
+        - id
+        - status
+        - statusUrl
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [processing, completed, failed]
+        statusUrl:
+          type: string
+          format: uri
+          description: Check processing status at this URL
+        progress:
+          type: object
+          properties:
+            percent:
+              type: integer
+              minimum: 0
+              maximum: 100
+            message:
+              type: string
+
+    FileMetadataResponse:
+      type: object
+      description: File metadata
+      required:
+        - id
+        - filename
+        - size
+        - mimetype
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+        size:
+          type: integer
+        mimetype:
+          type: string
+        hash:
+          type: string
+          description: SHA-256 hash for verification
+        createdAt:
+          type: string
+          format: date-time
+        downloadUrl:
+          type: string
+          format: uri
+        isPublic:
+          type: boolean
+        accessLevel:
+          type: string
+          enum: [private, shared, public]
+
+    FileListResponse:
+      type: object
+      required:
+        - files
+        - pagination
+      properties:
+        files:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              filename:
+                type: string
+              size:
+                type: integer
+              mimetype:
+                type: string
+              createdAt:
+                type: string
+                format: date-time
+              url:
+                type: string
+                format: uri
+        pagination:
+          type: object
+          required:
+            - page
+            - limit
+            - total
+            - pages
+          properties:
+            page:
+              type: integer
+            limit:
+              type: integer
+            total:
+              type: integer
+            pages:
+              type: integer
+
+    FileVerificationResponse:
+      type: object
+      description: File integrity verification result
+      required:
+        - fileId
+        - verified
+        - message
+      properties:
+        fileId:
+          type: string
+          format: uuid
+        verified:
+          type: boolean
+        message:
+          type: string
+        clientHash:
+          type: string
+        serverHash:
+          type: string
+
+    StorageQuotaResponse:
+      type: object
+      description: User storage quota information
+      required:
+        - quotaBytes
+        - usedBytes
+        - availableBytes
+        - usagePercent
+      properties:
+        quotaBytes:
+          type: integer
+          description: Total quota in bytes
+        usedBytes:
+          type: integer
+          description: Used space in bytes
+        availableBytes:
+          type: integer
+          description: Available space in bytes
+        usagePercent:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Usage as percentage
+        fileCount:
+          type: integer
+          description: Number of files
+
+    # Error Schemas
+    ErrorResponse:
+      type: object
+      required:
+        - type
+        - title
+        - status
+        - detail
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          default: "about:blank"
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 100
+          maximum: 599
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              path:
+                type: string
+              message:
+                type: string
+              code:
+                type: string
+
+    FileErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: object
+          properties:
+            maxSize:
+              type: integer
+              description: Maximum allowed size in bytes
+            allowedMimeTypes:
+              type: array
+              items:
+                type: string
+              description: List of allowed MIME types
+
+    AuthErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: object
+          properties:
+            title:
+              default: Unauthorized
+            status:
+              default: 401
+
+    NotFoundResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: object
+          properties:
+            title:
+              default: Not Found
+            status:
+              default: 404
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT bearer token for authentication
+
+security:
+  - bearerAuth: []

@@ -1,5 +1,6 @@
 # Spikard
 
+[![Documentation](https://img.shields.io/badge/docs-spikard.dev-58FBDA)](https://spikard.dev)
 [![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
 [![PyPI](https://badge.fury.io/py/spikard.svg)](https://badge.fury.io/py/spikard)
 [![npm](https://img.shields.io/npm/v/spikard)](https://www.npmjs.com/package/spikard)
@@ -7,6 +8,7 @@
 [![RubyGems](https://badge.fury.io/rb/spikard.svg)](https://rubygems.org/gems/spikard)
 [![Packagist](https://img.shields.io/packagist/v/spikard/spikard)](https://packagist.org/packages/spikard/spikard)
 [![Crates.io](https://img.shields.io/crates/v/spikard)](https://crates.io/crates/spikard)
+[![CI Status](https://github.com/Goldziher/spikard/workflows/CI/badge.svg)](https://github.com/Goldziher/spikard/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **An experimental polyglot web development framework.**
@@ -486,12 +488,47 @@ Node.js, Ruby, and WASM benchmarks coming soon.
 
 ### Installation
 
-**Pre-built packages coming soon to:**
-- PyPI (Python)
-- npm (TypeScript/Node.js)
-- RubyGems (Ruby)
-- Packagist (PHP via Composer)
-- crates.io (Rust)
+**Language-specific packages:**
+
+#### Python
+```bash
+pip install spikard
+```
+See [Python README](packages/python/README.md) for more details.
+
+#### Node.js / TypeScript
+```bash
+npm install spikard
+# or with pnpm
+pnpm add spikard
+```
+See [Node.js README](packages/node/README.md) for more details.
+
+#### Ruby
+```bash
+gem install spikard
+```
+See [Ruby README](packages/ruby/README.md) for more details.
+
+#### PHP
+```bash
+composer require spikard/spikard
+```
+See [PHP README](packages/php/README.md) for more details.
+
+#### WebAssembly
+```bash
+npm install spikard-wasm
+# or
+pnpm add spikard-wasm
+```
+See [WASM README](crates/spikard-wasm/README.md) for more details.
+
+#### Rust (native)
+```bash
+cargo add spikard
+```
+See [Rust README](crates/spikard/README.md) for more details.
 
 ### From Source
 
@@ -505,13 +542,14 @@ Node.js, Ruby, and WASM benchmarks coming soon.
 **Quick Start:**
 ```bash
 # Clone repository
-git clone https://github.com/your-org/spikard.git
+git clone https://github.com/Goldziher/spikard.git
 cd spikard
 
 # Install dependencies
 pnpm install
 bundle install
 uv sync
+composer install
 
 # Build bindings
 task build:py      # Python
@@ -519,6 +557,7 @@ task build:node    # Node.js
 task build:ruby    # Ruby
 task build:php     # PHP
 task build:wasm    # WebAssembly
+task build:rust    # Rust
 
 # Run tests
 task test

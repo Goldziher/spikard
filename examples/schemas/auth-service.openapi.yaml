@@ -1,0 +1,858 @@
+openapi: 3.1.0
+info:
+  title: Authentication Service API
+  version: 1.0.0
+  description: |
+    Comprehensive authentication and authorization API demonstrating security patterns.
+
+    **Features:**
+    - Multiple authentication schemes (API keys, Bearer tokens, OAuth 2.0)
+    - API key generation and rotation
+    - JWT token management (issue, refresh, revoke)
+    - Scope-based authorization
+    - Rate limiting per API key
+    - Audit logging patterns
+    - OAuth 2.0 code flow support
+
+    **Demonstrates Spikard features:**
+    - Security scheme composition
+    - Multiple auth methods on same endpoint
+    - Structured error responses for auth failures
+    - Lifecycle hooks: preValidation (auth check), onResponse (audit log)
+    - Rate limiting per authenticated user
+    - Token validation and refresh
+    - Secure cookie handling
+
+  contact:
+    name: Spikard Team
+  license:
+    name: MIT
+
+servers:
+  - url: https://auth.example.com/v1
+    description: Production authentication server
+  - url: http://localhost:8000/v1
+    description: Local development server
+
+tags:
+  - name: API Keys
+    description: API key management
+  - name: Tokens
+    description: JWT token operations
+  - name: OAuth
+    description: OAuth 2.0 flows
+
+paths:
+  /auth/api-keys:
+    post:
+      tags:
+        - API Keys
+      summary: Generate new API key
+      description: |
+        Creates a new API key for programmatic access.
+
+        **Request body:**
+        - name: Friendly name for the key
+        - scopes: Array of permissions (e.g., "read", "write", "admin")
+        - expiresIn: Optional expiration in days (default: never expires)
+
+        **Response:**
+        - Returns the key only once - client must store securely
+        - Key is SHA-256 hashed on server
+        - Include key prefix for identification
+
+        **Lifecycle hooks used:**
+        - onRequest: Check user authentication
+        - preValidation: Validate scope list
+        - onResponse: Audit log the creation
+      operationId: generateApiKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                  description: Friendly name for the key
+                scopes:
+                  type: array
+                  items:
+                    type: string
+                    enum: [read, write, admin, delete]
+                  default: [read]
+                  description: Permissions granted to this key
+                expiresIn:
+                  type: integer
+                  nullable: true
+                  description: Expiration period in days (null = never)
+            examples:
+              basic:
+                summary: Basic API key
+                value:
+                  name: "Production CI/CD"
+                  scopes: [read, write]
+              withExpiry:
+                summary: API key with expiration
+                value:
+                  name: "Third-party integration"
+                  scopes: [read]
+                  expiresIn: 90
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: API key created successfully
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyResponse'
+              examples:
+                created:
+                  summary: New API key
+                  value:
+                    id: "550e8400-e29b-41d4-a716-446655440000"
+                    name: "Production CI/CD"
+                    key: "spk_live_7f8g9h0i1j2k3l4m5n6o7p8q9r0s1t"
+                    prefix: "spk_live"
+                    scopes: [read, write]
+                    createdAt: "2024-01-15T10:30:00Z"
+                    expiresAt: null
+                    warning: "Store this key securely. You won't see it again."
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags:
+        - API Keys
+      summary: List API keys
+      description: |
+        Lists all API keys for the authenticated user.
+
+        Includes metadata but not the actual key values.
+      operationId: listApiKeys
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: API keys listed
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyListResponse'
+              examples:
+                list:
+                  summary: API keys list
+                  value:
+                    keys:
+                      - id: "550e8400-e29b-41d4-a716-446655440000"
+                        name: "Production CI/CD"
+                        prefix: "spk_live"
+                        scopes: [read, write]
+                        createdAt: "2024-01-15T10:30:00Z"
+                        expiresAt: "2024-04-15T10:30:00Z"
+                        lastUsedAt: "2024-01-15T11:00:00Z"
+                        status: active
+                    pagination:
+                      page: 1
+                      limit: 20
+                      total: 1
+                      pages: 1
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+
+  /auth/api-keys/{keyId}:
+    delete:
+      tags:
+        - API Keys
+      summary: Revoke API key
+      description: |
+        Revokes an API key, immediately invalidating it.
+
+        Previously issued tokens remain valid until expiration.
+      operationId: revokeApiKey
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: API key revoked
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+        '403':
+          description: Forbidden - cannot revoke key
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: API key not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+
+  /auth/token:
+    post:
+      tags:
+        - Tokens
+      summary: Issue bearer token
+      description: |
+        Exchanges credentials for a JWT bearer token.
+
+        **Supported grant types:**
+        - password: Username and password (legacy)
+        - client_credentials: API key and secret
+        - refresh_token: Refresh token
+
+        **Response includes:**
+        - access_token: JWT for API requests
+        - refresh_token: Token for refreshing access
+        - expires_in: Token lifetime in seconds
+        - token_type: Always "Bearer"
+
+        **Lifecycle hooks used:**
+        - preValidation: Validate credentials format
+        - preHandler: Check user/API key status
+        - onResponse: Audit log the token issuance
+      operationId: issueToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/PasswordGrantRequest'
+                - $ref: '#/components/schemas/ClientCredentialsGrantRequest'
+                - $ref: '#/components/schemas/RefreshTokenGrantRequest'
+            examples:
+              password:
+                summary: Password grant
+                value:
+                  grant_type: password
+                  username: user@example.com
+                  password: secret_password
+              clientCredentials:
+                summary: Client credentials grant
+                value:
+                  grant_type: client_credentials
+                  client_id: "550e8400-e29b-41d4-a716-446655440000"
+                  client_secret: "spk_live_secret"
+              refresh:
+                summary: Refresh token grant
+                value:
+                  grant_type: refresh_token
+                  refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: Token issued successfully
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+              examples:
+                token:
+                  summary: JWT token response
+                  value:
+                    access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    token_type: Bearer
+                    expires_in: 3600
+                    refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '400':
+          description: Invalid credentials or grant type
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+              examples:
+                invalidCredentials:
+                  summary: Invalid credentials
+                  value:
+                    type: "about:blank"
+                    title: "Invalid Credentials"
+                    status: 400
+                    detail: "Username or password is incorrect"
+                invalidGrant:
+                  summary: Invalid grant type
+                  value:
+                    type: "about:blank"
+                    title: "Unsupported Grant Type"
+                    status: 400
+                    detail: "Grant type must be one of: password, client_credentials, refresh_token"
+
+        '429':
+          description: Too many failed attempts
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Tokens
+      summary: Refresh bearer token
+      description: |
+        Issues a new access token using a refresh token.
+
+        **Note:** Prefer using the `/auth/token` endpoint with refresh_token grant type.
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  type: string
+                  description: Refresh token from previous token response
+      responses:
+        '200':
+          description: New access token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Invalid or expired refresh token
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+
+  /auth/logout:
+    post:
+      tags:
+        - Tokens
+      summary: Logout / Revoke token
+      description: |
+        Revokes the current bearer token.
+
+        Invalidates the token immediately and removes any associated sessions.
+
+        **Lifecycle hooks used:**
+        - onResponse: Audit log the logout
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Successfully logged out
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+
+  /auth/verify:
+    post:
+      tags:
+        - Tokens
+      summary: Verify token validity
+      description: |
+        Verifies that a token is valid and returns token information.
+
+        Used for debugging and token inspection.
+      operationId: verifyToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+                  description: Token to verify
+      responses:
+        '200':
+          description: Token is valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenVerificationResponse'
+              examples:
+                valid:
+                  summary: Valid token
+                  value:
+                    valid: true
+                    userId: "user-123"
+                    scopes: [read, write]
+                    issuedAt: "2024-01-15T10:30:00Z"
+                    expiresAt: "2024-01-15T11:30:00Z"
+        '400':
+          description: Token is invalid
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid:
+                  summary: Invalid token
+                  value:
+                    type: "about:blank"
+                    title: "Invalid Token"
+                    status: 400
+                    detail: "Token format is invalid or has expired"
+
+  /auth/oauth/authorize:
+    get:
+      tags:
+        - OAuth
+      summary: OAuth 2.0 authorization endpoint
+      description: |
+        Initiates OAuth 2.0 authorization code flow.
+
+        **Parameters:**
+        - client_id: OAuth client ID
+        - redirect_uri: URL to redirect after authorization
+        - scope: Requested permissions (space-separated)
+        - state: CSRF token (required)
+        - response_type: Must be "code"
+
+        **Response:**
+        Redirects to login/consent page, then to redirect_uri with:
+        - code: Authorization code (5 minute expiry)
+        - state: Echo of request state
+
+        **Example:**
+        ```
+        https://auth.example.com/v1/auth/oauth/authorize?
+          client_id=abc123&
+          redirect_uri=https://app.example.com/callback&
+          scope=read+write&
+          state=xyz789&
+          response_type=code
+        ```
+      operationId: oauthAuthorize
+      parameters:
+        - name: client_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: redirect_uri
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uri
+        - name: scope
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "read write"
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+            description: CSRF token
+        - name: response_type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [code]
+      responses:
+        '302':
+          description: Redirect to authorization page or redirect_uri
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/oauth/token:
+    post:
+      tags:
+        - OAuth
+      summary: OAuth 2.0 token endpoint
+      description: |
+        Exchanges authorization code for access token.
+
+        **Request body:**
+        - grant_type: Must be "authorization_code"
+        - code: Authorization code from authorize endpoint
+        - client_id: OAuth client ID
+        - client_secret: OAuth client secret
+        - redirect_uri: Must match original authorize request
+      operationId: oauthToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - grant_type
+                - code
+                - client_id
+                - client_secret
+                - redirect_uri
+              properties:
+                grant_type:
+                  type: string
+                  enum: [authorization_code]
+                code:
+                  type: string
+                  description: Authorization code
+                client_id:
+                  type: string
+                client_secret:
+                  type: string
+                redirect_uri:
+                  type: string
+                  format: uri
+      responses:
+        '200':
+          description: Token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+
+components:
+  schemas:
+    # Request Schemas
+    PasswordGrantRequest:
+      type: object
+      required:
+        - grant_type
+        - username
+        - password
+      properties:
+        grant_type:
+          type: string
+          const: password
+        username:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 1
+
+    ClientCredentialsGrantRequest:
+      type: object
+      required:
+        - grant_type
+        - client_id
+        - client_secret
+      properties:
+        grant_type:
+          type: string
+          const: client_credentials
+        client_id:
+          type: string
+        client_secret:
+          type: string
+
+    RefreshTokenGrantRequest:
+      type: object
+      required:
+        - grant_type
+        - refresh_token
+      properties:
+        grant_type:
+          type: string
+          const: refresh_token
+        refresh_token:
+          type: string
+
+    # Response Schemas
+    ApiKeyResponse:
+      type: object
+      required:
+        - id
+        - name
+        - key
+        - prefix
+        - scopes
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        key:
+          type: string
+          description: API key (shown only once)
+        prefix:
+          type: string
+          description: Key prefix for identification
+        scopes:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        warning:
+          type: string
+          description: Security warning about storing key
+
+    ApiKeyListResponse:
+      type: object
+      properties:
+        keys:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              prefix:
+                type: string
+              scopes:
+                type: array
+                items:
+                  type: string
+              createdAt:
+                type: string
+                format: date-time
+              expiresAt:
+                type: string
+                format: date-time
+                nullable: true
+              lastUsedAt:
+                type: string
+                format: date-time
+                nullable: true
+              status:
+                type: string
+                enum: [active, expired, revoked]
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+            limit:
+              type: integer
+            total:
+              type: integer
+            pages:
+              type: integer
+
+    TokenResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+        - expires_in
+      properties:
+        access_token:
+          type: string
+          description: JWT bearer token
+        token_type:
+          type: string
+          default: Bearer
+        expires_in:
+          type: integer
+          description: Seconds until expiration
+        refresh_token:
+          type: string
+          nullable: true
+          description: Token for refreshing access
+        scope:
+          type: string
+          nullable: true
+          description: Granted scopes
+
+    TokenVerificationResponse:
+      type: object
+      required:
+        - valid
+      properties:
+        valid:
+          type: boolean
+        userId:
+          type: string
+          nullable: true
+        scopes:
+          type: array
+          items:
+            type: string
+          nullable: true
+        issuedAt:
+          type: string
+          format: date-time
+          nullable: true
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    # Error Schemas
+    ErrorResponse:
+      type: object
+      required:
+        - type
+        - title
+        - status
+        - detail
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          default: "about:blank"
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 100
+          maximum: 599
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+
+    AuthErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+
+    NotFoundResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: object
+          properties:
+            title:
+              default: Not Found
+            status:
+              default: 404
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT bearer token for authentication
+
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for programmatic access
+
+security:
+  - bearerAuth: []
+  - apiKeyAuth: []
