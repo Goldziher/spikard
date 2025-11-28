@@ -6,7 +6,11 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description = "Python bindings (PyO3) for spikard"
+description = "High-performance Python bindings for Spikard HTTP framework via PyO3"
+keywords = ["python", "bindings", "pyo3", "http", "framework", "async"]
+categories = ["api-bindings", "web-programming::http-server"]
+documentation = "https://docs.rs/spikard-py"
+readme = "README.md"
 
 [lib]
 name = "_spikard"

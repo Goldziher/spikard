@@ -7,8 +7,10 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "Shared transport-agnostic primitives for Spikard runtimes"
-keywords = ["http", "web", "framework", "validation", "middleware"]
-categories = ["web-programming::http-server", "web-programming"]
+keywords = ["http", "web", "framework", "validation", "middleware", "async", "request", "response"]
+categories = ["web-programming::http-server", "web-programming", "development-tools"]
+documentation = "https://docs.rs/spikard-core"
+readme = "README.md"
 
 [dependencies]
 serde.workspace = true

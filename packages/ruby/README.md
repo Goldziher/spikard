@@ -1,16 +1,39 @@
 # Spikard Ruby
 
-[![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
-[![RubyGems](https://badge.fury.io/rb/spikard.svg)](https://rubygems.org/gems/spikard)
-[![npm](https://img.shields.io/npm/v/spikard)](https://www.npmjs.com/package/spikard)
-[![npm (WASM)](https://img.shields.io/npm/v/spikard-wasm?label=npm%20%28wasm%29)](https://www.npmjs.com/package/spikard-wasm)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Gem Version](https://img.shields.io/gem/v/spikard.svg)](https://rubygems.org/gems/spikard)
+[![Gem Downloads](https://img.shields.io/gem/dt/spikard.svg)](https://rubygems.org/gems/spikard)
+[![Ruby Version](https://img.shields.io/badge/ruby-%3E%3D%203.2-red.svg)](https://www.ruby-lang.org/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![CI Status](https://img.shields.io/github/actions/workflow/status/Goldziher/spikard/ci.yml?branch=main)](https://github.com/Goldziher/spikard/actions)
+[![PyPI](https://img.shields.io/pypi/v/spikard.svg)](https://pypi.org/project/spikard/)
+[![npm](https://img.shields.io/npm/v/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
+[![Crates.io](https://img.shields.io/crates/v/spikard.svg)](https://crates.io/crates/spikard)
+[![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg)](https://packagist.org/packages/spikard/spikard)
 
-High-performance Ruby web framework with a Rust core. Build REST APIs with Sinatra-style blocks backed by Axum and Tower-HTTP.
+High-performance Ruby web framework with a Rust core. Build REST APIs with Sinatra-style routing and zero-overhead async handlers backed by Axum and Tower-HTTP.
+
+## Features
+
+- **Rust-powered performance**: High-throughput HTTP server backed by Tokio and Axum
+- **Sinatra-style routing**: Familiar `get`, `post`, `put`, `patch`, `delete` DSL
+- **Type-safe with RBS**: Full RBS type definitions for Steep type checking
+- **Zero-copy serialization**: Direct Rust-to-Ruby object conversion via Magnus
+- **Async-first**: Non-blocking handlers with full async/await support
+- **Middleware stack**: Compression, rate limiting, request IDs, authentication
+- **WebSockets & SSE**: Native real-time communication primitives
+- **Request validation**: JSON Schema and dry-schema support
+- **Lifecycle hooks**: onRequest, preValidation, preHandler, onResponse, onError
+- **Dependency injection**: Built-in container for services and factories
 
 ## Installation
 
-**From source (currently):**
+**Via RubyGems (recommended):**
+
+```bash
+gem install spikard
+```
+
+**From source (development):**
 
 ```bash
 cd packages/ruby
@@ -19,9 +42,9 @@ bundle exec rake ext:build
 ```
 
 **Requirements:**
-- Ruby 3.2+
+- Ruby 3.2 or later
 - Bundler
-- Rust toolchain (for building native extension)
+- Rust toolchain (for building from source)
 
 ## Quick Start
 
@@ -566,10 +589,23 @@ See `/examples/ruby/` for more examples.
 
 ## Documentation
 
-- [Main Project README](../../README.md)
-- [Contributing Guide](../../CONTRIBUTING.md)
-- [RBS Type Signatures](sig/spikard.rbs)
+**API Reference & Guides:**
+- [Type Definitions (RBS)](sig/spikard.rbs) - Full type signatures for Steep
+- [Configuration Reference](lib/spikard/config.rb) - ServerConfig and middleware options
+- [Handler Documentation](lib/spikard/handler_wrapper.rb) - Request/response handling
+
+**Project Resources:**
+- [Main Project README](../../README.md) - Spikard overview and multi-language ecosystem
+- [Contributing Guide](../../CONTRIBUTING.md) - Development guidelines
+- [Architecture Decisions](../../docs/adr/) - ADRs on design choices
+- [Examples](../../examples/ruby/) - Runnable example applications
+
+**Cross-Language:**
+- [Python (PyPI)](https://pypi.org/project/spikard/)
+- [Node.js (npm)](https://www.npmjs.com/package/@spikard/node)
+- [Rust (Crates.io)](https://crates.io/crates/spikard)
+- [PHP (Packagist)](https://packagist.org/packages/spikard/spikard)
 
 ## License
 
-MIT
+MIT - See [LICENSE](../../LICENSE) for details

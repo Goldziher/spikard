@@ -1,5 +1,17 @@
 # spikard-py
 
+High-performance Python bindings for Spikard HTTP framework via PyO3.
+
+## Status & Badges
+
+[![Crates.io](https://img.shields.io/crates/v/spikard-py.svg)](https://crates.io/crates/spikard-py)
+[![Downloads](https://img.shields.io/crates/d/spikard-py.svg)](https://crates.io/crates/spikard-py)
+[![Documentation](https://docs.rs/spikard-py/badge.svg)](https://docs.rs/spikard-py)
+[![PyPI](https://img.shields.io/pypi/v/spikard.svg)](https://pypi.org/project/spikard/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+## Overview
+
 PyO3 bindings that expose the Rust HTTP runtime to Python applications under the module name `_spikard`.
 
 This crate implements high-performance Python bindings for Spikard's HTTP server by bridging Python's asyncio with Rust's async/await runtime through carefully optimized FFI patterns.

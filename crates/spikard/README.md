@@ -1,12 +1,39 @@
-# Spikard (Rust)
-
-[![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
-[![Crates.io](https://img.shields.io/crates/v/spikard)](https://crates.io/crates/spikard)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+# Spikard
 
 High-performance HTTP framework built on Axum and Tower-HTTP with type-safe routing, validation, WebSocket/SSE support, and lifecycle hooks.
 
+## Status & Badges
+
+[![Crates.io](https://img.shields.io/crates/v/spikard.svg)](https://crates.io/crates/spikard)
+[![Downloads](https://img.shields.io/crates/d/spikard.svg)](https://crates.io/crates/spikard)
+[![Documentation](https://docs.rs/spikard/badge.svg)](https://docs.rs/spikard)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
+[![CI](https://img.shields.io/github/actions/workflow/status/Goldziher/spikard/ci.yml?branch=main)](https://github.com/Goldziher/spikard/actions)
+
+### Multi-Language Bindings
+
+[![PyPI](https://img.shields.io/pypi/v/spikard.svg)](https://pypi.org/project/spikard/)
+[![npm](https://img.shields.io/npm/v/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
+[![RubyGems](https://img.shields.io/gem/v/spikard.svg)](https://rubygems.org/gems/spikard)
+[![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg)](https://packagist.org/packages/spikard/spikard)
+
+## Features
+
+- **Type-safe routing** with path parameter extraction and compile-time validation
+- **JSON Schema validation** via schemars with automatic OpenAPI generation
+- **WebSocket and SSE** (Server-Sent Events) support
+- **Lifecycle hooks** with zero-cost abstraction (onRequest, preValidation, preHandler, onResponse, onError)
+- **Tower middleware** stack (compression, rate limiting, auth, CORS, request IDs, timeouts)
+- **OpenAPI 3.1** and AsyncAPI generation with Swagger UI and ReDoc
+- **Testing utilities** with in-memory test server
+- **File upload** handling with multipart form support
+- **Streaming responses** with native async/await
+- **Multi-language bindings** (Python, Node.js, Ruby, PHP, WebAssembly)
+
 ## Installation
+
+### Rust
 
 ```toml
 [dependencies]
@@ -405,16 +432,68 @@ Built on:
 - **jsonschema** for validation
 - Zero-copy where possible
 
+## Language Bindings
+
+Spikard is available for multiple languages:
+
+### Python
+```bash
+pip install spikard
+```
+See [spikard-py](../spikard-py/README.md) for details.
+
+### Node.js / TypeScript
+```bash
+npm install @spikard/node
+```
+See [spikard-node](../spikard-node/README.md) for details.
+
+### Ruby
+```bash
+gem install spikard
+```
+See [spikard-rb](../spikard-rb/README.md) for details.
+
+### PHP
+```bash
+composer require spikard/spikard
+```
+See [spikard-php](../spikard-php/README.md) for details.
+
+### WebAssembly
+```bash
+npm install @spikard/wasm
+```
+See [spikard-wasm](../spikard-wasm/README.md) for details.
+
 ## Documentation
 
 - [Main Project README](../../README.md)
 - [Contributing Guide](../../CONTRIBUTING.md)
 - [Architecture Decision Records](../../docs/adr/)
-- [API Documentation](https://docs.rs/spikard) *(coming soon)*
+- [Full API Documentation](https://docs.rs/spikard)
+- [Getting Started Guide](../../docs/getting-started.md)
 
 ## Examples
 
-See `/examples/rust/` for more examples.
+See `/examples/rust/` for more Rust examples.
+
+## Performance
+
+Built on industry-proven foundations:
+- **Axum** for blazing-fast routing (600k+ req/s)
+- **Tower-HTTP** for zero-overhead middleware
+- **Tokio** for high-performance async runtime
+- **jsonschema** for efficient validation
+
+Benchmarks: ~165k req/s baseline with 0.3ms mean latency (macOS, 50 concurrent connections)
+
+## Related Projects
+
+- [spikard-http](../spikard-http/README.md) - HTTP runtime
+- [spikard-core](../spikard-core/README.md) - Core primitives
+- [spikard-cli](../spikard-cli/README.md) - Command-line interface
+- [spikard-codegen](../spikard-codegen/README.md) - Code generation tools
 
 ## License
 

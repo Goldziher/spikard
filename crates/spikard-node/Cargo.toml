@@ -6,7 +6,11 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description = "Node.js bindings (napi-rs) for spikard"
+description = "High-performance Node.js bindings for Spikard HTTP framework via napi-rs"
+keywords = ["nodejs", "bindings", "napi", "http", "framework", "typescript"]
+categories = ["api-bindings", "web-programming::http-server"]
+documentation = "https://docs.rs/spikard-node"
+readme = "README.md"
 
 [lib]
 crate-type = ["cdylib"]

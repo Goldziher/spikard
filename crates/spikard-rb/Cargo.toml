@@ -5,7 +5,12 @@ edition = "2024"
 authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 license = "MIT"
 repository = "https://github.com/Goldziher/spikard"
-description = "Ruby bindings for the Spikard HTTP toolkit (thin Magnus wrapper around the Rust engine)."
+homepage = "https://github.com/Goldziher/spikard"
+description = "High-performance Ruby bindings for Spikard HTTP framework via Magnus"
+keywords = ["ruby", "bindings", "magnus", "http", "framework"]
+categories = ["api-bindings", "web-programming::http-server"]
+documentation = "https://docs.rs/spikard-rb"
+readme = "README.md"
 
 [lib]
 name = "spikard_rb_core"

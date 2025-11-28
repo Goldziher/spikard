@@ -1,10 +1,10 @@
 {
-	"name": "spikard",
+	"name": "@spikard/node",
 	"version": "0.2.0",
-	"description": "High-performance HTTP framework for Node.js and Bun. Type-safe routing, validation, and testing powered by Rust core.",
+	"description": "High-performance Node.js HTTP framework with Rust core. Type-safe routing, validation, middleware, and testing via napi-rs bindings.",
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",
-	"types": "index.d.ts",
+	"types": "dist/index.d.ts",
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
@@ -57,7 +57,11 @@
 	"license": "MIT",
 	"files": [
 		"dist",
-		"README.md"
+		"index.d.ts",
+		"index.js",
+		"*.node",
+		"README.md",
+		"LICENSE"
 	],
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.8",

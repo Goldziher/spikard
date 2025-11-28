@@ -1,12 +1,17 @@
-# Spikard Ruby
+# spikard-rb
 
+High-performance Ruby bindings for Spikard HTTP framework via Magnus.
+
+## Status & Badges
+
+[![RubyGems](https://img.shields.io/gem/v/spikard.svg)](https://rubygems.org/gems/spikard)
+[![Downloads](https://img.shields.io/gem/dt/spikard.svg)](https://rubygems.org/gems/spikard)
+[![Crates.io](https://img.shields.io/crates/v/spikard-rb.svg)](https://crates.io/crates/spikard-rb)
+[![Documentation](https://docs.rs/spikard-rb/badge.svg)](https://docs.rs/spikard-rb)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
-[![PyPI](https://badge.fury.io/py/spikard.svg)](https://badge.fury.io/py/spikard)
-[![npm](https://img.shields.io/npm/v/spikard)](https://www.npmjs.com/package/spikard)
-[![npm (WASM)](https://img.shields.io/npm/v/spikard-wasm?label=npm%20%28wasm%29)](https://www.npmjs.com/package/spikard-wasm)
-[![RubyGems](https://badge.fury.io/rb/spikard.svg)](https://rubygems.org/gems/spikard)
-[![Packagist](https://img.shields.io/packagist/v/spikard/spikard)](https://packagist.org/packages/spikard/spikard)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+## Overview
 
 High-performance Ruby web framework with a Rust core. Build REST APIs with Sinatra-style blocks backed by Axum and Tower-HTTP.
 

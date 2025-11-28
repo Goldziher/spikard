@@ -6,7 +6,11 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description = "WebAssembly bindings (wasm-bindgen) for spikard"
+description = "WebAssembly bindings for Spikard HTTP framework via wasm-bindgen"
+keywords = ["wasm", "webassembly", "bindings", "http", "framework"]
+categories = ["api-bindings", "web-programming::http-server"]
+documentation = "https://docs.rs/spikard-wasm"
+readme = "README.md"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
