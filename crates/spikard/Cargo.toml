@@ -7,8 +7,9 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "High-performance HTTP framework built on Axum and Tower-HTTP with type-safe routing, validation, WebSocket/SSE support, and lifecycle hooks"
-keywords = ["http", "web", "framework", "axum", "tower"]
-categories = ["web-programming::http-server", "web-programming"]
+keywords = ["http", "web", "framework", "axum", "tower", "web-framework", "api", "rest"]
+categories = ["web-programming::http-server", "web-programming::http-client"]
+documentation = "https://docs.rs/spikard"
 readme = "README.md"
 
 [lib]

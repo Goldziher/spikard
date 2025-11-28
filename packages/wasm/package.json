@@ -1,7 +1,7 @@
 {
-	"name": "spikard-wasm",
+	"name": "@spikard/wasm",
 	"version": "0.2.0",
-	"description": "Spikard bindings for WebAssembly/edge runtimes implemented in TypeScript.",
+	"description": "Spikard HTTP framework for WebAssembly and edge runtimes with full TypeScript support, targeting browsers, Deno, Cloudflare Workers, and Node.js.",
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",
 	"types": "dist/index.d.ts",
@@ -29,14 +29,21 @@
 	},
 	"files": [
 		"dist",
-		"README.md"
+		"README.md",
+		"package.json"
 	],
 	"keywords": [
 		"http",
 		"framework",
 		"wasm",
+		"webassembly",
 		"edge",
-		"typescript"
+		"typescript",
+		"cloudflare-workers",
+		"deno",
+		"fetch-api",
+		"async",
+		"router"
 	],
 	"author": {
 		"name": "Na'aman Hirschfeld",
@@ -44,9 +51,10 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Goldziher/spikard"
+		"url": "https://github.com/Goldziher/spikard.git",
+		"directory": "packages/wasm"
 	},
-	"homepage": "https://github.com/Goldziher/spikard",
+	"homepage": "https://github.com/Goldziher/spikard/tree/main/packages/wasm",
 	"bugs": {
 		"url": "https://github.com/Goldziher/spikard/issues"
 	},

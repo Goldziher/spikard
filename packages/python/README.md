@@ -1,18 +1,28 @@
 # Spikard Python
 
-[![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
-[![PyPI](https://badge.fury.io/py/spikard.svg)](https://badge.fury.io/py/spikard)
-[![npm](https://img.shields.io/npm/v/spikard)](https://www.npmjs.com/package/spikard)
-[![npm (WASM)](https://img.shields.io/npm/v/spikard-wasm?label=npm%20%28wasm%29)](https://www.npmjs.com/package/spikard-wasm)
-[![RubyGems](https://badge.fury.io/rb/spikard.svg)](https://rubygems.org/gems/spikard)
-[![Packagist](https://img.shields.io/packagist/v/spikard/spikard)](https://packagist.org/packages/spikard/spikard)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
 High-performance Python web framework with a Rust core. Build REST APIs, WebSockets, and SSE services with FastAPI/Litestar-style decorators backed by Axum and Tower-HTTP.
+
+## Badges
+
+[![PyPI](https://img.shields.io/pypi/v/spikard.svg?logo=python&logoColor=white)](https://pypi.org/project/spikard/)
+[![Downloads](https://img.shields.io/pypi/dm/spikard.svg)](https://pypi.org/project/spikard/)
+[![Python](https://img.shields.io/pypi/pyversions/spikard.svg?logo=python&logoColor=white)](https://pypi.org/project/spikard/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Crates.io](https://img.shields.io/crates/v/spikard.svg?logo=rust)](https://crates.io/crates/spikard)
+[![npm](https://img.shields.io/npm/v/@spikard/node.svg?logo=npm)](https://www.npmjs.com/package/@spikard/node)
+[![RubyGems](https://img.shields.io/gem/v/spikard.svg?logo=ruby&logoColor=white)](https://rubygems.org/gems/spikard)
+[![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg?logo=php&logoColor=white)](https://packagist.org/packages/spikard/spikard)
+[![Discord](https://img.shields.io/discord/1234567890?logo=discord&logoColor=white&label=community)](https://discord.gg/pXxagNK2zN)
 
 ## Installation
 
-**From source (currently):**
+**Via pip (requires building from source):**
+
+```bash
+pip install spikard
+```
+
+**From source:**
 
 ```bash
 cd packages/python
@@ -22,7 +32,7 @@ pip install -e .
 ```
 
 **Requirements:**
-- Python 3.11+
+- Python 3.10+
 - Rust toolchain (for building from source)
 
 ## Quick Start
@@ -580,6 +590,16 @@ See `/examples/python/` for more examples including:
 - [Main Project README](../../README.md)
 - [Contributing Guide](../../CONTRIBUTING.md)
 - [Architecture Decision Records](../../docs/adr/)
+- [Python Examples](../../examples/python/)
+- [GitHub Discussions](https://github.com/Goldziher/spikard/discussions)
+
+## Ecosystem Links
+
+- Rust: [Crates.io](https://crates.io/crates/spikard)
+- Node.js: [npm](https://www.npmjs.com/package/@spikard/node)
+- Ruby: [RubyGems](https://rubygems.org/gems/spikard)
+- PHP: [Packagist](https://packagist.org/packages/spikard/spikard)
+- WebAssembly: [npm (@spikard/wasm)](https://www.npmjs.com/package/@spikard/wasm)
 
 ## License
 

@@ -1,14 +1,19 @@
-# spikard
+# spikard-node
 
+High-performance Node.js bindings for Spikard HTTP framework via napi-rs.
+
+## Status & Badges
+
+[![npm](https://img.shields.io/npm/v/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
+[![npm downloads](https://img.shields.io/npm/dm/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
+[![Crates.io](https://img.shields.io/crates/v/spikard-node.svg)](https://crates.io/crates/spikard-node)
+[![Documentation](https://docs.rs/spikard-node/badge.svg)](https://docs.rs/spikard-node)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
-[![PyPI](https://badge.fury.io/py/spikard.svg)](https://badge.fury.io/py/spikard)
-[![npm](https://img.shields.io/npm/v/spikard)](https://www.npmjs.com/package/spikard)
-[![npm (WASM)](https://img.shields.io/npm/v/spikard-wasm?label=npm%20%28wasm%29)](https://www.npmjs.com/package/spikard-wasm)
-[![RubyGems](https://badge.fury.io/rb/spikard.svg)](https://rubygems.org/gems/spikard)
-[![Packagist](https://img.shields.io/packagist/v/spikard/spikard)](https://packagist.org/packages/spikard/spikard)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-High-performance TypeScript/Node.js web framework with a Rust core. Build REST APIs with Fastify-style decorators backed by Axum and Tower-HTTP.
+## Overview
+
+High-performance TypeScript/Node.js web framework with a Rust core. Build REST APIs with type-safe routing backed by Axum and Tower-HTTP.
 
 ## Installation
 

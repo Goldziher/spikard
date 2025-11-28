@@ -1,11 +1,19 @@
 # spikard-wasm
 
-[![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
-[![npm](https://img.shields.io/npm/v/spikard)](https://www.npmjs.com/package/spikard)
-[![npm (WASM)](https://img.shields.io/npm/v/spikard-wasm?label=npm%20%28wasm%29)](https://www.npmjs.com/package/spikard-wasm)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+WebAssembly bindings for Spikard HTTP framework via wasm-bindgen.
 
-Edge-friendly TypeScript web framework for WASM runtimes (Deno, Cloudflare Workers, browsers). Build REST APIs with the same routing primitives as `spikard` Node.js bindings, compiled to WebAssembly for maximum portability.
+## Status & Badges
+
+[![npm](https://img.shields.io/npm/v/@spikard/wasm.svg)](https://www.npmjs.com/package/@spikard/wasm)
+[![npm downloads](https://img.shields.io/npm/dm/@spikard/wasm.svg)](https://www.npmjs.com/package/@spikard/wasm)
+[![Crates.io](https://img.shields.io/crates/v/spikard-wasm.svg)](https://crates.io/crates/spikard-wasm)
+[![Documentation](https://docs.rs/spikard-wasm/badge.svg)](https://docs.rs/spikard-wasm)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
+
+## Overview
+
+Edge-friendly TypeScript web framework for WASM runtimes (Deno, Cloudflare Workers, browsers). Build REST APIs with the same routing primitives as spikard Node.js bindings, compiled to WebAssembly for maximum portability.
 
 ## Installation
 

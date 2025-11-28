@@ -6,7 +6,11 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description = "HTTP server for spikard"
+description = "High-performance HTTP server for Spikard with tower-http middleware stack"
+keywords = ["http", "server", "framework", "axum", "middleware", "tower", "validation"]
+categories = ["web-programming::http-server", "web-programming"]
+documentation = "https://docs.rs/spikard-http"
+readme = "README.md"
 
 [dependencies]
 axum = { workspace = true, features = ["multipart", "ws"] }

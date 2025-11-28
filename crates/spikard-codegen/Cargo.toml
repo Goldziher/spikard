@@ -2,10 +2,15 @@
 name = "spikard-codegen"
 version = "0.2.0"
 edition.workspace = true
-authors = ["Spikard Contributors"]
+authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 description = "Code generation and configuration management for Spikard"
+keywords = ["codegen", "code-generation", "openapi", "asyncapi", "schema"]
+categories = ["development-tools", "development-tools::code-generators"]
+documentation = "https://docs.rs/spikard-codegen"
 license = "MIT"
 repository = "https://github.com/Goldziher/spikard"
+homepage = "https://github.com/Goldziher/spikard"
+readme = "README.md"
 
 [dependencies]
 # Configuration parsing
