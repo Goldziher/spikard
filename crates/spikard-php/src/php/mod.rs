@@ -20,6 +20,7 @@ mod response;
 mod server;
 mod sse;
 pub(crate) mod start;
+mod streaming;
 mod testing;
 mod websocket;
 
@@ -33,6 +34,7 @@ pub use response::PhpResponse;
 pub use server::PhpServer;
 pub use sse::{PhpSseEventProducer, create_sse_state};
 // Start module functions are wrapped above and don't need re-export
+pub use streaming::{StreamingConfig, create_handler_response as create_streaming_response, register_generator};
 pub use testing::{
     PhpHttpTestClient, PhpSseEvent, PhpSseStream, PhpTestClient, PhpTestResponse, PhpWebSocketTestConnection,
 };
