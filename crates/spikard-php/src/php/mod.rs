@@ -50,7 +50,12 @@ pub fn spikard_background_run_wrapper(callable: &Zval, args: &Zval) -> PhpResult
 /// Start server wrapper for PHP.
 #[php_function]
 #[php(name = "spikard_start_server")]
-pub fn spikard_start_server(routes_zval: &Zval, config: &Zval, hooks: &Zval, dependencies: Option<&Zval>) -> PhpResult<u64> {
+pub fn spikard_start_server(
+    routes_zval: &Zval,
+    config: &Zval,
+    hooks: &Zval,
+    dependencies: Option<&Zval>,
+) -> PhpResult<u64> {
     let default_deps = Zval::new();
     let deps = dependencies.unwrap_or(&default_deps);
     start::spikard_start_server_impl(routes_zval, config, hooks, deps)

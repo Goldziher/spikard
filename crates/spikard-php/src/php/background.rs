@@ -24,8 +24,7 @@ thread_local! {
     static TASK_QUEUE: RefCell<VecDeque<QueuedTask>> = RefCell::new(VecDeque::new());
 }
 
-static BACKGROUND_HANDLE: Lazy<Mutex<Option<BackgroundHandle>>> =
-    Lazy::new(|| Mutex::new(None));
+static BACKGROUND_HANDLE: Lazy<Mutex<Option<BackgroundHandle>>> = Lazy::new(|| Mutex::new(None));
 
 /// Install the background handle at server startup
 pub fn install_handle(handle: BackgroundHandle) {
