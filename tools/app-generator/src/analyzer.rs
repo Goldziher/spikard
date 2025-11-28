@@ -193,10 +193,8 @@ pub fn extract_path_params(route: &str) -> Vec<String> {
                     inner
                 };
                 Some(param_name.to_string())
-            } else if segment.starts_with(':') {
-                Some(segment[1..].to_string())
             } else {
-                None
+                segment.strip_prefix(':').map(|stripped| stripped.to_string())
             }
         })
         .collect()

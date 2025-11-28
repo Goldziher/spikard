@@ -14,7 +14,7 @@ pub fn generate(analysis: &RouteAnalysis) -> Result<String> {
 
     let has_body_handlers = analysis.routes.iter().any(|r| r.params.body.is_some());
     output.push_str(&generate_imports(has_body_handlers));
-    output.push_str("\n");
+    output.push('\n');
 
     // Generate TypeScript interfaces for body handlers
     for route in &analysis.routes {
@@ -179,7 +179,7 @@ fn generate_handler_body(route: &RouteInfo, has_query: bool, has_body: bool) -> 
     }
 
     if has_query {
-        for (name, _) in &route.params.query {
+        for name in route.params.query.keys() {
             lines.push(format!("  if (queryParams['{}'] !== undefined) {{", name));
             lines.push(format!("    response['{}'] = queryParams['{}'];", name, name));
             lines.push("  }".to_string());
@@ -188,29 +188,6 @@ fn generate_handler_body(route: &RouteInfo, has_query: bool, has_body: bool) -> 
 
     if has_body {
         lines.push("  Object.assign(response, body);".to_string());
-    }
-
-    lines.push("  return response;".to_string());
-
-    lines.join("\n    ")
-}
-
-fn generate_handler_body_simple(route: &RouteInfo) -> String {
-    let mut lines = Vec::new();
-    lines.push("const response: Record<string, unknown> = {};".to_string());
-
-    let path_params = crate::analyzer::extract_path_params(&route.route);
-    for param_name in &path_params {
-        lines.push(format!("  if (pathParams['{}'] !== undefined) {{", param_name));
-        lines.push(format!(
-            "    response['{}'] = pathParams['{}'];",
-            param_name, param_name
-        ));
-        lines.push("  }".to_string());
-    }
-
-    for (name, _) in &route.params.query {
-        lines.push(format!("  // response['{}'] = /* query param: {} */;", name, name));
     }
 
     lines.push("  return response;".to_string());

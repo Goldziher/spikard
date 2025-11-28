@@ -9,7 +9,7 @@ pub fn generate(analysis: &RouteAnalysis) -> Result<String> {
     let mut output = String::new();
 
     output.push_str(&generate_header(analysis));
-    output.push_str("\n");
+    output.push('\n');
 
     output.push_str("$app = new App();\n\n");
 
@@ -91,11 +91,8 @@ fn generate_handler_body(route: &RouteInfo) -> String {
     }
 
     // Extract query parameters
-    for (name, _) in &route.params.query {
-        lines.push(format!(
-            "if (isset($request->queryParams['{}'])) {{",
-            name
-        ));
+    for name in route.params.query.keys() {
+        lines.push(format!("if (isset($request->queryParams['{}'])) {{", name));
         lines.push(format!(
             "    $response['{}'] = $request->queryParams['{}'];",
             name, name
@@ -104,15 +101,9 @@ fn generate_handler_body(route: &RouteInfo) -> String {
     }
 
     // Extract headers if needed
-    for (name, _) in &route.params.headers {
-        lines.push(format!(
-            "if (isset($request->headers['{}'])) {{",
-            name
-        ));
-        lines.push(format!(
-            "    $response['{}'] = $request->headers['{}'];",
-            name, name
-        ));
+    for name in route.params.headers.keys() {
+        lines.push(format!("if (isset($request->headers['{}'])) {{", name));
+        lines.push(format!("    $response['{}'] = $request->headers['{}'];", name, name));
         lines.push("}".to_string());
     }
 
