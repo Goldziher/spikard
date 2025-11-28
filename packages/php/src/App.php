@@ -232,6 +232,7 @@ final class App
 
         $configPayload = $this->configToNative($configToUse);
         $lifecyclePayload = $this->hooks ? $this->hooksToNative($this->hooks) : [];
+        $dependenciesPayload = $this->dependencies ?? null;
 
         // Extension entrypoint is guaranteed by the guard above; call directly.
         $routes = $this->nativeRoutes();
@@ -241,7 +242,7 @@ final class App
             $routes
         );
         /** @var int $handle */
-        $handle = spikard_start_server($normalizedRoutes, $configPayload, $lifecyclePayload);
+        $handle = spikard_start_server($normalizedRoutes, $configPayload, $lifecyclePayload, $dependenciesPayload);
         $this->serverHandle = $handle;
     }
 

@@ -12,6 +12,7 @@ use ext_php_rs::types::{ZendHashTable, Zval};
 use serde_json::Value;
 
 mod background;
+mod di;
 mod handler;
 mod hooks;
 mod request;
@@ -23,6 +24,7 @@ mod testing;
 mod websocket;
 
 pub use background::{clear_handle, install_handle};
+pub use di::{PhpFactoryDependency, PhpValueDependency, extract_di_container_from_php};
 pub use handler::GLOBAL_RUNTIME;
 pub use handler::PhpHandler;
 pub use hooks::{PhpHookResult, PhpLifecycleHooks};
@@ -39,8 +41,9 @@ pub use websocket::{PhpWebSocketHandler, create_websocket_state};
 /// Start server wrapper for PHP.
 #[php_function]
 #[php(name = "spikard_start_server")]
-pub fn spikard_start_server(routes_zval: &Zval, config: &Zval, hooks: &Zval) -> PhpResult<u64> {
-    start::spikard_start_server_impl(routes_zval, config, hooks)
+pub fn spikard_start_server(routes_zval: &Zval, config: &Zval, hooks: &Zval, dependencies: Option<&Zval>) -> PhpResult<u64> {
+    let deps = dependencies.unwrap_or(&Zval::new());
+    start::spikard_start_server_impl(routes_zval, config, hooks, deps)
 }
 
 /// Stop server wrapper for PHP.
