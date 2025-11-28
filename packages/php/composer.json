@@ -1,10 +1,39 @@
 {
-	"name": "spikard/extension",
-	"description": "PHP bindings for the Spikard runtime (ext-php-rs scaffold).",
+	"name": "spikard/spikard",
+	"description": "High-performance PHP web framework with a Rust core. Build REST APIs, WebSockets, and SSE services with ext-php-rs bindings, async handlers, dependency injection, and lifecycle hooks.",
 	"version": "0.2.0",
 	"type": "library",
 	"license": "MIT",
+	"keywords": [
+		"framework",
+		"http",
+		"rust",
+		"performance",
+		"websocket",
+		"sse",
+		"async",
+		"ffi",
+		"ext-php-rs",
+		"tower-http",
+		"axum",
+		"tokio",
+		"web-framework",
+		"rest-api",
+		"php8"
+	],
 	"homepage": "https://github.com/Goldziher/spikard",
+	"support": {
+		"issues": "https://github.com/Goldziher/spikard/issues",
+		"source": "https://github.com/Goldziher/spikard",
+		"docs": "https://github.com/Goldziher/spikard/tree/main/packages/php"
+	},
+	"authors": [
+		{
+			"name": "Na'aman Hirschfeld",
+			"email": "nhirschfeld@gmail.com",
+			"role": "creator"
+		}
+	],
 	"require": {
 		"php": "^8.2"
 	},
