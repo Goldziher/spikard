@@ -371,36 +371,37 @@ final class App
     /**
      * Convert LifecycleHooks to native format.
      *
-     * NOTE: Lifecycle hooks CANNOT be serialized to JSON and passed through
-     * spikard_start_server() because they contain PHP callables. The Rust
-     * LifecycleHooks struct expects trait objects (Arc<dyn LifecycleHook>)
-     * which cannot be deserialized from JSON.
-     *
-     * SOLUTION: Lifecycle hooks must be registered directly through the PHP
-     * extension using PhpLifecycleHooks class (Spikard\Lifecycle\Hooks) which
-     * wraps PHP callables into Rust trait objects. See:
+     * Lifecycle hooks are passed as PHP callables to the Rust extension.
+     * The Rust side stores them as Zval in thread_local! registries and
+     * reconstructs ZendCallable when invoking hooks. See:
      * crates/spikard-php/src/php/hooks.rs
-     *
-     * For now, this returns an empty array to satisfy the spikard_start_server
-     * signature, but hooks are not yet supported through the App::run() path.
      *
      * @return array<string, mixed>
      */
     private function hooksToNative(LifecycleHooks $hooks): array
     {
-        // Lifecycle hooks are not yet supported in PHP bindings.
-        //
-        // The Rust PhpLifecycleHooks class exists but creates no-op hooks due to
-        // ext-php-rs ZendCallable lifetime constraints that prevent storing PHP callables
-        // across async boundaries.
-        //
-        // Future implementation strategy (similar to SSE/WebSocket):
-        // 1. Store PHP callables as Zval in thread_local! registries
-        // 2. Reconstruct ZendCallable when invoking hooks
-        // 3. Run hook invocations in tokio::task::spawn_blocking for thread safety
-        // 4. Convert between PHP objects and Rust Request/Response types
-        //
-        // For now, this returns empty array and hooks are not registered.
-        return [];
+        $payload = [];
+
+        if ($hooks->onRequest !== null) {
+            $payload['onRequest'] = $hooks->onRequest;
+        }
+
+        if ($hooks->preValidation !== null) {
+            $payload['preValidation'] = $hooks->preValidation;
+        }
+
+        if ($hooks->preHandler !== null) {
+            $payload['preHandler'] = $hooks->preHandler;
+        }
+
+        if ($hooks->onResponse !== null) {
+            $payload['onResponse'] = $hooks->onResponse;
+        }
+
+        if ($hooks->onError !== null) {
+            $payload['onError'] = $hooks->onError;
+        }
+
+        return $payload;
     }
 }

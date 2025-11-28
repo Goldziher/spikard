@@ -9,6 +9,7 @@ use std::sync::{Arc, Mutex};
 use tokio::sync::oneshot;
 
 use crate::php::handler::PhpHandler;
+use crate::php::hooks::{PhpErrorHook, PhpRequestHook, PhpResponseHook};
 
 /// Registry for graceful shutdown channels.
 /// Maps server handle IDs to oneshot senders that trigger shutdown.
@@ -431,6 +432,87 @@ fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::Se
     })
 }
 
+/// Extract lifecycle hooks from PHP array/object Zval.
+///
+/// Expected structure from PHP LifecycleHooks:
+/// - onRequest: PHP callable or null
+/// - preValidation: PHP callable or null
+/// - preHandler: PHP callable or null
+/// - onResponse: PHP callable or null
+/// - onError: PHP callable or null
+///
+/// Returns LifecycleHooks with registered PHP hook wrappers.
+fn extract_lifecycle_hooks_from_php(hooks_zval: &Zval) -> Result<Option<Arc<LifecycleHooks>>, String> {
+    // If hooks is null or empty array, return None
+    if hooks_zval.is_null() {
+        return Ok(None);
+    }
+
+    let hooks_array = match hooks_zval.array() {
+        Some(arr) if !arr.is_empty() => arr,
+        _ => return Ok(None),
+    };
+
+    let mut lifecycle_hooks = LifecycleHooks::default();
+    let mut has_any_hook = false;
+
+    // Extract onRequest hook
+    if let Some(on_request_zval) = hooks_array.get("onRequest") {
+        if on_request_zval.is_callable() {
+            let hook = PhpRequestHook::new_from_zval(on_request_zval)
+                .map_err(|e| format!("Failed to create onRequest hook: {}", e))?;
+            lifecycle_hooks.add_on_request(Arc::new(hook));
+            has_any_hook = true;
+        }
+    }
+
+    // Extract preValidation hook
+    if let Some(pre_validation_zval) = hooks_array.get("preValidation") {
+        if pre_validation_zval.is_callable() {
+            let hook = PhpRequestHook::new_from_zval(pre_validation_zval)
+                .map_err(|e| format!("Failed to create preValidation hook: {}", e))?;
+            lifecycle_hooks.add_pre_validation(Arc::new(hook));
+            has_any_hook = true;
+        }
+    }
+
+    // Extract preHandler hook
+    if let Some(pre_handler_zval) = hooks_array.get("preHandler") {
+        if pre_handler_zval.is_callable() {
+            let hook = PhpRequestHook::new_from_zval(pre_handler_zval)
+                .map_err(|e| format!("Failed to create preHandler hook: {}", e))?;
+            lifecycle_hooks.add_pre_handler(Arc::new(hook));
+            has_any_hook = true;
+        }
+    }
+
+    // Extract onResponse hook
+    if let Some(on_response_zval) = hooks_array.get("onResponse") {
+        if on_response_zval.is_callable() {
+            let hook = PhpResponseHook::new_from_zval(on_response_zval)
+                .map_err(|e| format!("Failed to create onResponse hook: {}", e))?;
+            lifecycle_hooks.add_on_response(Arc::new(hook));
+            has_any_hook = true;
+        }
+    }
+
+    // Extract onError hook
+    if let Some(on_error_zval) = hooks_array.get("onError") {
+        if on_error_zval.is_callable() {
+            let hook = PhpErrorHook::new_from_zval(on_error_zval)
+                .map_err(|e| format!("Failed to create onError hook: {}", e))?;
+            lifecycle_hooks.add_on_error(Arc::new(hook));
+            has_any_hook = true;
+        }
+    }
+
+    if has_any_hook {
+        Ok(Some(Arc::new(lifecycle_hooks)))
+    } else {
+        Ok(None)
+    }
+}
+
 /// Start a server from PHP, given route/config payloads.
 ///
 /// This function now accepts PHP objects directly instead of JSON:
@@ -442,21 +524,15 @@ fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::Se
 /// JSON deserialization issues with non-serializable fields like lifecycle_hooks.
 pub fn spikard_start_server_impl(routes_zval: &Zval, config: &Zval, hooks: &Zval) -> PhpResult<u64> {
     // Extract ServerConfig from PHP array
-    let server_config = extract_server_config_from_php(config)
+    let mut server_config = extract_server_config_from_php(config)
         .map_err(|e| PhpException::default(format!("Invalid server config: {}", e)))?;
 
-    // Lifecycle hooks are not yet supported due to ext-php-rs ZendCallable lifetime constraints.
-    // PhpLifecycleHooks exists but all hooks are currently no-ops.
-    //
-    // Future implementation requires:
-    // 1. Extract hook definitions from PHP (check if hooks is a PHP object/array)
-    // 2. Store PHP callables as Zval in thread_local! registries (see sse.rs/websocket.rs)
-    // 3. Create actual PhpLifecycleHooks with functional hooks that invoke stored callables
-    // 4. Pass Some(hooks) to ServerConfig.lifecycle_hooks
-    //
-    // For now, hooks parameter is ignored and no lifecycle hooks are registered.
-    let _hooks_ignored = hooks; // Explicitly mark as unused
-    let _lifecycle_hooks: Option<LifecycleHooks> = None;
+    // Extract lifecycle hooks from PHP
+    let lifecycle_hooks = extract_lifecycle_hooks_from_php(hooks)
+        .map_err(|e| PhpException::default(format!("Invalid lifecycle hooks: {}", e)))?;
+
+    // Set lifecycle hooks in server config
+    server_config.lifecycle_hooks = lifecycle_hooks;
 
     // Parse routes array from Zval
     let routes_array = routes_zval
