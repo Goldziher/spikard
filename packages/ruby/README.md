@@ -1,5 +1,6 @@
 # Spikard Ruby
 
+[![Documentation](https://img.shields.io/badge/docs-spikard.dev-58FBDA)](https://spikard.dev)
 [![Gem Version](https://img.shields.io/gem/v/spikard.svg)](https://rubygems.org/gems/spikard)
 [![Gem Downloads](https://img.shields.io/gem/dt/spikard.svg)](https://rubygems.org/gems/spikard)
 [![Ruby Version](https://img.shields.io/badge/ruby-%3E%3D%203.2-red.svg)](https://www.ruby-lang.org/)

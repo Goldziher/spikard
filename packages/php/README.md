@@ -1,5 +1,6 @@
 # Spikard PHP
 
+[![Documentation](https://img.shields.io/badge/docs-spikard.dev-58FBDA)](https://spikard.dev)
 [![Packagist Version](https://img.shields.io/packagist/v/spikard/spikard.svg)](https://packagist.org/packages/spikard/spikard)
 [![Packagist Downloads](https://img.shields.io/packagist/dt/spikard/spikard.svg)](https://packagist.org/packages/spikard/spikard)
 [![PHP Version](https://img.shields.io/badge/php-%3E%3D%208.2-blue.svg)](https://www.php.net/)

@@ -1,0 +1,810 @@
+asyncapi: 3.0.0
+info:
+  title: Chat WebSocket Service API
+  version: 1.0.0
+  description: |
+    A comprehensive real-time chat API using WebSockets with bidirectional messaging.
+
+    **Demonstrates advanced Spikard features:**
+    - WebSocket bidirectional communication
+    - Channel-based messaging
+    - User presence tracking (join/leave events)
+    - Message acknowledgments and error handling
+    - Typing indicators for UX
+    - Connection state management
+    - Lifecycle hooks: onRequest (connection auth), onResponse (cleanup)
+    - Multiple message types on single channel
+    - Message validation and error responses
+
+    **Architecture:**
+    - Clients connect via WebSocket at `/chat/{roomId}`
+    - Messages are validated against schemas
+    - Server broadcasts events to all connected clients in room
+    - Acknowledgments confirm server-side processing
+    - Errors return structured JSON payloads
+    - Automatic cleanup on disconnect
+
+  contact:
+    name: Spikard Team
+  license:
+    name: MIT
+
+servers:
+  production:
+    host: chat.example.com:443
+    protocol: wss
+    description: Production WebSocket server
+
+  development:
+    host: localhost:8000
+    protocol: ws
+    description: Local development server
+
+channels:
+  # Main chat channel - bidirectional messaging
+  chat:
+    address: /chat/{roomId}
+    title: Chat Messages
+    description: |
+      Bidirectional channel for chat messages within a room.
+
+      Clients send messages and receive messages from other participants,
+      plus system events (user join/leave, presence updates).
+
+      **Connection Requirements:**
+      - Authentication: Pass JWT token in query parameter or header
+      - roomId: Valid UUID identifying the chat room
+      - userId: Will be extracted from token
+
+      **Message Flow:**
+      1. Client connects via WebSocket
+      2. Server sends `userJoined` event to all clients
+      3. Client sends `chatMessage` to server
+      4. Server broadcasts to all clients in room
+      5. Server sends `chatAck` to sender
+      6. Client disconnects
+      7. Server sends `userLeft` event to all remaining clients
+
+      **Lifecycle Hooks:**
+      - onRequest: Validate token, extract userId, check room access
+      - preValidation: Validate incoming message schema
+      - preHandler: Check user permissions, rate limiting
+      - onResponse: Log message, persist to database
+      - onError: Transform errors to JSON, clean up state
+
+    parameters:
+      roomId:
+        description: Chat room ID (UUID)
+        schema:
+          type: string
+          format: uuid
+          examples:
+            - "550e8400-e29b-41d4-a716-446655440000"
+
+    messages:
+      # Incoming client messages
+      chatMessage:
+        $ref: '#/components/messages/chatMessage'
+      typingIndicator:
+        $ref: '#/components/messages/typingIndicator'
+      presenceRequest:
+        $ref: '#/components/messages/presenceRequest'
+
+      # Outgoing server messages
+      chatMessageBroadcast:
+        $ref: '#/components/messages/chatMessageBroadcast'
+      chatAck:
+        $ref: '#/components/messages/chatAck'
+      userJoined:
+        $ref: '#/components/messages/userJoined'
+      userLeft:
+        $ref: '#/components/messages/userLeft'
+      userTyping:
+        $ref: '#/components/messages/userTyping'
+      userStoppedTyping:
+        $ref: '#/components/messages/userStoppedTyping'
+      presenceUpdate:
+        $ref: '#/components/messages/presenceUpdate'
+      chatError:
+        $ref: '#/components/messages/chatError'
+      connectionClosed:
+        $ref: '#/components/messages/connectionClosed'
+
+operations:
+  # Client -> Server operations
+  publishChatMessage:
+    action: send
+    channel:
+      $ref: '#/channels/chat'
+    title: Publish Chat Message
+    summary: Client sends a chat message
+    description: |
+      Sends a chat message to the room.
+
+      **Validation:**
+      - text: required, 1-500 chars
+      - replyTo: optional, message ID
+
+      **Response:**
+      - chatAck: Server acknowledges with messageId
+      - chatError: Invalid message format or rate limited
+
+      **Rate Limit:** 20 messages per minute per user
+    messages:
+      - $ref: '#/components/messages/chatMessage'
+
+  publishTypingIndicator:
+    action: send
+    channel:
+      $ref: '#/channels/chat'
+    title: Publish Typing Indicator
+    summary: Client indicates they are typing
+    messages:
+      - $ref: '#/components/messages/typingIndicator'
+
+  requestPresence:
+    action: send
+    channel:
+      $ref: '#/channels/chat'
+    title: Request Presence
+    summary: Client requests current presence data
+    messages:
+      - $ref: '#/components/messages/presenceRequest'
+
+  # Server -> Client operations
+  receiveChatMessage:
+    action: receive
+    channel:
+      $ref: '#/channels/chat'
+    title: Receive Chat Message
+    summary: Server broadcasts chat message to all clients
+    description: |
+      Server sends a chat message that was published by another client.
+
+      All clients in the room receive this event.
+    messages:
+      - $ref: '#/components/messages/chatMessageBroadcast'
+
+  receiveChatAck:
+    action: receive
+    channel:
+      $ref: '#/channels/chat'
+    title: Receive Chat ACK
+    summary: Server acknowledges message delivery
+    description: |
+      Server confirms that a message was received and processed.
+
+      Only the sending client receives this message.
+    messages:
+      - $ref: '#/components/messages/chatAck'
+
+  receiveUserJoined:
+    action: receive
+    channel:
+      $ref: '#/channels/chat'
+    title: Receive User Joined Event
+    summary: Server notifies that a user joined
+    description: |
+      All clients in room receive notification when a user joins.
+
+      Includes user ID, name, and timestamp.
+    messages:
+      - $ref: '#/components/messages/userJoined'
+
+  receiveUserLeft:
+    action: receive
+    channel:
+      $ref: '#/channels/chat'
+    title: Receive User Left Event
+    summary: Server notifies that a user left
+    messages:
+      - $ref: '#/components/messages/userLeft'
+
+  receiveTypingIndicator:
+    action: receive
+    channel:
+      $ref: '#/channels/chat'
+    title: Receive Typing Indicator
+    summary: Server broadcasts that a user is typing
+    description: |
+      Other clients receive notification that a user is typing.
+
+      Should display typing indicator UI. Indicator expires after 5 seconds.
+    messages:
+      - $ref: '#/components/messages/userTyping'
+
+  receiveStoppedTyping:
+    action: receive
+    channel:
+      $ref: '#/channels/chat'
+    title: Receive Typing Stopped
+    summary: Server notifies typing stopped
+    messages:
+      - $ref: '#/components/messages/userStoppedTyping'
+
+  receivePresenceUpdate:
+    action: receive
+    channel:
+      $ref: '#/channels/chat'
+    title: Receive Presence Update
+    summary: Server sends current presence data
+    description: |
+      Response to presence requests or periodic updates.
+
+      Lists all currently online users in the room.
+    messages:
+      - $ref: '#/components/messages/presenceUpdate'
+
+  receiveError:
+    action: receive
+    channel:
+      $ref: '#/channels/chat'
+    title: Receive Error
+    summary: Server sends error message
+    description: |
+      Error messages for validation failures, rate limiting, etc.
+
+      Follows RFC 9457 problem details format.
+    messages:
+      - $ref: '#/components/messages/chatError'
+
+  receiveConnectionClosed:
+    action: receive
+    channel:
+      $ref: '#/channels/chat'
+    title: Connection Closed
+    summary: Server closes connection
+    description: |
+      Server is closing the connection.
+
+      Reasons: auth failure, room closed, server maintenance.
+    messages:
+      - $ref: '#/components/messages/connectionClosed'
+
+components:
+  messages:
+    # Client -> Server Messages
+    chatMessage:
+      name: chatMessage
+      title: Chat Message
+      contentType: application/json
+      summary: A message sent by a user in the chat
+      description: |
+        User sends a text message to the chat room.
+
+        **Validation:**
+        - type: must be "message"
+        - text: required, 1-500 chars, no leading/trailing whitespace
+        - replyTo: optional, references messageId of message being replied to
+
+        **Processing:**
+        - Server validates and stores message
+        - Broadcasts to all clients in room
+        - Sends chatAck back to sender
+        - Persists to database for history
+
+      payload:
+        type: object
+        required:
+          - type
+          - text
+        properties:
+          type:
+            type: string
+            const: message
+            description: Message type identifier
+          text:
+            type: string
+            minLength: 1
+            maxLength: 500
+            description: Message content
+          replyTo:
+            type: string
+            description: Message ID being replied to
+            nullable: true
+      examples:
+        - summary: Simple message
+          payload:
+            type: message
+            text: Hello, everyone!
+        - summary: Reply to message
+          payload:
+            type: message
+            text: "I agree with that!"
+            replyTo: "msg-123"
+
+    typingIndicator:
+      name: typingIndicator
+      title: Typing Indicator
+      contentType: application/json
+      summary: User is typing
+      description: |
+        Notifies that the user is typing.
+
+        Server broadcasts to other clients and auto-expires after 5 seconds.
+      payload:
+        type: object
+        required:
+          - type
+        properties:
+          type:
+            type: string
+            const: typing
+          isTyping:
+            type: boolean
+            default: true
+            description: True when user starts typing, false when stops
+
+    presenceRequest:
+      name: presenceRequest
+      title: Presence Request
+      contentType: application/json
+      summary: Request current presence data
+      description: |
+        Client requests the current list of online users.
+
+        Server responds with presenceUpdate message.
+      payload:
+        type: object
+        required:
+          - type
+        properties:
+          type:
+            type: string
+            const: presence_request
+
+    # Server -> Client Messages
+    chatMessageBroadcast:
+      name: chatMessageBroadcast
+      title: Chat Message Broadcast
+      contentType: application/json
+      summary: Message broadcasted to all clients
+      description: |
+        Server broadcasts a chat message to all clients in the room.
+
+        Includes server-generated metadata (messageId, timestamp, sender info).
+      payload:
+        type: object
+        required:
+          - type
+          - messageId
+          - userId
+          - username
+          - text
+          - timestamp
+        properties:
+          type:
+            type: string
+            const: message
+          messageId:
+            type: string
+            description: Server-generated unique message ID
+          userId:
+            type: string
+            description: ID of the user who sent the message
+          username:
+            type: string
+            minLength: 1
+            maxLength: 50
+            description: Display name of the user
+          text:
+            type: string
+            maxLength: 500
+          replyTo:
+            type: string
+            nullable: true
+            description: Message ID being replied to
+          timestamp:
+            type: string
+            format: date-time
+            description: ISO 8601 server timestamp
+          edited:
+            type: boolean
+            default: false
+            description: Whether message was edited
+      examples:
+        - summary: Message broadcast
+          payload:
+            type: message
+            messageId: msg-12345
+            userId: user-789
+            username: alice
+            text: "Hello, everyone!"
+            timestamp: "2024-01-15T10:30:00Z"
+            edited: false
+
+    chatAck:
+      name: chatAck
+      title: Chat ACK
+      contentType: application/json
+      summary: Acknowledgement for message delivery
+      description: |
+        Server acknowledges that a message was received and processed.
+
+        Sent only to the message sender.
+
+        **Status meanings:**
+        - queued: Message accepted, processing
+        - delivered: Message delivered to all clients
+        - rejected: Message validation failed or rate limited
+      payload:
+        type: object
+        required:
+          - type
+          - messageId
+          - status
+          - timestamp
+        properties:
+          type:
+            type: string
+            const: ack
+          messageId:
+            type: string
+            description: ID of the message being acknowledged
+          status:
+            type: string
+            enum: [queued, delivered, rejected]
+            description: Delivery status
+          errorCode:
+            type: string
+            nullable: true
+            description: Error code if rejected
+          errorMessage:
+            type: string
+            nullable: true
+            description: Error message if rejected
+          timestamp:
+            type: string
+            format: date-time
+            description: ISO 8601 timestamp
+      examples:
+        - summary: Delivered
+          payload:
+            type: ack
+            messageId: msg-12345
+            status: delivered
+            timestamp: "2024-01-15T10:30:01Z"
+        - summary: Rejected (rate limited)
+          payload:
+            type: ack
+            messageId: msg-12346
+            status: rejected
+            errorCode: RATE_LIMIT_EXCEEDED
+            errorMessage: "Too many messages. Try again in 10 seconds."
+            timestamp: "2024-01-15T10:30:02Z"
+
+    userJoined:
+      name: userJoined
+      title: User Joined
+      contentType: application/json
+      summary: User joined the chat
+      description: |
+        Notifies all clients that a user joined the chat room.
+
+        Include user metadata for UI updates.
+      payload:
+        type: object
+        required:
+          - type
+          - userId
+          - username
+          - timestamp
+        properties:
+          type:
+            type: string
+            const: user_joined
+          userId:
+            type: string
+            description: ID of the user who joined
+          username:
+            type: string
+            minLength: 1
+            maxLength: 50
+          avatar:
+            type: string
+            format: uri
+            nullable: true
+            description: User avatar image URL
+          timestamp:
+            type: string
+            format: date-time
+      examples:
+        - summary: User joined
+          payload:
+            type: user_joined
+            userId: user-456
+            username: bob
+            avatar: "https://api.example.com/avatars/bob.jpg"
+            timestamp: "2024-01-15T10:29:55Z"
+
+    userLeft:
+      name: userLeft
+      title: User Left
+      contentType: application/json
+      summary: User left the chat
+      description: Notifies all clients that a user left the chat room.
+      payload:
+        type: object
+        required:
+          - type
+          - userId
+          - username
+          - timestamp
+        properties:
+          type:
+            type: string
+            const: user_left
+          userId:
+            type: string
+          username:
+            type: string
+          timestamp:
+            type: string
+            format: date-time
+      examples:
+        - summary: User left
+          payload:
+            type: user_left
+            userId: user-456
+            username: bob
+            timestamp: "2024-01-15T10:35:00Z"
+
+    userTyping:
+      name: userTyping
+      title: User Typing
+      contentType: application/json
+      summary: User is typing
+      description: |
+        Notifies that another user is typing.
+
+        Auto-expires after 5 seconds if not refreshed.
+      payload:
+        type: object
+        required:
+          - type
+          - userId
+          - username
+          - timestamp
+        properties:
+          type:
+            type: string
+            const: user_typing
+          userId:
+            type: string
+          username:
+            type: string
+          timestamp:
+            type: string
+            format: date-time
+
+    userStoppedTyping:
+      name: userStoppedTyping
+      title: User Stopped Typing
+      contentType: application/json
+      summary: User stopped typing
+      payload:
+        type: object
+        required:
+          - type
+          - userId
+          - username
+        properties:
+          type:
+            type: string
+            const: user_stopped_typing
+          userId:
+            type: string
+          username:
+            type: string
+
+    presenceUpdate:
+      name: presenceUpdate
+      title: Presence Update
+      contentType: application/json
+      summary: Current presence data
+      description: |
+        Lists all currently online users in the room.
+
+        Sent in response to presence requests or periodically (e.g., every 30s).
+      payload:
+        type: object
+        required:
+          - type
+          - users
+          - timestamp
+        properties:
+          type:
+            type: string
+            const: presence_update
+          users:
+            type: array
+            items:
+              type: object
+              required:
+                - userId
+                - username
+              properties:
+                userId:
+                  type: string
+                username:
+                  type: string
+                avatar:
+                  type: string
+                  format: uri
+                  nullable: true
+                joinedAt:
+                  type: string
+                  format: date-time
+                isTyping:
+                  type: boolean
+                  default: false
+          timestamp:
+            type: string
+            format: date-time
+      examples:
+        - summary: Presence update
+          payload:
+            type: presence_update
+            users:
+              - userId: user-123
+                username: alice
+                avatar: "https://api.example.com/avatars/alice.jpg"
+                joinedAt: "2024-01-15T10:15:00Z"
+                isTyping: true
+              - userId: user-789
+                username: charlie
+                joinedAt: "2024-01-15T10:20:00Z"
+                isTyping: false
+            timestamp: "2024-01-15T10:30:00Z"
+
+    chatError:
+      name: chatError
+      title: Chat Error
+      contentType: application/problem+json
+      summary: Error message
+      description: |
+        RFC 9457 problem details format error response.
+
+        Examples:
+        - Validation errors (invalid message format)
+        - Rate limiting (too many messages)
+        - Authorization (no permission to post)
+        - Server errors (database failure)
+      payload:
+        type: object
+        required:
+          - type
+          - title
+          - status
+          - detail
+        properties:
+          type:
+            type: string
+            format: uri-reference
+            default: "about:blank"
+          title:
+            type: string
+          status:
+            type: integer
+            minimum: 400
+            maximum: 599
+          detail:
+            type: string
+          instance:
+            type: string
+            format: uri-reference
+          errors:
+            type: array
+            items:
+              type: object
+              properties:
+                path:
+                  type: string
+                message:
+                  type: string
+                code:
+                  type: string
+      examples:
+        - summary: Validation error
+          payload:
+            type: "about:blank"
+            title: "Validation Error"
+            status: 422
+            detail: "Message validation failed"
+            errors:
+              - path: "/text"
+                message: "Text is required and must be 1-500 characters"
+                code: "INVALID"
+        - summary: Rate limit
+          payload:
+            type: "about:blank"
+            title: "Too Many Requests"
+            status: 429
+            detail: "Rate limit exceeded: 20 messages per minute"
+
+    connectionClosed:
+      name: connectionClosed
+      title: Connection Closed
+      contentType: application/json
+      summary: Server closing connection
+      description: |
+        Server is closing the WebSocket connection.
+
+        Client should handle gracefully and attempt reconnection if appropriate.
+      payload:
+        type: object
+        required:
+          - type
+          - code
+          - reason
+        properties:
+          type:
+            type: string
+            const: connection_closed
+          code:
+            type: integer
+            description: WebSocket close code
+          reason:
+            type: string
+            enum:
+              - "auth_failed"
+              - "room_closed"
+              - "server_maintenance"
+              - "idle_timeout"
+              - "duplicate_connection"
+              - "server_error"
+          message:
+            type: string
+            description: Human-readable message
+          reconnectAfter:
+            type: integer
+            nullable: true
+            description: Seconds to wait before reconnecting (if applicable)
+
+  schemas:
+    uuid:
+      type: string
+      format: uuid
+      pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+      description: UUID v4
+
+    username:
+      type: string
+      minLength: 1
+      maxLength: 50
+      pattern: '^[a-zA-Z0-9_-]+$'
+      description: Valid username (alphanumeric, dash, underscore)
+
+    messageText:
+      type: string
+      minLength: 1
+      maxLength: 500
+      description: Chat message content
+
+    userId:
+      type: string
+      description: User ID from authentication token
+
+    messageId:
+      type: string
+      description: Server-generated unique message identifier
+
+    roomId:
+      type: string
+      format: uuid
+      description: Chat room ID
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT bearer token passed in WebSocket connection.
+
+        Can be passed as:
+        - Query parameter: `?token={jwt}`
+        - Authorization header (if supported by client)
+        - Custom header in upgrade request
+
+defaultContentType: application/json

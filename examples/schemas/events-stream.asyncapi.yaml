@@ -1,0 +1,703 @@
+asyncapi: 3.0.0
+info:
+  title: Events Stream Service API
+  version: 1.0.0
+  description: |
+    A comprehensive Server-Sent Events (SSE) API for real-time event streaming.
+
+    **Demonstrates Spikard features:**
+    - Server-Sent Events streaming responses
+    - One-way server-to-client communication
+    - Event type multiplexing on single channel
+    - Automatic reconnection handling
+    - Heartbeat/keep-alive messages
+    - Batch events for catch-up on reconnection
+    - Event filtering by type and severity
+    - Memory-efficient message queueing
+    - Lifecycle hooks: onRequest (validate filters), onResponse (cleanup)
+    - Proper HTTP headers for SSE
+    - Structured JSON payloads
+
+    **Architecture:**
+    - Client establishes HTTP connection to `/events` endpoint
+    - Server sends events as text/event-stream
+    - Each event is JSON-formatted with type discrimination
+    - Connection supports graceful shutdown and automatic cleanup
+    - Client can filter events with query parameters
+    - Server sends heartbeat events every 30 seconds
+    - On reconnection, server provides batch of missed events
+
+  contact:
+    name: Spikard Team
+  license:
+    name: MIT
+
+servers:
+  production:
+    host: events.example.com
+    protocol: https
+    description: |
+      Production SSE endpoint.
+
+      Use HTTPS for secure communication.
+      Server maintains persistent HTTP connections.
+
+  development:
+    host: localhost:8000
+    protocol: http
+    description: Local development server
+
+channels:
+  # Main SSE stream channel
+  events:
+    address: /events
+    title: Event Stream
+    description: |
+      Server-Sent Events stream for real-time event notifications.
+
+      **Connection Requirements:**
+      - Authentication: Bearer token in Authorization header or query
+      - Keep-Alive: Server sends heartbeats every 30 seconds
+      - Reconnection: Client receives missed events in batch
+
+      **Query Parameters:**
+      - eventTypes: Comma-separated list of event types to receive
+      - severity: Minimum severity level (info, warning, error, critical)
+      - userId: Filter events for specific user
+      - sourceFilter: Filter by source/component
+
+      **Message Flow:**
+      1. Client sends GET request with Accept: text/event-stream header
+      2. Server validates authentication and filters
+      3. Server sends periodic heartbeat messages
+      4. Server streams events in real-time
+      5. Client reconnects on disconnect
+      6. Server sends batch of missed events
+
+      **Lifecycle Hooks:**
+      - onRequest: Validate auth, check permissions, parse filters
+      - preValidation: Validate filter parameters
+      - onResponse: Add SSE headers, set connection properties
+      - onError: Log errors, return proper SSE error format
+
+    parameters:
+      eventTypes:
+        description: |
+          Comma-separated list of event types to receive.
+          If not specified, all types are sent.
+        schema:
+          type: string
+          example: system_alert,user_notification,status_update
+
+      severity:
+        description: |
+          Minimum event severity to receive.
+          Filters out lower severity events.
+        schema:
+          type: string
+          enum: [info, warning, error, critical]
+          default: info
+
+      userId:
+        description: Filter events for specific user ID
+        schema:
+          type: string
+          format: uuid
+
+      sourceFilter:
+        description: Filter by source system/component
+        schema:
+          type: string
+          example: payment-service,auth-service
+
+    messages:
+      systemAlert:
+        $ref: '#/components/messages/systemAlert'
+      userNotification:
+        $ref: '#/components/messages/userNotification'
+      statusUpdate:
+        $ref: '#/components/messages/statusUpdate'
+      heartbeat:
+        $ref: '#/components/messages/heartbeat'
+      notificationBatch:
+        $ref: '#/components/messages/notificationBatch'
+      streamError:
+        $ref: '#/components/messages/streamError'
+
+operations:
+  # Server -> Client operations
+  subscribeToEvents:
+    action: receive
+    channel:
+      $ref: '#/channels/events'
+    title: Subscribe to Event Stream
+    summary: Client connects to event stream
+    description: |
+      Client establishes an HTTP connection to receive events.
+
+      Server responds with HTTP 200 and Content-Type: text/event-stream.
+      Connection remains open and streams events indefinitely.
+
+      **HTTP Headers:**
+      - Accept: text/event-stream (required)
+      - Authorization: Bearer {token}
+      - Last-Event-ID: {id} (optional, for recovery)
+
+      **Response Headers:**
+      - Content-Type: text/event-stream
+      - Cache-Control: no-cache
+      - X-Accel-Buffering: no (disable proxy buffering)
+      - Connection: keep-alive
+      - X-RateLimit-Limit: {limit}
+      - X-RateLimit-Remaining: {remaining}
+      - X-RateLimit-Reset: {reset}
+
+      **Example connection:**
+      ```
+      curl -H "Authorization: Bearer token" \
+           -H "Accept: text/event-stream" \
+           https://events.example.com/events?severity=warning
+      ```
+
+  streamSystemAlerts:
+    action: send
+    channel:
+      $ref: '#/channels/events'
+    title: Stream System Alerts
+    summary: Server sends critical system alerts
+    description: |
+      High-priority system alerts affecting multiple users or services.
+
+      Examples: Database down, API rate limit approached, service degraded.
+
+      Broadcasted to all connected clients.
+    messages:
+      - $ref: '#/components/messages/systemAlert'
+
+  streamUserNotifications:
+    action: send
+    channel:
+      $ref: '#/channels/events'
+    title: Stream User Notifications
+    summary: Server sends user-specific notifications
+    description: |
+      Notifications targeted to specific users.
+
+      Only clients subscribed to that user receive these events.
+    messages:
+      - $ref: '#/components/messages/userNotification'
+
+  streamStatusUpdates:
+    action: send
+    channel:
+      $ref: '#/channels/events'
+    title: Stream Status Updates
+    summary: Server sends service status changes
+    description: |
+      Periodic or event-driven status updates about services and components.
+
+      Examples: Service deployed, region recovered, maintenance window starting.
+    messages:
+      - $ref: '#/components/messages/statusUpdate'
+
+  sendHeartbeat:
+    action: send
+    channel:
+      $ref: '#/channels/events'
+    title: Send Heartbeat
+    summary: Server sends keep-alive signal
+    description: |
+      Periodic heartbeat messages to keep connection alive.
+
+      Sent every 30 seconds regardless of event activity.
+      Prevents proxies from closing idle connections.
+    messages:
+      - $ref: '#/components/messages/heartbeat'
+
+  sendCatchupBatch:
+    action: send
+    channel:
+      $ref: '#/channels/events'
+    title: Send Catch-up Batch
+    summary: Server sends missed events on reconnection
+    description: |
+      On reconnection, server sends batch of events missed during downtime.
+
+      Client provides Last-Event-ID header with last received event ID.
+      Server responds with all events since that ID (up to 100 events).
+    messages:
+      - $ref: '#/components/messages/notificationBatch'
+
+  sendStreamError:
+    action: send
+    channel:
+      $ref: '#/channels/events'
+    title: Send Stream Error
+    summary: Server sends error message
+    description: |
+      Error messages for auth failures, invalid filters, etc.
+
+      Format: RFC 9457 problem details as JSON event.
+    messages:
+      - $ref: '#/components/messages/streamError'
+
+components:
+  messages:
+    # Individual event types
+    systemAlert:
+      name: systemAlert
+      title: System Alert
+      contentType: application/json
+      summary: Critical system alert
+      description: |
+        High-priority system alert affecting multiple users or services.
+
+        **Severity levels:**
+        - info: Informational (service deployed, config changed)
+        - warning: Warning (resource limit approaching, rate limiting active)
+        - error: Error (service degraded, data loss)
+        - critical: Critical (service down, data corruption)
+
+        **Common sources:**
+        - database-service
+        - api-gateway
+        - auth-service
+        - payment-service
+        - infrastructure
+
+      payload:
+        type: object
+        required:
+          - id
+          - type
+          - level
+          - message
+          - timestamp
+          - source
+        properties:
+          id:
+            type: string
+            format: uuid
+            description: Unique event ID for deduplication
+          type:
+            type: string
+            const: system_alert
+            description: Message type identifier
+          level:
+            type: string
+            enum: [info, warning, error, critical]
+            description: Alert severity level
+          message:
+            type: string
+            minLength: 1
+            maxLength: 500
+            description: Alert message content
+          timestamp:
+            type: string
+            format: date-time
+            description: ISO 8601 timestamp
+          source:
+            type: string
+            minLength: 1
+            maxLength: 100
+            description: Source system or component
+          details:
+            type: object
+            nullable: true
+            description: Additional context-specific details
+            additionalProperties: true
+            examples:
+              - database: "primary-db"
+                error: "connection pool exhausted"
+              - service: "payment-api"
+                percentage: 95
+                limit: 1000
+      examples:
+        - summary: Database alert
+          payload:
+            id: "550e8400-e29b-41d4-a716-446655440000"
+            type: system_alert
+            level: critical
+            message: "Database connection pool exhausted"
+            timestamp: "2024-01-15T10:30:00Z"
+            source: database-service
+            details:
+              database: primary-db
+              active_connections: 50
+              max_connections: 50
+        - summary: Rate limit warning
+          payload:
+            id: "550e8400-e29b-41d4-a716-446655440001"
+            type: system_alert
+            level: warning
+            message: "API rate limit approaching"
+            timestamp: "2024-01-15T10:31:00Z"
+            source: api-gateway
+            details:
+              current_rate: 950
+              limit: 1000
+              window: "1m"
+
+    userNotification:
+      name: userNotification
+      title: User Notification
+      contentType: application/json
+      summary: User-specific notification
+      description: |
+        Notification targeted to a specific user.
+
+        Only the target user receives this event.
+
+        **Priority levels:**
+        - low: Background information
+        - normal: Regular notification
+        - high: Needs attention
+        - urgent: Immediate action needed
+
+      payload:
+        type: object
+        required:
+          - id
+          - type
+          - userId
+          - title
+          - body
+          - timestamp
+        properties:
+          id:
+            type: string
+            format: uuid
+            description: Unique event ID
+          type:
+            type: string
+            const: user_notification
+            description: Message type identifier
+          userId:
+            type: string
+            minLength: 1
+            maxLength: 50
+            description: Target user ID
+          title:
+            type: string
+            minLength: 1
+            maxLength: 100
+            description: Notification title
+          body:
+            type: string
+            minLength: 1
+            maxLength: 500
+            description: Notification body text
+          timestamp:
+            type: string
+            format: date-time
+            description: ISO 8601 timestamp
+          priority:
+            type: string
+            enum: [low, normal, high, urgent]
+            default: normal
+            description: Notification priority
+          actionUrl:
+            type: string
+            format: uri
+            nullable: true
+            description: URL for action button
+          metadata:
+            type: object
+            nullable: true
+            description: Additional notification metadata
+            additionalProperties: true
+      examples:
+        - summary: New message notification
+          payload:
+            id: "550e8400-e29b-41d4-a716-446655440002"
+            type: user_notification
+            userId: user_12345
+            title: "New message from John"
+            body: "You have received a new direct message"
+            timestamp: "2024-01-15T10:30:00Z"
+            priority: high
+            actionUrl: "https://app.example.com/messages/john"
+        - summary: Payment notification
+          payload:
+            id: "550e8400-e29b-41d4-a716-446655440003"
+            type: user_notification
+            userId: user_12345
+            title: "Payment processed"
+            body: "Your payment of $99.99 has been processed successfully"
+            timestamp: "2024-01-15T10:31:00Z"
+            priority: normal
+
+    statusUpdate:
+      name: statusUpdate
+      title: Status Update
+      contentType: application/json
+      summary: Service status update
+      description: |
+        Periodic or event-driven status update about services and infrastructure.
+
+        **Status values:**
+        - operational: Service fully operational
+        - degraded: Service operational but with reduced performance
+        - outage: Service is down or unavailable
+        - maintenance: Scheduled maintenance in progress
+
+      payload:
+        type: object
+        required:
+          - id
+          - type
+          - service
+          - status
+          - timestamp
+        properties:
+          id:
+            type: string
+            format: uuid
+            description: Unique event ID
+          type:
+            type: string
+            const: status_update
+            description: Message type identifier
+          service:
+            type: string
+            minLength: 1
+            maxLength: 100
+            description: Service or component name
+          status:
+            type: string
+            enum: [operational, degraded, outage, maintenance]
+            description: Current service status
+          message:
+            type: string
+            maxLength: 500
+            description: Status message or description
+          timestamp:
+            type: string
+            format: date-time
+            description: ISO 8601 timestamp
+          metadata:
+            type: object
+            description: Additional status metadata
+            additionalProperties: true
+            examples:
+              - uptime: 99.99
+                region: us-east-1
+                affectedServices: ["api", "dashboard"]
+      examples:
+        - summary: Service operational
+          payload:
+            id: "550e8400-e29b-41d4-a716-446655440004"
+            type: status_update
+            service: payment-gateway
+            status: operational
+            message: "All systems operational"
+            timestamp: "2024-01-15T10:30:00Z"
+            metadata:
+              uptime: 99.99
+              region: us-east-1
+        - summary: Service degraded
+          payload:
+            id: "550e8400-e29b-41d4-a716-446655440005"
+            type: status_update
+            service: api-gateway
+            status: degraded
+            message: "Elevated latency observed (avg 500ms)"
+            timestamp: "2024-01-15T10:32:00Z"
+            metadata:
+              latency_ms: 500
+              normal_latency_ms: 100
+
+    heartbeat:
+      name: heartbeat
+      title: Heartbeat
+      contentType: application/json
+      summary: Keep-alive signal
+      description: |
+        Periodic heartbeat message sent every 30 seconds.
+
+        Keeps the connection alive and prevents proxy timeout.
+        Client can safely ignore these messages.
+      payload:
+        type: object
+        required:
+          - type
+          - timestamp
+        properties:
+          type:
+            type: string
+            const: heartbeat
+            description: Message type identifier
+          timestamp:
+            type: string
+            format: date-time
+            description: ISO 8601 timestamp
+      examples:
+        - summary: Heartbeat
+          payload:
+            type: heartbeat
+            timestamp: "2024-01-15T10:30:30Z"
+
+    notificationBatch:
+      name: notificationBatch
+      title: Notification Batch
+      contentType: application/json
+      summary: Batched events for reconnected clients
+      description: |
+        Batch of missed events sent when client reconnects.
+
+        Returned when client provides Last-Event-ID header with a previous event ID.
+        Contains all events since that ID (maximum 100 events, 5 minute window).
+
+        Allows clients to catch up without processing all historical events.
+
+      payload:
+        type: array
+        minItems: 1
+        maxItems: 100
+        items:
+          type: object
+          required:
+            - id
+            - type
+            - timestamp
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: Unique event ID
+            type:
+              type: string
+              description: Event type
+              enum: [system_alert, user_notification, status_update]
+            timestamp:
+              type: string
+              format: date-time
+              description: ISO 8601 timestamp
+            data:
+              type: object
+              description: Event payload (full event details)
+      examples:
+        - summary: Batch of missed events
+          payload:
+            - id: "550e8400-e29b-41d4-a716-446655440006"
+              type: system_alert
+              timestamp: "2024-01-15T10:30:15Z"
+              data:
+                message: "High memory usage"
+                level: warning
+                source: infrastructure
+            - id: "550e8400-e29b-41d4-a716-446655440007"
+              type: user_notification
+              timestamp: "2024-01-15T10:30:20Z"
+              data:
+                userId: user_12345
+                title: "Update available"
+                body: "A new version is ready"
+
+    streamError:
+      name: streamError
+      title: Stream Error
+      contentType: application/problem+json
+      summary: Error message
+      description: |
+        RFC 9457 problem details format error response.
+
+        Sent when connection cannot be established or maintained.
+
+        Examples:
+        - Authentication failure
+        - Invalid query parameters
+        - Server error
+      payload:
+        type: object
+        required:
+          - type
+          - title
+          - status
+          - detail
+        properties:
+          type:
+            type: string
+            format: uri-reference
+            default: "about:blank"
+          title:
+            type: string
+          status:
+            type: integer
+            minimum: 400
+            maximum: 599
+          detail:
+            type: string
+          instance:
+            type: string
+            format: uri-reference
+          errors:
+            type: array
+            items:
+              type: object
+              properties:
+                path:
+                  type: string
+                message:
+                  type: string
+                code:
+                  type: string
+      examples:
+        - summary: Authentication error
+          payload:
+            type: "about:blank"
+            title: "Unauthorized"
+            status: 401
+            detail: "Missing or invalid authentication token"
+        - summary: Invalid filter
+          payload:
+            type: "about:blank"
+            title: "Bad Request"
+            status: 400
+            detail: "Invalid query parameters"
+            errors:
+              - path: "/severity"
+                message: "Invalid severity value"
+                code: "INVALID_ENUM"
+
+  schemas:
+    uuid:
+      type: string
+      format: uuid
+      pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+      description: UUID v4
+
+    severity:
+      type: string
+      enum: [info, warning, error, critical]
+      description: Event severity level
+
+    eventType:
+      type: string
+      enum: [system_alert, user_notification, status_update]
+      description: Type of event
+
+    serviceStatus:
+      type: string
+      enum: [operational, degraded, outage, maintenance]
+      description: Service status
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT bearer token for authentication.
+
+        Pass in Authorization header:
+        ```
+        Authorization: Bearer {token}
+        ```
+
+        Or as query parameter:
+        ```
+        /events?token={token}
+        ```
+
+defaultContentType: application/json
