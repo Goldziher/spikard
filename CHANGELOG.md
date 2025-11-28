@@ -179,6 +179,96 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - WebAssembly bindings have limited threading support due to WASM runtime constraints
 - Background tasks in Python require explicit awaitable coroutines (no automatic lambda wrapping)
 
+## [0.2.0] - TBD
+
+### Added
+
+#### PHP Bindings (ext-php-rs)
+- Complete PHP 8.2+ bindings via ext-php-rs with 100% test coverage
+- Native HTTP server with full middleware stack support
+- Parameter extraction helpers (Query, Path, Header, Cookie, Body)
+- Lifecycle hooks implementation (on_request, pre_validation, pre_handler, on_response, on_error)
+- Streaming responses and WebSocket support
+- Server-Sent Events (SSE) support with producer pattern
+- Background task infrastructure with message queue pattern and serialization
+- Dependency injection with thread-local architecture
+- AsyncAPI integration and test generation
+- PHP app generator for benchmark harness
+- Comprehensive test coverage with native PHP test client
+- Full configuration API support matching Python/Node/Ruby bindings
+
+#### Dependency Injection (DI)
+- Cross-language DI framework implementation across all bindings
+- Handler parameter extraction with type-safe context passing
+- Language-specific DI container implementations:
+  - Python: PyO3 integration with proper GIL handling
+  - Node.js: napi-rs with ThreadsafeFunction support
+  - Ruby: Magnus with proper memory management
+  - PHP: ext-php-rs with Zval thread-safety
+- 100% test pass rates achieved across all bindings (18/18 Python, 442/442 Node, 478/478 Ruby, 100+ PHP)
+- Request context exposure to handlers for accessing parsed parameters
+
+#### Documentation & Examples
+- MkDocs site setup with comprehensive playbooks and guides
+- Architecture diagram and reference matrices
+- Binding support matrix and feature parity audit
+- Playbooks for authentication, uploads, streaming, background tasks, and error handling
+- Runnable examples for all bindings including WASM/Deno
+- Comprehensive README updates for all language bindings with testable snippets
+- PHP language standards and agent configuration
+
+### Changed
+
+#### PHP Implementation
+- Parameter extraction system now utilizes DI framework for type-safe handler access
+- Streaming and WebSocket handlers refined for production stability
+- Background task system improved with proper serialization and error handling
+- Thread-local architecture adopted for DI container management
+
+#### Build & Testing
+- PHP build and test tasks fully enabled with native extension loading
+- E2E generation now supports PHP with schema-aware generation
+- Test generator enhanced for PHP with ServerConfig, schema validation, and response verification
+
+### Fixed
+
+#### PHP Bindings
+- Threading issues resolved - proper async handling without deadlocks
+- ARM Mac compilation errors fixed with runtime feature enablement
+- Zval thread safety achieved through thread-local architecture
+- Parameter passing in background tasks corrected
+- Query string handling and null body processing fixed
+- All test failures resolved (query strings, streaming, WebSocket)
+
+#### Bindings Integration
+- Python server config properly propagates DI container
+- Node DI context correctly flows into handlers
+- Ruby DI snippet evaluation bound to local app
+- API compatibility across all bindings standardized
+
+#### Build System
+- Biome formatting alignment across codebase
+- Lint issues addressed in all binding implementations
+- PHP e2e generator headers normalization and proper escaping
+- Dependency management stabilized with locked versions
+
+#### Documentation
+- PHP snippet API updated to match actual implementation
+- Handler signatures corrected across all binding READMEs
+- TypeScript examples aligned with current request shape
+- WebSocket support status clarified
+- Background task caveats documented
+
+### Security
+- Zval thread-safety in PHP bindings ensures safe concurrent access
+- Proper error propagation across FFI boundaries prevents panic leakage
+- DI container thread-local storage prevents cross-request contamination
+
+### Infrastructure
+- Dependency updates: hono and various GitHub Actions
+- Extended testing coverage across all bindings
+- CI/CD setup for PHP native extension building
+
 ## [0.1.1] - 2025-11-23
 
 ### Added
