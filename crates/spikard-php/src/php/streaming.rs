@@ -90,31 +90,25 @@ pub fn register_generator(
 /// Convert a registered PHP Generator to a Rust async Stream.
 ///
 /// This creates a Stream<Item = Result<Bytes, BoxError>> that polls the PHP
-/// Generator on each chunk using spawn_blocking.
+/// Generator on each chunk synchronously (PHP is single-threaded).
 pub fn generator_to_stream(
     generator_idx: usize,
 ) -> impl futures::Stream<Item = Result<Bytes, Box<dyn std::error::Error + Send + Sync>>> {
     stream! {
         loop {
-            // Poll the generator on the PHP thread
-            let result = tokio::task::spawn_blocking(move || {
-                poll_generator(generator_idx)
-            }).await;
+            // Poll the generator directly (PHP is single-threaded, cannot use spawn_blocking)
+            let result = poll_generator(generator_idx);
 
             match result {
-                Ok(Ok(Some(bytes))) => {
+                Ok(Some(bytes)) => {
                     yield Ok(bytes);
                 }
-                Ok(Ok(None)) => {
+                Ok(None) => {
                     // Generator exhausted
                     break;
                 }
-                Ok(Err(err)) => {
-                    yield Err(Box::new(io::Error::other(err)) as Box<dyn std::error::Error + Send + Sync>);
-                    break;
-                }
                 Err(err) => {
-                    yield Err(Box::new(io::Error::other(format!("Task error: {}", err))) as Box<dyn std::error::Error + Send + Sync>);
+                    yield Err(Box::new(io::Error::other(err)) as Box<dyn std::error::Error + Send + Sync>);
                     break;
                 }
             }
@@ -124,7 +118,7 @@ pub fn generator_to_stream(
 
 /// Poll the PHP Generator for the next chunk.
 ///
-/// This runs on the PHP thread (via spawn_blocking) and calls:
+/// This runs synchronously on the same thread and calls:
 /// 1. `$generator->valid()` to check if more data available
 /// 2. `$generator->current()` to get the chunk
 /// 3. `$generator->next()` to advance to next chunk

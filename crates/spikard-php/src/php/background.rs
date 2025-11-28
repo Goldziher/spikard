@@ -49,60 +49,15 @@ pub fn clear_handle() {
 /// ```
 #[php_function]
 #[php(name = "spikard_background_run")]
-pub fn spikard_background_run(callable: &Zval, args: Option<&Zval>) -> PhpResult<()> {
-    // Validate callable
-    if !callable.is_callable() {
-        return Err(PhpException::default(
-            "First argument to spikard_background_run must be callable".to_string(),
-        ));
-    }
-
-    // Get background handle
-    let handle = BACKGROUND_HANDLE
-        .read()
-        .map_err(|_| PhpException::default("Background handle lock poisoned".to_string()))?
-        .clone()
-        .ok_or_else(|| {
-            PhpException::default(
-                "Background runtime not initialized. Server must be running to spawn background tasks.".to_string(),
-            )
-        })?;
-
-    // Clone for 'static lifetime
-    let callable_owned = callable.shallow_clone();
-    let args_owned = args.map(|a| a.shallow_clone());
-
-    // Execute PHP callable directly (PHP is single-threaded, cannot use spawn_blocking)
-    // This runs "in the background" from the request's perspective but on the same thread
-    handle
-        .spawn_with_metadata(
-            async move {
-                // Execute PHP callable synchronously within async context
-                let call_result = if let Some(args_zval) = args_owned {
-                    // Extract args array
-                    let args_array = args_zval
-                        .array()
-                        .ok_or_else(|| BackgroundJobError::from("Arguments must be an array"))?;
-
-                    let args_vec: Vec<&dyn ext_php_rs::convert::IntoZvalDyn> =
-                        args_array.values().map(|v| v as &dyn ext_php_rs::convert::IntoZvalDyn).collect();
-
-                    ZendCallable::new(&callable_owned)
-                        .map_err(|e| BackgroundJobError::from(format!("Failed to create callable: {:?}", e)))?
-                        .try_call(args_vec)
-                } else {
-                    ZendCallable::new(&callable_owned)
-                        .map_err(|e| BackgroundJobError::from(format!("Failed to create callable: {:?}", e)))?
-                        .try_call(vec![])
-                };
-
-                call_result.map(|_| ()).map_err(|e| {
-                    BackgroundJobError::from(format!("Background task failed: {:?}", e))
-                })
-            },
-            BackgroundJobMetadata::default(),
-        )
-        .map_err(|err| PhpException::default(err.to_string()))
+pub fn spikard_background_run(_callable: &Zval, _args: Option<&Zval>) -> PhpResult<()> {
+    // TODO: Background tasks not yet supported in PHP due to threading constraints.
+    // PHP is single-threaded and Zvals cannot be sent across thread boundaries.
+    // We need a different queue mechanism for PHP background tasks.
+    Err(PhpException::default(
+        "Background tasks are not yet supported in PHP bindings. \
+         PHP is single-threaded and cannot safely execute callables in background threads."
+            .to_string(),
+    ))
 }
 
 #[cfg(test)]
