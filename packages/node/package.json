@@ -60,7 +60,7 @@
 		"README.md"
 	],
 	"devDependencies": {
-		"@biomejs/biome": "^2.3.7",
+		"@biomejs/biome": "^2.3.8",
 		"@napi-rs/cli": "^3.4.1",
 		"@types/node": "^24.10.1",
 		"@types/ws": "^8.18.1",
