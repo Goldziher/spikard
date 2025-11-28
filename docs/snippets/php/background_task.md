@@ -14,7 +14,7 @@ function sendEmail(int $userId): void {
 }
 
 $app = $app->addRoute('POST', '/signup', function (Request $request) {
-    $user = $request->jsonBody();
+    $user = $request->body;
 
     BackgroundTask::run(function () use ($user) {
         sendEmail($user['id']);

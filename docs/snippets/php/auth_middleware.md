@@ -3,16 +3,23 @@
 
 use Spikard\App;
 use Spikard\Config\ServerConfig;
+use Spikard\Config\LifecycleHooks;
+use Spikard\Config\HookResult;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
 
-$app = new App(new ServerConfig(port: 8000));
-
-$app = $app->preHandler(function (Request $request) {
-    $token = $request->header('authorization');
-    if ($token !== 'Bearer dev-token') {
-        return Response::json(['error' => 'unauthorized'], 401);
+$hooks = new LifecycleHooks(
+    preHandler: function (Request $request): HookResult {
+        $token = $request->headers['authorization'] ?? null;
+        if ($token !== 'Bearer dev-token') {
+            return HookResult::ShortCircuit(
+                Response::json(['error' => 'unauthorized'], 401)
+            );
+        }
+        return HookResult::Continue($request);
     }
-    return $request;
-});
+);
+
+$app = (new App(new ServerConfig(port: 8000)))
+    ->withLifecycleHooks($hooks);
 ```
