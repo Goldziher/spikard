@@ -181,10 +181,9 @@ fn convert_chunk_to_bytes(chunk: &Zval) -> Result<Bytes, String> {
 
     // Try array or object (serialize to JSON)
     if chunk.is_array() || chunk.is_object() {
-        let json_val = crate::php::zval_to_json(chunk)
-            .map_err(|e| format!("Failed to convert chunk to JSON: {}", e))?;
-        let json_str = serde_json::to_string(&json_val)
-            .map_err(|e| format!("Failed to serialize JSON: {}", e))?;
+        let json_val =
+            crate::php::zval_to_json(chunk).map_err(|e| format!("Failed to convert chunk to JSON: {}", e))?;
+        let json_str = serde_json::to_string(&json_val).map_err(|e| format!("Failed to serialize JSON: {}", e))?;
         return Ok(Bytes::from(json_str));
     }
 
@@ -195,10 +194,7 @@ fn convert_chunk_to_bytes(chunk: &Zval) -> Result<Bytes, String> {
 ///
 /// This is called from `interpret_php_response` when it detects a
 /// StreamingResponse object.
-pub fn create_handler_response(
-    generator_idx: usize,
-    config: StreamingConfig,
-) -> Result<HandlerResponse, String> {
+pub fn create_handler_response(generator_idx: usize, config: StreamingConfig) -> Result<HandlerResponse, String> {
     let status = StatusCode::from_u16(config.status_code)
         .map_err(|e| format!("Invalid status code {}: {}", config.status_code, e))?;
 
@@ -206,10 +202,9 @@ pub fn create_handler_response(
         .headers
         .into_iter()
         .map(|(name, value)| {
-            let header_name = HeaderName::from_str(&name)
-                .map_err(|e| format!("Invalid header '{}': {}", name, e))?;
-            let header_value = HeaderValue::from_str(&value)
-                .map_err(|e| format!("Invalid header value '{}': {}", value, e))?;
+            let header_name = HeaderName::from_str(&name).map_err(|e| format!("Invalid header '{}': {}", name, e))?;
+            let header_value =
+                HeaderValue::from_str(&value).map_err(|e| format!("Invalid header value '{}': {}", value, e))?;
             Ok((header_name, header_value))
         })
         .collect::<Result<Vec<_>, String>>()?;

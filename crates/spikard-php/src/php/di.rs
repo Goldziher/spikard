@@ -17,9 +17,9 @@
 
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
-use spikard_core::di::{Dependency, DependencyContainer, DependencyError, ResolvedDependencies};
-use spikard_core::RequestData;
 use http::Request;
+use spikard_core::RequestData;
+use spikard_core::di::{Dependency, DependencyContainer, DependencyError, ResolvedDependencies};
 use std::any::Any;
 use std::cell::RefCell;
 use std::future::Future;
@@ -61,7 +61,7 @@ impl ZvalHandle {
             reg.get(self.value_id)
                 .map(|z| z.shallow_clone())
                 .ok_or_else(|| DependencyError::ResolutionFailed {
-                    message: format!("Zval handle {} not found in registry", self.value_id)
+                    message: format!("Zval handle {} not found in registry", self.value_id),
                 })
         })
     }
@@ -178,17 +178,20 @@ impl PhpFactoryDependency {
         for dep_name in &self.dependencies {
             let resolved_value = match resolved.get_arc(dep_name) {
                 Some(v) => v,
-                None => return Err(DependencyError::ResolutionFailed {
-                    message: format!("Dependency '{}' not resolved", dep_name)
-                }),
+                None => {
+                    return Err(DependencyError::ResolutionFailed {
+                        message: format!("Dependency '{}' not resolved", dep_name),
+                    });
+                }
             };
 
             // Downcast to ZvalHandle
-            let handle = resolved_value
-                .downcast_ref::<ZvalHandle>()
-                .ok_or_else(|| DependencyError::ResolutionFailed {
-                    message: format!("Dependency '{}' is not a ZvalHandle", dep_name)
-                })?;
+            let handle =
+                resolved_value
+                    .downcast_ref::<ZvalHandle>()
+                    .ok_or_else(|| DependencyError::ResolutionFailed {
+                        message: format!("Dependency '{}' is not a ZvalHandle", dep_name),
+                    })?;
 
             // Get the actual Zval from thread-local storage
             let zval = handle.get()?;
@@ -201,23 +204,22 @@ impl PhpFactoryDependency {
             let callable_zval = reg
                 .get(self.factory_id)
                 .ok_or_else(|| DependencyError::ResolutionFailed {
-                    message: format!("Factory {} not found in registry", self.factory_id)
+                    message: format!("Factory {} not found in registry", self.factory_id),
                 })?;
 
             // Build argument references for try_call
-            let args: Vec<&dyn ext_php_rs::convert::IntoZvalDyn> =
-                zvals.iter().map(|v| v as &dyn ext_php_rs::convert::IntoZvalDyn).collect();
+            let args: Vec<&dyn ext_php_rs::convert::IntoZvalDyn> = zvals
+                .iter()
+                .map(|v| v as &dyn ext_php_rs::convert::IntoZvalDyn)
+                .collect();
 
             // Invoke PHP callable
-            let callable = ZendCallable::new(callable_zval)
-                .map_err(|e| DependencyError::ResolutionFailed {
-                    message: format!("Failed to create callable: {:?}", e)
-                })?;
-            let result = callable
-                .try_call(args)
-                .map_err(|e| DependencyError::ResolutionFailed {
-                    message: format!("Factory invocation failed: {:?}", e)
-                })?;
+            let callable = ZendCallable::new(callable_zval).map_err(|e| DependencyError::ResolutionFailed {
+                message: format!("Failed to create callable: {:?}", e),
+            })?;
+            let result = callable.try_call(args).map_err(|e| DependencyError::ResolutionFailed {
+                message: format!("Factory invocation failed: {:?}", e),
+            })?;
 
             Ok(result)
         })?;
@@ -316,33 +318,35 @@ pub fn extract_di_container_from_php(container_zval: Option<&Zval>) -> Result<Op
                         .map_err(|_| format!("Provide instance '{}' missing 'dependsOn' property", dep_name))?;
 
                     let depends_on = if let Some(arr) = depends_on_zval.array() {
-                        arr.values()
-                            .filter_map(|v| v.string())
-                            .map(|s| s.to_string())
-                            .collect()
+                        arr.values().filter_map(|v| v.string()).map(|s| s.to_string()).collect()
                     } else {
                         Vec::new()
                     };
 
-                    let factory = PhpFactoryDependency::register(dep_name.clone(), factory_callable.shallow_clone(), depends_on);
-                    container.register(dep_name, Arc::new(factory))
+                    let factory =
+                        PhpFactoryDependency::register(dep_name.clone(), factory_callable.shallow_clone(), depends_on);
+                    container
+                        .register(dep_name, Arc::new(factory))
                         .map_err(|e| format!("Failed to register factory: {:?}", e))?;
                 } else {
                     // Plain object value dependency
                     let value = PhpValueDependency::new(dep_name.clone(), dep_val.shallow_clone());
-                    container.register(dep_name, Arc::new(value))
+                    container
+                        .register(dep_name, Arc::new(value))
                         .map_err(|e| format!("Failed to register value: {:?}", e))?;
                 }
             } else {
                 // Object without class name - treat as value
                 let value = PhpValueDependency::new(dep_name.clone(), dep_val.shallow_clone());
-                container.register(dep_name, Arc::new(value))
+                container
+                    .register(dep_name, Arc::new(value))
                     .map_err(|e| format!("Failed to register value: {:?}", e))?;
             }
         } else {
             // Scalar value dependency
             let value = PhpValueDependency::new(dep_name.clone(), dep_val.shallow_clone());
-            container.register(dep_name, Arc::new(value))
+            container
+                .register(dep_name, Arc::new(value))
                 .map_err(|e| format!("Failed to register value: {:?}", e))?;
         }
     }

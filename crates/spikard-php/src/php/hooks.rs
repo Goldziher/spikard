@@ -306,8 +306,17 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpRequestHook {
                         Some(Ok(None))
                     } else {
                         if let Some(obj) = result_zval.object() {
-                            let status = obj.try_call_method("getStatus", vec![]).ok().and_then(|v| v.long()).unwrap_or(200);
-                            let body_str = obj.try_call_method("getBody", vec![]).ok().and_then(|v| v.string()).map(|s| s.to_string()).unwrap_or_else(|| "{}".to_string());
+                            let status = obj
+                                .try_call_method("getStatus", vec![])
+                                .ok()
+                                .and_then(|v| v.long())
+                                .unwrap_or(200);
+                            let body_str = obj
+                                .try_call_method("getBody", vec![])
+                                .ok()
+                                .and_then(|v| v.string())
+                                .map(|s| s.to_string())
+                                .unwrap_or_else(|| "{}".to_string());
                             let body: Value = serde_json::from_str(&body_str).unwrap_or(Value::Null);
                             let mut headers = HashMap::new();
                             if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![]) {
@@ -330,18 +339,17 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpRequestHook {
                         }
                     }
                 })
-            }).await;
+            })
+            .await;
             match result {
                 Ok(Some(Ok(None))) => Ok(HookResult::Continue(req)),
-                Ok(Some(Ok(Some(php_resp)))) => {
-                    match php_response_to_axum(&php_resp) {
-                        Ok(resp) => Ok(HookResult::ShortCircuit(resp)),
-                        Err(e) => {
-                            tracing_error!("Failed to convert PHP response: {}", e);
-                            Ok(HookResult::Continue(req))
-                        }
+                Ok(Some(Ok(Some(php_resp)))) => match php_response_to_axum(&php_resp) {
+                    Ok(resp) => Ok(HookResult::ShortCircuit(resp)),
+                    Err(e) => {
+                        tracing_error!("Failed to convert PHP response: {}", e);
+                        Ok(HookResult::Continue(req))
                     }
-                }
+                },
                 Ok(Some(Err(e))) => {
                     tracing_error!("Hook error: {}", e);
                     Ok(HookResult::Continue(req))
@@ -406,7 +414,14 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpResponseHook {
         Box::pin(async move {
             let (php_resp, original_resp) = axum_response_to_php(resp).await.unwrap_or_else(|e| {
                 tracing_error!("Failed to convert response to PHP: {}", e);
-                return (PhpResponse { status: 500, body: Value::Null, headers: HashMap::new() }, Response::new(Body::empty()));
+                return (
+                    PhpResponse {
+                        status: 500,
+                        body: Value::Null,
+                        headers: HashMap::new(),
+                    },
+                    Response::new(Body::empty()),
+                );
             });
             let result = tokio::task::spawn_blocking(move || {
                 PHP_HOOK_REGISTRY.with(|registry| -> Option<Result<Option<PhpResponse>, String>> {
@@ -425,8 +440,17 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpResponseHook {
                         Some(Ok(None))
                     } else {
                         if let Some(obj) = result_zval.object() {
-                            let status = obj.try_call_method("getStatus", vec![]).ok().and_then(|v| v.long()).unwrap_or(200);
-                            let body_str = obj.try_call_method("getBody", vec![]).ok().and_then(|v| v.string()).map(|s| s.to_string()).unwrap_or_else(|| "{}".to_string());
+                            let status = obj
+                                .try_call_method("getStatus", vec![])
+                                .ok()
+                                .and_then(|v| v.long())
+                                .unwrap_or(200);
+                            let body_str = obj
+                                .try_call_method("getBody", vec![])
+                                .ok()
+                                .and_then(|v| v.string())
+                                .map(|s| s.to_string())
+                                .unwrap_or_else(|| "{}".to_string());
                             let body: Value = serde_json::from_str(&body_str).unwrap_or(Value::Null);
                             let mut headers = HashMap::new();
                             if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![]) {
@@ -449,18 +473,17 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpResponseHook {
                         }
                     }
                 })
-            }).await;
+            })
+            .await;
             match result {
                 Ok(Some(Ok(None))) => Ok(HookResult::Continue(original_resp)),
-                Ok(Some(Ok(Some(php_resp)))) => {
-                    match php_response_to_axum(&php_resp) {
-                        Ok(resp) => Ok(HookResult::Continue(resp)),
-                        Err(e) => {
-                            tracing_error!("Failed to convert PHP response: {}", e);
-                            Ok(HookResult::Continue(original_resp))
-                        }
+                Ok(Some(Ok(Some(php_resp)))) => match php_response_to_axum(&php_resp) {
+                    Ok(resp) => Ok(HookResult::Continue(resp)),
+                    Err(e) => {
+                        tracing_error!("Failed to convert PHP response: {}", e);
+                        Ok(HookResult::Continue(original_resp))
                     }
-                }
+                },
                 Ok(Some(Err(e))) => {
                     tracing_error!("Hook error: {}", e);
                     Ok(HookResult::Continue(original_resp))
@@ -518,7 +541,14 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpErrorHook {
         Box::pin(async move {
             let (php_resp, original_resp) = axum_response_to_php(resp).await.unwrap_or_else(|e| {
                 tracing_error!("Failed to convert response to PHP: {}", e);
-                return (PhpResponse { status: 500, body: Value::Null, headers: HashMap::new() }, Response::new(Body::empty()));
+                return (
+                    PhpResponse {
+                        status: 500,
+                        body: Value::Null,
+                        headers: HashMap::new(),
+                    },
+                    Response::new(Body::empty()),
+                );
             });
             let result = tokio::task::spawn_blocking(move || {
                 PHP_HOOK_REGISTRY.with(|registry| -> Option<Result<Option<PhpResponse>, String>> {
@@ -537,8 +567,17 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpErrorHook {
                         Some(Ok(None))
                     } else {
                         if let Some(obj) = result_zval.object() {
-                            let status = obj.try_call_method("getStatus", vec![]).ok().and_then(|v| v.long()).unwrap_or(200);
-                            let body_str = obj.try_call_method("getBody", vec![]).ok().and_then(|v| v.string()).map(|s| s.to_string()).unwrap_or_else(|| "{}".to_string());
+                            let status = obj
+                                .try_call_method("getStatus", vec![])
+                                .ok()
+                                .and_then(|v| v.long())
+                                .unwrap_or(200);
+                            let body_str = obj
+                                .try_call_method("getBody", vec![])
+                                .ok()
+                                .and_then(|v| v.string())
+                                .map(|s| s.to_string())
+                                .unwrap_or_else(|| "{}".to_string());
                             let body: Value = serde_json::from_str(&body_str).unwrap_or(Value::Null);
                             let mut headers = HashMap::new();
                             if let Ok(headers_zval) = obj.try_call_method("getHeaders", vec![]) {
@@ -561,18 +600,17 @@ impl LifecycleHook<Request<Body>, Response<Body>> for PhpErrorHook {
                         }
                     }
                 })
-            }).await;
+            })
+            .await;
             match result {
                 Ok(Some(Ok(None))) => Ok(HookResult::Continue(original_resp)),
-                Ok(Some(Ok(Some(php_resp)))) => {
-                    match php_response_to_axum(&php_resp) {
-                        Ok(resp) => Ok(HookResult::Continue(resp)),
-                        Err(e) => {
-                            tracing_error!("Failed to convert PHP response: {}", e);
-                            Ok(HookResult::Continue(original_resp))
-                        }
+                Ok(Some(Ok(Some(php_resp)))) => match php_response_to_axum(&php_resp) {
+                    Ok(resp) => Ok(HookResult::Continue(resp)),
+                    Err(e) => {
+                        tracing_error!("Failed to convert PHP response: {}", e);
+                        Ok(HookResult::Continue(original_resp))
                     }
-                }
+                },
                 Ok(Some(Err(e))) => {
                     tracing_error!("Hook error: {}", e);
                     Ok(HookResult::Continue(original_resp))
@@ -596,10 +634,7 @@ fn make_request_hook(
         idx
     });
 
-    Arc::new(PhpRequestHook {
-        name,
-        callback_index,
-    })
+    Arc::new(PhpRequestHook { name, callback_index })
 }
 
 /// Adapt a PHP callable into a LifecycleHook for responses.
@@ -615,10 +650,7 @@ fn make_response_hook(
         idx
     });
 
-    Arc::new(PhpResponseHook {
-        name,
-        callback_index,
-    })
+    Arc::new(PhpResponseHook { name, callback_index })
 }
 
 /// Adapt a PHP callable into a LifecycleHook for error handling.
@@ -634,8 +666,5 @@ fn make_error_hook(
         idx
     });
 
-    Arc::new(PhpErrorHook {
-        name,
-        callback_index,
-    })
+    Arc::new(PhpErrorHook { name, callback_index })
 }

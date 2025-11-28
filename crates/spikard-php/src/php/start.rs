@@ -426,7 +426,7 @@ fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::Se
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
         openapi: openapi_config,
         lifecycle_hooks: None, // Set separately via hooks parameter
-        di_container: None, // DI not yet supported in PHP bindings
+        di_container: None,    // DI not yet supported in PHP bindings
     })
 }
 
@@ -520,7 +520,12 @@ fn extract_lifecycle_hooks_from_php(hooks_zval: &Zval) -> Result<Option<Arc<Life
 ///
 /// The config is extracted manually using extract_server_config_from_php() to avoid
 /// JSON deserialization issues with non-serializable fields like lifecycle_hooks.
-pub fn spikard_start_server_impl(routes_zval: &Zval, config: &Zval, hooks: &Zval, dependencies: &Zval) -> PhpResult<u64> {
+pub fn spikard_start_server_impl(
+    routes_zval: &Zval,
+    config: &Zval,
+    hooks: &Zval,
+    dependencies: &Zval,
+) -> PhpResult<u64> {
     // Extract ServerConfig from PHP array
     let mut server_config = extract_server_config_from_php(config)
         .map_err(|e| PhpException::default(format!("Invalid server config: {}", e)))?;
@@ -650,57 +655,60 @@ pub fn spikard_start_server_impl(routes_zval: &Zval, config: &Zval, hooks: &Zval
             // Use LocalSet for PHP background tasks (thread-local storage compatibility)
             let local = tokio::task::LocalSet::new();
 
-            local.run_until(async move {
-                let addr = format!("{}:{}", server_config.host, server_config.port);
-                let listener = match tokio::net::TcpListener::bind(&addr).await {
-                    Ok(l) => l,
-                    Err(e) => {
-                        eprintln!("Failed to bind to {}: {}", addr, e);
-                        return;
-                    }
-                };
-
-                // Start background task runtime
-                let background_runtime = spikard_http::BackgroundRuntime::start(server_config.background_tasks.clone()).await;
-                crate::php::install_handle(background_runtime.handle());
-
-                // Spawn PHP background task processor (using spawn_local for thread-local access)
-                // This periodically processes queued PHP tasks on the same thread
-                tokio::task::spawn_local(async {
-                    loop {
-                        // Process one task if available
-                        crate::php::process_pending_tasks();
-                        // Yield to avoid busy loop
-                        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-                    }
-                });
-
-                // Custom shutdown signal that waits for either Ctrl+C or our shutdown channel
-                let shutdown_signal = async move {
-                    let ctrl_c = async {
-                        tokio::signal::ctrl_c().await.expect("failed to install Ctrl+C handler");
+            local
+                .run_until(async move {
+                    let addr = format!("{}:{}", server_config.host, server_config.port);
+                    let listener = match tokio::net::TcpListener::bind(&addr).await {
+                        Ok(l) => l,
+                        Err(e) => {
+                            eprintln!("Failed to bind to {}: {}", addr, e);
+                            return;
+                        }
                     };
 
-                    let channel_shutdown = async {
-                        let _ = shutdown_rx.await;
+                    // Start background task runtime
+                    let background_runtime =
+                        spikard_http::BackgroundRuntime::start(server_config.background_tasks.clone()).await;
+                    crate::php::install_handle(background_runtime.handle());
+
+                    // Spawn PHP background task processor (using spawn_local for thread-local access)
+                    // This periodically processes queued PHP tasks on the same thread
+                    tokio::task::spawn_local(async {
+                        loop {
+                            // Process one task if available
+                            crate::php::process_pending_tasks();
+                            // Yield to avoid busy loop
+                            tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+                        }
+                    });
+
+                    // Custom shutdown signal that waits for either Ctrl+C or our shutdown channel
+                    let shutdown_signal = async move {
+                        let ctrl_c = async {
+                            tokio::signal::ctrl_c().await.expect("failed to install Ctrl+C handler");
+                        };
+
+                        let channel_shutdown = async {
+                            let _ = shutdown_rx.await;
+                        };
+
+                        tokio::select! {
+                            _ = ctrl_c => {},
+                            _ = channel_shutdown => {},
+                        }
                     };
 
-                    tokio::select! {
-                        _ = ctrl_c => {},
-                        _ = channel_shutdown => {},
+                    if let Err(e) = axum::serve(listener, app).with_graceful_shutdown(shutdown_signal).await {
+                        eprintln!("Server error: {}", e);
                     }
-                };
 
-                if let Err(e) = axum::serve(listener, app).with_graceful_shutdown(shutdown_signal).await {
-                    eprintln!("Server error: {}", e);
-                }
-
-                // Shutdown background runtime
-                crate::php::clear_handle();
-                if let Err(e) = background_runtime.shutdown().await {
-                    eprintln!("Failed to drain background tasks during shutdown: {:?}", e);
-                }
-            }).await;
+                    // Shutdown background runtime
+                    crate::php::clear_handle();
+                    if let Err(e) = background_runtime.shutdown().await {
+                        eprintln!("Failed to drain background tasks during shutdown: {:?}", e);
+                    }
+                })
+                .await;
         });
     });
 

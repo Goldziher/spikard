@@ -650,10 +650,7 @@ pub fn interpret_php_response(response: &Zval, _handler_name: &str) -> HandlerRe
                         HashMap::new()
                     };
 
-                    let config = crate::php::StreamingConfig {
-                        status_code,
-                        headers,
-                    };
+                    let config = crate::php::StreamingConfig { status_code, headers };
 
                     // Register generator and create streaming response
                     match crate::php::register_generator(&generator_zval, Some(config)) {
