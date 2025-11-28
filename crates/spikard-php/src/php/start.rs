@@ -498,8 +498,8 @@ fn extract_lifecycle_hooks_from_php(hooks_zval: &Zval) -> Result<Option<Arc<Life
     if let Some(on_error_zval) = hooks_array.get("onError")
         && on_error_zval.is_callable()
     {
-        let hook = PhpErrorHook::new_from_zval(on_error_zval)
-            .map_err(|e| format!("Failed to create onError hook: {}", e))?;
+        let hook =
+            PhpErrorHook::new_from_zval(on_error_zval).map_err(|e| format!("Failed to create onError hook: {}", e))?;
         lifecycle_hooks.add_on_error(Arc::new(hook));
         has_any_hook = true;
     }
