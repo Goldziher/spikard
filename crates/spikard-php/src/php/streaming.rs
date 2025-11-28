@@ -18,7 +18,7 @@ use std::str::FromStr;
 // Since Zval contains raw pointers to PHP's single-threaded structures,
 // we use thread-local storage similar to PhpHandler registry.
 thread_local! {
-    static GENERATOR_REGISTRY: RefCell<Vec<GeneratorHandle>> = RefCell::new(Vec::new());
+    static GENERATOR_REGISTRY: RefCell<Vec<GeneratorHandle>> = const { RefCell::new(Vec::new()) };
 }
 
 /// Handle to a PHP Generator stored in thread-local registry.

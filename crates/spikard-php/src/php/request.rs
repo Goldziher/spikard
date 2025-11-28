@@ -23,6 +23,7 @@ pub struct PhpRequest {
 #[php_impl]
 impl PhpRequest {
     /// Create a new request from JSON body string.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         method: String,
         path: String,
@@ -133,6 +134,7 @@ impl PhpRequest {
     }
 
     /// Internal constructor for Rust code (not exposed to PHP).
+    #[allow(clippy::too_many_arguments)]
     pub fn from_parts(
         method: String,
         path: String,

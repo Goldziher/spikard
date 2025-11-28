@@ -17,7 +17,7 @@ use tracing::{debug, error};
 //
 // NOTE: thread_local because Zval is not Send/Sync (PHP is single-threaded).
 thread_local! {
-    static PHP_WS_HANDLER_REGISTRY: std::cell::RefCell<Vec<PhpWebSocketHandlerCallables>> = std::cell::RefCell::new(Vec::new());
+    static PHP_WS_HANDLER_REGISTRY: std::cell::RefCell<Vec<PhpWebSocketHandlerCallables>> = const { std::cell::RefCell::new(Vec::new()) };
 }
 
 /// Storage for the three PHP callables that implement the WebSocket handler interface.
@@ -208,7 +208,7 @@ impl WebSocketHandler for PhpWebSocketHandler {
         let _ = tokio::task::spawn_blocking(move || {
             // Call onClose(1000, null) - normal closure
             let mut code_zval = Zval::new();
-            let _ = code_zval.set_long(1000); // Normal closure code
+            code_zval.set_long(1000); // Normal closure code
 
             let reason_zval = Zval::new();
             // Leave reason as null
