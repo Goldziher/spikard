@@ -339,7 +339,7 @@ mod tests {
         let app_dir = PathBuf::from("/app");
 
         // Test without working_dir_hint
-        let framework = get_framework("spikard").expect("spikard should exist");
+        let framework = get_framework("spikard-python").expect("spikard-python should exist");
         let working_dir = if let Some(hint) = &framework.working_dir_hint {
             app_dir.join(hint)
         } else {
@@ -378,11 +378,11 @@ mod tests {
         // Verify that all major frameworks are accessible
         let frameworks = vec![
             "spikard-rust",
-            "spikard",
+            "spikard-python",
             "spikard-node",
             "spikard-ruby",
             "spikard-wasm",
-            "fastapi",
+            "fastapi-uvicorn",
             "robyn",
         ];
 
@@ -414,11 +414,10 @@ mod tests {
     fn test_auto_detect_python_framework() {
         let temp_dir = TempDir::new().unwrap();
         fs::write(temp_dir.path().join("server.py"), "# Python server").unwrap();
-        fs::write(temp_dir.path().join("pyproject.toml"), "[build-system]").unwrap();
 
         let detected = detect_framework(temp_dir.path());
         assert!(detected.is_ok());
-        assert_eq!(detected.unwrap().name, "spikard");
+        assert_eq!(detected.unwrap().name, "spikard-python");
     }
 
     #[test]

@@ -82,7 +82,7 @@ jobs:
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-spikard-python:
-    name: spikard
+    name: spikard-python
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -98,7 +98,7 @@ jobs:
           cache-key-prefix: bench-spikard-python
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: spikard
+          framework: spikard-python
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
@@ -192,8 +192,8 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-fastapi:
-    name: fastapi
+  bench-fastapi-uvicorn:
+    name: fastapi-uvicorn
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -206,7 +206,7 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: fastapi
+          framework: fastapi-uvicorn
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
@@ -230,8 +230,8 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-litestar:
-    name: litestar
+  bench-litestar-uvicorn:
+    name: litestar-uvicorn
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -244,7 +244,7 @@ jobs:
       - run: chmod +x ~/.cargo/bin/benchmark-harness
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: litestar
+          framework: litestar-uvicorn
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
@@ -287,7 +287,7 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  # Python raw variants (5 frameworks)
+  # Python raw variants (6 frameworks)
   bench-spikard-raw:
     name: spikard-raw
     needs: build-harness
@@ -382,6 +382,25 @@ jobs:
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: litestar-granian-raw
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
+  bench-robyn-raw:
+    name: robyn-raw
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v6
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: robyn-raw
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
