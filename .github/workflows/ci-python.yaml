@@ -9,6 +9,11 @@ on:
       - 'pyproject.toml'
       - 'uv.lock'
       - 'crates/spikard/**/*.rs'
+      - 'crates/spikard-http/**/*.rs'
+      - 'testing_data/**'
+      - '.github/workflows/ci-python.yaml'
+      - '.github/actions/setup-python-env/**'
+      - '.github/actions/setup-rust/**'
   pull_request:
     branches: [main]
     paths:
@@ -17,6 +22,11 @@ on:
       - 'pyproject.toml'
       - 'uv.lock'
       - 'crates/spikard/**/*.rs'
+      - 'crates/spikard-http/**/*.rs'
+      - 'testing_data/**'
+      - '.github/workflows/ci-python.yaml'
+      - '.github/actions/setup-python-env/**'
+      - '.github/actions/setup-rust/**'
 
 concurrency:
   group: ci-python-${{ github.event.pull_request.number || github.ref }}
@@ -106,9 +116,41 @@ jobs:
       - name: Run pytest
         run: cd packages/python && uv run pytest tests/ -v
 
+  build-python-sdist:
+    name: Build Python Source Distribution
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: python-sdist
+
+      - name: Setup Python
+        uses: ./.github/actions/setup-python-env
+        with:
+          python-version: "3.13"
+          cache-prefix: python-sdist
+
+      - name: Install maturin
+        run: uv pip install maturin
+
+      - name: Build source distribution
+        run: uv run maturin sdist --manifest-path crates/spikard-py/Cargo.toml
+
+      - name: Upload sdist artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-sdist
+          path: target/wheels/*.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
   python-complete:
     name: Python Tests Complete
-    needs: [build-python-wheels, test-python]
+    needs: [build-python-wheels, test-python, build-python-sdist]
     if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
