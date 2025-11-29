@@ -17,7 +17,7 @@ on:
         required: false
         type: string
       targets:
-        description: "Comma-separated list of release targets (all, python, node, ruby, cli, crates, wasm, homebrew)"
+        description: "Comma-separated list of release targets (all, python, node, ruby, php, cli, crates, wasm, homebrew)"
         required: false
         type: string
   push:
@@ -54,6 +54,7 @@ jobs:
       release_python: ${{ steps.meta.outputs.release_python }}
       release_node: ${{ steps.meta.outputs.release_node }}
       release_ruby: ${{ steps.meta.outputs.release_ruby }}
+      release_php: ${{ steps.meta.outputs.release_php }}
       release_cli: ${{ steps.meta.outputs.release_cli }}
       release_crates: ${{ steps.meta.outputs.release_crates }}
       release_wasm: ${{ steps.meta.outputs.release_wasm }}
@@ -142,6 +143,7 @@ jobs:
           release_python=false
           release_node=false
           release_ruby=false
+          release_php=false
           release_cli=false
           release_crates=false
           release_wasm=false
@@ -151,6 +153,7 @@ jobs:
             release_python=true
             release_node=true
             release_ruby=true
+            release_php=true
             release_cli=true
             release_crates=true
             release_wasm=true
@@ -180,6 +183,9 @@ jobs:
               ruby)
                 release_ruby=true
                 ;;
+              php)
+                release_php=true
+                ;;
               cli)
                 release_cli=true
                 ;;
@@ -196,13 +202,14 @@ jobs:
                 release_python=false
                 release_node=false
                 release_ruby=false
+                release_php=false
                 release_cli=false
                 release_crates=false
                 release_wasm=false
                 release_homebrew=false
                 ;;
               *)
-                echo "Unknown release target '$trimmed'. Allowed: all, python, node, ruby, cli, crates, wasm, homebrew." >&2
+                echo "Unknown release target '$trimmed'. Allowed: all, python, node, ruby, php, cli, crates, wasm, homebrew." >&2
                 exit 1
                 ;;
             esac
@@ -217,11 +224,12 @@ jobs:
           if [[ "$release_python" == "true" ]]; then enabled_targets+=("python"); fi
           if [[ "$release_node" == "true" ]]; then enabled_targets+=("node"); fi
           if [[ "$release_ruby" == "true" ]]; then enabled_targets+=("ruby"); fi
+          if [[ "$release_php" == "true" ]]; then enabled_targets+=("php"); fi
           if [[ "$release_cli" == "true" ]]; then enabled_targets+=("cli"); fi
           if [[ "$release_crates" == "true" ]]; then enabled_targets+=("crates"); fi
           if [[ "$release_wasm" == "true" ]]; then enabled_targets+=("wasm"); fi
 
-          if [[ ${#enabled_targets[@]} -eq 6 ]]; then
+          if [[ ${#enabled_targets[@]} -eq 7 ]]; then
             release_targets_summary="all"
           elif [[ ${#enabled_targets[@]} -eq 0 ]]; then
             release_targets_summary="none"
@@ -249,6 +257,7 @@ jobs:
             "release_python": $release_python,
             "release_node": $release_node,
             "release_ruby": $release_ruby,
+            "release_php": $release_php,
             "release_cli": $release_cli,
             "release_crates": $release_crates,
             "release_wasm": $release_wasm
@@ -267,6 +276,7 @@ jobs:
           echo "release_python=$release_python" >> "$GITHUB_OUTPUT"
           echo "release_node=$release_node" >> "$GITHUB_OUTPUT"
           echo "release_ruby=$release_ruby" >> "$GITHUB_OUTPUT"
+          echo "release_php=$release_php" >> "$GITHUB_OUTPUT"
           echo "release_cli=$release_cli" >> "$GITHUB_OUTPUT"
           echo "release_crates=$release_crates" >> "$GITHUB_OUTPUT"
           echo "release_wasm=$release_wasm" >> "$GITHUB_OUTPUT"
@@ -842,6 +852,106 @@ jobs:
           path: packages/ruby/pkg/*.gem
           retention-days: 14
 
+  build-php-extension:
+    name: Build PHP extension (${{ matrix.os }}, PHP ${{ matrix.php_version }})
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_php == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            php_version: "8.2"
+          - os: ubuntu-latest
+            php_version: "8.3"
+          - os: macos-14
+            php_version: "8.2"
+          - os: macos-14
+            php_version: "8.3"
+          - os: windows-latest
+            php_version: "8.2"
+          - os: windows-latest
+            php_version: "8.3"
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Ensure target commit
+        if: ${{ needs.prepare.outputs.target_sha != '' }}
+        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
+
+      - name: Setup LLVM/Clang
+        uses: egor-tensin/setup-llvm@v1
+        with:
+          version: latest
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php_version }}
+          extensions: json
+
+      - name: Build PHP extension
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo build --release -p spikard-php
+
+      - name: Package PHP extension artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          os_name="${{ matrix.os }}"
+          php_version="${{ matrix.php_version }}"
+
+          case "$os_name" in
+            ubuntu-latest)
+              os_label="linux"
+              ;;
+            macos-14)
+              os_label="macos"
+              ;;
+            windows-latest)
+              os_label="windows"
+              ;;
+            *)
+              os_label="unknown"
+              ;;
+          esac
+
+          artifact_name="php-extension-${os_label}-${php_version}"
+          mkdir -p "$artifact_name"
+
+          # Copy relevant build artifacts
+          if [ -f "target/release/libspikard_php.so" ]; then
+            cp target/release/libspikard_php.so "$artifact_name/" || true
+          fi
+          if [ -f "target/release/spikard_php.dll" ]; then
+            cp target/release/spikard_php.dll "$artifact_name/" || true
+          fi
+          if [ -f "target/release/libspikard_php.dylib" ]; then
+            cp target/release/libspikard_php.dylib "$artifact_name/" || true
+          fi
+
+          tar -czf "${artifact_name}.tar.gz" "$artifact_name"
+          rm -rf "$artifact_name"
+
+      - name: Upload PHP extension artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: php-extension-${{ matrix.os }}-${{ matrix.php_version }}
+          path: php-extension-*.tar.gz
+          retention-days: 14
+
   wasm-package:
     name: Build WebAssembly package
     needs: prepare
@@ -985,6 +1095,7 @@ jobs:
       - node-bindings
       - cli-binaries
       - ruby-gem
+      - build-php-extension
       - wasm-package
       - cargo-packages
     if: |
@@ -998,6 +1109,7 @@ jobs:
       (needs.node-bindings.result == 'success' || needs.node-bindings.result == 'skipped') &&
       (needs.cli-binaries.result == 'success' || needs.cli-binaries.result == 'skipped') &&
       (needs.ruby-gem.result == 'success' || needs.ruby-gem.result == 'skipped') &&
+      (needs.build-php-extension.result == 'success' || needs.build-php-extension.result == 'skipped') &&
       (needs.wasm-package.result == 'success' || needs.wasm-package.result == 'skipped') &&
       (needs.cargo-packages.result == 'success' || needs.cargo-packages.result == 'skipped')
     runs-on: ubuntu-latest
@@ -1500,3 +1612,48 @@ jobs:
             Auto-update from release ${{ steps.release.outputs.tag }}
         env:
           COMMITTER_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
+
+  publish-packagist:
+    name: Publish PHP extension to Packagist
+    needs: [prepare, upload-release-artifacts]
+    if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_php == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - name: Verify composer.json version matches tag
+        run: |
+          set -euo pipefail
+          composer_version=$(grep '"version"' packages/php/composer.json | head -1 | sed -E 's/.*"version": "(.*)".*/\1/')
+          tag_version="${{ needs.prepare.outputs.version }}"
+          if [ "$composer_version" != "$tag_version" ]; then
+            echo "Version mismatch! composer.json: $composer_version, tag: $tag_version" >&2
+            exit 1
+          fi
+          echo "composer.json version matches tag: $composer_version"
+
+      - name: Notify Packagist
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        env:
+          PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag="${{ needs.prepare.outputs.tag }}"
+          if [ -z "$PACKAGIST_TOKEN" ]; then
+            echo "::warning::Packagist token not available; skipping automatic package update. Package will be indexed on next scheduled refresh."
+            echo "Packagist token not available; manual refresh may be needed." >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          curl -X POST https://packagist.org/api/github \
+            -H "Authorization: Bearer $PACKAGIST_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"repository":"https://github.com/Goldziher/spikard","tag":"'"$tag"'"}' \
+            || echo "::warning::Failed to notify Packagist; package may require manual refresh."
+
+      - name: Dry run summary
+        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
+        run: |
+          echo "Dry run requested; Packagist notification skipped." >> "$GITHUB_STEP_SUMMARY"

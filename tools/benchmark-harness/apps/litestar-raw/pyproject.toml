@@ -13,5 +13,6 @@ classifiers = [
 ]
 dependencies = [
   "litestar",
+  "sniffio",
   "uvicorn[standard]",
 ]

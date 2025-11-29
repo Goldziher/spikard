@@ -88,6 +88,13 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
+            "spikard-php",
+            vec!["server.php".to_string()],
+            None,
+            "php server.php {port}",
+            None,
+        ),
+        FrameworkConfig::new(
             "spikard-wasm",
             vec!["server.js".to_string()],
             None,
@@ -104,6 +111,13 @@ fn framework_registry() -> Vec<FrameworkConfig> {
         ),
         FrameworkConfig::new(
             "fastapi-uvicorn",
+            vec!["server.py".to_string()],
+            None,
+            "uv run python server.py {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "fastapi-python",
             vec!["server.py".to_string()],
             None,
             "uv run python server.py {port}",
@@ -411,16 +425,18 @@ mod tests {
         let registry = framework_registry();
         let names: Vec<&str> = registry.iter().map(|f| f.name.as_str()).collect();
 
-        // Spikard bindings (5)
+        // Spikard bindings (6)
         assert!(names.contains(&"spikard-rust"));
         assert!(names.contains(&"spikard-python"));
         assert!(names.contains(&"spikard-node"));
         assert!(names.contains(&"spikard-ruby"));
+        assert!(names.contains(&"spikard-php"));
         assert!(names.contains(&"spikard-wasm"));
 
-        // Python validated (6)
+        // Python validated (7)
         assert!(names.contains(&"axum-baseline"));
         assert!(names.contains(&"fastapi-uvicorn"));
+        assert!(names.contains(&"fastapi-python"));
         assert!(names.contains(&"fastapi-granian"));
         assert!(names.contains(&"litestar-uvicorn"));
         assert!(names.contains(&"litestar-granian"));
@@ -454,7 +470,7 @@ mod tests {
         assert!(names.contains(&"trongate"));
         assert!(names.contains(&"phalcon"));
 
-        assert_eq!(registry.len(), 31);
+        assert_eq!(registry.len(), 33);
     }
 
     #[test]
@@ -513,7 +529,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        assert_eq!(frameworks.len(), 31);
+        assert_eq!(frameworks.len(), 33);
     }
 
     #[test]
