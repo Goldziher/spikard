@@ -71,7 +71,7 @@ jobs:
         run: cargo build --release -p spikard-php --features extension-module
 
       - name: Upload PHP extension artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: php-extension-${{ matrix.os }}
           path: target/release/*.so
@@ -116,7 +116,7 @@ jobs:
             ${{ runner.os }}-composer-${{ matrix.php }}-
 
       - name: Download PHP extension artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v4
         with:
           name: php-extension-${{ matrix.os }}
           path: target/release

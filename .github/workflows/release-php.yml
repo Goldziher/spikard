@@ -324,7 +324,7 @@ jobs:
           tools: composer:2.9.1
 
       - name: Download extension artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v4
         with:
           pattern: php-extension-*
           path: php-exts
@@ -450,14 +450,14 @@ jobs:
           ref: ${{ needs.prepare.outputs.ref }}
 
       - name: Download PHP extensions
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v4
         with:
           pattern: php-extension-*
           path: dist/php-extensions
           merge-multiple: true
 
       - name: Download PHP PIE bundle
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v4
         with:
           name: php-pie-src
           path: dist/php-pie
