@@ -25,6 +25,9 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Setup Rust (needed for maturin and wasm-pack)
+      uses: ./.github/actions/setup-rust
+
     - name: Install oha load generator
       shell: bash
       run: |
@@ -97,10 +100,10 @@ runs:
       shell: bash
       working-directory: crates/spikard-py
       run: |
-        # Install maturin with uv in the project environment
+        # Ensure maturin is installed (required for building Python bindings)
         uv pip install maturin
-        # Build the Python binding using maturin
-        uv run maturin develop --release
+        # Build and install the Python binding in development mode
+        uv run maturin develop --release --features extension-module
 
     - name: Build Node binding (if needed)
       if: steps.detect.outputs.language == 'node' && inputs.framework == 'spikard-node'
@@ -123,6 +126,29 @@ runs:
       shell: bash
       working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
       run: bundle install --local
+
+    - name: Install pnpm for WASM builds
+      if: steps.detect.outputs.language == 'wasm'
+      uses: pnpm/action-setup@v4
+
+    - name: Setup Node for WASM
+      if: steps.detect.outputs.language == 'wasm'
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'pnpm'
+
+    - name: Build WASM binding (if needed)
+      if: steps.detect.outputs.language == 'wasm' && inputs.framework == 'spikard-wasm'
+      shell: bash
+      run: |
+        # Build the WASM module using wasm-pack
+        cd crates/spikard-wasm
+        pnpm install
+        pnpm run build:node
+        # Install framework benchmark app dependencies
+        cd ../../tools/benchmark-harness/apps/spikard-wasm
+        pnpm install
 
     - name: Create results directory
       shell: bash
