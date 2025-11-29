@@ -106,12 +106,11 @@ runs:
       shell: bash
       working-directory: crates/spikard-py
       run: |
-        # Ensure maturin is installed (required for building Python bindings)
-        uv pip install maturin || { echo "Failed to install maturin"; exit 1; }
-        # Verify maturin is available
-        python -m maturin --version || { echo "maturin not found in PATH"; exit 1; }
+        # maturin is already installed via uv sync from the root pyproject.toml dev dependencies
+        # Use uv run to execute maturin from the uv-managed virtual environment
+        uv run maturin --version || { echo "maturin not found in uv environment"; exit 1; }
         # Build and install the Python binding in development mode
-        python -m maturin develop --release --features extension-module || { echo "Failed to build Python binding"; exit 1; }
+        uv run maturin develop --release --features extension-module || { echo "Failed to build Python binding"; exit 1; }
 
     - name: Build Node binding (if needed)
       if: steps.detect.outputs.language == 'node' && inputs.framework == 'spikard-node'
@@ -162,9 +161,11 @@ runs:
         cd crates/spikard-wasm
         pnpm install
         pnpm run build:node
+
         # Install framework benchmark app dependencies
+        # Use --force to ensure workspace dependencies are properly linked
         cd ../../tools/benchmark-harness/apps/spikard-wasm
-        pnpm install
+        pnpm install --force
 
     - name: Create results directory
       shell: bash

@@ -20,8 +20,6 @@ on:
         description: "Comma-separated list of release targets (all, python, node, ruby, php, cli, crates, wasm, homebrew)"
         required: false
         type: string
-  release:
-    types: [published]
   repository_dispatch:
     types: [publish-release]
 
