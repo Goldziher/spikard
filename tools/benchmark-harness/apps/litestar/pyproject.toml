@@ -1,0 +1,26 @@
+# /// script
+# dependencies = [
+#     "litestar",
+#     "uvicorn[standard]",
+#     "msgspec",
+# ]
+# ///
+
+[project]
+name = "litestar-benchmark"
+version = "0.1.0"
+description = "Litestar benchmark application"
+requires-python = ">=3.10"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+  "litestar",
+  "msgspec>=0.19",
+  "uvicorn[standard]",
+]

@@ -1069,12 +1069,11 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "1.3.1"
+version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4a85d31aea989eead29a3aaf9e1115a180df8282431156e533de47660892565"
+checksum = "e3ba2a386d7f85a81f119ad7498ebe444d2e22c2af0b86b069416ace48b3311a"
 dependencies = [
  "bytes",
- "fnv",
  "itoa",
 ]
 
@@ -2427,11 +2426,13 @@ dependencies = [
 
 [[package]]
 name = "spikard"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "axum",
  "axum-test",
+ "base64",
+ "bytes",
  "schemars",
  "serde",
  "serde_json",
@@ -2441,13 +2442,14 @@ dependencies = [
 
 [[package]]
 name = "spikard-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "base64",
  "brotli",
  "flate2",
  "http",
+ "indexmap",
  "jiff",
  "jsonschema",
  "regex",
@@ -2461,7 +2463,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-http"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -2502,7 +2504,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-rust-bench"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "axum",
  "clap",
@@ -2787,9 +2789,9 @@ dependencies = [
 
 [[package]]
 name = "tower-http"
-version = "0.6.6"
+version = "0.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "adc82fd73de2a9722ac5da747f12383d2bfdb93591ee6c58486e0097890f05f2"
+checksum = "9cf146f99d442e8e68e585f5d798ccd3cad9a7835b917e09728880a862706456"
 dependencies = [
  "async-compression",
  "bitflags",

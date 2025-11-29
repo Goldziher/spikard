@@ -57,6 +57,7 @@ dependencies = [
   "httpx>=0.28.1",
   "httpx-sse>=0.4.3",
   "msgspec>=0.19",
+  "typing-extensions>=4",
   "uvloop>=0.22; sys_platform!='win32'",
   "websockets>=15.0.1",
 ]

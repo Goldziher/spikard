@@ -60,6 +60,10 @@ runs:
         python-version: "3.13"
         cache-prefix: benchmark-${{ inputs.framework }}
 
+    - name: Install pnpm
+      if: steps.detect.outputs.language == 'node'
+      uses: pnpm/action-setup@v4
+
     - name: Setup Node environment
       if: steps.detect.outputs.language == 'node'
       uses: actions/setup-node@v4
@@ -73,6 +77,12 @@ runs:
       with:
         ruby-version: '3.2'
         bundler-cache: true
+
+    - name: Install Node dependencies
+      if: steps.detect.outputs.language == 'node'
+      shell: bash
+      working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
+      run: pnpm install --frozen-lockfile
 
     - name: Build Python binding (if needed)
       if: steps.detect.outputs.language == 'python' && (inputs.framework == 'spikard' || inputs.framework == 'spikard-python' || inputs.framework == 'spikard-raw')
