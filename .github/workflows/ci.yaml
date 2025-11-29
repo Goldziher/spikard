@@ -57,6 +57,13 @@ jobs:
               }
             fi
             set -e  # Re-enable strict error handling
+
+            # Validate LLVM installation before using it
+            if ! command -v llvm-config &> /dev/null && ! brew --prefix llvm &> /dev/null; then
+              echo "Error: LLVM installation failed - llvm-config not found and brew --prefix llvm returned nothing"
+              exit 1
+            fi
+
             LLVM_PREFIX="$(brew --prefix llvm)"
             LLVM_LIBDIR="${LLVM_PREFIX}/lib"
             LLVM_VERSION="$(\"${LLVM_PREFIX}/bin/llvm-config\" --version | cut -d. -f1)"
@@ -169,6 +176,13 @@ jobs:
               }
             fi
             set -e  # Re-enable strict error handling
+
+            # Validate LLVM installation before using it
+            if ! command -v llvm-config &> /dev/null && ! brew --prefix llvm &> /dev/null; then
+              echo "Error: LLVM installation failed - llvm-config not found and brew --prefix llvm returned nothing"
+              exit 1
+            fi
+
             LLVM_PREFIX="$(brew --prefix llvm)"
             LLVM_LIBDIR="${LLVM_PREFIX}/lib"
             LLVM_VERSION="$(\"${LLVM_PREFIX}/bin/llvm-config\" --version | cut -d. -f1)"
@@ -524,6 +538,13 @@ jobs:
               }
             fi
             set -e  # Re-enable strict error handling
+
+            # Validate LLVM installation before using it
+            if ! command -v llvm-config &> /dev/null && ! brew --prefix llvm &> /dev/null; then
+              echo "Error: LLVM installation failed - llvm-config not found and brew --prefix llvm returned nothing"
+              exit 1
+            fi
+
             LLVM_PREFIX="$(brew --prefix llvm)"
             LLVM_LIBDIR="${LLVM_PREFIX}/lib"
             LLVM_VERSION="$(\"${LLVM_PREFIX}/bin/llvm-config\" --version | cut -d. -f1)"
