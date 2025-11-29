@@ -44,9 +44,11 @@ runs:
         # Determine language based on framework name and app directory
         if [[ "$framework" == *"-rust" ]] || [[ "$framework" == "axum-baseline" ]]; then
           echo "language=rust" >> $GITHUB_OUTPUT
-        elif [[ "$framework" == *"-python" ]] || [[ "$framework" == "fastapi"* ]] || [[ "$framework" == "litestar"* ]] || [[ "$framework" == "robyn" ]] || [[ "$framework" == "spikard" ]] || [[ "$framework" == *"-raw" ]]; then
+        elif [[ "$framework" == "phalcon" ]] || [[ "$framework" == "trongate" ]] || [[ "$framework" == "spikard-php" ]]; then
+          echo "language=php" >> $GITHUB_OUTPUT
+        elif [[ "$framework" == *"-python" ]] || [[ "$framework" == "fastapi"* ]] || [[ "$framework" == "litestar"* ]] || [[ "$framework" == "robyn"* ]] || [[ "$framework" == "spikard-raw" ]] || [[ "$framework" == "spikard-python" ]]; then
           echo "language=python" >> $GITHUB_OUTPUT
-        elif [[ "$framework" == *"-node" ]] || [[ "$framework" == "fastify"* ]] || [[ "$framework" == "hono"* ]] || [[ "$framework" == "express"* ]]; then
+        elif [[ "$framework" == *"-node" ]] || [[ "$framework" == "fastify"* ]] || [[ "$framework" == "hono"* ]] || [[ "$framework" == "express"* ]] || [[ "$framework" == "elysia" ]] || [[ "$framework" == "morojs" ]]; then
           echo "language=node" >> $GITHUB_OUTPUT
         elif [[ "$framework" == *"-ruby" ]] || [[ "$framework" == "hanami-api"* ]] || [[ "$framework" == "roda"* ]]; then
           echo "language=ruby" >> $GITHUB_OUTPUT
