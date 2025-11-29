@@ -211,6 +211,11 @@ nav:
       - ADR 0005 - Lifecycle Hooks: adr/0005-lifecycle-hooks.md
       - ADR 0006 - Streaming and Async Protocols: adr/0006-streaming-and-async-protocols.md
       - ADR 0007 - Observability and OTEL: adr/0007-observability-and-otel.md
-  - Benchmarks: benchmarks/harness-design.md
+  - Benchmarks:
+      - Overview: benchmarks/index.md
+      - Methodology: benchmarks/methodology.md
+      - Frameworks: benchmarks/frameworks.md
+      - Running Benchmarks: benchmarks/running.md
+      - Harness Design: benchmarks/harness-design.md
   - Contributing: contributing.md
   - Changelog: changelog.md
