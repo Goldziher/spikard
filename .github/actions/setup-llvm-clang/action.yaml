@@ -1,0 +1,79 @@
+name: Setup LLVM/Clang
+description: Install LLVM and Clang for bindgen (ext-php-rs, rb-sys)
+
+runs:
+  using: composite
+  steps:
+    - name: Install LLVM/Clang (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        set -euo pipefail
+        sudo apt-get update
+        sudo apt-get install -y llvm-dev libclang-dev clang
+        LLVM_LIBDIR="$(llvm-config --libdir)"
+        LLVM_VERSION="$(llvm-config --version | cut -d. -f1)"
+        echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+        echo "BINDGEN_EXTRA_CLANG_ARGS=-I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include" >> "$GITHUB_ENV"
+
+    - name: Install LLVM/Clang (macOS)
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        # Check if LLVM is already installed
+        if brew list llvm &>/dev/null; then
+          echo "LLVM already installed"
+          brew link --overwrite llvm 2>/dev/null || true
+        else
+          echo "Installing LLVM"
+          brew install llvm || {
+            echo "Installation failed, trying to link existing installation"
+            brew link --overwrite llvm || true
+          }
+        fi
+
+        # Validate LLVM installation before using it
+        if ! command -v llvm-config &> /dev/null && ! brew --prefix llvm &> /dev/null; then
+          echo "Error: LLVM installation failed - llvm-config not found and brew --prefix llvm returned nothing"
+          exit 1
+        fi
+
+        LLVM_PREFIX="$(brew --prefix llvm)"
+        LLVM_LIBDIR="${LLVM_PREFIX}/lib"
+        LLVM_VERSION="$("${LLVM_PREFIX}/bin/llvm-config" --version | cut -d. -f1)"
+        SDK_PATH="$(xcrun --show-sdk-path)"
+
+        echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+        echo "DYLD_FALLBACK_LIBRARY_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+        echo "LDFLAGS=-L${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+        echo "CPPFLAGS=-I${LLVM_PREFIX}/include" >> "$GITHUB_ENV"
+        echo "CMAKE_PREFIX_PATH=${LLVM_PREFIX}" >> "$GITHUB_ENV"
+        echo "BINDGEN_EXTRA_CLANG_ARGS=-nostdinc -I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include -isysroot ${SDK_PATH} -I${SDK_PATH}/usr/include" >> "$GITHUB_ENV"
+        echo "${LLVM_PREFIX}/bin" >> "$GITHUB_PATH"
+
+    - name: Install LLVM/Clang (Windows)
+      if: runner.os == 'Windows'
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        # Check for existing LLVM installation (using MSYS path format)
+        if [ -d "/c/Program Files/LLVM" ]; then
+          echo "LLVM already installed, using existing version"
+          LLVM_LIBDIR="/c/Program Files/LLVM/bin"
+        else
+          choco install llvm --version 18.1.8 -y || {
+            echo "Failed to install LLVM 18.1.8, checking for any existing version"
+            LLVM_LIBDIR="/c/Program Files/LLVM/bin"
+          }
+        fi
+
+        # Validate LLVM installation before proceeding
+        if [ ! -d "${LLVM_LIBDIR}" ]; then
+          echo "Error: LLVM installation failed - ${LLVM_LIBDIR} does not exist"
+          exit 1
+        fi
+
+        echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"

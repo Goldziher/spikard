@@ -1,0 +1,145 @@
+name: CI Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-validate-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  RUST_BACKTRACE: short
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  lint-rust:
+    name: Lint Rust
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: lint-rust
+
+      - name: Check Rust formatting
+        run: cargo fmt --all --check
+
+      - name: Run Clippy
+        run: cargo clippy --workspace --all-features -- -D warnings
+
+  lint-python:
+    name: Lint Python
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: ./.github/actions/setup-python-env
+        with:
+          python-version: "3.13"
+          cache-prefix: lint-python
+
+      - name: Check Ruff linting
+        run: uv run ruff check .
+
+      - name: Check Ruff formatting
+        run: uv run ruff format --check .
+
+      - name: Run mypy type checking
+        run: uv run mypy tools packages/python
+
+  lint-typescript:
+    name: Lint TypeScript
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: ./.github/actions/setup-node-workspace
+        with:
+          node-version: "20"
+
+      - name: Run Biome check
+        run: pnpm biome check packages/node/src crates/spikard-node/src e2e/node --log-level=warn
+
+      - name: Run oxlint
+        run: pnpm oxlint packages/node/src crates/spikard-node/src e2e/node
+
+  lint-ruby:
+    name: Lint Ruby
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: Run Rubocop
+        working-directory: packages/ruby
+        run: bundle exec rubocop
+
+      - name: Run Steep typecheck
+        working-directory: packages/ruby
+        run: bundle exec steep check
+
+  lint-php:
+    name: Lint PHP
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup LLVM/Clang (for bindgen)
+        uses: ./.github/actions/setup-llvm-clang
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer
+          coverage: none
+
+      - name: Setup Composer Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.composer/cache
+            packages/php/vendor
+          key: ${{ runner.os }}-composer-8.3-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-8.3-
+
+      - name: Install PHP dependencies
+        working-directory: packages/php
+        run: composer install --no-interaction --no-progress
+
+      - name: Run PHPStan
+        working-directory: packages/php
+        run: composer run lint
+
+  validation-complete:
+    name: Validation Complete
+    needs: [lint-rust, lint-python, lint-typescript, lint-ruby, lint-php]
+    if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: echo "All validation checks passed"
