@@ -4,7 +4,7 @@
 set -e
 
 echo "Starting Fastify server on port 9995..."
-npm start 9995 > /tmp/fastify_verify.log 2>&1 &
+pnpm start 9995 > /tmp/fastify_verify.log 2>&1 &
 SERVER_PID=$!
 sleep 2
 

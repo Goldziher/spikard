@@ -1389,7 +1389,7 @@ jobs:
           cd crates/spikard-node/npm
           for dir in */; do
             if [ -f "$dir/package.json" ]; then
-              (cd "$dir" && npm pack && mv *.tgz ..)
+              (cd "$dir" && pnpm pack && mv *.tgz ..)
             fi
           done
 
