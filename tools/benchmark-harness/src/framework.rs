@@ -67,7 +67,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "spikard",
+            "spikard-python",
             vec!["server.py".to_string()],
             None,
             "uv run python server.py {port}",
@@ -103,7 +103,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "fastapi",
+            "fastapi-uvicorn",
             vec!["server.py".to_string()],
             None,
             "uv run python server.py {port}",
@@ -154,6 +154,13 @@ fn framework_registry() -> Vec<FrameworkConfig> {
         ),
         FrameworkConfig::new(
             "litestar-granian-raw",
+            vec!["server.py".to_string()],
+            None,
+            "uv run server.py {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "robyn-raw",
             vec!["server.py".to_string()],
             None,
             "uv run server.py {port}",
@@ -217,7 +224,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "litestar",
+            "litestar-uvicorn",
             vec!["server.py".to_string()],
             None,
             "uv run server.py {port}",
@@ -406,31 +413,34 @@ mod tests {
 
         // Spikard bindings (5)
         assert!(names.contains(&"spikard-rust"));
-        assert!(names.contains(&"spikard"));
+        assert!(names.contains(&"spikard-python"));
         assert!(names.contains(&"spikard-node"));
         assert!(names.contains(&"spikard-ruby"));
         assert!(names.contains(&"spikard-wasm"));
 
         // Python validated (6)
         assert!(names.contains(&"axum-baseline"));
-        assert!(names.contains(&"fastapi"));
+        assert!(names.contains(&"fastapi-uvicorn"));
         assert!(names.contains(&"fastapi-granian"));
-        assert!(names.contains(&"litestar"));
+        assert!(names.contains(&"litestar-uvicorn"));
         assert!(names.contains(&"litestar-granian"));
         assert!(names.contains(&"robyn"));
 
-        // Python raw (5)
+        // Python raw (6)
         assert!(names.contains(&"spikard-raw"));
         assert!(names.contains(&"fastapi-raw"));
         assert!(names.contains(&"fastapi-granian-raw"));
         assert!(names.contains(&"litestar-raw"));
         assert!(names.contains(&"litestar-granian-raw"));
+        assert!(names.contains(&"robyn-raw"));
 
-        // TypeScript (6)
+        // TypeScript (8)
         assert!(names.contains(&"fastify"));
         assert!(names.contains(&"fastify-raw"));
         assert!(names.contains(&"hono"));
         assert!(names.contains(&"hono-raw"));
+        assert!(names.contains(&"elysia"));
+        assert!(names.contains(&"morojs"));
         assert!(names.contains(&"express"));
         assert!(names.contains(&"express-raw"));
 
@@ -440,7 +450,11 @@ mod tests {
         assert!(names.contains(&"roda"));
         assert!(names.contains(&"roda-raw"));
 
-        assert_eq!(registry.len(), 30);
+        // PHP (2)
+        assert!(names.contains(&"trongate"));
+        assert!(names.contains(&"phalcon"));
+
+        assert_eq!(registry.len(), 31);
     }
 
     #[test]
@@ -499,7 +513,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        assert_eq!(frameworks.len(), 30);
+        assert_eq!(frameworks.len(), 31);
     }
 
     #[test]
@@ -535,7 +549,7 @@ mod tests {
 
         let result = detect_framework(temp_dir.path());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().name, "spikard");
+        assert_eq!(result.unwrap().name, "spikard-python");
     }
 
     #[test]
