@@ -3,22 +3,24 @@ name: CI Rust
 on:
   push:
     branches: [main]
-    paths:
-      - 'crates/**/*.rs'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-      - 'rust-toolchain.toml'
-      - '.github/workflows/ci-rust.yaml'
-      - '.github/actions/setup-rust/**'
+    # TODO: Re-enable path filters once CI is validated green
+    # paths:
+    #   - 'crates/**/*.rs'
+    #   - 'Cargo.toml'
+    #   - 'Cargo.lock'
+    #   - 'rust-toolchain.toml'
+    #   - '.github/workflows/ci-rust.yaml'
+    #   - '.github/actions/setup-rust/**'
   pull_request:
     branches: [main]
-    paths:
-      - 'crates/**/*.rs'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-      - 'rust-toolchain.toml'
-      - '.github/workflows/ci-rust.yaml'
-      - '.github/actions/setup-rust/**'
+    # TODO: Re-enable path filters once CI is validated green
+    # paths:
+    #   - 'crates/**/*.rs'
+    #   - 'Cargo.toml'
+    #   - 'Cargo.lock'
+    #   - 'rust-toolchain.toml'
+    #   - '.github/workflows/ci-rust.yaml'
+    #   - '.github/actions/setup-rust/**'
 
 concurrency:
   group: ci-rust-${{ github.event.pull_request.number || github.ref }}

@@ -1,7 +1,6 @@
 """Spikard - High-performance HTTP framework with Rust core."""
 
-from _spikard import Response, StreamingResponse
-
+from _spikard import Response, StreamingResponse  # type: ignore[attr-defined]
 from spikard import background
 from spikard._internal.converters import register_decoder
 from spikard.app import HttpMethod, Spikard
