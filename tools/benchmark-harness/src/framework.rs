@@ -160,20 +160,20 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         // TypeScript frameworks
-        FrameworkConfig::new("fastify", vec!["server.ts".to_string()], None, "npm start {port}", None),
+        FrameworkConfig::new("fastify", vec!["server.ts".to_string()], None, "npm run start -- {port}", None),
         FrameworkConfig::new(
             "fastify-raw",
             vec!["server.js".to_string()],
             None,
-            "npm start {port}",
+            "npm start -- {port}",
             None,
         ),
-        FrameworkConfig::new("hono", vec!["server.ts".to_string()], None, "npm start {port}", None),
+        FrameworkConfig::new("hono", vec!["server.ts".to_string()], None, "npm run start -- {port}", None),
         FrameworkConfig::new(
             "hono-raw",
             vec!["server.ts".to_string()],
             None,
-            "npm start {port}",
+            "npm run start -- {port}",
             None,
         ),
         FrameworkConfig::new(
@@ -183,19 +183,19 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "bun run server.ts {port}",
             None,
         ),
-        FrameworkConfig::new("morojs", vec!["server.ts".to_string()], None, "npm start {port}", None),
+        FrameworkConfig::new("morojs", vec!["server.ts".to_string()], None, "npm run start -- {port}", None),
         FrameworkConfig::new(
             "express",
             vec!["server.ts".to_string()],
             None,
-            "npm run start:ts {port}",
+            "npm run start:ts -- {port}",
             None,
         ),
         FrameworkConfig::new(
             "express-raw",
             vec!["server.ts".to_string()],
             None,
-            "npm start {port}",
+            "npm start -- {port}",
             None,
         ),
         FrameworkConfig::new(

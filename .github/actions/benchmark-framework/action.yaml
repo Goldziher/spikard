@@ -60,6 +60,14 @@ runs:
         python-version: "3.13"
         cache-prefix: benchmark-${{ inputs.framework }}
 
+    - name: Install framework-specific dependencies
+      if: steps.detect.outputs.language == 'python'
+      shell: bash
+      working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
+      run: |
+        # Install dependencies from the benchmark app's pyproject.toml
+        uv pip install -e .
+
     - name: Install pnpm
       if: steps.detect.outputs.language == 'node'
       uses: pnpm/action-setup@v4
@@ -89,10 +97,9 @@ runs:
       shell: bash
       working-directory: crates/spikard-py
       run: |
-        # Install maturin if not available
-        if ! uv run --isolated --with maturin maturin --version &>/dev/null; then
-          uv pip install maturin
-        fi
+        # Install maturin with uv in the project environment
+        uv pip install maturin
+        # Build the Python binding using maturin
         uv run maturin develop --release
 
     - name: Build Node binding (if needed)
@@ -110,6 +117,12 @@ runs:
       run: |
         bundle install
         bundle exec rake compile
+
+    - name: Install Ruby benchmark app dependencies
+      if: steps.detect.outputs.language == 'ruby' && inputs.framework == 'spikard-ruby'
+      shell: bash
+      working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
+      run: bundle install --local
 
     - name: Create results directory
       shell: bash
