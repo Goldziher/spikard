@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 concurrency:
-  group: ci-validate-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ci-validate-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 env:

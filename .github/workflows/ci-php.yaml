@@ -1,0 +1,129 @@
+name: CI PHP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - crates/spikard-php/**
+      - packages/php/**
+      - composer.lock
+      - crates/spikard/**/*.rs
+  pull_request:
+    branches: [main]
+    paths:
+      - crates/spikard-php/**
+      - packages/php/**
+      - composer.lock
+      - crates/spikard/**/*.rs
+
+concurrency:
+  group: ci-php-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  RUST_BACKTRACE: short
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-php-extension:
+    name: Build PHP Extension (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: build-php-${{ matrix.os }}
+
+      - name: Setup LLVM/Clang
+        uses: ./.github/actions/setup-llvm-clang
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer
+          coverage: none
+
+      - name: Build PHP extension
+        run: cargo build --release -p spikard-php --features extension-module
+
+      - name: Upload PHP extension artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: php-extension-${{ matrix.os }}
+          path: target/release/*.so
+          retention-days: 7
+
+  test-php:
+    name: Test PHP (${{ matrix.php }} | ${{ matrix.os }})
+    needs: build-php-extension
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        php: ["8.2", "8.3"]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: test-php-${{ matrix.os }}-${{ matrix.php }}
+
+      - name: Setup LLVM/Clang
+        uses: ./.github/actions/setup-llvm-clang
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          tools: composer
+          coverage: none
+
+      - name: Setup Composer Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.composer/cache
+            packages/php/vendor
+          key: ${{ runner.os }}-composer-${{ matrix.php }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-${{ matrix.php }}-
+
+      - name: Download PHP extension artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: php-extension-${{ matrix.os }}
+          path: target/release
+
+      - name: Install PHP dependencies
+        working-directory: packages/php
+        run: composer install --no-interaction --no-progress
+
+      - name: Run PHP tests
+        working-directory: packages/php
+        run: composer test
+
+  php-complete:
+    name: PHP Tests Complete
+    needs: [build-php-extension, test-php]
+    if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: echo "PHP tests passed"

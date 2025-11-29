@@ -1,0 +1,129 @@
+name: CI Ruby
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'crates/spikard-rb/**'
+      - 'packages/ruby/**'
+      - 'Gemfile.lock'
+      - 'crates/spikard/**/*.rs'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'crates/spikard-rb/**'
+      - 'packages/ruby/**'
+      - 'Gemfile.lock'
+      - 'crates/spikard/**/*.rs'
+
+concurrency:
+  group: ci-ruby-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  RUST_BACKTRACE: short
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-ruby-gem:
+    name: Build Ruby Gem (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: ruby-gem-${{ matrix.os }}
+
+      - name: Setup LLVM/Clang (for magnus bindgen)
+        uses: ./.github/actions/setup-llvm-clang
+
+      - name: Setup Ruby
+        id: setup-ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: packages/ruby
+
+      - name: Build Ruby gem
+        working-directory: packages/ruby
+        env:
+          RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
+        run: bundle exec rake compile
+
+      - name: Upload Ruby gem
+        uses: actions/upload-artifact@v6
+        with:
+          name: ruby-gem-${{ matrix.os }}
+          path: packages/ruby/**/*.so
+          retention-days: 7
+
+  test-ruby:
+    name: Test Ruby (${{ matrix.os }}, Ruby ${{ matrix.ruby-version }})
+    needs: build-ruby-gem
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            ruby-version: "3.2"
+          - os: ubuntu-latest
+            ruby-version: "3.3"
+          - os: macos-latest
+            ruby-version: "3.2"
+          - os: macos-latest
+            ruby-version: "3.3"
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: ruby-tests-${{ matrix.os }}-${{ matrix.ruby-version }}
+
+      - name: Setup LLVM/Clang (for magnus bindgen)
+        uses: ./.github/actions/setup-llvm-clang
+
+      - name: Setup Ruby
+        id: setup-ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
+          working-directory: packages/ruby
+
+      - name: Download Ruby gem artifacts
+        uses: actions/download-artifact@v6
+        with:
+          name: ruby-gem-${{ matrix.os }}
+          path: packages/ruby/
+
+      - name: Run Ruby specs
+        working-directory: packages/ruby
+        env:
+          RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
+        run: bundle exec rspec
+
+  ruby-complete:
+    name: Ruby CI Complete
+    needs: [build-ruby-gem, test-ruby]
+    if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: echo "Ruby CI completed successfully"
