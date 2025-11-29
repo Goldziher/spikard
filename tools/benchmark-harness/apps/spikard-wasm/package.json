@@ -1,0 +1,20 @@
+{
+  "name": "spikard-wasm-benchmark",
+  "version": "0.1.0",
+  "description": "Spikard WASM benchmark server for workload comparison",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js 8000"
+  },
+  "dependencies": {
+    "spikard-wasm": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
