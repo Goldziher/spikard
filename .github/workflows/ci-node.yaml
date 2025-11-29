@@ -8,6 +8,11 @@ on:
       - 'packages/node/**'
       - 'pnpm-lock.yaml'
       - 'crates/spikard/**/*.rs'
+      - 'crates/spikard-http/**/*.rs'
+      - 'testing_data/**'
+      - '.github/workflows/ci-node.yaml'
+      - '.github/actions/setup-node-workspace/**'
+      - '.github/actions/setup-rust/**'
   pull_request:
     branches: [main]
     paths:
@@ -15,6 +20,11 @@ on:
       - 'packages/node/**'
       - 'pnpm-lock.yaml'
       - 'crates/spikard/**/*.rs'
+      - 'crates/spikard-http/**/*.rs'
+      - 'testing_data/**'
+      - '.github/workflows/ci-node.yaml'
+      - '.github/actions/setup-node-workspace/**'
+      - '.github/actions/setup-rust/**'
 
 concurrency:
   group: ci-node-${{ github.event.pull_request.number || github.ref }}

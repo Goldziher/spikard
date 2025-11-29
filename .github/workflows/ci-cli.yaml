@@ -4,17 +4,23 @@ on:
   push:
     branches: [main]
     paths:
-      - crates/spikard-cli/**
-      - crates/spikard/**/*.rs
-      - Cargo.toml
-      - Cargo.lock
+      - "crates/spikard-cli/**"
+      - "crates/spikard/**/*.rs"
+      - "crates/spikard-http/**/*.rs"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/ci-cli.yaml"
+      - ".github/actions/setup-rust/**"
   pull_request:
     branches: [main]
     paths:
-      - crates/spikard-cli/**
-      - crates/spikard/**/*.rs
-      - Cargo.toml
-      - Cargo.lock
+      - "crates/spikard-cli/**"
+      - "crates/spikard/**/*.rs"
+      - "crates/spikard-http/**/*.rs"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/ci-cli.yaml"
+      - ".github/actions/setup-rust/**"
 
 concurrency:
   group: ci-cli-${{ github.event.pull_request.number || github.ref }}

@@ -2,7 +2,7 @@ name: CI Status
 
 on:
   workflow_run:
-    workflows: ["CI", "CI Validate"]
+    workflows: ["CI Validate", "CI Rust", "CI Python", "CI Node", "CI Ruby", "CI PHP", "CI CLI", "CI Smoke Tests"]
     types: [completed]
 
 permissions:

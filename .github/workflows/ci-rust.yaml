@@ -8,6 +8,8 @@ on:
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'rust-toolchain.toml'
+      - '.github/workflows/ci-rust.yaml'
+      - '.github/actions/setup-rust/**'
   pull_request:
     branches: [main]
     paths:
@@ -15,6 +17,8 @@ on:
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'rust-toolchain.toml'
+      - '.github/workflows/ci-rust.yaml'
+      - '.github/actions/setup-rust/**'
 
 concurrency:
   group: ci-rust-${{ github.event.pull_request.number || github.ref }}

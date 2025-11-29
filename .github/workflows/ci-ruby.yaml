@@ -8,6 +8,11 @@ on:
       - 'packages/ruby/**'
       - 'Gemfile.lock'
       - 'crates/spikard/**/*.rs'
+      - 'crates/spikard-http/**/*.rs'
+      - 'testing_data/**'
+      - '.github/workflows/ci-ruby.yaml'
+      - '.github/actions/setup-llvm-clang/**'
+      - '.github/actions/setup-rust/**'
   pull_request:
     branches: [main]
     paths:
@@ -15,6 +20,11 @@ on:
       - 'packages/ruby/**'
       - 'Gemfile.lock'
       - 'crates/spikard/**/*.rs'
+      - 'crates/spikard-http/**/*.rs'
+      - 'testing_data/**'
+      - '.github/workflows/ci-ruby.yaml'
+      - '.github/actions/setup-llvm-clang/**'
+      - '.github/actions/setup-rust/**'
 
 concurrency:
   group: ci-ruby-${{ github.event.pull_request.number || github.ref }}

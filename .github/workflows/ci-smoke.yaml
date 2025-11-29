@@ -4,15 +4,33 @@ on:
   push:
     branches: [main]
     paths:
-      - crates/**
-      - packages/**
-      - examples/**
+      - crates/spikard/**/*.rs
+      - crates/spikard-http/**/*.rs
+      - crates/spikard-py/**
+      - crates/spikard-node/**
+      - packages/python/**
+      - packages/node/**
+      - examples/python/**
+      - examples/node/**
+      - .github/workflows/ci-smoke.yaml
+      - .github/actions/setup-rust/**
+      - .github/actions/setup-python-env/**
+      - .github/actions/setup-node-workspace/**
   pull_request:
     branches: [main]
     paths:
-      - crates/**
-      - packages/**
-      - examples/**
+      - crates/spikard/**/*.rs
+      - crates/spikard-http/**/*.rs
+      - crates/spikard-py/**
+      - crates/spikard-node/**
+      - packages/python/**
+      - packages/node/**
+      - examples/python/**
+      - examples/node/**
+      - .github/workflows/ci-smoke.yaml
+      - .github/actions/setup-rust/**
+      - .github/actions/setup-python-env/**
+      - .github/actions/setup-node-workspace/**
 
 concurrency:
   group: ci-smoke-${{ github.event.pull_request.number || github.ref }}
