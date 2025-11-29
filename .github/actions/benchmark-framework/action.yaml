@@ -116,13 +116,18 @@ runs:
     - name: Build Node binding (if needed)
       if: steps.detect.outputs.language == 'node' && inputs.framework == 'spikard-node'
       shell: bash
-      working-directory: crates/spikard-node
       run: |
-        # Clean old bindings to avoid platform mismatches
-        rm -f *.node
+        # Clean old bindings in both locations to avoid platform mismatches
+        rm -f crates/spikard-node/*.node
+        rm -f packages/node/*.node
+
+        cd crates/spikard-node
         pnpm install
         # Build for current platform using napi --platform flag
         pnpm exec napi build --platform --release
+
+        # Copy built binding to packages/node where the benchmark app expects it
+        cp *.node ../../packages/node/ || true
 
     - name: Build Ruby binding (if needed)
       if: steps.detect.outputs.language == 'ruby' && inputs.framework == 'spikard-ruby'
