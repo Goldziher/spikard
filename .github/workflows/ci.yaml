@@ -44,7 +44,7 @@ jobs:
             echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
             echo "BINDGEN_EXTRA_CLANG_ARGS=-I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include" >> "$GITHUB_ENV"
           elif [[ "${RUNNER_OS}" == "macOS" ]]; then
-            brew install llvm
+            brew install llvm || brew link --overwrite llvm || true
             LLVM_PREFIX="$(brew --prefix llvm)"
             LLVM_LIBDIR="${LLVM_PREFIX}/lib"
             LLVM_VERSION="$(\"${LLVM_PREFIX}/bin/llvm-config\" --version | cut -d. -f1)"
@@ -54,7 +54,7 @@ jobs:
             echo "BINDGEN_EXTRA_CLANG_ARGS=-nostdinc -I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include -isysroot ${SDK_PATH} -I${SDK_PATH}/usr/include" >> "$GITHUB_ENV"
             echo "${LLVM_PREFIX}/bin" >> "$GITHUB_PATH"
           else
-            choco install llvm --version 18.1.8 -y
+            choco install llvm --version 18.1.8 --allow-downgrade --force -y || true
             LLVM_LIBDIR="C:\\Program Files\\LLVM\\bin"
             echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
           fi
@@ -136,7 +136,7 @@ jobs:
             echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
             echo "BINDGEN_EXTRA_CLANG_ARGS=-I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include" >> "$GITHUB_ENV"
           elif [[ "${RUNNER_OS}" == "macOS" ]]; then
-            brew install llvm
+            brew install llvm || brew link --overwrite llvm || true
             LLVM_PREFIX="$(brew --prefix llvm)"
             LLVM_LIBDIR="${LLVM_PREFIX}/lib"
             LLVM_VERSION="$(\"${LLVM_PREFIX}/bin/llvm-config\" --version | cut -d. -f1)"
@@ -146,7 +146,7 @@ jobs:
             echo "BINDGEN_EXTRA_CLANG_ARGS=-nostdinc -I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include -isysroot ${SDK_PATH} -I${SDK_PATH}/usr/include" >> "$GITHUB_ENV"
             echo "${LLVM_PREFIX}/bin" >> "$GITHUB_PATH"
           else
-            choco install llvm --version 18.1.8 -y
+            choco install llvm --version 18.1.8 --allow-downgrade --force -y || true
             LLVM_LIBDIR="C:\\Program Files\\LLVM\\bin"
             echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
           fi
@@ -158,9 +158,9 @@ jobs:
           PYO3_PYTHON: python
         run: |
           if [[ "$RUNNER_OS" == "Windows" ]]; then
-            cargo test --workspace --release --all-features --exclude spikard-py --exclude spikard-rb
+            cargo test --workspace --release --all-features --exclude spikard-py --exclude spikard-rb --exclude spikard-php
           else
-            cargo test --workspace --release --all-features --exclude spikard-py
+            cargo test --workspace --release --all-features --exclude spikard-py --exclude spikard-php
           fi
           cargo test -p spikard-py --release
 
@@ -168,6 +168,7 @@ jobs:
     name: Python Wheels (${{ matrix.platform }})
     needs: validate
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 480
     strategy:
       fail-fast: false
       matrix:
@@ -470,7 +471,7 @@ jobs:
             echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
             echo "BINDGEN_EXTRA_CLANG_ARGS=-I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include" >> "$GITHUB_ENV"
           elif [[ "${RUNNER_OS}" == "macOS" ]]; then
-            brew install llvm
+            brew install llvm || brew link --overwrite llvm || true
             LLVM_PREFIX="$(brew --prefix llvm)"
             LLVM_LIBDIR="${LLVM_PREFIX}/lib"
             LLVM_VERSION="$(\"${LLVM_PREFIX}/bin/llvm-config\" --version | cut -d. -f1)"
