@@ -98,7 +98,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "spikard-wasm",
             vec!["server.js".to_string()],
             None,
-            "wasmtime run -- server.js {port}",
+            "node server.js {port}",
             None,
         ),
         // Baseline and alternative frameworks
