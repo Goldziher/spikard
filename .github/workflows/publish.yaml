@@ -1081,80 +1081,9 @@ jobs:
           path: crate-artifacts/*.crate
           retention-days: 14
 
-  upload-release-artifacts:
-    name: Upload release artifacts
-    needs:
-      - prepare
-      - python-wheels
-      - python-sdist
-      - python-wrapper
-      - node-bindings
-      - cli-binaries
-      - ruby-gem
-      - build-php-extension
-      - wasm-package
-      - cargo-packages
-    if: |
-      always() &&
-      needs.prepare.result == 'success' &&
-      needs.prepare.outputs.dry_run != 'true' &&
-      needs.prepare.outputs.is_tag == 'true' &&
-      (needs.python-wheels.result == 'success' || needs.python-wheels.result == 'skipped') &&
-      (needs.python-sdist.result == 'success' || needs.python-sdist.result == 'skipped') &&
-      (needs.python-wrapper.result == 'success' || needs.python-wrapper.result == 'skipped') &&
-      (needs.node-bindings.result == 'success' || needs.node-bindings.result == 'skipped') &&
-      (needs.cli-binaries.result == 'success' || needs.cli-binaries.result == 'skipped') &&
-      (needs.ruby-gem.result == 'success' || needs.ruby-gem.result == 'skipped') &&
-      (needs.build-php-extension.result == 'success' || needs.build-php-extension.result == 'skipped') &&
-      (needs.wasm-package.result == 'success' || needs.wasm-package.result == 'skipped') &&
-      (needs.cargo-packages.result == 'success' || needs.cargo-packages.result == 'skipped')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Ensure GitHub release exists
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          tag="${{ needs.prepare.outputs.tag }}"
-          if gh release view "$tag" >/dev/null 2>&1; then
-            echo "Release $tag already exists"
-          else
-            gh release create "$tag" --title "$tag" --generate-notes
-          fi
-
-      - name: Download CLI artifacts
-        if: ${{ needs.prepare.outputs.release_cli == 'true' }}
-        uses: actions/download-artifact@v4
-        with:
-          pattern: cli-*
-          path: dist/cli
-          merge-multiple: true
-
-      - name: Upload CLI binaries to release
-        if: ${{ needs.prepare.outputs.release_cli == 'true' }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          shopt -s nullglob
-          files=(dist/cli/spikard-cli-*)
-          if [ ${#files[@]} -eq 0 ]; then
-            echo "No CLI artifacts to upload" >&2
-            exit 1
-          fi
-          for file in "${files[@]}"; do
-            gh release upload ${{ needs.prepare.outputs.tag }} "$file" --clobber
-          done
-
   publish-crates:
     name: Publish crates.io packages
-    needs: [prepare, upload-release-artifacts]
+    needs: [prepare, cargo-packages]
     if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_crates == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -1286,7 +1215,7 @@ jobs:
 
   publish-pypi:
     name: Publish Python packages to PyPI
-    needs: [prepare, upload-release-artifacts]
+    needs: [prepare, python-wheels, python-sdist, python-wrapper]
     if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_python == 'true' }}
     runs-on: ubuntu-latest
     environment: pypi
@@ -1330,7 +1259,7 @@ jobs:
 
   publish-rubygems:
     name: Publish Ruby gems
-    needs: [prepare, upload-release-artifacts]
+    needs: [prepare, ruby-gem]
     if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_ruby == 'true' }}
     runs-on: ubuntu-latest
     permissions:
@@ -1394,7 +1323,7 @@ jobs:
 
   publish-node:
     name: Publish Node packages
-    needs: [prepare, upload-release-artifacts]
+    needs: [prepare, node-bindings]
     if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_node == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -1527,7 +1456,7 @@ jobs:
 
   publish-wasm:
     name: Publish WASM to npm
-    needs: [prepare, upload-release-artifacts]
+    needs: [prepare, wasm-package]
     if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_wasm == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -1572,9 +1501,55 @@ jobs:
         if: ${{ needs.prepare.outputs.dry_run == 'true' }}
         run: echo "Dry run requested; WASM publish skipped." >> "$GITHUB_STEP_SUMMARY"
 
+  publish-cli-release:
+    name: Upload CLI to GitHub release
+    needs: [prepare, cli-binaries]
+    if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_cli == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - name: Ensure GitHub release exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag="${{ needs.prepare.outputs.tag }}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists"
+          else
+            gh release create "$tag" --title "$tag" --generate-notes
+          fi
+
+      - name: Download CLI artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cli-*
+          path: dist/cli
+          merge-multiple: true
+
+      - name: Upload CLI binaries to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          shopt -s nullglob
+          files=(dist/cli/spikard-cli-*)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No CLI artifacts to upload" >&2
+            exit 1
+          fi
+          for file in "${files[@]}"; do
+            gh release upload ${{ needs.prepare.outputs.tag }} "$file" --clobber
+          done
+
   publish-homebrew:
     name: Update Homebrew formula
-    needs: [prepare, upload-release-artifacts]
+    needs: [prepare, publish-cli-release]
     if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.dry_run != 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_homebrew == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -1611,7 +1586,7 @@ jobs:
 
   publish-packagist:
     name: Publish PHP extension to Packagist
-    needs: [prepare, upload-release-artifacts]
+    needs: [prepare, build-php-extension]
     if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_php == 'true' }}
     runs-on: ubuntu-latest
     steps:
