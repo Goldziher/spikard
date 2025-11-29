@@ -15,4 +15,5 @@ dependencies = [
   "granian",
   "litestar",
   "msgspec>=0.19",
+  "sniffio",
 ]

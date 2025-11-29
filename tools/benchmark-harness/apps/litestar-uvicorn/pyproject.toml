@@ -22,5 +22,6 @@ classifiers = [
 dependencies = [
   "litestar",
   "msgspec>=0.19",
+  "sniffio",
   "uvicorn[standard]",
 ]

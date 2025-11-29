@@ -41,16 +41,20 @@ runs:
       run: |
         framework="${{ inputs.framework }}"
 
-        # Determine language based on framework name and app directory
+        # Determine language based on framework name patterns
+        # Patterns: rust (-rust, axum-baseline), php (phalcon, trongate, spikard-php),
+        # python (fastapi*, litestar*, robyn*, spikard-python, spikard-raw),
+        # node (fastify*, hono*, express*, elysia, morojs, spikard-node, spikard-wasm),
+        # ruby (-ruby, hanami-api*, roda*), wasm (-wasm)
         if [[ "$framework" == *"-rust" ]] || [[ "$framework" == "axum-baseline" ]]; then
           echo "language=rust" >> $GITHUB_OUTPUT
         elif [[ "$framework" == "phalcon" ]] || [[ "$framework" == "trongate" ]] || [[ "$framework" == "spikard-php" ]]; then
           echo "language=php" >> $GITHUB_OUTPUT
-        elif [[ "$framework" == *"-python" ]] || [[ "$framework" == "fastapi"* ]] || [[ "$framework" == "litestar"* ]] || [[ "$framework" == "robyn"* ]] || [[ "$framework" == "spikard-raw" ]] || [[ "$framework" == "spikard-python" ]]; then
+        elif [[ "$framework" == fastapi* ]] || [[ "$framework" == litestar* ]] || [[ "$framework" == robyn* ]] || [[ "$framework" == "spikard-python" ]] || [[ "$framework" == "spikard-raw" ]]; then
           echo "language=python" >> $GITHUB_OUTPUT
-        elif [[ "$framework" == *"-node" ]] || [[ "$framework" == "fastify"* ]] || [[ "$framework" == "hono"* ]] || [[ "$framework" == "express"* ]] || [[ "$framework" == "elysia" ]] || [[ "$framework" == "morojs" ]]; then
+        elif [[ "$framework" == *"-node" ]] || [[ "$framework" == fastify* ]] || [[ "$framework" == hono* ]] || [[ "$framework" == express* ]] || [[ "$framework" == "elysia" ]] || [[ "$framework" == "morojs" ]] || [[ "$framework" == "spikard-wasm" ]]; then
           echo "language=node" >> $GITHUB_OUTPUT
-        elif [[ "$framework" == *"-ruby" ]] || [[ "$framework" == "hanami-api"* ]] || [[ "$framework" == "roda"* ]]; then
+        elif [[ "$framework" == *"-ruby" ]] || [[ "$framework" == hanami-api* ]] || [[ "$framework" == roda* ]]; then
           echo "language=ruby" >> $GITHUB_OUTPUT
         elif [[ "$framework" == *"-wasm" ]]; then
           echo "language=wasm" >> $GITHUB_OUTPUT
@@ -103,17 +107,22 @@ runs:
       working-directory: crates/spikard-py
       run: |
         # Ensure maturin is installed (required for building Python bindings)
-        uv pip install maturin
+        uv pip install maturin || { echo "Failed to install maturin"; exit 1; }
+        # Verify maturin is available
+        python -m maturin --version || { echo "maturin not found in PATH"; exit 1; }
         # Build and install the Python binding in development mode
-        uv run maturin develop --release --features extension-module
+        python -m maturin develop --release --features extension-module || { echo "Failed to build Python binding"; exit 1; }
 
     - name: Build Node binding (if needed)
       if: steps.detect.outputs.language == 'node' && inputs.framework == 'spikard-node'
       shell: bash
       working-directory: crates/spikard-node
       run: |
+        # Clean old bindings to avoid platform mismatches
+        rm -f *.node
         pnpm install
-        pnpm exec napi build --release
+        # Build for current platform using napi --platform flag
+        pnpm exec napi build --platform --release
 
     - name: Build Ruby binding (if needed)
       if: steps.detect.outputs.language == 'ruby' && inputs.framework == 'spikard-ruby'
