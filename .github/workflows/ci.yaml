@@ -70,6 +70,9 @@ jobs:
             SDK_PATH="$(xcrun --show-sdk-path)"
             echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
             echo "DYLD_FALLBACK_LIBRARY_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+            echo "LDFLAGS=-L${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+            echo "CPPFLAGS=-I${LLVM_PREFIX}/include" >> "$GITHUB_ENV"
+            echo "CMAKE_PREFIX_PATH=${LLVM_PREFIX}" >> "$GITHUB_ENV"
             echo "BINDGEN_EXTRA_CLANG_ARGS=-nostdinc -I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include -isysroot ${SDK_PATH} -I${SDK_PATH}/usr/include" >> "$GITHUB_ENV"
             echo "${LLVM_PREFIX}/bin" >> "$GITHUB_PATH"
           else
@@ -189,6 +192,9 @@ jobs:
             SDK_PATH="$(xcrun --show-sdk-path)"
             echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
             echo "DYLD_FALLBACK_LIBRARY_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+            echo "LDFLAGS=-L${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+            echo "CPPFLAGS=-I${LLVM_PREFIX}/include" >> "$GITHUB_ENV"
+            echo "CMAKE_PREFIX_PATH=${LLVM_PREFIX}" >> "$GITHUB_ENV"
             echo "BINDGEN_EXTRA_CLANG_ARGS=-nostdinc -I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include -isysroot ${SDK_PATH} -I${SDK_PATH}/usr/include" >> "$GITHUB_ENV"
             echo "${LLVM_PREFIX}/bin" >> "$GITHUB_PATH"
           else
@@ -551,6 +557,9 @@ jobs:
             SDK_PATH="$(xcrun --show-sdk-path)"
             echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
             echo "DYLD_FALLBACK_LIBRARY_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+            echo "LDFLAGS=-L${LLVM_LIBDIR}" >> "$GITHUB_ENV"
+            echo "CPPFLAGS=-I${LLVM_PREFIX}/include" >> "$GITHUB_ENV"
+            echo "CMAKE_PREFIX_PATH=${LLVM_PREFIX}" >> "$GITHUB_ENV"
             echo "BINDGEN_EXTRA_CLANG_ARGS=-nostdinc -I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include -isysroot ${SDK_PATH} -I${SDK_PATH}/usr/include" >> "$GITHUB_ENV"
             echo "${LLVM_PREFIX}/bin" >> "$GITHUB_PATH"
           fi

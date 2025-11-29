@@ -230,6 +230,25 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
+  bench-fastapi-python:
+    name: fastapi-python
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v6
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: fastapi-python
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
   bench-litestar-uvicorn:
     name: litestar-uvicorn
     needs: build-harness
@@ -463,6 +482,25 @@ jobs:
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
+  bench-elysia:
+    name: elysia
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v6
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: elysia
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
   bench-hono-raw:
     name: hono-raw
     needs: build-harness
@@ -516,6 +554,25 @@ jobs:
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: express-raw
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
+  bench-morojs:
+    name: morojs
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v6
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: morojs
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
@@ -593,6 +650,67 @@ jobs:
       - uses: ./.github/actions/benchmark-framework
         with:
           framework: roda-raw
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
+  # PHP frameworks (4 frameworks)
+  bench-phalcon:
+    name: phalcon
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v6
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: phalcon
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
+  bench-spikard-php:
+    name: spikard-php
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v6
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: bench-spikard-php
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: spikard-php
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '30' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
+  bench-trongate:
+    name: trongate
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v6
+        with:
+          name: benchmark-harness
+          path: ~/.cargo/bin
+      - run: chmod +x ~/.cargo/bin/benchmark-harness
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: trongate
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '30' }}
           concurrency: ${{ inputs.concurrency || '100' }}
