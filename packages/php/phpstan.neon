@@ -5,7 +5,7 @@ parameters:
         - tests
     tmpDir: var/cache/phpstan
     bootstrapFiles:
-        - ../../vendor/autoload.php
+        - vendor/autoload.php
         - tests/bootstrap.php
     scanFiles:
         - stubs/ext.php
