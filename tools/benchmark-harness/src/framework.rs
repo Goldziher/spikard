@@ -241,6 +241,21 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "ruby server.rb {port}",
             None,
         ),
+        // PHP frameworks
+        FrameworkConfig::new(
+            "trongate",
+            vec!["server.php".to_string()],
+            None,
+            "php server.php {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "phalcon",
+            vec!["server.php".to_string(), "composer.json".to_string()],
+            Some("composer install --no-dev --optimize-autoloader".to_string()),
+            "php server.php {port}",
+            None,
+        ),
     ]
 }
 
@@ -407,7 +422,7 @@ mod tests {
         assert!(names.contains(&"roda"));
         assert!(names.contains(&"roda-raw"));
 
-        assert_eq!(registry.len(), 28);
+        assert_eq!(registry.len(), 30);
     }
 
     #[test]
@@ -466,7 +481,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        assert_eq!(frameworks.len(), 28);
+        assert_eq!(frameworks.len(), 30);
     }
 
     #[test]
