@@ -1,0 +1,92 @@
+name: CI Smoke Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - crates/**
+      - packages/**
+      - examples/**
+  pull_request:
+    branches: [main]
+    paths:
+      - crates/**
+      - packages/**
+      - examples/**
+
+concurrency:
+  group: ci-smoke-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  RUST_BACKTRACE: short
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  smoke-python:
+    name: Smoke Test Python
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: smoke-python
+
+      - name: Setup Python
+        uses: ./.github/actions/setup-python-env
+        with:
+          python-version: "3.13"
+          cache-prefix: smoke-python
+
+      - name: Build Python binding (dev)
+        run: |
+          cd crates/spikard-py
+          cargo build --dev
+
+      - name: Run Python smoke test
+        run: |
+          cd examples/python
+          uv run python main.py
+
+  smoke-node:
+    name: Smoke Test Node
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: smoke-node
+
+      - name: Setup Node Workspace
+        uses: ./.github/actions/setup-node-workspace
+        with:
+          node-version: "20"
+
+      - name: Build Node binding
+        run: pnpm --filter @spikard/node run build:debug
+
+      - name: Run Node smoke test
+        run: |
+          cd examples/node
+          node index.js
+
+  smoke-complete:
+    name: Smoke Tests Complete
+    needs: [smoke-python, smoke-node]
+    if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: echo "Smoke tests passed"
