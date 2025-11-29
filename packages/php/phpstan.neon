@@ -9,12 +9,3 @@ parameters:
         - tests/bootstrap.php
     scanFiles:
         - stubs/ext.php
-    ignoreErrors:
-        # Test assertions on literals and already-narrowed types are acceptable
-        - '#Call to method PHPUnit\\Framework\\Assert::(assertIsString|assertIsInt|assertIsFloat|assertIsBool|assertTrue|assertFalse|assertNull|assertIsArray|assertIsCallable)\(\) with .+ will always evaluate to (true|false)#'
-        - '#Call to function is_array\(\) with array.* will always evaluate to true#'
-        - '#Strict comparison using !== between .+ and null will always evaluate to true#'
-        - '#Cannot access offset .+ on mixed#'
-        -
-            message: '#Call to function is_array\(\) with array will always evaluate to true#'
-            path: tests/StreamingResponseTest.php

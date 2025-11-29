@@ -75,7 +75,7 @@ jobs:
         run: pnpm exec napi build --release
 
       - name: Upload Node bindings
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: napi-${{ matrix.os }}
           path: crates/spikard-node/*.node
@@ -103,7 +103,7 @@ jobs:
           cache: pnpm
 
       - name: Download Node bindings
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v4
         with:
           name: napi-${{ matrix.os }}
           path: crates/spikard-node/
