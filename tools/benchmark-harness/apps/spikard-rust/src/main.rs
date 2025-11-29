@@ -360,6 +360,7 @@ async fn main() {
     let config = ServerConfig {
         host: "0.0.0.0".to_string(),
         port: args.port,
+        graceful_shutdown: true,
         ..Default::default()
     };
 

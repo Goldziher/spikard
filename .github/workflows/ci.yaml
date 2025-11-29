@@ -44,7 +44,19 @@ jobs:
             echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
             echo "BINDGEN_EXTRA_CLANG_ARGS=-I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include" >> "$GITHUB_ENV"
           elif [[ "${RUNNER_OS}" == "macOS" ]]; then
-            brew install llvm || brew link --overwrite llvm || true
+            set +e  # Allow commands to fail gracefully
+            # Check if LLVM is already installed
+            if brew list llvm &>/dev/null; then
+              echo "LLVM already installed"
+              brew link --overwrite llvm 2>/dev/null || true
+            else
+              echo "Installing LLVM"
+              brew install llvm || {
+                echo "Installation failed, trying to link existing installation"
+                brew link --overwrite llvm || true
+              }
+            fi
+            set -e  # Re-enable strict error handling
             LLVM_PREFIX="$(brew --prefix llvm)"
             LLVM_LIBDIR="${LLVM_PREFIX}/lib"
             LLVM_VERSION="$(\"${LLVM_PREFIX}/bin/llvm-config\" --version | cut -d. -f1)"
@@ -54,8 +66,16 @@ jobs:
             echo "BINDGEN_EXTRA_CLANG_ARGS=-nostdinc -I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include -isysroot ${SDK_PATH} -I${SDK_PATH}/usr/include" >> "$GITHUB_ENV"
             echo "${LLVM_PREFIX}/bin" >> "$GITHUB_PATH"
           else
-            choco install llvm --version 18.1.8 --allow-downgrade --force -y || true
-            LLVM_LIBDIR="C:\\Program Files\\LLVM\\bin"
+            # Windows: Check for existing LLVM installation
+            if [ -d "C:\\Program Files\\LLVM" ]; then
+              echo "LLVM already installed, using existing version"
+              LLVM_LIBDIR="C:\\Program Files\\LLVM\\bin"
+            else
+              choco install llvm --version 18.1.8 -y || {
+                echo "Failed to install LLVM 18.1.8, checking for any existing version"
+                LLVM_LIBDIR="C:\\Program Files\\LLVM\\bin"
+              }
+            fi
             echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
           fi
 
@@ -136,7 +156,19 @@ jobs:
             echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
             echo "BINDGEN_EXTRA_CLANG_ARGS=-I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include" >> "$GITHUB_ENV"
           elif [[ "${RUNNER_OS}" == "macOS" ]]; then
-            brew install llvm || brew link --overwrite llvm || true
+            set +e  # Allow commands to fail gracefully
+            # Check if LLVM is already installed
+            if brew list llvm &>/dev/null; then
+              echo "LLVM already installed"
+              brew link --overwrite llvm 2>/dev/null || true
+            else
+              echo "Installing LLVM"
+              brew install llvm || {
+                echo "Installation failed, trying to link existing installation"
+                brew link --overwrite llvm || true
+              }
+            fi
+            set -e  # Re-enable strict error handling
             LLVM_PREFIX="$(brew --prefix llvm)"
             LLVM_LIBDIR="${LLVM_PREFIX}/lib"
             LLVM_VERSION="$(\"${LLVM_PREFIX}/bin/llvm-config\" --version | cut -d. -f1)"
@@ -146,8 +178,16 @@ jobs:
             echo "BINDGEN_EXTRA_CLANG_ARGS=-nostdinc -I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include -isysroot ${SDK_PATH} -I${SDK_PATH}/usr/include" >> "$GITHUB_ENV"
             echo "${LLVM_PREFIX}/bin" >> "$GITHUB_PATH"
           else
-            choco install llvm --version 18.1.8 --allow-downgrade --force -y || true
-            LLVM_LIBDIR="C:\\Program Files\\LLVM\\bin"
+            # Windows: Check for existing LLVM installation
+            if [ -d "C:\\Program Files\\LLVM" ]; then
+              echo "LLVM already installed, using existing version"
+              LLVM_LIBDIR="C:\\Program Files\\LLVM\\bin"
+            else
+              choco install llvm --version 18.1.8 -y || {
+                echo "Failed to install LLVM 18.1.8, checking for any existing version"
+                LLVM_LIBDIR="C:\\Program Files\\LLVM\\bin"
+              }
+            fi
             echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
           fi
 
@@ -471,7 +511,19 @@ jobs:
             echo "LIBCLANG_PATH=${LLVM_LIBDIR}" >> "$GITHUB_ENV"
             echo "BINDGEN_EXTRA_CLANG_ARGS=-I${LLVM_LIBDIR}/clang/${LLVM_VERSION}/include" >> "$GITHUB_ENV"
           elif [[ "${RUNNER_OS}" == "macOS" ]]; then
-            brew install llvm || brew link --overwrite llvm || true
+            set +e  # Allow commands to fail gracefully
+            # Check if LLVM is already installed
+            if brew list llvm &>/dev/null; then
+              echo "LLVM already installed"
+              brew link --overwrite llvm 2>/dev/null || true
+            else
+              echo "Installing LLVM"
+              brew install llvm || {
+                echo "Installation failed, trying to link existing installation"
+                brew link --overwrite llvm || true
+              }
+            fi
+            set -e  # Re-enable strict error handling
             LLVM_PREFIX="$(brew --prefix llvm)"
             LLVM_LIBDIR="${LLVM_PREFIX}/lib"
             LLVM_VERSION="$(\"${LLVM_PREFIX}/bin/llvm-config\" --version | cut -d. -f1)"

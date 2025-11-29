@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+# /// script
+# dependencies = [
+#     "fastapi",
+#     "pydantic",
+#     "uvicorn[standard]",
+# ]
+# ///
 """FastAPI benchmark server with Granian for workload comparison.
 
 Uses ORJSONResponse for optimal JSON performance + Granian Rust server.
