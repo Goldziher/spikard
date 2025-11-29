@@ -2,538 +2,554 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://spikard.dev/1.0/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/RELEASE_SETUP/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/changelog/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/contributing/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/features/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/php-di-design/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/adr/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/adr/0001-architecture-and-principles/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/adr/0002-runtime-and-middleware/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/adr/0003-validation-and-fixtures/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/adr/0004-code-generation/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/adr/0005-lifecycle-hooks/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/adr/0006-streaming-and-async-protocols/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/adr/0007-observability-and-otel/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/adr/0008-dependency-injection/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/adr/TEMPLATE/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
+    </url>
+    <url>
+         <loc>https://spikard.dev/1.0/benchmarks/</loc>
+         <lastmod>2025-11-29</lastmod>
+    </url>
+    <url>
+         <loc>https://spikard.dev/1.0/benchmarks/frameworks/</loc>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/benchmarks/harness-design/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
+    </url>
+    <url>
+         <loc>https://spikard.dev/1.0/benchmarks/methodology/</loc>
+         <lastmod>2025-11-29</lastmod>
+    </url>
+    <url>
+         <loc>https://spikard.dev/1.0/benchmarks/running/</loc>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/bindings/python/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/bindings/ruby/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/bindings/rust/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/bindings/typescript/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/bindings/wasm/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/cli/usage/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/concepts/architecture-diagram/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/concepts/architecture/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/concepts/middleware/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/concepts/runtime/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/concepts/streaming/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/concepts/validation/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/getting-started/installation/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/getting-started/quickstart/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/guides/configuration/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/guides/dependency-injection/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/guides/deployment/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/guides/middleware/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/guides/requests/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/guides/routing/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/guides/validation/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/playbooks/auth/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/playbooks/background/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/playbooks/errors/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/playbooks/logging/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/playbooks/streaming/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/playbooks/uploads/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/python/architecture/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/reference/api-python/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/reference/api-ruby/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/reference/api-rust/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/reference/api-typescript/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/reference/configuration/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/reference/errors/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/reference/types/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/cli/run_app/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/php/auth_middleware/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/php/background_task/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/php/dependency_injection/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/php/hello_route/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/php/middleware_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/php/path_params/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/php/quickstart_routes/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/php/request_data/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/php/response_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/php/routing_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/php/run_app/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/php/sse/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/php/streaming/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/php/upload/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/php/validation_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/php/websocket/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/python/auth_middleware/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/python/background_task/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/python/dependency_injection/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/python/hello_route/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/python/middleware_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/python/path_params/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/python/quickstart_routes/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/python/request_data/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/python/response_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/python/routing_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/python/run_app/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/python/sse/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/python/streaming/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/python/upload/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/python/validation_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/python/websocket/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/ruby/auth_middleware/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/ruby/background_task/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/ruby/dependency_injection/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/ruby/hello_route/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/ruby/middleware_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/ruby/path_params/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/ruby/quickstart_routes/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/ruby/request_data/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/ruby/response_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/ruby/routing_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/ruby/sse/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/ruby/streaming/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/ruby/upload/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/ruby/validation_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/ruby/websocket/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/rust/auth_layer/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/rust/background_task/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/rust/dependency_injection/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/rust/hello_route/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/rust/middleware_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/rust/path_params/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/rust/quickstart_routes/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/rust/request_data/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/rust/response_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/rust/routing_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/rust/run_binary/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/rust/sse/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/rust/streaming/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/rust/upload/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/rust/validation_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/rust/websocket/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/typescript/auth_middleware/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/typescript/background_task/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/typescript/deno_fetch/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/typescript/dependency_injection/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/typescript/fetch_handler/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/typescript/hello_route/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/typescript/middleware_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/typescript/path_params/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/typescript/quickstart_routes/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/typescript/request_data/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/typescript/response_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/typescript/routing_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/typescript/run_app/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/typescript/sse/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/typescript/streaming/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/typescript/upload/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/typescript/validation_basic/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
     <url>
          <loc>https://spikard.dev/1.0/snippets/typescript/websocket/</loc>
-         <lastmod>2025-11-28</lastmod>
+         <lastmod>2025-11-29</lastmod>
     </url>
 </urlset>
