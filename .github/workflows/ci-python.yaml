@@ -68,11 +68,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache-prefix: build-wheels-${{ matrix.os }}-py${{ matrix.python-version }}
 
-      - name: Install maturin
-        run: uv pip install maturin
-
       - name: Build Python wheels
-        run: cd crates/spikard-py && uv run maturin build --release --features extension-module -i ${{ matrix.python-version }}
+        run: uv tool run maturin build --release --features extension-module -i ${{ matrix.python-version }} --manifest-path crates/spikard-py/Cargo.toml
 
       - name: Upload wheels artifact
         uses: actions/upload-artifact@v4
@@ -136,11 +133,8 @@ jobs:
           python-version: "3.13"
           cache-prefix: python-sdist
 
-      - name: Install maturin
-        run: uv pip install maturin
-
       - name: Build source distribution
-        run: uv run maturin sdist --manifest-path crates/spikard-py/Cargo.toml
+        run: uv tool run maturin sdist --manifest-path crates/spikard-py/Cargo.toml
 
       - name: Upload sdist artifact
         uses: actions/upload-artifact@v4

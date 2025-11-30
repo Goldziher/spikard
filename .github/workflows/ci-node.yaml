@@ -74,13 +74,13 @@ jobs:
 
       - name: Build NAPI bindings
         working-directory: crates/spikard-node
-        run: pnpm exec napi build --release
+        run: pnpm exec napi build --release -o ../../packages/node
 
       - name: Upload Node bindings
         uses: actions/upload-artifact@v4
         with:
-          name: napi-${{ matrix.os }}
-          path: crates/spikard-node/*.node
+          name: napi-bindings-${{ matrix.os }}
+          path: packages/node/*.node
           retention-days: 7
 
   test-node:
@@ -107,8 +107,8 @@ jobs:
       - name: Download Node bindings
         uses: actions/download-artifact@v4
         with:
-          name: napi-${{ matrix.os }}
-          path: crates/spikard-node/
+          name: napi-bindings-${{ matrix.os }}
+          path: packages/node/
 
       - name: Install dependencies
         working-directory: packages/node

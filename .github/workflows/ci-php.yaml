@@ -69,6 +69,19 @@ jobs:
           tools: composer
           coverage: none
 
+      - name: Install PHP development headers (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y php-dev
+
+      - name: Detect PHP configuration
+        run: |
+          PHP_CONFIG=$(which php-config || echo "php-config")
+          echo "PHP_CONFIG=${PHP_CONFIG}" >> "$GITHUB_ENV"
+          echo "Found PHP config at: ${PHP_CONFIG}"
+          ${PHP_CONFIG} --version || true
+
       - name: Build PHP extension
         run: cargo build --release -p spikard-php --features extension-module
 
@@ -76,7 +89,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: php-extension-${{ matrix.os }}
-          path: target/release/*.so
+          path: |
+            target/release/*.so
+            target/release/*.dylib
           retention-days: 7
 
   test-php:
