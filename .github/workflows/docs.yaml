@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - '.github/workflows/docs.yaml'
   workflow_dispatch:
 
 permissions:

@@ -1,6 +1,10 @@
 name: Setup Rust Environment
 description: Install Rust toolchain with caching for build artifacts
 inputs:
+  toolchain:
+    description: Rust toolchain to install (stable, nightly, beta, or specific version)
+    required: false
+    default: stable
   components:
     description: Comma-separated list of Rust components to install
     required: false
@@ -27,6 +31,7 @@ runs:
     - name: Setup Rust
       uses: actions-rust-lang/setup-rust-toolchain@v1
       with:
+        toolchain: ${{ inputs.toolchain }}
         components: ${{ inputs.components }}
 
     - name: Setup sccache

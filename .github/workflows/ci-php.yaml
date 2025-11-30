@@ -54,7 +54,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Setup Rust
+      - name: Setup Rust (Nightly for Windows)
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: build-php-${{ matrix.os }}
+          toolchain: nightly
+
+      - name: Setup Rust (Stable for Unix)
+        if: runner.os != 'Windows'
         uses: ./.github/actions/setup-rust
         with:
           cache-key-prefix: build-php-${{ matrix.os }}
