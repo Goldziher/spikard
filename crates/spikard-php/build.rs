@@ -4,12 +4,20 @@ use std::process::Command;
 fn main() {
     let php_config = env::var("PHP_CONFIG").unwrap_or_else(|_| "php-config".to_string());
 
-    // Set minimum macOS version to avoid linker mismatches
-    // Object files built on newer macOS need compatible deployment target
+    // macOS-specific configuration for PHP extension building
     #[cfg(target_os = "macos")]
     {
+        // CRITICAL: Allow PHP Zend symbols to be resolved at runtime
+        // PHP extensions are plugins - symbols exist in the PHP interpreter, not at link time
+        // Without this, linking fails with "Undefined symbols" errors
+        // See: https://github.com/rust-lang/rust/pull/66204
+        println!("cargo:rustc-link-arg=-undefined");
+        println!("cargo:rustc-link-arg=dynamic_lookup");
+
+        // Set deployment target to match modern macOS (GitHub Actions uses macOS 14+)
+        // Prevents "object file was built for newer macOS version" warnings
         if env::var("MACOSX_DEPLOYMENT_TARGET").is_err() {
-            println!("cargo:rustc-env=MACOSX_DEPLOYMENT_TARGET=13.0");
+            println!("cargo:rustc-env=MACOSX_DEPLOYMENT_TARGET=14.0");
         }
     }
 
