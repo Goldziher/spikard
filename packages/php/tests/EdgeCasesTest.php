@@ -238,9 +238,8 @@ final class EdgeCasesTest extends TestCase
     public function testQueryParamWithoutDefault(): void
     {
         $query = new Query();
-        $this->assertFalse($query->hasDefault());
-        /** @phpstan-ignore-next-line alreadyNarrowedType */
-        $this->assertNull($query->getDefault());
+        $hasDefault = $query->hasDefault();
+        $this->assertFalse($hasDefault);
     }
 
     public function testQueryParamWithZeroDefault(): void
@@ -460,18 +459,6 @@ final class EdgeCasesTest extends TestCase
         ];
         $request = new Request(method: 'POST', path: '/test', body: $body);
         $this->assertSame($body, $request->body);
-        /** @phpstan-ignore-next-line alreadyNarrowedType */
-        $this->assertIsString($request->body['string']);
-        /** @phpstan-ignore-next-line alreadyNarrowedType */
-        $this->assertIsInt($request->body['int']);
-        /** @phpstan-ignore-next-line alreadyNarrowedType */
-        $this->assertIsFloat($request->body['float']);
-        /** @phpstan-ignore-next-line alreadyNarrowedType */
-        $this->assertIsBool($request->body['bool']);
-        /** @phpstan-ignore-next-line alreadyNarrowedType */
-        $this->assertNull($request->body['null']);
-        /** @phpstan-ignore-next-line alreadyNarrowedType */
-        $this->assertIsArray($request->body['array']);
     }
 
     public function testResponsePreservesAllMixedTypes(): void

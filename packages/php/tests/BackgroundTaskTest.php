@@ -84,8 +84,7 @@ final class BackgroundTaskTest extends TestCase
         BackgroundTask::run('strlen', ['test']);
 
         // If we got here, the function was called successfully
-        /** @phpstan-ignore-next-line method.alreadyNarrowedType */
-        $this->assertTrue(true);
+        $this->expectNotToPerformAssertions();
     }
 
     public function testRunAcceptsStaticMethod(): void
