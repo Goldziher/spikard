@@ -68,9 +68,7 @@ jobs:
           cache-prefix: smoke-python
 
       - name: Build Python binding (dev)
-        run: |
-          cd crates/spikard-py
-          uv run maturin develop
+        run: uv pip install -e crates/spikard-py
 
       - name: Run Python smoke test
         run: |
@@ -100,7 +98,7 @@ jobs:
       - name: Run Node smoke test
         run: |
           cd examples/di
-          node node_basic.ts
+          node node_basic.js
 
   smoke-complete:
     name: Smoke Tests Complete
