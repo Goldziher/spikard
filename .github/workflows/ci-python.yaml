@@ -114,8 +114,15 @@ jobs:
           name: wheels-${{ matrix.os }}-py${{ matrix.python-version }}
           path: dist/
 
-      - name: Install wheel
-        run: pip install dist/*.whl
+      - name: Install wheel (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: uv pip install dist/*.whl
+
+      - name: Install wheel (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: uv pip install (Get-Item dist\*.whl).FullName
 
       - name: Run pytest (Unix)
         if: runner.os != 'Windows'
