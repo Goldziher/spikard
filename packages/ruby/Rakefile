@@ -15,7 +15,7 @@ namespace :ext do
   end
 
   desc 'Build the native Ruby extension via cargo'
-  task build: :clean do
+  task build: [:clean, 'vendor:sync'] do
     Dir.chdir(File.expand_path('ext/spikard_rb', __dir__)) do
       profile = ENV.fetch('CARGO_PROFILE', 'release')
       sh({ 'CARGO_PROFILE' => profile }, 'bundle exec ruby extconf.rb')
@@ -34,6 +34,56 @@ namespace :ext do
       FileUtils.cp(artifact, target_path)
       puts "Copied #{artifact} to #{target_path}"
     end
+  end
+end
+
+namespace :vendor do
+  desc 'Copy workspace crates into vendor directory for gem distribution'
+  task :sync do
+    vendor_dir = File.expand_path('vendor', __dir__)
+    FileUtils.rm_rf(vendor_dir)
+    FileUtils.mkdir_p(vendor_dir)
+
+    crates = {
+      'spikard-rb' => '../../crates/spikard-rb',
+      'spikard-core' => '../../crates/spikard-core',
+      'spikard-http' => '../../crates/spikard-http'
+    }
+
+    crates.each do |name, source_path|
+      source = File.expand_path(source_path, __dir__)
+      dest = File.join(vendor_dir, name)
+
+      FileUtils.mkdir_p(dest)
+
+      # Copy Cargo.toml
+      FileUtils.cp(File.join(source, 'Cargo.toml'), dest)
+
+      # Copy source files
+      src_dir = File.join(source, 'src')
+      FileUtils.cp_r(src_dir, dest) if Dir.exist?(src_dir)
+
+      # Copy README if exists
+      readme = File.join(source, 'README.md')
+      FileUtils.cp(readme, dest) if File.exist?(readme)
+
+      # Copy build.rs if exists
+      build_rs = File.join(source, 'build.rs')
+      FileUtils.cp(build_rs, dest) if File.exist?(build_rs)
+
+      puts "Vendored #{name} to vendor/#{name}"
+    end
+
+    # Update vendored spikard-rb to use relative paths to other vendored crates
+    vendored_rb_cargo = File.join(vendor_dir, 'spikard-rb', 'Cargo.toml')
+    if File.exist?(vendored_rb_cargo)
+      content = File.read(vendored_rb_cargo)
+      content.gsub!('path = "../spikard-core"', 'path = "../spikard-core"')
+      content.gsub!('path = "../spikard-http"', 'path = "../spikard-http"')
+      File.write(vendored_rb_cargo, content)
+    end
+
+    puts "\n✓ Workspace crates vendored successfully"
   end
 end
 
