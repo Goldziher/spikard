@@ -1661,27 +1661,3 @@ jobs:
         if: ${{ needs.prepare.outputs.dry_run == 'true' }}
         run: |
           echo "Dry run requested; Packagist notification skipped." >> "$GITHUB_STEP_SUMMARY"
-
-  deprecate-old-packages:
-    name: Deprecate Old Package Names
-    needs: [prepare, publish-node, publish-wasm]
-    if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Deprecate spikard
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          npm deprecate spikard@0.2.0 "⚠️ Package moved to @spikard/node. Install with: npm install @spikard/node"
-
-      - name: Deprecate spikard-wasm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          npm deprecate spikard-wasm@0.2.0 "⚠️ Package moved to @spikard/wasm. Install with: npm install @spikard/wasm"
