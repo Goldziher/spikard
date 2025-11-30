@@ -79,11 +79,5 @@
 	},
 	"dependencies": {
 		"zod": "^4.1.13"
-	},
-	"optionalDependencies": {
-		"@spikard/darwin-arm64": "0.2.1",
-		"@spikard/darwin-x64": "0.2.1",
-		"@spikard/linux-x64-gnu": "0.2.1",
-		"@spikard/win32-x64-msvc": "0.2.1"
 	}
 }
