@@ -320,7 +320,7 @@ async def get_users(db: AsyncSession) -> list[User]:
 #### TypeScript/Node
 
 ```typescript
-import { Server, Provide } from '@spikard/node';
+import { Server, Provide } from 'spikard';
 
 const app = new Server();
 

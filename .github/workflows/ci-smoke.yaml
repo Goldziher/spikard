@@ -93,7 +93,7 @@ jobs:
           node-version: "20"
 
       - name: Build Node binding
-        run: pnpm --filter @spikard/node run build:debug
+        run: pnpm --filter spikard run build:debug
 
       - name: Run Node smoke test
         run: |

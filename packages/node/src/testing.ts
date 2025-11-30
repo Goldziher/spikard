@@ -122,7 +122,7 @@ export const __setNativeClientFactory = (factory?: NativeClientFactory): void =>
  *
  * @example
  * ```typescript
- * import { TestClient } from '@spikard/node';
+ * import { TestClient } from 'spikard';
  *
  * const app = {
  *   routes: [

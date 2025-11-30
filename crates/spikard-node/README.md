@@ -4,8 +4,8 @@ High-performance Node.js bindings for Spikard HTTP framework via napi-rs.
 
 ## Status & Badges
 
-[![npm](https://img.shields.io/npm/v/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
-[![npm downloads](https://img.shields.io/npm/dm/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
+[![npm](https://img.shields.io/npm/v/spikard.svg)](https://www.npmjs.com/package/spikard)
+[![npm downloads](https://img.shields.io/npm/dm/spikard.svg)](https://www.npmjs.com/package/spikard)
 [![Crates.io](https://img.shields.io/crates/v/spikard-node.svg)](https://crates.io/crates/spikard-node)
 [![Documentation](https://docs.rs/spikard-node/badge.svg)](https://docs.rs/spikard-node)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)

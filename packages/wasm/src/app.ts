@@ -37,7 +37,7 @@ export interface LifecycleHooks {
  *
  * @example
  * ```typescript
- * import { Spikard, get, post } from '@spikard/node';
+ * import { Spikard, get, post } from 'spikard';
  *
  * const app = new Spikard();
  *

@@ -14,7 +14,7 @@
  *
  * @example
  * ```typescript
- * import { Spikard, type UploadFile } from '@spikard/node';
+ * import { Spikard, type UploadFile } from 'spikard';
  *
  * const app = new Spikard();
  *

@@ -748,7 +748,7 @@ tasks:
     desc: "Build all JavaScript/TypeScript packages (node, wasm)"
     cmds:
       - task: build:node
-      - pnpm --filter @spikard/wasm run build
+      - pnpm --filter spikard-wasm run build
 
   run:cli:
     desc: "Run the CLI tool"

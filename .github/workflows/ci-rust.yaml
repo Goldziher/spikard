@@ -68,6 +68,7 @@ jobs:
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: python
+        shell: bash
         run: |
           # Test all workspace crates. Note: spikard-py extension-module feature is
           # intentionally excluded from testing as it's only for Python wheel builds
@@ -106,10 +107,20 @@ jobs:
       - name: Install LLVM/Clang (for ext-php-rs bindgen)
         uses: ./.github/actions/setup-llvm-clang
 
-      - name: Run workspace tests
+      - name: Run workspace tests (Unix)
+        if: runner.os != 'Windows'
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: python
+        shell: bash
+        run: cargo test --workspace
+
+      - name: Run workspace tests (Windows)
+        if: runner.os == 'Windows'
+        env:
+          RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
+          PYO3_PYTHON: python
+        shell: pwsh
         run: cargo test --workspace
 
   rust-complete:

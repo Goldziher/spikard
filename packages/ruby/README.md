@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI Status](https://img.shields.io/github/actions/workflow/status/Goldziher/spikard/ci.yml?branch=main)](https://github.com/Goldziher/spikard/actions)
 [![PyPI](https://img.shields.io/pypi/v/spikard.svg)](https://pypi.org/project/spikard/)
-[![npm](https://img.shields.io/npm/v/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
+[![npm](https://img.shields.io/npm/v/spikard.svg)](https://www.npmjs.com/package/spikard)
 [![Crates.io](https://img.shields.io/crates/v/spikard.svg)](https://crates.io/crates/spikard)
 [![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg)](https://packagist.org/packages/spikard/spikard)
 
@@ -617,7 +617,7 @@ See [examples/README.md](../../examples/README.md) for code generation instructi
 
 **Cross-Language:**
 - [Python (PyPI)](https://pypi.org/project/spikard/)
-- [Node.js (npm)](https://www.npmjs.com/package/@spikard/node)
+- [Node.js (npm)](https://www.npmjs.com/package/spikard)
 - [Rust (Crates.io)](https://crates.io/crates/spikard)
 - [PHP (Packagist)](https://packagist.org/packages/spikard/spikard)
 

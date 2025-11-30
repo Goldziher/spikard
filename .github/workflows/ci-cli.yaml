@@ -55,7 +55,14 @@ jobs:
         with:
           cache-key-prefix: build-cli-${{ matrix.os }}
 
-      - name: Build CLI
+      - name: Build CLI (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: cargo build --release -p spikard-cli
+
+      - name: Build CLI (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: cargo build --release -p spikard-cli
 
       - name: Upload CLI artifact

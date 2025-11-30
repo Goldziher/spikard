@@ -116,7 +116,7 @@ export declare function createStreamingHandle(iterator: object, init?: Streaming
  * # Example
  *
  * ```typescript
- * import { Spikard, ServerConfig } from '@spikard/node';
+ * import { Spikard, ServerConfig } from 'spikard';
  *
  * const config: ServerConfig = {
  *   host: '0.0.0.0',

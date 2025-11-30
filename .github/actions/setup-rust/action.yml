@@ -33,8 +33,8 @@ runs:
       if: inputs.use-sccache == 'true'
       uses: mozilla-actions/sccache-action@v0.0.9
 
-    - name: Verify sccache installation
-      if: inputs.use-sccache == 'true'
+    - name: Verify sccache installation (Unix)
+      if: inputs.use-sccache == 'true' && runner.os != 'Windows'
       shell: bash
       run: |
         set -euo pipefail
@@ -47,7 +47,21 @@ runs:
         sccache --version
         echo "sccache location: $(which sccache)"
 
-    - name: Configure Rust flags
+    - name: Verify sccache installation (Windows)
+      if: inputs.use-sccache == 'true' && runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        if (-not (Get-Command sccache -ErrorAction SilentlyContinue)) {
+          Write-Error "ERROR: sccache is not available on PATH after mozilla-actions/sccache-action"
+          Write-Error "This indicates a problem with the sccache-action setup"
+          exit 1
+        }
+        Write-Output "sccache version:"
+        sccache --version
+        Write-Output "sccache location: $(Get-Command sccache | Select-Object -ExpandProperty Source)"
+
+    - name: Configure Rust flags (Unix)
+      if: runner.os != 'Windows'
       shell: bash
       run: |
         set -euo pipefail
@@ -62,6 +76,23 @@ runs:
           echo "SCCACHE_GHA_ENABLED=false" >> "$GITHUB_ENV"
           echo "RUSTC_WRAPPER=" >> "$GITHUB_ENV"
         fi
+
+    - name: Configure Rust flags (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        if ("${{ inputs.use-sccache }}" -eq "true") {
+          "SCCACHE_GHA_ENABLED=true" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "RUSTC_WRAPPER=sccache" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          # Configure sccache settings for optimal CI performance
+          "SCCACHE_CACHE_SIZE=2G" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "SCCACHE_IDLE_TIMEOUT=0" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "SCCACHE_LOG=info" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        } else {
+          "SCCACHE_GHA_ENABLED=false" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "RUSTC_WRAPPER=" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        }
+
 
     - name: Cache Rust build artifacts
       if: inputs.use-sccache != 'true'
@@ -95,7 +126,8 @@ runs:
         path: ~/.cargo/bin/cargo-llvm-cov
         key: cargo-llvm-cov-${{ runner.os }}
 
-    - name: Install cargo-llvm-cov if not cached
+    - name: Install cargo-llvm-cov if not cached (Unix)
+      if: runner.os != 'Windows'
       shell: bash
       run: |
         if ! command -v cargo-llvm-cov &> /dev/null; then
@@ -104,3 +136,14 @@ runs:
         else
           echo "cargo-llvm-cov already installed"
         fi
+
+    - name: Install cargo-llvm-cov if not cached (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        if (-not (Get-Command cargo-llvm-cov -ErrorAction SilentlyContinue)) {
+          Write-Output "Installing cargo-llvm-cov..."
+          cargo install cargo-llvm-cov
+        } else {
+          Write-Output "cargo-llvm-cov already installed"
+        }

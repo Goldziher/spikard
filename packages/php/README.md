@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI Status](https://github.com/Goldziher/spikard/workflows/CI/badge.svg)](https://github.com/Goldziher/spikard/actions)
 [![PyPI](https://img.shields.io/pypi/v/spikard.svg)](https://pypi.org/project/spikard/)
-[![npm](https://img.shields.io/npm/v/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
+[![npm](https://img.shields.io/npm/v/spikard.svg)](https://www.npmjs.com/package/spikard)
 [![Crates.io](https://img.shields.io/crates/v/spikard.svg)](https://crates.io/crates/spikard)
 [![RubyGems](https://img.shields.io/gem/v/spikard.svg)](https://rubygems.org/gems/spikard)
 
@@ -979,7 +979,7 @@ Spikard is available for multiple languages:
 | Language | Package | Status |
 |----------|---------|--------|
 | Python | [spikard](https://pypi.org/project/spikard/) | Stable |
-| Node.js | [@spikard/node](https://www.npmjs.com/package/@spikard/node) | Stable |
+| Node.js | [spikard](https://www.npmjs.com/package/spikard) | Stable |
 | Ruby | [spikard](https://rubygems.org/gems/spikard) | Stable |
 | PHP | [spikard/spikard](https://packagist.org/packages/spikard/spikard) | Stable |
 | WebAssembly | [spikard-wasm](https://www.npmjs.com/package/spikard-wasm) | Stable |

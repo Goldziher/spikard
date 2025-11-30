@@ -1,9 +1,9 @@
 # Spikard for Node.js
 
 [![Documentation](https://img.shields.io/badge/docs-spikard.dev-58FBDA)](https://spikard.dev)
-[![npm](https://img.shields.io/npm/v/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
-[![npm downloads](https://img.shields.io/npm/dm/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
-[![Node](https://img.shields.io/node/v/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
+[![npm](https://img.shields.io/npm/v/spikard.svg)](https://www.npmjs.com/package/spikard)
+[![npm downloads](https://img.shields.io/npm/dm/spikard.svg)](https://www.npmjs.com/package/spikard)
+[![Node](https://img.shields.io/node/v/spikard.svg)](https://www.npmjs.com/package/spikard)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/Goldziher/spikard/ci.yml?branch=main)](https://github.com/Goldziher/spikard/actions)
 [![PyPI](https://img.shields.io/pypi/v/spikard.svg)](https://pypi.org/project/spikard/)
@@ -32,11 +32,11 @@ High-performance HTTP framework for Node.js powered by a Rust core (Axum + Tower
 Install from npm:
 
 ```bash
-npm install @spikard/node
+npm install spikard
 # or with pnpm
-pnpm add @spikard/node
+pnpm add spikard
 # or with yarn
-yarn add @spikard/node
+yarn add spikard
 ```
 
 **Build from source:**
@@ -582,7 +582,7 @@ Spikard is available across multiple languages:
 
 | Platform | Package | Status |
 |----------|---------|--------|
-| **Node.js** | [@spikard/node](https://www.npmjs.com/package/@spikard/node) | Stable |
+| **Node.js** | [spikard](https://www.npmjs.com/package/spikard) | Stable |
 | **Python** | [spikard](https://pypi.org/project/spikard/) | Stable |
 | **Rust** | [spikard](https://crates.io/crates/spikard) | Stable |
 | **Ruby** | [spikard](https://rubygems.org/gems/spikard) | Stable |

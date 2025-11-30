@@ -17,11 +17,11 @@ fn main() {
     }
 
     // Get PHP libs
-    // Filter out optional/problematic PHP extension dependencies that may not be available
-    // in all CI environments. Libraries like libsodium, libargon2, and aspell are often
-    // compiled as optional PHP extensions and shouldn't be required for basic PHP binding.
-    // We only link essential PHP core libraries (php, m, c, etc).
-    let optional_libs = ["sodium", "argon2", "aspell"];
+    // Use a whitelist approach for PHP libraries to avoid linking optional/missing extensions.
+    // Different PHP builds include different optional extensions (libsodium, aspell, tidy, sybdb, etc)
+    // that may not be available in all CI environments. We only link essential core libraries.
+    // This ensures consistent builds across different PHP installations and platforms.
+    let essential_libs = ["php", "m", "c", "pthread", "resolv", "xml2", "z", "ssl", "crypto"];
 
     if let Ok(output) = Command::new(&php_config).arg("--libs").output()
         && output.status.success()
@@ -31,8 +31,8 @@ fn main() {
             if let Some(path) = lib.strip_prefix("-L") {
                 println!("cargo:rustc-link-search=native={}", path);
             } else if let Some(name) = lib.strip_prefix("-l") {
-                // Skip optional extension libraries that may not be available in CI
-                if !optional_libs.contains(&name) {
+                // Only link essential PHP core libraries (whitelist approach)
+                if essential_libs.contains(&name) {
                     println!("cargo:rustc-link-lib=dylib={}", name);
                 }
             }

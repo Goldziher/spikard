@@ -49,7 +49,7 @@ fn generate_header() -> String {
 
 fn generate_imports(_has_body_handlers: bool) -> String {
     // Import both wrapHandler and wrapBodyHandler for flexibility
-    let imports = "import { Spikard, wrapHandler, wrapBodyHandler, type UploadFile } from \"@spikard/node\";\n";
+    let imports = "import { Spikard, wrapHandler, wrapBodyHandler, type UploadFile } from \"spikard\";\n";
 
     format!("{}\nconst app = new Spikard();", imports)
 }
