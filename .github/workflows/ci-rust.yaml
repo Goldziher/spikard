@@ -122,12 +122,3 @@ jobs:
           PYO3_PYTHON: python
         shell: pwsh
         run: cargo test --workspace --exclude spikard-rb
-
-  rust-complete:
-    name: Rust Tests Complete
-    needs: [test-rust-workspace, test-rust-cross-platform]
-    if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - run: echo "All Rust tests passed"

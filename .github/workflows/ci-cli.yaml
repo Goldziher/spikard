@@ -105,12 +105,3 @@ jobs:
         run: |
           & cli-artifact/spikard.exe --version
           & cli-artifact/spikard.exe --help
-
-  cli-complete:
-    name: CLI Tests Complete
-    needs: [build-cli, test-cli]
-    if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - run: echo "CLI tests passed"
