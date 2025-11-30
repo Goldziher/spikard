@@ -887,8 +887,18 @@ jobs:
       - name: Setup LLVM/Clang
         uses: ./.github/actions/setup-llvm-clang
 
-      - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Setup Rust (Nightly for Windows)
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/setup-rust
+        with:
+          toolchain: nightly
+          cache-key-prefix: php-build-${{ matrix.os }}-${{ matrix.php_version }}
+
+      - name: Setup Rust (Stable for Unix)
+        if: runner.os != 'Windows'
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: php-build-${{ matrix.os }}-${{ matrix.php_version }}
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -1425,8 +1435,8 @@ jobs:
           set -e
           if [ "$status" -ne 0 ]; then
             if grep -q "previously published versions" "$publish_log"; then
-              echo "::notice::spikard already published; skipping."
-              echo "spikard already published; skipping." >> $GITHUB_STEP_SUMMARY
+              echo "::notice::@spikard/node already published; skipping."
+              echo "@spikard/node already published; skipping." >> $GITHUB_STEP_SUMMARY
             else
               exit "$status"
             fi
@@ -1513,8 +1523,8 @@ jobs:
           set -e
           if [ "$status" -ne 0 ]; then
             if grep -q "previously published versions" "$publish_log"; then
-              echo "::notice::spikard-wasm already published; skipping."
-              echo "spikard-wasm already published; skipping." >> $GITHUB_STEP_SUMMARY
+              echo "::notice::@spikard/wasm already published; skipping."
+              echo "@spikard/wasm already published; skipping." >> $GITHUB_STEP_SUMMARY
             else
               exit "$status"
             fi
@@ -1651,3 +1661,27 @@ jobs:
         if: ${{ needs.prepare.outputs.dry_run == 'true' }}
         run: |
           echo "Dry run requested; Packagist notification skipped." >> "$GITHUB_STEP_SUMMARY"
+
+  deprecate-old-packages:
+    name: Deprecate Old Package Names
+    needs: [prepare, publish-node, publish-wasm]
+    if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Deprecate spikard
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm deprecate spikard@0.2.0 "⚠️ Package moved to @spikard/node. Install with: npm install @spikard/node"
+
+      - name: Deprecate spikard-wasm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm deprecate spikard-wasm@0.2.0 "⚠️ Package moved to @spikard/wasm. Install with: npm install @spikard/wasm"
