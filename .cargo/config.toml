@@ -1,3 +1,41 @@
+# Cargo configuration for spikard workspace
+# This file configures build caching and compilation settings
+
+[build]
+# Enable incremental builds locally for faster iterations.
+# Speeds up development by only recompiling changed code.
+incremental = true
+
+# sccache configuration:
+# - CI: sccache IS enabled by default via RUSTC_WRAPPER=sccache in .github/actions/setup-rust
+#       The mozilla-actions/sccache-action handles installation and GitHub Actions cache integration
+# - Local: To enable sccache locally, install it (cargo install sccache) and set:
+#       export RUSTC_WRAPPER=sccache
+#   Local sccache can cache to disk or cloud storage (S3, GCS, Azure, Redis)
+#   See: https://github.com/mozilla/sccache for configuration options
+
+# Registry settings for faster crate resolution
+[registries.crates-io]
+protocol = "sparse"
+
+# Network settings for faster crate downloads
+[net]
+git-fetch-with-cli = false
+
+# Platform-specific target configurations
+[target.x86_64-unknown-linux-gnu]
+# Linux x86_64 specific settings
+
+[target.x86_64-apple-darwin]
+# macOS x86_64 specific settings
+
+[target.aarch64-apple-darwin]
+# macOS ARM64 specific settings
+# Note: Ruby linking handled below under cfg(target_os = "macos")
+
+[target.x86_64-pc-windows-msvc]
+# Windows MSVC specific settings
+
 # macOS ARM64 needs -undefined dynamic_lookup for bundled Ruby (homebrew)
 [target.'cfg(target_os = "macos")']
 rustflags = ["-C", "link-arg=-Wl,-undefined,dynamic_lookup"]

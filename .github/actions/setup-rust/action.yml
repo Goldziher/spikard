@@ -13,6 +13,10 @@ inputs:
     description: Whether to cache cargo home directory
     required: false
     default: 'true'
+  use-sccache:
+    description: Enable sccache as the Rust compiler wrapper
+    required: false
+    default: 'true'
 outputs:
   cache-hit:
     description: Whether the Rust cache was restored
@@ -25,7 +29,42 @@ runs:
       with:
         components: ${{ inputs.components }}
 
+    - name: Setup sccache
+      if: inputs.use-sccache == 'true'
+      uses: mozilla-actions/sccache-action@v0.0.9
+
+    - name: Verify sccache installation
+      if: inputs.use-sccache == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        if ! command -v sccache &> /dev/null; then
+          echo "ERROR: sccache is not available on PATH after mozilla-actions/sccache-action"
+          echo "This indicates a problem with the sccache-action setup"
+          exit 1
+        fi
+        echo "sccache version:"
+        sccache --version
+        echo "sccache location: $(which sccache)"
+
+    - name: Configure Rust flags
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [ "${{ inputs.use-sccache }}" = "true" ]; then
+          echo "SCCACHE_GHA_ENABLED=true" >> "$GITHUB_ENV"
+          echo "RUSTC_WRAPPER=sccache" >> "$GITHUB_ENV"
+          # Configure sccache settings for optimal CI performance
+          echo "SCCACHE_CACHE_SIZE=2G" >> "$GITHUB_ENV"
+          echo "SCCACHE_IDLE_TIMEOUT=0" >> "$GITHUB_ENV"
+          echo "SCCACHE_LOG=info" >> "$GITHUB_ENV"
+        else
+          echo "SCCACHE_GHA_ENABLED=false" >> "$GITHUB_ENV"
+          echo "RUSTC_WRAPPER=" >> "$GITHUB_ENV"
+        fi
+
     - name: Cache Rust build artifacts
+      if: inputs.use-sccache != 'true'
       id: cache-rust
       uses: actions/cache@v4
       with:
@@ -37,6 +76,18 @@ runs:
         key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}
         restore-keys: |
           ${{ inputs.cache-key-prefix }}-${{ runner.os }}-
+
+    - name: Cache cargo home (when sccache enabled)
+      if: inputs.use-sccache == 'true' && inputs.cache-cargo-home == 'true'
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry/index
+          ~/.cargo/registry/cache
+          ~/.cargo/git/db
+        key: cargo-home-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          cargo-home-${{ runner.os }}-
 
     - name: Cache cargo-llvm-cov
       uses: actions/cache@v4

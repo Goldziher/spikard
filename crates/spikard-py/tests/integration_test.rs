@@ -22,10 +22,10 @@ fn init_python() {
         .expect("failed to resolve python package path");
     let stub_path = ensure_stub_dir();
     let mut python_paths = vec![stub_path.clone(), package_path];
-    if let Some(current) = std::env::var_os("PYTHONPATH") {
-        if !current.is_empty() {
-            python_paths.extend(std::env::split_paths(&current));
-        }
+    if let Some(current) = std::env::var_os("PYTHONPATH")
+        && !current.is_empty()
+    {
+        python_paths.extend(std::env::split_paths(&current));
     }
 
     let new_pythonpath = std::env::join_paths(python_paths).expect("failed to build PYTHONPATH");

@@ -78,8 +78,10 @@ fn python_dataclass_generation_emits_dataclasses() -> Result<()> {
     let dir = tempdir()?;
     let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);
 
-    let mut dto = DtoConfig::default();
-    dto.python = PythonDtoStyle::Dataclass;
+    let dto = DtoConfig {
+        python: PythonDtoStyle::Dataclass,
+        ..Default::default()
+    };
 
     let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto, None)?;
     assert!(code.contains("@dataclass"), "expected dataclass annotation");
@@ -94,8 +96,10 @@ fn python_msgspec_generation_emits_structs() -> Result<()> {
     let dir = tempdir()?;
     let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);
 
-    let mut dto = DtoConfig::default();
-    dto.python = PythonDtoStyle::Msgspec;
+    let dto = DtoConfig {
+        python: PythonDtoStyle::Msgspec,
+        ..Default::default()
+    };
 
     let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto, None)?;
     assert!(
@@ -112,8 +116,10 @@ fn python_nullable_properties_emit_optional_union() -> Result<()> {
     let dir = tempdir()?;
     let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);
 
-    let mut dto = DtoConfig::default();
-    dto.python = PythonDtoStyle::Dataclass;
+    let dto = DtoConfig {
+        python: PythonDtoStyle::Dataclass,
+        ..Default::default()
+    };
 
     let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto, None)?;
     assert!(
@@ -128,8 +134,10 @@ fn node_generation_uses_zod_schemas() -> Result<()> {
     let dir = tempdir()?;
     let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);
 
-    let mut dto = DtoConfig::default();
-    dto.node = NodeDtoStyle::Zod;
+    let dto = DtoConfig {
+        node: NodeDtoStyle::Zod,
+        ..Default::default()
+    };
 
     let code = generate_from_openapi(&schema_path, TargetLanguage::TypeScript, &dto, None)?;
     assert!(
@@ -148,8 +156,10 @@ fn typescript_nullable_properties_emit_nullable_optional_schemas() -> Result<()>
     let dir = tempdir()?;
     let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);
 
-    let mut dto = DtoConfig::default();
-    dto.node = NodeDtoStyle::Zod;
+    let dto = DtoConfig {
+        node: NodeDtoStyle::Zod,
+        ..Default::default()
+    };
 
     let code = generate_from_openapi(&schema_path, TargetLanguage::TypeScript, &dto, None)?;
     assert!(
@@ -164,8 +174,10 @@ fn ruby_generation_uses_dry_structs() -> Result<()> {
     let dir = tempdir()?;
     let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);
 
-    let mut dto = DtoConfig::default();
-    dto.ruby = RubyDtoStyle::DrySchema;
+    let dto = DtoConfig {
+        ruby: RubyDtoStyle::DrySchema,
+        ..Default::default()
+    };
 
     let code = generate_from_openapi(&schema_path, TargetLanguage::Ruby, &dto, None)?;
     assert!(
