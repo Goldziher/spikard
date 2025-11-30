@@ -3,70 +3,68 @@ name: CI Validate
 on:
   push:
     branches: [main]
-    # TODO: Re-enable path filters once CI is validated as green
-    # paths:
-    #   # Rust
-    #   - 'crates/**/*.rs'
-    #   - 'Cargo.toml'
-    #   - 'Cargo.lock'
-    #   - 'rust-toolchain.toml'
-    #   # Python
-    #   - '**/*.py'
-    #   - 'pyproject.toml'
-    #   - 'uv.lock'
-    #   - 'packages/python/**'
-    #   - 'tools/**'
-    #   # TypeScript
-    #   - '**/*.ts'
-    #   - '**/*.tsx'
-    #   - '**/*.js'
-    #   - 'packages/node/**'
-    #   - 'crates/spikard-node/src/**'
-    #   # Ruby
-    #   - '**/*.rb'
-    #   - 'Gemfile*'
-    #   - 'packages/ruby/**'
-    #   # PHP
-    #   - '**/*.php'
-    #   - 'composer.json'
-    #   - 'composer.lock'
-    #   - 'packages/php/**'
-    #   # Workflows/actions
-    #   - '.github/workflows/**'
-    #   - '.github/actions/**'
+    paths:
+      # Rust
+      - 'crates/**/*.rs'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      # Python
+      - '**/*.py'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'packages/python/**'
+      - 'tools/**'
+      # TypeScript
+      - '**/*.ts'
+      - '**/*.tsx'
+      - '**/*.js'
+      - 'packages/node/**'
+      - 'crates/spikard-node/src/**'
+      # Ruby
+      - '**/*.rb'
+      - 'Gemfile*'
+      - 'packages/ruby/**'
+      # PHP
+      - '**/*.php'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'packages/php/**'
+      # Workflows/actions
+      - '.github/workflows/**'
+      - '.github/actions/**'
   pull_request:
     branches: [main]
-    # TODO: Re-enable path filters once CI is validated as green
-    # paths:
-    #   # Rust
-    #   - 'crates/**/*.rs'
-    #   - 'Cargo.toml'
-    #   - 'Cargo.lock'
-    #   - 'rust-toolchain.toml'
-    #   # Python
-    #   - '**/*.py'
-    #   - 'pyproject.toml'
-    #   - 'uv.lock'
-    #   - 'packages/python/**'
-    #   - 'tools/**'
-    #   # TypeScript
-    #   - '**/*.ts'
-    #   - '**/*.tsx'
-    #   - '**/*.js'
-    #   - 'packages/node/**'
-    #   - 'crates/spikard-node/src/**'
-    #   # Ruby
-    #   - '**/*.rb'
-    #   - 'Gemfile*'
-    #   - 'packages/ruby/**'
-    #   # PHP
-    #   - '**/*.php'
-    #   - 'composer.json'
-    #   - 'composer.lock'
-    #   - 'packages/php/**'
-    #   # Workflows/actions
-    #   - '.github/workflows/**'
-    #   - '.github/actions/**'
+    paths:
+      # Rust
+      - 'crates/**/*.rs'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      # Python
+      - '**/*.py'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'packages/python/**'
+      - 'tools/**'
+      # TypeScript
+      - '**/*.ts'
+      - '**/*.tsx'
+      - '**/*.js'
+      - 'packages/node/**'
+      - 'crates/spikard-node/src/**'
+      # Ruby
+      - '**/*.rb'
+      - 'Gemfile*'
+      - 'packages/ruby/**'
+      # PHP
+      - '**/*.php'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'packages/php/**'
+      # Workflows/actions
+      - '.github/workflows/**'
+      - '.github/actions/**'
 
 concurrency:
   group: ci-validate-${{ github.event.pull_request.number || github.ref }}
