@@ -39,5 +39,7 @@ async-stream = "0.3"
 
 [features]
 default = ["di"]
+# extension-module is intentionally NOT in default features to avoid breaking
+# test compilation. It's enabled only by maturin in pyproject.toml for wheel builds.
 extension-module = ["pyo3/extension-module"]
 di = ["spikard-core/di", "spikard-http/di"]
