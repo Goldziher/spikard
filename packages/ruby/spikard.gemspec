@@ -45,6 +45,7 @@ Gem::Specification.new do |spec|
     'lib/**/*.rb',
     'ext/**/*.{rs,toml,lock,rb}',
     'sig/**/*.rbs',
+    'vendor/**/*.{rs,toml}', # Vendored workspace crates
     'LICENSE',
     'README.md'
   ]
