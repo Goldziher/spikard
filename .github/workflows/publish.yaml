@@ -2,7 +2,7 @@ name: Publish Release
 
 on:
   release:
-    types: [created]
+    types: [published]
   workflow_dispatch:
     inputs:
       tag:
@@ -896,6 +896,21 @@ jobs:
           php-version: ${{ matrix.php_version }}
           extensions: json
 
+      - name: Setup OpenSSL for PHP (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          if ! command -v brew &> /dev/null; then
+            echo "::error::Homebrew not found"
+            exit 1
+          fi
+          if ! brew --prefix openssl@3 &> /dev/null; then
+            echo "::error::OpenSSL 3 not found via Homebrew"
+            exit 1
+          fi
+          OPENSSL_PREFIX=$(brew --prefix openssl@3)
+          echo "OPENSSL_LIB_DIR=${OPENSSL_PREFIX}/lib" >> $GITHUB_ENV
+          echo "OPENSSL_INCLUDE_DIR=${OPENSSL_PREFIX}/include" >> $GITHUB_ENV
+
       - name: Build PHP extension
         shell: bash
         run: |
@@ -1437,7 +1452,15 @@ jobs:
         run: |
           set -euo pipefail
           shopt -s nullglob
+          first=true
           for pkg in crates/spikard-node/npm/*.tgz; do
+            # Sleep 30s between packages to avoid npm spam detection
+            if [ "$first" = false ]; then
+              echo "Waiting 30s to avoid spam detection..."
+              sleep 30
+            fi
+            first=false
+
             echo "Publishing $pkg"
             publish_log=$(mktemp)
             set +e
