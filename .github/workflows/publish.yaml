@@ -557,7 +557,7 @@ jobs:
         run: Remove-Item -Recurse -Force crates/spikard-node\npm -ErrorAction SilentlyContinue
 
       - name: Create npm package structure
-        run: pnpm --filter spikard exec napi create-npm-dirs
+        run: pnpm --filter @spikard/node exec napi create-npm-dirs
 
       - name: Build native module
         if: runner.os != 'Windows'
