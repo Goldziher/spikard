@@ -321,7 +321,7 @@ mod tests {
     #[test]
     fn test_parse_event_json_minimal() {
         let json = r#"{"data": {"count": 42}}"#;
-        let event = PhpSseEventProducer::parse_event_json(json).unwrap();
+        let event = PhpSseEventProducer::parse_event_json(json).expect("valid event");
         assert!(event.event_type.is_none());
         assert!(event.id.is_none());
         assert!(event.retry.is_none());
@@ -336,7 +336,7 @@ mod tests {
             "id": "event-123",
             "retry": 5000
         }"#;
-        let event = PhpSseEventProducer::parse_event_json(json).unwrap();
+        let event = PhpSseEventProducer::parse_event_json(json).expect("valid event");
         assert_eq!(event.event_type, Some("notification".to_string()));
         assert_eq!(event.id, Some("event-123".to_string()));
         assert_eq!(event.retry, Some(5000));
@@ -348,7 +348,7 @@ mod tests {
         let json = r#"{"event_type": "test"}"#;
         let result = PhpSseEventProducer::parse_event_json(json);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("missing required 'data'"));
+        assert!(result.expect_err("should be error").contains("missing required 'data'"));
     }
 
     #[test]
@@ -356,6 +356,6 @@ mod tests {
         let json = "not valid json";
         let result = PhpSseEventProducer::parse_event_json(json);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Failed to parse"));
+        assert!(result.expect_err("should be error").contains("Failed to parse"));
     }
 }

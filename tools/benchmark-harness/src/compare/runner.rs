@@ -600,7 +600,7 @@ mod tests {
         let runner = CompareRunner::new(config).expect("valid config");
 
         // Test that port calculation works
-        assert_eq!(runner.config.port + 0, 8100);
+        assert_eq!(runner.config.port, 8100);
         assert_eq!(runner.config.port + 10, 8110);
         assert_eq!(runner.config.port + 20, 8120);
     }

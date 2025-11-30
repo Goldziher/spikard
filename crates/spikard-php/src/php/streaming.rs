@@ -234,7 +234,7 @@ mod tests {
     fn test_convert_string_chunk() {
         let mut zval = Zval::new();
         let _ = zval.set_string("test chunk", false);
-        let bytes = convert_chunk_to_bytes(&zval).unwrap();
+        let bytes = convert_chunk_to_bytes(&zval).expect("valid chunk");
         assert_eq!(bytes, Bytes::from("test chunk"));
     }
 }

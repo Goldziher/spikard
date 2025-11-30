@@ -1030,8 +1030,8 @@ mod tests {
     struct EchoWebSocket;
 
     impl WebSocketHandler for EchoWebSocket {
-        fn handle_message(&self, message: serde_json::Value) -> impl Future<Output = Option<serde_json::Value>> + Send {
-            async move { Some(message) }
+        async fn handle_message(&self, message: serde_json::Value) -> Option<serde_json::Value> {
+            Some(message)
         }
     }
 
@@ -1057,12 +1057,10 @@ mod tests {
     struct DummyProducer;
 
     impl SseEventProducer for DummyProducer {
-        fn next_event(&self) -> impl Future<Output = Option<SseEvent>> + Send {
-            async move {
-                Some(SseEvent::new(json!({
-                    "message": "hello"
-                })))
-            }
+        async fn next_event(&self) -> Option<SseEvent> {
+            Some(SseEvent::new(json!({
+                "message": "hello"
+            })))
         }
     }
 
